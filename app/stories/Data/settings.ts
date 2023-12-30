@@ -3,8 +3,8 @@ import { BridgeSettings } from "../../Models/BridgeSettings";
 
 export const Settings: BridgeSettings = {
     "discovery": {
-        "identity_url": "https://identity-api-dev.bridge.cloud",
-        "resource_storage_url": "https://devlsbridgebridgesa.blob.core.windows.net/",
+        "identity_url": "https://identity-api-dev.layerswap.cloud",
+        "resource_storage_url": "https://devlslayerswapbridgesa.blob.core.windows.net/",
         "o_auth_providers": [
             {
                 "provider": "COINBASE",

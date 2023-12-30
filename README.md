@@ -1,5 +1,5 @@
 # bridge-next
-Next generation LUX Bridge.
+Next-gen Bridge for Lux Network.
 
 ## To run locally
 
