@@ -1,6 +1,6 @@
 'use client'
 
-import BridgeExplorerLogo from './icons/luxdefiExplorer'
+import BridgeExplorerLogo from './icons/BridgeExplorer'
 import Search from './Search'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'

@@ -1,0 +1,420 @@
+{
+	"info": {
+		"_postman_id": "33d13bc3-f40c-42c7-8dd2-da800f0b2ce5",
+		"name": "Bridge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "20702802"
+	},
+	"item": [
+		{
+			"name": "prod",
+			"item": [
+				{
+					"name": "get sources and destinations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{PROD_HOST}}/api/available_networks?version=any",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"available_networks"
+							],
+							"query": [
+								{
+									"key": "version",
+									"value": "any"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "available routes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{PROD_HOST}}/api/available_routes?source=OPTIMISM_MAINNET&destination=ARBITRUM_MAINNET&sourceAsset=ETH&destinationAsset=ETH&version=any",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"available_routes"
+							],
+							"query": [
+								{
+									"key": "source",
+									"value": "OPTIMISM_MAINNET"
+								},
+								{
+									"key": "destination",
+									"value": "ARBITRUM_MAINNET"
+								},
+								{
+									"key": "sourceAsset",
+									"value": "ETH"
+								},
+								{
+									"key": "destinationAsset",
+									"value": "ETH"
+								},
+								{
+									"key": "version",
+									"value": "any"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get swap rate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"source\": \"POLYGON_MAINNET\",\n  \"source_asset\": \"ETH\",\n  \"destination\": \"ZKSPACE_MAINNET\",\n  \"destination_asset\": \"ETH\",\n  \"refuel\": false\n}\n"
+						},
+						"url": "{{PROD_HOST}}/api/swap_rate"
+					},
+					"response": []
+				},
+				{
+					"name": "create swap",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"source\": \"STARKNET_MAINNET\",\n  \"source_asset\": \"ETH\",\n  \"destination\": \"SCROLL_MAINNET\",\n  \"destination_asset\": \"ETH\",\n  \"refuel\": false,\n  \"amount\": 0.01,\n  \"destination_address\": \"0x481B173Fe7f9Ff503d9182d0B9Ad6E62336B7733\",\n  \"reference_id\": \"1\"\n}"
+						},
+						"url": "{{PROD_HOST}}/api/swaps"
+					},
+					"response": []
+				},
+				{
+					"name": "get swap",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}"
+							}
+						],
+						"url": "{{PROD_HOST}}/api/swaps/ad94ccfd-09b0-4c01-aae3-632a7f3011d2"
+					},
+					"response": []
+				},
+				{
+					"name": "cancel swap",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}"
+							}
+						],
+						"url": "{{PROD_HOST}}/api/swaps/ad94ccfd-09b0-4c01-aae3-632a7f3011d2"
+					},
+					"response": []
+				},
+				{
+					"name": "prepare",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{PROD_HOST}}/api/swaps/dce676a5-ec52-4543-b299-9877457ce6f7/prepare_src_transaction?from_address=0xe688b84b23f322a994A53dbF8E15FA82CDB71127",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"swaps",
+								"dce676a5-ec52-4543-b299-9877457ce6f7",
+								"prepare_src_transaction"
+							],
+							"query": [
+								{
+									"key": "from_address",
+									"value": "0xe688b84b23f322a994A53dbF8E15FA82CDB71127"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "local",
+			"item": [
+				{
+					"name": "get sources and destinations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{PROD_HOST}}/api/available_networks?version=sandbox",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"available_networks"
+							],
+							"query": [
+								{
+									"key": "version",
+									"value": "sandbox"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "available routes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{PROD_HOST}}/api/available_routes?source=ETHEREUM_GOERLI&destination=ARBITRUM_GOERLI&sourceAsset=ETH&destinationAsset=ETH&version=sandbox",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"available_routes"
+							],
+							"query": [
+								{
+									"key": "source",
+									"value": "ETHEREUM_GOERLI"
+								},
+								{
+									"key": "destination",
+									"value": "ARBITRUM_GOERLI"
+								},
+								{
+									"key": "sourceAsset",
+									"value": "ETH"
+								},
+								{
+									"key": "destinationAsset",
+									"value": "ETH"
+								},
+								{
+									"key": "version",
+									"value": "sandbox"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get swap rate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"source\": \"IMMUTABLEX_GOERLI\",\n  \"source_asset\": \"ETH\",\n  \"destination\": \"STARKNET_GOERLI\",\n  \"destination_asset\": \"ETH\",\n  \"refuel\": false\n}"
+						},
+						"url": {
+							"raw": "{{PROD_HOST}}/api/swap_rate?version=sandbox",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"swap_rate"
+							],
+							"query": [
+								{
+									"key": "version",
+									"value": "sandbox"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create swap",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"source\": \"ETHEREUM_GOERLI\",\n  \"source_asset\": \"ETH\",\n  \"destination\": \"ZKSYNCERA_GOERLI\",\n  \"destination_asset\": \"ETH\",\n  \"refuel\": false,\n  \"amount\": 0.01,\n  \"destination_address\": \"0xe688b84b23f322a994A53dbF8E15FA82CDB71127\",\n  \"reference_id\": \"1\"\n}"
+						},
+						"url": "{{PROD_HOST}}/api/swaps"
+					},
+					"response": []
+				},
+				{
+					"name": "get swap",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}"
+							},
+							{
+								"key": "accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "{{PROD_HOST}}/api/swaps/6019d056-76dd-4ea3-86e8-92a52a7ebd71"
+					},
+					"response": []
+				},
+				{
+					"name": "cancel swap",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}"
+							}
+						],
+						"url": "{{PROD_HOST}}/api/swaps/6019d056-76dd-4ea3-86e8-92a52a7ebd71"
+					},
+					"response": []
+				},
+				{
+					"name": "prepare",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-LS-APIKEY",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{PROD_HOST}}/api/swaps/dce676a5-ec52-4543-b299-9877457ce6f7/prepare_src_transaction?from_address=0xe688b84b23f322a994A53dbF8E15FA82CDB71127",
+							"host": [
+								"{{PROD_HOST}}"
+							],
+							"path": [
+								"api",
+								"swaps",
+								"dce676a5-ec52-4543-b299-9877457ce6f7",
+								"prepare_src_transaction"
+							],
+							"query": [
+								{
+									"key": "from_address",
+									"value": "0xe688b84b23f322a994A53dbF8E15FA82CDB71127"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "API_KEY",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "PROD_HOST",
+			"value": "https://api.bridge.lux.network",
+			"type": "default"
+		}
+	]
+}
