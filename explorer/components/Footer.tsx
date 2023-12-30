@@ -7,9 +7,9 @@ const Footer = () => {
             { name: 'Product', href: '/' },
             { name: 'Company', href: '/company' },
             { name: 'FAQ', href: '/faq' },
-            { name: 'Privacy Policy', href: 'https://docs.bridge.lux.network/information/privacy-policy' },
-            { name: 'Terms of Services', href: 'https://docs.bridge.lux.network/information/terms-of-services' },
-            { name: 'Docs', href: 'https://docs.bridge.lux.network/onboarding-sdk/' },
+            { name: 'Privacy Policy', href: 'https://lux.partners/privacy' },
+            { name: 'Terms of Services', href: 'https://lux.partners/terms' },
+            { name: 'Docs', href: 'https://docs.bridge.lux.network/' },
         ],
         social: [
             {
@@ -33,7 +33,7 @@ const Footer = () => {
             },
             {
                 name: 'GitHub',
-                href: 'https://github.com/luxdefi/luxdefiapp',
+                href: 'https://github.com/luxdefi',
                 icon: (props: any) => (
                     <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
                         <path
@@ -46,7 +46,7 @@ const Footer = () => {
             },
             {
                 name: 'YouTube',
-                href: 'https://www.youtube.com/@luxdefihq',
+                href: 'https://www.youtube.com/@luxdefi',
                 icon: (props: any) => (
                     <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
                         <path
@@ -71,10 +71,10 @@ const Footer = () => {
                 ))}
             </div>
             <div className="flex justify-center mt-3 md:mt-0 gap-6 order-2 place-self-center">
-                <Link target="_blank" href="https://docs.bridge.lux.network/information/privacy-policy" className="text-xs leading-6 text-primary-text-muted hover:text-opacity-70 duration-200 transition-all">
+                <Link target="_blank" href="https://lux.partners/privacy" className="text-xs leading-6 text-primary-text-muted hover:text-opacity-70 duration-200 transition-all">
                     Privacy Policy
                 </Link>
-                <Link target="_blank" href="https://docs.bridge.lux.network/information/terms-of-services" className="text-xs leading-6 text-primary-text-muted hover:text-opacity-70 duration-200 transition-all">
+                <Link target="_blank" href="https://lux.partners/terms" className="text-xs leading-6 text-primary-text-muted hover:text-opacity-70 duration-200 transition-all">
                     Terms of Services
                 </Link>
             </div>
