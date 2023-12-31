@@ -63,13 +63,13 @@ export default function BridgeMenu() {
             },
             {
                 name: 'GitHub',
-                href: 'https://github.com/luxdefi,
+                href: 'https://github.com/luxdefi',
                 icon: (props) => GitHubLogo(props),
                 className: 'plausible-event-name=GitHub'
             },
             {
                 name: 'Discord',
-                href: 'https://discord.gg/25A3sS3H',
+                href: 'https://discord.gg/XsD63KMbV2',
                 icon: (props) => DiscordLogo(props),
                 className: 'plausible-event-name=Discord'
             },
