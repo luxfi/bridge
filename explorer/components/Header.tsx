@@ -31,7 +31,7 @@ export default function Header() {
                     }
                 </div>
                 <div className="flex gap-x-2 sm:gap-x-4 order-2 lg:order-3 justify-self-end col-span-1">
-                    <Link target='_blank' href={'https://bridge.lux.network/app'} className='px-2 sm:px-3 py-1 sm:py-2 bg-secondary-700 rounded-lg border shadow-sm border-white/10 hover:border-white/50 flex items-center gap-1 text-white text-sm sm:text-base duration-200 transition-colors'>
+                    <Link target='_blank' href={'https://bridge.lux.network'} className='px-2 sm:px-3 py-1 sm:py-2 bg-secondary-700 rounded-lg border shadow-sm border-white/10 hover:border-white/50 flex items-center gap-1 text-white text-sm sm:text-base duration-200 transition-colors'>
                         <Layers className='h-4 w-4' />
                         <span>App</span>
                     </Link>
