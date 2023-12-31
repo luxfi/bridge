@@ -21,7 +21,8 @@ module.exports = (phase, { defaultConfig }) => {
       defaultLocale: "en",
     },
     images: {
-      domains: ["stagelsbridgebridgesa.blob.core.windows.net", "bransferstorage.blob.core.windows.net", "devlsbridgebridgesa.blob.core.windows.net", "prodlsbridgebridgesa.blob.core.windows.net"],
+      domains: ["stagelslayerswapbridgesa.blob.core.windows.net", "bransferstorage.blob.core.windows.net", "devlslayerswapbridgesa.blob.core.windows.net", "prodlslayerswapbridgesa.blob.core.windows.net"],
+
     },
     compiler: {
       removeConsole: false,
