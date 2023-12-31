@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { IntercomProvider } from 'react-use-intercom';
 import { SWRConfig } from 'swr'
 
-const INTERCOM_APP_ID = 'h5zisg78'
+const INTERCOM_APP_ID = 'tovyeyyd'
 import "@rainbow-me/rainbowkit/styles.css";
 
 function App({ Component, pageProps }) {
