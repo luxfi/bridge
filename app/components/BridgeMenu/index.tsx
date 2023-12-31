@@ -57,37 +57,37 @@ export default function BridgeMenu() {
         social: [
             {
                 name: 'Twitter',
-                href: 'https://twitter.com/bridge',
+                href: 'https://twitter.com/luxdefi',
                 icon: (props) => TwitterLogo(props),
                 className: 'plausible-event-name=Twitter'
             },
             {
                 name: 'GitHub',
-                href: 'https://github.com/bridge/bridgeapp',
+                href: 'https://github.com/luxdefi,
                 icon: (props) => GitHubLogo(props),
                 className: 'plausible-event-name=GitHub'
             },
             {
                 name: 'Discord',
-                href: 'https://discord.com/invite/KhwYN35sHy',
+                href: 'https://discord.gg/25A3sS3H',
                 icon: (props) => DiscordLogo(props),
                 className: 'plausible-event-name=Discord'
             },
             {
                 name: 'YouTube',
-                href: 'https://www.youtube.com/@bridgehq',
+                href: 'https://www.youtube.com/@luxdefi',
                 icon: (props) => YoutubeLogo(props),
                 className: 'plausible-event-name=Youtube'
             },
             {
                 name: 'Substack',
-                href: 'https://bridge.substack.com/',
+                href: 'https://luxdefi.substack.com/',
                 icon: (props) => SubstackLogo(props),
                 className: 'plausible-event-name=Substack'
             },
             {
                 name: 'Roadmap',
-                href: 'https://bridge.ducalis.io/roadmap/summary',
+                href: 'https://github.com/orgs/luxdefi/projects/1/views/4',
                 icon: (props) => <Map {...props}></Map>,
                 className: 'plausible-event-name=Roadmap'
             },
