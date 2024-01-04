@@ -1,9 +1,18 @@
+import React from  'react'
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@luxdefi/ui/primitives"
+
+
 import WalletIcon from "./icons/WalletIcon"
 import shortenAddress from "./utils/ShortenAddress"
 import useWallet from "../hooks/useWallet"
 import ConnectButton from "./buttons/connectButton"
 import SubmitButton from "./buttons/submitButton"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./shadcn/dialog"
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import AddressIcon from "./AddressIcon"

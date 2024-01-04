@@ -14,7 +14,7 @@
     "exchange",
     "swap"
   ],
-  "scripts": {
+  "scripts_": {
     "build": "yarn build:all",
     "build:all": "yarn build:app && yarn build:explorer && yarn build:sdk && yarn build:ui",
     "build:app": "yarn workspace @luxbridge/app build",
@@ -47,14 +47,17 @@
   },
   "engines": {
     "node": ">=18",
-    "yarn": ">=1"
+    "yarn": ">=1",
+    "pnpm": ">=8"
   },
-  "workspaces": {
+  "workspaces_": {
     "packages": [
       "app",
       "explorer",
       "sdk",
-      "ui"
+      "ui",
+      "shared-ui"
     ]
-  }
+  },
+  "packageManager": "pnpm@8.11.0"
 }

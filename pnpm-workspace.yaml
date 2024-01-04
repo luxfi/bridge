@@ -1,3 +1,5 @@
 packages:
-  - '/app'
-  - '/explorer'
+  - 'app'
+  - 'explorer'
+  - 'shared-ui'
+
