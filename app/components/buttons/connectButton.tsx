@@ -1,16 +1,21 @@
 import { ReactNode, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../shadcn/popover";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+//} from "../shadcn/dialog";
+} from "@luxdefi/ui/primitives"
+
 import useWallet from "../../hooks/useWallet";
 import { NetworkType } from "../../Models/CryptoNetwork";
 import RainbowIcon from "../icons/Wallets/Rainbow";
 import TON from "../icons/Wallets/TON";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "../shadcn/dialog";
+
+
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import MetaMaskIcon from "../icons/Wallets/MetaMask";
 import WalletConnectIcon from "../icons/Wallets/WalletConnect";
