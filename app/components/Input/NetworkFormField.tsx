@@ -19,7 +19,18 @@ type Props = {
     direction: SwapDirection,
     label: string,
 }
-const GROUP_ORDERS = { "Popular": 1, "New": 2, "Fiat": 3, "Networks": 4, "Exchanges": 5, "Other": 10 };
+const GROUP_ORDERS = { 
+  "Popular": 1, 
+  "New": 2, 
+  "Fiat": 3, 
+  "Networks": 4, 
+  "Exchanges": 5, 
+  "Other": 10 
+}
+
+type GroupOrderKeysType = keyof typeof GROUP_ORDERS
+
+
 const getGroupName = (layer: Layer) => {
 
     if (layer.is_featured) {
@@ -60,7 +71,7 @@ const NetworkFormField = forwardRef(function NetworkFormField({ direction, label
         currencies?.find(c => c?.asset?.toUpperCase() === (asset as string)?.toUpperCase())
         : null
 
-    let valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
+    //let valueGrouper: (values: ISelectMenuItem<Layer>[]) => SelectMenuItemGroup[];
 
     if (direction === "from") {
         placeholder = "Source";
@@ -74,10 +85,10 @@ const NetworkFormField = forwardRef(function NetworkFormField({ direction, label
         filteredLayers = FilterDestinationLayers(layers, from, lockedCurrency);
         menuItems = GenerateMenuItems(filteredLayers, resolveImgSrc, direction, !!(to && lockTo));
     }
-    valueGrouper = groupByType
+    const valueGrouper = groupByType
 
     const value = menuItems.find(x => x.id == (direction === "from" ? from : to)?.internal_name);
-    const handleSelect = useCallback((item: SelectMenuItem<Layer>) => {
+    const handleSelect = useCallback((item: ISelectMenuItem<Layer>) => {
         setFieldValue(name, item.baseObject, true)
     }, [name])
 
@@ -86,7 +97,7 @@ const NetworkFormField = forwardRef(function NetworkFormField({ direction, label
             {label}
         </label>
         <div ref={ref} className={`mt-1.5 `}>
-            <CommandSelectWrapper
+            <CommandSelectWrapper<Layer>
                 disabled={false}
                 valueGrouper={valueGrouper}
                 placeholder={placeholder}
@@ -99,10 +110,10 @@ const NetworkFormField = forwardRef(function NetworkFormField({ direction, label
     </div>)
 });
 
-function groupByType(values: ISelectMenuItem[]) {
-    let groups: SelectMenuItemGroup[] = [];
+function groupByType(values: SelectMenuItem<Layer>[]) {
+    let groups: SelectMenuItemGroup<Layer>[] = [];
     values.forEach((v) => {
-        let group = groups.find(x => x.name == v.group) || new SelectMenuItemGroup({ name: v.group, items: [] });
+        let group = groups.find(x => x.name == v.group) || new SelectMenuItemGroup<Layer>({ name: v.group, items: [] });
         group.items.push(v);
         if (!groups.find(x => x.name == v.group)) {
             groups.push(group);
@@ -115,7 +126,7 @@ function groupByType(values: ISelectMenuItem[]) {
 
     groups.sort((a, b) => {
         // Sort put networks first then exchanges
-        return (GROUP_ORDERS[a.name] || GROUP_ORDERS.Other) - (GROUP_ORDERS[b.name] || GROUP_ORDERS.Other);
+        return (GROUP_ORDERS[a.name as GroupOrderKeysType] || GROUP_ORDERS.Other) - (GROUP_ORDERS[b.name as GroupOrderKeysType] || GROUP_ORDERS.Other);
     });
 
     return groups;

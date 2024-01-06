@@ -27,8 +27,9 @@ export function useComplexInterval(callback: () => Promise<boolean>, dependencie
     }, [...dependencies, delay])
 }
 
-export function useInterval(callback, delay) {
-    const savedCallback = useRef<any>(undefined)
+export function useInterval(callback: () => void, delay: number) {
+  
+    const savedCallback = useRef<(() => void) | undefined>(undefined)
 
     useEffect(() => {
         savedCallback.current = callback
@@ -36,7 +37,7 @@ export function useInterval(callback, delay) {
 
     useEffect(() => {
         function tick() {
-            typeof savedCallback.current === "function" && savedCallback.current()
+          savedCallback.current && savedCallback.current()
         }
         if (delay !== null) {
             let id = setInterval(tick, delay)

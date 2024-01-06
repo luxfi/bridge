@@ -1,5 +1,7 @@
-import { motion } from 'framer-motion';
 import { FC, useEffect } from 'react'
+
+import { Variants, motion } from 'framer-motion';
+
 import { useFormWizardaUpdate, useFormWizardState } from '../../context/formWizardProvider';
 import { Steps } from '../../Models/Wizard';
 
@@ -18,7 +20,9 @@ const WizardItem: FC<Props> = (({ StepName, children, GoBack, PositionPercent, f
 
     useEffect(() => {
         if (currentStepName === StepName) {
-            setGoBack(GoBack)
+            if (GoBack) {
+              setGoBack(GoBack)
+            }
             PositionPercent && setPositionPercent(PositionPercent)
         }
     }, [currentStepName, GoBack, PositionPercent, StepName, setGoBack, setPositionPercent])
@@ -42,7 +46,7 @@ const WizardItem: FC<Props> = (({ StepName, children, GoBack, PositionPercent, f
         : null
 })
 
-let variants = {
+const variants: Variants = {
     enter: ({ direction, width }) => ({
         x: direction * width,
     }),

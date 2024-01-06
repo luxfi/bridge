@@ -14,6 +14,7 @@ import KnownInternalNames from '../../../../lib/knownIds';
 import { parseUnits } from 'viem'
 import useWallet from '../../../../hooks/useWallet';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
+import toastError from '../../../../helpers/toastError';
 
 type Props = {
     depositAddress?: string;
@@ -63,7 +64,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             await provider.connectWallet(source_layer?.chain_id)
         }
         catch (e) {
-            toast(e.message)
+          toastError(e)
         }
         setLoading(false)
     }, [source_layer, provider])
@@ -137,13 +138,12 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                 }
             }
             catch (e) {
-                toast(e.message)
+              toastError(e)
             }
         }
         catch (e) {
-            if (e?.message)
-                toast(e.message)
-        }
+          toastError(e)
+      }
         setLoading(false)
     }, [wallet, swap, source_network, depositAddress, userId, sourceCurrency])
 

@@ -1,11 +1,11 @@
+import { useEffect, useRef } from "react";
 import Jazzicon from "@metamask/jazzicon";
-import { FC, useEffect, useRef } from "react";
 
 type Props = {
     address: string;
     size: number;
 }
-const AddressIcon: FC<Props> = ({ address, size }) => {
+const AddressIcon: React.FC<Props> = ({ address, size }) => {
     const ref = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (address && ref.current) {
@@ -20,4 +20,5 @@ const AddressIcon: FC<Props> = ({ address, size }) => {
 
     return <div ref={ref as any} />
 }
+
 export default AddressIcon

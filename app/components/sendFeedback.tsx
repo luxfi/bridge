@@ -5,6 +5,7 @@ import { useIntercom } from 'react-use-intercom';
 import { useAuthState } from '../context/authContext';
 import { SendFeedbackMessage } from '../lib/telegram';
 import SubmitButton from './buttons/submitButton';
+import toastError from '../helpers/toastError';
 
 interface SendFeedbackFormValues {
     Feedback: string;
@@ -36,7 +37,7 @@ const SendFeedback: FC<Props> = ({ onSend }) => {
             }
         }
         catch (e) {
-            toast.error(e.message)
+            toastError(e)
         }
     }, [email, onSend])
 

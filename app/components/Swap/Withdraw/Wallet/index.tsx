@@ -1,4 +1,4 @@
-import { FC } from "react"
+import { FC, PropsWithChildren } from "react"
 import { ApiResponse } from "../../../../Models/ApiResponse"
 import { useSettingsState } from "../../../../context/settings"
 import { useSwapDataState } from "../../../../context/swap"
@@ -87,7 +87,7 @@ const WalletTransfer: FC = () => {
 
 }
 
-const Wrapper: FC<{ children?: React.ReactNode }> = ({ children }) => {
+const Wrapper: FC<PropsWithChildren> = ({ children }) => {
     return <div className='border-secondary-500 rounded-md border bg-secondary-700 p-3'>
         {children}
     </div>

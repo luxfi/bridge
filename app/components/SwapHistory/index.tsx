@@ -19,6 +19,7 @@ import Link from "next/link";
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
 import { truncateDecimals } from "../utils/RoundDecimals";
+import toastError from "../../helpers/toastError";
 
 function TransactionsHistory() {
   const [page, setPage] = useState(0)
@@ -36,9 +37,10 @@ function TransactionsHistory() {
   const PAGE_SIZE = 20
 
   const goBack = useCallback(() => {
-    window?.['navigation']?.['canGoBack'] ?
+    window.history?.length > 2 ?
       router.back()
-      : router.push({
+      : 
+      router.push({
         pathname: "/",
         query: resolvePersistantQueryParams(router.query)
       })
@@ -63,7 +65,7 @@ function TransactionsHistory() {
         const { data, error } = await bridgeApiClient.GetSwapsAsync(1)
 
         if (error) {
-          toast.error(error.message);
+          toastError(error)
           return;
         }
 
@@ -79,7 +81,7 @@ function TransactionsHistory() {
         const { data, error } = await bridgeApiClient.GetSwapsAsync(1, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
 
         if (error) {
-          toast.error(error.message);
+          toastError(error)
           return;
         }
 
@@ -101,7 +103,7 @@ function TransactionsHistory() {
       const { data, error } = await bridgeApiClient.GetSwapsAsync(nextPage)
 
       if (error) {
-        toast.error(error.message);
+        toastError(error)
         return;
       }
 
@@ -115,7 +117,7 @@ function TransactionsHistory() {
       const { data, error } = await bridgeApiClient.GetSwapsAsync(nextPage, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
 
       if (error) {
-        toast.error(error.message);
+        toastError(error)
         return;
       }
 

@@ -13,6 +13,7 @@ import MessageComponent from '../../../MessageComponent';
 import Modal from '../../../modal/modal';
 import TimerWithContext from '../../../TimerComponent';
 import { Widget } from '../../../Widget/Index';
+import toastError from '../../../../helpers/toastError';
 
 const TIMER_SECONDS = 120
 
@@ -47,11 +48,11 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
             await onSuccess(swap.id)
         }
         catch (error) {
-            const data: ApiError = error?.response?.data?.error
+            const data: ApiError = (error as any).response?.data?.error
 
             if (!data) {
-                toast.error(error.message)
-                return
+              toastError(error)
+              return
             }
             else if (data.code === LSAPIKnownErrorCode.INSUFFICIENT_FUNDS) {
                 setShowInsufficientFundsModal(true)
@@ -75,15 +76,13 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
             const bridgeApiClient = new BridgeApiClient()
             await bridgeApiClient.WithdrawFromExchange(swap.id, swap.source_exchange)
         } catch (error) {
-            const data: ApiError = error?.response?.data?.error
+            const data: ApiError = (error as any).response?.data?.error
 
             if (!data) {
-                toast.error(error.message)
-                return
+                toastError(error)
             }
-            if (data.code === LSAPIKnownErrorCode.COINBASE_INVALID_2FA) {
+            else if (data.code === LSAPIKnownErrorCode.COINBASE_INVALID_2FA) {
                 startTimer(TIMER_SECONDS)
-                return
             }
             else {
                 toast.error(data.message)

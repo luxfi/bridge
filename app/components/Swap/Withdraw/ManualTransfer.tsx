@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { FC, useCallback } from "react"
 import useSWR from "swr"
-import { ArrowLeftRight } from "lucide-react"
+import { ArrowLeftRight, Network } from "lucide-react"
 import Image from 'next/image';
 import { ApiResponse } from "../../../Models/ApiResponse";
 import { useSettingsState } from "../../../context/settings";

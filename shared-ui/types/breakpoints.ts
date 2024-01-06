@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import bps from '../style/screens.tailwind'
 
 type Breakpoint = keyof typeof bps

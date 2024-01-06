@@ -66,7 +66,7 @@ export const OfframpExchangeAuthorizationSteps: { [key: string]: SwapCreateStep 
     "o_auth2": SwapCreateStep.OffRampOAuth
 }
 
-export class WizardStep<T> {
+export interface WizardStep<T> {
     Name: T;
     Content: FC;
     onBack?: () => void;

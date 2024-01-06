@@ -1,4 +1,3 @@
-import { THEME_COLORS, ThemeData } from "../Models/Theme";
 import BridgeApiClient from "../lib/BridgeApiClient";
 import { getThemeData } from "./settingsHelper";
 

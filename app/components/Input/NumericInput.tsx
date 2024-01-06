@@ -21,9 +21,34 @@ type Input = {
     onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
+const onInput = (event: React.ChangeEvent<HTMLInputElement>, precision: number) => { 
+  replaceComma(event); 
+  limitDecimalPlaces(event, precision) 
+}
+
+
 // Use with Formik
 const NumericInput: FC<Input> = forwardRef<HTMLInputElement, Input>(
-    function NumericInput({ label, pattern, disabled, placeholder, min, max, minLength, maxLength, precision, step, name, className, children, onChange }, ref) {
+
+    function NumericInput(
+      { 
+        label, 
+        pattern, 
+        disabled, 
+        placeholder, 
+        min, 
+        max, 
+        minLength, 
+        maxLength, 
+        precision, 
+        step, 
+        name, 
+        className, 
+        children, 
+        onChange 
+      }, 
+      ref
+    ) {
         const { handleChange } = useFormikContext<SwapFormValues>();
         const [field] = useField(name)
 
@@ -46,7 +71,7 @@ const NumericInput: FC<Input> = forwardRef<HTMLInputElement, Input>(
                     max={max}
                     minLength={minLength}
                     maxLength={maxLength}
-                    onInput={(event: React.ChangeEvent<HTMLInputElement>) => { replaceComma(event); limitDecimalPlaces(event, precision) }}
+                    onInput={(event: React.ChangeEvent<HTMLInputElement>) => { onInput(event, precision as number) }}
                     type="text"
                     step={step}
                     name={name}
@@ -69,20 +94,20 @@ const NumericInput: FC<Input> = forwardRef<HTMLInputElement, Input>(
         </>;
     });
 
-function limitDecimalPlaces(e, count) {
+function limitDecimalPlaces(e: React.ChangeEvent<HTMLInputElement>, count: number) {
     if (e.target.value.indexOf('.') == -1) { return; }
     if ((e.target.value.length - e.target.value.indexOf('.')) > count) {
-        e.target.value = ParseFloat(e.target.value, count);
+        e.target.value = ParseFloat(e.target.value, count).toString()
     }
 }
 
-function ParseFloat(str, val) {
+function ParseFloat(str: string, val: number): number {
     str = str.toString();
     str = str.slice(0, (str.indexOf(".")) + val + 1);
     return Number(str);
 }
 
-function replaceComma(e) {
+function replaceComma(e: React.ChangeEvent<HTMLInputElement>) {
     var val = e.target.value;
     if (val.match(/\,/)) {
         val = val.replace(/\,/g, '.');

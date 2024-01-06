@@ -1,13 +1,9 @@
-import { FC, useEffect, useRef } from 'react'
+import { FC, PropsWithChildren, useEffect, useRef } from 'react'
 import { useFormWizardaUpdate, useFormWizardState } from '../../context/formWizardProvider';
 import { AnimatePresence } from 'framer-motion';
 import HeaderWithMenu from '../HeaderWithMenu';
 
-type Props = {
-   children: JSX.Element | JSX.Element[];
-}
-
-const Wizard: FC<Props> = ({ children }) => {
+const Wizard: FC<PropsWithChildren> = ({ children }) => {
 
    const wrapper = useRef<HTMLDivElement>(null);
 

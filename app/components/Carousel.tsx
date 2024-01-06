@@ -32,7 +32,7 @@ export type CarouselRef = {
 const Carousel = forwardRef<CarouselRef, CarouselProps>(function Carousel({ onFirst, onLast, children, starAtLast }, ref) {
     const [activeIndex, setActiveIndex] = useState(starAtLast ? React.Children.count(children) - 1 : 0);
 
-    const updateIndex = useCallback((newIndex) => {
+    const updateIndex = useCallback((newIndex: number) => {
         onFirst(false)
         onLast(false)
         if (newIndex >= 0 && newIndex <= React.Children.count(children) - 1) {

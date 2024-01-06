@@ -11,6 +11,7 @@ import StatusIcon from './StatusIcons';
 import { ExternalLink } from 'lucide-react';
 import isGuid from '../utils/isGuid';
 import KnownInternalNames from '../../lib/knownIds';
+import toastError from '../../helpers/toastError';
 
 type Props = {
     id: string
@@ -56,7 +57,7 @@ const SwapDetails: FC<Props> = ({ id }) => {
                 setSwap(swapResponse.data)
             }
             catch (e) {
-                toast.error(e.message)
+                toastError(e)
             }
             finally {
                 setLoading(false)

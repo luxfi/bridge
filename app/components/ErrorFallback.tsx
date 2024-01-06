@@ -6,7 +6,10 @@ import MessageComponent from "./MessageComponent"
 import Navbar from "./navbar"
 import GoHomeButton from "./utils/GoHome"
 
-export default function ErrorFallback({ error, resetErrorBoundary }) {
+import type { FallbackProps } from 'react-error-boundary'
+
+
+export default function ErrorFallback({ error, resetErrorBoundary}: FallbackProps) {
 
     const extension_error = error.stack.includes("chrome-extension", "app://")
 
@@ -56,9 +59,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
                                     </div>
                                     <div className='basis-2/3'>
                                         <SubmitButton button_align="right" text_align="left" isDisabled={false} isSubmitting={false}
-                                            onClick={() =>
-                                                resetErrorBoundary()
-                                            }
+                                            onClick={resetErrorBoundary}
                                             icon={<RefreshCcw className="h-5 w-5" aria-hidden="true" />}>
                                             Try Again
                                         </SubmitButton>

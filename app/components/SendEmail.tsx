@@ -1,6 +1,6 @@
 import { Disclosure } from '@headlessui/react';
 import { Album, ChevronDown, Mail, ScrollText, User } from 'lucide-react';
-import { Field, Form, Formik, FormikErrors } from 'formik';
+import { Field, FieldProps, Form, Formik, FormikErrors } from 'formik';
 import { FC, useCallback } from 'react'
 import toast from 'react-hot-toast';
 import { useAuthDataUpdate, useAuthState } from '../context/authContext';
@@ -9,6 +9,7 @@ import TokenService from '../lib/TokenService';
 import BridgeAuthApiClient from '../lib/userAuthApiClient';
 import SubmitButton from './buttons/submitButton';
 import { Widget } from './Widget/Index';
+import toastError from '../helpers/toastError';
 
 type EmailFormValues = {
     email: string;
@@ -46,12 +47,12 @@ const SendEmail: FC<Props> = ({ onSend, disclosureLogin }) => {
             onSend(inputEmail)
         }
         catch (error) {
-            if (error.response?.data?.errors?.length > 0) {
-                const message = error.response.data.errors.map(e => e.message).join(", ")
+            if ((error as any).response?.data?.errors?.length > 0) {
+                const message = (error as any).response.data.errors.map((e: any) => (e.message!)).join(", ")
                 toast.error(message)
             }
             else {
-                toast.error(error.message)
+              toastError(error)
             }
         }
     }, [tempEmail])
@@ -102,7 +103,7 @@ const SendEmail: FC<Props> = ({ onSend, disclosureLogin }) => {
                                                     <div className='grid gap-4 grid-cols-5  items-center'>
                                                         <div className="relative rounded-md shadow-sm col-span-3">
                                                             <Field name="email">
-                                                                {({ field }) => (
+                                                                {({ field }: FieldProps<any>) => (
                                                                     <input
                                                                         {...field}
                                                                         id='email'
@@ -137,7 +138,7 @@ const SendEmail: FC<Props> = ({ onSend, disclosureLogin }) => {
                                         </div>
                                         <div className="relative rounded-md shadow-sm">
                                             <Field name="email">
-                                                {({ field }) => (
+                                                {({ field }: FieldProps<any>) => (
                                                     <input
                                                         {...field}
                                                         id='email'

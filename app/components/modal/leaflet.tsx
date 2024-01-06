@@ -1,5 +1,5 @@
 import { Dispatch, PropsWithChildren, SetStateAction, useCallback, useEffect, useRef } from 'react'
-import { motion, useAnimation } from "framer-motion";
+import { PanInfo, motion, useAnimation } from "framer-motion";
 import { forwardRef } from 'react';
 import IconButton from '../buttons/iconButton';
 import { X } from 'lucide-react';
@@ -24,7 +24,7 @@ export const Leaflet = forwardRef<HTMLDivElement, PropsWithChildren<LeafletProps
     const controls = useAnimation();
     const transitionProps = { type: "spring", stiffness: 500, damping: 40 };
 
-    async function handleDragEnd(_, info) {
+    async function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
         const offset = info.offset.y;
         const velocity = info.velocity.y;
         const height = mobileModalRef.current?.getBoundingClientRect().height || 0;
