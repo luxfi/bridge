@@ -1,17 +1,17 @@
 import { useCallback, useState } from 'react'
 import Image from 'next/image'
 import {ChevronDown } from 'lucide-react'
-import { ISelectMenuItem, SelectMenuItem } from '../Shared/Props/selectMenuItem'
+import { SelectMenuItem } from '../Shared/Props/selectMenuItem'
 import CommandSelect, { SelectMenuItemGroup } from './commandSelect'
 
-type CommandSelectWrapperProps = {
-    setValue: (value: ISelectMenuItem) => void;
-    values: ISelectMenuItem[];
-    value?: ISelectMenuItem;
+type CommandSelectWrapperProps<T> = {
+    setValue: (value: SelectMenuItem<T>) => void;
+    values: SelectMenuItem<T>[];
+    value?: SelectMenuItem<T>;
     placeholder: string;
     searchHint: string;
     disabled: boolean;
-    valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
+    valueGrouper: (values: SelectMenuItem<T>[]) => SelectMenuItemGroup<T>[];
 }
 
 export default function CommandSelectWrapper<T>({
@@ -22,7 +22,7 @@ export default function CommandSelectWrapper<T>({
     searchHint,
     values,
     valueGrouper
-}: CommandSelectWrapperProps) {
+}: CommandSelectWrapperProps<T>) {
     const [showModal, setShowModal] = useState(false)
 
     function openModal() {
@@ -77,7 +77,7 @@ export default function CommandSelectWrapper<T>({
                     </span>
                 </button>
             </div>
-            <CommandSelect
+            <CommandSelect<T>
                 setShow={setShowModal}
                 setValue={handleSelect}
                 show={showModal}

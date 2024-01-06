@@ -9,6 +9,8 @@ import {
     GasProps
 } from "../../../Models/Balance";
 
+import { PublicKey } from '@solana/web3.js'
+
 export default function useSolanaBalance(): BalanceProvider {
     const name = 'solana'
     const supportedNetworks = [
@@ -30,7 +32,7 @@ export default function useSolanaBalance(): BalanceProvider {
             "confirmed"
         );
 
-        async function getTokenBalanceWeb3(connection: SolanaConnection, tokenAccount) {
+        async function getTokenBalanceWeb3(connection: SolanaConnection, tokenAccount: PublicKey) {
             const info = await connection.getTokenAccountBalance(tokenAccount);
             return info?.value?.uiAmount;
         }

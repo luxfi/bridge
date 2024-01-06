@@ -1,10 +1,11 @@
+import { PropsWithChildren } from "react";
 import CancelIcon from "./icons/CancelIcon";
 import DelayIcon from "./icons/DelayIcon";
 import FailIcon from "./icons/FailIcon";
 import SuccessIcon from "./icons/SuccessIcon";
 type iconStyle = 'red' | 'green' | 'yellow' | 'gray'
 
-class MessageComponentProps {
+interface MessageComponentProps {
     children: JSX.Element | JSX.Element[];
     center?: boolean
     icon: iconStyle
@@ -31,48 +32,56 @@ function constructIcons(icon: iconStyle) {
     return iconStyle
 }
 
-const MessageComponent = ({ children }) => {
-    return <div className="w-full flex flex-col h-full justify-between pt-6 min-h-full">
-        {children}
-    </div>
-}
+  // Don't use FC
+const MessageComponent = ({ 
+  children 
+}: PropsWithChildren) => (
+  <div className="w-full flex flex-col h-full justify-between pt-6 min-h-full">
+    {children}
+  </div>
+)
 
-const Content = ({ children, icon, center }: MessageComponentProps) => {
-    return (
-        center ?
-            <div className='flex flex-col self-center grow w-full'>
-                <div className='flex self-center grow w-full'>
-                    <div className='flex flex-col space-y-8 self-center w-full'>
-                        <div className='flex place-content-center'>{constructIcons(icon)}</div>
-                        {children}
-                    </div>
-                </div>
-            </div>
-            :
-            <div className='space-y-3'>
+const Content: React.FC<MessageComponentProps> = ({ children, icon, center }) => (
+  center ? (
+    <div className='flex flex-col self-center grow w-full'>
+        <div className='flex self-center grow w-full'>
+            <div className='flex flex-col space-y-8 self-center w-full'>
                 <div className='flex place-content-center'>{constructIcons(icon)}</div>
                 {children}
             </div>
-    )
-}
-
-const Header = ({ children }) => {
-    return <div className='md:text-3xl text-lg font-bold text-primary-text leading-6 text-center'>
+        </div>
+    </div>
+  ) : (
+    <div className='space-y-3'>
+        <div className='flex place-content-center'>{constructIcons(icon)}</div>
         {children}
     </div>
-}
+  )
+)
 
-const Description = ({ children }) => {
-    return <div className="text-base font-medium space-y-6 text-secondary-text text-center mb-6">
-        {children}
-    </div>
-}
+const Header: React.FC<PropsWithChildren> = ({ 
+  children 
+}) => (
+  <div className='md:text-3xl text-lg font-bold text-primary-text leading-6 text-center'>
+    {children}
+  </div>
+)
 
-const Buttons = ({ children }) => {
-    return <div className="space-y-3">
-        {children}
-    </div>
-}
+const Description: React.FC<PropsWithChildren> = ({ 
+  children 
+}) => (
+  <div className="text-base font-medium space-y-6 text-secondary-text text-center mb-6">
+    {children}
+  </div>
+)
+
+const Buttons: React.FC<PropsWithChildren> = ({ 
+  children 
+}) => (
+    <div className="space-y-3">
+      {children}
+  </div>
+)
 
 MessageComponent.Content = Content
 MessageComponent.Header = Header

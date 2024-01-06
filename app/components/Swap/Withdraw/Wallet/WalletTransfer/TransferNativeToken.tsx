@@ -6,7 +6,7 @@ import {
     useWaitForTransaction,
     useNetwork,
 } from "wagmi";
-import { parseEther, createPublicClient, http } from 'viem'
+import { parseEther, createPublicClient, http, TransactionReceipt } from 'viem'
 import SubmitButton from "../../../../buttons/submitButton";
 import { PublishedSwapTransactionStatus } from "../../../../../lib/BridgeApiClient";
 import WalletIcon from "../../../../icons/WalletIcon";
@@ -40,6 +40,7 @@ const TransferNativeTokenButton: FC<TransferNativeTokenButtonProps> = ({
     const { setSwapTransaction } = useSwapTransactionStore();
     const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
 
+      // @ts-ignore
     const sendTransactionPrepare = usePrepareSendTransaction({
         enabled: !!depositAddress && isContractWallet?.ready,
         to: depositAddress,
@@ -86,19 +87,21 @@ const TransferNativeTokenButton: FC<TransferNativeTokenButtonProps> = ({
             }
         }
         catch (e) {
-            //TODO log to logger
-            console.error(e.message)
-        }
+          if ('message' in (e as Object)) {
+            console.error((e as any).message!)
+          }
+      }
     }, [transaction?.data?.hash, swapId, isContractWallet?.isContract])
 
+      // @ts-ignore
     const waitForTransaction = useWaitForTransaction({
         hash: transaction?.data?.hash || savedTransactionHash,
-        onSuccess: async (trxRcpt) => {
+        onSuccess: async (trxRcpt: TransactionReceipt) => {
             setApplyingTransaction(true)
             setSwapTransaction(swapId, PublishedSwapTransactionStatus.Completed, trxRcpt.transactionHash);
             setApplyingTransaction(false)
         },
-        onError: async (err) => {
+        onError: async (err: Error) => {
             if (transaction?.data?.hash)
                 setSwapTransaction(swapId, PublishedSwapTransactionStatus.Error, transaction?.data?.hash, err.message);
         }

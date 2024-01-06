@@ -2,6 +2,7 @@ import { Link, ArrowLeftRight } from 'lucide-react';
 import { FC, useCallback, useEffect, useState } from 'react'
 import SubmitButton from '../../../buttons/submitButton';
 import toast from 'react-hot-toast';
+import toastError from '../../../../helpers/toastError'
 import * as zksync from 'zksync';
 import { utils } from 'ethers';
 import { useEthersSigner } from '../../../../lib/ethersToViem/ethers';
@@ -63,7 +64,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             setSyncWallet(wallet)
         }
         catch (e) {
-            toast(e.message)
+            toastError(e)
         }
         finally {
             setLoading(false)
@@ -96,10 +97,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             }
         }
         catch (e) {
-            if (e?.message) {
-                toast(e.message)
-                return
-            }
+          toastError(e)
         }
         setLoading(false)
 

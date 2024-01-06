@@ -1,4 +1,4 @@
-export default function CardContainer(props) {
+export default function CardContainer(props :  React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>) {
     return (<div {...props}>
         <div className="bg-secondary-900 shadow-card rounded-lg w-full mt-10 overflow-hidden relative">
             <div className="relative overflow-hidden h-1 flex rounded-t-lg bg-secondary-500"></div>

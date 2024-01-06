@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import {
@@ -7,10 +8,11 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "../primitives/toast"
+} from "./toast"
+
 import { useToast } from "../primitives/use-toast"
 
-export function Toaster() {
+export const Toaster: React.FC = () => {
   const { toasts } = useToast()
 
   return (

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ReactNode, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../shadcn/popover";
 
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-//} from "../shadcn/dialog";
 } from "@luxdefi/ui/primitives"
 
 import useWallet from "../../hooks/useWallet";

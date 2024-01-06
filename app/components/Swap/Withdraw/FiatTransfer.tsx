@@ -1,6 +1,6 @@
 import { Context, FC, createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSwapDataState } from "../../../context/swap";
-import { StripeOnramp, loadStripeOnramp } from "@stripe/crypto";
+import { OnrampUIEventMap, StripeOnramp, loadStripeOnramp } from "@stripe/crypto";
 import { PublishedSwapTransactionStatus } from "../../../lib/BridgeApiClient";
 import { useSwapTransactionStore } from "../../../stores/swapTransactionStore";
 import inIframe from "../../utils/inIframe";
@@ -97,7 +97,7 @@ export const OnrampElement: FC<OnrampElementProps> = ({
                         },
                     })
                     .mount(containerRef)
-                const eventListener = async (e) => {
+                const eventListener = async (e: OnrampUIEventMap['onramp_session_updated']) => {
                     let transactionStatus: PublishedSwapTransactionStatus
                     if (e.payload.session.status === "fulfillment_complete")
                         transactionStatus = PublishedSwapTransactionStatus.Completed
@@ -108,10 +108,18 @@ export const OnrampElement: FC<OnrampElementProps> = ({
                         return
                     }
                     await setSwapTransaction(swapId, PublishedSwapTransactionStatus.Completed, e.payload.session.id);
+                } 
+
+                const uiLoaded = () => {
+                  setLoading(false)  
                 }
 
                 session.addEventListener("onramp_session_updated", eventListener)
-                session.addEventListener("onramp_ui_loaded", () => setLoading(false))
+                session.addEventListener("onramp_ui_loaded", uiLoaded)
+                return () => {
+                  session.removeEventListener("onramp_session_updated", eventListener)
+                  session.removeEventListener("onramp_ui_loaded", uiLoaded)
+                }
             }
         }
 

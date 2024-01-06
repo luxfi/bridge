@@ -16,7 +16,7 @@ export function pathOf<T>(
   arg1: T | CallBackForPropertyAccess<T>,
   arg2?: CallBackForPropertyAccess<T>
 ): string {
-  const separatedPath = separatedPathOf(arg1, arg2);
+  const separatedPath = separatedPathOf(arg1 as any, arg2);
   if (separatedPath.length === 0) {
     throw new Error("ts-nameof-proxy: No properties were read.");
   }

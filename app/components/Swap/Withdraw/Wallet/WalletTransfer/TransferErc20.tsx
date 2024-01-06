@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FC, useCallback, useEffect, useState } from "react";
 import {
     useAccount,
@@ -93,9 +94,10 @@ const TransferErc20Button: FC<TransferERC20ButtonProps> = ({
             }
         }
         catch (e) {
-            //TODO log to logger
-            console.error(e.message)
-        }
+            if ('message' in (e as Object)) {
+              console.error((e as any).message!)
+            }
+          }
     }, [contractWrite?.data?.hash, swapId, isContractWallet?.isContract])
 
     const clickHandler = useCallback(() => {

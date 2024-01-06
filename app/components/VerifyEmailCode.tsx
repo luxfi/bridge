@@ -14,6 +14,7 @@ import Modal from './modal/modal';
 import TimerWithContext from './TimerComponent';
 import { classNames } from './utils/classNames';
 import { Widget } from './Widget/Index';
+import toastError from '../helpers/toastError';
 interface VerifyEmailCodeProps {
     onSuccessfullVerify: (authresponse: AuthConnectResponse) => Promise<void>;
     disclosureLogin?: boolean
@@ -34,19 +35,19 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
     const handleResendCode = useCallback(async () => {
         try {
             const apiClient = new BridgeAuthApiClient();
-            const res = await apiClient.getCodeAsync(tempEmail)
+            const res = await apiClient.getCodeAsync(tempEmail as string)
             const next = new Date(res?.data?.next)
             const now = new Date()
             const miliseconds = next.getTime() - now.getTime()
             startTimer(Math.round((res?.data?.already_sent ? 60000 : miliseconds) / 1000))
         }
         catch (error) {
-            if (error.response?.data?.errors?.length > 0) {
-                const message = error.response.data.errors.map(e => e.message).join(", ")
+            if ((error as any).response?.data?.errors?.length > 0) {
+                const message = (error as any).response.data.errors.map((e: Error) => (e.message)).join(", ")
                 toast.error(message)
             }
             else {
-                toast.error(error.message)
+                toastError(error)
             }
         }
     }, [tempEmail])
@@ -92,17 +93,17 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                     if (userType == UserType.GuestUser && guestAuthData?.access_token) await apiClient.SwapsMigration(guestAuthData?.access_token)
                 }
                 catch (error) {
-                    const message = error.response.data.error_description
-                    if (error.response?.data?.error === 'USER_LOCKED_OUT_ERROR') {
+                    const message = (error as any).response?.data?.error_description
+                    if ((error as any).response?.data?.error === 'USER_LOCKED_OUT_ERROR') {
                         toast.error(message)
                         setUserLockedOut(true)
                         startTimer(600)
                     }
-                    else if (error.response?.data?.error_description) {
+                    else if (message) {
                         toast.error(message)
                     }
                     else {
-                        toast.error(error.message)
+                        toastError(error)
                     }
                 }
             }}

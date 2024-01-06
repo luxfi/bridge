@@ -19,6 +19,7 @@ import { motion } from 'framer-motion';
 import { useCoinbaseStore } from './CoinbaseStore';
 import { useRouter } from 'next/router';
 import { Widget } from '../../../Widget/Index';
+import toastError from '../../../../helpers/toastError';
 
 type Props = {
     onAuthorized: () => void,
@@ -33,7 +34,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
     const router = useRouter()
     let alreadyFamiliar = useCoinbaseStore((state) => state.alreadyFamiliar);
     let toggleAlreadyFamiliar = useCoinbaseStore((state) => state.toggleAlreadyFamiliar);
-    const [carouselFinished, setCarouselFinished] = useState(alreadyFamiliar)
+    const [carouselFinished, setCarouselFinished] = useState<boolean>(alreadyFamiliar)
 
     const [authWindow, setAuthWindow] = useState<Window | null>()
     const [firstScreen, setFirstScreen] = useState<boolean>(true)
@@ -68,7 +69,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
 
     useInterval(
         checkShouldStartPolling,
-        authWindow && !authWindow.closed ? 1000 : null,
+        authWindow && !authWindow.closed ? 1000 : 0,
     )
 
     const handleConnect = useCallback(() => {
@@ -89,8 +90,8 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
             const authWindow = OpenLink({ link: oauth_authorize_url + encoded, query: router.query, swapId: swap.id })
             setAuthWindow(authWindow)
         }
-        catch (e) {
-            toast.error(e.message)
+        catch (error) {
+          toastError(error)
         }
     }, [carouselFinished, alreadyFamiliar, swap?.id, oauth_authorize_url, router.query])
 
@@ -101,11 +102,11 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
 
     const exchange_name = exchange?.display_name
 
-    const onCarouselLast = (value) => {
+    const onCarouselLast = (value: boolean) => {
         setCarouselFinished(value)
     }
 
-    const handleToggleChange = (e) => {
+    const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
             carouselRef?.current?.goToLast();
         } else {
@@ -128,19 +129,19 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                     <div className="w-full flex flex-col self-center h-[100%]">
                         {swap && <Carousel onLast={onCarouselLast} onFirst={setFirstScreen} ref={carouselRef} starAtLast={alreadyFamiliar}>
                             <CarouselItem width={100} >
-                                <FirstScreen exchange_name={exchange_name} />
+                                <FirstScreen name={exchange_name} />
                             </CarouselItem>
                             <CarouselItem width={100}>
                                 <SecondScreen />
                             </CarouselItem>
                             <CarouselItem width={100}>
-                                <ThirdScreen minimalAuthorizeAmount={minimalAuthorizeAmount} />
+                                <ThirdScreen minimalAuthorizeAmount={minimalAuthorizeAmount as number} />
                             </CarouselItem>
                             <CarouselItem width={100}>
-                                <FourthScreen minimalAuthorizeAmount={minimalAuthorizeAmount} />
+                                <FourthScreen minimalAuthorizeAmount={minimalAuthorizeAmount as number} />
                             </CarouselItem>
                             <CarouselItem width={100}>
-                                <LastScreen number={!alreadyFamiliar} minimalAuthorizeAmount={Number(minimalAuthorizeAmount)} />
+                                <LastScreen number={!alreadyFamiliar} minimalAuthorizeAmount={minimalAuthorizeAmount as number} />
                             </CarouselItem>
                         </Carousel>}
                     </div>

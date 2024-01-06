@@ -112,15 +112,24 @@ export const WalletsMenu = () => {
     )
 }
 
+/*
+                <DialogHeader>
+                  <DialogTitle className="text-center">{'Wallets'}</DialogTitle>
+                </DialogHeader>
+*/
+
+
 const ConnectedWalletsDialog = ({ openDialog, setOpenDialog }: { openDialog: boolean, setOpenDialog: (open: boolean) => void }) => {
-    const { wallets, disconnectWallet } = useWallet()
+
+  const { wallets, disconnectWallet } = useWallet()
 
     return (
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle className="text-center">Wallets</DialogTitle>
+                  <h2 className="text-center">Wallets</h2>
                 </DialogHeader>
+
                 <div className="flex flex-col justify-start space-y-2">
                     {
                         wallets.map((wallet, index) => (

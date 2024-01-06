@@ -1,15 +1,18 @@
+import React, { type PropsWithChildren, type ReactNode } from "react"
 import { ChevronRight, ExternalLink } from "lucide-react"
 import LinkWrapper from "../LinkWraapper"
-import { ReactNode } from "react"
 
-const Menu = ({ children }: { children: ReactNode }) => {
-    return <div className="flex flex-col gap-3 mt-3">
-        {children}
-        <div style={{ height: '70px' }} />
-    </div>
-}
+  // aa: Do not use React.FC as we add props to the function object below
+const Menu = ({ 
+  children 
+}: PropsWithChildren) => (
+  <div className="flex flex-col gap-3 mt-3">
+    {children}
+    <div style={{ height: '70px' }} />
+  </div>
+)
 
-const Group = ({ children }: { children: JSX.Element | JSX.Element[] }) => {
+const Group = ({ children }: PropsWithChildren) => {
     return (
         <div>
             <div className="divide-y divide-secondary-500 rounded-md bg-secondary-700 overflow-hidden">
@@ -65,7 +68,7 @@ type MenuIemProps = {
     target?: Target;
 };
 
-const Footer = ({ children }: { children: JSX.Element | JSX.Element[] }) => {
+const Footer = ({ children }: PropsWithChildren) => {
     return (
         <div className={`text-primary-text text-base border-t border-secondary-500 fixed inset-x-0 bottom-0 z-30 bg-secondary-900 shadow-widget-footer px-6 py-4 w-full `}>
             {children}

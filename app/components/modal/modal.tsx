@@ -12,7 +12,7 @@ export interface ModalProps {
     className?: string;
     height?: LeafletHeight;
     show: boolean;
-    setShow: Dispatch<SetStateAction<boolean>>;
+    setShow: Dispatch<SetStateAction<boolean>>
 }
 
 const Modal: FC<ModalProps> = (({ header, height, className, children, subHeader, show, setShow }) => {

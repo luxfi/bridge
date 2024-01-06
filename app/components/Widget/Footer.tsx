@@ -1,29 +1,22 @@
-import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react"
-import ReactPortal from "../Common/ReactPortal";
-
+import { motion } from "framer-motion";
 
 const variants = {
-    enter: () => {
-        return ({
-            opacity: 0,
-            y: '100%',
-        })
-    },
-    center: () => {
-        return ({
-            opacity: 1,
-            y: 0,
-        })
-    },
-    exit: () => {
-        return ({
-            y: '100%',
-            zIndex: 0,
-            opacity: 0,
-        })
-    },
+  enter: () => ({
+    opacity: 0,
+    y: '100%',
+  }),
+  center: () => ({
+    opacity: 1,
+    y: 0,
+  }),
+  exit: () => ({
+    y: '100%',
+    zIndex: 0,
+    opacity: 0,
+  }),
 };
+type VariantType = keyof typeof variants
 
 type FooterProps = {
     hidden?: boolean,
@@ -39,10 +32,10 @@ const Footer = ({ children, hidden, sticky = true }: FooterProps) => {
         setHeight(Number(ref?.current?.clientHeight))
     }, [])
 
-    const handleAnimationEnd = (variant) => {
-        if (variant == "center") {
-            setHeight(Number(ref?.current?.clientHeight))
-        }
+    const handleAnimationEnd = (variant: VariantType) => {
+      if (variant === "center") {
+        setHeight(Number(ref?.current?.clientHeight))
+      }
     }
     return (
         sticky ?

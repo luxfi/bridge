@@ -17,7 +17,7 @@ const Widget = ({ children, className, hideMenu }: Props) => {
    const wrapper = useRef(null);
 
    const goBack = useCallback(() => {
-      window?.['navigation']?.['canGoBack'] ?
+      window.history?.length > 2 ?
          router.back()
          : router.push({
             pathname: "/",

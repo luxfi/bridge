@@ -39,4 +39,4 @@ storybook-static/*
 .sentryclirc
 .sedbak
 
-
+**/tsconfig.tsbuildinfo

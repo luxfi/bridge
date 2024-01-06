@@ -2,7 +2,7 @@ import { CryptoNetwork } from "./CryptoNetwork";
 import { Currency } from "./Currency";
 import { Exchange } from "./Exchange";
 
-export class BridgeSettings {
+export interface BridgeSettings {
     exchanges?: Exchange[];
     networks?: CryptoNetwork[];
     currencies?: Currency[];

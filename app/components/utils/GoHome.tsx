@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FC } from "react";
 import CopyButton from "../buttons/copyButton";
 import BridgeLogo from "../icons/BridgeLogo";

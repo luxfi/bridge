@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
-import MessageComponent from "./MessageComponent";
-import Navbar from "./navbar";
-import inIframe from "./utils/inIframe";
-import Link from "next/link";
-import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react"
+import MessageComponent from "./MessageComponent"
+import inIframe from "./utils/inIframe"
+import Link from "next/link"
 
-function NoCookies(props) {
+const NoCookies: React.FC = () => {
     const [embedded, setEmbedded] = useState<boolean>()
 
     useEffect(() => {
@@ -49,4 +47,4 @@ function NoCookies(props) {
     );
 }
 
-export default NoCookies;
+export default NoCookies

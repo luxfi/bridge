@@ -6,7 +6,7 @@ import CardContainer from "../cardContainer";
 import BridgeLogo from "../icons/BridgeLogo";
 import TwitterLogo from "../icons/TwitterLogo";
 
-function MaintananceContent(props) {
+function MaintananceContent(props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>) {
     const { email, userId } = useAuthState()
     const { boot, show, update } = useIntercom()
     const updateWithProps = () => update({ email: email, userId: userId })

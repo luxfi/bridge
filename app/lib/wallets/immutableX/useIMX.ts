@@ -15,7 +15,7 @@ export default function useImmutableX(): WalletProvider {
         return wallets.find(wallet => wallet.providerName === name)
     }
 
-    const connectWallet = async (chain: string | number) => {
+    const connectWallet = async (chain: string | number | null | undefined) => {
         if (!chain) throw new Error('No chain id for imx connect wallet')
         const networkName = chain == 1 ? KnownInternalNames.Networks.ImmutableXMainnet : KnownInternalNames.Networks.ImmutableXGoerli
         try {

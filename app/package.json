@@ -7,9 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "analyze": "cross-env ANALYZE=true next build"
+    "analyze": "cross-env ANALYZE=true next build",
+    "cn": "rm -r ./.next",
+    "tc": "tsc --noEmit"
   },
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
@@ -28,7 +28,7 @@
     "@radix-ui/react-select": "^1.2.1",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tooltip": "^1.0.7",
-    "@rainbow-me/rainbowkit": "^1.1.2",
+    "@rainbow-me/rainbowkit": "^1.3.3",
     "@sentry/nextjs": "^7.80.1",
     "@solana/spl-token": "^0.3.9",
     "@solana/wallet-adapter-base": "0.9.18",
@@ -44,13 +44,17 @@
     "@stripe/stripe-js": "^1.53.0",
     "@tailwindcss/forms": "^0.5.0",
     "@tailwindcss/typography": "^0.5.2",
+    "@tanstack/react-query": "^5.17.1",
     "@ton/core": "^0.53.0",
     "@ton/crypto": "^3.2.0",
     "@tonconnect/ui-react": "^2.0.0-beta.4",
     "@uidotdev/usehooks": "^2.4.1",
+    "@wagmi/core": "1.4.13",
     "axios": "^0.21.4",
     "bn.js": "^5.2.0",
+    "class-variance-authority": "^0.7.0",
     "cmdk": "^0.2.0",
+    "copy-to-clipboard": "^3.3.3",
     "crypto-js": "^4.1.1",
     "ethers": "5.7.2",
     "formik": "^2.2.9",
@@ -64,20 +68,17 @@
     "react-error-boundary": "^4.0.11",
     "react-hot-toast": "^2.2.0",
     "react-swipeable": "^7.0.0",
-    "react-use-intercom": "^2.0.0",
+    "react-use-intercom": "^5.3.0",
     "starknet": "^5.19.5",
     "starknetkit": "^1.0.10",
     "swr": "^2.1.1",
     "tailwindcss-animate": "^1.0.5",
     "ton": "^13.9.0",
     "uuid": "^9.0.0",
-    "viem": "^1.13.1",
-    "wagmi": "^1.4.12",
+    "viem": "1.13.1",
+    "wagmi": "1.4.12",
     "zksync": "^0.13.1",
     "zustand": "^4.4.1"
-  },
-  "engines": {
-    "node": "18.x"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^13.5.4",
@@ -94,6 +95,8 @@
     "@types/crypto-js": "^4.1.1",
     "@types/node": "^16.11.7",
     "@types/react": "18.x",
+    "@types/react-dom": "^18.2.18",
+    "@types/uuid": "^9.0.7",
     "@web3-react/types": "^6.0.7",
     "autoprefixer": "^10.4.5",
     "chromatic": "^6.24.1",
@@ -104,6 +107,6 @@
     "storybook-react-context": "^0.6.0",
     "tailwindcss": "^3.0.24",
     "tailwindcss-themer": "^2.0.2",
-    "typescript": "^5.1"
+    "typescript": "^5.3.3"
   }
 }

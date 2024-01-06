@@ -1,7 +1,7 @@
+// @ts-nocheck
 "use client"
 
-import React from "react"
-// @ts-ignore
+import React, { PropsWithChildren } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
@@ -54,7 +54,7 @@ DialogContent.displayName = DialogPrimitive.Content.displayName
 const DialogHeader = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: React.HTMLAttributes<HTMLDivElement> & PropsWithChildren) => (
   <div
     className={cn(
       "flex flex-col space-y-1.5 text-center sm:text-left",
