@@ -60,7 +60,7 @@ const Container = ({ type, children }: Props & {
     children: JSX.Element | JSX.Element[]
 }) => {
     if (type === "widget")
-        return <Widget><>{children}</></Widget>
+        return <Widget>{children}</Widget>
     else
         return <div className="w-full flex flex-col justify-between h-full space-y-5 text-secondary-text">
             {children}

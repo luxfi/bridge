@@ -1,8 +1,10 @@
 //@ts-check
 
-const colors = require("tailwindcss/colors");
+const defaultColors = require("tailwindcss/colors");
 const plugin = require('tailwindcss/plugin')
 const defaultTheme = require('tailwindcss/defaultTheme')
+
+const luxColors = require('@luxdefi/ui/style/colors.tailwind')
 
 const round = (num) =>
   num
@@ -53,6 +55,7 @@ module.exports = {
           '950': 'rgb(var(--ls-colors-secondary-900, 11, 17, 35), <alpha-value>)',
           'text': 'rgb(var(--ls-colors-secondary-text, 171, 181, 209), <alpha-value>)',
         },
+        
       },
       opacity: {
         '35': '.35',
@@ -203,6 +206,10 @@ module.exports = {
         }
       }),
     },
+    colors: (theme) => ({
+      ...defaultColors,
+      ...luxColors(theme),
+    })
   },
   variants: {
     extend: {

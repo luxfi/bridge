@@ -4,42 +4,7 @@ import Navbar from "./navbar"
 import GlobalFooter from "./globalFooter";
 import { PropsWithChildren } from "react";
 
-export default function ThemeWrapper({ children }: PropsWithChildren) {
-    return <div className='styled-scroll'>
-        <div className="invisible light"></div>
-        <main className="styled-scroll">
-            <div className={`flex flex-col items-center min-h-screen overflow-hidden relative font-robo`}>
-                <Toaster position="top-center" toastOptions={{
-                    duration: 5000,
-                    style: {
-                        background: '#131E36',
-                        color: '#a4afc8'
-                    },
-                    position: 'top-center',
-
-
-                    error: {
-                        duration: Infinity,
-                    },
-                }}
-                >
-                    {(t) => (
-                        <ToastBar toast={t}>
-                            {({ icon, message }) => (
-                                <>
-                                    {icon}
-                                    {message}
-                                    {t.type !== 'loading' && (
-                                        <button type="button" onClick={() => toast.dismiss(t.id)}><X className="h-5" /></button>
-                                    )}
-                                </>
-                            )}
-                        </ToastBar>
-                    )}
-                </Toaster>
-                <div className={`top-backdrop md:block hidden`}>
-
-                </div>
+/*
                 <div>
                     <svg
                         className="absolute inset-0 -z-10 h-full w-full stroke-secondary-500/60 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
@@ -66,17 +31,54 @@ export default function ThemeWrapper({ children }: PropsWithChildren) {
                         <rect width="100%" height="100%" strokeWidth={0} fill="url(#983e3e4c-de6d-4c3f-8d64-b9761d1534cc)" />
                     </svg>
                 </div>
-                <Navbar />
-                <div className="w-full max-w-lg z-[1]">
-                    <div className="flex content-center items-center justify-center space-y-5 flex-col container mx-auto sm:px-6 max-w-lg">
-                        <div className="flex flex-col w-full text-primary-text">
-                            {children}
-                        </div>
-                    </div>
-                </div>
-                <div id="offset-for-stickyness" className="block md:hidden"></div>
-                <GlobalFooter />
+*/
+
+const ThemeWrapper: React.FC<PropsWithChildren> = ({ children } ) => (
+  <div className='styled-scroll'>
+    <div className="invisible light"></div>
+    <main className="styled-scroll bg-background">
+      <div className={`flex flex-col items-center min-h-screen overflow-hidden relative font-robo`}>
+        <Toaster position="top-center" toastOptions={{
+            duration: 5000,
+            style: {
+                background: '#131E36',
+                color: '#a4afc8'
+            },
+            position: 'top-center',
+
+
+            error: {
+                duration: Infinity,
+            },
+        }}
+        >
+          {(t) => (
+            <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== 'loading' && (
+                    <button type="button" onClick={() => toast.dismiss(t.id)}><X className="h-5" /></button>
+                )}
+              </>
+            )}
+            </ToastBar>
+          )}
+        </Toaster>
+        <Navbar />
+        <div className="w-full max-w-lg z-[1]">
+          <div className="flex content-center items-center justify-center space-y-5 flex-col container mx-auto sm:px-6 max-w-lg">
+            <div className="flex flex-col w-full text-foreground">
+              {children}
             </div>
-        </main>
-    </div>
-}
+          </div>
+        </div>
+        <div id="offset-for-stickyness" className="block md:hidden"></div>
+        <GlobalFooter />
+      </div>
+    </main>
+  </div>
+)
+
+export default ThemeWrapper
