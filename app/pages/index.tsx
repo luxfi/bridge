@@ -1,6 +1,6 @@
 import Layout from '../components/layout'
 import BridgeApiClient from '../lib/BridgeApiClient'
-import { InferGetServerSidePropsType } from 'next'
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { BridgeSettings } from '../Models/BridgeSettings'
 import { validateSignature } from '../helpers/validateSignature'
 import { mapNetworkCurrencies } from '../helpers/settingsHelper'
@@ -21,7 +21,7 @@ export default function Home({ settings, inMaintanance, themeData }: InferGetSer
   </>)
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   const validSignatureIsPresent = validateSignature(context.query)
 
@@ -34,7 +34,9 @@ export async function getServerSideProps(context) {
     's-maxage=60, stale-while-revalidate'
   );
 
-  result.themeData = await getThemeData(context.query.theme || context.query.addressSource)
+  const themeName = (context.query.theme) ? context.query.theme as string: (context.query.addressSource  ? context.query.addressSource as string : '')
+
+  result.themeData = await getThemeData(themeName)
 
   var apiClient = new BridgeApiClient();
   const { data: settings } = await apiClient.GetSettingsAsync()

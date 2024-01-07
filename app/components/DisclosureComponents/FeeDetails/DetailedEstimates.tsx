@@ -27,7 +27,7 @@ const DetailedEstimates: FC<EstimatesProps> = ({
 
     return <>
         <div className="mt-2 flex flex-row items-baseline justify-between">
-            <label className="inline-flex items-center text-left text-primary-text-placeholder">
+            <label className="inline-flex items-center text-left text-muted text-muted-primary-text-placeholder">
                 Bridge fee
             </label>
             <div className="text-right">
@@ -64,7 +64,7 @@ const NetworkGas: FC<NetworkGasProps> = ({ selected_currency, network, currencie
         : truncateDecimals(networkGas, selected_currency?.precision)
 
     return <div className="mt-2 flex flex-row items-baseline justify-between">
-        <label className="inline-flex items-center text-left text-primary-text-placeholder">
+        <label className="inline-flex items-center text-left text-muted text-muted-primary-text-placeholder">
             Estimated gas
         </label>
         <div className="text-right flex items-center gap-1">
@@ -81,7 +81,7 @@ const EstimatedArrival: FC<EstimatedArrivalProps> = ({ currency, destination }) 
     const destinationNetwork = GetDefaultNetwork(destination, currency?.asset)
 
     return <div className="mt-2 flex flex-row items-baseline justify-between">
-        <label className="block text-left text-primary-text-placeholder">
+        <label className="block text-left text-muted text-muted-primary-text-placeholder">
             Estimated arrival
         </label>
         <span className="text-right">

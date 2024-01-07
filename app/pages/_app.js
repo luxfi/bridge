@@ -1,4 +1,7 @@
 import '../styles/globals.css'
+//import '@luxdefi/ui/style/globals.css'
+
+
 import '../styles/dialog-transition.css'
 import { useRouter } from "next/router";
 import { IntercomProvider } from 'react-use-intercom';

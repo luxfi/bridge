@@ -6,7 +6,10 @@ import MessageComponent from "./MessageComponent"
 import Navbar from "./navbar"
 import GoHomeButton from "./utils/GoHome"
 
-export default function ErrorFallback({ error, resetErrorBoundary }) {
+import type { FallbackProps } from 'react-error-boundary'
+
+
+export default function ErrorFallback({ error, resetErrorBoundary}: FallbackProps) {
 
     const extension_error = error.stack.includes("chrome-extension", "app://")
 
@@ -15,7 +18,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
             <main className="styled-scroll">
                 <div className="min-h-screen overflow-hidden relative font-robo">
                     <Navbar />
-                    <div className="mx-auto max-w-xl bg-secondary-900 shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
+                    <div className="mx-auto max-w-xl bg-level-1 darkest-class shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
                         <MessageComponent>
                             <MessageComponent.Content icon="red">
                                 <MessageComponent.Header>
@@ -44,7 +47,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
                                 </MessageComponent.Description>
                             </MessageComponent.Content>
                             <MessageComponent.Buttons>
-                                <div className="flex flex-row text-primary-text text-xs sm:text-base space-x-2">
+                                <div className="flex flex-row text-muted text-muted-primary-text text-xs sm:text-base space-x-2">
                                     <div className='basis-1/3'>
                                         {
                                             <GoHomeButton>
@@ -56,9 +59,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }) {
                                     </div>
                                     <div className='basis-2/3'>
                                         <SubmitButton button_align="right" text_align="left" isDisabled={false} isSubmitting={false}
-                                            onClick={() =>
-                                                resetErrorBoundary()
-                                            }
+                                            onClick={resetErrorBoundary}
                                             icon={<RefreshCcw className="h-5 w-5" aria-hidden="true" />}>
                                             Try Again
                                         </SubmitButton>

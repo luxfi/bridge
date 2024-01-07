@@ -1,7 +1,7 @@
 import { NetworkCurrency } from "./CryptoNetwork";
 import { LayerStatus } from "./Layer";
 
-export class Exchange {
+export interface Exchange {
     display_name: string;
     internal_name: string;
     authorization_flow: "o_auth2" | "api_credentials" | 'none'
@@ -13,7 +13,7 @@ export class Exchange {
     img_url?: string
 }
 
-export class ExchangeCurrency {
+export interface ExchangeCurrency {
     asset: string;
     withdrawal_fee: number;
     min_deposit_amount: number;

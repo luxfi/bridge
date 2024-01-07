@@ -5,13 +5,13 @@ class TokenService {
     getAuthData(): (AuthData | undefined | null) {
         return checkStorageIsAvailable('localStorage') ? (JSON.parse((window?.localStorage?.getItem("authData") || "null"))) : undefined;
     }
-    setAuthData(data) {
+    setAuthData(data: AuthData) {
         checkStorageIsAvailable('localStorage') && localStorage.setItem("authData", JSON.stringify(data));
     }
     getCodeNextTime(): Date | undefined {
         return checkStorageIsAvailable('localStorage') ? JSON.parse((window?.localStorage?.getItem("codeNextTime") || "null")) : undefined;
     }
-    setCodeNextTime(time) {
+    setCodeNextTime(time: Date | undefined) {
         checkStorageIsAvailable('localStorage') && localStorage.setItem("codeNextTime", JSON.stringify(time));
     }
     removeAuthData() {
