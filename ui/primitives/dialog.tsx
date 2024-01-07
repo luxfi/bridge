@@ -1,18 +1,17 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
-import { classNames } from "../utils/classNames"
+import { classNames } from "../util/classNames"
 
 const Dialog = DialogPrimitive.Root
 
 const DialogTrigger = DialogPrimitive.Trigger
 
 const DialogPortal = ({
-    className,
     children,
     ...props
 }: DialogPrimitive.DialogPortalProps) => (
-    <DialogPrimitive.Portal className={classNames(className)} {...props}>
+    <DialogPrimitive.Portal {...props}>
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
             {children}
         </div>
@@ -87,6 +86,24 @@ const DialogFooter = ({
 )
 DialogFooter.displayName = "DialogFooter"
 
+const DialogClose = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Close>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Close
+    ref={ref}
+    className={classNames(
+      "absolute right-4 top-3 p-1 justify-self-start hover:brightness-105 hover:scale-110 duration-100 ring-1 ring-secondary-400 transition bg-secondary-500 hover:text-primary-text focus:outline-none rounded-full items-center",
+      className
+    )}
+    {...props}
+  >
+    <X className="h-4 w-4" />
+    <span className="sr-only">Close</span>
+  </DialogPrimitive.Close>
+));
+DialogClose.displayName = "DialogClose"
+
 const DialogTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
@@ -117,6 +134,7 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName
 export {
     Dialog,
     DialogContent,
+    DialogClose,
     DialogDescription,
     DialogFooter,
     DialogHeader,
