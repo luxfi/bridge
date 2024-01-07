@@ -193,13 +193,13 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                                 aria-label="Reverse the source and destination"
                                 disabled={valuesSwapperDisabled}
                                 onClick={valuesSwapper}
-                                className='absolute right-[calc(50%-16px)] top-[74px] z-10 border-4 border-secondary-900 bg-secondary-900 rounded-full disabled:cursor-not-allowed hover:text-primary disabled:text-secondary-text duration-200 transition'>
+                                className='absolute right-[calc(50%-16px)] top-[74px] z-10 border-2 border-muted hover:border-accent bg-level-2 rounded-full disabled:cursor-not-allowed text-muted hover:text-accent disabled:text-secondary-text duration-200 transition'>
                                 <motion.div
                                     animate={animate}
                                     transition={{ duration: 0.3 }}
                                     onTap={() => !valuesSwapperDisabled && cycle()}
                                 >
-                                    <ArrowUpDown className={classNames(valuesSwapperDisabled && 'opacity-50', "w-8 h-auto p-1 bg-secondary-900 border-2 border-secondary-500 rounded-full disabled:opacity-30")} />
+                                    <ArrowUpDown className={classNames(valuesSwapperDisabled && 'opacity-50', "w-8 h-auto p-1 bg-level-3 border-2 border-level-3 rounded-full disabled:opacity-30")} />
                                 </motion.div>
                             </button>}
                         {!(query?.hideTo && values?.to) && <div className="flex flex-col w-full">

@@ -1,15 +1,16 @@
-import { Dispatch, PropsWithChildren, SetStateAction, useCallback, useEffect, useRef } from 'react'
-import { PanInfo, motion, useAnimation } from "framer-motion";
-import { forwardRef } from 'react';
-import IconButton from '../buttons/iconButton';
-import { X } from 'lucide-react';
+import { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useRef, forwardRef } from 'react'
 
-export type LeafletHeight = 'fit' | 'full' | '80%' | '90%';
+import { PanInfo, motion, useAnimation } from "framer-motion"
+import { X } from 'lucide-react'
+
+import IconButton from '../buttons/iconButton'
+
+export type LeafletHeight = 'fit' | 'full' | '80%' | '90%'
 
 // Relative gives the div a relative position allowing the parent to put it inside a React Portal. Appwide makes it fixed, so it renders on top of the app.
-export type LeafletPosition = 'absolute' | 'fixed';
+export type LeafletPosition = 'absolute' | 'fixed'
 
-export interface LeafletProps {
+interface LeafletProps {
     show: boolean;
     setShow: Dispatch<SetStateAction<boolean>>;
     title?: React.ReactNode;
@@ -18,8 +19,9 @@ export interface LeafletProps {
     height?: LeafletHeight;
     position: LeafletPosition;
 }
+
 // TODO handle overflow when height is set to 'fit'
-export const Leaflet = forwardRef<HTMLDivElement, PropsWithChildren<LeafletProps>>(function Leaflet({ show, setShow, children, title, className, height, description, position }, topmostRef) {
+const Leaflet = forwardRef<HTMLDivElement, PropsWithChildren<LeafletProps>>(function Leaflet({ show, setShow, children, title, className, height, description, position }, topmostRef) {
     const mobileModalRef = useRef<HTMLDivElement>(null);
     const controls = useAnimation();
     const transitionProps = { type: "spring", stiffness: 500, damping: 40 };
@@ -116,3 +118,5 @@ export const Leaflet = forwardRef<HTMLDivElement, PropsWithChildren<LeafletProps
         </div>
     )
 })
+
+export default Leaflet
