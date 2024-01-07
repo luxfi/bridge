@@ -86,7 +86,7 @@ export const getErc20Balances = async ({
                     balances.push({
                         status: "failure",
                         result: null,
-                        error: e?.message
+                        error: ('message' in (e as any)) ? (e as any).message : 'error'
                     })
                 }
             }

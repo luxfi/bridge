@@ -26,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return
         }
         catch (e) {
-            if (e?.response?.data?.error)
-                res.status(500).json({ error: e?.response?.data?.error })
+            if ((e as any).response?.data?.error)
+                res.status(500).json({ error: (e as any).response?.data?.error })
             return
         }
     }

@@ -14,6 +14,7 @@ import Modal from './modal/modal';
 import TimerWithContext from './TimerComponent';
 import { classNames } from './utils/classNames';
 import { Widget } from './Widget/Index';
+import toastError from '../helpers/toastError';
 interface VerifyEmailCodeProps {
     onSuccessfullVerify: (authresponse: AuthConnectResponse) => Promise<void>;
     disclosureLogin?: boolean
@@ -34,19 +35,19 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
     const handleResendCode = useCallback(async () => {
         try {
             const apiClient = new BridgeAuthApiClient();
-            const res = await apiClient.getCodeAsync(tempEmail)
+            const res = await apiClient.getCodeAsync(tempEmail as string)
             const next = new Date(res?.data?.next)
             const now = new Date()
             const miliseconds = next.getTime() - now.getTime()
             startTimer(Math.round((res?.data?.already_sent ? 60000 : miliseconds) / 1000))
         }
         catch (error) {
-            if (error.response?.data?.errors?.length > 0) {
-                const message = error.response.data.errors.map(e => e.message).join(", ")
+            if ((error as any).response?.data?.errors?.length > 0) {
+                const message = (error as any).response.data.errors.map((e: Error) => (e.message)).join(", ")
                 toast.error(message)
             }
             else {
-                toast.error(error.message)
+                toastError(error)
             }
         }
     }, [tempEmail])
@@ -92,37 +93,37 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                     if (userType == UserType.GuestUser && guestAuthData?.access_token) await apiClient.SwapsMigration(guestAuthData?.access_token)
                 }
                 catch (error) {
-                    const message = error.response.data.error_description
-                    if (error.response?.data?.error === 'USER_LOCKED_OUT_ERROR') {
+                    const message = (error as any).response?.data?.error_description
+                    if ((error as any).response?.data?.error === 'USER_LOCKED_OUT_ERROR') {
                         toast.error(message)
                         setUserLockedOut(true)
                         startTimer(600)
                     }
-                    else if (error.response?.data?.error_description) {
+                    else if (message) {
                         toast.error(message)
                     }
                     else {
-                        toast.error(error.message)
+                        toastError(error)
                     }
                 }
             }}
         >
             {({ isValid, isSubmitting, errors, handleChange }) => (
-                <Form className='h-full w-full text-secondary-text'>
+                <Form className='h-full w-full text-foreground text-foreground-new'>
                     {
                         disclosureLogin ?
                             <div className='mt-2'>
                                 <div className="w-full text-left text-base font-light">
                                     <div className='flex items-center justify-start'>
-                                        <p className='text-xl text-primary-text'>
+                                        <p className='text-xl text-muted text-muted-primary-text'>
                                             Sign in with email
                                         </p>
                                     </div>
                                     <p className='mt-2 text-left'>
-                                        <span>Please enter the 6 digit code sent to </span><span className='font-medium text-primary-text'>{tempEmail}</span>
+                                        <span>Please enter the 6 digit code sent to </span><span className='font-medium text-muted text-muted-primary-text'>{tempEmail}</span>
                                     </p>
                                 </div>
-                                <div className="text-sm text-secondary-text font-normal mt-5">
+                                <div className="text-sm text-foreground text-foreground-new font-normal mt-5">
                                     <div className='grid gap-4 grid-cols-5  items-center'>
                                         <div className="relative rounded-md shadow-sm col-span-3">
                                             <NumericInput
@@ -133,8 +134,8 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 onChange={e => {
                                                     /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                                 }}
-                                                className="leading-none h-12 text-2xl pl-5 text-primary-text  focus:ring-primary text-center focus:border-primary border-secondary-500 block
-                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-secondary-700  w-full font-semibold rounded-md placeholder-primary-text"
+                                                className="leading-none h-12 text-2xl pl-5 text-muted text-muted-primary-text  focus:ring-primary text-center focus:border-primary border-secondary-500 block
+                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-3 darker-2-class  w-full font-semibold rounded-md placeholder-primary-text"
                                             />
                                         </div>
                                         <div className='col-start-4 col-span-2'>
@@ -170,7 +171,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                 <Widget.Content center={true}>
                                     <MailOpen className='w-16 h-16 mt-auto text-primary self-center' />
                                     <div className='text-center mt-5'>
-                                        <p className='text-lg'><span>Please enter the 6 digit code sent to&nbsp;</span><span className='font-medium text-primary-text'>{tempEmail}</span></p>
+                                        <p className='text-lg'><span>Please enter the 6 digit code sent to&nbsp;</span><span className='font-medium text-muted text-muted-primary-text'>{tempEmail}</span></p>
                                     </div>
                                     <div className="relative rounded-md shadow-sm mt-5">
                                         <NumericInput
@@ -181,8 +182,8 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                             onChange={e => {
                                                 /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                             }}
-                                            className="leading-none h-12 text-2xl pl-5 text-primary-text  focus:ring-primary text-center focus:border-primary border-secondary-500 block
-                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-secondary-700  w-full font-semibold rounded-md placeholder-primary-text"
+                                            className="leading-none h-12 text-2xl pl-5 text-muted text-muted-primary-text  focus:ring-primary text-center focus:border-primary border-secondary-500 block
+                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-3 darker-2-class  w-full font-semibold rounded-md placeholder-primary-text"
                                         />
                                         <span className="flex text-sm leading-6 items-center mt-1.5">
                                             <TimerWithContext isStarted={started} seconds={timerCountdown} waitingComponent={(remainingTime) => (
@@ -201,7 +202,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                     </div>
                                 </Widget.Content>
                                 <Widget.Footer>
-                                    <p className='text-secondary-text text-xs sm:text-sm mb-3 md:mb-5'>
+                                    <p className='text-foreground text-foreground-new text-xs sm:text-sm mb-3 md:mb-5'>
                                         <span>By clicking Confirm you agree to Bridge&apos;s&nbsp;</span><span
                                             onClick={handleOpenTerms}
                                             className='decoration decoration-primary underline-offset-1 underline hover:no-underline cursor-pointer'> Terms of Service

@@ -1,10 +1,10 @@
 import '@rainbow-me/rainbowkit/styles.css';
-import { FC } from 'react';
+import { FC, PropsWithChildren } from 'react';
 import {
     ConnectButton,
 } from '@rainbow-me/rainbowkit';
 
-const RainbowKit: FC<{ children?: React.ReactNode }> = ({ children }) => {
+const RainbowKit: FC<PropsWithChildren> = ({ children }) => {
     return (
         <ConnectButton.Custom>
             {({

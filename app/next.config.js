@@ -21,8 +21,12 @@ module.exports = (phase, { defaultConfig }) => {
       defaultLocale: "en",
     },
     images: {
-      domains: ["stagelslayerswapbridgesa.blob.core.windows.net", "bransferstorage.blob.core.windows.net", "devlslayerswapbridgesa.blob.core.windows.net", "prodlslayerswapbridgesa.blob.core.windows.net"],
-
+      domains: [
+        "stagelslayerswapbridgesa.blob.core.windows.net", 
+        "bransferstorage.blob.core.windows.net", 
+        "devlslayerswapbridgesa.blob.core.windows.net", 
+        "prodlslayerswapbridgesa.blob.core.windows.net"
+      ],
     },
     compiler: {
       removeConsole: false,
@@ -33,6 +37,8 @@ module.exports = (phase, { defaultConfig }) => {
       return config;
     },
     productionBrowserSourceMaps: true,
+      // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
+    transpilePackages: ['@luxdefi/ui'],
   }
   if (process.env.APP_BASE_PATH) {
     nextConfig.basePath = process.env.APP_BASE_PATH

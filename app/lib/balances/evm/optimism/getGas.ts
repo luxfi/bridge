@@ -75,7 +75,7 @@ export default class getOptimismGas extends getEVMGas {
             client: this.publicClient,
         })
 
-        return fee;
+        return fee as bigint 
     }
 
 }

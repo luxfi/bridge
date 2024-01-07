@@ -62,7 +62,7 @@ const CampaignDisplay: FC<CampaignDisplayProps> = ({ campaign, fee, selected_cur
             y: "-100%",
             transition: { duration: 0.4, ease: [0.36, 0.66, 0.04, 1] },
         }}
-        className='w-full flex items-center justify-between rounded-b-lg bg-secondary-700  relative bottom-2 z-0 pt-4 pb-2 px-3.5 text-right'>
+        className='w-full flex items-center justify-between rounded-b-lg bg-level-3 darker-2-class  relative bottom-2 z-0 pt-4 pb-2 px-3.5 text-right'>
         <div className='flex items-center'>
             <p>Est. {campaignAsset?.asset} Reward</p>
             <ClickTooltip text={<span><span>The amount of onboarding reward that you’ll earn.&nbsp;</span><a target='_blank' href='/campaigns' className='text-primary underline hover:no-underline decoration-primary cursor-pointer'>Learn more</a></span>} />

@@ -1,6 +1,6 @@
 import BridgeApiClient from '../../lib/BridgeApiClient';
 import Layout from '../../components/layout';
-import { InferGetServerSidePropsType } from 'next';
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
 import React from 'react';
 import { SwapDataProvider } from '../../context/swap';
 import BridgeAuthApiClient from '../../lib/userAuthApiClient';
@@ -25,9 +25,9 @@ const SwapDetails = ({ settings, themeData }: InferGetServerSidePropsType<typeof
   </>)
 }
 
-export const getServerSideProps = async (ctx) => {
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const params = ctx.params;
-  let isValidGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.swapId);
+  let isValidGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test((params as any).swapId);
   if (!isValidGuid) {
     return {
       redirect: {

@@ -1,55 +1,73 @@
-export const FirstScreen = ({ exchange_name }) => {
+import React from "react"
+
+export const FirstScreen: React.FC<{
+  name: string
+}> = ({ 
+  name 
+}) => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.01</span><span>&nbsp;After this guide you&apos;ll be redirected to </span>{exchange_name}<span></span></div>
+        <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.01</span><span>&nbsp;After this guide you&apos;ll be redirected to </span>{name}<span></span></div>
         <div className="w-1/2 m-auto">
             <FirstScreenImage />
         </div>
     </div>
 }
 
-export const SecondScreen = () => {
+export const SecondScreen: React.FC = () => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.02</span><span>&nbsp;When in Coinbase, click&nbsp;</span><span className='strong-highlight font-medium'>Change this amount</span></div>
+        <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.02</span><span>&nbsp;When in Coinbase, click&nbsp;</span><span className='strong-highlight font-medium'>Change this amount</span></div>
         <div className="w-1/2 m-auto">
             <SecondScreenImage />
         </div>
     </div>
 }
 
-export const ThirdScreen = ({ minimalAuthorizeAmount }) => {
-    return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.03</span><span>&nbsp;Change the existing 1.0 value to&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click Save</span></div>
-        <div className="w-1/2  m-auto">
-            <ThirdScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
-        </div>
+export const ThirdScreen: React.FC<{
+  minimalAuthorizeAmount: number
+}> = ({ 
+  minimalAuthorizeAmount 
+}) => (
+  <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
+    <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.03</span><span>&nbsp;Change the existing 1.0 value to&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click Save</span></div>
+    <div className="w-1/2  m-auto">
+      <ThirdScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
     </div>
-}
+  </div>
+)
 
-export const FourthScreen = ({ minimalAuthorizeAmount }) => {
-    return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.04</span><span>&nbsp;Make sure that the amount is&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click&nbsp;</span><span className='strong-highlight font-medium'>Authorize</span></div>
-        <div className="w-1/2  m-auto">
-            <FourthScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
-        </div>
+export const FourthScreen: React.FC<{
+  minimalAuthorizeAmount: number
+}> = ({ 
+  minimalAuthorizeAmount 
+}) => (
+  <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
+    <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.04</span><span>&nbsp;Make sure that the amount is&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click&nbsp;</span><span className='strong-highlight font-medium'>Authorize</span></div>
+    <div className="w-1/2  m-auto">
+      <FourthScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
     </div>
-}
+  </div>
+)
 
-export const LastScreen = ({ minimalAuthorizeAmount, number }: { minimalAuthorizeAmount: number, number?: boolean }) => {
-    return (
-        <div className="inline-flex flex-col left-0 l relative top-0 grow w-full">
-            <div className='text-primary-text text-md font-normal grow w-full pb-2 '>
-                {number &&
-                    <span className='font-medium text-primary'>.05</span>
-                }
-                <span>&nbsp;Make sure to change the allowed amount to&nbsp;</span>
-                <span className='strong-highlight'>{minimalAuthorizeAmount}</span>
-            </div>
-            <div className="w-1/2  m-auto">
-                <LastScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
-            </div>
-        </div>
-    );
-}
+
+
+export const LastScreen: React.FC<{
+  minimalAuthorizeAmount: number
+  number?: boolean 
+}> = ({ 
+  minimalAuthorizeAmount, 
+  number
+}) => (
+  <div className="inline-flex flex-col left-0 l relative top-0 grow w-full">
+    <div className='text-muted text-muted-primary-text text-md font-normal grow w-full pb-2 '>
+      {number && (<span className='font-medium text-primary'>.05</span>) }
+      <span>&nbsp;Make sure to change the allowed amount to&nbsp;</span>
+      <span className='strong-highlight'>{minimalAuthorizeAmount}</span>
+    </div>
+    <div className="w-1/2  m-auto">
+      <LastScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
+    </div>
+  </div>
+)
 
 export const FirstScreenImage = () => {
     return <svg viewBox="0 0 413 484" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -221,8 +239,12 @@ export const SecondScreenImage = () => {
     </svg>
 }
 
-export const ThirdScreenImage = ({ minimalAuthorizeAmount }) => {
-    return <svg viewBox="0 0 413 484" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const ThirdScreenImage: React.FC<{
+  minimalAuthorizeAmount: number
+}> = ({ 
+  minimalAuthorizeAmount 
+}) => (
+    <svg viewBox="0 0 413 484" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g clipPath="url(#clip0_1740_1883)">
             <rect x="3" width="407" height="844" rx="50" fill="url(#paint0_linear_1740_1883)" />
             <rect x="19" y="16" width="375" height="812" rx="36" fill="#2261EB" />
@@ -407,11 +429,14 @@ export const ThirdScreenImage = ({ minimalAuthorizeAmount }) => {
             </clipPath>
         </defs>
     </svg>
+)
 
-}
-
-export const FourthScreenImage = ({ minimalAuthorizeAmount }) => {
-    return <svg viewBox="0 0 413 484" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const FourthScreenImage: React.FC<{
+  minimalAuthorizeAmount: number
+}> = ({ 
+  minimalAuthorizeAmount 
+}) => (
+    <svg viewBox="0 0 413 484" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g clipPath="url(#clip0_1743_2570)">
             <rect x="3" width="407" height="844" rx="50" fill="url(#paint0_linear_1743_2570)" />
             <rect x="19" y="16" width="375" height="812" rx="36" fill="#2261EB" />
@@ -519,10 +544,15 @@ export const FourthScreenImage = ({ minimalAuthorizeAmount }) => {
             </clipPath>
         </defs>
     </svg>
-}
+)
 
-export const LastScreenImage = ({ minimalAuthorizeAmount }) => {
-    return <svg viewBox="0 0 413 484" fill="none" className="h-full" xmlns="http://www.w3.org/2000/svg">
+export const LastScreenImage: React.FC<{
+  minimalAuthorizeAmount: number
+}> = ({ 
+  minimalAuthorizeAmount 
+}) => (
+  
+    <svg viewBox="0 0 413 484" fill="none" className="h-full" xmlns="http://www.w3.org/2000/svg">
         <g clipPath="url(#clip0_1743_2866)">
             <rect x="3" width="407" height="844" rx="50" fill="url(#paint0_linear_1743_2866)" />
             <g clipPath="url(#clip1_1743_2866)">
@@ -649,4 +679,4 @@ export const LastScreenImage = ({ minimalAuthorizeAmount }) => {
             </clipPath>
         </defs>
     </svg>
-}
+)

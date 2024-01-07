@@ -4,12 +4,12 @@ import BridgeApiClient from '@/lib/BridgeApiClient';
 import { ApiResponse } from '@/models/ApiResponse';
 import { BridgeAppSettings } from '@/models/BridgeAppSettings';
 import { BridgeSettings } from '@/models/BridgeSettings';
-import React, { FC, ReactNode } from 'react'
+import React, { FC, PropsWithChildren } from 'react'
 import useSWR from 'swr';
 
 const SettingsStateContext = React.createContext<BridgeAppSettings | null>(null);
 
-export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export const SettingsProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const fetcher = (url: string) => fetch(url).then(r => r.json());
   const version = process.env.NEXT_PUBLIC_API_VERSION;

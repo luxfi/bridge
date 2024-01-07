@@ -12,39 +12,47 @@ type WillReceiveProps = {
     currencies: Currency[];
     refuel: boolean
 }
-export const ReceiveAmounts: FC<WillReceiveProps> = ({ receive_amount, currency, to, currencies, refuel }) => {
-    const parsedReceiveAmount = parseFloat(receive_amount?.toFixed(currency?.precision) || "")
-    const destinationNetworkCurrency = (to && currency) ? GetNetworkCurrency(to, currency.asset) : null
+export const ReceiveAmounts: FC<WillReceiveProps> = ({ 
+  receive_amount, 
+  currency, 
+  to, 
+  currencies, 
+  refuel 
+}) => {
 
-    return <>
-        <span className="md:font-semibold text-sm md:text-base text-secondary-text leading-8 md:leading-8 flex-1">
-            You will receive
+  const parsedReceiveAmount = parseFloat(receive_amount?.toFixed(currency?.precision) || "")
+  const destinationNetworkCurrency = (to && currency) ? GetNetworkCurrency(to, currency.asset) : null
+
+  return (<>
+    <span className="md:font-semibold text-sm md:text-base text-foreground text-foreground-new leading-8 md:leading-8 flex-1">
+        You will receive
+    </span>
+    <div className='flex items-center space-x-2'>
+        <span className="text-sm md:text-base">
+            {
+                parsedReceiveAmount > 0 ?
+                    <div className="font-semibold md:font-bold text-right leading-4">
+                        <p>
+                            <>{parsedReceiveAmount}</>
+                            &nbsp;
+                            <span>
+                                {destinationNetworkCurrency?.name}
+                            </span>
+                        </p>
+                        {refuel && <Refuel
+                            currencies={currencies}
+                            currency={currency}
+                            to={to}
+                            refuel={refuel}
+                        />}
+                    </div>
+                    : '-'
+            }
         </span>
-        <div className='flex items-center space-x-2'>
-            <span className="text-sm md:text-base">
-                {
-                    parsedReceiveAmount > 0 ?
-                        <div className="font-semibold md:font-bold text-right leading-4">
-                            <p>
-                                <>{parsedReceiveAmount}</>
-                                &nbsp;
-                                <span>
-                                    {destinationNetworkCurrency?.name}
-                                </span>
-                            </p>
-                            {refuel && <Refuel
-                                currencies={currencies}
-                                currency={currency}
-                                to={to}
-                                refuel={refuel}
-                            />}
-                        </div>
-                        : '-'
-                }
-            </span>
-        </div>
-    </>
+    </div>
+  </>)
 }
+
 type RefuelProps = {
     currency?: Currency | null;
     to?: Layer | null;
@@ -65,7 +73,7 @@ export const Refuel: FC<RefuelProps> = ({ to, currency, currencies, refuel }) =>
 
     return <>
         {
-            truncated_refuel > 0 ? <p className='text-[12px] text-secondary-text/50'>
+            truncated_refuel > 0 ? <p className='text-[12px] text-foreground text-foreground-new/50'>
                 <>+</> <span>{truncated_refuel} {destination_native_asset}</span>
             </p>
                 : null

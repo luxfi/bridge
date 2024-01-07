@@ -1,4 +1,5 @@
-import { ISelectMenuItem } from '../Shared/Props/selectMenuItem'
+import React, { Dispatch, SetStateAction } from "react";
+import { SelectMenuItem } from '../Shared/Props/selectMenuItem'
 import {
     CommandEmpty,
     CommandGroup,
@@ -7,7 +8,6 @@ import {
     CommandList,
     CommandWrapper
 } from '../../shadcn/command'
-import React from "react";
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import SelectItem from '../Shared/SelectItem';
 import { SelectProps } from '../Shared/Props/SelectProps'
@@ -15,25 +15,33 @@ import Modal from '../../modal/modal';
 import { Info } from 'lucide-react';
 import { LayerDisabledReason } from '../Popover/PopoverSelect';
 
-export interface CommandSelectProps extends SelectProps {
+export interface CommandSelectProps<T> extends SelectProps<T> {
     show: boolean;
-    setShow: (value: boolean) => void;
+    setShow:  Dispatch<SetStateAction<boolean>>
     searchHint: string;
-    valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
+    valueGrouper: (values: SelectMenuItem<T>[]) => SelectMenuItemGroup<T>[];
 }
 
-export class SelectMenuItemGroup {
-    constructor(init?: Partial<SelectMenuItemGroup>) {
+export class SelectMenuItemGroup<T> {
+    constructor(init?: Partial<SelectMenuItemGroup<T>>) {
         Object.assign(this, init);
     }
 
-    name: string;
-    items: ISelectMenuItem[];
+    name: string = ''
+    items: SelectMenuItem<T>[] = []
 }
 
-export default function CommandSelect({ values, setValue, show, setShow, searchHint, valueGrouper }: CommandSelectProps) {
+export default function CommandSelect<T>({ 
+  values, 
+  setValue, 
+  show, 
+  setShow, 
+  searchHint, 
+  valueGrouper 
+}: CommandSelectProps<T>) {
+
     const { isDesktop } = useWindowDimensions();
-    let groups: SelectMenuItemGroup[] = valueGrouper(values);
+    let groups: SelectMenuItemGroup<T>[] = valueGrouper(values);
     return (
         <Modal height='full' show={show} setShow={setShow}>
             {show ?
@@ -41,7 +49,7 @@ export default function CommandSelect({ values, setValue, show, setShow, searchH
                     <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
                     {
                         values.some(v => v.isAvailable.value === false && v.isAvailable.disabledReason === LayerDisabledReason.LockNetworkIsTrue) &&
-                        <div className='text-xs text-left text-secondary-text mb-2'>
+                        <div className='text-xs text-left text-foreground text-foreground-new mb-2'>
                             <Info className='h-3 w-3 inline-block mb-0.5' /><span>&nbsp;You&apos;re accessing Bridge from a partner&apos;s page. In case you want to transact with other networks, please open bridge.lux.network in a separate tab.</span>
                         </div>
                     }
@@ -55,7 +63,7 @@ export default function CommandSelect({ values, setValue, show, setShow, searchH
                                             setValue(item)
                                             setShow(false)
                                         }}>
-                                            <SelectItem item={item} />
+                                            <SelectItem<T> item={item} />
                                         </CommandItem>)
                                     }
                                 </CommandGroup>)
