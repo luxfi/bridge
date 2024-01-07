@@ -27,6 +27,7 @@ import { ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import ResizablePanel from "../../ResizablePanel";
+import toastError from "../../../helpers/toastError";
 
 type NetworkToConnect = {
     DisplayName: string;
@@ -36,9 +37,9 @@ const SwapDetails = dynamic(() => import(".."), {
     loading: () => <div className="w-full h-[450px]">
         <div className="animate-pulse flex space-x-4">
             <div className="flex-1 space-y-6 py-1">
-                <div className="h-32 bg-secondary-700 rounded-lg"></div>
-                <div className="h-40 bg-secondary-700 rounded-lg"></div>
-                <div className="h-12 bg-secondary-700 rounded-lg"></div>
+                <div className="h-32 bg-level-3 darker-2-class rounded-lg"></div>
+                <div className="h-40 bg-level-3 darker-2-class rounded-lg"></div>
+                <div className="h-12 bg-level-3 darker-2-class rounded-lg"></div>
             </div>
         </div>
     </div>
@@ -81,7 +82,7 @@ export default function Form() {
                     setUserType(UserType.GuestUser)
                 }
                 catch (error) {
-                    toast.error(error.response?.data?.error || error.message)
+                    toast.error(((error as any).response?.data?.error || (error as any).message) as string)
                     return;
                 }
             }
@@ -102,7 +103,7 @@ export default function Form() {
             }
         }
         catch (error) {
-            const data: ApiError = error?.response?.data?.error
+            const data: ApiError = (error as any).response?.data?.error
             if (data?.code === LSAPIKnownErrorCode.BLACKLISTED_ADDRESS) {
                 toast.error("You can't transfer to that address. Please double check.")
             }
@@ -117,7 +118,7 @@ export default function Form() {
                 setShowConnectNetworkModal(true);
             }
             else {
-                toast.error(error.message)
+              toastError(error)
             }
         }
     }, [createSwap, query, partner, router, updateAuthData, setUserType, swap])
@@ -211,11 +212,11 @@ const PendingSwap = ({ onClick }: { onClick: () => void }) => {
         <motion.div
             onClick={onClick}
             initial="rest" whileHover="hover" animate="rest"
-            className="relative bg-secondary-600 rounded-r-lg">
+            className="relative bg-level-4 darker-3-class rounded-r-lg">
             <motion.div
                 variants={textMotion}
-                className="flex items-center bg-secondary-600 rounded-r-lg">
-                <div className="text-primary-text flex px-3 p-2 items-center space-x-2">
+                className="flex items-center bg-level-4 darker-3-class rounded-r-lg">
+                <div className="text-muted text-muted-primary-text flex px-3 p-2 items-center space-x-2">
                     <span className="flex items-center">
                         {swap && <StatusIcon swap={swap} short={true} />}
                     </span>

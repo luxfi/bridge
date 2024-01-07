@@ -1,5 +1,5 @@
 packages:
-  - '/app'
-  - '/explorer'
-  - '/sdk'
-  - '/ui'
+  - 'app'
+  - 'explorer'
+  - 'sdk'
+  - 'ui'

@@ -19,11 +19,10 @@ export default function useStarknet(): WalletProvider {
         return wallets.find(wallet => wallet.providerName === name)
     }
 
-    const connectWallet = useCallback(async (chain: string) => {
+    const connectWallet = useCallback(async (chain: string | number | null | undefined) => {
         const constants = (await import('starknet')).constants
         const chainId = (chain && fromHex(chain as `0x${string}`, 'string')) || constants.NetworkName.SN_MAIN
         const connect = (await import('starknetkit')).connect
-        try {
             const res = await connect({
                 argentMobileOptions: {
                     dappName: 'Bridge',
@@ -49,10 +48,6 @@ export default function useStarknet(): WalletProvider {
                 await disconnectWallet()
                 connectWallet(chain)
             }
-        }
-        catch (e) {
-            throw new Error(e)
-        }
     }, [addWallet])
 
     const disconnectWallet = async () => {

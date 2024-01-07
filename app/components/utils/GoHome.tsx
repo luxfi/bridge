@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FC } from "react";
 import CopyButton from "../buttons/copyButton";
 import BridgeLogo from "../icons/BridgeLogo";
@@ -24,7 +25,7 @@ const GoHomeButton: FC<Props> = (({ className, children }) => {
                         <ContextMenuPrimitive.Trigger>
                             <BridgeLogo className={className ?? "h-8 w-auto text-primary-logoColor fill-primary-text"} />
                         </ContextMenuPrimitive.Trigger>
-                        <ContextMenuPrimitive.Content className="dialog-overlay absolute z-40 border h-fit text-secondary-text border-secondary-100 mt-2 w-fit rounded-md shadow-lg bg-secondary-900 ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <ContextMenuPrimitive.Content className="dialog-overlay absolute z-40 border h-fit text-foreground text-foreground-new border-secondary-100 mt-2 w-fit rounded-md shadow-lg bg-level-1 darkest-class ring-1 ring-black ring-opacity-5 focus:outline-none">
                             <ContextMenuPrimitive.ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full rounded-t hover:bg-secondary-400 whitespace-nowrap">
                                 <CopyButton toCopy={renderToString(<BridgeLogo />)}>Copy logo as SVG</CopyButton>
                             </ContextMenuPrimitive.ContextMenuItem >

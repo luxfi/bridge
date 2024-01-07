@@ -26,10 +26,12 @@ export default class ImtblClient {
             return result
         }
         catch (e) {
-            if (e.code === 1003)
-                throw new Error("You closed ImmutableX connect wallet window")
-            else
-                throw e
+            if ('code' in (e as any) && (e as any).code === 1003) {
+              throw new Error("You closed ImmutableX connect wallet window")
+            }
+            else {
+              throw e
+            }
         }
     }
 

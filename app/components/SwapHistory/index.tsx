@@ -19,6 +19,7 @@ import Link from "next/link";
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
 import { truncateDecimals } from "../utils/RoundDecimals";
+import toastError from "../../helpers/toastError";
 
 function TransactionsHistory() {
   const [page, setPage] = useState(0)
@@ -36,9 +37,10 @@ function TransactionsHistory() {
   const PAGE_SIZE = 20
 
   const goBack = useCallback(() => {
-    window?.['navigation']?.['canGoBack'] ?
+    window.history?.length > 2 ?
       router.back()
-      : router.push({
+      : 
+      router.push({
         pathname: "/",
         query: resolvePersistantQueryParams(router.query)
       })
@@ -63,7 +65,7 @@ function TransactionsHistory() {
         const { data, error } = await bridgeApiClient.GetSwapsAsync(1)
 
         if (error) {
-          toast.error(error.message);
+          toastError(error)
           return;
         }
 
@@ -79,7 +81,7 @@ function TransactionsHistory() {
         const { data, error } = await bridgeApiClient.GetSwapsAsync(1, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
 
         if (error) {
-          toast.error(error.message);
+          toastError(error)
           return;
         }
 
@@ -101,7 +103,7 @@ function TransactionsHistory() {
       const { data, error } = await bridgeApiClient.GetSwapsAsync(nextPage)
 
       if (error) {
-        toast.error(error.message);
+        toastError(error)
         return;
       }
 
@@ -115,7 +117,7 @@ function TransactionsHistory() {
       const { data, error } = await bridgeApiClient.GetSwapsAsync(nextPage, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
 
       if (error) {
-        toast.error(error.message);
+        toastError(error)
         return;
       }
 
@@ -138,7 +140,7 @@ function TransactionsHistory() {
   }
 
   return (
-    <div className='bg-secondary-900 sm:shadow-card rounded-lg mb-6 w-full text-primary-text overflow-hidden relative min-h-[620px]'>
+    <div className='bg-level-1 darkest-class sm:shadow-card rounded-lg mb-6 w-full text-muted text-muted-primary-text overflow-hidden relative min-h-[620px]'>
       <HeaderWithMenu goBack={goBack} />
       {
         page == 0 && loading ?
@@ -146,7 +148,7 @@ function TransactionsHistory() {
           : <>
             {
               Number(swaps?.length) > 0 ?
-                <div className="w-full flex flex-col justify-between h-full px-6 space-y-5 text-secondary-text">
+                <div className="w-full flex flex-col justify-between h-full px-6 space-y-5 text-foreground text-foreground-new">
                   <div className="mt-4">
                     {showToggleButton && <div className="flex justify-end mb-2">
                       <div className='flex space-x-2'>
@@ -158,7 +160,7 @@ function TransactionsHistory() {
                     </div>}
                     <div className="max-h-[450px] styled-scroll overflow-y-auto ">
                       <table className="w-full divide-y divide-secondary-500">
-                        <thead className="text-secondary-text">
+                        <thead className="text-foreground text-foreground-new">
                           <tr>
                             <th scope="col" className="text-left text-sm font-semibold">
                               <div className="block">
@@ -199,10 +201,10 @@ function TransactionsHistory() {
                               <td
                                 className={classNames(
                                   index === 0 ? '' : 'border-t border-secondary-500',
-                                  'relative text-sm text-primary-text table-cell'
+                                  'relative text-sm text-muted text-muted-primary-text table-cell'
                                 )}
                               >
-                                <div className="text-primary-text flex items-center">
+                                <div className="text-muted text-muted-primary-text flex items-center">
                                   <div className="flex-shrink-0 h-5 w-5 relative">
                                     {source &&
                                       <Image
@@ -227,7 +229,7 @@ function TransactionsHistory() {
                                     }
                                   </div>
                                 </div>
-                                {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-secondary-500" /> : null}
+                                {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-level-4 darker-hover-class" /> : null}
 
                               </td>
                               <td className={classNames(
@@ -241,7 +243,7 @@ function TransactionsHistory() {
                               <td
                                 className={classNames(
                                   index === 0 ? '' : 'border-t border-secondary-500',
-                                  'px-3 py-3.5 text-sm text-primary-text table-cell'
+                                  'px-3 py-3.5 text-sm text-muted text-muted-primary-text table-cell'
                                 )}
                               >
                                 <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { handleopenSwapDetails(swap); e.preventDefault() }}>
@@ -267,7 +269,7 @@ function TransactionsHistory() {
                       </table>
                     </div>
                   </div>
-                  <div className="text-primary-text text-sm flex justify-center">
+                  <div className="text-muted text-muted-primary-text text-sm flex justify-center">
                     {
                       !isLastPage &&
                       <button
@@ -294,8 +296,8 @@ function TransactionsHistory() {
                       }
                       {
                         selectedSwap &&
-                        <div className="text-primary-text text-sm mt-6 space-y-3">
-                          <div className="flex flex-row text-primary-text text-base space-x-2">
+                        <div className="text-muted text-muted-primary-text text-sm mt-6 space-y-3">
+                          <div className="flex flex-row text-muted text-muted-primary-text text-base space-x-2">
                             <SubmitButton
                               text_align="center"
                               onClick={() => router.push({
@@ -321,8 +323,8 @@ function TransactionsHistory() {
                 <div className="absolute top-1/4 right-0 text-center w-full">
                   <Scroll className='h-40 w-40 text-secondary-700 mx-auto' />
                   <p className="my-2 text-xl">It&apos;s empty here</p>
-                  <p className="px-14 text-primary-text">You can find all your transactions by searching with address in</p>
-                  <Link target="_blank" href={AppSettings.ExplorerURl} className="underline hover:no-underline cursor-pointer hover:text-secondary-text text-primary-text font-light">
+                  <p className="px-14 text-muted text-muted-primary-text">You can find all your transactions by searching with address in</p>
+                  <Link target="_blank" href={AppSettings.ExplorerURl} className="underline hover:no-underline cursor-pointer hover:text-foreground text-foreground-new text-muted text-muted-primary-text font-light">
                     <span>Bridge Explorer</span>
                   </Link>
                 </div>

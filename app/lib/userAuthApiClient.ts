@@ -4,7 +4,7 @@ import { AuthGetCodeResponse, AuthConnectResponse } from "../Models/BridgeAuth";
 export default class BridgeAuthApiClient {
     static identityBaseEndpoint: string;
 
-    async getCodeAsync(email): Promise<AuthGetCodeResponse> {
+    async getCodeAsync(email: string): Promise<AuthGetCodeResponse> {
         return await axios.post(BridgeAuthApiClient.identityBaseEndpoint + '/api/auth/get_code',
             { email },
             { headers: { 'Access-Control-Allow-Origin': '*' } })

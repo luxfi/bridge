@@ -1,4 +1,4 @@
-import { Context, useCallback, useEffect, useState, createContext, useContext, useMemo } from 'react'
+import { Context, useCallback, useEffect, useState, createContext, useContext, useMemo, PropsWithChildren } from 'react'
 import { SwapFormValues } from '../components/DTOs/SwapFormValues';
 import BridgeApiClient, { CreateSwapParams, SwapItem, PublishedSwapTransactions, SwapTransaction, WithdrawType } from '../lib/BridgeApiClient';
 import { useRouter } from 'next/router';
@@ -46,7 +46,7 @@ export type SwapData = {
     selectedAssetNetwork: ExchangeAsset | BaseL2Asset | undefined
 }
 
-export function SwapDataProvider({ children }) {
+export function SwapDataProvider({ children }: PropsWithChildren) {
     const [addressConfirmed, setAddressConfirmed] = useState<boolean>(false)
     const [codeRequested, setCodeRequested] = useState<boolean>(false)
     const [withdrawType, setWithdrawType] = useState<WithdrawType>()
@@ -88,7 +88,7 @@ export function SwapDataProvider({ children }) {
         setSwapTransaction(txForSwap)
     }, [swapId])
 
-    const createSwap = useCallback(async (values: SwapFormValues, query: QueryParams, partner: Partner) => {
+    const createSwap = useCallback(async (values: SwapFormValues, query: QueryParams, partner?: Partner) => {
         if (!values)
             throw new Error("No swap data")
 

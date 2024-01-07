@@ -1,13 +1,9 @@
-import { FC, useEffect, useRef } from 'react'
+import { FC, PropsWithChildren, useEffect, useRef } from 'react'
 import { useFormWizardaUpdate, useFormWizardState } from '../../context/formWizardProvider';
 import { AnimatePresence } from 'framer-motion';
 import HeaderWithMenu from '../HeaderWithMenu';
 
-type Props = {
-   children: JSX.Element | JSX.Element[];
-}
-
-const Wizard: FC<Props> = ({ children }) => {
+const Wizard: FC<PropsWithChildren> = ({ children }) => {
 
    const wrapper = useRef<HTMLDivElement>(null);
 
@@ -28,9 +24,9 @@ const Wizard: FC<Props> = ({ children }) => {
 
    const width = positionPercent || 0
    return <>
-      <div className={noToolBar ? `` : ` bg-secondary-900 md:shadow-card rounded-lg w-full sm:overflow-hidden relative`}>
+      <div className={noToolBar ? `` : ` bg-level-1 darkest-class md:shadow-card rounded-lg w-full sm:overflow-hidden relative`}>
          <div className="relative">
-            {!noToolBar && <div className="overflow-hidden h-1 flex rounded-t-lg bg-secondary-500">
+            {!noToolBar && <div className="overflow-hidden h-1 flex rounded-t-lg bg-level-4 darker-hover-class">
                <div style={{ width: `${width}%`, transition: 'width 1s' }} className="shadow-none flex flex-col whitespace-nowrap justify-center bg-primary"></div>
             </div>}
          </div>

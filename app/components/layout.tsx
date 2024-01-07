@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react"
+import React, { ErrorInfo, useEffect, useState } from "react"
 import Head from "next/head"
 import { useRouter } from "next/router";
 import ThemeWrapper from "./themeWrapper";
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import MaintananceContent from "./maintanance/maintanance";
 import { AuthProvider } from "../context/authContext";
 import { SettingsProvider } from "../context/settings";
@@ -32,7 +32,7 @@ export default function Layout({ children, settings, themeData }: Props) {
   const router = useRouter();
 
   useEffect(() => {
-    function prepareUrl(params) {
+    function prepareUrl(params: string[]) {
       const url = new URL(location.href)
       const queryParams = new URLSearchParams(location.search)
       let customUrl = url.protocol + "//" + url.hostname + url.pathname.replace(/\/$/, '')
@@ -90,18 +90,22 @@ export default function Layout({ children, settings, themeData }: Props) {
     ...(router.query.lockAsset === 'false' ? { lockAsset: false } : {}),
   };
 
-  function logErrorToService(error, info) {
+  function logErrorToService(error: Error, info: ErrorInfo) {
+    /*
+
     const transaction = Sentry.startTransaction({
       name: "error_boundary_handler",
     });
     Sentry.configureScope((scope) => {
       scope.setSpan(transaction);
     });
-    if (process.env.NEXT_PUBLIC_VERCEL_ENV && !error.stack.includes("chrome-extension")) {
+    if (process.env.NEXT_PUBLIC_VERCEL_ENV && !(error.stack && error.stack.includes("chrome-extension"))) {
       SendErrorMessage("UI error", `env: ${process.env.NEXT_PUBLIC_VERCEL_ENV} %0A url: ${process.env.NEXT_PUBLIC_VERCEL_URL} %0A message: ${error?.message} %0A errorInfo: ${info?.componentStack} %0A stack: ${error?.stack ?? error.stack} %0A`)
     }
-    Sentry.captureException(error, info);
+      // @ts-ignore
+    Sentry.captureException(error, info.componentStack);
     transaction.finish();
+    */
   }
 
   themeData = themeData || THEME_COLORS.default
