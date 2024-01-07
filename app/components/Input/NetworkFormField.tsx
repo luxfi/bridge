@@ -92,7 +92,7 @@ const NetworkFormField = forwardRef(function NetworkFormField({ direction, label
         setFieldValue(name, item.baseObject, true)
     }, [name])
 
-    return (<div className="rounded-xl p-3 bg-level-2">
+    return (<div className="rounded-xl p-3 bg-level-2 border border-level-3">
         <label htmlFor={name} className="block font-semibold text-foreground text-sm">
             {label}
         </label>

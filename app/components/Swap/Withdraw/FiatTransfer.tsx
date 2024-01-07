@@ -22,7 +22,7 @@ const FiatTransfer: FC = () => {
         setEmbedded(inIframe())
     }, [])
 
-    return <div className='rounded-xl bg-secondary-700 border border-secondary-500 divide-y divide-secondary-500'>
+    return <div className='rounded-xl bg-level-3 darker-2-class border border-secondary-500 divide-y divide-secondary-500'>
         {
             embedded ?
                 <SubmitButton onClick={() => window.open(swap?.fiat_redirect_url, '_blank')} icon={<ExternalLink className='h-5 w-5' strokeWidth={2} />} isDisabled={!swap} isSubmitting={false}>

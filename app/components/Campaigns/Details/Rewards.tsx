@@ -55,17 +55,17 @@ const Rewards: FC<Props> = ({ campaign }) => {
 
     return <>
         <div className="space-y-4">
-            <p className="text-primary-text">
+            <p className="text-muted text-muted-primary-text">
                 <span>
                     <span>Onboarding incentives that are earned by transferring to&nbsp;</span>{network?.display_name}<span>.&nbsp;</span>
                     <a
                         target='_blank'
                         href="https://docs.bridge.lux.network/user-docs/bridge-campaigns/usdop-rewards"
-                        className="text-primary-text underline hover:no-underline decoration-white cursor-pointer"
+                        className="text-muted text-muted-primary-text underline hover:no-underline decoration-white cursor-pointer"
                     >Learn more</a>
                 </span>
             </p>
-            <div className="bg-secondary-700 divide-y divide-secondary-500 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+            <div className="bg-level-3 darker-2-class divide-y divide-secondary-500 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
                 {!campaignIsEnded &&
                     <BackgroundField header={<span className="flex justify-between"><span className="flex items-center"><span>Pending Earnings&nbsp;</span><ClickTooltip text={`${campaign?.asset} tokens that will be airdropped periodically.`} /> </span><span>Next Airdrop</span></span>} withoutBorder>
                         <div className="flex justify-between w-full text-2xl">
@@ -116,7 +116,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
             </div>
 
         </div>
-        <div className="bg-secondary-700 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+        <div className="bg-level-3 darker-2-class rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
             <BackgroundField header={
                 <>
                     <p className="flex items-center"><span>{campaign?.asset} pool</span>
@@ -127,7 +127,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
                 <div className="flex flex-col w-full gap-2">
                     <Progress value={DistributedAmount === Infinity ? 0 : DistributedAmount} />
                     <div className="flex justify-between w-full font-semibold text-sm ">
-                        <div className="text-primary"><span className="text-primary-text">{campaign?.distributed_amount.toFixed(0)}</span> <span>/</span> {totalBudget} {campaign?.asset}</div>
+                        <div className="text-primary"><span className="text-muted text-muted-primary-text">{campaign?.distributed_amount.toFixed(0)}</span> <span>/</span> {totalBudget} {campaign?.asset}</div>
                     </div>
                 </div>
             </BackgroundField>
@@ -136,11 +136,11 @@ const Rewards: FC<Props> = ({ campaign }) => {
             payouts.length > 0 &&
             <div className="space-y-1">
                 <p className="font-bold text-lg text-left">Payouts</p>
-                <div className=" bg-secondary-700 divide-y divide-secondary-300 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+                <div className=" bg-level-3 darker-2-class divide-y divide-secondary-300 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
                     <div className="inline-block min-w-full align-middle">
                         <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                             <table className="min-w-full divide-y divide-secondary-500">
-                                <thead className="bg-secondary-800/70">
+                                <thead className="bg-level-2 darker-class/70">
                                     <tr>
                                         <th scope="col" className="py-3.5 pl-4 text-left text-sm font-semibold  sm:pl-6">
                                             Tx Id
@@ -156,7 +156,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
                                 <tbody className="divide-y divide-secondary-600">
                                     {payouts.map((payout) => (
                                         <tr key={payout.transaction_id}>
-                                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-primary-text sm:pl-6 underline hover:no-underline">
+                                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-muted text-muted-primary-text sm:pl-6 underline hover:no-underline">
                                                 <a target={"_blank"} href={network?.transaction_explorer_template?.replace("{0}", payout.transaction_id)}>{shortenAddress(payout.transaction_id)}</a>
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-100">{payout.amount}</td>

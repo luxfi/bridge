@@ -24,11 +24,13 @@ module.exports = ({ colors }) => ({
   }, 
   primary: {
     DEFAULT: "var(--primary)",
+    lux: "var(--primary)",
     hover: "var(--primary-hover)",
     fg: "var(--primary-fg)",
   },
   secondary: {
     DEFAULT: "var(--secondary)",
+    lux: "var(--secondary)",
     hover: "var(--secondary-hover)",
     fg: "var(--secondary-fg)",
   },

@@ -18,7 +18,7 @@ export default function ErrorFallback({ error, resetErrorBoundary}: FallbackProp
             <main className="styled-scroll">
                 <div className="min-h-screen overflow-hidden relative font-robo">
                     <Navbar />
-                    <div className="mx-auto max-w-xl bg-secondary-900 shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
+                    <div className="mx-auto max-w-xl bg-level-1 darkest-class shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
                         <MessageComponent>
                             <MessageComponent.Content icon="red">
                                 <MessageComponent.Header>
@@ -47,7 +47,7 @@ export default function ErrorFallback({ error, resetErrorBoundary}: FallbackProp
                                 </MessageComponent.Description>
                             </MessageComponent.Content>
                             <MessageComponent.Buttons>
-                                <div className="flex flex-row text-primary-text text-xs sm:text-base space-x-2">
+                                <div className="flex flex-row text-muted text-muted-primary-text text-xs sm:text-base space-x-2">
                                     <div className='basis-1/3'>
                                         {
                                             <GoHomeButton>

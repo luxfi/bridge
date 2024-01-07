@@ -4,19 +4,19 @@ import SelectItem from '../Shared/SelectItem';
 
 export default function PopoverSelect<T>({ values, value, setValue }: SelectProps<T>) {
 
-    return (
-        <CommandWrapper>
-            <CommandList>
-                {values.map(item =>
-                    <CommandItem disabled={!item.isAvailable.value} value={item.id} key={item.id} onSelect={() => {
-                        setValue(item)
-                    }}>
-                        <SelectItem<T> item={item} />
-                    </CommandItem>)
-                }
-            </CommandList>
-        </CommandWrapper>
-    )
+  return (
+    <CommandWrapper>
+      <CommandList>
+        {values.map(item =>
+          <CommandItem disabled={!item.isAvailable.value} value={item.id} key={item.id} onSelect={() => {
+            setValue(item)
+          }}>
+            <SelectItem<T> item={item} />
+          </CommandItem>)
+        }
+      </CommandList>
+    </CommandWrapper>
+  )
 }
 
 export enum LayerDisabledReason {

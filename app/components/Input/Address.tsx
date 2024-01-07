@@ -128,14 +128,14 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
     const destinationChainId = destinationAsset?.network?.chain_id
 
     return (<>
-        <div className='w-full flex flex-col justify-between h-full text-primary-text'>
+        <div className='w-full flex flex-col justify-between h-full text-muted text-muted-primary-text'>
             <div className='flex flex-col self-center grow w-full'>
                 <div className={`flex flex-col self-center grow w-full space-y-3`}>
                     <div className="text-left">
                         <label htmlFor={name}>Address</label>
                         {isPartnerWallet && partner && <span className='truncate text-sm text-indigo-200'> ({partner?.display_name})</span>}
                         <div className="flex flex-wrap flex-col md:flex-row">
-                            <div className="relative flex grow rounded-lg shadow-sm mt-1.5 bg-secondary-700 border-secondary-500 border focus-within:ring-0 focus-within:ring-primary focus-within:border-primary">
+                            <div className="relative flex grow rounded-lg shadow-sm mt-1.5 bg-level-3 darker-2-class border-secondary-500 border focus-within:ring-0 focus-within:ring-primary focus-within:border-primary">
                                 {isPartnerWallet &&
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         {
@@ -150,17 +150,17 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                                     placeholder={placeholder}
                                     autoCorrect="off"
                                     type={"text"}
-                                    disabled={disabled || !!(connectedWallet && values.destination_address)}
+                                    disabled={disabled || !!(connectedWallet && values.destination_address) }
                                     name={name}
                                     id={name}
                                     ref={inputReference}
                                     tabIndex={0}
-                                    className={`${isPartnerWallet ? 'pl-11' : ''} disabled:cursor-not-allowed grow h-12 border-none leading-4  block font-semibold w-full bg-secondary-700 rounded-lg truncate hover:overflow-x-scroll focus:ring-0 focus:outline-none`}
+                                    className={`${isPartnerWallet ? 'pl-11' : ''} disabled:cursor-not-allowed grow h-12 border-none leading-4  block font-semibold w-full bg-level-2 darker-2-class rounded-lg truncate hover:overflow-x-scroll focus:ring-0 focus:outline-none`}
                                 />
                                 {
                                     inputValue && !disabled &&
                                     <span className="inline-flex items-center mr-2">
-                                        <div className="text-xs flex items-center space-x-2 md:ml-5 bg-secondary-500 rounded-md border border-secondary-500">
+                                        <div className="text-xs flex items-center space-x-2 md:ml-5 bg-level-4 darker-hover-class rounded-md border border-secondary-500">
                                             <button
                                                 type="button"
                                                 className="p-0.5 duration-200 transition  hover:bg-secondary-400  rounded-md border border-secondary-500 hover:border-secondary-200"
@@ -192,8 +192,8 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                     </div>
                     {
                         validInputAddress &&
-                        <div onClick={handleSetNewAddress} className={`text-left min-h-12 cursor-pointer space-x-2 border border-secondary-300 bg-secondary-600 shadow-xl flex text-sm rounded-md items-center w-full transform hover:bg-secondary-500 transition duration-200 px-2 py-2 hover:border-secondary-500 hover:shadow-xl`}>
-                            <div className='flex text-primary-text bg-secondary-400 flex-row items-left rounded-md p-2'>
+                        <div onClick={handleSetNewAddress} className={`text-left min-h-12 cursor-pointer space-x-2 border border-secondary-300 bg-level-4 darker-3-class shadow-xl flex text-sm rounded-md items-center w-full transform hover:bg-level-4 darker-hover-class transition duration-200 px-2 py-2 hover:border-secondary-500 hover:shadow-xl`}>
+                            <div className='flex text-muted text-muted-primary-text bg-secondary-400 flex-row items-left rounded-md p-2'>
                                 {
                                     destinationIsStarknet && connectedWallet ?
                                         <connectedWallet.icon className='rounded-md' alt={connectedWallet?.address} width={25} height={25} />
@@ -202,11 +202,11 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                                 }
                             </div>
                             <div className="flex flex-col grow">
-                                <div className="block text-md font-medium text-primary-text">
+                                <div className="block text-md font-medium text-muted text-muted-primary-text">
                                     {shortenAddress(validInputAddress)}
                                 </div>
                             </div>
-                            <div className='flex text-primary-text flex-row items-left px-2 py-1 rounded-md'>
+                            <div className='flex text-muted text-muted-primary-text flex-row items-left px-2 py-1 rounded-md'>
                                 Select
                             </div>
                         </div>
@@ -219,9 +219,9 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                         && destinationNetwork
                         && provider
                         && !connectedWallet &&
-                        <div onClick={() => { connectWallet(provider.name) }} className={`min-h-12 text-left cursor-pointer space-x-2 border border-secondary-500 bg-secondary-700/70  flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 hover:border-secondary-500 hover:bg-secondary-700 hover:shadow-xl`}>
-                            <div className='flex text-primary-text flex-row items-left bg-secondary-400 px-2 py-1 rounded-md'>
-                                <WalletIcon className="w-6 h-6 text-primary-text" />
+                        <div onClick={() => { connectWallet(provider.name) }} className={`min-h-12 text-left cursor-pointer space-x-2 border border-secondary-500 bg-level-3 darker-2-class/70  flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 hover:border-secondary-500 hover:bg-level-3 darker-2-class hover:shadow-xl`}>
+                            <div className='flex text-muted text-muted-primary-text flex-row items-left bg-secondary-400 px-2 py-1 rounded-md'>
+                                <WalletIcon className="w-6 h-6 text-muted text-muted-primary-text" />
                             </div>
                             <div className="flex flex-col">
                                 <div className="block text-sm font-medium">
@@ -239,12 +239,12 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                         && values.currency
                         && destinationNetwork
                         &&
-                        <div className='text-left p-4 bg-secondary-800 text-primary-text rounded-lg border border-secondary-500'>
+                        <div className='text-left p-4 bg-level-2 darker-class text-muted text-muted-primary-text rounded-lg border border-secondary-500'>
                             <div className="flex items-center">
                                 <Info className='h-5 w-5 text-primary-600 mr-3' />
                                 <label className="block text-sm md:text-base font-medium leading-6">How to find your {destination?.display_name} deposit address</label>
                             </div>
-                            <ul className="list-disc font-light space-y-1 text-xs md:text-sm mt-2 ml-8 text-primary-text">
+                            <ul className="list-disc font-light space-y-1 text-xs md:text-sm mt-2 ml-8 text-muted text-muted-primary-text">
                                 <li>Go to the Deposits page</li>
                                 <li>
                                     <span>Select</span>
@@ -256,7 +256,7 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                                                 width="15"
                                                 className='rounded-sm'
                                             />
-                                            <span className="text-primary-text">{values.currency.asset}</span>
+                                            <span className="text-muted text-muted-primary-text">{values.currency.asset}</span>
                                         </span>
                                     </span>
                                     <span>as asset</span>
@@ -271,7 +271,7 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                                                 width="15"
                                                 className='rounded-sm'
                                             />
-                                            <span className="text-primary-text">{destinationNetwork?.display_name}</span>
+                                            <span className="text-muted text-muted-primary-text">{destinationNetwork?.display_name}</span>
                                         </span>
                                     </span>
                                     <span>as network</span>
@@ -302,9 +302,9 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                                                 return (
                                                     <RadioGroup.Description
                                                         as="span"
-                                                        className={`space-x-2 flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 border border-secondary-900 hover:border-secondary-500 hover:bg-secondary-700/70 hover:shadow-xl ${checked && 'border-secondary-700'}`}
+                                                        className={`space-x-2 flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 border border-secondary-900 hover:border-secondary-500 hover:bg-level-3 darker-2-class/70 hover:shadow-xl ${checked && 'border-secondary-700'}`}
                                                     >
-                                                        <div className='flex bg-secondary-400 text-primary-text flex-row items-left  rounded-md p-2'>
+                                                        <div className='flex bg-secondary-400 text-muted text-muted-primary-text flex-row items-left  rounded-md p-2'>
                                                             <AddressIcon address={a.address} size={20} />
                                                         </div>
                                                         <div className="flex flex-col">

@@ -16,9 +16,11 @@
     -moz-appearance: textfield;
   }
   
+  /*
   .styled-scroll {
-    @apply scrollbar:!w-1.5 scrollbar:!h-1.5 scrollbar:bg-secondary-500  scrollbar-thumb:!rounded scrollbar-thumb:!bg-slate-300  scrollbar-thumb:!bg-slate-500/50;
+    @apply scrollbar:!w-1.5 scrollbar:!h-1.5 scrollbar:bg-level-4 darker-hover-class  scrollbar-thumb:!rounded scrollbar-thumb:!bg-slate-300  scrollbar-thumb:!bg-slate-500/50;
   }
+  */
   
 }
 
@@ -354,8 +356,6 @@ input:disabled,
 textarea:disabled,
 input:disabled::placeholder,
 textarea:disabled::placeholder {
-  -webkit-text-fill-color: theme('colors.primary.text-placeholder');
-  /* 1. sets text fill to 'primary-text': '#a4afc8' */
   opacity: 1;
   /* 2. correct opacity on iOS */
 }

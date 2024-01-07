@@ -44,14 +44,14 @@ const ManualTransfer: FC = () => {
     }, [swap, hintsStore])
 
     return (
-        <div className='rounded-md bg-secondary-700 border border-secondary-500 w-full h-full items-center relative'>
+        <div className='rounded-md bg-level-3 darker-2-class border border-secondary-500 w-full h-full items-center relative'>
             <div className={!hintClicked ? "absolute w-full h-full flex flex-col items-center px-3 pb-3 text-center" : "hidden"}>
                 <div className="flex flex-col items-center justify-center h-full pb-2">
                     <div className="max-w-xs">
-                        <p className="text-base text-primary-text">
+                        <p className="text-base text-muted text-muted-primary-text">
                             About manual transfers
                         </p>
-                        <p className="text-xs text-secondary-text">
+                        <p className="text-xs text-foreground text-foreground-new">
                             Transfer assets to Bridge’s deposit address to complete the swap.
                         </p>
                     </div>
@@ -110,8 +110,8 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         setSelectedAssetNetwork(n)
     }, [])
 
-    return <div className='divide-y divide-secondary-500 text-primary-text h-full'>
-        {source_exchange && <div className={`w-full relative rounded-md px-3 py-3 shadow-sm border-secondary-700 border bg-secondary-700 flex flex-col items-center justify-center gap-2`}>
+    return <div className='divide-y divide-secondary-500 text-muted text-muted-primary-text h-full'>
+        {source_exchange && <div className={`w-full relative rounded-md px-3 py-3 shadow-sm border-secondary-700 border bg-level-3 darker-2-class flex flex-col items-center justify-center gap-2`}>
             <ExchangeNetworkPicker onChange={handleChangeSelectedNetwork} />
         </div>
         }
@@ -128,7 +128,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
                     }
                     {
                         (source_network_internal_name === KnownInternalNames.Networks.LoopringMainnet || source_network_internal_name === KnownInternalNames.Networks.LoopringGoerli) &&
-                        <div className='flex text-xs items-center py-1 mt-1 border-2 border-secondary-300 rounded border-dashed text-secondary-text'>
+                        <div className='flex text-xs items-center py-1 mt-1 border-2 border-secondary-300 rounded border-dashed text-foreground text-foreground-new'>
                             <p>
                                 This address might not be activated. You can ignore it.
                             </p>
@@ -183,7 +183,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
                             {asset?.name}
                         </span>
                         {asset?.contract_address && isValidAddress(asset.contract_address, selectedAssetNetwork?.network) &&
-                            <span className="text-xs text-secondary-text flex items-center leading-3">
+                            <span className="text-xs text-foreground text-foreground-new flex items-center leading-3">
                                 {shortenAddress(asset?.contract_address)}
                             </span>
                         }
@@ -215,13 +215,13 @@ const ExchangeNetworkPicker: FC<{ onChange: (network: BaseL2Asset) => void }> = 
     return <div className='flex items-center gap-1 text-sm my-2'>
         <span>Network:</span>
         {exchangeAssets?.length === 1 ?
-            <div className='flex space-x-1 items-center w-fit font-semibold text-primary-text'>
+            <div className='flex space-x-1 items-center w-fit font-semibold text-muted text-muted-primary-text'>
                 <Image alt="chainLogo" height='20' width='20' className='h-5 w-5 rounded-md ring-2 ring-secondary-600' src={resolveImgSrc(exchangeAssets?.[0])}></Image>
                 <span>{defaultSourceNetwork?.network?.display_name}</span>
             </div>
             :
             <Select onValueChange={handleChangeSelectedNetwork} defaultValue={defaultSourceNetwork?.network_internal_name}>
-                <SelectTrigger className="w-fit border-none !text-primary-text !font-semibold !h-fit !p-0">
+                <SelectTrigger className="w-fit border-none !text-muted text-muted-primary-text !font-semibold !h-fit !p-0">
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,7 +255,7 @@ const ExchangeNetworkPicker: FC<{ onChange: (network: BaseL2Asset) => void }> = 
 
 
 const Sceleton = () => {
-    return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-secondary-700 border border-secondary-500">
+    return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-level-3 darker-2-class border border-secondary-500">
         <div className="flex-1 space-y-6 py-1 p-8 pt-4 items-center">
             <div className="h-2 bg-secondary-text rounded self-center w-16 m-auto"></div>
             <div className="space-y-3">
