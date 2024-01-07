@@ -94,7 +94,7 @@ type BriefInformationProps = {
     network?: CryptoNetwork
 }
 const BriefInformation: FC<BriefInformationProps> = ({ campaign, network }) =>
-    <p className="text-secondary-text text-base">
+    <p className="text-foreground text-foreground-new text-base">
         <span>You can earn $</span>
         <span>{campaign?.asset}</span>
         <span>&nbsp;tokens by transferring assets to&nbsp;</span>

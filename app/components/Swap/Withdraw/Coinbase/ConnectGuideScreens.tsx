@@ -6,7 +6,7 @@ export const FirstScreen: React.FC<{
   name 
 }) => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.01</span><span>&nbsp;After this guide you&apos;ll be redirected to </span>{name}<span></span></div>
+        <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.01</span><span>&nbsp;After this guide you&apos;ll be redirected to </span>{name}<span></span></div>
         <div className="w-1/2 m-auto">
             <FirstScreenImage />
         </div>
@@ -15,7 +15,7 @@ export const FirstScreen: React.FC<{
 
 export const SecondScreen: React.FC = () => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.02</span><span>&nbsp;When in Coinbase, click&nbsp;</span><span className='strong-highlight font-medium'>Change this amount</span></div>
+        <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.02</span><span>&nbsp;When in Coinbase, click&nbsp;</span><span className='strong-highlight font-medium'>Change this amount</span></div>
         <div className="w-1/2 m-auto">
             <SecondScreenImage />
         </div>
@@ -28,7 +28,7 @@ export const ThirdScreen: React.FC<{
   minimalAuthorizeAmount 
 }) => (
   <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-    <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.03</span><span>&nbsp;Change the existing 1.0 value to&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click Save</span></div>
+    <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.03</span><span>&nbsp;Change the existing 1.0 value to&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click Save</span></div>
     <div className="w-1/2  m-auto">
       <ThirdScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
     </div>
@@ -41,7 +41,7 @@ export const FourthScreen: React.FC<{
   minimalAuthorizeAmount 
 }) => (
   <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-    <div className='whitespace-normal text-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.04</span><span>&nbsp;Make sure that the amount is&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click&nbsp;</span><span className='strong-highlight font-medium'>Authorize</span></div>
+    <div className='whitespace-normal text-muted text-muted-primary-text grow text-md font-normal pb-2'><span className='font-medium text-primary'>.04</span><span>&nbsp;Make sure that the amount is&nbsp;</span><span className='strong-highlight font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click&nbsp;</span><span className='strong-highlight font-medium'>Authorize</span></div>
     <div className="w-1/2  m-auto">
       <FourthScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
     </div>
@@ -58,7 +58,7 @@ export const LastScreen: React.FC<{
   number
 }) => (
   <div className="inline-flex flex-col left-0 l relative top-0 grow w-full">
-    <div className='text-primary-text text-md font-normal grow w-full pb-2 '>
+    <div className='text-muted text-muted-primary-text text-md font-normal grow w-full pb-2 '>
       {number && (<span className='font-medium text-primary'>.05</span>) }
       <span>&nbsp;Make sure to change the allowed amount to&nbsp;</span>
       <span className='strong-highlight'>{minimalAuthorizeAmount}</span>

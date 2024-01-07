@@ -148,12 +148,12 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
             onSubmit={handleSubmit}
         >
             {({ isValid, isSubmitting, errors, handleChange }) => (
-                <Form className='flex flex-col jutsify-center text-secondary-text h-full '>
+                <Form className='flex flex-col jutsify-center text-foreground text-foreground-new h-full '>
                     <Widget.Content center>
                         <div className="w-full flex-col justify-between flex h-full">
                             <ScanFace className='w-12 h-12 md:w-16 md:h-16 mt-auto text-primary self-center' />
                             <div className='text-center md:mt-5 md:mb-8'>
-                                <p className='mb-2 md:mb-6 mt-2 pt-2 text-2xl font-bold text-primary-text leading-6 text-center font-roboto'>
+                                <p className='mb-2 md:mb-6 mt-2 pt-2 text-2xl font-bold text-muted text-muted-primary-text leading-6 text-center font-roboto'>
                                     Coinbase 2FA
                                 </p>
                                 <p className='text-center text-base px-2'>
@@ -169,8 +169,8 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
                                     onChange={e => {
                                         /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                     }}
-                                    className="leading-none h-12 text-2xl pl-5 text-primary-text  focus:ring-primary text-center focus:border-primary border-secondary-500 block
-                                placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-secondary-700  w-full font-semibold rounded-md placeholder-primary-text"
+                                    className="leading-none h-12 text-2xl pl-5 text-muted text-muted-primary-text  focus:ring-primary text-center focus:border-primary border-secondary-500 block
+                                placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-3 darker-2-class  w-full font-semibold rounded-md placeholder-primary-text"
                                 />
                             </div>
                             <span className="flex text-sm leading-6 items-center mt-1.5">
@@ -189,7 +189,7 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
                                         : <SpinIcon className="animate-spin h-5 w-5" />}
                                 </TimerWithContext>
                             </span>
-                            <div className='p-4 bg-secondary-700 text-secondary-text rounded-lg border border-secondary-500 my-4'>
+                            <div className='p-4 bg-level-3 darker-2-class text-foreground text-foreground-new rounded-lg border border-secondary-500 my-4'>
                                 <div className="flex items-center">
                                     <Info className='h-5 w-5 text-primary-600 mr-3' />
                                     <label className="block text-sm md:text-base font-medium leading-6">To obtain the 2 step verification code, check:</label>

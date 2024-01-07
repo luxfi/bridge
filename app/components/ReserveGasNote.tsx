@@ -38,11 +38,11 @@ const ReserveGasNote = ({ onSubmit }: { onSubmit: (walletBalance: Balance, netwo
     return (
         mightBeAutOfGas && gasToReserveFormatted > 0 &&
         <WarningMessage messageType="warning" className="mt-4">
-            <div className="font-normal text-primary-text">
+            <div className="font-normal text-muted text-muted-primary-text">
                 <div>
                     You might not be able to complete the transaction.
                 </div>
-                <div onClick={() => onSubmit(walletBalance, networkGas)} className="cursor-pointer border-b border-dotted border-primary-text w-fit hover:text-primary hover:border-primary text-primary-text">
+                <div onClick={() => onSubmit(walletBalance, networkGas)} className="cursor-pointer border-b border-dotted border-primary-text w-fit hover:text-primary hover:border-primary text-muted text-muted-primary-text">
                     <span>Reserve</span> <span>{gasToReserveFormatted}</span> <span>{values?.currency?.asset}</span> <span>for gas.</span>
                 </div>
             </div>

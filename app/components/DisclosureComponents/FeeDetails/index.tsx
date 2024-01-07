@@ -15,7 +15,7 @@ export default function FeeDetails({ values }: { values: SwapFormValues }) {
     let receive_amount = CalculateReceiveAmount(values, networks, currencies);
     return (
         <>
-            <div className="mx-auto relative w-full rounded-lg border border-secondary-500 hover:border-secondary-300 bg-secondary-700 px-3.5 py-3 z-[1] transition-all duration-200">
+            <div className="mx-auto relative w-full rounded-lg bg-level-2 border border-level-3 hover:border-level-4 px-3.5 py-3 z-[1] transition-all duration-200">
                     {/* @ts-ignore */}
                 <Accordion type="single" collapsible>
                     {/* @ts-ignore */}
@@ -31,7 +31,7 @@ export default function FeeDetails({ values }: { values: SwapFormValues }) {
                             />
                         </AccordionTrigger>
                     {/* @ts-ignore */}
-                    <AccordionContent className="text-sm text-secondary-text font-normal">
+                    <AccordionContent className="text-sm text-foreground text-foreground-new font-normal">
                             <DetailedEstimates
                                 currencies={currencies}
                                 networks={networks}

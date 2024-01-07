@@ -118,7 +118,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-primary-text">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-muted text-muted-primary-text">
                 <div className='space-y-4'>
                     {
                         !syncWallet &&

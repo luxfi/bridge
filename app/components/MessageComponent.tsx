@@ -62,7 +62,7 @@ const Content: React.FC<MessageComponentProps> = ({ children, icon, center }) =>
 const Header: React.FC<PropsWithChildren> = ({ 
   children 
 }) => (
-  <div className='md:text-3xl text-lg font-bold text-primary-text leading-6 text-center'>
+  <div className='md:text-3xl text-lg font-bold text-muted text-muted-primary-text leading-6 text-center'>
     {children}
   </div>
 )
@@ -70,7 +70,7 @@ const Header: React.FC<PropsWithChildren> = ({
 const Description: React.FC<PropsWithChildren> = ({ 
   children 
 }) => (
-  <div className="text-base font-medium space-y-6 text-secondary-text text-center mb-6">
+  <div className="text-base font-medium space-y-6 text-foreground text-foreground-new text-center mb-6">
     {children}
   </div>
 )

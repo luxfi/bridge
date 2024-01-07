@@ -18,7 +18,7 @@ export default function SelectItem<T>({ item }: { item: SelectMenuItem<T> }) {
             </p>
             {
                 item.details &&
-                <p className="text-primary-text-muted">
+                <p className="text-muted">
                     {item.details}
                 </p>
             }
