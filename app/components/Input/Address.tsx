@@ -135,7 +135,7 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                         <label htmlFor={name}>Address</label>
                         {isPartnerWallet && partner && <span className='truncate text-sm text-indigo-200'> ({partner?.display_name})</span>}
                         <div className="flex flex-wrap flex-col md:flex-row">
-                            <div className="relative flex grow rounded-lg shadow-sm mt-1.5 bg-level-3 darker-2-class border-secondary-500 border focus-within:ring-0 focus-within:ring-primary focus-within:border-primary">
+                            <div className="relative flex grow rounded-lg shadow-sm mt-1.5 focus-within:ring-0 focus-within:ring-primary focus-within:border-primary">
                                 {isPartnerWallet &&
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         {
@@ -155,15 +155,15 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                                     id={name}
                                     ref={inputReference}
                                     tabIndex={0}
-                                    className={`${isPartnerWallet ? 'pl-11' : ''} disabled:cursor-not-allowed grow h-12 border-none leading-4  block font-semibold w-full bg-level-2 darker-2-class rounded-lg truncate hover:overflow-x-scroll focus:ring-0 focus:outline-none`}
+                                    className={`${isPartnerWallet ? 'pl-11' : ''} disabled:cursor-not-allowed grow h-12 leading-4 placeholder:text-muted-2 block font-semibold w-full bg-level-2 border-level-3 border rounded-lg truncate hover:overflow-x-scroll focus:ring-0 focus:outline-none`}
                                 />
                                 {
                                     inputValue && !disabled &&
                                     <span className="inline-flex items-center mr-2">
-                                        <div className="text-xs flex items-center space-x-2 md:ml-5 bg-level-4 darker-hover-class rounded-md border border-secondary-500">
+                                        <div className="text-xs flex items-center space-x-2 md:ml-5 bg-level-4 darker-hover-class rounded-md border border-level-3">
                                             <button
                                                 type="button"
-                                                className="p-0.5 duration-200 transition  hover:bg-secondary-400  rounded-md border border-secondary-500 hover:border-secondary-200"
+                                                className="p-0.5 duration-200 transition  hover:bg-level-3 rounded-md border border-level-3 hover:border-level-4"
                                                 onClick={handleRemoveDepositeAddress}
                                             >
                                                 <div className="flex items-center px-2 text-sm py-1 font-semibold">

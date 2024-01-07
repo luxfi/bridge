@@ -340,7 +340,7 @@ const AddressButton: FC<AddressButtonProps> = ({
   partnerImage, 
   disabled 
 }) => ( 
-  <button type="button" disabled={disabled} onClick={openAddressModal} className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 text-muted placeholder:text-muted-2 bg-level-2 border-level-3 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-primary focus:border-primary font-semibold w-full px-3.5 py-3">
+  <button type="button" disabled={disabled} onClick={openAddressModal} className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 text-muted placeholder:text-muted-2 bg-level-2 border-level-3 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-accent focus:border-accent font-semibold w-full px-3.5 py-3">
     {isPartnerWallet && !values.to?.isExchange &&
       <div className="shrink-0 flex items-center pointer-events-none">
       {partnerImage && (
