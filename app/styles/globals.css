@@ -16,11 +16,11 @@
     -moz-appearance: textfield;
   }
   
-  /*
+  
   .styled-scroll {
-    @apply scrollbar:!w-1.5 scrollbar:!h-1.5 scrollbar:bg-level-4 darker-hover-class  scrollbar-thumb:!rounded scrollbar-thumb:!bg-slate-300  scrollbar-thumb:!bg-slate-500/50;
+    @apply scrollbar:!w-1.5 scrollbar:!h-1.5 scrollbar:bg-level-2 scrollbar-thumb:!rounded scrollbar-thumb:!bg-level-3;
   }
-  */
+  
   
 }
 
