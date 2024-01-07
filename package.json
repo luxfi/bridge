@@ -14,15 +14,15 @@
     "exchange",
     "swap"
   ],
-  "scripts_": {
-    "build": "yarn build:all",
-    "build:all": "yarn build:app && yarn build:explorer && yarn build:sdk && yarn build:ui",
-    "build:app": "yarn workspace @luxbridge/app build",
-    "build:explorer": "yarn workspace @luxbridge/explorer build",
-    "build:sdk": "yarn workspace @luxbridge/sdk build",
-    "build:ui": "yarn workspace @luxbridge/ui build",
-    "start": "yarn workspace @luxbridge/app start",
-    "dev": "yarn workspace @luxbridge/app dev"
+  "scripts": {
+    "build": "pnpm build:all",
+    "build:all": "pnpm build:app && pnpm build:explorer && pnpm build:sdk && pnpm build:ui",
+    "build:app": "pnpm --filter @luxbridge/app build",
+    "build:explorer": "pnpm --filter @luxbridge/explorer build",
+    "build:sdk": "pnpm --filter @luxbridge/sdk build",
+    "build:ui": "pnpm --filter @luxdefi/ui build",
+    "start": "pnpm workspace @luxbridge/app start",
+    "dev": "pnpm workspace @luxbridge/app dev"
   },
   "devDependencies_": {
     "@babel/preset-typescript": "^7.18.6",
