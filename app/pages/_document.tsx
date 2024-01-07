@@ -21,7 +21,7 @@ declare global {
 
 export default function Document() {
   return (
-    <Html lang="en">
+    <Html lang="en" className='dark'>
       <Head>
         {process.env.NEXT_PUBLIC_VERCEL_ENV && <script
           defer

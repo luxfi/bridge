@@ -5,14 +5,14 @@ import useWindowDimensions from "../../hooks/useWindowDimensions";
 import { Leaflet, LeafletHeight } from "./leaflet";
 import ReactPortal from "../Common/ReactPortal";
 
-export interface ModalProps {
-    header?: ReactNode;
-    subHeader?: string | JSX.Element
-    children?: JSX.Element | JSX.Element[];
-    className?: string;
-    height?: LeafletHeight;
-    show: boolean;
-    setShow: Dispatch<SetStateAction<boolean>>
+interface ModalProps {
+  header?: ReactNode;
+  subHeader?: string | JSX.Element
+  children?: JSX.Element | JSX.Element[];
+  className?: string;
+  height?: LeafletHeight;
+  show: boolean;
+  setShow: Dispatch<SetStateAction<boolean>>
 }
 
 const Modal: FC<ModalProps> = (({ header, height, className, children, subHeader, show, setShow }) => {

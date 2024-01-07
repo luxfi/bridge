@@ -14,7 +14,7 @@ module.exports = ({ colors }) => ({
     '3': "var(--bg-3)", 
   },
   accent: "var(--fg-0)",      // full contrast (darkTheme:white) : heading and links hover  
-  foreground: "var(--fg-body)", // body off-white (bright enough to contrast to bg-forward-1)
+  foreground: "var(--fg-body)", // body off-white (bright enough to contrast to bg-level-1)
   muted: {
     DEFAULT: "var(--fg-2)",   // de-emphasized: fine print
     '1': "var(--fg-2)",       // synonymous ^^^ 

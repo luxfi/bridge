@@ -1,12 +1,6 @@
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './accordion'
-import { default as ApplyTypography, TypographySize} from './apply-typography'
+export { default as ApplyTypography, type TypographySize} from './apply-typography'
 
-/*
-export {
-  ApplyTypography,
-  type TypographySize
-}
-*/
 export { 
   default as Button, 
   type ButtonProps,
