@@ -1,11 +1,11 @@
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './accordion'
 export { default as ApplyTypography, type TypographySize} from './apply-typography'
 
-export { 
-  default as Button, 
+export {
+  default as Button,
   type ButtonProps,
   type ButtonVariants,
-  type ButtonSizes, 
+  type ButtonSizes,
   buttonVariants,
 } from './button'
 
@@ -71,6 +71,3 @@ export { Toaster } from './toaster'
 export { useToast, toast } from './use-toast'
 
 export { default as VideoPlayer } from './video-player'
-
-
-
