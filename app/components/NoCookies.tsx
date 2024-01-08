@@ -12,7 +12,7 @@ const NoCookies: React.FC = () => {
 
     return (
         <div className="styled-scroll">
-            <div className="min-h-screen overflow-hidden relative font-robo">
+            <div className="min-h-screen overflow-hidden relative">
                 <div className="mx-auto max-w-xl bg-level-1 darkest-class shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
                     <MessageComponent>
                         <MessageComponent.Content icon="red">
