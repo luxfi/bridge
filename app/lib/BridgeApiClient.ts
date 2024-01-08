@@ -29,7 +29,7 @@ export default class BridgeApiClient {
         settingsURL = `https://bridge.lux.network:443` + settingsURL
       }
 
-      return await axios.get(settingsURL).then((res: ApiResponse<BridgeSettings>) => res.data);
+      return await axios.get(settingsURL).then((res: any) => res.data);
     }
 
     async CreateSwapAsync(params: CreateSwapParams): Promise<ApiResponse<CreateSwapData>> {
