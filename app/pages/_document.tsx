@@ -1,6 +1,7 @@
 import React from 'react'
 import { Head, Html, Main, NextScript } from 'next/document'
 
+
 export enum TrackEvent {
   SignedIn = 'Signed in',
   SwapFailed = 'Swap failed',
@@ -19,9 +20,13 @@ declare global {
   }
 }
 
+
+const fontClasses = 
+  'bg-background fg-foreground font-sans'
+
 export default function Document() {
   return (
-    <Html lang="en" className='dark'>
+    <Html lang="en" className='dark' >
       <Head>
         {process.env.NEXT_PUBLIC_VERCEL_ENV && <script
           defer
@@ -46,7 +51,7 @@ export default function Document() {
           }}
         />
       </Head>
-      <body>
+      <body className={fontClasses}>
         <Main />
         <NextScript />
       </body>
