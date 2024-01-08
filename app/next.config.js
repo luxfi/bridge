@@ -69,8 +69,8 @@ module.exports = withSentryConfig(
 
     // Suppresses source map uploading logs during build
     silent: true,
-    org: "bridge-sr",
-    project: "javascript-nextjs",
+    org: "lux-e4",
+    project: "lux-bridge",
   },
   {
     // For all available options, see:
