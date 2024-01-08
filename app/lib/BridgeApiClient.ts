@@ -21,7 +21,15 @@ export default class BridgeApiClient {
     fetcher = (url: string) => this.AuthenticatedRequest<ApiResponse<any>>("GET", url)
 
     async GetSettingsAsync(): Promise<ApiResponse<BridgeSettings>> {
-        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
+      let settingsURL = `/api/settings?version=${BridgeApiClient.apiVersion}`
+
+      if (process.env.NODE_ENV === 'development') {
+        settingsURL = 'http://localhost:3000' + settingsURL
+      } else {
+        settingsURL = `https://bridge.lux.network:443` + settingsURL
+      }
+
+      return await axios.get(settingsURL).then((res: any) => res.data);
     }
 
     async CreateSwapAsync(params: CreateSwapParams): Promise<ApiResponse<CreateSwapData>> {

@@ -57,7 +57,7 @@ const SendFeedback: FC<Props> = ({ onSend }) => {
             {({ handleChange, isValid, isSubmitting }) => (
                 <Form className='flex flex-col justify-between'>
                     <div className='space-y-4 h-full mt-2'>
-                        <p className='text-base text-left font-roboto text-foreground text-foreground-new font-light'>
+                        <p className='text-base text-left text-foreground text-foreground-new font-light'>
                             Please help us shape the product, catch bugs, and prioritize features. Your feedback will go directly into our Telegram channel.
                         </p>
                     </div>

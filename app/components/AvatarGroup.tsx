@@ -4,7 +4,7 @@ type Props = {
   imageUrls: string[]
 }
 
-const AvatarGroup: FC<Props> = (({ imageUrls }) => {
+const AvatarGroup = ({ imageUrls }: Props) => {
   return (
     <div className="">
       <div className="isolate flex -space-x-1 overflow-hidden p-1">
@@ -23,6 +23,6 @@ const AvatarGroup: FC<Props> = (({ imageUrls }) => {
       </div>
     </div>
   )
-});
+}
 
 export default AvatarGroup;
