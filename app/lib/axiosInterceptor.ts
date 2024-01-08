@@ -30,7 +30,7 @@ export const InitializeInstance = (baseURL?: string) => {
             refreshTokenState.RefreshingToken = true
 
             const params = new URLSearchParams();
-            params.append('client_id', 'bridge_bridge_ui');
+            params.append('client_id', 'bridge_ui');
             params.append('grant_type', 'refresh_token');
             params.append('refresh_token', refresh_token);
 
