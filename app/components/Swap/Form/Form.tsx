@@ -32,6 +32,7 @@ import AmountField from "../../Input/Amount"
 import { Balance, Gas } from "../../../Models/Balance";
 import dynamic from "next/dynamic";
 
+
 type Props = {
     isPartnerWallet?: boolean,
     partner?: Partner,
@@ -180,6 +181,16 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
             setFieldValue('amount', walletBalance?.amount - networkGas?.gas)
     }, [values.amount])
 
+    const LuxTo: React.FC = () => ( 
+      <div className="rounded-xl p-3 bg-level-2 border border-level-3">
+              <span className="font-semibold text-foreground text-sm mr-3">
+                  To
+              </span>
+              <h4 className='inline text-center text-lg'>&#9660;&nbsp;Lux Chain</h4>
+      </div>
+    )
+      
+
   const SwapToAndFromButton: React.FC = () => (
     <button type="button"
       aria-label="Reverse the source and destination"
@@ -210,12 +221,9 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                               <NetworkFormField direction="from" label="From" />
                           </div>)
                         }
-                        {!query?.hideFrom && !query?.hideTo && (
-                          <SwapToAndFromButton />
-                        )}
                         {!(query?.hideTo && values?.to) && (
                           <div className="flex flex-col w-full">
-                              <NetworkFormField direction="to" label="To" />
+                              <LuxTo />
                           </div>
                         )}
                     </div>
