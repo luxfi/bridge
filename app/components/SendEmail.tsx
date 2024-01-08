@@ -132,7 +132,7 @@ const SendEmail: FC<Props> = ({ onSend, disclosureLogin }) => {
                                     <Widget.Content center={true}>
                                         <User className='w-16 h-16 text-primary self-center mt-auto' />
                                         <div>
-                                            <p className='mb-6 mt-2 pt-2 text-2xl font-bold text-muted text-muted-primary-text leading-6 text-center font-roboto'>
+                                            <p className='mb-6 mt-2 pt-2 text-2xl font-bold text-muted text-muted-primary-text leading-6 text-center'>
                                                 What&apos;s your email?
                                             </p>
                                         </div>
