@@ -16,7 +16,7 @@ type Props = {
     children: JSX.Element | JSX.Element[];
 }
 
-const BackgroundField: FC<Props> = (({ Copiable, toCopy, header, children, QRable, highlited, withoutBorder, Explorable, toExplore }) => {
+const BackgroundField = ({ Copiable, toCopy, header, children, QRable, highlited, withoutBorder, Explorable, toExplore }: Props) => {
     const { isMobile } = useWindowDimensions()
 
     return (
@@ -28,10 +28,10 @@ const BackgroundField: FC<Props> = (({ Copiable, toCopy, header, children, QRabl
                 </div>
             }
             <div className={
-              'w-full relative px-3 py-3 shadow-sm ' + 
-                withoutBorder ? 
-                  'border-secondary-700' 
-                  : 
+              'w-full relative px-3 py-3 shadow-sm ' +
+                withoutBorder ?
+                  'border-secondary-700'
+                  :
                   'border-secondary-500 rounded-md border bg-level-3 darker-2-class'
               }
             >
@@ -60,6 +60,6 @@ const BackgroundField: FC<Props> = (({ Copiable, toCopy, header, children, QRabl
             </div>
         </div>
     )
-})
+}
 
 export default BackgroundField;
