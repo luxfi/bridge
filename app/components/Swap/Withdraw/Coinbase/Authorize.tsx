@@ -120,7 +120,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
             <Widget.Content>
                 {
                     !hideHeader ?
-                        <h3 className='md:mb-4 pt-2 text-lg sm:text-xl text-left font-roboto text-muted text-muted-primary-text font-semibold'>
+                        <h3 className='md:mb-4 pt-2 text-lg sm:text-xl text-left text-muted font-semibold'>
                             Please connect your {exchange_name} account
                         </h3>
                         : <></>
