@@ -7,32 +7,59 @@ const Dialog = DialogPrimitive.Root
 
 const DialogTrigger = DialogPrimitive.Trigger
 
-const DialogPortal = ({
-    children,
-    ...props
-}: DialogPrimitive.DialogPortalProps) => (
+interface DialogPortalProps extends React.PropsWithChildren<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal>> {
+    className?: string;
+}
+
+const DialogPortal = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Portal>,
+    DialogPortalProps
+>(({ className, children, ...props }, ref) => (
     <DialogPrimitive.Portal {...props}>
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+        <div className={classNames("fixed inset-0 z-50 flex items-end justify-center sm:items-center", className)}>
             {children}
         </div>
     </DialogPrimitive.Portal>
-)
-DialogPortal.displayName = DialogPrimitive.Portal.displayName
+))
+DialogPortal.displayName = 'DialogPortal'
+
+interface DialogOverlayProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> {
+    className?: string;
+}
 
 const DialogOverlay = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Overlay>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+    DialogOverlayProps
 >(({ className, ...props }, ref) => (
-    <DialogPrimitive.Overlay
+    <div className={classNames("fixed inset-0 z-50 flex items-end justify-center sm:items-center", className)}>
+      <DialogPrimitive.Overlay ref={ref} {...props} />
+    </div>
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+
+interface DialogCloseProps extends React.PropsWithChildren<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>> {
+    className?: string;
+}
+
+const DialogClose = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Close>,
+    DialogCloseProps
+>(({ className, ...props }, ref) => (
+    <DialogPrimitive.Close
         ref={ref}
         className={classNames(
-            "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-all duration-100 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in",
+            "absolute right-4 top-3 p-1 justify-self-start hover:brightness-105 hover:scale-110 duration-100 ring-1 ring-secondary-400 transition bg-secondary-500 hover:text-primary-text focus:outline-none rounded-full items-center",
             className
         )}
         {...props}
-    />
+    >
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+    </DialogPrimitive.Close>
 ))
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+DialogClose.displayName = DialogPrimitive.Close.displayName
 
 const DialogContent = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Content>,
@@ -49,10 +76,7 @@ const DialogContent = React.forwardRef<
             {...props}
         >
             {children}
-            <DialogPrimitive.Close className="absolute text-secondary-text right-4 top-3 p-1 justify-self-start hover:brightness-105 hover:scale-110 duartion-100 ring-1 ring-secondary-400 transition bg-secondary-500 hover:text-primary-text focus:outline-none rounded-full items-center">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
+            <DialogClose />
         </DialogPrimitive.Content>
     </DialogPortal>
 ))
@@ -86,24 +110,6 @@ const DialogFooter = ({
 )
 DialogFooter.displayName = "DialogFooter"
 
-const DialogClose = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Close>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Close
-    ref={ref}
-    className={classNames(
-      "absolute right-4 top-3 p-1 justify-self-start hover:brightness-105 hover:scale-110 duration-100 ring-1 ring-secondary-400 transition bg-secondary-500 hover:text-primary-text focus:outline-none rounded-full items-center",
-      className
-    )}
-    {...props}
-  >
-    <X className="h-4 w-4" />
-    <span className="sr-only">Close</span>
-  </DialogPrimitive.Close>
-));
-DialogClose.displayName = "DialogClose"
-
 const DialogTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
@@ -133,13 +139,13 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName
 
 export {
     Dialog,
-    DialogContent,
-    DialogClose,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
     DialogTrigger,
     DialogOverlay,
+    DialogClose,
     DialogPortal,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
 }

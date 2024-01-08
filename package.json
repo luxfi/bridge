@@ -1,8 +1,7 @@
 {
-  "name": "@luxbridge/monorepo",
+  "name": "luxbridge",
   "version": "0.1.0",
   "author": "Lux Partners Limited <dev@lux.partners> (https://lux.partners)",
-  "license": "BSD-3-Clause",
   "private": true,
   "keywords": [
     "ai",
@@ -21,8 +20,8 @@
     "build:explorer": "pnpm --filter @luxbridge/explorer build",
     "build:sdk": "pnpm --filter @luxbridge/sdk build",
     "build:ui": "pnpm --filter @luxdefi/ui build",
-    "start": "pnpm workspace @luxbridge/app start",
-    "dev": "pnpm workspace @luxbridge/app dev"
+    "start": "pnpm --filter @luxbridge/app start",
+    "dev": "pnpm --filter @luxbridge/app dev"
   },
   "devDependencies_": {
     "@babel/preset-typescript": "^7.18.6",
