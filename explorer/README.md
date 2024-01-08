@@ -1,2 +1,1 @@
-# bridge-explorer
-Lux Bridge Explorer.
+Bridge Explorer
