@@ -1,7 +1,6 @@
 {
   "name": "@luxdefi/ui",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
   "description": "Library that contains shared UI primitives, styles, and core types",
   "main": "dist/index.js",
   "scripts": {
