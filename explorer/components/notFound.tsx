@@ -13,7 +13,7 @@ export default function NotFound() {
                     <div className='hover:bg-secondary-600 hover:text-accent-foreground rounded ring-offset-background transition-colors'>
                         <BackBtn />
                     </div>
-                    <Link href={'http://discord.gg/bridge'} target="_blank" className="w-1/2 px-5 py-2 text-sm tracking-wide text-white transition-colors duration-200 bg-primary-500 rounded-lg shrink-0 sm:w-auto hover:bg-primary-500/80">
+                    <Link href={'http://chat.lux.network'} target="_blank" className="w-1/2 px-5 py-2 text-sm tracking-wide text-white transition-colors duration-200 bg-primary-500 rounded-lg shrink-0 sm:w-auto hover:bg-primary-500/80">
                         Contact support
                     </Link>
                 </div>
