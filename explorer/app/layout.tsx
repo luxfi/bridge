@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <Script defer data-domain="bridge.io" src="https://plausible.io/js/script.js" />
+      <Script defer data-domain="bridge.lux.network" src="https://plausible.io/js/script.js" />
       <body className='flex min-h-screen flex-col items-center max-w-6xl mx-auto'>
         <Header />
         {children}
