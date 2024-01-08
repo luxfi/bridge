@@ -1,31 +1,31 @@
 {
   "extends": "../tsconfig.base.json",
   "include": [
-    "next-env.d.ts", 
-    "types.d.ts", 
-    "**/*.ts", 
-    "**/*.tsx", 
-    ".next/types/**/*.ts",
-    "**/**/*.tsx",
-    "pages/_app.js"
+     "next-env.d.ts",
+     "types.d.ts",
+     "**/*.ts",
+     "**/*.tsx",
+     ".next/types/**/*.ts",
+     "**/**/*.tsx",
+     "pages/_app.js"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "./dist",
+    "**/*.stories.tsx"
   ],
-
+  "plugins": [
+    {
+      "name": "next"
+    }
+  ],
   "compilerOptions": {
-    "declaration": true,
-    "preserveSymlinks": true,
     "target": "es2020",
+    "jsx": "preserve",
     "lib": [
       "es2020",
-      "dom", 
-      "dom.iterable", 
-    ],
-    "plugins": [
-      {
-        "name": "next"
-      }
+      "dom",
+      "dom.iterable"
     ]
-  },
+  }
 }
