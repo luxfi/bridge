@@ -2,7 +2,6 @@
   "name": "luxbridge",
   "version": "0.1.0",
   "author": "Lux Partners Limited <dev@lux.partners> (https://lux.partners)",
-  "license": "BSD-3-Clause",
   "private": true,
   "keywords": [
     "ai",

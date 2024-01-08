@@ -1,0 +1,31 @@
+{
+  "extends": "../tsconfig.base.json",
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "./dist",
+    "**/*.stories.tsx"
+  ],
+  "plugins": [
+    {
+      "name": "next"
+    }
+  ],
+  "compilerOptions": {
+    "target": "es2020",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "jsx": "preserve",
+    "lib": [
+      "dom",
+      "es2015"
+    ]
+  }
+}
