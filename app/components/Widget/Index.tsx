@@ -13,7 +13,7 @@ type Props = {
 
   // Don't use FC
 const Widget = ({ children, className, hideMenu }: Props & PropsWithChildren) => {
-  
+
   const router = useRouter()
   const wrapper = useRef(null);
 
@@ -32,7 +32,7 @@ const Widget = ({ children, className, hideMenu }: Props & PropsWithChildren) =>
     <div className='bg-level-1 rounded-lg w-full sm:overflow-hidden relative'>
       <div className="relative z-20">
         {
-            BridgeApiClient.apiVersion === 'sandbox' && <div>
+            BridgeApiClient.apiVersion === 'testnet' && <div>
               <div className="h-0.5 bg-[#D95E1B]" />
               <div className="absolute -top-0.5 right-[calc(50%-68px)] bg-[#D95E1B] py-0.5 px-10 rounded-b-md text-xs scale-75">
                   TESTNET
