@@ -324,7 +324,7 @@ function TransactionsHistory() {
                   <Scroll className='h-40 w-40 text-secondary-700 mx-auto' />
                   <p className="my-2 text-xl">It&apos;s empty here</p>
                   <p className="px-14 text-muted text-muted-primary-text">You can find all your transactions by searching with address in</p>
-                  <Link target="_blank" href={AppSettings.ExplorerURl} className="underline hover:no-underline cursor-pointer hover:text-foreground text-foreground-new text-muted text-muted-primary-text font-light">
+                  <Link target="_blank" href={AppSettings.ExplorerURL} className="underline hover:no-underline cursor-pointer hover:text-foreground text-foreground-new text-muted text-muted-primary-text font-light">
                     <span>Bridge Explorer</span>
                   </Link>
                 </div>
