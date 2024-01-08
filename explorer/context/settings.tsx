@@ -1,9 +1,9 @@
 'use client'
 
-import BridgeApiClient from '@/lib/BridgeApiClient';
+import AppSettings from '@/lib/AppSettings';
 import { ApiResponse } from '@/models/ApiResponse';
+import { CryptoNetwork } from '@/models/CryptoNetwork';
 import { BridgeAppSettings } from '@/models/BridgeAppSettings';
-import { BridgeSettings } from '@/models/BridgeSettings';
 import React, { FC, ReactNode } from 'react'
 import useSWR from 'swr';
 
@@ -13,9 +13,16 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const fetcher = (url: string) => fetch(url).then(r => r.json());
   const version = process.env.NEXT_PUBLIC_API_VERSION;
-  const { data: settings } = useSWR<ApiResponse<BridgeSettings>>(`https://bridge.lux.network/api/settings?version=${version}`, fetcher, { dedupingInterval: 60000 });
 
-  let appSettings = new BridgeAppSettings(settings?.data);
+  const { data: netWorkData } = useSWR<ApiResponse<CryptoNetwork[]>>(`${AppSettings.BridgeApiUri}/api/networks?version=${version}`, fetcher, { dedupingInterval: 60000 })
+  const { data: exchangeData } = useSWR<ApiResponse<CryptoNetwork[]>>(`${AppSettings.BridgeApiUri}/api/exchanges?version=${version}`, fetcher, { dedupingInterval: 60000 })
+
+  const settings = {
+    networks: netWorkData?.data,
+    exchanges: exchangeData?.data,
+  }
+
+  let appSettings = new BridgeAppSettings(settings);
 
   return (
     <SettingsStateContext.Provider value={appSettings}>
