@@ -38,7 +38,7 @@ module.exports = (phase, { defaultConfig }) => {
     },
     productionBrowserSourceMaps: true,
       // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
-    transpilePackages: ['@luxbridge/ui'],
+    transpilePackages: ['@luxdefi/ui'],
   }
   if (process.env.APP_BASE_PATH) {
     nextConfig.basePath = process.env.APP_BASE_PATH
