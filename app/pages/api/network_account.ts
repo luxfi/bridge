@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 const getAccessToken = async (): Promise<AuthConnectResponse> => {
     const params = new URLSearchParams();
-    params.append('client_id', 'bridge_bridge_internal');
+    params.append('client_id', 'bridge_internal');
     params.append('grant_type', 'client_credentials');
     params.append('client_secret', process.env.INTERNAL_API_SECRET || "");
     var apiClient = new BridgeApiClient();

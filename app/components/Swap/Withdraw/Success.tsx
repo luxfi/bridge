@@ -25,7 +25,7 @@ const Success: FC = () => {
     const handleViewInExplorer = useCallback(() => {
         if (!transaction_explorer_template)
             return
-        window.open(`${AppSettings.ExplorerURl}/${swapOutputTransaction?.transaction_id}`, '_blank')
+        window.open(`${AppSettings.ExplorerURL}/${swapOutputTransaction?.transaction_id}`, '_blank')
     }, [transaction_explorer_template])
 
     return (
