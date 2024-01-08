@@ -107,7 +107,7 @@ export function SwapDataProvider({ children }: PropsWithChildren) {
             source_asset: currency.asset,
             destination_asset: currency.asset,
             destination_address: values.destination_address,
-            app_name: partner ? query?.appName : (apiVersion === 'sandbox' ? 'BridgeSandbox' : 'Bridge'),
+            app_name: partner ? query?.appName : (apiVersion === 'testnet' ? 'BridgeTestnet' : 'Bridge'),
             reference_id: query.externalId,
         }
 
