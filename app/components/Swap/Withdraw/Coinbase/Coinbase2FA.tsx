@@ -153,7 +153,7 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
                         <div className="w-full flex-col justify-between flex h-full">
                             <ScanFace className='w-12 h-12 md:w-16 md:h-16 mt-auto text-primary self-center' />
                             <div className='text-center md:mt-5 md:mb-8'>
-                                <p className='mb-2 md:mb-6 mt-2 pt-2 text-2xl font-bold text-muted text-muted-primary-text leading-6 text-center font-roboto'>
+                                <p className='mb-2 md:mb-6 mt-2 pt-2 text-2xl font-bold text-muted leading-6 text-center'>
                                     Coinbase 2FA
                                 </p>
                                 <p className='text-center text-base px-2'>

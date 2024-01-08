@@ -6,6 +6,7 @@ import CardContainer from "../cardContainer";
 import BridgeLogo from "../icons/BridgeLogo";
 import TwitterLogo from "../icons/TwitterLogo";
 
+
 function MaintananceContent(props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>) {
     const { email, userId } = useAuthState()
     const { boot, show, update } = useIntercom()
@@ -19,7 +20,7 @@ function MaintananceContent(props: React.DetailedHTMLProps<React.HTMLAttributes<
     const twitterLogo = <TwitterLogo className="text-muted text-muted-primary-text h-6 w-6" />
     return (
         <div className="flex items-stretch flex-col">
-            <BridgeLogo className="block md:hidden h-8 w-auto text-muted text-muted-primary-text mt-5"></BridgeLogo>
+            <BridgeLogo className="block h-8 w-auto mt-5"></BridgeLogo>
             <CardContainer {...props} >
                 <div className="flex flex-col justify-center space-y-12 p-10 text-muted text-muted-primary-text md:min-h-fit min-h-[400px]">
                     <h1 className="text-xl tracking-tight text-gray-200">

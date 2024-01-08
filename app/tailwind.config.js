@@ -5,6 +5,7 @@ const plugin = require('tailwindcss/plugin')
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 const luxColors = require('@luxdefi/ui/style/colors.tailwind')
+const { fontFamily } = require('@luxdefi/ui/style/fonts.tailwind')
 
 const round = (num) =>
   num
@@ -15,8 +16,13 @@ const rem = (px) => `${round(px / 16)}rem`
 const em = (px, base) => `${round(px / base)}em`
 
 module.exports = {
-  content: ["./pages/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
-  darkMode: 'media',
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx}", 
+    "./components/**/*.{js,ts,jsx,tsx}", 
+    '../ui/**/*.tsx',
+    './styles/nextFonts.ts'
+  ],
+  darkMode: ["class"],
   theme: {
     extend: {
       colors: {
@@ -209,7 +215,8 @@ module.exports = {
     colors: (theme) => ({
       ...defaultColors,
       ...luxColors(theme),
-    })
+    }),
+    fontFamily,
   },
   variants: {
     extend: {

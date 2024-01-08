@@ -12,7 +12,7 @@ const Logo: React.FC<{
   className?: string
 }> = ({
   size,
-  href='/',
+  href, // no default please
   className='',
   logoOnly=false
 }) => {
@@ -41,11 +41,23 @@ const Logo: React.FC<{
   const spanClasses = 'inline-block font-bold font-heading ' + classes.span 
   const linkClasses = 'flex items-center text-primary hover:text-primary-hover ' + className
 
-  return (
-    <Link href={href} className={linkClasses} >
+  const Inner: React.FC = () => (<>
       <Icons.logo className={classes.icon} />
       <span className={cn(spanClasses, ' text-inherit')}>LUX</span>
-    </Link>
+  </>)
+
+
+  return (
+    href ? (
+      <Link href={href} className={linkClasses} >
+        <Inner />
+      </Link>
+  
+    ) : (
+      <span className={linkClasses} >
+        <Inner />
+      </span>
+    )
   )
 }
 

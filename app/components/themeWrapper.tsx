@@ -37,7 +37,7 @@ const ThemeWrapper: React.FC<PropsWithChildren> = ({ children } ) => (
   <div className='styled-scroll'>
     <div className="invisible light"></div>
     <main className="styled-scroll bg-background">
-      <div className={`flex flex-col items-center min-h-screen overflow-hidden relative font-robo`}>
+      <div className='flex flex-col items-center min-h-screen overflow-hidden relative'>
         <Toaster position="top-center" toastOptions={{
             duration: 5000,
             style: {
