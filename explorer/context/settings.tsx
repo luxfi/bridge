@@ -4,11 +4,10 @@ import BridgeApiClient from '@/lib/BridgeApiClient';
 import { ApiResponse } from '@/models/ApiResponse';
 import { BridgeAppSettings } from '@/models/BridgeAppSettings';
 import { BridgeSettings } from '@/models/BridgeSettings';
-import react, { FC, ReactNode } from 'react'
-
+import React, { FC, ReactNode } from 'react'
 import useSWR from 'swr';
 
-const SettingsStateContext = react.createContext<BridgeAppSettings | null>(null);
+const SettingsStateContext = React.createContext<BridgeAppSettings | null>(null);
 
 export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
@@ -19,14 +18,14 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   let appSettings = new BridgeAppSettings(settings?.data);
 
   return (
-      <SettingsStateContext.Provider value={appSettings}>
-        {children}
-      </SettingsStateContext.Provider>
+    <SettingsStateContext.Provider value={appSettings}>
+      {children}
+    </SettingsStateContext.Provider>
   );
 }
 
 export function useSettingsState() {
-  const data = react.useContext(SettingsStateContext);
+  const data = React.useContext(SettingsStateContext);
 
   if (data === undefined) {
     throw new Error('useSettingsState must be used within a SettingsProvider');

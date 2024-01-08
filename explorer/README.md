@@ -1,2 +1,2 @@
-# Bridge Explorer
-Explorer for Lux Network bridge chain.
+# bridge-explorer
+Lux Bridge Explorer.

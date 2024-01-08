@@ -21,10 +21,10 @@ export class BridgeAppSettings extends BridgeSettings {
         }
         // Shitty way to check for partner
         else if ((item as any)?.internal_name != undefined) {
-            return `${this?.discovery?.resource_storage_url}layerswap/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+            return `${this?.discovery?.resource_storage_url}bridge/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
         }
         else if ((item as any)?.asset != undefined) {
-            return `${this?.discovery?.resource_storage_url}layerswap/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
+            return `${this?.discovery?.resource_storage_url}bridge/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
         }
     }
 

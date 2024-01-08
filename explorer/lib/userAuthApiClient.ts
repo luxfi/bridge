@@ -13,7 +13,7 @@ export default class BridgeAuthApiClient {
 
     async connectAsync(email: string, code: string): Promise<AuthConnectResponse> {
         const params = new URLSearchParams();
-        params.append('client_id', 'luxdefi_bridge_ui');
+        params.append('client_id', 'bridge_bridge_ui');
         params.append('grant_type', 'passwordless');
         params.append('email', email);
         params.append('code', code);
@@ -23,7 +23,7 @@ export default class BridgeAuthApiClient {
 
     async guestConnectAsync(): Promise<AuthConnectResponse> {
         const params = new URLSearchParams();
-        params.append('client_id', 'luxdefi_bridge_ui');
+        params.append('client_id', 'bridge_bridge_ui');
         params.append('grant_type', 'credentialless');
 
         return await axios.post(BridgeAuthApiClient.identityBaseEndpoint + '/connect/token', params, { headers: { 'Access-Control-Allow-Origin': '*' } }).then(res => res.data);
