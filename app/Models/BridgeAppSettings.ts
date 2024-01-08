@@ -41,10 +41,10 @@ export class BridgeAppSettings implements BridgeSettings {
             return (item as Partner)?.logo_url;
         }
         else if ((item as any)?.internal_name != undefined) {
-            basePath.pathname = `/bridge/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+            basePath.pathname = `/layerswap/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
         }
         else if ((item as any)?.asset != undefined) {
-            basePath.pathname = `/bridge/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
+            basePath.pathname = `/layerswap/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
         }
 
         return basePath.href;
@@ -55,15 +55,15 @@ export class BridgeAppSettings implements BridgeSettings {
 
         settings.networks = settings.networks.map(n => ({
             ...n,
-            img_url: `${basePath}bridge/networks/${n?.internal_name?.toLowerCase()}.png`
+            img_url: `${basePath}layerswap/networks/${n?.internal_name?.toLowerCase()}.png`
         }))
         settings.exchanges = settings.exchanges.map(e => ({
             ...e,
-            img_url: `${basePath}bridge/networks/${e?.internal_name?.toLowerCase()}.png`
+            img_url: `${basePath}layerswap/networks/${e?.internal_name?.toLowerCase()}.png`
         }))
         settings.currencies = settings.currencies.map(c => ({
             ...c,
-            img_url: `${basePath}bridge/networks/${c?.asset?.toLowerCase()}.png`
+            img_url: `${basePath}layerswap/networks/${c?.asset?.toLowerCase()}.png`
         }))
 
         return settings
