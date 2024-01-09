@@ -1,6 +1,6 @@
 'use client'
 
-import BridgeExplorerLogo from './icons/bridgeExplorer'
+import BridgeExplorerLogo from './icons/BridgeExplorerLogo'
 import Search from './Search'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
