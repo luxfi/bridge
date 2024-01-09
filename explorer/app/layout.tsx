@@ -1,27 +1,39 @@
-import Header from '@/components/Header'
-import './globals.css'
-import Footer from '@/components/Footer'
+import React, { PropsWithChildren } from 'react'
 import { Metadata } from 'next'
 import Script from 'next/script'
+
+import { inter, drukTextWide } from '@luxdefi/ui/style/nextFonts'
+
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+
+import { SettingsProvider } from "@/context/settings";
+
+import '../style/globals.css'
 
 export const metadata: Metadata = {
   title: 'Bridge Explorer',
   description: 'Explore your swaps',
 }
 
-export default function RootLayout({
+const bodyClasses = 
+'flex min-h-screen flex-col items-center max-w-6xl mx-auto ' + 
+  `${inter.variable} ${drukTextWide.variable} font-sans` 
+
+const RootLayout: React.FC<PropsWithChildren> = ({
   children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en">
-      <Script defer data-domain="bridge.lux.network" src="https://plausible.io/js/script.js" />
-      <body className='flex min-h-screen flex-col items-center max-w-6xl mx-auto'>
-        <Header />
-        {children}
-        <Footer />
-      </body>
-    </html>
-  )
-}
+}) => (
+  <SettingsProvider>
+  <html lang="en">
+    <Script defer data-domain="bridge.lux.network" src="https://plausible.io/js/script.js" />
+    <body className={bodyClasses}>
+      <Header />
+      {children}
+      <Footer />
+    </body>
+  </html>
+  </SettingsProvider>
+)
+
+export default RootLayout 
+

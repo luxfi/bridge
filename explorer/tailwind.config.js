@@ -1,3 +1,7 @@
+const colors = require('@luxdefi/ui/style/colors.tailwind')
+const { fontFamily } = require('@luxdefi/ui/style/fonts.tailwind')
+
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -5,16 +9,8 @@ module.exports = {
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
 	],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
         primary: {
@@ -66,6 +62,15 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    colors,
+    fontFamily,
   },
   plugins: [require("tailwindcss-animate")],
 }
