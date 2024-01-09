@@ -123,11 +123,11 @@ const Withdraw: FC = () => {
     return (
         <>
             <Widget.Content>
-                <div className="w-full flex flex-col justify-between  text-foreground text-foreground-new">
+                <div className="w-full flex flex-col justify-between  text-secondary-text">
                     <div className='grid grid-cols-1 gap-4 '>
                         {
                             !isFiat &&
-                            <div className="bg-level-3 darker-2-class rounded-lg px-3 py-4 border border-secondary-500 w-full relative z-10 space-y-4">
+                            <div className="bg-secondary-700 rounded-lg px-3 py-4 border border-secondary-500 w-full relative z-10 space-y-4">
                                 <SwapSummary />
                             </div>
                         }
@@ -227,8 +227,8 @@ const WalletTransferContent: FC = () => {
             <span className='mb-1 ml-1 text-sm'>{swap?.source_exchange ? "Connected account" : "Connected wallet"}</span>
         }
 
-        <div onClick={handleOpenAccount} className={`${canOpenAccount ? 'cursor-pointer' : 'cursor-auto'} text-left min-h-12  space-x-2 border border-secondary-600 bg-level-3 darker-2-class/70 flex text-sm rounded-md items-center w-full pl-4 pr-2 py-1.5`}>
-            <div className='flex text-foreground text-foreground-new bg-secondary-400 flex-row items-left rounded-md p-1'>
+        <div onClick={handleOpenAccount} className={`${canOpenAccount ? 'cursor-pointer' : 'cursor-auto'} text-left min-h-12  space-x-2 border border-secondary-600 bg-secondary-700/70 flex text-sm rounded-md items-center w-full pl-4 pr-2 py-1.5`}>
+            <div className='flex text-secondary-text bg-secondary-400 flex-row items-left rounded-md p-1'>
                 {
                     !swap?.source_exchange
                     && wallet?.connector
@@ -247,7 +247,7 @@ const WalletTransferContent: FC = () => {
                 }
             </div>
             <div className="flex flex-col grow">
-                <div className="block text-md font-medium text-muted text-muted-primary-text">
+                <div className="block text-md font-medium text-primary-text">
                     {!swap?.source_exchange && <span>
                         {shortenAddress(accountAddress)}
                     </span>}
@@ -256,7 +256,7 @@ const WalletTransferContent: FC = () => {
                     </span>}
                 </div>
             </div>
-            <div onClick={handleDisconnect} className='cursor-pointer flex text-foreground text-foreground-new flex-row items-left p-2 rounded-md transform hover:bg-level-4 darker-hover-class transition duration-200 hover:border-secondary-500 hover:shadow-xl'>
+            <div onClick={handleDisconnect} className='cursor-pointer flex text-secondary-text flex-row items-left p-2 rounded-md transform hover:bg-secondary-500 transition duration-200 hover:border-secondary-500 hover:shadow-xl'>
                 {isLoading ? <SpinIcon className="animate-spin h-5 w-5" /> : <X className='h-5' />}
             </div>
         </div>

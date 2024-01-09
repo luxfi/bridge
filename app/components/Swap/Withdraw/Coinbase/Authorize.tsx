@@ -19,7 +19,6 @@ import { motion } from 'framer-motion';
 import { useCoinbaseStore } from './CoinbaseStore';
 import { useRouter } from 'next/router';
 import { Widget } from '../../../Widget/Index';
-import toastError from '../../../../helpers/toastError';
 
 type Props = {
     onAuthorized: () => void,
@@ -34,7 +33,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
     const router = useRouter()
     let alreadyFamiliar = useCoinbaseStore((state) => state.alreadyFamiliar);
     let toggleAlreadyFamiliar = useCoinbaseStore((state) => state.toggleAlreadyFamiliar);
-    const [carouselFinished, setCarouselFinished] = useState<boolean>(alreadyFamiliar)
+    const [carouselFinished, setCarouselFinished] = useState(alreadyFamiliar)
 
     const [authWindow, setAuthWindow] = useState<Window | null>()
     const [firstScreen, setFirstScreen] = useState<boolean>(true)
@@ -69,7 +68,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
 
     useInterval(
         checkShouldStartPolling,
-        authWindow && !authWindow.closed ? 1000 : 0,
+        authWindow && !authWindow.closed ? 1000 : null,
     )
 
     const handleConnect = useCallback(() => {
@@ -90,8 +89,8 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
             const authWindow = OpenLink({ link: oauth_authorize_url + encoded, query: router.query, swapId: swap.id })
             setAuthWindow(authWindow)
         }
-        catch (error) {
-          toastError(error)
+        catch (e) {
+            toast.error(e.message)
         }
     }, [carouselFinished, alreadyFamiliar, swap?.id, oauth_authorize_url, router.query])
 
@@ -102,11 +101,11 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
 
     const exchange_name = exchange?.display_name
 
-    const onCarouselLast = (value: boolean) => {
+    const onCarouselLast = (value) => {
         setCarouselFinished(value)
     }
 
-    const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleToggleChange = (e) => {
         if (e.target.checked) {
             carouselRef?.current?.goToLast();
         } else {
@@ -120,7 +119,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
             <Widget.Content>
                 {
                     !hideHeader ?
-                        <h3 className='md:mb-4 pt-2 text-lg sm:text-xl text-left text-muted font-semibold'>
+                        <h3 className='md:mb-4 pt-2 text-lg sm:text-xl text-left font-roboto text-primary-text font-semibold'>
                             Please connect your {exchange_name} account
                         </h3>
                         : <></>
@@ -129,19 +128,19 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                     <div className="w-full flex flex-col self-center h-[100%]">
                         {swap && <Carousel onLast={onCarouselLast} onFirst={setFirstScreen} ref={carouselRef} starAtLast={alreadyFamiliar}>
                             <CarouselItem width={100} >
-                                <FirstScreen name={exchange_name} />
+                                <FirstScreen exchange_name={exchange_name} />
                             </CarouselItem>
                             <CarouselItem width={100}>
                                 <SecondScreen />
                             </CarouselItem>
                             <CarouselItem width={100}>
-                                <ThirdScreen minimalAuthorizeAmount={minimalAuthorizeAmount as number} />
+                                <ThirdScreen minimalAuthorizeAmount={minimalAuthorizeAmount} />
                             </CarouselItem>
                             <CarouselItem width={100}>
-                                <FourthScreen minimalAuthorizeAmount={minimalAuthorizeAmount as number} />
+                                <FourthScreen minimalAuthorizeAmount={minimalAuthorizeAmount} />
                             </CarouselItem>
                             <CarouselItem width={100}>
-                                <LastScreen number={!alreadyFamiliar} minimalAuthorizeAmount={minimalAuthorizeAmount as number} />
+                                <LastScreen number={!alreadyFamiliar} minimalAuthorizeAmount={Number(minimalAuthorizeAmount)} />
                             </CarouselItem>
                         </Carousel>}
                     </div>
@@ -155,11 +154,11 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                                 name="alreadyFamiliar"
                                 id='alreadyFamiliar'
                                 type="checkbox"
-                                className="h-4 w-4 bg-level-4 darker-3-class cursor-pointer rounded border-secondary-400 text-priamry"
+                                className="h-4 w-4 bg-secondary-600 cursor-pointer rounded border-secondary-400 text-priamry"
                                 onChange={handleToggleChange}
                                 checked={alreadyFamiliar}
                             />
-                            <label htmlFor="alreadyFamiliar" className="ml-2 cursor-pointer block text-sm text-muted text-muted-primary-text">
+                            <label htmlFor="alreadyFamiliar" className="ml-2 cursor-pointer block text-sm text-primary-text">
                                 I&apos;m already familiar with the process.
                             </label>
                         </div>
@@ -182,10 +181,10 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                             </SubmitButton>
                         </div>
                     }
-                    <div className="pt-2 font-normal text-xs text-foreground text-foreground-new">
+                    <div className="pt-2 font-normal text-xs text-secondary-text">
                         <p className="block font-lighter text-left">
-                            <span>Even after authorization Bridge can&apos;t initiate a withdrawal without your explicit confirmation.&nbsp;</span>
-                            <a target='_blank' href='https://docs.bridge.lux.network/user-docs/connect-a-coinbase-account' className='text-muted text-muted-primary-text underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
+                            <span>Even after authorization Lux can&apos;t initiate a withdrawal without your explicit confirmation.&nbsp;</span>
+                            <a target='_blank' href='https://docs.bridge.lux.network/user-docs/connect-a-coinbase-account' className='text-primary-text underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
                     </div>
                 </div>
             </Widget.Footer>
