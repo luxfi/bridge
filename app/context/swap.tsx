@@ -1,4 +1,4 @@
-import { Context, useCallback, useEffect, useState, createContext, useContext, useMemo, PropsWithChildren } from 'react'
+import { Context, useCallback, useEffect, useState, createContext, useContext, useMemo } from 'react'
 import { SwapFormValues } from '../components/DTOs/SwapFormValues';
 import BridgeApiClient, { CreateSwapParams, SwapItem, PublishedSwapTransactions, SwapTransaction, WithdrawType } from '../lib/BridgeApiClient';
 import { useRouter } from 'next/router';
@@ -8,7 +8,7 @@ import useSWR, { KeyedMutator } from 'swr';
 import { ApiResponse } from '../Models/ApiResponse';
 import { Partner } from '../Models/Partner';
 import { ApiError } from '../Models/ApiError';
-import { BaseL2Asset, ExchangeAsset, NetworkAsset } from '../Models/Layer';
+import { BaseL2Asset, ExchangeAsset } from '../Models/Layer';
 import { ResolvePollingInterval } from '../components/utils/SwapStatus';
 
 export const SwapDataStateContext = createContext<SwapData>({
@@ -46,7 +46,7 @@ export type SwapData = {
     selectedAssetNetwork: ExchangeAsset | BaseL2Asset | undefined
 }
 
-export function SwapDataProvider({ children }: PropsWithChildren) {
+export function SwapDataProvider({ children }) {
     const [addressConfirmed, setAddressConfirmed] = useState<boolean>(false)
     const [codeRequested, setCodeRequested] = useState<boolean>(false)
     const [withdrawType, setWithdrawType] = useState<WithdrawType>()
@@ -64,9 +64,7 @@ export function SwapDataProvider({ children }: PropsWithChildren) {
     const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>()
     const source_exchange = layers.find(n => n?.internal_name?.toLowerCase() === swapResponse?.data?.source_exchange?.toLowerCase())
 
-    //const exchangeAssets = source_exchange?.assets?.filter(a => a?.asset === swapResponse?.data?.source_network_asset && a?.network?.status !== "inactive")
-    const exchangeAssets = (source_exchange?.assets as NetworkAsset[]).filter(a => a?.asset === swapResponse?.data?.source_network_asset && a?.network?.status !== "inactive");
-
+    const exchangeAssets = source_exchange?.assets?.filter(a => a?.asset === swapResponse?.data?.source_network_asset && a?.network?.status !== "inactive")
     const source_network = layers.find(n => n.internal_name?.toLowerCase() === swapResponse?.data?.source_network?.toLowerCase())
     const defaultSourceNetwork = (exchangeAssets?.find(sn => sn?.is_default) || exchangeAssets?.[0] || source_network?.assets?.[0])
     const [selectedAssetNetwork, setSelectedAssetNetwork] = useState<ExchangeAsset | BaseL2Asset | undefined>(defaultSourceNetwork)
@@ -90,7 +88,7 @@ export function SwapDataProvider({ children }: PropsWithChildren) {
         setSwapTransaction(txForSwap)
     }, [swapId])
 
-    const createSwap = useCallback(async (values: SwapFormValues, query: QueryParams, partner?: Partner) => {
+    const createSwap = useCallback(async (values: SwapFormValues, query: QueryParams, partner: Partner) => {
         if (!values)
             throw new Error("No swap data")
 
@@ -109,7 +107,7 @@ export function SwapDataProvider({ children }: PropsWithChildren) {
             source_asset: currency.asset,
             destination_asset: currency.asset,
             destination_address: values.destination_address,
-            app_name: partner ? query?.appName : (apiVersion === 'testnet' ? 'BridgeTestnet' : 'Bridge'),
+            app_name: partner ? query?.appName : (apiVersion === 'mainnet' ? 'testnet' : 'mainnet'),
             reference_id: query.externalId,
         }
 

@@ -21,25 +21,24 @@ const TransactionMessage: FC<TransactionMessageProps> = ({
     if (wait?.isLoading || applyingTransaction) {
         return <TransactionInProgressMessage />
     }
-    else if (transaction.isLoading || applyingTransaction) {
+    else if (transaction?.isLoading || applyingTransaction) {
         return <ConfirmTransactionMessage />
     }
-    else if (prepare.isLoading) {
+    else if (prepare?.isLoading) {
         return <PreparingTransactionMessage />
     }
-    else if (prepare.isError && prepareResolvedError === "insufficient_funds") {
+    else if (prepare?.isError && prepareResolvedError === "insufficient_funds") {
         return <InsufficientFundsMessage />
     }
-    else if (transaction.isError && transactionResolvedError) {
+    else if (transaction?.isError && transactionResolvedError) {
         return <TransactionRejectedMessage />
-    } 
-    else if (hasError) {
-        const unexpectedError = 
-          prepare.error || transaction.error || wait?.error ||
-          (transaction.error as any).data?.message 
-        return <UnexpectedErrorMessage message={unexpectedError?.message} />
+    } else if (hasError) {
+        const unexpectedError = prepare?.error
+            || transaction?.error?.['data']?.message || transaction?.error
+            || wait?.error
+        return <UexpectedErrorMessage message={unexpectedError?.message} />
     }
-    return <></>
+    else return <></>
 }
 
 const PreparingTransactionMessage: FC = () => {
@@ -77,7 +76,7 @@ const TransactionRejectedMessage: FC = () => {
         details={`You've rejected the transaction in your wallet. Click “Try again” to open the prompt again.`} />
 }
 
-const UnexpectedErrorMessage: FC<{ message: string }> = ({ message }) => {
+const UexpectedErrorMessage: FC<{ message: string }> = ({ message }) => {
     return <WalletMessage
         status="error"
         header='Unexpected error'
