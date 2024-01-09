@@ -4,6 +4,7 @@ import { useSettingsState } from "../../../context/settings"
 import { useSwapDataState } from "../../../context/swap"
 import Summary from "./Summary"
 import { ApiResponse } from "../../../Models/ApiResponse"
+import { ExchangeAsset } from "../../../Models/Layer"
 import BridgeApiClient, { DepositType, Fee, TransactionType, WithdrawType } from "../../../lib/BridgeApiClient"
 import { GetDefaultNetwork } from "../../../helpers/settingsHelper"
 import useWalletTransferOptions from "../../../hooks/useWalletTransferOptions"
@@ -34,7 +35,9 @@ const SwapSummary: FC = () => {
     const { data: feeData } = useSWR<ApiResponse<Fee[]>>([params], selectedAssetNetwork ? ([params]) => apiClient.GetFee(params) : null, { dedupingInterval: 60000 })
 
     const source_layer = layers.find(n => n.internal_name === (source_exchange_internal_name ?? source_network_internal_name))
-    const asset = source_layer?.assets?.find(currency => currency?.asset === destination_network_asset)
+    const assets = source_layer?.assets as ExchangeAsset[];
+    const asset = assets?.find(currency => currency?.asset === destination_network_asset);
+    //const asset = source_layer?.assets?.find(currency => currency?.asset === destination_network_asset)
     const currency = currencies?.find(c => c.asset === asset?.asset)
     const destination_layer = layers?.find(l => l.internal_name === (destination_exchange_internal_name ?? destination_network_internal_name))
 

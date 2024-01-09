@@ -16,30 +16,37 @@ export function mapNetworkCurrencies(exchanges: Exchange[], networks: CryptoNetw
 }
 
 export function GetNetworkCurrency(layer: Layer, asset: string): NetworkCurrency | undefined {
-    return layer
-        ?.assets
-        ?.find(a => a.asset === asset && a.is_default)
-        ?.network
-        ?.currencies
-        ?.find(c => c.asset === asset)
+    if (!layer?.assets || typeof asset !== 'string') return undefined;
+
+    const assetsArray = layer.assets as ExchangeAsset[]; // Type assertion
+    const defaultAsset = assetsArray.find(a => a.asset === asset && a.is_default);
+    const networkCurrencies = defaultAsset?.network?.currencies as NetworkCurrency[] | undefined; // Type assertion
+
+    return networkCurrencies?.find(c => c.asset === asset);
 }
 
 export function GetDefaultNetwork(layer: Layer | undefined | null, asset: string | undefined | null): CryptoNetwork | undefined {
-    return layer
-        ?.assets
-        ?.find(a => a.is_default && a.asset === asset)
-        ?.network
+    if (!layer?.assets || typeof asset !== 'string') return undefined;
+
+    const assetsArray = layer.assets as ExchangeAsset[]; // Type assertion
+    const defaultAsset = assetsArray.find(a => a.is_default && a.asset === asset);
+
+    return defaultAsset?.network;
 }
 
-export function GetDefaultAsset(layer: Layer & { isExchange: true }, asset: string): ExchangeAsset | undefined
-export function GetDefaultAsset(layer: Layer & { isExchange: false }, asset: string): BaseL2Asset | undefined
-export function GetDefaultAsset(layer: Layer, asset: string): BaseL2Asset | undefined
+export function GetDefaultAsset(layer: Layer & { isExchange: true }, asset: string): ExchangeAsset | undefined;
+export function GetDefaultAsset(layer: Layer & { isExchange: false }, asset: string): BaseL2Asset | undefined;
+export function GetDefaultAsset(layer: Layer, asset: string): BaseL2Asset | undefined;
 export function GetDefaultAsset(layer: Layer, asset: string) {
-    return layer
-        ?.assets
-        ?.find(a => a.is_default && a.asset === asset)
-}
+    if (!layer?.assets || typeof asset !== 'string') return undefined;
 
+    // Determine the type of assets based on isExchange property
+    const assetsArray = layer.isExchange
+                        ? layer.assets as ExchangeAsset[] // Type assertion for ExchangeAsset
+                        : layer.assets as BaseL2Asset[]; // Type assertion for BaseL2Asset
+
+    return assetsArray.find(a => a.is_default && a.asset === asset);
+}
 export function FilterSourceLayers(layers: Layer[], destination?: Layer | null, lockedCurrency?: Currency | null): Layer[] {
     const IsAvailableForSomeLayer = (asset: string, source: Layer) =>
         layers.some(l => IsAvailableForLayer(asset, source, l))
