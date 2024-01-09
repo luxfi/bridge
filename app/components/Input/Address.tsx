@@ -11,6 +11,7 @@ import { isValidAddress } from "../../lib/addressValidator";
 import { RadioGroup } from "@headlessui/react";
 import Image from 'next/image';
 import { Partner } from "../../Models/Partner";
+import { ExchangeAsset } from "../../Models/Layer";
 import shortenAddress from "../utils/ShortenAddress";
 import AddressIcon from "../AddressIcon";
 import { GetDefaultNetwork } from "../../helpers/settingsHelper";
@@ -124,7 +125,8 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
         close()
     }, [validInputAddress])
 
-    const destinationAsset = destination?.assets?.find(a => a.asset === asset)
+    //const destinationAsset = destination?.assets?.find(a => a.asset === asset)
+    const destinationAsset = (destination?.assets as ExchangeAsset[]).find(a => a.asset === asset);
     const destinationChainId = destinationAsset?.network?.chain_id
 
     return (<>
