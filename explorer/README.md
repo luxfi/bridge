@@ -1,1 +1,2 @@
-Bridge Explorer
+# @luxbridge/explorer
+Lux Bridge explorer app.
