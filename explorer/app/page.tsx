@@ -3,8 +3,8 @@ import Search from '@/components/Search'
 import DataTable from '@/components/DataTable'
 
 const Home: React.FC = () => (
-  <main className='w-full py-5 px-6 xl:px-0 h-full flex flex-col flex-1'>
-    <Search />
+  <main className='w-full py-5 px-6 h-full flex flex-col flex-1'>
+    <Search className="w-full"/>
     <DataTable />
   </main>
 )

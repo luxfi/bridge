@@ -92,7 +92,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
 
     return (Number(data?.data?.length) > 1 ?
         <div className="px-4 sm:px-6 lg:px-8 w-full">
-            {!(pathname === '/' || pathname === basePath || pathname === `${basePath}/`) && <div className='hidden xl:block w-fit mb-1 hover:bg-secondary-600 hover:text-accent-foreground rounded ring-offset-background transition-colors -ml-5'>
+            {!(pathname === '/' || pathname === basePath || pathname === `${basePath}/`) && <div className='hidden xl:block w-fit mb-1 hover:bg-level-2 hover:text-accent-foreground rounded ring-offset-background transition-colors -ml-5'>
                 <BackBtn />
             </div>}
             <div className="flow-root w-full">
@@ -143,7 +143,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                             return
 
                                         return (
-                                            <tr key={index} onClick={(e) => router.push(`/${inputTransaction?.transaction_id}`)} className="hover:bg-secondary-600 hover:cursor-pointer">
+                                            <tr key={index} onClick={(e) => router.push(`/${inputTransaction?.transaction_id}`)} className="hover:bg-level-2 hover:cursor-pointer">
                                                 <td className="whitespace-nowrap py-2 px-3 text-sm font-medium text-white flex flex-col">
                                                     <Link href={`/${inputTransaction?.transaction_id}`} onClick={(e) => e.stopPropagation()} className="hover:text-gray-300 inline-flex items-center w-fit">
                                                         {shortenAddress(inputTransaction?.transaction_id)}
@@ -247,7 +247,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
         <div className="w-full">
             <div className="sm:rounded-lg w-full">
                 {swap && input_transaction && <div className="py-2 lg:py-10 pt-4 sm:px-6 lg:px-8">
-                    {pathname !== '/' && <div className='hidden xl:block w-fit mb-1 hover:bg-secondary-600 hover:text-accent-foreground rounded ring-offset-background transition-colors -ml-5'>
+                    {pathname !== '/' && <div className='hidden xl:block w-fit mb-1 hover:bg-level-2 hover:text-accent-foreground rounded ring-offset-background transition-colors -ml-5'>
                         <BackBtn />
                     </div>}
                     <div className="md:ml-0 md:mb-6 flex-col sm:flex-row sm:justify-between sm:items-start">
@@ -314,7 +314,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             <div className="flex items-center text-white">
                                 <div className="mr-2 text-primary-text text-2xl font-medium">From</div>
                             </div>
-                            <div className="rounded-md w-full grid text-primary-text bg-secondary-700 shadow-lg relative border-secondary-600 border divide-y divide-secondary-500">
+                            <div className="rounded-md w-full grid text-primary-text bg-level-1 shadow-lg relative border-level-2 border divide-y divide-secondary-500">
                                 <div className="flex justify-around">
                                     <div className="flex-1 p-4">
                                         <div className="text-base font-normal text-socket-secondary">Asset</div>
@@ -325,7 +325,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex-1 p-4 border-secondary-600 border-l">
+                                    <div className="flex-1 p-4 border-level-2 border-l">
                                         <div className="text-base font-normal text-socket-secondary">Source</div>
                                         <div className="flex items-center">
                                             <Image alt="Source chain icon" src={settings?.resolveImgSrc(sourceExchange ? sourceExchange : sourceLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
@@ -385,7 +385,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             <div className="flex items-center text-white">
                                 <div className="mr-2 text-primary-text text-2xl font-medium">To</div>
                             </div>
-                            <div className="rounded-md w-full grid text-primary-text bg-secondary-700 shadow-lg relative border-secondary-600 border divide-y divide-secondary-500">
+                            <div className="rounded-md w-full grid text-primary-text bg-level-1 shadow-lg relative border-level-2 border divide-y divide-secondary-500">
                                 <div className="flex justify-around">
                                     <div className="flex-1 p-4">
                                         <div className="text-base font-normal text-socket-secondary">Asset</div>
@@ -400,7 +400,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                             }
                                         </div>
                                     </div>
-                                    <div className="flex-1 p-4 border-secondary-600 border-l">
+                                    <div className="flex-1 p-4 border-level-2 border-l">
                                         <div className="text-base font-normal text-socket-secondary">Destination</div>
                                         <div className="flex items-center">
                                             <Image alt="Destination chain icon" src={settings?.resolveImgSrc(destinationExchange ? destinationExchange : destinationLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
@@ -454,7 +454,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                     <div className="flex items-center text-white">
                                         <div className="mr-2 text-primary-text text-2xl font-medium">... and for gas</div>
                                     </div>
-                                    <div className="rounded-md w-full grid gap-y-3 text-primary-text bg-secondary-700 shadow-lg relative border-secondary-600 border">
+                                    <div className="rounded-md w-full grid gap-y-3 text-primary-text bg-level-1 shadow-lg relative border-level-2 border">
                                         <div className="flex justify-around">
                                             <div className="flex-1 p-4">
                                                 <div className="text-base font-normal text-socket-secondary">Native Asset</div>
@@ -465,7 +465,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex-1 p-4 border-secondary-600 border-l">
+                                            <div className="flex-1 p-4 border-level-2 border-l">
                                                 <div className="text-base font-normal text-socket-secondary">Transaction</div>
                                                 {refuel_transaction?.transaction_id ?
                                                     <div className="flex items-center justify-between text-white hover:text-primary-text">
