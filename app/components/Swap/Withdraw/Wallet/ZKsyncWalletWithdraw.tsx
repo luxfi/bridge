@@ -2,7 +2,6 @@ import { Link, ArrowLeftRight } from 'lucide-react';
 import { FC, useCallback, useEffect, useState } from 'react'
 import SubmitButton from '../../../buttons/submitButton';
 import toast from 'react-hot-toast';
-import toastError from '../../../../helpers/toastError'
 import * as zksync from 'zksync';
 import { utils } from 'ethers';
 import { useEthersSigner } from '../../../../lib/ethersToViem/ethers';
@@ -64,7 +63,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             setSyncWallet(wallet)
         }
         catch (e) {
-            toastError(e)
+            toast(e.message)
         }
         finally {
             setLoading(false)
@@ -97,7 +96,10 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             }
         }
         catch (e) {
-          toastError(e)
+            if (e?.message) {
+                toast(e.message)
+                return
+            }
         }
         setLoading(false)
 
@@ -118,7 +120,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-muted text-muted-primary-text">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-primary-text">
                 <div className='space-y-4'>
                     {
                         !syncWallet &&
