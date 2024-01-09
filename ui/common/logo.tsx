@@ -6,7 +6,7 @@ import { cn } from '../util'
 import { Icons  } from '../common'
 
 const Logo: React.FC<{
-  size: TShirtSize
+  size?: TShirtSize
   logoOnly?: boolean
   href?: string
   className?: string
@@ -38,8 +38,10 @@ const Logo: React.FC<{
     classes.span = 'text-lg' + toAdd.span
   }
 
-  const spanClasses = 'inline-block font-bold font-heading ' + classes.span 
-  const linkClasses = 'flex items-center text-primary hover:text-primary-hover ' + className
+  const outerClasses = 'flex items-center ' + className
+  const spanClasses = 'inline-block font-bold font-heading text-foreground ' 
+    + (href ? 'hover:text-accent ' : 'cursor-default ') 
+    + classes.span 
 
   const Inner: React.FC = () => (<>
       <Icons.logo className={classes.icon} />
@@ -49,12 +51,12 @@ const Logo: React.FC<{
 
   return (
     href ? (
-      <Link href={href} className={linkClasses} >
+      <Link href={href} className={outerClasses} >
         <Inner />
       </Link>
   
     ) : (
-      <span className={linkClasses} >
+      <span className={outerClasses} >
         <Inner />
       </span>
     )

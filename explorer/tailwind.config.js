@@ -1,5 +1,7 @@
-const colors = require('@luxdefi/ui/style/colors.tailwind')
+const defaultColors = require("tailwindcss/colors");
+const luxColors = require('@luxdefi/ui/style/colors.tailwind')
 const { fontFamily } = require('@luxdefi/ui/style/fonts.tailwind')
+
 
 
 /** @type {import('tailwindcss').Config} */
@@ -9,12 +11,13 @@ module.exports = {
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
+    '../ui/**/*.{ts,tsx}',
 	],
   theme: {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#E42575',
+          _DEFAULT: '#E42575',
           '50': '#F8C8DC',
           '100': '#F6B6D1',
           '200': '#F192BA',
@@ -33,7 +36,7 @@ module.exports = {
           'logoColor': '#FF0093'
         },
         secondary: {
-          DEFAULT: '#111D36',
+          _DEFAULT: '#111D36',
           '50': '#313C9B',
           '100': '#2E3B93',
           '200': '#232A70',
@@ -69,7 +72,16 @@ module.exports = {
         "2xl": "1400px",
       },
     },
-    colors,
+    colors: (theme) => ({
+      ...{
+          // Needed in table
+        yellow: defaultColors.yellow,
+        red: defaultColors.red,
+        green: defaultColors.green,
+        gray: defaultColors.gray,
+      },
+      ...luxColors(theme)
+    }),
     fontFamily,
   },
   plugins: [require("tailwindcss-animate")],

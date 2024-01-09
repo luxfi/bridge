@@ -17,14 +17,14 @@ export const metadata: Metadata = {
 }
 
 const bodyClasses = 
-'flex min-h-screen flex-col items-center max-w-6xl mx-auto ' + 
+'bg-background text-foreground flex min-h-screen flex-col items-center max-w-6xl mx-auto ' + 
   `${inter.variable} ${drukTextWide.variable} font-sans` 
 
 const RootLayout: React.FC<PropsWithChildren> = ({
   children,
 }) => (
   <SettingsProvider>
-  <html lang="en">
+  <html lang="en" className='dark'>
     <Script defer data-domain="bridge.lux.network" src="https://plausible.io/js/script.js" />
     <body className={bodyClasses}>
       <Header />
