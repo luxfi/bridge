@@ -305,6 +305,12 @@ importers:
       '@heroicons/react':
         specifier: ^2.0.18
         version: 2.1.1(react@18.2.0)
+      '@luxbridge/explorer':
+        specifier: 'link:'
+        version: 'link:'
+      '@luxdefi/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
@@ -356,6 +362,9 @@ importers:
       tailwind-merge:
         specifier: ^2.2.0
         version: 2.2.0
+      workspace:
+        specifier: 0.0.1-preview.1
+        version: 0.0.1-preview.1
     devDependencies:
       '@types/node':
         specifier: 20.10.7
@@ -20381,6 +20390,10 @@ packages:
   /wordwrap@1.0.0:
     resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
     dev: true
+
+  /workspace@0.0.1-preview.1:
+    resolution: {integrity: sha512-oPpEvU7NIQ0MW7ReL+EigMUI2JPNp05kmqzWS6zXVUaSq5KxuQzfgxGd8wuurBulBkTaOnEcGge+2rriyDVHkw==}
+    dev: false
 
   /wrap-ansi@5.1.0:
     resolution: {integrity: sha512-QC1/iN/2/RPVJ5jYK8BGttj5z83LmSKmvbvrXPNCLZSEb32KKVDJDl/MOt2N01qU2H/FkzEa9PKto1BqDjtd7Q==}

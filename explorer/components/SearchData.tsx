@@ -1,10 +1,10 @@
 "use client"
 import { shortenAddress, shortenHash } from "@/lib/utils";
 import { ApiResponse } from "@/models/ApiResponse";
-import CopyButton from "../../components/buttons/copyButton";
+import CopyButton from "@/components/buttons/copyButton";
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import useSWR from "swr";
-import StatusIcon from '../../components/SwapHistory/StatusIcons';
+import StatusIcon from '@/components/SwapHistory/StatusIcons';
 import Link from "next/link";
 import Image from "next/image";
 import { useSettingsState } from "@/context/settings";

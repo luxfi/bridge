@@ -1,15 +1,12 @@
-import Search from "@/components/Search";
-import DataTable from "./DataTable";
-import { SettingsProvider } from "@/context/settings";
+import React from 'react'
+import Search from '@/components/Search'
+import DataTable from '@/components/DataTable'
 
-export default async function Home() {
+const Home: React.FC = () => (
+  <main className='w-full py-5 px-6 xl:px-0 h-full flex flex-col flex-1'>
+    <Search />
+    <DataTable />
+  </main>
+)
 
-  return (
-    <SettingsProvider>
-      <main className="w-full py-5 px-6 xl:px-0 h-full flex flex-col flex-1">
-        <Search />
-        <DataTable />
-      </main>
-    </SettingsProvider>
-  )
-}
+export default Home

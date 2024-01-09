@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { FileText, Layers } from 'lucide-react'
 
 export default function Header() {
+  
     const pathname = usePathname();
     const basePath = process.env.NEXT_PUBLIC_APP_BASE_PATH
     const version = process.env.NEXT_PUBLIC_API_VERSION
