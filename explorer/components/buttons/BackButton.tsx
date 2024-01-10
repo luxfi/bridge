@@ -2,6 +2,8 @@
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { cn } from "@luxdefi/ui/util"
+
 const buttonClass = 
   'py-2 px-4 flex items-center justify-center-md ' + 
   'text-md font-medium ' + 
@@ -28,7 +30,7 @@ const BackButton: React.FC<{
     return (
       <button
         onClick={goBack}
-        className={buttonClass + (className ?? '')}
+        className={cn(buttonClass, (className ?? ''))}
       >
         <ChevronLeft className="mr-2 h-4 w-4" />
         <span>{label}</span>

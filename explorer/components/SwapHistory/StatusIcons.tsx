@@ -1,64 +1,56 @@
 import { SwapStatus } from "../../models/SwapStatus";
 
-export default function StatusIcon({ swap }: { swap: string | undefined }) {
+export function StatusIcon({ swap, className}: { swap: string | undefined , className?: string}) {
   switch (swap) {
     case SwapStatus.Failed:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <RedIcon />
-            <p>Failed</p>
-          </div>
-        </>)
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <RedIcon />
+          <p>Failed</p>
+        </div>
+      )
     case SwapStatus.Completed:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <GreenIcon />
-            <p>Completed</p>
-          </div>
-        </>
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <GreenIcon />
+          <p>Completed</p>
+        </div>
       )
     case SwapStatus.Cancelled:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <GreyIcon />
-            <p>Cancelled</p>
-          </div>
-        </>)
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <GreyIcon />
+          <p>Cancelled</p>
+        </div>
+      )
     case SwapStatus.UserTransferPending:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <YellowIcon />
-            <p>Deposite pending</p>
-          </div>
-        </>)
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <YellowIcon />
+          <p>Deposite pending</p>
+        </div>
+      )
     case SwapStatus.UserTransferDelayed:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <YellowIcon />
-            <p>Delayed</p>
-          </div>
-        </>)
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <YellowIcon />
+          <p>Delayed</p>
+        </div>
+      )
     case SwapStatus.LsTransferPending:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <YellowIcon />
-            <p>Pending</p>
-          </div>
-        </>)
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <YellowIcon />
+          <p>Pending</p>
+        </div>
+      )
     case SwapStatus.Expired:
       return (
-        <>
-          <div className="inline-flex items-center">
-            <GreyIcon />
-            <p>Expired</p>
-          </div>
-        </>)
+        <div className={"inline-flex items-center " + className ?? ''} >
+          <GreyIcon />
+          <p>Expired</p>
+        </div>
+      )
   }
 }
 
