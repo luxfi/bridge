@@ -1,6 +1,6 @@
 import { Context, FC, createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSwapDataState } from "../../../context/swap";
-import { OnrampUIEventMap, StripeOnramp, loadStripeOnramp } from "@stripe/crypto";
+import { StripeOnramp, loadStripeOnramp } from "@stripe/crypto";
 import { PublishedSwapTransactionStatus } from "../../../lib/BridgeApiClient";
 import { useSwapTransactionStore } from "../../../stores/swapTransactionStore";
 import inIframe from "../../utils/inIframe";
@@ -22,7 +22,7 @@ const FiatTransfer: FC = () => {
         setEmbedded(inIframe())
     }, [])
 
-    return <div className='rounded-xl bg-level-3 darker-2-class border border-secondary-500 divide-y divide-secondary-500'>
+    return <div className='rounded-xl bg-secondary-700 border border-secondary-500 divide-y divide-secondary-500'>
         {
             embedded ?
                 <SubmitButton onClick={() => window.open(swap?.fiat_redirect_url, '_blank')} icon={<ExternalLink className='h-5 w-5' strokeWidth={2} />} isDisabled={!swap} isSubmitting={false}>
@@ -97,7 +97,7 @@ export const OnrampElement: FC<OnrampElementProps> = ({
                         },
                     })
                     .mount(containerRef)
-                const eventListener = async (e: OnrampUIEventMap['onramp_session_updated']) => {
+                const eventListener = async (e) => {
                     let transactionStatus: PublishedSwapTransactionStatus
                     if (e.payload.session.status === "fulfillment_complete")
                         transactionStatus = PublishedSwapTransactionStatus.Completed
@@ -108,18 +108,10 @@ export const OnrampElement: FC<OnrampElementProps> = ({
                         return
                     }
                     await setSwapTransaction(swapId, PublishedSwapTransactionStatus.Completed, e.payload.session.id);
-                } 
-
-                const uiLoaded = () => {
-                  setLoading(false)  
                 }
 
                 session.addEventListener("onramp_session_updated", eventListener)
-                session.addEventListener("onramp_ui_loaded", uiLoaded)
-                return () => {
-                  session.removeEventListener("onramp_session_updated", eventListener)
-                  session.removeEventListener("onramp_ui_loaded", uiLoaded)
-                }
+                session.addEventListener("onramp_ui_loaded", () => setLoading(false))
             }
         }
 
