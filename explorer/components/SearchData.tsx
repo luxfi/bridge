@@ -1,7 +1,7 @@
 "use client"
 import { shortenAddress, shortenHash } from "@/lib/utils";
 import { ApiResponse } from "@/models/ApiResponse";
-import CopyButton from "@/components/buttons/copyButton";
+import CopyButton from "@/components/buttons/CopyButton";
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import useSWR from "swr";
 import StatusIcon from '@/components/SwapHistory/StatusIcons';
@@ -11,10 +11,10 @@ import { useSettingsState } from "@/context/settings";
 import LoadingBlocks from "@/components/LoadingBlocks";
 import { SwapStatus } from "@/models/SwapStatus";
 import AppSettings from "@/lib/AppSettings";
-import NotFound from "@/components/notFound";
+import NotFound from "@/components/NotFound";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/shadcn/tooltip";
 import { useRouter } from "next/navigation";
-import BackBtn from "@/helpers/BackButton";
+import BackButton from "@/components/buttons/BackButton"
 import { usePathname } from 'next/navigation'
 import Error500 from "@/components/Error500";
 import { getTimeDifferenceFromNow } from "@/components/utils/CalcTime";
@@ -93,12 +93,12 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
     return (Number(data?.data?.length) > 1 ?
         <div className="px-4 sm:px-6 lg:px-8 w-full">
             {!(pathname === '/' || pathname === basePath || pathname === `${basePath}/`) && <div className='hidden xl:block w-fit mb-1 hover:bg-level-2 hover:text-accent-foreground rounded ring-offset-background transition-colors -ml-5'>
-                <BackBtn />
+                <BackButton />
             </div>}
             <div className="flow-root w-full">
                 <div className="inline-block min-w-full align-middle">
-                    <h1 className="h5 mb-4 text-white flex gap-1">
-                        <span className="font-bold text-primary-text">Address: </span>
+                    <h1 className="h5 mb-4 flex gap-1">
+                        <span className="font-bold ">Address: </span>
                         <span className="break-all">
                             {swap?.destination_address}
                             <CopyButton toCopy={swap?.destination_address || ''} iconHeight={16} iconClassName="order-2" iconWidth={16} className="inline-flex items-center ml-1 align-middle" />
@@ -108,24 +108,24 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                 <div className={`${Number(filteredData?.length) > 5 ? "overflow-y-scroll h-full max-h-[55vh] 2xl:max-h-[65vh] dataTable" : "overflow-hidden"} -mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8`}>
                     <div className="inline-block min-w-full pb-2 align-middle sm:px-6 lg:px-8">
                         <div className="shadow ring-1 ring-white ring-opacity-5 sm:rounded-lg">
-                            <table className="min-w-full divide-y divide-secondary-500 relative">
-                                <thead className="bg-secondary-800 sticky -top-1 z-10 sm:rounded-lg">
+                            <table className="min-w-full relative">
+                                <thead className="sticky -top-1 z-10 sm:rounded-lg">
                                     <tr>
-                                        <th scope="col" className="sticky top-0 px-3 py-3.5 text-left text-sm font-semibold text-white sm:rounded-tl-lg">
+                                        <th scope="col" className="sticky top-0 px-3 py-3.5 text-left text-sm font-semibold  sm:rounded-tl-lg">
                                             Source Tx Hash
                                         </th>
-                                        <th scope="col" className="sticky top-0 px-3 py-3.5 text-left text-sm font-semibold text-white">
+                                        <th scope="col" className="sticky top-0 px-3 py-3.5 text-left text-sm font-semibold ">
                                             Source
                                         </th>
-                                        <th scope="col" className="sticky top-0 px-3 py-3.5 text-left text-sm font-semibold text-white rouned-tr-lg">
+                                        <th scope="col" className="sticky top-0 px-3 py-3.5 text-left text-sm font-semibold  rouned-tr-lg">
                                             Destination
                                         </th>
-                                        <th scope="col" className="sticky top-0 px-4 py-3.5 text-left text-sm font-semibold text-white rounded-tr-lg">
+                                        <th scope="col" className="sticky top-0 px-4 py-3.5 text-left text-sm font-semibold  rounded-tr-lg">
 
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-secondary-400 bg-secondary">
+                                <tbody >
                                     {filteredData?.map((swap, index) => {
                                         const sourceLayer = settings?.layers?.find(l => l.internal_name?.toLowerCase() === swap.source_network?.toLowerCase())
                                         const sourceToken = sourceLayer?.assets?.find(a => a?.asset == swap?.source_network_asset)
@@ -144,14 +144,14 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
 
                                         return (
                                             <tr key={index} onClick={(e) => router.push(`/${inputTransaction?.transaction_id}`)} className="hover:bg-level-2 hover:cursor-pointer">
-                                                <td className="whitespace-nowrap py-2 px-3 text-sm font-medium text-white flex flex-col">
+                                                <td className="whitespace-nowrap py-2 px-3 text-sm font-medium  flex flex-col">
                                                     <Link href={`/${inputTransaction?.transaction_id}`} onClick={(e) => e.stopPropagation()} className="hover:text-gray-300 inline-flex items-center w-fit">
                                                         {shortenAddress(inputTransaction?.transaction_id)}
                                                     </Link>
                                                     <StatusIcon swap={swap.status} />
-                                                    <span className="text-primary-text">{new Date(swap.created_date).toLocaleString()}</span>
+                                                    <span className="">{new Date(swap.created_date).toLocaleString()}</span>
                                                 </td>
-                                                <td className="whitespace-nowrap px-3 py-2 text-sm text-primary-text">
+                                                <td className="whitespace-nowrap px-3 py-2 text-sm ">
                                                     <div className="flex flex-row">
                                                         <div className="flex flex-col items-start ">
                                                             <span className="text-sm md:text-base font-normal text-socket-ternary place-items-end mb-1">Token:</span>
@@ -167,8 +167,8 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                                         </span>
                                                                     </div>
                                                                     <div className="mx-2.5">
-                                                                        <span className="text-white">{inputTransaction?.amount}</span>
-                                                                        <span className="mx-1 text-white">{swap?.source_network_asset}</span>
+                                                                        <span className="">{inputTransaction?.amount}</span>
+                                                                        <span className="mx-1 ">{swap?.source_network_asset}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -179,7 +179,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                                         <Image alt={`Source chain icon ${index}`} src={settings?.resolveImgSrc(sourceExchange ? sourceExchange : sourceLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md" />
                                                                     </span>
                                                                 </div>
-                                                                <div className="mx-2 text-white">
+                                                                <div className="mx-2 ">
                                                                     <Link href={`${inputTransaction?.explorer_url}`} onClick={(e) => e.stopPropagation()} target="_blank" className="hover:text-gray-300 inline-flex items-center w-fit">
                                                                         <span className="mx-0.5 hover:text-gray-300 underline">{sourceExchange ? sourceExchange?.display_name : sourceLayer?.display_name}</span>
                                                                     </Link>
@@ -188,7 +188,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="whitespace-nowrap px-3 py-2 text-sm text-primary-text">
+                                                <td className="whitespace-nowrap px-3 py-2 text-sm ">
                                                     <div className="flex flex-row">
                                                         <div className="flex flex-col items-start ">
                                                             <span className="text-sm md:text-base font-normal text-socket-ternary place-items-end mb-1">Token:</span>
@@ -205,8 +205,8 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                                     {
                                                                         outputTransaction?.amount ?
                                                                             <div className="mx-2.5">
-                                                                                <span className="text-white mx-0.5">{outputTransaction?.amount}</span>
-                                                                                <span className="text-white">{swap?.destination_network_asset}</span>
+                                                                                <span className=" mx-0.5">{outputTransaction?.amount}</span>
+                                                                                <span className="">{swap?.destination_network_asset}</span>
                                                                             </div>
                                                                             :
                                                                             <span className="ml-2.5">-</span>
@@ -220,7 +220,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                                         <Image alt={`Destination chain icon ${index}`} src={settings?.resolveImgSrc(destinationExchange ? destinationExchange : destinationLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md" />
                                                                     </span>
                                                                 </div>
-                                                                <div className="mx-2 text-white">
+                                                                <div className="mx-2 ">
                                                                     <Link href={`${outputTransaction?.explorer_url}`} onClick={(e) => e.stopPropagation()} target="_blank" className={`${!outputTransaction ? "disabled" : ""} hover:text-gray-300 inline-flex items-center w-fit`}>
                                                                         <span className={`${outputTransaction?.explorer_url ? "underline" : ""} mx-0.5 hover:text-gray-300`}>{destinationExchange ? destinationExchange?.display_name : destinationLayer?.display_name}</span>
                                                                     </Link>
@@ -229,7 +229,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="whitespace-nowrap text-sm mr-4 text-primary-text">
+                                                <td className="whitespace-nowrap text-sm mr-4 ">
                                                     <ChevronRight />
                                                 </td>
                                             </tr>
@@ -248,18 +248,18 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
             <div className="sm:rounded-lg w-full">
                 {swap && input_transaction && <div className="py-2 lg:py-10 pt-4 sm:px-6 lg:px-8">
                     {pathname !== '/' && <div className='hidden xl:block w-fit mb-1 hover:bg-level-2 hover:text-accent-foreground rounded ring-offset-background transition-colors -ml-5'>
-                        <BackBtn />
+                        <BackButton />
                     </div>}
                     <div className="md:ml-0 md:mb-6 flex-col sm:flex-row sm:justify-between sm:items-start">
                         <div className="mb-4 sm:mb-0">
-                            <div className="text-sm md:text-base text-[#475467] dark:text-white sm:flex justify-between w-full">
-                                <div className="items-center text-base mb-0.5 text-white">
+                            <div className="text-sm md:text-base  sm:flex justify-between w-full">
+                                <div className="items-center text-base mb-0.5 ">
                                     <div className="mr-2 sm:text-xl text-base">
                                         {swap.status == SwapStatus.Completed && output_transaction ?
                                             <div className="flex flex-col sm:flex-row">
                                                 <div><StatusIcon swap={swap.status} />
-                                                    <span className="whitespace-nowrap text-primary-text align-bottom">&nbsp;at</span>
-                                                    <span className="whitespace-nowrap text-white align-bottom">&nbsp;
+                                                    <span className="whitespace-nowrap align-bottom">&nbsp;at</span>
+                                                    <span className="whitespace-nowrap  align-bottom">&nbsp;
                                                         <TooltipProvider delayDuration={0}>
                                                             <Tooltip>
                                                                 <TooltipTrigger className="cursor-default">{new Date(input_transaction?.created_date)?.toLocaleString('en-US', options)}.</TooltipTrigger>
@@ -271,12 +271,12 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                     </span>
                                                 </div>
                                                 <p className="sm:self-end">
-                                                    <span className="sm:whitespace-nowrap sm:ml-0.5 text-primary-text">Took</span>
-                                                    <span className="text-white">&nbsp;{getTimeDifferenceFromNow(input_transaction?.timestamp, output_transaction?.timestamp)}</span>
+                                                    <span className="sm:whitespace-nowrap sm:ml-0.5 ">Took</span>
+                                                    <span className="">&nbsp;{getTimeDifferenceFromNow(input_transaction?.timestamp, output_transaction?.timestamp)}</span>
                                                 </p>
                                                 <p className="sm:self-end">
-                                                    <span className="text-primary-text sm:ml-1">and cost</span>
-                                                    <span className="text-white">&nbsp;{truncateDecimals(cost, sourceToken?.precision)} {swap?.source_network_asset}</span>
+                                                    <span className=" sm:ml-1">and cost</span>
+                                                    <span className="">&nbsp;{truncateDecimals(cost, sourceToken?.precision)} {swap?.source_network_asset}</span>
                                                 </p>
                                             </div>
                                             :
@@ -284,8 +284,8 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                 <div className="flex flex-col sm:flex-row">
                                                     <div>
                                                         <StatusIcon swap={swap.status} />
-                                                        <span className="whitespace-nowrap text-primary-text align-bottom">&nbsp;Published at</span>
-                                                        <span className="whitespace-nowrap text-white align-bottom">&nbsp;
+                                                        <span className="whitespace-nowrap  align-bottom">&nbsp;Published at</span>
+                                                        <span className="whitespace-nowrap  align-bottom">&nbsp;
                                                             <TooltipProvider delayDuration={0}>
                                                                 <Tooltip>
                                                                     <TooltipTrigger className="cursor-default">{new Date(input_transaction?.created_date)?.toLocaleString('en-US', options)}.</TooltipTrigger>
@@ -297,7 +297,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                                         </span>
                                                     </div>
                                                     <p className="sm:self-end">
-                                                        <span className="text-primary-text">&nbsp;({getTimeDifferenceFromNow(input_transaction?.timestamp, new Date().toString())} ago)</span>
+                                                        <span className="">&nbsp;({getTimeDifferenceFromNow(input_transaction?.timestamp, new Date().toString())} ago)</span>
                                                     </p>
                                                 </div>
                                                 :
@@ -309,44 +309,44 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-col lg:flex-row items-start rounded-md text-primary-text gap-4">
-                        <div className="rounded-md w-full p-6 grid gap-y-3 items-baseline lg:max-w-[50%] bg-secondary-900 rounded-t-lg border-secondary-500 border-t-4 shadow-lg">
-                            <div className="flex items-center text-white">
-                                <div className="mr-2 text-primary-text text-2xl font-medium">From</div>
+                    <div className="flex flex-col lg:flex-row items-start gap-4">
+                        <div className="w-full p-6 grid gap-y-3 items-baseline lg:max-w-[50%] border border-muted-3 border-1 rounded-lg shadow-lg">
+                            <div className="w-full flex items-center border-b border-muted-3 border-1">
+                                <div className="text-2xl font-medium">From</div>
                             </div>
-                            <div className="rounded-md w-full grid text-primary-text bg-level-1 shadow-lg relative border-level-2 border divide-y divide-secondary-500">
+                            <div className="rounded-md w-full grid  shadow-lg relative ">
                                 <div className="flex justify-around">
-                                    <div className="flex-1 p-4">
-                                        <div className="text-base font-normal text-socket-secondary">Asset</div>
+                                    <div className="flex-1 ">
+                                        <div className="text-base font-normal ">Asset</div>
                                         <div className="flex items-center">
-                                            <span className="text-sm lg:text-base font-medium text-socket-table text-white flex items-center">
+                                            <span className="text-sm lg:text-base font-medium text-socket-table  flex items-center">
                                                 <Image alt="Source token icon" src={settings?.resolveImgSrc(sourceToken) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
                                                 {input_transaction?.amount} {swap?.source_network_asset}
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex-1 p-4 border-level-2 border-l">
-                                        <div className="text-base font-normal text-socket-secondary">Source</div>
+                                    <div className="flex-1 ">
+                                        <div className="text-base font-normal ">Source</div>
                                         <div className="flex items-center">
                                             <Image alt="Source chain icon" src={settings?.resolveImgSrc(sourceExchange ? sourceExchange : sourceLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
-                                            <span className="text-sm lg:text-base font-medium text-socket-table text-white">{sourceExchange ? sourceExchange?.display_name : sourceLayer?.display_name}</span>
+                                            <span className="text-sm lg:text-base font-medium text-socket-table ">{sourceExchange ? sourceExchange?.display_name : sourceLayer?.display_name}</span>
                                         </div>
                                         {
                                             swap?.source_exchange && sourceExchange &&
                                             <div>
-                                                <div className="text-base font-normal text-socket-secondary">Via</div>
+                                                <div className="text-base font-normal ">Via</div>
                                                 <div className="flex items-center">
                                                     <Image alt="Source chain icon" src={settings?.resolveImgSrc(sourceLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
-                                                    <span className="text-sm lg:text-base font-medium text-socket-table text-white">{sourceLayer?.display_name}</span>
+                                                    <span className="text-sm lg:text-base font-medium text-socket-table ">{sourceLayer?.display_name}</span>
                                                 </div>
                                             </div>
                                         }
                                     </div>
                                 </div>
-                                <div className="flex flex-col p-4">
-                                    <div className="text-base font-normal text-socket-secondary">From Address</div>
+                                <div className="flex flex-col mt-6">
+                                    <div className="text-base font-normal ">From Address</div>
                                     <div className="text-sm lg:text-base font-medium text-tx-base w-full">
-                                        <div className="flex justify-between items-center text-white hover:text-primary-text">
+                                        <div className="flex justify-between items-center  hover:">
                                             <Link href={`${sourceLayer?.account_explorer_template?.replace('{0}', input_transaction?.from)}`} target="_blank" className="hover:text-gray-300 w-fit contents items-center">
                                                 <span className="break-all link link-underline link-underline-black">{input_transaction?.from}</span>
                                             </Link>
@@ -354,10 +354,10 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex flex-col p-4">
-                                    <div className="text-base font-normal text-socket-secondary">Transaction</div>
+                                <div className="flex flex-col mt-6">
+                                    <div className="text-base font-normal ">Transaction</div>
                                     <div className="text-sm lg:text-base font-medium text-tx-base w-full">
-                                        <div className="flex items-center justify-between text-white hover:text-primary-text">
+                                        <div className="flex items-center justify-between  hover:">
                                             <Link href={`${input_transaction?.explorer_url}`} target="_blank" className="hover:text-gray-300 w-fit contents items-center second-link">
                                                 <span className="break-all link link-underline link-underline-black">{shortenAddress(input_transaction?.transaction_id)}</span>
                                             </Link>
@@ -369,9 +369,9 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                     null
                                     :
                                     <div className="flex-1">
-                                        <div className="text-base font-normal text-socket-secondary">
+                                        <div className="text-base font-normal ">
                                             Confirmations
-                                            <span className="text-sm lg:text-base font-medium text-socket-table text-white ml-1">
+                                            <span className="text-sm lg:text-base font-medium text-socket-table  ml-1">
                                                 {input_transaction?.confirmations >= input_transaction?.max_confirmations ? input_transaction?.max_confirmations : input_transaction?.confirmations}/{input_transaction?.max_confirmations}
                                             </span>
                                         </div>
@@ -379,50 +379,50 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                 }
                             </div>
                         </div>
-                        <div className="rotate-90 lg:rotate-0 self-center"><ArrowRight className="text-white w-6 h-auto" /></div>
-                        <div className="rounded-md w-full p-6 grid gap-y-3 text-primary-text bg-secondary-900 border-secondary-500 border-t-4 shadow-lg relative">
+                        <div className="rotate-90 lg:rotate-0 self-center"><ArrowRight className=" w-8 h-auto" /></div>
+                        <div className="w-full p-6 grid gap-y-3 border border-muted-3 border-1 rounded-lg shadow-lg relative">
                             {swap.status == SwapStatus.LsTransferPending || swap.status == SwapStatus.UserTransferPending ? <span className="pendingAnim"></span> : null}
-                            <div className="flex items-center text-white">
-                                <div className="mr-2 text-primary-text text-2xl font-medium">To</div>
+                            <div className="flex items-center border-b border-muted-3 border-1">
+                                <div className="mr-2  text-2xl font-medium">To</div>
                             </div>
-                            <div className="rounded-md w-full grid text-primary-text bg-level-1 shadow-lg relative border-level-2 border divide-y divide-secondary-500">
+                            <div className="rounded-md w-full grid shadow-lg relative ">
                                 <div className="flex justify-around">
-                                    <div className="flex-1 p-4">
-                                        <div className="text-base font-normal text-socket-secondary">Asset</div>
+                                    <div className="flex-1">
+                                        <div className="text-base font-normal ">Asset</div>
                                         <div className="flex items-center">
                                             {output_transaction?.amount ?
                                                 <div className="flex items-center">
                                                     <Image alt="Destination token icon" src={settings?.resolveImgSrc(destinationToken) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md" />
-                                                    <span className="text-sm lg:text-base font-medium text-socket-table text-white ml-0.5">{output_transaction?.amount} {swap?.destination_network_asset}</span>
+                                                    <span className="text-sm lg:text-base font-medium text-socket-table  ml-0.5">{output_transaction?.amount} {swap?.destination_network_asset}</span>
                                                 </div>
                                                 :
                                                 <span>-</span>
                                             }
                                         </div>
                                     </div>
-                                    <div className="flex-1 p-4 border-level-2 border-l">
-                                        <div className="text-base font-normal text-socket-secondary">Destination</div>
+                                    <div className="flex-1">
+                                        <div className="text-base font-normal ">Destination</div>
                                         <div className="flex items-center">
                                             <Image alt="Destination chain icon" src={settings?.resolveImgSrc(destinationExchange ? destinationExchange : destinationLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
-                                            <span className="text-sm lg:text-base font-medium text-socket-table text-white">{destinationExchange ? destinationExchange?.display_name : destinationLayer?.display_name}</span>
+                                            <span className="text-sm lg:text-base font-medium text-socket-table ">{destinationExchange ? destinationExchange?.display_name : destinationLayer?.display_name}</span>
                                         </div>
                                         {
                                             swap?.destination_exchange && destinationExchange &&
                                             <div>
-                                                <div className="text-base font-normal text-socket-secondary">Via</div>
+                                                <div className="text-base font-normal ">Via</div>
                                                 <div className="flex items-center">
                                                     <Image alt="Source chain icon" src={settings?.resolveImgSrc(destinationLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md mr-0.5" />
-                                                    <span className="text-sm lg:text-base font-medium text-socket-table text-white">{destinationLayer?.display_name}</span>
+                                                    <span className="text-sm lg:text-base font-medium text-socket-table ">{destinationLayer?.display_name}</span>
                                                 </div>
                                             </div>
                                         }
                                     </div>
                                 </div>
-                                <div className="flex flex-col p-4">
-                                    <div className="text-base font-normal text-socket-secondary">To Address</div>
+                                <div className="flex flex-col mt-6">
+                                    <div className="text-base font-normal ">To Address</div>
                                     <div className="text-sm lg:text-base font-medium text-tx-base w-full">
                                         {output_transaction?.to ?
-                                            <div className="flex items-center justify-between text-white hover:text-primary-text">
+                                            <div className="flex items-center justify-between  hover:">
                                                 <Link href={`${(destinationExchange ? destinationLayer : sourceLayer)?.account_explorer_template?.replace("{0}", output_transaction?.to)}`} target="_blank" className="hover:text-gray-300 w-fit contents items-center">
                                                     <span className="break-all link link-underline link-underline-black">{output_transaction?.to}</span>
                                                 </Link>
@@ -433,11 +433,11 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                         }
                                     </div>
                                 </div>
-                                <div className="flex flex-col p-4">
-                                    <div className="text-base font-normal text-socket-secondary">Transaction</div>
+                                <div className="flex flex-col mt-6">
+                                    <div className="text-base font-normal ">Transaction</div>
                                     <div className="text-sm lg:text-base font-medium text-tx-base w-full">
                                         {output_transaction?.transaction_id ?
-                                            <div className="flex items-center justify-between text-white hover:text-primary-text">
+                                            <div className="flex items-center justify-between  hover:">
                                                 <Link href={`${output_transaction?.explorer_url}`} target="_blank" className="hover:text-gray-300 w-fit contents items-center">
                                                     <span className="break-all link link-underline link-underline-black">{shortenAddress(output_transaction?.transaction_id)}</span>
                                                 </Link>
@@ -451,24 +451,24 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             </div>
                             {swap?.has_refuel &&
                                 <>
-                                    <div className="flex items-center text-white">
-                                        <div className="mr-2 text-primary-text text-2xl font-medium">... and for gas</div>
+                                    <div className="flex items-center ">
+                                        <div className="mr-2  text-2xl font-medium">... and for gas</div>
                                     </div>
-                                    <div className="rounded-md w-full grid gap-y-3 text-primary-text bg-level-1 shadow-lg relative border-level-2 border">
+                                    <div className="rounded-md w-full grid gap-y-3  bg-level-1 shadow-lg relative border-level-2 border">
                                         <div className="flex justify-around">
                                             <div className="flex-1 p-4">
-                                                <div className="text-base font-normal text-socket-secondary">Native Asset</div>
+                                                <div className="text-base font-normal ">Native Asset</div>
                                                 <div className="flex items-center">
                                                     <div className="flex items-center">
                                                         <Image alt="Destination token icon" src={settings?.resolveImgSrc(destinationToken) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md" />
-                                                        <span className="text-sm lg:text-base font-medium text-socket-table text-white ml-0.5">{truncateDecimals(refuel_transaction?.amount, DestinationNativeToken?.precision)} {DestinationNativeToken?.asset}</span>
+                                                        <span className="text-sm lg:text-base font-medium text-socket-table  ml-0.5">{truncateDecimals(refuel_transaction?.amount, DestinationNativeToken?.precision)} {DestinationNativeToken?.asset}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex-1 p-4 border-level-2 border-l">
-                                                <div className="text-base font-normal text-socket-secondary">Transaction</div>
+                                                <div className="text-base font-normal ">Transaction</div>
                                                 {refuel_transaction?.transaction_id ?
-                                                    <div className="flex items-center justify-between text-white hover:text-primary-text">
+                                                    <div className="flex items-center justify-between  hover:">
                                                         <Link href={`${refuel_transaction?.explorer_url}`} target="_blank" className="hover:text-gray-300 w-fit contents items-center">
                                                             <span className="break-all link link-underline link-underline-black">{shortenHash(refuel_transaction?.transaction_id)}</span>
                                                         </Link>

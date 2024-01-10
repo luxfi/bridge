@@ -73,14 +73,14 @@ const DataTable: React.FC = () => {
     const output_transaction = swap?.transactions?.find(t => t?.type == TransactionType.Output);
 
     return (
-      <tr key={index} onClick={() => {router.push(`/${input_transaction?.transaction_id}`)}} className="cursor-pointer hover:bg-level-2">
-        <td className="whitespace-nowrap py-2 px-3 text-sm font-medium flex flex-col">
+      <tr key={index} onClick={() => {router.push(`/${input_transaction?.transaction_id}`)}} className="cursor-pointer hover:bg-level-1">
+        <td className="whitespace-nowrap border-l border-r border-b border-muted-4 py-2 px-3 text-sm font-medium flex flex-col">
           <div className="flex flex-row items-center py-1 rounded">
             <StatusPill swap={swap} />
           </div>
           <span className="text-muted">{new Date(swap.created_date).toLocaleString()}</span>
         </td>
-        <td className="whitespace-nowrap px-3 py-2 text-sm text-muted">
+        <td className="whitespace-nowrap border-r border-b border-muted-4 px-3 py-2 text-sm text-muted">
           <div className="flex flex-row">
             <div className="flex flex-col items-start mr-4">
               <span className="text-sm md:text-base font-normal place-items-end mb-1">Token:</span>
@@ -106,7 +106,7 @@ const DataTable: React.FC = () => {
                             <Image alt={`Source chain icon ${index}`} src={settings?.resolveImgSrc(sourceExchange ? sourceExchange : sourceLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md" />
                         </span>
                     </div>
-                    <div className="mx-2 text-white">
+                    <div className="mx-2 ">
                         <Link href={`${input_transaction?.explorer_url}`} onClick={(e) => e.stopPropagation()} target="_blank" className="hover:text-gray-300 inline-flex items-center w-fit">
                             <span className="mx-0.5 hover:text-gray-300 underline hover:no-underline">{sourceExchange ? sourceExchange?.display_name : sourceLayer?.display_name}</span>
                         </Link>
@@ -115,7 +115,7 @@ const DataTable: React.FC = () => {
             </div>
           </div>
         </td>
-        <td className="whitespace-nowrap px-3 py-2 text-sm text-muted">
+        <td className="whitespace-nowrap border-b border-muted-4 px-3 py-2 text-sm text-muted">
           <div className="flex flex-row">
             <div className="flex flex-col items-start">
               <span className="text-sm md:text-base font-normal place-items-end mb-1">Token:</span>
@@ -131,8 +131,8 @@ const DataTable: React.FC = () => {
                         </div>
                         {output_transaction?.amount ?
                             <div className="mx-2.5">
-                                <span className="text-white">{output_transaction?.amount}</span>
-                                <span className="mx-1 text-white">{swap?.destination_network_asset}</span>
+                                <span className="">{output_transaction?.amount}</span>
+                                <span className="mx-1 ">{swap?.destination_network_asset}</span>
                             </div>
                             :
                             <span className="ml-2.5">-</span>
@@ -145,7 +145,7 @@ const DataTable: React.FC = () => {
                             <Image alt={`Destination chain icon ${index}`} src={settings?.resolveImgSrc(destinationExchange ? destinationExchange : destinationLayer) || ''} width={20} height={20} decoding="async" data-nimg="responsive" className="rounded-md" />
                         </span>
                     </div>
-                    <div className="mx-2 text-white">
+                    <div className="mx-2 ">
                         {output_transaction?.explorer_url ?
                             <Link href={`${output_transaction?.explorer_url}`} onClick={(e) => e.stopPropagation()} target="_blank" className={`${!output_transaction ? "disabled" : ""} hover:text-gray-300 inline-flex items-center w-fit`}>
                                 <span className={`underline mx-0.5 hover:text-gray-300 hover:no-underline`}>{destinationExchange ? destinationExchange?.display_name : destinationLayer?.display_name}</span>
@@ -158,7 +158,7 @@ const DataTable: React.FC = () => {
             </div>
           </div>
         </td>
-        <td className="whitespace-nowrap text-sm mr-4 text-foreground">
+        <td className="whitespace-nowrap border-b border-muted-4 text-sm mr-4 text-foreground">
             <ChevronRight />
         </td>
       </tr>
@@ -171,21 +171,19 @@ const DataTable: React.FC = () => {
         <table className="border-spacing-0 w-full relative border-separate gap-0">
           <thead className="sticky top-0 z-10 bg-background ">
             <tr className='' >
-              <th scope="col" className="cursor-default rounded-tl-lg bg-level-2 border-b px-3 py-3.5 text-left text-sm font-semibold text-foreground">
+              <th scope="col" className="cursor-default rounded-tl-lg border-muted-4 border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted">
                   Status
               </th>
-              <th scope="col" className="cursor-default border-b px-3 bg-level-2 py-3.5 text-left text-sm font-semibold text-foreground">
+              <th scope="col" className="cursor-default border-muted-4 border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted">
                   Source
               </th>
-              <th scope="col" className="cursor-default border-b px-3 bg-level-2 py-3.5 text-left text-sm font-semibold text-foreground ">
+              <th scope="col" className="cursor-default border-muted-4 border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted ">
                   Destination
               </th>
-              <th scope="col" className="border-b px-4 bg-level-2 py-3.5 text-left text-sm font-semibold text-foreground ">
-
-              </th>
+              <th scope="col" className="border-muted-4 border-b border-t px-4 py-3.5 text-left text-sm font-semibold text-muted " />
             </tr>
           </thead>
-          <tbody className="bg-level-1">
+          <tbody>
           {swapsData?.filter(s => s.transactions?.some(t => t?.type == TransactionType.Input))?.map((swap, index) => (
             <Row swap={swap} index={index} />
           ))}
