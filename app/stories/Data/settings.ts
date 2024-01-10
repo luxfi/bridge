@@ -32,8 +32,8 @@ export const Settings: BridgeSettings = {
             "created_date": "2022-07-14T20:23:10.387669+00:00"
         },
         {
-            "display_name": "FTX.US",
-            "internal_name": "FTXUS",
+            "display_name": "LUXUSA.NET",
+            "internal_name": "LUXUSA",
             "o_auth": {
                 "authorize_url": "test",
                 "connect_url": "test"
@@ -60,8 +60,8 @@ export const Settings: BridgeSettings = {
             "created_date": "2022-04-06T15:12:15.394338+00:00"
         },
         {
-            "display_name": "FTX.COM",
-            "internal_name": "FTXCOM",
+            "display_name": "LUX.LINK",
+            "internal_name": "LUX",
             "type": "cex",
             "is_featured": false,
             "o_auth": {
