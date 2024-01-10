@@ -31,9 +31,9 @@ const Failed: FC = () => {
                     <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
                         <QuestionIcon className="h-7 w-7 text-primary" aria-hidden="true" />
                     </span>
-                    <label className="block text-sm md:text-base text-primary-text font-medium">What&apos;s happening?</label>
+                    <label className="block text-sm md:text-base text-muted text-muted-primary-text font-medium">What&apos;s happening?</label>
                 </div>
-                <div className='mt-4 text-xs md:text-sm text-primary-text'>
+                <div className='mt-4 text-xs md:text-sm text-muted text-muted-primary-text'>
                     {
                         swap?.status == SwapStatus.Cancelled &&
                         <Canceled onGetHelp={startIntercom} swap={swap} />
@@ -60,8 +60,8 @@ type Props = {
 const Expired = ({ onGetHelp }: Props) => {
     return (
         <div>
-            <span className='text-md text-left text-xs md:text-sm text-primary-text'>The transfer wasn&apos;t completed during the allocated timeframe.</span>
-            <span className='text-secondary-text'><span> If you&apos;ve already sent crypto for this swap, your funds are safe, </span><a className='underline hover:cursor-pointer' onClick={() => onGetHelp()}>please contact our support.</a></span>
+            <span className='text-md text-left text-xs md:text-sm text-muted text-muted-primary-text'>The transfer wasn&apos;t completed during the allocated timeframe.</span>
+            <span className='text-foreground text-foreground-new'><span> If you&apos;ve already sent crypto for this swap, your funds are safe, </span><a className='underline hover:cursor-pointer' onClick={() => onGetHelp()}>please contact our support.</a></span>
         </div>
     )
 }
@@ -71,7 +71,7 @@ const Delay: FC = () => {
             <p className='text-md '><span>This usually means that the exchange needs additional verification.</span>
                 <Link target='_blank' href="https://docs.bridge.lux.network/user-docs/why-is-coinbase-transfer-taking-so-long"
                     className='disabled:text-opacity-40 disabled:bg-primary-900 disabled:cursor-not-allowed ml-1 underline hover:no-underline cursor-pointer'>Learn More</Link></p>
-            <ul className="list-inside list-decimal font-light space-y-1 mt-2 text-left text-primary-text ">
+            <ul className="list-inside list-decimal font-light space-y-1 mt-2 text-left text-muted text-muted-primary-text ">
                 <li>Check your email for details from Coinbase</li>
                 <li>Check your Coinbase account&apos;s transfer history</li>
             </ul>
@@ -82,8 +82,8 @@ const Delay: FC = () => {
 const Canceled = ({ onGetHelp }: Props) => {
     return (
         <div>
-            <p className='text-md text-left text-primary-text'><span>The transaction was cancelled by your request.</span>
-                <span className='text-secondary-text'><span> If you&apos;ve already sent crypto for this swap, your funds are safe,</span><a className='underline hover:cursor-pointer' onClick={() => onGetHelp()}> please contact our support.</a></span>
+            <p className='text-md text-left text-muted text-muted-primary-text'><span>The transaction was cancelled by your request.</span>
+                <span className='text-foreground text-foreground-new'><span> If you&apos;ve already sent crypto for this swap, your funds are safe,</span><a className='underline hover:cursor-pointer' onClick={() => onGetHelp()}> please contact our support.</a></span>
             </p>
         </div>
     )

@@ -1,4 +1,4 @@
-export class Currency {
+export interface Currency {
     asset: string;
     usd_price: number;
     precision: number;
