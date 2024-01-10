@@ -125,8 +125,8 @@ importers:
         specifier: 1.4.13
         version: 1.4.13(@types/react@18.2.47)(react@18.2.0)(typescript@5.3.3)(viem@1.13.1)
       axios:
-        specifier: ^1.6.0
-        version: 1.6.5
+        specifier: ^0.21.4
+        version: 0.21.4
       bn.js:
         specifier: ^5.2.1
         version: 5.2.1
@@ -294,7 +294,7 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(tailwindcss@3.4.1)
       typescript:
-        specifier: ^5.1
+        specifier: ^5.3.3
         version: 5.3.3
 
   explorer:
@@ -11938,6 +11938,7 @@ packages:
       is-hex-prefixed: 1.0.0
       strip-hex-prefix: 1.0.0
     dev: false
+    bundledDependencies: false
 
   /event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
