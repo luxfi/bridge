@@ -36,7 +36,7 @@ const Widget = ({ children, className, hideMenu }: Props) => {
     {sandbox && (
       <div className="relative z-20 pb-2">
         <div className="h-1 bg-secondary-lux" />
-        <div className="absolute -top-0.5 right-[calc(50%-68px)] bg-secondary-lux  py-0.5 px-10 rounded-b-md text-xs scale-75">
+        <div className="absolute cursor-default -top-0.5 right-[calc(50%-68px)] bg-secondary-lux  py-0.5 px-10 rounded-b-md text-xs scale-75">
           TESTNET
         </div>
       </div>
