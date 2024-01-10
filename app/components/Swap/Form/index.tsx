@@ -80,7 +80,7 @@ export default function Form() {
                     updateAuthData(res)
                     setUserType(UserType.GuestUser)
                 }
-                catch (error) {
+                catch (error: any) {
                     toast.error(error.response?.data?.error || error.message)
                     return;
                 }
@@ -101,7 +101,7 @@ export default function Form() {
                 setShowSwapModal(true)
             }
         }
-        catch (error) {
+        catch (error: any) {
             const data: ApiError = error?.response?.data?.error
             if (data?.code === LSAPIKnownErrorCode.BLACKLISTED_ADDRESS) {
                 toast.error("You can't transfer to that address. Please double check.")
