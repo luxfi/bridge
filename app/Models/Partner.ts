@@ -1,4 +1,4 @@
-export class Partner {
+export interface Partner {
     display_name: string;
     logo_url: string;
     is_wallet: boolean;
