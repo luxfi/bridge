@@ -12,9 +12,9 @@ export default class KnownInternalNames {
 
         public static readonly Huobi: string = "HUOBI";
 
-        public static readonly FtxUs: string = "FTXUS";
+        public static readonly LuxUSA: string = "LUXUSA";
 
-        public static readonly FtxCom: string = "FTXCOM";
+        public static readonly Lux: string = "LUX";
 
         public static readonly Okex: string = "OKEX";
 
