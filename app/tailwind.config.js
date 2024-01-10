@@ -2,7 +2,6 @@
 
 const defaultColors = require("tailwindcss/colors");
 const plugin = require('tailwindcss/plugin')
-const defaultTheme = require('tailwindcss/defaultTheme')
 
 const luxColors = require('@luxdefi/ui/style/colors.tailwind')
 const { fontFamily } = require('@luxdefi/ui/style/fonts.tailwind')
@@ -213,7 +212,10 @@ module.exports = {
       }),
     },
     colors: (theme) => ({
-      ...defaultColors,
+      ...{
+        gray: defaultColors.gray,
+        slate: defaultColors.gray,
+      },
       ...luxColors(theme),
     }),
     fontFamily,
