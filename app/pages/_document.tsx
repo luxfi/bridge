@@ -46,7 +46,7 @@ export default function Document() {
           }}
         />
       </Head>
-      <body>
+      <body className='bg-background fg-foreground font-sans'>
         <Main />
         <NextScript />
       </body>
