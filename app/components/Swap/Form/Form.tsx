@@ -184,10 +184,10 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
             )}
               <div className="gap-4 flex relative items-center outline-none w-full px-4 py-3  text-xs md:text-base">
                 <DetailedEstimates
-                    networks={layers}
-                    selected_currency={toCurrency}
-                    source={source}
-                    destination={destination}
+                  networks={layers}
+                  selected_currency={toCurrency}
+                  source={source}
+                  destination={destination}
                 />
               </div>
             {!(query?.hideTo && values?.to) && (
@@ -198,15 +198,16 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
             </div>
             {!hideAddress ? (
               <div className="w-full mb-3.5 leading-4">
-                <label htmlFor="destination_address" className="block font-semibold text-secondary-text text-xs">
-                    {`To ${values?.to?.display_name || ''} address`}
+                <label htmlFor="destination_address" className="block font-semibold text-xs">
+                  {`To ${values?.to?.display_name || ''} address`}
                 </label>
                 <AddressButton
-                    disabled={!values.to || !values.from}
-                    isPartnerWallet={!!isPartnerWallet}
-                    openAddressModal={() => setShowAddressModal(true)}
-                    partnerImage={partnerImage}
-                    values={values} />
+                  disabled={!values.to || !values.from}
+                  isPartnerWallet={!!isPartnerWallet}
+                  openAddressModal={() => setShowAddressModal(true)}
+                  partnerImage={partnerImage}
+                  values={values} 
+                />
                 <Modal
                     header={`To ${values?.to?.display_name || ''} address`}
                     height="fit"
@@ -280,38 +281,47 @@ const TruncatedAdrress = ({ address }: { address: string }) => {
     return <div className="tracking-wider text-primary-text">{shortAddress}</div>
 }
 
-type AddressButtonProps = {
-    openAddressModal: () => void;
-    isPartnerWallet: boolean;
-    values: SwapFormValues;
-    partnerImage?: string;
-    disabled: boolean;
-}
-const AddressButton: FC<AddressButtonProps> = ({ openAddressModal, isPartnerWallet, values, partnerImage, disabled }) => {
-    const destination = values?.to
-    return <button type="button" disabled={disabled} onClick={openAddressModal} className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 text-primary-text-placeholder bg-secondary-700 border-secondary-500 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-primary focus:border-primary font-semibold w-full px-3.5 py-3">
-        {isPartnerWallet &&
-            <div className="shrink-0 flex items-center pointer-events-none">
-                {
-                    partnerImage &&
-                    <Image
-                        alt="Partner logo"
-                        className='rounded-md object-contain'
-                        src={partnerImage}
-                        width="24"
-                        height="24"></Image>
-                }
-            </div>
-        }
-        <div className="truncate">
-            {values.destination_address ?
-                <TruncatedAdrress address={values.destination_address} />
-                :
-                <span>Enter your address here</span>
-            }
-        </div>
-    </button>
-}
+const AddressButton: FC<{
+  openAddressModal: () => void;
+  isPartnerWallet: boolean;
+  values: SwapFormValues;
+  partnerImage?: string;
+  disabled: boolean;
+}> = ({ 
+  openAddressModal, 
+  isPartnerWallet, 
+  values, 
+  partnerImage, 
+  disabled 
+}) => (
+  <button 
+    type="button" 
+    disabled={disabled} 
+    onClick={openAddressModal} 
+    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-muted-4 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-primary focus:border-primary font-semibold w-full px-3.5 py-3"
+  >
+  {isPartnerWallet &&
+    <div className="shrink-0 flex items-center pointer-events-none">
+    {partnerImage && (
+      <Image
+        alt="Partner logo"
+        className='rounded-md object-contain'
+        src={partnerImage}
+        width="24"
+        height="24" 
+      />
+    )}
+    </div>
+  }
+    <div className="truncate text-muted">
+    {values.destination_address ? (
+      <TruncatedAdrress address={values.destination_address} />
+    ) : (
+      <span>Enter your address here</span>
+    )}
+    </div>
+  </button>
+)
 
 
 
