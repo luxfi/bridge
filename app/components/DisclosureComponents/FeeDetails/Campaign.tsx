@@ -1,5 +1,4 @@
 import { FC } from "react"
-import { Currency } from "../../../Models/Currency"
 import { Layer } from "../../../Models/Layer"
 import BridgeApiClient, { Campaign } from "../../../lib/BridgeApiClient"
 import useSWR from "swr"
@@ -9,11 +8,12 @@ import { truncateDecimals } from "../../utils/RoundDecimals"
 import { motion } from "framer-motion"
 import ClickTooltip from "../../Tooltips/ClickTooltip"
 import Image from 'next/image';
+import { NetworkCurrency } from "../../../Models/CryptoNetwork"
 
 type CampaignProps = {
     destination: Layer,
-    fee: number,
-    selected_currency: Currency,
+    fee: number | undefined,
+    selected_currency: NetworkCurrency,
 }
 const Campaign: FC<CampaignProps> = ({
     destination,
@@ -32,7 +32,7 @@ const Campaign: FC<CampaignProps> = ({
             && c.status == 'active'
             && new Date(c?.end_date).getTime() - now > 0)
 
-    if (!campaign)
+    if (!campaign || !fee)
         return <></>
 
     return <CampaignDisplay
@@ -44,11 +44,12 @@ const Campaign: FC<CampaignProps> = ({
 type CampaignDisplayProps = {
     campaign: Campaign,
     fee: number,
-    selected_currency: Currency,
+    selected_currency: NetworkCurrency,
 }
 const CampaignDisplay: FC<CampaignDisplayProps> = ({ campaign, fee, selected_currency }) => {
-    const { resolveImgSrc, currencies } = useSettingsState()
-    const campaignAsset = currencies.find(c => c?.asset === campaign?.asset)
+    const { resolveImgSrc, layers } = useSettingsState()
+    const layer = layers.find(l => l.internal_name === campaign.network)
+    const campaignAsset = layer?.assets.find(c => c?.asset === campaign?.asset)
     const feeinUsd = fee * selected_currency.usd_price
     const reward = truncateDecimals(((feeinUsd * (campaign?.percentage || 0) / 100) / (campaignAsset?.usd_price || 1)), (campaignAsset?.precision || 0))
 
@@ -62,7 +63,7 @@ const CampaignDisplay: FC<CampaignDisplayProps> = ({ campaign, fee, selected_cur
             y: "-100%",
             transition: { duration: 0.4, ease: [0.36, 0.66, 0.04, 1] },
         }}
-        className='w-full flex items-center justify-between rounded-b-lg bg-level-3 darker-2-class  relative bottom-2 z-0 pt-4 pb-2 px-3.5 text-right'>
+        className='w-full flex items-center justify-between rounded-b-lg bg-secondary-700  relative bottom-2 z-0 pt-4 pb-2 px-3.5 text-right'>
         <div className='flex items-center'>
             <p>Est. {campaignAsset?.asset} Reward</p>
             <ClickTooltip text={<span><span>The amount of onboarding reward that you’ll earn.&nbsp;</span><a target='_blank' href='/campaigns' className='text-primary underline hover:no-underline decoration-primary cursor-pointer'>Learn more</a></span>} />

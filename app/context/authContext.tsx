@@ -1,4 +1,4 @@
-import React, { Context, PropsWithChildren, useCallback, useEffect, useState } from 'react'
+import React, { Context, useCallback, useEffect, useState } from 'react'
 import { parseJwt } from '../lib/jwtParser';
 import TokenService from '../lib/TokenService';
 
@@ -25,7 +25,7 @@ export type UpdateInterface = {
     setUserType: (value: UserType) => void
 }
 
-export function AuthProvider({ children }: PropsWithChildren) {
+export function AuthProvider({ children }) {
 
     const [email, setEmail] = React.useState<string | undefined>()
     const [tempEmail, setTempEmail] = React.useState<string | undefined>()

@@ -41,7 +41,7 @@ export default class ExchangeSettings {
 
     public static KnownSettings: { [key: string]: ExchangeSettings } = {};
     public static ForceDisable?: { [exchange: string]: { offramp: boolean, onramp: boolean } }
-    
+
     private static _isInitialized = false;
     public static Initialize() {
         if (ExchangeSettings._isInitialized) {
@@ -126,7 +126,7 @@ export default class ExchangeSettings {
             if (setting) {
                 let destOrder = destinationOrder.indexOf(k);
                 let srcOrder = sourceOrder.indexOf(k);
-                
+
                 setting.OrderInDestination = destOrder < 0 ? 10000 : destOrder;
                 setting.OrderInSource = srcOrder < 0 ? 10000 : srcOrder;
             }

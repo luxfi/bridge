@@ -1,4 +1,4 @@
 user-agent: *
 allow: /
 
-sitemap: https://www.bridge.lux.network/sitemap.xml
+sitemap: https://bridge.lux.network/sitemap.xml

@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { Balance, Gas } from '../Models/Balance';
 
 export const BalancesStateContext = React.createContext<BalancesState | null>(null);
@@ -22,7 +22,11 @@ export type BalancesStateUpdate = {
     }>>,
 }
 
-export const BalancesDataProvider: FC<PropsWithChildren> = ({ children }) => {
+type Props = {
+    children?: JSX.Element | JSX.Element[];
+}
+
+export const BalancesDataProvider: FC<Props> = ({ children }) => {
     const [allBalances, setAllBalances] = useState<{ [address: string]: Balance[] }>({})
     const [allGases, setAllGases] = useState<{ [network: string]: Gas[] }>({})
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(false)

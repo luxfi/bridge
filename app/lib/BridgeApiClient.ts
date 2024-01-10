@@ -8,6 +8,8 @@ import { NextRouter } from "next/router";
 import { AuthRefreshFailedError } from "./Errors/AuthRefreshFailedError";
 import { ApiResponse, EmptyApiResponse } from "../Models/ApiResponse";
 import BridgeAuthApiClient from "./userAuthApiClient";
+import { CryptoNetwork } from "../Models/CryptoNetwork";
+import { Exchange } from "../Models/Exchange";
 
 export default class BridgeApiClient {
     static apiBaseEndpoint?: string = AppSettings.BridgeApiUri;
@@ -20,16 +22,37 @@ export default class BridgeApiClient {
 
     fetcher = (url: string) => this.AuthenticatedRequest<ApiResponse<any>>("GET", url)
 
+    async GetNetworksAsync(): Promise<ApiResponse<{
+        network: string,
+        asset: string
+    }>> {
+        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/routes/sources?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
+    }
+
+    async GetSourceRoutesAsync(): Promise<ApiResponse<{
+        network: string;
+        asset: string;
+    }[]>> {
+        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/routes/sources?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
+    }
+
+    async GetDestinationRoutesAsync(): Promise<ApiResponse<{
+        network: string;
+        asset: string;
+    }[]>> {
+        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/routes/destinations?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
+    }
+
+    async GetExchangesAsync(): Promise<ApiResponse<Exchange[]>> {
+        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/exchanges?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
+    }
+
     async GetSettingsAsync(): Promise<ApiResponse<BridgeSettings>> {
-      let settingsURL = `/api/settings?version=${BridgeApiClient.apiVersion}`
+        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
+    }
 
-      if (process.env.NODE_ENV === 'development') {
-        settingsURL = 'http://localhost:3000' + settingsURL
-      } else {
-        settingsURL = `https://bridge.lux.network:443` + settingsURL
-      }
-
-      return await axios.get(settingsURL).then((res: any) => res.data);
+    async GetLSNetworksAsync(): Promise<ApiResponse<CryptoNetwork[]>> {
+        return await axios.get(`${BridgeApiClient.apiBaseEndpoint}/api/networks?version=${BridgeApiClient.apiVersion}`).then(res => res.data);
     }
 
     async CreateSwapAsync(params: CreateSwapParams): Promise<ApiResponse<CreateSwapData>> {
@@ -62,7 +85,7 @@ export default class BridgeApiClient {
     }
 
     async GenerateDepositAddress(network: string): Promise<ApiResponse<DepositAddress>> {
-        return await this.AuthenticatedRequest<ApiResponse<any>>("POST", `/deposit_addresses/${network}`);
+        return await this.AuthenticatedRequest<ApiResponse<any>>("POST", `/networks/${network}/deposit_addresses`);
     }
 
     async WithdrawFromExchange(swapId: string, exchange: string, twoFactorCode?: string): Promise<ApiResponse<void>> {
@@ -128,6 +151,8 @@ export type CreateSwapParams = {
     destination: string,
     source_asset: string,
     destination_asset: string
+    source_exchange?: string
+    destination_exchange?: string
     destination_address: string,
     app_name?: string,
     reference_id?: string,
@@ -224,7 +249,11 @@ export enum PublishedSwapTransactionStatus {
 }
 
 export type PublishedSwapTransactions = {
-    [key: string]: SwapTransaction
+    state: {
+        swapTransactions: {
+            [key: string]: SwapTransaction
+        }
+    }
 }
 
 

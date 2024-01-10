@@ -8,7 +8,7 @@ If you have partnership offers or questions related to collaboration with Bridge
 
 To integrate Bridge in your wallet or app, direct users to Bridge and customize the initial values by using query parameters.
 
-Example: [Loopring & Coinbase](https://www.bridge.lux.network/?destNetwork=LOOPRING_MAINNET&sourceExchangeName=coinbase).
+Example: [Loopring & Coinbase](https://bridge.lux.network/?destNetwork=LOOPRING_MAINNET&sourceExchangeName=coinbase).
 
 - *sourceExchangeName* - Pre-select the source exchange. Available values are at the <a href='#bottom2'>bottom of the page</a>.
 
@@ -21,7 +21,7 @@ Example: [Loopring & Coinbase](https://www.bridge.lux.network/?destNetwork=LOOPR
 
 - *asset* - To pre-select the asset. NOTE: available assets depend on the selected network, for example, the asset **LRC** is only available in **LOOPRING** network. Avilable values are: ***ETH***, ***USDC***, ***USDT*** and ***LRC***.
 
-- [Full template](https://www.bridge.lux.network/?destNetwork=zksync_mainnet&destAddress=zksync%3A0x4d70500858f9705ddbd56d007d13bbc92c9c67d1&lockNetwork=true&lockAddress=true&appName=argent&email=tantushyan2736%40gmail.com).
+- [Full template](https://bridge.lux.network/?destNetwork=zksync_mainnet&destAddress=zksync%3A0x4d70500858f9705ddbd56d007d13bbc92c9c67d1&lockNetwork=true&lockAddress=true&appName=argent&email=tantushyan2736%40gmail.com).
 
 ---
 

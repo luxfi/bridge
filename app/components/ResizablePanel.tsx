@@ -1,6 +1,6 @@
+import { useMeasure } from "@uidotdev/usehooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode } from "react";
-import { useMeasure } from "@uidotdev/usehooks";
 
 export default function ResizablePanel({ children, className }: { children: ReactNode, className?: string }) {
     let [ref, { height }] = useMeasure();
@@ -37,7 +37,7 @@ export default function ResizablePanel({ children, className }: { children: Reac
 
 const ignoreCircularReferences = () => {
     const seen = new WeakSet();
-    return (key: string, value: any) => {
+    return (key, value) => {
         if (key.startsWith("_")) return; // Don't compare React's internal props.
         if (typeof value === "object" && value !== null) {
             if (seen.has(value)) return;

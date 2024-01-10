@@ -1,7 +1,6 @@
 import React from 'react'
 import { Head, Html, Main, NextScript } from 'next/document'
 
-
 export enum TrackEvent {
   SignedIn = 'Signed in',
   SwapFailed = 'Swap failed',
@@ -20,22 +19,18 @@ declare global {
   }
 }
 
-
-const fontClasses = 
-  'bg-background fg-foreground font-sans'
-
 export default function Document() {
   return (
-    <Html lang="en" className='dark' >
+    <Html lang="en">
       <Head>
         {process.env.NEXT_PUBLIC_VERCEL_ENV && <script
           defer
-          data-domain={process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'bridge.lux.network' : "bridge.lux-test.network"}
+          data-domain={process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'bridge.lux.network' : "testnet.bridge.lux.network"}
           src="https://plausible.io/js/script.tagged-events.js"
         />}
         {process.env.NEXT_PUBLIC_VERCEL_ENV && <script
           defer
-          data-domain={process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'bridge.lux.network' : "bridge.lux-test.network"}
+          data-domain={process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'bridge.lux.network' : "testnet.bridge.lux.network"}
           src="https://plausible.io/js/script.manual.js"
         />}
         <script
@@ -51,7 +46,7 @@ export default function Document() {
           }}
         />
       </Head>
-      <body className={fontClasses}>
+      <body>
         <Main />
         <NextScript />
       </body>

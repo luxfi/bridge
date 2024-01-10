@@ -23,6 +23,6 @@ const KnownKonnectors = {
     Braavos: 'braavos',
 }
 
-const CoinsIcon = (props: any) => {
+const CoinsIcon = (props) => {
     return <Coins {...props} strokeWidth={2} />
 }

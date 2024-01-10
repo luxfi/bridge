@@ -14,7 +14,6 @@ import KnownInternalNames from '../../../../lib/knownIds';
 import { parseUnits } from 'viem'
 import useWallet from '../../../../hooks/useWallet';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
-import toastError from '../../../../helpers/toastError';
 
 type Props = {
     depositAddress?: string;
@@ -38,13 +37,13 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
 
     const { userId } = useAuthState()
     const { swap } = useSwapDataState()
-    const { networks, layers } = useSettingsState()
+    const { layers } = useSettingsState()
 
     const { setSwapTransaction } = useSwapTransactionStore();
     const { source_network: source_network_internal_name } = swap || {}
-    const source_network = networks.find(n => n.internal_name === source_network_internal_name)
+    const source_network = layers.find(n => n.internal_name === source_network_internal_name)
     const source_layer = layers.find(n => n.internal_name === source_network_internal_name)
-    const sourceCurrency = source_network?.currencies.find(c => c.asset?.toLowerCase() === swap?.source_network_asset?.toLowerCase())
+    const sourceCurrency = source_network?.assets.find(c => c.asset?.toLowerCase() === swap?.source_network_asset?.toLowerCase())
     const sourceChainId = source_network?.chain_id
 
     const provider = useMemo(() => {
@@ -56,15 +55,13 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
     const handleConnect = useCallback(async () => {
         if (!provider)
             throw new Error(`No provider from ${source_layer?.internal_name}`)
-        if (source_layer?.isExchange === true)
-            throw new Error(`Source is exchange`)
 
         setLoading(true)
         try {
             await provider.connectWallet(source_layer?.chain_id)
         }
         catch (e) {
-          toastError(e)
+            toast(e.message)
         }
         setLoading(false)
     }, [source_layer, provider])
@@ -138,18 +135,19 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                 }
             }
             catch (e) {
-              toastError(e)
+                toast(e.message)
             }
         }
         catch (e) {
-          toastError(e)
-      }
+            if (e?.message)
+                toast(e.message)
+        }
         setLoading(false)
     }, [wallet, swap, source_network, depositAddress, userId, sourceCurrency])
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-foreground text-foreground-new">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-secondary-text">
                 <div className='space-y-4'>
                     {
 
@@ -167,7 +165,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                     {
                         !wallet &&
                         <div className="flex flex-row
-                         text-muted text-muted-primary-text text-base space-x-2">
+                         text-primary-text text-base space-x-2">
                             <SubmitButton
                                 isDisabled={loading}
                                 isSubmitting={loading}
@@ -187,7 +185,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                         && depositAddress
                         && !isWrongNetwork
                         && <div className="flex flex-row
-                        text-muted text-muted-primary-text text-base space-x-2">
+                        text-primary-text text-base space-x-2">
                             <SubmitButton
                                 isDisabled={!!(loading || transferDone)}
                                 isSubmitting={!!(loading || transferDone)}

@@ -21,7 +21,7 @@ export default function useStarknetBalance(): BalanceProvider {
 
         let balances: Balance[] = []
 
-        if (layer.isExchange === true || !layer.assets) return
+        if (!layer.assets) return
 
         const provider = new RpcProvider({
             nodeUrl: layer.nodes[0].url,
@@ -68,7 +68,7 @@ export default function useStarknetBalance(): BalanceProvider {
 
         const { BigNumber } = await import("ethers");
 
-        if (layer.isExchange === true || !layer.assets) return
+        if (!layer.assets) return
 
         const amountToWithdraw = BigNumber.from(1);
         const contract_address = layer.assets.find(a => a.asset === currency.asset)?.contract_address

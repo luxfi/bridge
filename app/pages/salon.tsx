@@ -2,15 +2,11 @@ import Layout from '../components/layout'
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/router';
 import { clearTempData, getTempData } from '../lib/openLink';
-import BridgeAuthApiClient from '../lib/userAuthApiClient';
 import { InferGetServerSidePropsType } from 'next';
-import { BridgeAppSettings } from '../Models/BridgeAppSettings';
 import { getServerSideProps } from '../helpers/getSettings';
 
 export default function Salon({ settings }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const router = useRouter();
-    let appSettings = new BridgeAppSettings(settings)
-    BridgeAuthApiClient.identityBaseEndpoint = appSettings.discovery.identity_url
 
 
     useEffect(() => {
@@ -33,8 +29,8 @@ export default function Salon({ settings }: InferGetServerSidePropsType<typeof g
     }, [router])
 
     return (
-        <Layout hideFooter={true} settings={appSettings}>
-            <div className="h-full min-h-screen flex flex-col justify-center text-foreground text-foreground-new text-md font-lighter leading-6">
+        <Layout hideFooter={true} settings={settings}>
+            <div className="h-full min-h-screen flex flex-col justify-center text-secondary-text text-md font-lighter leading-6">
                 <div className='flex place-content-center mb-4'>
                     <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 116 116" fill="none">
                         <circle cx="58" cy="58" r="58" fill="#55B585" fillOpacity="0.1" />
@@ -44,7 +40,7 @@ export default function Salon({ settings }: InferGetServerSidePropsType<typeof g
                     </svg>
                 </div>
                 <div className="flex flex-col text-center place-content-center space-y-2">
-                    <p className="block text-muted text-muted-primary-text font-bold text-lg"> Exchange account successfully connected </p>
+                    <p className="block text-primary-text font-bold text-lg"> Exchange account successfully connected </p>
                     <p className="block"> You can close this window now</p>
                 </div>
             </div>
