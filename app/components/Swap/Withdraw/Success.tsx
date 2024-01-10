@@ -25,14 +25,14 @@ const Success: FC = () => {
     const handleViewInExplorer = useCallback(() => {
         if (!transaction_explorer_template)
             return
-        window.open(`${AppSettings.ExplorerURL}/${swapOutputTransaction?.transaction_id}`, '_blank')
+        window.open(`${AppSettings.ExplorerURl}/${swapOutputTransaction?.transaction_id}`, '_blank')
     }, [transaction_explorer_template])
 
     return (
         <>
             <Widget.Footer>
                 <MessageComponent.Buttons>
-                    <div className="flex flex-row text-muted text-muted-primary-text text-base space-x-2">
+                    <div className="flex flex-row text-primary-text text-base space-x-2">
                         {!externalId &&
                             ((transaction_explorer_template && swapOutputTransaction?.transaction_id) ?
                                 <>

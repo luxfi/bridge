@@ -2,26 +2,13 @@ import { CryptoNetwork, NetworkCurrency } from "./CryptoNetwork";
 import { Currency } from "./Currency";
 import { Exchange, ExchangeCurrency } from "./Exchange";
 import { BaseL2Asset, ExchangeAsset, Layer, NetworkAsset } from "./Layer";
-import type { BridgeSettings, OauthProveider, Discovery } from "./BridgeSettings";
+import { BridgeSettings } from "./BridgeSettings";
 import { Partner } from "./Partner";
 
-export class BridgeAppSettings implements BridgeSettings {
-
-    exchanges: Exchange[]
-    networks: CryptoNetwork[]
-    currencies: Currency[] 
-    discovery: Discovery
-    validSignatureisPresent: boolean = false
-
+export class BridgeAppSettings extends BridgeSettings {
     constructor(settings: BridgeSettings | any) {
-//        super();
-        BridgeAppSettings.ResolveSettings(settings)
-        this.networks = settings.networks
-        this.exchanges = settings.exchanges
-        this.currencies = settings.currencies
-        this.discovery = settings.discovery
-        this.validSignatureisPresent = settings.validSignatureisPresent ?? undefined
-        
+        super();
+        Object.assign(this, BridgeAppSettings.ResolveSettings(settings))
 
         this.layers = BridgeAppSettings.ResolveLayers(this.exchanges, this.networks);
     }

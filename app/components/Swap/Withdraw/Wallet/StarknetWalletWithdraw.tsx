@@ -14,7 +14,6 @@ import KnownInternalNames from '../../../../lib/knownIds';
 import { parseUnits } from 'viem'
 import useWallet from '../../../../hooks/useWallet';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
-import toastError from '../../../../helpers/toastError';
 
 type Props = {
     depositAddress?: string;
@@ -64,7 +63,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             await provider.connectWallet(source_layer?.chain_id)
         }
         catch (e) {
-          toastError(e)
+            toast(e.message)
         }
         setLoading(false)
     }, [source_layer, provider])
@@ -138,18 +137,19 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                 }
             }
             catch (e) {
-              toastError(e)
+                toast(e.message)
             }
         }
         catch (e) {
-          toastError(e)
-      }
+            if (e?.message)
+                toast(e.message)
+        }
         setLoading(false)
     }, [wallet, swap, source_network, depositAddress, userId, sourceCurrency])
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-foreground text-foreground-new">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-secondary-text">
                 <div className='space-y-4'>
                     {
 
@@ -167,7 +167,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                     {
                         !wallet &&
                         <div className="flex flex-row
-                         text-muted text-muted-primary-text text-base space-x-2">
+                         text-primary-text text-base space-x-2">
                             <SubmitButton
                                 isDisabled={loading}
                                 isSubmitting={loading}
@@ -187,7 +187,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                         && depositAddress
                         && !isWrongNetwork
                         && <div className="flex flex-row
-                        text-muted text-muted-primary-text text-base space-x-2">
+                        text-primary-text text-base space-x-2">
                             <SubmitButton
                                 isDisabled={!!(loading || transferDone)}
                                 isSubmitting={!!(loading || transferDone)}

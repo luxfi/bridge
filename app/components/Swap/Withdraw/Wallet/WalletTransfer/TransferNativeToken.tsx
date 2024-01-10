@@ -6,7 +6,7 @@ import {
     useWaitForTransaction,
     useNetwork,
 } from "wagmi";
-import { parseEther, createPublicClient, http, TransactionReceipt } from 'viem'
+import { parseEther, createPublicClient, http } from 'viem'
 import SubmitButton from "../../../../buttons/submitButton";
 import { PublishedSwapTransactionStatus } from "../../../../../lib/BridgeApiClient";
 import WalletIcon from "../../../../icons/WalletIcon";
@@ -40,7 +40,6 @@ const TransferNativeTokenButton: FC<TransferNativeTokenButtonProps> = ({
     const { setSwapTransaction } = useSwapTransactionStore();
     const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
 
-      // @ts-ignore
     const sendTransactionPrepare = usePrepareSendTransaction({
         enabled: !!depositAddress && isContractWallet?.ready,
         to: depositAddress,
@@ -87,21 +86,19 @@ const TransferNativeTokenButton: FC<TransferNativeTokenButtonProps> = ({
             }
         }
         catch (e) {
-          if ('message' in (e as Object)) {
-            console.error((e as any).message!)
-          }
-      }
+            //TODO log to logger
+            console.error(e.message)
+        }
     }, [transaction?.data?.hash, swapId, isContractWallet?.isContract])
 
-      // @ts-ignore
     const waitForTransaction = useWaitForTransaction({
         hash: transaction?.data?.hash || savedTransactionHash,
-        onSuccess: async (trxRcpt: TransactionReceipt) => {
+        onSuccess: async (trxRcpt) => {
             setApplyingTransaction(true)
             setSwapTransaction(swapId, PublishedSwapTransactionStatus.Completed, trxRcpt.transactionHash);
             setApplyingTransaction(false)
         },
-        onError: async (err: Error) => {
+        onError: async (err) => {
             if (transaction?.data?.hash)
                 setSwapTransaction(swapId, PublishedSwapTransactionStatus.Error, transaction?.data?.hash, err.message);
         }
@@ -151,10 +148,10 @@ const TransferNativeTokenButton: FC<TransferNativeTokenButtonProps> = ({
         >
             <MessageComponent>
                 <div className="space-y-4">
-                    <div className='md:text-2xl text-lg font-bold text-muted text-muted-primary-text leading-6 text-center'>
+                    <div className='md:text-2xl text-lg font-bold text-primary-text leading-6 text-center'>
                         Insufficient funds for gas
                     </div>
-                    <div className="text-base font-medium space-y-6 text-muted text-muted-primary-text text-center">
+                    <div className="text-base font-medium space-y-6 text-primary-text text-center">
                         This transfer can&apos;t be processed because you don&apos;t have enough gas.
                     </div>
                 </div>
@@ -162,7 +159,7 @@ const TransferNativeTokenButton: FC<TransferNativeTokenButtonProps> = ({
                     You have requested swap with {amount}
                 </div>
                 <MessageComponent.Buttons>
-                    <div className="flex flex-row text-muted text-muted-primary-text text-base space-x-2">
+                    <div className="flex flex-row text-primary-text text-base space-x-2">
                         <div className='basis-1/3'>
                             <SubmitButton onClick={() => { setOpenChangeAmount(false); clickHandler() }} text_align='left' isDisabled={false} isSubmitting={false} buttonStyle='filled' >
                                 Transfer

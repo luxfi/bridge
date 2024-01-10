@@ -9,7 +9,6 @@ import WarningMessage from '../../../WarningMessage';
 import GuideLink from '../../../guideLink';
 import useWallet from '../../../../hooks/useWallet';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
-import toastError from '../../../../helpers/toastError';
 
 type Props = {
     depositAddress?: string
@@ -67,14 +66,15 @@ const ImtblxWalletWithdrawStep: FC<Props> = ({ depositAddress }) => {
             }
         }
         catch (e) {
-          toastError(e)
+            if (e?.message)
+                toast(e.message)
         }
         setLoading(false)
     }, [imxAccount, swap, source_network, depositAddress])
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-foreground text-foreground-new">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-secondary-text">
                 <div className='space-y-4'>
                     <WarningMessage messageType='informing'>
                         <span className='flex-none'>
