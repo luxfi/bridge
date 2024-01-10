@@ -12,9 +12,9 @@ const basePath = process.env.NEXT_PUBLIC_APP_BASE_PATH
 const version = process.env.NEXT_PUBLIC_API_VERSION
 
 const Header: React.FC = () => {
-  
+
   const pathname = usePathname(); // TODO make sandbox compnent lazyloaded, so this can be SSR'd
-  
+
   return (
     <header className="max-w-6xl w-full mx-auto">
       {
@@ -34,24 +34,24 @@ const Header: React.FC = () => {
             }
         </div>
         <div className="flex gap-x-2 sm:gap-x-4  justify-self-end">
-          <LinkElement 
+          <LinkElement
             def={{
               variant: 'outline',
               size: 'default',
               title: 'Bridge App',
               icon: <Layers className='h-4 w-4' />,
-              href: 'https://www.bridge.lux.network/app'
-            }} 
+              href: 'https://bridge.lux.network/app'
+            }}
             className='lg:min-w-0 gap-1'
           />
-          <LinkElement 
+          <LinkElement
             def={{
               variant: 'outline',
               size: 'default',
               title: 'Docs',
               icon: <FileText className='h-4 w-4' />,
               href: 'https://docs.bridge.lux.network'
-            }} 
+            }}
             className='lg:min-w-0 gap-1'
           />
         </div>
