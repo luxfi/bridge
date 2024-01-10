@@ -6,15 +6,13 @@ import { BalancesDataProvider } from '../context/balances';
 
 const Swap: FC = () => {
   return (
-    <div className="text-primary-text">
-      <SwapDataProvider >
-        <TimerProvider>
-          <BalancesDataProvider>
-            <SwapForm />
-          </BalancesDataProvider>
-        </TimerProvider>
-      </SwapDataProvider >
-    </div >
+    <SwapDataProvider >
+      <TimerProvider>
+        <BalancesDataProvider>
+          <SwapForm />
+        </BalancesDataProvider>
+      </TimerProvider>
+    </SwapDataProvider >
   )
 };
 

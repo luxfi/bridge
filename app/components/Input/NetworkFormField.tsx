@@ -50,10 +50,12 @@ const getGroupName = (value: Layer | Exchange, type: 'cex' | 'layer') => {
 }
 
 const NetworkFormField = forwardRef(function NetworkFormField({ direction, label, className }: Props, ref: any) {
+
     const {
         values,
         setFieldValue,
     } = useFormikContext<SwapFormValues>();
+
     const name = direction
 
     const { from, to, fromCurrency, toCurrency, fromExchange, toExchange, currencyGroup, refuel } = values
@@ -127,58 +129,55 @@ const NetworkFormField = forwardRef(function NetworkFormField({ direction, label
     const parsedReceiveAmount = parseFloat(fee.walletReceiveAmount?.toFixed(toCurrency?.precision) || "")
     const destinationNetworkCurrency = (to && toCurrency) ? toCurrency : null
 
-    return (<div className={`p-3 bg-secondary-700 ${className}`}>
-        <label htmlFor={name} className="block font-semibold text-secondary-text text-xs">
-            {label}
+    return (
+      <div className={`p-3 ${className}`}>
+        <label htmlFor={name} className="block font-semibold text-xs">
+          {label}
         </label>
-        <div className="border border-secondary-500 rounded-lg mt-1.5 pb-2">
-            <div ref={ref}>
-                <div className="w-full">
-                    <CommandSelectWrapper
-                        disabled={false}
-                        valueGrouper={valueGrouper}
-                        placeholder={placeholder}
-                        setValue={handleSelect}
-                        value={value}
-                        values={menuItems}
-                        searchHint={searchHint}
-                        className="rounded-b-none border-t-0 border-x-0"
-                    />
-                </div>
+        <div className="border border-muted-4 bg-level-1 rounded-lg mt-1.5 pb-2">
+          <div ref={ref}>
+            <div className="w-full">
+              <CommandSelectWrapper
+                disabled={false}
+                valueGrouper={valueGrouper}
+                placeholder={placeholder}
+                setValue={handleSelect}
+                value={value}
+                values={menuItems}
+                searchHint={searchHint}
+                className="rounded-b-none border-t-0 border-x-0"
+              />
             </div>
-            <div className="flex justify-between items-center mt-2 pl-3 pr-4">
-                {
-                    direction === 'from' ?
-                        <AmountField />
-                        :
-                        parsedReceiveAmount > 0 ?
-                            <div className="font-semibold md:font-bold text-right leading-4">
-                                <p>
-                                    <>{parsedReceiveAmount}</>
-                                    &nbsp;
-                                    <span>
-                                        {destinationNetworkCurrency?.asset}
-                                    </span>
-                                </p>
-                                {refuel && <Refuel
-                                    currency={toCurrency}
-                                    to={to}
-                                    refuel={refuel}
-                                />}
-                            </div>
-                            : '-'
-                }
-                {
-                    value?.type === 'cex' ?
-                        <CurrencyGroupFormField direction={name} />
-                        :
-                        <CurrencyFormField direction={name} />
-                }
-            </div>
+          </div>
+          <div className="flex justify-between items-center mt-2 pl-3 pr-4">
+          {direction === 'from' ? (
+            <AmountField />
+          ) : (
+            parsedReceiveAmount > 0 ? (
+              <div className="font-semibold md:font-bold text-right leading-4">
+                <p>
+                  <span>{parsedReceiveAmount}</span>&nbsp;<span>{destinationNetworkCurrency?.asset}</span>
+                </p>
+                {refuel && (
+                  <Refuel
+                    currency={toCurrency}
+                    to={to}
+                    refuel={refuel}
+                  />
+                )}
+              </div>
+            ) : (<>-</>)
+          )}
+          {value?.type === 'cex' ? (
+            <CurrencyGroupFormField direction={name} />
+          ) : (
+            <CurrencyFormField direction={name} />
+          )}
+          </div>
         </div>
-
-    </div>)
-});
+      </div>
+    )
+})
 
 function groupByType(values: ISelectMenuItem[]) {
     let groups: SelectMenuItemGroup[] = [];

@@ -151,27 +151,35 @@ export default function Form() {
     }
 
     return <>
-        <Modal height="fit" show={showConnectNetworkModal} setShow={setShowConnectNetworkModal} header={`${networkToConnect?.DisplayName} connect`}>
-            {networkToConnect && <ConnectNetwork NetworkDisplayName={networkToConnect?.DisplayName} AppURL={networkToConnect?.AppURL} />}
-        </Modal>
-        <Modal height='fit'
-            show={showSwapModal}
-            setShow={setShowSwapModal}
-            header={`Complete the swap`}
-            onClose={handleClosesSwapModal}>
-            <ResizablePanel>
-                <SwapDetails type="contained" />
-            </ResizablePanel>
-        </Modal>
-        <Formik
-            innerRef={formikRef}
-            initialValues={initialValues}
-            validateOnMount={true}
-            validate={MainStepValidation({ minAllowedAmount, maxAllowedAmount })}
-            onSubmit={handleSubmit}
-            isInitialValid={!initiallyIsValid}
-        >
-            <SwapForm isPartnerWallet={!!isPartnerWallet} partner={partner} />
-        </Formik>
+      <Modal 
+        height="fit" 
+        show={showConnectNetworkModal} 
+        setShow={setShowConnectNetworkModal} 
+        header={`${networkToConnect?.DisplayName} connect`}
+      >
+      {networkToConnect && (
+        <ConnectNetwork NetworkDisplayName={networkToConnect?.DisplayName} AppURL={networkToConnect?.AppURL} />
+      )}
+      </Modal>
+      <Modal height='fit'
+        show={showSwapModal}
+        setShow={setShowSwapModal}
+        header={`Complete the swap`}
+        onClose={handleClosesSwapModal}
+      >
+        <ResizablePanel>
+          <SwapDetails type="contained" />
+        </ResizablePanel>
+      </Modal>
+      <Formik
+          innerRef={formikRef}
+          initialValues={initialValues}
+          validateOnMount={true}
+          validate={MainStepValidation({ minAllowedAmount, maxAllowedAmount })}
+          onSubmit={handleSubmit}
+          isInitialValid={!initiallyIsValid}
+      >
+          <SwapForm isPartnerWallet={!!isPartnerWallet} partner={partner} />
+      </Formik>
     </>
 }
