@@ -1,4 +1,4 @@
-import { FC } from "react"
+import { FC, PropsWithChildren } from "react"
 import { ApiResponse } from "../../../../Models/ApiResponse"
 import { useSettingsState } from "../../../../context/settings"
 import { useSwapDataState } from "../../../../context/swap"
@@ -30,10 +30,10 @@ const WalletTransfer: FC = () => {
     const shouldGetGeneratedAddress = isContractWallet?.ready && !canDoSweepless
     const generateDepositParams = shouldGetGeneratedAddress ? [source_network_internal_name] : null    
 
-    const client = new BridgeApiClient()
+    const bridgeApiClient = new BridgeApiClient()
     const {
         data: generatedDeposit
-    } = useSWR<ApiResponse<DepositAddress>>(generateDepositParams, ([network]) => client.GenerateDepositAddress(network), { dedupingInterval: 60000 })
+    } = useSWR<ApiResponse<DepositAddress>>(generateDepositParams, ([network]) => bridgeApiClient.GenerateDepositAddress(network), { dedupingInterval: 60000 })
 
     const managedDepositAddress = sourceAsset?.network?.managed_accounts?.[0]?.address;
     const generatedDepositAddress = generatedDeposit?.data?.address
@@ -51,7 +51,7 @@ const WalletTransfer: FC = () => {
         refuel: swap?.has_refuel
     }
 
-    const { data: feeData } = useSWR<ApiResponse<Fee[]>>([feeParams], ([params]) => client.GetFee(params), { dedupingInterval: 60000 })
+    const { data: feeData } = useSWR<ApiResponse<Fee[]>>([feeParams], ([params]) => bridgeApiClient.GetFee(params), { dedupingInterval: 60000 })
     const walletTransferFee = isContractWallet?.ready ?
         feeData?.data?.find(f => f?.deposit_type === (canDoSweepless ? DepositType.Wallet : DepositType.Manual))
         : undefined
@@ -87,8 +87,8 @@ const WalletTransfer: FC = () => {
 
 }
 
-const Wrapper: FC<{ children?: React.ReactNode }> = ({ children }) => {
-    return <div className='border-secondary-500 rounded-md border bg-secondary-700 p-3'>
+const Wrapper: FC<PropsWithChildren> = ({ children }) => {
+    return <div className='border-secondary-500 rounded-md border bg-level-3 darker-2-class p-3'>
         {children}
     </div>
 }

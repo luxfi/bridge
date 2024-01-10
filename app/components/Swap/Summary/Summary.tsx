@@ -48,8 +48,8 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
         hideAddress
     } = useQueryState()
 
-    const client = new BridgeApiClient()
-    const { data: partnerData } = useSWR<ApiResponse<Partner>>(appName && `/apps?name=${appName}`, client.fetcher)
+    const bridgeApiClient = new BridgeApiClient()
+    const { data: partnerData } = useSWR<ApiResponse<Partner>>(appName && `/apps?name=${appName}`, bridgeApiClient.fetcher)
     const partner = partnerData?.data
 
     const source = hideFrom ? partner : from
@@ -92,31 +92,31 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                     <div className="flex items-center gap-3">
                         {source && <Image src={resolveImgSrc(source)} alt={source.display_name} width={32} height={32} className="rounded-full" />}
                         <div>
-                            <p className="text-primary-text text-sm leading-5">{source?.display_name}</p>
+                            <p className="text-muted text-muted-primary-text text-sm leading-5">{source?.display_name}</p>
                             {
                                 sourceAccountAddress &&
-                                <p className="text-sm text-secondary-text">{sourceAccountAddress}</p>
+                                <p className="text-sm text-foreground text-foreground-new">{sourceAccountAddress}</p>
                             }
                         </div>
                     </div>
                     <div className="flex flex-col">
-                        <p className="text-primary-text text-sm">{truncateDecimals(requestedAmount, currency.precision)} {sourceCurrencyName}</p>
-                        <p className="text-secondary-text text-sm flex justify-end">${requestedAmountInUsd}</p>
+                        <p className="text-muted text-muted-primary-text text-sm">{truncateDecimals(requestedAmount, currency.precision)} {sourceCurrencyName}</p>
+                        <p className="text-foreground text-foreground-new text-sm flex justify-end">${requestedAmountInUsd}</p>
                     </div>
                 </div>
                 <div className="flex items-center justify-between  w-full ">
                     <div className="flex items-center gap-3">
                         {destination && <Image src={resolveImgSrc(destination)} alt={destination.display_name} width={32} height={32} className="rounded-full" />}
                         <div>
-                            <p className="text-primary-text text-sm leading-5">{destination?.display_name}</p>
-                            <p className="text-sm text-secondary-text">{shortenAddress(destAddress as string)}</p>
+                            <p className="text-muted text-muted-primary-text text-sm leading-5">{destination?.display_name}</p>
+                            <p className="text-sm text-foreground text-foreground-new">{shortenAddress(destAddress as string)}</p>
                         </div>
                     </div>
                     {
                         fee != undefined && receiveAmount != undefined && fee >= 0 ?
                             <div className="flex flex-col justify-end">
-                                <p className="text-primary-text text-sm">{truncateDecimals(receiveAmount, currency.precision)} {destCurrencyName}</p>
-                                <p className="text-secondary-text text-sm flex justify-end">${receiveAmountInUsd}</p>
+                                <p className="text-muted text-muted-primary-text text-sm">{truncateDecimals(receiveAmount, currency.precision)} {destCurrencyName}</p>
+                                <p className="text-foreground text-foreground-new text-sm flex justify-end">${receiveAmountInUsd}</p>
                             </div>
                             :
                             <div className="flex flex-col justify-end">
@@ -136,8 +136,8 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                             <p>Refuel</p>
                         </div>
                         <div className="flex flex-col">
-                            <p className="text-primary-text text-sm">{truncatedRefuelAmount} {nativeCurrency?.asset}</p>
-                            <p className="text-secondary-text text-sm flex justify-end">${refuelAmountInUsd}</p>
+                            <p className="text-muted text-muted-primary-text text-sm">{truncatedRefuelAmount} {nativeCurrency?.asset}</p>
+                            <p className="text-foreground text-foreground-new text-sm flex justify-end">${refuelAmountInUsd}</p>
                         </div>
                     </div>
                 }

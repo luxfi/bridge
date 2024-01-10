@@ -52,7 +52,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
 
     const outputPendingDetails = <div className='flex items-center space-x-1'>
         <span>Estimated arrival after confirmation:</span>
-        <div className='text-primary-text'>
+        <div className='text-muted text-muted-primary-text'>
             {
                 destinationNetworkCurrency?.status == 'insufficient_liquidity' ?
                     <span>Up to 2 hours (delayed)</span>
@@ -74,7 +74,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
                     <span>
                         <span>Waiting for confirmations</span>
                         {swapInputTransaction && swapInputTransaction?.confirmations && (
-                            <span className="text-primary-text ml-1">
+                            <span className="text-muted text-muted-primary-text ml-1">
                                 <span>{swapInputTransaction?.confirmations >= swapInputTransaction?.max_confirmations
                                     ? swapInputTransaction?.max_confirmations
                                     : swapInputTransaction?.confirmations}</span>
@@ -98,7 +98,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
                 name: `The transfer failed`,
                 description: <div className='flex space-x-1'>
                     <span>Error: </span>
-                    <div className='space-x-1 text-primary-text'>
+                    <div className='space-x-1 text-muted text-muted-primary-text'>
                         {swap?.fail_reason == SwapFailReasons.RECEIVED_MORE_THAN_VALID_RANGE ?
                             "Your deposit is higher than the max limit. We'll review and approve your transaction in up to 2 hours."
                             :
@@ -139,7 +139,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
             failed: {
                 name: swap?.fail_reason == SwapFailReasons.RECEIVED_MORE_THAN_VALID_RANGE ? `The transfer is on hold` : "The transfer has failed",
                 description: <div className='flex space-x-1'>
-                    <div className='space-x-1 text-secondary-text'>
+                    <div className='space-x-1 text-foreground text-foreground-new'>
                         {swap?.fail_reason == SwapFailReasons.RECEIVED_MORE_THAN_VALID_RANGE ?
                             "Your deposit is higher than the max limit. We'll review and approve your transaction in up to 2 hours."
                             :
@@ -211,24 +211,24 @@ const Processing: FC<Props> = ({ settings, swap }) => {
     if (!swap) return <></>
     return (
         <Widget.Content>
-            <div className={`w-full min-h-[422px] space-y-5 flex flex-col justify-between text-primary-text`}>
+            <div className={`w-full min-h-[422px] space-y-5 flex flex-col justify-between text-muted text-muted-primary-text`}>
                 <div className='space-y-5'>
                     <div className="w-full flex flex-col h-full space-y-5">
-                        <div className="bg-secondary-700 font-normal px-3 py-4 rounded-lg flex flex-col border border-secondary-500 w-full relative z-10">
+                        <div className="bg-level-3 darker-2-class font-normal px-3 py-4 rounded-lg flex flex-col border border-secondary-500 w-full relative z-10">
                             <SwapSummary></SwapSummary>
                         </div>
                     </div>
-                    <div className="bg-secondary-700 font-normal px-3 py-6 rounded-lg flex flex-col border border-secondary-500 w-full relative z-10 divide-y-2 divide-secondary-500 divide-dashed">
+                    <div className="bg-level-3 darker-2-class font-normal px-3 py-6 rounded-lg flex flex-col border border-secondary-500 w-full relative z-10 divide-y-2 divide-secondary-500 divide-dashed">
                         <div className='pb-4'>
                             <div className='flex flex-col gap-2 items-center'>
                                 <div className='flex items-center'>
                                     <Gauge value={stepsProgressPercentage} size="small" showCheckmark={swap?.status === SwapStatus.Completed} />
                                 </div>
                                 <div className="flex-col text-center ">
-                                    <span className="font-medium text-primary-text">
+                                    <span className="font-medium text-muted text-muted-primary-text">
                                         {progressStatuses.generalStatus.title}
                                     </span>
-                                    <span className='text-sm block space-x-1 text-secondary-text'>
+                                    <span className='text-sm block space-x-1 text-foreground text-foreground-new'>
                                         <span>{progressStatuses.generalStatus.subTitle ?? outputPendingDetails}</span>
                                     </span>
                                 </div>
@@ -298,7 +298,7 @@ const getProgressStatuses = (swap: SwapItem, swapStatus: SwapStatus): { stepStat
 
     if (swapStatus == SwapStatus.Completed) {
         generalTitle = "Transfer completed"
-        subtitle = "Thanks for using Lux"
+        subtitle = "Thanks for using Bridge"
     }
     if (swapStatus == SwapStatus.Cancelled) {
         generalTitle = "Transfer cancelled"
