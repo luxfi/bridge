@@ -40,7 +40,7 @@ const Header: React.FC = () => {
               size: 'default',
               title: 'Bridge App',
               icon: <Layers className='h-4 w-4' />,
-              href: 'https://bridge.lux.network/app'
+              href: 'https://bridge.lux.network'
             }}
             className='lg:min-w-0 gap-1'
           />
