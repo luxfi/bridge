@@ -39,7 +39,7 @@ const Search: React.FC<{
 
   return (
     <div className={className ?? ''} >
-      <div className="relative flex flex-row items-center pl-2 border border-muted-2 rounded-md">
+      <div className="relative flex flex-row items-center pl-2 border border-muted-3 rounded-md">
         <input
           type="text"
           name="searchParam"

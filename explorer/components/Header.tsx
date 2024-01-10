@@ -15,15 +15,13 @@ const Header: React.FC = () => {
   
   const pathname = usePathname(); // TODO make sandbox compnent lazyloaded, so this can be SSR'd
   
-  console.log('PATHNAME: ' + pathname)
-
   return (
     <header className="max-w-6xl w-full mx-auto">
       {
         version === 'sandbox' &&
         <div className='px-6 lg:px-8'>
           <div className="h-0.5 bg-[#D95E1B] rounded-full " />
-          <div className="absolute -top-0.5 right-[calc(50%-68px)] bg-[#D95E1B] py-0.5 px-10 rounded-b-md text-xs scale-75 text-white">
+          <div className="absolute -top-0.5 right-[calc(50%-68px)] bg-[#D95E1B] py-0.5 px-10 rounded-b-md text-xs scale-75 ">
             TESTNET
           </div>
         </div>
