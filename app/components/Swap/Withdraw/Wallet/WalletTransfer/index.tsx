@@ -49,15 +49,14 @@ const TransferFromWallet: FC<Props> = ({ networkDisplayName,
     useEffect(() => {
         try {
             const data: PublishedSwapTransactions = JSON.parse(localStorage.getItem('swapTransactions') || "{}")
-            const hash = data?.[swapId]?.hash
+            const hash = data.state.swapTransactions?.[swapId]?.hash;
             if (hash)
                 setSavedTransactionHash(hash)
         }
         catch (e) {
-          if ('message' in (e as Object)) {
-            console.error((e as any).message!)
-          }
-      }
+            //TODO log to logger
+            console.error(e.message)
+        }
     }, [swapId])
 
     const hexed_sequence_number = sequenceNumber?.toString(16)

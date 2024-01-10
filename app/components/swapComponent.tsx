@@ -6,7 +6,7 @@ import { BalancesDataProvider } from '../context/balances';
 
 const Swap: FC = () => {
   return (
-    <div className="text-muted text-muted-primary-text">
+    <div className="text-primary-text">
       <SwapDataProvider >
         <TimerProvider>
           <BalancesDataProvider>

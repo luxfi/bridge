@@ -23,15 +23,27 @@ const SwapDetails: FC<Props> = ({ type }) => {
     const storedWalletTransaction = storedWalletTransactions.swapTransactions?.[swap?.id || '']
 
     const sourceNetwork = settings.layers.find(l => l.internal_name === swap?.source_network)
-    const currency = settings.currencies.find(c => c.asset === swap?.source_network_asset)
+    const currency = sourceNetwork?.assets.find(c => c.asset === swap?.source_network_asset)
 
     if (!swap) return <>
         <div className="w-full h-[430px]">
             <div className="animate-pulse flex space-x-4">
                 <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-3 darker-2-class rounded-lg"></div>
-                    <div className="h-40 bg-level-3 darker-2-class rounded-lg"></div>
-                    <div className="h-12 bg-level-3 darker-2-class rounded-lg"></div>
+                    <div className="h-32 bg-secondary-700 rounded-lg"></div>
+                    <div className="h-40 bg-secondary-700 rounded-lg"></div>
+                    <div className="h-12 bg-secondary-700 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+    </>
+
+    if (!swap) return <>
+        <div className="w-full h-[430px]">
+            <div className="animate-pulse flex space-x-4">
+                <div className="flex-1 space-y-6 py-1">
+                    <div className="h-32 bg-secondary-700 rounded-lg"></div>
+                    <div className="h-40 bg-secondary-700 rounded-lg"></div>
+                    <div className="h-12 bg-secondary-700 rounded-lg"></div>
                 </div>
             </div>
         </div>
@@ -60,9 +72,9 @@ const Container = ({ type, children }: Props & {
     children: JSX.Element | JSX.Element[]
 }) => {
     if (type === "widget")
-        return <Widget>{children}</Widget>
+        return <Widget><>{children}</></Widget>
     else
-        return <div className="w-full flex flex-col justify-between h-full space-y-5 text-foreground text-foreground-new">
+        return <div className="w-full flex flex-col justify-between h-full space-y-5 text-secondary-text">
             {children}
         </div>
 

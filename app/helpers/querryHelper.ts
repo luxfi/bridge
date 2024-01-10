@@ -1,5 +1,5 @@
 import { ParsedUrlQuery } from "querystring";
-import { PersistantQueryParams } from "../Models/QueryParams";
+import { PersistantQueryParams, QueryParams } from "../Models/QueryParams";
 
 
 export const resolvePersistantQueryParams = (query: ParsedUrlQuery): ParsedUrlQuery | null => {

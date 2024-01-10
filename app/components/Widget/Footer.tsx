@@ -1,22 +1,29 @@
-import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react"
+import ReactPortal from "../Common/ReactPortal";
+
 
 const variants = {
-  enter: () => ({
-    opacity: 0,
-    y: '100%',
-  }),
-  center: () => ({
-    opacity: 1,
-    y: 0,
-  }),
-  exit: () => ({
-    y: '100%',
-    zIndex: 0,
-    opacity: 0,
-  }),
+    enter: () => {
+        return ({
+            opacity: 0,
+            y: '100%',
+        })
+    },
+    center: () => {
+        return ({
+            opacity: 1,
+            y: 0,
+        })
+    },
+    exit: () => {
+        return ({
+            y: '100%',
+            zIndex: 0,
+            opacity: 0,
+        })
+    },
 };
-type VariantType = keyof typeof variants
 
 type FooterProps = {
     hidden?: boolean,
@@ -32,10 +39,10 @@ const Footer = ({ children, hidden, sticky = true }: FooterProps) => {
         setHeight(Number(ref?.current?.clientHeight))
     }, [])
 
-    const handleAnimationEnd = (variant: VariantType) => {
-      if (variant === "center") {
-        setHeight(Number(ref?.current?.clientHeight))
-      }
+    const handleAnimationEnd = (variant) => {
+        if (variant == "center") {
+            setHeight(Number(ref?.current?.clientHeight))
+        }
     }
     return (
         sticky ?
@@ -48,12 +55,12 @@ const Footer = ({ children, hidden, sticky = true }: FooterProps) => {
                     }}
                     custom={{ direction: "back" ? -1 : 1, width: 100 }}
                     variants={variants}
-                    className={`text-muted text-muted-primary-text text-base mt-3        
+                    className={`text-primary-text text-base mt-3        
                         max-sm:fixed
                         max-sm:inset-x-0
                         max-sm:bottom-0 
                         max-sm:z-30
-                        max-sm:bg-level-1 darkest-class 
+                        max-sm:bg-secondary-900 
                         max-sm:shadow-widget-footer 
                         max-sm:p-4 
                         max-sm:px-6 
@@ -62,7 +69,7 @@ const Footer = ({ children, hidden, sticky = true }: FooterProps) => {
                 </motion.div>
                 
                 <div style={{ height: `${height}px` }}
-                    className={`text-muted text-muted-primary-text text-base mt-3        
+                    className={`text-primary-text text-base mt-3        
                              max-sm:inset-x-0
                              max-sm:bottom-0 
                              max-sm:p-4 max-sm:w-full invisible sm:hidden`}>

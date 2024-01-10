@@ -1,4 +1,4 @@
-import { Context, useCallback, createContext, useContext, useState, PropsWithChildren } from 'react'
+import { Context, useCallback, createContext, useContext, useState } from 'react'
 import { useInterval } from '../hooks/useInterval';
 
 const TimerStateContext = createContext<DataContextType | null>(null);
@@ -10,7 +10,7 @@ type DataContextType = {
     start: (seconds: number) => void,
 }
 
-export function TimerProvider({ children }: PropsWithChildren) {
+export function TimerProvider({ children }) {
 
     const [secondsRemaining, setSecondsRemaining] = useState<number>()
     const [started, setStarted] = useState(false)
@@ -32,7 +32,7 @@ export function TimerProvider({ children }: PropsWithChildren) {
 
     useInterval(
         callback,
-        started ? 1000 : 0,
+        started ? 1000 : null,
     )
 
     return (

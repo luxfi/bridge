@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { FC, useState } from "react"
 import { QRCodeSVG } from "qrcode.react";
 import { classNames } from "./utils/classNames";

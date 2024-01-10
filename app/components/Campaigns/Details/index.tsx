@@ -14,15 +14,15 @@ import Link from "next/link";
 import LinkWrapper from "../../LinkWraapper";
 import { Widget } from "../../Widget/Index";
 import Leaderboard from "./Leaderboard"
-import { CryptoNetwork } from "../../../Models/CryptoNetwork";
 import Rewards from "./Rewards";
 import SpinIcon from "../../icons/spinIcon"
+import { Layer } from "../../../Models/Layer"
 
 function CampaignDetails() {
 
     const settings = useSettingsState()
     const router = useRouter();
-    const { resolveImgSrc, networks } = settings
+    const { resolveImgSrc, layers } = settings
     const camapaignName = router.query.campaign?.toString()
 
     const { isConnected } = useAccount();
@@ -31,7 +31,7 @@ function CampaignDetails() {
     const { data: campaignsData, isLoading } = useSWR<ApiResponse<Campaign[]>>('/campaigns', apiClient.fetcher)
     const campaign = campaignsData?.data?.find(c => c.name === camapaignName)
 
-    const network = networks.find(n => n.internal_name === campaign?.network)
+    const network = layers.find(n => n.internal_name === campaign?.network)
 
     if (isLoading) {
         return <Loading />
@@ -91,10 +91,10 @@ function CampaignDetails() {
 
 type BriefInformationProps = {
     campaign: Campaign,
-    network?: CryptoNetwork
+    network?: Layer
 }
 const BriefInformation: FC<BriefInformationProps> = ({ campaign, network }) =>
-    <p className="text-foreground text-foreground-new text-base">
+    <p className="text-secondary-text text-base">
         <span>You can earn $</span>
         <span>{campaign?.asset}</span>
         <span>&nbsp;tokens by transferring assets to&nbsp;</span>
@@ -102,7 +102,7 @@ const BriefInformation: FC<BriefInformationProps> = ({ campaign, network }) =>
         <span>. For each transaction, you&amp;ll receive&nbsp;</span>
         <span>{campaign?.percentage}</span>
         <span>% of Bridge fee back.&nbsp;</span>
-        <Link target='_blank' href="https://docs.bridge.lux.network/user-docs/bridge-campaigns/usdop-rewards"
+        <Link target='_blank' href="https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards"
             className="text-primary underline hover:no-underline decoration-primary cursor-pointer">
             Learn more
         </Link>

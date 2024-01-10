@@ -1,6 +1,4 @@
-import { LucideProps } from 'lucide-react';
-
-const BitKeep = (props: LucideProps) => <svg {...props} version="1.0" xmlns="http://www.w3.org/2000/svg"
+const BitKeep = (props) => <svg {...props} version="1.0" xmlns="http://www.w3.org/2000/svg"
 width="170.000000pt" height="170.000000pt" viewBox="0 0 170.000000 170.000000"
 preserveAspectRatio="xMidYMid meet">
 

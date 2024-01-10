@@ -21,12 +21,7 @@ module.exports = (phase, { defaultConfig }) => {
       defaultLocale: "en",
     },
     images: {
-      domains: [
-        "stagelslayerswapbridgesa.blob.core.windows.net",
-        "bransferstorage.blob.core.windows.net",
-        "devlslayerswapbridgesa.blob.core.windows.net",
-        "prodlslayerswapbridgesa.blob.core.windows.net"
-      ],
+      domains: ["stagelslayerswapbridgesa.blob.core.windows.net", "bransferstorage.blob.core.windows.net", "devlslayerswapbridgesa.blob.core.windows.net", "prodlslayerswapbridgesa.blob.core.windows.net"],
     },
     compiler: {
       removeConsole: false,
@@ -37,9 +32,6 @@ module.exports = (phase, { defaultConfig }) => {
       return config;
     },
     productionBrowserSourceMaps: true,
-      // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
-    transpilePackages: ['@luxdefi/ui'],
-    pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   }
   if (process.env.APP_BASE_PATH) {
     nextConfig.basePath = process.env.APP_BASE_PATH
@@ -58,38 +50,3 @@ module.exports = (phase, { defaultConfig }) => {
 
   return nextConfig;
 }
-
-// Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
-module.exports = withSentryConfig(
-  module.exports,
-  {
-    // For all available options, see:
-    // https://github.com/getsentry/sentry-webpack-plugin#options
-
-    // Suppresses source map uploading logs during build
-    silent: true,
-    org: "lux-e4",
-    project: "lux-bridge",
-  },
-  {
-    // For all available options, see:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-    // Upload a larger set of source maps for prettier stack traces (increases build time)
-    widenClientFileUpload: true,
-
-    // Transpiles SDK to be compatible with IE11 (increases bundle size)
-    transpileClientSDK: true,
-
-    // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
-    tunnelRoute: "/monitoring",
-
-    // Hides source maps from generated client bundles
-    hideSourceMaps: true,
-
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
-  }
-);

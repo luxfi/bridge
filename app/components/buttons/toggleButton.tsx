@@ -3,7 +3,7 @@ import { Field, FieldProps } from 'formik'
 import { Switch } from '@headlessui/react'
 import { classNames } from '../utils/classNames';
 
-export interface ToggleButtonProps {
+export class ToggleButtonProps {
     value: boolean;
     onChange: (isChecked: boolean) => void;
     name?: string;
@@ -15,7 +15,7 @@ const ToggleButton: FC<ToggleButtonProps> = ({ name, onChange, value }) => {
             checked={value}
             onChange={onChange}
             className={classNames(
-                value ? 'bg-primary' : 'bg-level-4 darker-hover-class',
+                value ? 'bg-primary' : 'bg-secondary-500',
                 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none'
             )}
         >
@@ -33,7 +33,7 @@ const ToggleButton: FC<ToggleButtonProps> = ({ name, onChange, value }) => {
                     )}
                     aria-hidden="true"
                 >
-                    <svg className="h-3 w-3 text-muted text-muted-primary-text" fill="none" viewBox="0 0 12 12">
+                    <svg className="h-3 w-3 text-primary-text" fill="none" viewBox="0 0 12 12">
                         <path
                             d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2"
                             stroke="currentColor"

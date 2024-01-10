@@ -19,15 +19,16 @@ export default function useStarknet(): WalletProvider {
         return wallets.find(wallet => wallet.providerName === name)
     }
 
-    const connectWallet = useCallback(async (chain: string | number | null | undefined) => {
+    const connectWallet = useCallback(async (chain: string) => {
         const constants = (await import('starknet')).constants
         const chainId = (chain && fromHex(chain as `0x${string}`, 'string')) || constants.NetworkName.SN_MAIN
         const connect = (await import('starknetkit')).connect
+        try {
             const res = await connect({
                 argentMobileOptions: {
                     dappName: 'Bridge',
                     projectId: WALLETCONNECT_PROJECT_ID,
-                    url: 'https://www.bridge.lux.network/app',
+                    url: 'https://bridge.lux.network/app',
                     description: 'Move crypto across exchanges, blockchains, and wallets.',
                     chainId: chainId as any
                 },
@@ -48,6 +49,10 @@ export default function useStarknet(): WalletProvider {
                 await disconnectWallet()
                 connectWallet(chain)
             }
+        }
+        catch (e) {
+            throw new Error(e)
+        }
     }, [addWallet])
 
     const disconnectWallet = async () => {

@@ -8,7 +8,6 @@ import { useSwapDataState, useSwapDataUpdate } from '../../../../context/swap';
 import BridgeApiClient, { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
 import { LSAPIKnownErrorCode } from '../../../../Models/ApiError';
 import toast from 'react-hot-toast';
-import toastError from '../../../../helpers/toastError';
 import { useSettingsState } from '../../../../context/settings';
 import { TimerProvider, useTimerState } from '../../../../context/timerContext';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
@@ -23,7 +22,7 @@ const Coinbase: FC = () => {
 const TransferElements: FC = () => {
     const { swap, codeRequested } = useSwapDataState()
     const { setCodeRequested, mutateSwap } = useSwapDataUpdate()
-    const { networks } = useSettingsState()
+    const { layers } = useSettingsState()
     const {
         destination_network: destination_network_internal_name,
     } = swap || {}
@@ -35,7 +34,7 @@ const TransferElements: FC = () => {
 
     const [loading, setLoading] = useState(false)
 
-    const destination_network = networks.find(n => n.internal_name === destination_network_internal_name)
+    const destination_network = layers.find(n => n.internal_name === destination_network_internal_name)
 
     const handleTransfer = useCallback(async () => {
         if (!swap || !swap.source_exchange)
@@ -45,32 +44,24 @@ const TransferElements: FC = () => {
             setOpenCoinbase2FA(true)
         else {
             try {
-                const bridgeApiClient = new BridgeApiClient()
-                await bridgeApiClient.WithdrawFromExchange(swap.id, swap.source_exchange)
+                const client = new BridgeApiClient()
+                await client.WithdrawFromExchange(swap.id, swap.source_exchange)
             }
             catch (e) {
-                const code = (e as any).response?.data?.error?.code
-                const message = (e as any).response?.data?.error?.message
-
-                if (code === LSAPIKnownErrorCode.COINBASE_INVALID_2FA) {
+                if (e?.response?.data?.error?.code === LSAPIKnownErrorCode.COINBASE_INVALID_2FA) {
                     startTimer(TIMER_SECONDS)
                     setCodeRequested(true)
                     setOpenCoinbase2FA(true)
                 }
-                else if (
-                  code === LSAPIKnownErrorCode.INVALID_CREDENTIALS 
-                  || 
-                  code === LSAPIKnownErrorCode.COINBASE_AUTHORIZATION_LIMIT_EXCEEDED
-                ) {
+                else if (e?.response?.data?.error?.code === LSAPIKnownErrorCode.INVALID_CREDENTIALS || e?.response?.data?.error?.code === LSAPIKnownErrorCode.COINBASE_AUTHORIZATION_LIMIT_EXCEEDED) {
                     setCodeRequested(false)
                     alert("You have not authorized enough to be able to complete the transfer. Please authorize again.")
                 }
-                else if (message) {
-                    toast(message)
+                else if (e?.response?.data?.error?.message) {
+                    toast(e?.response?.data?.error?.message)
                 }
-                else  {
-                  toastError(e)
-                }
+                else if (e?.message)
+                    toast(e.message)
             }
         }
         setLoading(false)
@@ -117,9 +108,9 @@ const TransferElements: FC = () => {
                     footerStickiness={false}
                 />
             </Modal>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-foreground text-foreground-new">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-secondary-text">
                 <div className='space-y-4'>
-                    <div className='border-secondary-500 rounded-md border bg-level-3 darker-2-class p-3'>
+                    <div className='border-secondary-500 rounded-md border bg-secondary-700 p-3'>
                         {
                             swap?.exchange_account_connected ?
                                 <SubmitButton

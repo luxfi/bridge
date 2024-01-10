@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { createContext, useState, useContext, Context, useCallback, PropsWithChildren } from 'react'
+import { createContext, useState, useContext, Context, useCallback } from 'react'
 
 const LoadingStateContext = createContext<ContextType | null>(null);
 type Reg = {
@@ -12,7 +12,7 @@ type ContextType = {
     isLoading: boolean
 }
 
-export function LoadingProvider({ children }: PropsWithChildren) {
+export function LoadingProvider({ children }) {
     const [regs, setReg] = useState<{ [key: string]: Reg }>({})
 
     const start = (name: string) => {

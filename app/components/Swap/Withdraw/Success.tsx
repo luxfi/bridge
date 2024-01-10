@@ -13,26 +13,26 @@ import { useRouter } from 'next/router';
 import { useQueryState } from '../../../context/query';
 
 const Success: FC = () => {
-    const { networks } = useSettingsState()
+    const { layers } = useSettingsState()
     const { swap } = useSwapDataState()
     const router = useRouter()
     const { externalId } = useQueryState()
     const { destination_network: destination_network_internal_name } = swap || {}
-    const destination_network = networks.find(n => n.internal_name === destination_network_internal_name)
+    const destination_network = layers.find(n => n.internal_name === destination_network_internal_name)
     const transaction_explorer_template = destination_network?.transaction_explorer_template
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
 
     const handleViewInExplorer = useCallback(() => {
         if (!transaction_explorer_template)
             return
-        window.open(`${AppSettings.ExplorerURL}/${swapOutputTransaction?.transaction_id}`, '_blank')
+        window.open(`${AppSettings.ExplorerURl}/${swapOutputTransaction?.transaction_id}`, '_blank')
     }, [transaction_explorer_template])
 
     return (
         <>
             <Widget.Footer>
                 <MessageComponent.Buttons>
-                    <div className="flex flex-row text-muted text-muted-primary-text text-base space-x-2">
+                    <div className="flex flex-row text-primary-text text-base space-x-2">
                         {!externalId &&
                             ((transaction_explorer_template && swapOutputTransaction?.transaction_id) ?
                                 <>

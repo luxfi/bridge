@@ -25,10 +25,10 @@ const Rewards = () => {
         <Widget className="min-h-[520px]">
             <Widget.Content>
                 {!isLoading ?
-                    <div className="space-y-5 h-full text-muted text-muted-primary-text">
+                    <div className="space-y-5 h-full text-primary-text">
                         <div className="space-y-2">
                             <p className="font-bold text-left leading-5">Campaigns</p>
-                            <div className="bg-level-3 darker-2-class border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg shadow-lg">
+                            <div className="bg-secondary-700 border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg shadow-lg">
                                 <div className="p-3 space-y-4">
                                     {
                                         activeCampaigns.length > 0 ?
@@ -52,7 +52,7 @@ const Rewards = () => {
                             inactiveCampaigns.length > 0 &&
                             <div className="space-y-2">
                                 <p className="font-bold text-left leading-5">Old campaigns</p>
-                                <div className="bg-level-3 darker-2-class border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg shadow-lg">
+                                <div className="bg-secondary-700 border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg shadow-lg">
                                     <div className="p-3 dpsv flex flex-col space-y-4">
                                         {inactiveCampaigns.map(c =>
                                             <CampaignItem
@@ -102,7 +102,7 @@ const CampaignItem: FC<CampaignProps> = ({ campaign, layers, resolveImgSrc }) =>
         </span>
         {
             campaignIsActive &&
-            <span className="text-muted text-muted-primary-text-muted text-right text-sm">
+            <span className="text-primary-text-muted text-right text-sm">
                 {campaignDaysLeft} days left
             </span>
         }

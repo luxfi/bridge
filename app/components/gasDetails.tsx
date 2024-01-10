@@ -1,8 +1,8 @@
-import { Currency } from "../Models/Currency"
+import { NetworkCurrency } from "../Models/CryptoNetwork"
 import { Layer } from "../Models/Layer"
 import { useBalancesState } from "../context/balances"
 
-const GasDetails = ({ network, currency }: { network: Layer, currency: Currency }) => {
+const GasDetails = ({ network, currency }: { network: Layer, currency: NetworkCurrency }) => {
 
     const { gases } = useBalancesState()
     const networkGas = gases?.[network?.internal_name]?.find(g => g?.token === currency?.asset)
@@ -10,9 +10,9 @@ const GasDetails = ({ network, currency }: { network: Layer, currency: Currency 
     if (!networkGas?.gasDetails) return
 
     return (
-        <div className='grid grid-cols-1 gap-2 px-3 py-2 rounded-lg border-2 border-secondary-500 bg-level-2 darker-class mt-2 w-[350px] fixed top-0 left-2'>
+        <div className='grid grid-cols-1 gap-2 px-3 py-2 rounded-lg border-2 border-secondary-500 bg-secondary-800 mt-2 w-[350px] fixed top-0 left-2'>
             <div className="flex flex-row items-baseline justify-between">
-                <label className="block text-left text-muted text-muted-primary-text-placeholder">
+                <label className="block text-left text-primary-text-placeholder">
                     Gas limit
                 </label>
                 <span className="text-right">
@@ -22,7 +22,7 @@ const GasDetails = ({ network, currency }: { network: Layer, currency: Currency 
                 </span>
             </div>
             <div className="flex flex-row items-baseline justify-between">
-                <label className="block text-left text-muted text-muted-primary-text-placeholder">
+                <label className="block text-left text-primary-text-placeholder">
                     Gas price
                 </label>
                 <span className="text-right">
@@ -32,7 +32,7 @@ const GasDetails = ({ network, currency }: { network: Layer, currency: Currency 
                 </span>
             </div>
             <div className="flex flex-row items-baseline justify-between">
-                <label className="block text-left text-muted text-muted-primary-text-placeholder">
+                <label className="block text-left text-primary-text-placeholder">
                     Max fee per gas
                 </label>
                 <span className="text-right">
@@ -42,7 +42,7 @@ const GasDetails = ({ network, currency }: { network: Layer, currency: Currency 
                 </span>
             </div>
             <div className="flex flex-row items-baseline justify-between">
-                <label className="block text-left text-muted text-muted-primary-text-placeholder">
+                <label className="block text-left text-primary-text-placeholder">
                     Max priority fee per gas
                 </label>
                 <span className="text-right">

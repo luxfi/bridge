@@ -1,4 +1,4 @@
-export interface AuthGetCodeResponse {
+export class AuthGetCodeResponse {
     data: {
         next: Date,
         already_sent: boolean
@@ -6,7 +6,7 @@ export interface AuthGetCodeResponse {
     error: string;
 }
 
-export interface AuthConnectResponse {
+export class AuthConnectResponse {
     access_token: string;
     expires_in: number;
     token_type: string;
