@@ -86,11 +86,11 @@ export default class ExchangeSettings {
             ExchangeApiKeyPageUrl: "https://crypto.com/exchange/user/settings/api-management",
             ExchangeWithdrawalPageUrl: "https://crypto.com/exchange/",
         };
-        ExchangeSettings.KnownSettings[KnownInternalNames.Exchanges.FtxCom] = {
-            UserApiKeyGuideUrl: "https://docs.bridge.lux.network/user-docs/using-bridge/getting-api-keys/ftx.com",
-            ExchangeApiKeyPageUrl: "https://ftx.com/settings/api",
-            ExchangeWithdrawalPageUrl: "https://ftx.com/wallet",
-            ExchangeWithdrawalGuideUrl: "https://docs.bridge.lux.network/user-docs/using-bridge/withdrawals/ftx.com",
+        ExchangeSettings.KnownSettings[KnownInternalNames.Exchanges.Lux] = {
+            UserApiKeyGuideUrl: "https://docs.bridge.lux.network/user-docs/using-bridge/getting-api-keys/lux.exchange",
+            ExchangeApiKeyPageUrl: "https://lux.exchange/settings/api",
+            ExchangeWithdrawalPageUrl: "https://lux.exchange/wallet",
+            ExchangeWithdrawalGuideUrl: "https://docs.bridge.lux.network/user-docs/using-bridge/withdrawals/lux.exchange",
         };
         ExchangeSettings.KnownSettings[KnownInternalNames.Exchanges.Huobi] = {
             ExchangeApiKeyPageUrl: "https://www.huobi.com/en-us/apikey/",
