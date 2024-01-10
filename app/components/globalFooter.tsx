@@ -4,7 +4,7 @@ import DiscordLogo from "./icons/DiscordLogo";
 import GitHubLogo from "./icons/GitHubLogo";
 import YoutubeLogo from "./icons/YoutubeLogo";
 
-const GLobalFooter = () => {
+const GlobalFooter = () => {
 
     const footerNavigation = {
         main: [
@@ -18,28 +18,28 @@ const GLobalFooter = () => {
         social: [
             {
                 name: 'Twitter',
-                href: 'https://twitter.com/layerswap',
+                href: 'https://twitter.com/luxdefi',
                 icon: () => (
                     <TwitterLogo className="h-6 w-6" aria-hidden="true" />
                 ),
             },
             {
                 name: 'Discord',
-                href: 'https://discord.gg/layerswap',
+                href: 'https://chat.lux.network',
                 icon: () => (
                     <DiscordLogo className="h-6 w-6" aria-hidden="true" />
                 ),
             },
             {
                 name: 'GitHub',
-                href: 'https://github.com/layerswap/layerswapapp',
+                href: 'https://github.com/luxdefi',
                 icon: () => (
                     <GitHubLogo className="h-6 w-6" aria-hidden="true" />
                 ),
             },
             {
                 name: 'YouTube',
-                href: 'https://www.youtube.com/@layerswaphq',
+                href: 'https://www.youtube.com/@luxdefi',
                 icon: () => (
                     <YoutubeLogo className="h-6 w-6" aria-hidden="true" />
                 ),
@@ -75,4 +75,4 @@ const GLobalFooter = () => {
     )
 }
 
-export default GLobalFooter
+export default GlobalFooter
