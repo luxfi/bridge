@@ -1,18 +1,22 @@
-import { FC } from "react";
+import { FC, PropsWithChildren } from "react"
+import { renderToString } from 'react-dom/server'
+
+import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
+import { Paperclip } from 'lucide-react'
+
+import { Logo } from '@luxdefi/ui/common'
+
 import CopyButton from "../buttons/copyButton";
 import BridgeLogo from "../icons/BridgeLogo";
-import { Paperclip } from 'lucide-react'
-import { renderToString } from 'react-dom/server'
 import BridgeLogoSmall from "../icons/BridgeLogoSmall";
-import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
 import { useGoHome } from "../../hooks/useGoHome";
 
-interface Props {
-    className?: string;
-    children?: JSX.Element | JSX.Element[] | string;
-}
-
-const GoHomeButton: FC<Props> = (({ className, children }) => {
+const GoHomeButton: FC<{
+  className?: string
+} & PropsWithChildren> = (({ 
+  className, 
+  children 
+}) => {
 
   const goHome = useGoHome()
 
@@ -21,7 +25,7 @@ const GoHomeButton: FC<Props> = (({ className, children }) => {
     {children ?? (
       <ContextMenuPrimitive.Root>
         <ContextMenuPrimitive.Trigger>
-            <BridgeLogo className={className ?? "h-8 w-auto text-primary-logoColor fill-primary-text"} />
+          <Logo size='md' className="text-primary-lux"/>
         </ContextMenuPrimitive.Trigger>
         <ContextMenuPrimitive.Content className="dialog-overlay absolute z-40 border h-fit text-secondary-text border-secondary-100 mt-2 w-fit rounded-md shadow-lg bg-secondary-900 ring-1 ring-black ring-opacity-5 focus:outline-none">
           <ContextMenuPrimitive.ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full rounded-t hover:bg-secondary-400 whitespace-nowrap">
