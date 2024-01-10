@@ -86,7 +86,7 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
             minAllowedAmount={minAllowedAmount}
             isBalanceLoading={(isBalanceLoading || isGasLoading)}
         /> */}
-        <div className="flex w-full justify-between items-center bg-secondary-700">
+        <div className="flex w-full justify-between items-center">
             <div className="relative w-full">
                 <NumericInput
                     disabled={!fromCurrency || !toCurrency}
@@ -97,9 +97,9 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
                     name={name}
                     ref={amountRef}
                     precision={fromCurrency?.precision}
-                    onFocus={() => setIsAmountVisible(false)}
-                    onBlur={() => setIsAmountVisible(true)}
-                    className="rounded-r-none text-primary-text w-full pl-0.5 p-0 focus:ring-0 h-fit"
+                    onFocus={() => {setIsAmountVisible(false)}}
+                    onBlur={() => {setIsAmountVisible(true)}}
+                    className="rounded-r-none w-full pl-0.5 p-0 focus:ring-0 h-fit"
                     onChange={e => {
                         /^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && handleChange(e);
                         updateRequestedAmountInUsd(parseFloat(e.target.value));
@@ -147,7 +147,7 @@ const AmountLabel = ({
 }: AmountLabelProps) => {
     return <div className="flex items-center w-full justify-between">
         <div className="flex items-center space-x-2">
-            <p className="block font-semibold text-secondary-text text-xs mb-1">Amount</p>
+            <p className="block font-semibold text-muted text-xs mb-1">Amount</p>
             {/* {
                 detailsAvailable &&
                 <div className="text-xs hidden md:flex text-secondary-text items-center">
