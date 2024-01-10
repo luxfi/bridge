@@ -54,10 +54,9 @@ const TransferFromWallet: FC<Props> = ({ networkDisplayName,
                 setSavedTransactionHash(hash)
         }
         catch (e) {
-          if ('message' in (e as Object)) {
-            console.error((e as any).message!)
-          }
-      }
+            //TODO log to logger
+            console.error(e.message)
+        }
     }, [swapId])
 
     const hexed_sequence_number = sequenceNumber?.toString(16)

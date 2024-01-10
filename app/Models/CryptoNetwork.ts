@@ -11,7 +11,7 @@ export enum NetworkType {
 }
 
 
-export interface CryptoNetwork {
+export class CryptoNetwork {
     display_name: string;
     internal_name: string;
     native_currency: string | null | undefined;
@@ -31,7 +31,7 @@ export interface CryptoNetwork {
     img_url?: string
 }
 
-export interface NetworkCurrency {
+export class NetworkCurrency {
     name: string;
     asset: string;
     status: LayerStatus;
@@ -47,13 +47,13 @@ export interface NetworkCurrency {
     source_base_fee: number;
     destination_base_fee: number;
 }
-export interface NetworkNode {
+export class NetworkNode {
     url: string;
 }
-export interface ManagedAccount {
+export class ManagedAccount {
     address: `0x${string}`;
 }
-export interface Metadata {
+export class Metadata {
     multicall3?: {
         address: `0x${string}`
         blockCreated: number
