@@ -1,36 +1,49 @@
+import { useState } from "react"
+import { Plus } from "lucide-react"
+
+import { Button } from '@luxdefi/ui/primitives'
+
 import WalletIcon from "./icons/WalletIcon"
 import shortenAddress from "./utils/ShortenAddress"
 import useWallet from "../hooks/useWallet"
 import ConnectButton from "./buttons/connectButton"
 import SubmitButton from "./buttons/submitButton"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./shadcn/dialog"
-import { useState } from "react"
-import { Plus } from "lucide-react"
 import AddressIcon from "./AddressIcon"
 import { Wallet } from "../stores/walletStore"
 
 export const WalletsHeader = () => {
-    const { wallets } = useWallet()
-    const [openDialog, setOpenDialog] = useState<boolean>(false)
 
-    if (wallets.length > 0) {
-        return (
-            <>
-                <button type="button" aria-label="Connected wallets" onClick={() => setOpenDialog(true)} className="-mx-2 p-1.5 justify-self-start text-secondary-text hover:bg-secondary-500 hover:text-primary-text focus:outline-none inline-flex rounded-lg items-center">
-                    <WalletsIcons wallets={wallets} />
-                </button>
-                <ConnectedWalletsDialog openDialog={openDialog} setOpenDialog={setOpenDialog} />
-            </>
-        )
-    }
+  const { wallets } = useWallet()
+  const [openDialog, setOpenDialog] = useState<boolean>(false)
 
-    return (
-        <ConnectButton>
-            <div className="p-1.5 justify-self-start text-secondary-text bg-secondary-700 hover:bg-secondary-500 hover:text-primary-text focus:outline-none inline-flex rounded-lg items-center">
-                <WalletIcon className="h-6 w-6 mx-0.5" strokeWidth="2" />
-            </div>
-        </ConnectButton>
-    )
+  if (wallets.length > 0) {
+    return (<>
+      <Button
+        variant='outline'
+        size='square'
+        onClick={() => setOpenDialog(true)}
+        aria-label='Connect wallet'
+        className="text-muted-2"
+      >
+        <WalletsIcons wallets={wallets} />
+      </Button>
+      <ConnectedWalletsDialog openDialog={openDialog} setOpenDialog={setOpenDialog} />
+    </>)
+  }
+
+  return (
+    <ConnectButton>
+      <Button
+        variant='outline'
+        size='square'
+        aria-label='Connect wallet'
+        className="text-muted-2"
+      >
+        <WalletIcon className="h-6 w-6 mx-0.5" strokeWidth="1.5" />
+      </Button>
+    </ConnectButton>
+  )
 }
 
 const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
@@ -58,6 +71,7 @@ const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
 }
 
 export const WalletsMenu = () => {
+
     const [openDialog, setOpenDialog] = useState<boolean>(false)
     const { wallets } = useWallet()
     const wallet = wallets[0]

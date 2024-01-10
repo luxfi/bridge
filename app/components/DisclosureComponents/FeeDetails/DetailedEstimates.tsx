@@ -29,9 +29,9 @@ const DetailedEstimates: FC<EstimatesProps> = ({
 
     return (
       <div className="flex justify-between w-full items-center">
-        <div className="flex flex-row items-baseline justify-between gap-1 pr-1 text-muted-2">
+        <div className="flex flex-row items-baseline justify-between gap-1 pr-1 text-muted-1">
           <label className="inline-flex items-center text-left">
-            Fee
+            Fee:
           </label>
           <div className="text-right ">
           {isFeeLoading ? (
@@ -69,7 +69,7 @@ const NetworkGas: FC<NetworkGasProps> = ({ selected_currency, network }) => {
         : truncateDecimals(networkGas, selected_currency?.precision)
 
     return <div className="flex flex-row items-center gap-2 w-fit px-1">
-        <Fuel className="h-4 w-4 text-secondary-text" />
+        <Fuel className="h-4 w-4" />
         <div className="text-right flex items-center gap-1">
             {isGasLoading ? <div className='h-[10px] w-10 bg-gray-500 rounded-sm animate-pulse' /> : estimatedGas} <span>{network?.assets.find(a => a.is_native)?.asset ?? selected_currency.asset}</span>
         </div>
@@ -81,7 +81,7 @@ type EstimatedArrivalProps = {
     fee: Fee
 }
 const EstimatedArrival: FC<EstimatedArrivalProps> = ({ fee }) => (
-  <div className="flex flex-row items-center gap-2 w-fit pl-1">
+  <div className="flex flex-row items-center gap-2 w-fit pl-1 text-muted-1">
     <Clock9 className="h-4 w-4" />
     <span className="text-right">
       <AverageCompletionTime hours={fee?.avgCompletionTime?.total_hours} minutes={fee?.avgCompletionTime?.total_minutes} />
