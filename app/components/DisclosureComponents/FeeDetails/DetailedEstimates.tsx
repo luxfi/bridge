@@ -27,22 +27,27 @@ const DetailedEstimates: FC<EstimatesProps> = ({
     const parsedFee = fee && parseFloat(Number(fee.walletFee).toFixed(fromCurrency?.precision))
     const currencyName = fromCurrency?.asset || " "
 
-    return <div className="flex justify-between w-full items-center">
-        <div className="flex flex-row items-baseline justify-between gap-1 pr-1">
-            <label className="inline-flex items-center text-left text-primary-text-placeholder">
-                Fee
-            </label>
-            <div className="text-right">
-                {isFeeLoading ? <div className='h-[10px] w-10 inline-flex bg-gray-500 rounded-sm animate-pulse' /> : <span>{parsedFee || 0}</span>} <span>{currencyName}</span>
-            </div>
+    return (
+      <div className="flex justify-between w-full items-center">
+        <div className="flex flex-row items-baseline justify-between gap-1 pr-1 text-muted-2">
+          <label className="inline-flex items-center text-left">
+            Fee
+          </label>
+          <div className="text-right ">
+          {isFeeLoading ? (
+            <div className='h-[10px] w-10 inline-flex bg-gray-500 rounded-sm animate-pulse' />
+          ) : (
+            <span>{parsedFee || 0}</span>
+          )} 
+            <span>{currencyName}</span>
+          </div>
         </div>
-        {
-            source
-            && selected_currency &&
-            <NetworkGas network={source} selected_currency={selected_currency} />
-        }
+        {source && selected_currency && (
+          <NetworkGas network={source} selected_currency={selected_currency} />
+        )}
         <EstimatedArrival currency={selected_currency} destination={destination} fee={fee} />
-    </div>
+      </div>
+    )
 }
 type NetworkGasProps = {
     network: Layer,
@@ -75,13 +80,13 @@ type EstimatedArrivalProps = {
     currency?: NetworkCurrency | null,
     fee: Fee
 }
-const EstimatedArrival: FC<EstimatedArrivalProps> = ({ fee }) => {
+const EstimatedArrival: FC<EstimatedArrivalProps> = ({ fee }) => (
+  <div className="flex flex-row items-center gap-2 w-fit pl-1">
+    <Clock9 className="h-4 w-4" />
+    <span className="text-right">
+      <AverageCompletionTime hours={fee?.avgCompletionTime?.total_hours} minutes={fee?.avgCompletionTime?.total_minutes} />
+    </span>
+  </div>
+)
 
-    return <div className="flex flex-row items-center gap-2 w-fit pl-1">
-        <Clock9 className="h-4 w-4 text-secondary-text" />
-        <span className="text-right">
-            <AverageCompletionTime hours={fee?.avgCompletionTime?.total_hours} minutes={fee?.avgCompletionTime?.total_minutes} />
-        </span>
-    </div>
-}
 export default DetailedEstimates
