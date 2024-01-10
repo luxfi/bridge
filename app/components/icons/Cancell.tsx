@@ -1,7 +1,6 @@
 import React from 'react';
-import { LucideProps } from 'lucide-react';
 
-const CancelIcon = (props: LucideProps) => (
+const CancelIcon = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" {...props}  width="24" height="24" viewBox="0 0 116 116" fill="none">
         <circle cx="58" cy="58" r="58" fill="#4E5460" fillOpacity="0.1" />
         <circle cx="58" cy="58" r="45" fill="#4E5460" fillOpacity="0.5" />

@@ -58,37 +58,37 @@ export default function BridgeMenu() {
             {
                 name: 'Twitter',
                 href: 'https://twitter.com/luxdefi',
-                Icon: ((props) => (TwitterLogo(props))) as React.FC<{className: string, ariaHidden: string}>,
+                icon: (props) => TwitterLogo(props),
                 className: 'plausible-event-name=Twitter'
             },
             {
                 name: 'GitHub',
                 href: 'https://github.com/luxdefi',
-                Icon: ((props) => (GitHubLogo(props))) as React.FC<{className: string, ariaHidden: string}>,
+                icon: (props) => GitHubLogo(props),
                 className: 'plausible-event-name=GitHub'
             },
             {
                 name: 'Discord',
-                href: 'https://discord.gg/XsD63KMbV2',
-                Icon: ((props) => (DiscordLogo(props))) as React.FC<{className: string, ariaHidden: string}>,
+                href: 'https://chat.lux.network',
+                icon: (props) => DiscordLogo(props),
                 className: 'plausible-event-name=Discord'
             },
             {
                 name: 'YouTube',
                 href: 'https://www.youtube.com/@luxdefi',
-                Icon: ((props) => (YoutubeLogo(props))) as React.FC<{className: string, ariaHidden: string}>,
+                icon: (props) => YoutubeLogo(props),
                 className: 'plausible-event-name=Youtube'
             },
             {
                 name: 'Substack',
                 href: 'https://luxdefi.substack.com/',
-                Icon: ((props) => (SubstackLogo(props))) as React.FC<{className: string, ariaHidden: string}>,
+                icon: (props) => SubstackLogo(props),
                 className: 'plausible-event-name=Substack'
             },
             {
                 name: 'Roadmap',
                 href: 'https://github.com/orgs/luxdefi/projects/1/views/4',
-                Icon: ((props) => (<Map {...props}></Map>)) as React.FC<{className: string, ariaHidden: string}>,
+                icon: (props) => <Map {...props}></Map>,
                 className: 'plausible-event-name=Roadmap'
             },
         ]
@@ -99,7 +99,7 @@ export default function BridgeMenu() {
     }
 
     return <>
-        <span className="text-foreground text-foreground-new cursor-pointer relative">
+        <span className="text-secondary-text cursor-pointer relative">
             {
 
                 <>
@@ -186,15 +186,15 @@ export default function BridgeMenu() {
 
                                 <div className="space-y-3 w-full">
                                     <hr className="border-secondary-500" />
-                                    <p className="text-muted text-muted-primary-text-muted flex justify-center my-3">Media links & suggestions:</p>
+                                    <p className="text-primary-text-muted flex justify-center my-3">Media links & suggestions:</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2 justify-center">
-                                    {navigation.social.map(({name, Icon, href, className}, index) => (
-                                        <Link key={index} target="_blank" href={href} className={`flex relative bg-level-3 darker-2-class hover:bg-level-4 darker-3-class rounded-md cursor-pointer select-none items-center outline-none text-muted text-muted-primary-text ${className}`}>
+                                    {navigation.social.map((item, index) => (
+                                        <Link key={index} target="_blank" href={item.href} className={`flex relative bg-secondary-700 hover:bg-secondary-600 rounded-md cursor-pointer select-none items-center outline-none text-primary-text ${item.className}`}>
                                             <div className="p-2 w-full flex justify-center gap-1">
-                                                <Icon className="h-5 w-5" ariaHidden="true" />
-                                                <p>{name}</p>
+                                                <item.icon className="h-5 w-5" aria-hidden="true" />
+                                                <p>{item.name}</p>
                                             </div>
                                         </Link>
                                     ))}
@@ -207,7 +207,7 @@ export default function BridgeMenu() {
                                                 userType == UserType.AuthenticatedUser ?
                                                     <div>
                                                         <div
-                                                            className={`gap-4 flex justify-between items-center relative select-none px-4 py-3 outline-none w-full text-muted text-muted-primary-text`}
+                                                            className={`gap-4 flex justify-between items-center relative select-none px-4 py-3 outline-none w-full text-primary-text`}
                                                         >
                                                             <div className="font-normal flex gap-2 items-center">
                                                                 <UserCircle2 className="h-5 w-5" />

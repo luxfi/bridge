@@ -1,6 +1,4 @@
-import { LucideProps } from 'lucide-react';
-
-const GitHubLogo = (props: LucideProps) => (
+const GitHubLogo = (props) => (
     <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
         <path
             fillRule="evenodd"

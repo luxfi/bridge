@@ -1,21 +1,16 @@
-// @ts-nocheck
 import { ReactNode, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../shadcn/popover";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@luxdefi/ui/primitives"
-
 import useWallet from "../../hooks/useWallet";
 import { NetworkType } from "../../Models/CryptoNetwork";
 import RainbowIcon from "../icons/Wallets/Rainbow";
 import TON from "../icons/Wallets/TON";
-
-
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "../shadcn/dialog";
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import MetaMaskIcon from "../icons/Wallets/MetaMask";
 import WalletConnectIcon from "../icons/Wallets/WalletConnect";
@@ -69,7 +64,7 @@ const ConnectButton = ({
     return isMobile ? (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger aria-label="Connect wallet">{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] text-muted text-muted-primary-text">
+            <DialogContent className="sm:max-w-[425px] text-primary-text">
                 <DialogHeader>
                     <DialogTitle className="text-center">
                         Link a new wallet
@@ -80,7 +75,7 @@ const ConnectButton = ({
                         <button
                             type="button"
                             key={index}
-                            className="w-full h-fit bg-level-3 darker-2-class border border-secondary-500 rounded py-2 px-3"
+                            className="w-full h-fit bg-secondary-700 border border-secondary-500 rounded py-2 px-3"
                             onClick={() => {
                                 connectWallet(connector.id);
                                 setOpen(false);
@@ -92,7 +87,7 @@ const ConnectButton = ({
                                     <div className="inline-flex items-center relative">
                                         <ResolveConnectorIcon
                                             connector={connector.id}
-                                            className="w-7 h-7 p-0.5 rounded-full bg-level-2 darker-class border border-secondary-400"
+                                            className="w-7 h-7 p-0.5 rounded-full bg-secondary-800 border border-secondary-400"
                                         />
                                     </div>
                                 )}
@@ -117,7 +112,7 @@ const ConnectButton = ({
                     <button
                         type="button"
                         key={index}
-                        className="w-full h-full hover:bg-level-4 darker-3-class rounded py-2 px-3"
+                        className="w-full h-full hover:bg-secondary-600 rounded py-2 px-3"
                         onClick={() => {
                             connectWallet(connector.id);
                             setOpen(false);
@@ -129,7 +124,7 @@ const ConnectButton = ({
                                 <div className="inline-flex items-center relative">
                                     <ResolveConnectorIcon
                                         connector={connector.id}
-                                        className="w-7 h-7 p-0.5 rounded-full bg-level-2 darker-class border border-secondary-400"
+                                        className="w-7 h-7 p-0.5 rounded-full bg-secondary-800 border border-secondary-400"
                                     />
                                 </div>
                             )}

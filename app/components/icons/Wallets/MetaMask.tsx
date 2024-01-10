@@ -1,6 +1,4 @@
-import { LucideProps } from 'lucide-react';
-
-const MetaMaskIcon = (props: LucideProps) => <svg {...props} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+const MetaMaskIcon = (props) => <svg {...props} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect fill="white" />
     <path d="M24.0891 3.1199L15.3446 9.61456L16.9617 5.7828L24.0891 3.1199Z" fill="#E2761B" stroke="#E2761B" strokeWidth="0.0878845" strokeLinecap="round" strokeLinejoin="round" />
     <path d="M3.90207 3.1199L12.5763 9.67608L11.0383 5.7828L3.90207 3.1199Z" fill="#E4761B" stroke="#E4761B" strokeWidth="0.0878845" strokeLinecap="round" strokeLinejoin="round" />

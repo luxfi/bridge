@@ -5,7 +5,6 @@ import { useIntercom } from 'react-use-intercom';
 import { useAuthState } from '../context/authContext';
 import { SendFeedbackMessage } from '../lib/telegram';
 import SubmitButton from './buttons/submitButton';
-import toastError from '../helpers/toastError';
 
 interface SendFeedbackFormValues {
     Feedback: string;
@@ -37,7 +36,7 @@ const SendFeedback: FC<Props> = ({ onSend }) => {
             }
         }
         catch (e) {
-            toastError(e)
+            toast.error(e.message)
         }
     }, [email, onSend])
 
@@ -57,18 +56,18 @@ const SendFeedback: FC<Props> = ({ onSend }) => {
             {({ handleChange, isValid, isSubmitting }) => (
                 <Form className='flex flex-col justify-between'>
                     <div className='space-y-4 h-full mt-2'>
-                        <p className='text-base text-left text-foreground text-foreground-new font-light'>
+                        <p className='text-base text-left font-roboto text-secondary-text font-light'>
                             Please help us shape the product, catch bugs, and prioritize features. Your feedback will go directly into our Telegram channel.
                         </p>
                     </div>
-                    <div className="text-muted text-muted-primary-text text-sm space-y-4 flex flex-col pt-8">
+                    <div className="text-primary-text text-sm space-y-4 flex flex-col pt-8">
                         <textarea
                             id='Feedback'
                             name='Feedback'
                             onChange={e => {
                                 handleChange(e)
                             }}
-                            className="h-40 max-h-60 appearance-none block bg-level-3 darker-2-class text-muted text-muted-primary-text border border-secondary-500 rounded-md py-3 px-4 mb-3 leading-tight focus:ring-0 focus:bg-level-4 darker-hover-class focus:border-secondary-100 "
+                            className="h-40 max-h-60 appearance-none block bg-secondary-700 text-primary-text border border-secondary-500 rounded-md py-3 px-4 mb-3 leading-tight focus:ring-0 focus:bg-secondary-500 focus:border-secondary-100 "
                         />
                         <button
                             type="button"

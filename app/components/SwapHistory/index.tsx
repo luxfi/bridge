@@ -19,12 +19,11 @@ import Link from "next/link";
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
 import { truncateDecimals } from "../utils/RoundDecimals";
-import toastError from "../../helpers/toastError";
 
 function TransactionsHistory() {
   const [page, setPage] = useState(0)
   const settings = useSettingsState()
-  const { exchanges, networks, currencies, resolveImgSrc } = settings
+  const { layers, resolveImgSrc } = settings
   const [isLastPage, setIsLastPage] = useState(false)
   const [swaps, setSwaps] = useState<SwapItem[]>()
   const [loading, setLoading] = useState(false)
@@ -37,10 +36,9 @@ function TransactionsHistory() {
   const PAGE_SIZE = 20
 
   const goBack = useCallback(() => {
-    window.history?.length > 2 ?
+    window?.['navigation']?.['canGoBack'] ?
       router.back()
-      : 
-      router.push({
+      : router.push({
         pathname: "/",
         query: resolvePersistantQueryParams(router.query)
       })
@@ -49,8 +47,8 @@ function TransactionsHistory() {
 
   useEffect(() => {
     (async () => {
-      const bridgeApiClient = new BridgeApiClient(router, '/transactions')
-      const { data } = await bridgeApiClient.GetSwapsAsync(1, SwapStatusInNumbers.Cancelled)
+      const client = new BridgeApiClient(router, '/transactions')
+      const { data } = await client.GetSwapsAsync(1, SwapStatusInNumbers.Cancelled)
       if (Number(data?.length) > 0) setShowToggleButton(true)
     })()
   }, [])
@@ -59,13 +57,13 @@ function TransactionsHistory() {
     (async () => {
       setIsLastPage(false)
       setLoading(true)
-      const bridgeApiClient = new BridgeApiClient(router, '/transactions')
+      const client = new BridgeApiClient(router, '/transactions')
 
       if (showAllSwaps) {
-        const { data, error } = await bridgeApiClient.GetSwapsAsync(1)
+        const { data, error } = await client.GetSwapsAsync(1)
 
         if (error) {
-          toastError(error)
+          toast.error(error.message);
           return;
         }
 
@@ -78,10 +76,10 @@ function TransactionsHistory() {
 
       } else {
 
-        const { data, error } = await bridgeApiClient.GetSwapsAsync(1, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
+        const { data, error } = await client.GetSwapsAsync(1, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
 
         if (error) {
-          toastError(error)
+          toast.error(error.message);
           return;
         }
 
@@ -98,12 +96,12 @@ function TransactionsHistory() {
     //TODO refactor page change
     const nextPage = page + 1
     setLoading(true)
-    const bridgeApiClient = new BridgeApiClient(router, '/transactions')
+    const client = new BridgeApiClient(router, '/transactions')
     if (showAllSwaps) {
-      const { data, error } = await bridgeApiClient.GetSwapsAsync(nextPage)
+      const { data, error } = await client.GetSwapsAsync(nextPage)
 
       if (error) {
-        toastError(error)
+        toast.error(error.message);
         return;
       }
 
@@ -114,10 +112,10 @@ function TransactionsHistory() {
 
       setLoading(false)
     } else {
-      const { data, error } = await bridgeApiClient.GetSwapsAsync(nextPage, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
+      const { data, error } = await client.GetSwapsAsync(nextPage, SwapStatusInNumbers.SwapsWithoutCancelledAndExpired)
 
       if (error) {
-        toastError(error)
+        toast.error(error.message);
         return;
       }
 
@@ -140,7 +138,7 @@ function TransactionsHistory() {
   }
 
   return (
-    <div className='bg-level-1 darkest-class sm:shadow-card rounded-lg mb-6 w-full text-muted text-muted-primary-text overflow-hidden relative min-h-[620px]'>
+    <div className='bg-secondary-900 sm:shadow-card rounded-lg mb-6 w-full text-primary-text overflow-hidden relative min-h-[620px]'>
       <HeaderWithMenu goBack={goBack} />
       {
         page == 0 && loading ?
@@ -148,7 +146,7 @@ function TransactionsHistory() {
           : <>
             {
               Number(swaps?.length) > 0 ?
-                <div className="w-full flex flex-col justify-between h-full px-6 space-y-5 text-foreground text-foreground-new">
+                <div className="w-full flex flex-col justify-between h-full px-6 space-y-5 text-secondary-text">
                   <div className="mt-4">
                     {showToggleButton && <div className="flex justify-end mb-2">
                       <div className='flex space-x-2'>
@@ -160,7 +158,7 @@ function TransactionsHistory() {
                     </div>}
                     <div className="max-h-[450px] styled-scroll overflow-y-auto ">
                       <table className="w-full divide-y divide-secondary-500">
-                        <thead className="text-foreground text-foreground-new">
+                        <thead className="text-secondary-text">
                           <tr>
                             <th scope="col" className="text-left text-sm font-semibold">
                               <div className="block">
@@ -191,20 +189,19 @@ function TransactionsHistory() {
                               source_network_asset
                             } = swap
 
-                            const source = source_exchange_internal_name ? exchanges.find(e => e.internal_name === source_exchange_internal_name) : networks.find(e => e.internal_name === source_network_internal_name)
-                            const source_currency = currencies?.find(c => c.asset === source_network_asset)
-                            const destination_exchange = destination_exchange_internal_name && exchanges.find(e => e.internal_name === destination_exchange_internal_name)
-                            const destination = destination_exchange_internal_name ? destination_exchange : networks.find(n => n.internal_name === destination_network_internal_name)
+                            const source = layers.find(e => e.internal_name === source_network_internal_name)
+                            const source_currency = source?.assets?.find(c => c.asset === source_network_asset)
+                            const destination = layers.find(n => n.internal_name === destination_network_internal_name)
                             const output_transaction = swap.transactions.find(t => t.type === TransactionType.Output)
                             return <tr onClick={() => handleopenSwapDetails(swap)} key={swap.id}>
 
                               <td
                                 className={classNames(
                                   index === 0 ? '' : 'border-t border-secondary-500',
-                                  'relative text-sm text-muted text-muted-primary-text table-cell'
+                                  'relative text-sm text-primary-text table-cell'
                                 )}
                               >
-                                <div className="text-muted text-muted-primary-text flex items-center">
+                                <div className="text-primary-text flex items-center">
                                   <div className="flex-shrink-0 h-5 w-5 relative">
                                     {source &&
                                       <Image
@@ -229,7 +226,7 @@ function TransactionsHistory() {
                                     }
                                   </div>
                                 </div>
-                                {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-level-4 darker-hover-class" /> : null}
+                                {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-secondary-500" /> : null}
 
                               </td>
                               <td className={classNames(
@@ -243,7 +240,7 @@ function TransactionsHistory() {
                               <td
                                 className={classNames(
                                   index === 0 ? '' : 'border-t border-secondary-500',
-                                  'px-3 py-3.5 text-sm text-muted text-muted-primary-text table-cell'
+                                  'px-3 py-3.5 text-sm text-primary-text table-cell'
                                 )}
                               >
                                 <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { handleopenSwapDetails(swap); e.preventDefault() }}>
@@ -269,7 +266,7 @@ function TransactionsHistory() {
                       </table>
                     </div>
                   </div>
-                  <div className="text-muted text-muted-primary-text text-sm flex justify-center">
+                  <div className="text-primary-text text-sm flex justify-center">
                     {
                       !isLastPage &&
                       <button
@@ -292,12 +289,12 @@ function TransactionsHistory() {
                   <Modal height="fit" show={openSwapDetailsModal} setShow={setOpenSwapDetailsModal} header="Swap details">
                     <div className="mt-2">
                       {
-                        selectedSwap && <SwapDetails id={selectedSwap?.id} />
+                        selectedSwap && <SwapDetails swap={selectedSwap} />
                       }
                       {
                         selectedSwap &&
-                        <div className="text-muted text-muted-primary-text text-sm mt-6 space-y-3">
-                          <div className="flex flex-row text-muted text-muted-primary-text text-base space-x-2">
+                        <div className="text-primary-text text-sm mt-6 space-y-3">
+                          <div className="flex flex-row text-primary-text text-base space-x-2">
                             <SubmitButton
                               text_align="center"
                               onClick={() => router.push({
@@ -323,8 +320,8 @@ function TransactionsHistory() {
                 <div className="absolute top-1/4 right-0 text-center w-full">
                   <Scroll className='h-40 w-40 text-secondary-700 mx-auto' />
                   <p className="my-2 text-xl">It&apos;s empty here</p>
-                  <p className="px-14 text-muted text-muted-primary-text">You can find all your transactions by searching with address in</p>
-                  <Link target="_blank" href={AppSettings.ExplorerURL} className="underline hover:no-underline cursor-pointer hover:text-foreground text-foreground-new text-muted text-muted-primary-text font-light">
+                  <p className="px-14 text-primary-text">You can find all your transactions by searching with address in</p>
+                  <Link target="_blank" href={AppSettings.ExplorerURl} className="underline hover:no-underline cursor-pointer hover:text-secondary-text text-primary-text font-light">
                     <span>Bridge Explorer</span>
                   </Link>
                 </div>

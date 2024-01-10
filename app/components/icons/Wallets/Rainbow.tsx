@@ -1,7 +1,4 @@
-import { LucideProps } from 'lucide-react';
-
-const RainbowIcon = (props: LucideProps) => (
-<svg {...props} width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+const RainbowIcon = (props) => <svg {...props} width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="120" height="120" fill="url(#paint0_linear_62_329)"/>
 <path d="M20 38H26C56.9279 38 82 63.0721 82 94V100H94C97.3137 100 100 97.3137 100 94C100 53.1309 66.8691 20 26 20C22.6863 20 20 22.6863 20 26V38Z" fill="url(#paint1_radial_62_329)"/>
 <path d="M84 94H100C100 97.3137 97.3137 100 94 100H84V94Z" fill="url(#paint2_linear_62_329)"/>
@@ -55,5 +52,4 @@ const RainbowIcon = (props: LucideProps) => (
 </radialGradient>
 </defs>
 </svg>
-)
 export default RainbowIcon

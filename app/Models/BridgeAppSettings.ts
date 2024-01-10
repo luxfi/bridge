@@ -1,40 +1,33 @@
 import { CryptoNetwork, NetworkCurrency } from "./CryptoNetwork";
-import { Currency } from "./Currency";
-import { Exchange, ExchangeCurrency } from "./Exchange";
-import { BaseL2Asset, ExchangeAsset, Layer, NetworkAsset } from "./Layer";
-import type { BridgeSettings, OauthProveider, Discovery } from "./BridgeSettings";
+import { Exchange } from "./Exchange";
+import { Layer } from "./Layer";
+import { BridgeSettings, Route } from "./BridgeSettings";
 import { Partner } from "./Partner";
 
-export class BridgeAppSettings implements BridgeSettings {
-
-    exchanges: Exchange[]
-    networks: CryptoNetwork[]
-    currencies: Currency[] 
-    discovery: Discovery
-    validSignatureisPresent: boolean = false
-
+export class BridgeAppSettings {
     constructor(settings: BridgeSettings | any) {
-//        super();
-        BridgeAppSettings.ResolveSettings(settings)
-        this.networks = settings.networks
+        this.layers = BridgeAppSettings.ResolveLayers(settings.networks, settings.sourceRoutes, settings.destinationRoutes);
         this.exchanges = settings.exchanges
-        this.currencies = settings.currencies
-        this.discovery = settings.discovery
-        this.validSignatureisPresent = settings.validSignatureisPresent ?? undefined
-        
-
-        this.layers = BridgeAppSettings.ResolveLayers(this.exchanges, this.networks);
+        this.sourceRoutes = settings.sourceRoutes
+        this.destinationRoutes = settings.destinationRoutes
     }
 
+    exchanges: Exchange[]
     layers: Layer[]
+    sourceRoutes: Route[]
+    destinationRoutes: Route[]
 
-    resolveImgSrc = (item: Layer | Currency | Pick<Layer, 'internal_name'> | { asset: string } | Partner) => {
+    resolveImgSrc = (item: Layer | NetworkCurrency | Pick<Layer, 'internal_name'> | { asset: string } | Partner | undefined) => {
 
         if (!item) {
             return "/images/logo_placeholder.png";
         }
 
-        const basePath = new URL(this.discovery.resource_storage_url);
+        const resource_storage_url = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL
+        if (!resource_storage_url)
+            throw new Error("NEXT_PUBLIC_RESOURCE_STORAGE_URL is not set up in env vars")
+
+        const basePath = new URL(resource_storage_url);
 
         // Shitty way to check for partner
         if ((item as Partner).is_wallet != undefined) {
@@ -50,69 +43,37 @@ export class BridgeAppSettings implements BridgeSettings {
         return basePath.href;
     }
 
-    static ResolveSettings(settings: BridgeSettings) {
-        const basePath = new URL(settings.discovery.resource_storage_url);
+    static ResolveLayers(networks: CryptoNetwork[], sourceRoutes: Route[], destinationRoutes: Route[]): Layer[] {
+        const resource_storage_url = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL
+        if (!resource_storage_url)
+            throw new Error("NEXT_PUBLIC_RESOURCE_STORAGE_URL is not set up in env vars")
 
-        settings.networks = settings.networks.map(n => ({
-            ...n,
-            img_url: `${basePath}layerswap/networks/${n?.internal_name?.toLowerCase()}.png`
-        }))
-        settings.exchanges = settings.exchanges.map(e => ({
-            ...e,
-            img_url: `${basePath}layerswap/networks/${e?.internal_name?.toLowerCase()}.png`
-        }))
-        settings.currencies = settings.currencies.map(c => ({
-            ...c,
-            img_url: `${basePath}layerswap/networks/${c?.asset?.toLowerCase()}.png`
-        }))
-
-        return settings
-    }
-
-    static ResolveLayers(exchanges: Exchange[], networks: CryptoNetwork[]): Layer[] {
-        const exchangeLayers: Layer[] = exchanges.map((e): Layer => ({
-            isExchange: true,
-            assets: BridgeAppSettings.ResolveExchangeL2Assets(e.currencies, networks),
-            ...e
-        }))
-        const networkLayers: Layer[] = networks.map((n): Layer =>
+        const basePath = new URL(resource_storage_url);
+        const networkLayers: Layer[] = networks?.map((n): Layer =>
         ({
-            isExchange: false,
-            assets: BridgeAppSettings.ResolveNetworkL2Assets(n),
-            ...n
+            assets: BridgeAppSettings.ResolveNetworkL2Assets(n, sourceRoutes, destinationRoutes),
+            img_url: `${basePath}layerswap/networks/${n?.internal_name?.toLowerCase()}.png`,
+            ...n,
         }))
-        const result = exchangeLayers.concat(networkLayers)
-        return result
+        return networkLayers
     }
 
-    static ResolveExchangeL2Assets(
-        currencies: ExchangeCurrency[],
-        networks: CryptoNetwork[]): ExchangeAsset[] {
-        return currencies.map(exchangecurrency => {
-            const network = networks.find(n => n.internal_name === exchangecurrency.network) as CryptoNetwork
-            const networkCurrencies = network?.currencies.find(nc => nc.asset === exchangecurrency.asset) as NetworkCurrency
-            const res: ExchangeAsset = {
-                asset: exchangecurrency.asset,
-                status: exchangecurrency.status,
-                is_default: exchangecurrency.is_default,
-                network_internal_name: exchangecurrency.network,
-                network: { ...network, currencies: [networkCurrencies] },
-                min_deposit_amount: exchangecurrency.min_deposit_amount,
-                withdrawal_fee: exchangecurrency.withdrawal_fee,
-            }
-            return res
+    static ResolveNetworkL2Assets(network: CryptoNetwork, sourceRoutes: Route[], destinationRoutes: Route[]): NetworkCurrency[] {
+        return network?.currencies?.map(c => {
+            const availableInSource = sourceRoutes?.some(r => r.asset === c.asset && r.network === network.internal_name)
+            const availableInDestination = destinationRoutes?.some(r => r.asset === c.asset && r.network === network.internal_name)
+
+            return ({
+                asset: c.asset,
+                contract_address: c.contract_address,
+                decimals: c.decimals,
+                precision: c.precision,
+                usd_price: c.usd_price,
+                is_native: c.is_native,
+                is_refuel_enabled: c.is_refuel_enabled,
+                availableInSource,
+                availableInDestination,
+            })
         })
-    }
-
-    static ResolveNetworkL2Assets(network: CryptoNetwork): NetworkAsset[] {
-        return network?.currencies.map(c => ({
-            asset: c.asset,
-            status: c.status,
-            is_default: true,
-            network_internal_name: network?.internal_name,
-            network: { ...network },
-            contract_address: c.contract_address,
-            decimals: c.decimals
-        }))
     }
 }

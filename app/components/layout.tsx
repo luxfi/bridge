@@ -1,8 +1,8 @@
-import React, { ErrorInfo, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Head from "next/head"
 import { useRouter } from "next/router";
 import ThemeWrapper from "./themeWrapper";
-import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
 import MaintananceContent from "./maintanance/maintanance";
 import { AuthProvider } from "../context/authContext";
 import { SettingsProvider } from "../context/settings";
@@ -12,12 +12,12 @@ import ErrorFallback from "./ErrorFallback";
 import { SendErrorMessage } from "../lib/telegram";
 import { QueryParams } from "../Models/QueryParams";
 import QueryProvider from "../context/query";
-import BridgeAuthApiClient from "../lib/userAuthApiClient";
 import { THEME_COLORS, ThemeData } from "../Models/Theme";
 import { TooltipProvider } from "./shadcn/tooltip";
 import ColorSchema from "./ColorSchema";
 import TonConnectProvider from "./TonConnectProvider";
 import * as Sentry from "@sentry/nextjs";
+import { FeeProvider } from "../context/feeContext";
 import RainbowKit from "./RainbowKit";
 import Solana from "./SolanaProvider";
 
@@ -32,7 +32,7 @@ export default function Layout({ children, settings, themeData }: Props) {
   const router = useRouter();
 
   useEffect(() => {
-    function prepareUrl(params: string[]) {
+    function prepareUrl(params) {
       const url = new URL(location.href)
       const queryParams = new URLSearchParams(location.search)
       let customUrl = url.protocol + "//" + url.hostname + url.pathname.replace(/\/$/, '')
@@ -62,7 +62,6 @@ export default function Layout({ children, settings, themeData }: Props) {
     </ThemeWrapper>
 
   let appSettings = new BridgeAppSettings(settings)
-  BridgeAuthApiClient.identityBaseEndpoint = appSettings.discovery.identity_url
 
   const query: QueryParams = {
     ...router.query,
@@ -90,22 +89,18 @@ export default function Layout({ children, settings, themeData }: Props) {
     ...(router.query.lockAsset === 'false' ? { lockAsset: false } : {}),
   };
 
-  function logErrorToService(error: Error, info: ErrorInfo) {
-    /*
-
+  function logErrorToService(error, info) {
     const transaction = Sentry.startTransaction({
       name: "error_boundary_handler",
     });
     Sentry.configureScope((scope) => {
       scope.setSpan(transaction);
     });
-    if (process.env.NEXT_PUBLIC_VERCEL_ENV && !(error.stack && error.stack.includes("chrome-extension"))) {
+    if (process.env.NEXT_PUBLIC_VERCEL_ENV && !error.stack.includes("chrome-extension")) {
       SendErrorMessage("UI error", `env: ${process.env.NEXT_PUBLIC_VERCEL_ENV} %0A url: ${process.env.NEXT_PUBLIC_VERCEL_URL} %0A message: ${error?.message} %0A errorInfo: ${info?.componentStack} %0A stack: ${error?.stack ?? error.stack} %0A`)
     }
-      // @ts-ignore
-    Sentry.captureException(error, info.componentStack);
-    transaction.finish();
-    */
+    Sentry.captureException(error, info);
+    transaction?.finish();
   }
 
   themeData = themeData || THEME_COLORS.default
@@ -124,7 +119,7 @@ export default function Layout({ children, settings, themeData }: Props) {
       <meta name="description" content="Move crypto across exchanges, blockchains, and wallets." />
 
       {/* Facebook Meta Tags */}
-      <meta property="og:url" content={`https://www.bridge.lux.network/${basePath}`} />
+      <meta property="og:url" content={`https://bridge.lux.network/${basePath}`} />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Bridge" />
       <meta property="og:description" content="Move crypto across exchanges, blockchains, and wallets." />
@@ -133,7 +128,7 @@ export default function Layout({ children, settings, themeData }: Props) {
       {/* Twitter Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta property="twitter:domain" content="bridge.lux.network" />
-      <meta property="twitter:url" content={`https://www.bridge.lux.network/${basePath}`} />
+      <meta property="twitter:url" content={`https://bridge.lux.network/${basePath}`} />
       <meta name="twitter:title" content="Bridge" />
       <meta name="twitter:description" content="Move crypto across exchanges, blockchains, and wallets." />
       <meta name="twitter:image" content={`https://bridge.lux.network/${basePath}/opengraphtw.jpg`} />
@@ -151,9 +146,11 @@ export default function Layout({ children, settings, themeData }: Props) {
                 <TonConnectProvider basePath={basePath} themeData={themeData}>
                   <RainbowKit>
                     <Solana>
-                      {process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true' ?
-                        <MaintananceContent />
-                        : children}
+                      <FeeProvider>
+                        {process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true' ?
+                          <MaintananceContent />
+                          : children}
+                      </FeeProvider>
                     </Solana>
                   </RainbowKit>
                 </TonConnectProvider>
@@ -162,6 +159,6 @@ export default function Layout({ children, settings, themeData }: Props) {
           </TooltipProvider>
         </AuthProvider>
       </SettingsProvider >
-    </QueryProvider>
+    </QueryProvider >
   </>)
 }

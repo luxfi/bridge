@@ -1,5 +1,3 @@
-import { LayerStatus } from "./Layer";
-
 export enum NetworkType {
     EVM = "evm",
     Starknet = "starknet",
@@ -10,15 +8,11 @@ export enum NetworkType {
     TON = 'ton'
 }
 
-
-export interface CryptoNetwork {
+export class CryptoNetwork {
     display_name: string;
     internal_name: string;
-    native_currency: string | null | undefined;
-    average_completion_time: string;
     transaction_explorer_template: string;
-    account_explorer_template?: string;
-    status: LayerStatus;
+    account_explorer_template: string;
     currencies: NetworkCurrency[];
     refuel_amount_in_usd: number;
     chain_id: string;
@@ -31,29 +25,25 @@ export interface CryptoNetwork {
     img_url?: string
 }
 
-export interface NetworkCurrency {
-    name: string;
+export class NetworkCurrency {
     asset: string;
-    status: LayerStatus;
-    is_deposit_enabled: boolean;
-    is_withdrawal_enabled: boolean;
     is_refuel_enabled: boolean;
-    max_withdrawal_amount: number;
-    deposit_fee: number;
-    withdrawal_fee: number;
+    is_native: boolean
     //TODO may be plain string
     contract_address: `0x${string}` | null | undefined;
     decimals: number;
-    source_base_fee: number;
-    destination_base_fee: number;
+    precision: number;
+    usd_price: number;
+    availableInSource: boolean;
+    availableInDestination: boolean;
 }
-export interface NetworkNode {
+export class NetworkNode {
     url: string;
 }
-export interface ManagedAccount {
+export class ManagedAccount {
     address: `0x${string}`;
 }
-export interface Metadata {
+export class Metadata {
     multicall3?: {
         address: `0x${string}`
         blockCreated: number

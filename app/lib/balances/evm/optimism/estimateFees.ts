@@ -1,8 +1,5 @@
 //from https://github.com/ethereum-optimism/optimism/blob/develop/packages/fee-estimation/src/estimateFees.ts
 
-import type {} from "class-variance-authority" // https://github.com/microsoft/TypeScript/issues/47663
-import type {} from '@storybook/react'
-
 import {
   gasPriceOracleABI,
   gasPriceOracleAddress,
@@ -30,14 +27,13 @@ type BlockOptions = {
 /**
  * Get gas price Oracle contract
  */
-const getGasPriceOracleContract = (client: PublicClient) => {
+export const getGasPriceOracleContract = (client: PublicClient) => {
   return getContract({
     address: gasPriceOracleAddress['420'],
     abi: gasPriceOracleABI,
     publicClient: client,
   })
 }
-
 
 /**
  * Computes the L1 portion of the fee based on the size of the rlp encoded input

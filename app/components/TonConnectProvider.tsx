@@ -1,4 +1,3 @@
-// @ts-ignore
 import { THEME, TonConnectUIProvider } from "@tonconnect/ui-react"
 import { ThemeData } from "../Models/Theme";
 

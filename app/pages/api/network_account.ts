@@ -26,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return
         }
         catch (e) {
-            if ((e as any).response?.data?.error)
-                res.status(500).json({ error: (e as any).response?.data?.error })
+            if (e?.response?.data?.error)
+                res.status(500).json({ error: e?.response?.data?.error })
             return
         }
     }
@@ -41,9 +41,7 @@ const getAccessToken = async (): Promise<AuthConnectResponse> => {
     params.append('client_id', 'bridge_internal');
     params.append('grant_type', 'client_credentials');
     params.append('client_secret', process.env.INTERNAL_API_SECRET || "");
-    var apiClient = new BridgeApiClient();
-    const settings = await apiClient.GetSettingsAsync()
-    const identity_url = settings?.data?.discovery?.identity_url
+    const identity_url = process.env.NEXT_PUBLIC_IDENTITY_API
     const auth = axios.post<AuthConnectResponse>(`${identity_url}/connect/token`, params, { headers: { 'content-type': 'application/x-www-form-urlencoded' } })
 
     return (await auth).data;

@@ -1,56 +1,68 @@
 
-import { useSettingsState } from '../../../context/settings';
-import { CalculateFee, CalculateReceiveAmount } from '../../../lib/fees';
 import { SwapFormValues } from '../../DTOs/SwapFormValues';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@luxdefi/ui/primitives';
 import { ReceiveAmounts } from './ReceiveAmounts';
 import DetailedEstimates from './DetailedEstimates';
+import { useFee } from '../../../context/feeContext';
+import { useSettingsState } from '../../../context/settings';
+import RefuelToggle from './Refuel';
+import CEXNetworkFormField from '../../Input/CEXNetworkFormField';
+import FeeDetails from './FeeDetailsComponent';
+import { useQueryState } from '../../../context/query';
 import Campaign from './Campaign';
 
-export default function FeeDetails({ values }: { values: SwapFormValues }) {
-    const { networks, currencies } = useSettingsState()
-    const { currency, from, to, refuel } = values || {}
+export default function FeeDetailsComponent({ values }: { values: SwapFormValues }) {
+    const { toCurrency, from, to, refuel, fromExchange, toExchange } = values || {};
+    const { fee } = useFee()
+    const currency = toCurrency
+    const { layers } = useSettingsState()
+    const query = useQueryState();
 
-    let fee = CalculateFee(values, networks);
-    let receive_amount = CalculateReceiveAmount(values, networks, currencies);
     return (
         <>
-            <div className="mx-auto relative w-full rounded-lg bg-level-2 border border-level-3 hover:border-level-4 px-3.5 py-3 z-[1] transition-all duration-200">
-                    {/* @ts-ignore */}
-                <Accordion type="single" collapsible>
-                    {/* @ts-ignore */}
-                    <AccordionItem value='item-1'>
-                    {/* @ts-ignore */}
-                    <AccordionTrigger className="items-center flex w-full relative gap-2 rounded-lg text-left text-base font-medium">
-                            <ReceiveAmounts
-                                currencies={currencies}
-                                currency={currency}
-                                to={to}
-                                receive_amount={receive_amount}
-                                refuel={!!refuel}
-                            />
-                        </AccordionTrigger>
-                    {/* @ts-ignore */}
-                    <AccordionContent className="text-sm text-foreground text-foreground-new font-normal">
-                            <DetailedEstimates
-                                currencies={currencies}
-                                networks={networks}
-                                fee={fee}
-                                selected_currency={currency}
-                                source={from}
-                                destination={to}
-                            />
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </div>
+            <FeeDetails>
+
+                {
+                    ((fromExchange || toExchange) && (from || to)) &&
+                    <FeeDetails.Item>
+                        <CEXNetworkFormField direction={fromExchange ? 'from' : 'to'} />
+                    </FeeDetails.Item>
+                }
+                {to && toCurrency && to.assets.find(a => a.asset === toCurrency.asset)?.is_refuel_enabled && !query?.hideRefuel &&
+
+                    <FeeDetails.Item>
+                        <RefuelToggle />
+                    </FeeDetails.Item>
+                }
+
+                {from && to &&
+                    <FeeDetails.Item>
+                        <DetailedEstimates
+                            networks={layers}
+                            selected_currency={currency}
+                            source={from}
+                            destination={to}
+                        />
+                    </FeeDetails.Item>
+                }
+
+                <FeeDetails.Item>
+                    <ReceiveAmounts
+                        currency={currency}
+                        to={to}
+                        receive_amount={fee.walletReceiveAmount}
+                        refuel={!!refuel}
+                    />
+                </FeeDetails.Item>
+
+            </FeeDetails>
+
             {
                 values.to &&
-                values.currency &&
+                values.toCurrency &&
                 <Campaign
                     destination={values.to}
-                    selected_currency={values.currency}
-                    fee={fee}
+                    selected_currency={values.toCurrency}
+                    fee={fee.walletFee}
                 />
             }
         </>

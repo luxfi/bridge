@@ -1,7 +1,7 @@
-import { SelectMenuItem } from '../../Shared/Props/selectMenuItem'
+import { ISelectMenuItem } from '../../Shared/Props/selectMenuItem'
 
-export interface SelectProps<T> {
-    values: SelectMenuItem<T>[]
-    value?: SelectMenuItem<T>
-    setValue: (value: SelectMenuItem<T>) => void
+export interface SelectProps {
+    values: ISelectMenuItem[],
+    value?: ISelectMenuItem;
+    setValue: (value: ISelectMenuItem) => void;
 }

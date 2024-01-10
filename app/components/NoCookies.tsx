@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react"
-import MessageComponent from "./MessageComponent"
-import inIframe from "./utils/inIframe"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import MessageComponent from "./MessageComponent";
+import Navbar from "./navbar";
+import inIframe from "./utils/inIframe";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
-const NoCookies: React.FC = () => {
+function NoCookies(props) {
     const [embedded, setEmbedded] = useState<boolean>()
 
     useEffect(() => {
@@ -12,25 +14,25 @@ const NoCookies: React.FC = () => {
 
     return (
         <div className="styled-scroll">
-            <div className="min-h-screen overflow-hidden relative">
-                <div className="mx-auto max-w-xl bg-level-1 darkest-class shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
+            <div className="min-h-screen overflow-hidden relative font-robo">
+                <div className="mx-auto max-w-xl bg-secondary-900 shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
                     <MessageComponent>
                         <MessageComponent.Content icon="red">
                             <MessageComponent.Header>
                                 Sorry
                             </MessageComponent.Header>
                             <MessageComponent.Description>
-                                <div className="text-foreground text-foreground-new space-y-5 text-left">
+                                <div className="text-secondary-text space-y-5 text-left">
                                     <div className="space-y-2">
-                                        <p className="text-muted text-muted-primary-text">
+                                        <p className="text-primary-text">
                                             It seems like you’ve either:
                                         </p>
-                                        <ul className="text-foreground text-foreground-new list-disc ml-4 mt-0 ">
+                                        <ul className="text-secondary-text list-disc ml-4 mt-0 ">
                                             <li>Disabled cookies</li>
                                             <li>Or using Bridge in a partner’s page in Incognito mode</li>
                                         </ul>
                                     </div>
-                                    <p className="text-foreground text-foreground-new">Unforunately, we can’t run in those conditions 🙁</p>
+                                    <p className="text-secondary-text">Unforunately, we can’t run in those conditions 🙁</p>
                                 </div>
                                 {
                                     embedded &&
@@ -47,4 +49,4 @@ const NoCookies: React.FC = () => {
     );
 }
 
-export default NoCookies
+export default NoCookies;

@@ -2,7 +2,6 @@ import { Link, ArrowLeftRight } from 'lucide-react';
 import { FC, useCallback, useEffect, useState } from 'react'
 import SubmitButton from '../../../buttons/submitButton';
 import toast from 'react-hot-toast';
-import toastError from '../../../../helpers/toastError'
 import * as zksync from 'zksync';
 import { utils } from 'ethers';
 import { useEthersSigner } from '../../../../lib/ethersToViem/ethers';
@@ -29,13 +28,13 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
     const signer = useEthersSigner();
     const { chain } = useNetwork();
 
-    const { networks, layers } = useSettingsState();
+    const { layers } = useSettingsState();
     const { source_network: source_network_internal_name } = swap || {};
-    const source_network = networks.find(n => n.internal_name === source_network_internal_name);
+    const source_network = layers.find(n => n.internal_name === source_network_internal_name);
     const source_layer = layers.find(l => l.internal_name === source_network_internal_name)
-    const source_currency = source_network?.currencies?.find(c => c.asset.toLocaleUpperCase() === swap?.source_network_asset.toLocaleUpperCase());
+    const source_currency = source_network?.assets?.find(c => c.asset.toLocaleUpperCase() === swap?.source_network_asset.toLocaleUpperCase());
     const defaultProvider = swap?.source_network?.split('_')?.[1]?.toLowerCase() == "mainnet" ? "mainnet" : "goerli";
-    const l1Network = networks.find(n => n.internal_name === source_network?.metadata?.L1Network);
+    const l1Network = layers.find(n => n.internal_name === source_network?.metadata?.L1Network);
 
     useEffect(() => {
         if (signer?._address !== syncWallet?.cachedAddress && source_layer) {
@@ -64,7 +63,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             setSyncWallet(wallet)
         }
         catch (e) {
-            toastError(e)
+            toast(e.message)
         }
         finally {
             setLoading(false)
@@ -97,7 +96,10 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
             }
         }
         catch (e) {
-          toastError(e)
+            if (e?.message) {
+                toast(e.message)
+                return
+            }
         }
         setLoading(false)
 
@@ -118,7 +120,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-muted text-muted-primary-text">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full text-primary-text">
                 <div className='space-y-4'>
                     {
                         !syncWallet &&

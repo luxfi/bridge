@@ -6,8 +6,8 @@ type Balances = {
     [currency: string]: string;
 };
 
-type VerifiedObject = {
-    verified: {
+type CommitedObject = {
+    committed: {
         balances: Balances;
         nonce: number;
         pubKeyHash: string;
@@ -33,7 +33,7 @@ export default function useZkSyncBalance(): BalanceProvider {
 
         let balances: Balance[] = []
 
-        if (layer.isExchange === true || !layer.assets) return
+        if (!layer.assets) return
 
         const { createPublicClient, http } = await import('viem');
         const provider = createPublicClient({
@@ -41,12 +41,15 @@ export default function useZkSyncBalance(): BalanceProvider {
         })
 
         try {
-            const result: VerifiedObject = await provider.request({ method: 'account_info' as any, params: [address as `0x${string}`] });
-            const zkSyncBalances = Object.entries(result.verified.balances).map(([token, amount]) => {
-                const currency = layer?.assets?.find(c => c?.asset == token);
+            const result: CommitedObject = await provider.request({ method: 'account_info' as any, params: [address as `0x${string}`] });
+
+            const zkSyncBalances = layer.assets.map((a) => {
+                const currency = layer?.assets?.find(c => c?.asset == a.asset);
+                const amount = currency && result.committed.balances[currency.asset];
+
                 return ({
                     network: layer.internal_name,
-                    token,
+                    token: a.asset,
                     amount: formatAmount(amount, Number(currency?.decimals)),
                     request_time: new Date().toJSON(),
                     decimals: Number(currency?.decimals),
@@ -68,7 +71,7 @@ export default function useZkSyncBalance(): BalanceProvider {
     const getGas = async ({ layer, currency, address }: GasProps) => {
 
         let gas: Gas[] = [];
-        if (layer.isExchange === true || !layer.assets) return
+        if (!layer.assets) return
 
         const { createPublicClient, http } = await import('viem');
         const provider = createPublicClient({
