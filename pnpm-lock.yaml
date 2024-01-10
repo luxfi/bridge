@@ -25,6 +25,9 @@ importers:
       '@loopring-web/web3-provider':
         specifier: 1.4.13
         version: 1.4.13(@babel/core@7.23.7)(react@18.2.0)
+      '@luxdefi/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
