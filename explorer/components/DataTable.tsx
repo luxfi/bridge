@@ -170,7 +170,7 @@ const DataTable: React.FC = () => {
       <div className="max-h-[65vh] w-full pb-2 align-middle overflow-y-auto dataTable">
         <table className="border-spacing-0 w-full relative border-separate gap-0">
           <thead className="sticky top-0 z-10 bg-background ">
-            <tr className='' >
+            <tr>
               <th scope="col" className="cursor-default rounded-tl-lg border-muted-4 border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted">
                   Status
               </th>
