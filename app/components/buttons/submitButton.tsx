@@ -1,5 +1,6 @@
-import { FC, MouseEventHandler, PropsWithChildren } from "react";
-import SpinIcon from "../icons/spinIcon";
+import { FC, MouseEventHandler, PropsWithChildren } from "react"
+import SpinIcon from "../icons/spinIcon"
+import { cn } from '@luxdefi/ui/util'
 
 type buttonStyle = 'outline' | 'filled';
 type buttonSize = 'small' | 'medium' | 'large';
@@ -7,8 +8,8 @@ type text_align = 'center' | 'left'
 type button_align = 'left' | 'right'
 
 function constructClassNames(size: buttonSize, buttonStyle: buttonStyle) {
-  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 disabled:border-muted-4 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform hover:bg-level-1 transition duration-200 ease-in-out'
-  defaultStyle += buttonStyle == 'filled' ? " bg-primary-lux text-primary-fg hover:text-primary-lux" : " text-muted-3";
+  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform hover:bg-level-1 disabled:hover:bg-primary-lux transition duration-200 ease-in-out'
+  defaultStyle += buttonStyle == 'filled' ? " bg-primary-lux text-primary-fg hover:text-primary-lux disabled:hover:text-primary-fg" : " text-muted-3";
 
   switch (size) {
     case 'large':
@@ -28,32 +29,32 @@ function constructClassNames(size: buttonSize, buttonStyle: buttonStyle) {
 const SubmitButton: FC<{
   isDisabled: boolean
   isSubmitting: boolean
-  type?: 'submit' | 'reset' | 'button' 
+  type?: 'submit' | 'reset' | 'button'
   onClick?: MouseEventHandler<HTMLButtonElement>
   icon?: React.ReactNode
-  buttonStyle?: buttonStyle 
+  buttonStyle?: buttonStyle
   size?: buttonSize
   text_align?: text_align
   button_align?: button_align
   className?: string
-} & PropsWithChildren> = ({ 
-  isDisabled, 
-  isSubmitting, 
-  icon, 
-  children, 
-  type, 
-  onClick, 
-  buttonStyle = 'filled', 
-  size = 'medium', 
-  text_align = 'center', 
-  button_align = 'left', 
-  className 
+} & PropsWithChildren> = ({
+  isDisabled,
+  isSubmitting,
+  icon,
+  children,
+  type,
+  onClick,
+  buttonStyle = 'filled',
+  size = 'medium',
+  text_align = 'center',
+  button_align = 'left',
+  className=''
 }) => (
   <button
-      disabled={isDisabled || isSubmitting}
-      type={type}
-      onClick={onClick}
-      className={constructClassNames(size, buttonStyle) + className}
+    disabled={isDisabled || isSubmitting}
+    type={type}
+    onClick={onClick}
+    className={cn(constructClassNames(size, buttonStyle), className)}
   >
     <span className={(button_align === "right" ? 'order-last ' : 'order-first ') + (text_align === 'center' ? "absolute left-0 inset-y-0 flex items-center pl-3" : "relative")}>
       {(!isDisabled && !isSubmitting) && icon}
@@ -81,11 +82,11 @@ export const DoubleLineText: React.FC<{
   secondarytext: string,
   colorStyle: 'mltln-text-light' | 'mltln-text-dark',
   reversed?: boolean
-}> = ({ 
-  primaryText, 
-  secondarytext, 
-  colorStyle, 
-  reversed 
+}> = ({
+  primaryText,
+  secondarytext,
+  colorStyle,
+  reversed
 }) => (
   <div className={`leading-3 flex ${reversed ? 'flex-col-reverse' : 'flex-col'}`}>
     <div className={`text-xs ${text_styles[colorStyle].secondary}`}>{secondarytext}</div>

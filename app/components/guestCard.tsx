@@ -22,15 +22,15 @@ function GuestCard() {
         <div className='mt-10'>
             <Wizard>
                 <WizardItem StepName={AuthStep.Email} fitHeight>
-                    <div className={noToolBar ? `p-6 border border-secondary-500 rounded-md` : "pt-6"}>
+                    <div className={noToolBar ? 'p-6' : "pt-6"}>
                         <EmailStep OnNext={GoToCodeStep} disclosureLogin />
                     </div>
                 </WizardItem>
                 <WizardItem StepName={AuthStep.Code} GoBack={GoBackToEmailStep} fitHeight>
-                    <div className={noToolBar ? `p-6 border border-secondary-500 rounded-md` : "pt-6"}>
+                    <div className={noToolBar ? 'p-6' : "pt-6"}>
                         {
                             goBack &&
-                            <button type='button' onClick={goBack} className="justify-self-start text-xs text-secondary-text flex items-center hover:text-secondary-text/70 cursor-pointer space-x-1" style={{ visibility: false ? 'hidden' : 'visible' }}>
+                            <button type='button' onClick={goBack} className="justify-self-start text-xs  flex items-center  cursor-pointer space-x-1" style={{ visibility: false ? 'hidden' : 'visible' }}>
                                 <ArrowLeft className='h-3' />
                                 <span>Edit email</span>
                             </button>
