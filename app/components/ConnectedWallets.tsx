@@ -71,50 +71,50 @@ const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
 }
 
 export const WalletsMenu = () => {
+  const [openDialog, setOpenDialog] = useState<boolean>(false)
+  const { wallets } = useWallet()
+  const wallet = wallets[0]
+  if (wallets.length > 0) {
+    return (<>
+      <button onClick={() => setOpenDialog(true)} type="button" className="py-3 px-4 bg-secondary-700 flex items-center w-full rounded-md space-x-1 disabled:text-opacity-40 disabled:bg-primary-900 disabled:cursor-not-allowed relative font-semibold transform border border-secondary-500 hover:bg-secondary-600 transition duration-200 ease-in-out">
+      {wallets.length === 1 ? (
+        <div className="flex gap-4 items-start">
+            <div className="inline-flex items-center relative">
+                <AddressIcon address={wallet.address} size={20} />
+                {
+                    wallet.connector && <span className="absolute -bottom-1 -right-2 ml-1 text-[10px] leading-4 font-semibold text-primary-text">
+                        <wallet.icon className="w-4 h-4 border-2 border-secondary-600 rounded-full bg-primary-text" />
+                    </span>
+                }
+            </div>
+            <p>{shortenAddress(wallet.address)}</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-center w-full">
+              Connected wallets
+          </div>
+          <div className="place-items-end absolute left-2.5">
+            <WalletsIcons wallets={wallets} />
+          </div>
+        </>
+      )}
+      </button>
+      <ConnectedWalletsDialog openDialog={openDialog} setOpenDialog={setOpenDialog} />
+    </>)
+  }
 
-    const [openDialog, setOpenDialog] = useState<boolean>(false)
-    const { wallets } = useWallet()
-    const wallet = wallets[0]
-    if (wallets.length > 0) {
-        return (
-            <>
-                <button onClick={() => setOpenDialog(true)} type="button" className="py-3 px-4 bg-secondary-700 flex items-center w-full rounded-md space-x-1 disabled:text-opacity-40 disabled:bg-primary-900 disabled:cursor-not-allowed relative font-semibold transform border border-secondary-500 hover:bg-secondary-600 transition duration-200 ease-in-out">
-                    {
-                        wallets.length === 1 ?
-                            <div className="flex gap-4 items-start">
-                                <div className="inline-flex items-center relative">
-                                    <AddressIcon address={wallet.address} size={20} />
-                                    {
-                                        wallet.connector && <span className="absolute -bottom-1 -right-2 ml-1 text-[10px] leading-4 font-semibold text-primary-text">
-                                            <wallet.icon className="w-4 h-4 border-2 border-secondary-600 rounded-full bg-primary-text" />
-                                        </span>
-                                    }
-                                </div>
-                                <p>{shortenAddress(wallet.address)}</p>
-                            </div>
-                            :
-                            <>
-                                <div className="flex justify-center w-full">
-                                    Connected wallets
-                                </div>
-                                <div className="place-items-end absolute left-2.5">
-                                    <WalletsIcons wallets={wallets} />
-                                </div>
-                            </>
-                    }
-                </button>
-                <ConnectedWalletsDialog openDialog={openDialog} setOpenDialog={setOpenDialog} />
-            </>
-        )
-    }
-
-    return (
-        <ConnectButton>
-            <SubmitButton text_align="center" icon={<WalletIcon className='h-5 w-5' strokeWidth={2} />} className="bg-primary/20 border-none !text-primary !px-4" type="button" isDisabled={false} isSubmitting={false}>
-                Connect a wallet
-            </SubmitButton>
-        </ConnectButton>
-    )
+  return (
+    <ConnectButton>
+      <SubmitButton
+        text_align="center"
+        icon={<WalletIcon className='h-5 w-5' strokeWidth={2} />}
+        className='border-none !px-4' type="button" isDisabled={false} isSubmitting={false}
+      >
+        Connect a wallet
+      </SubmitButton>
+    </ConnectButton>
+  )
 }
 
 const ConnectedWalletsDialog = ({ openDialog, setOpenDialog }: { openDialog: boolean, setOpenDialog: (open: boolean) => void }) => {
