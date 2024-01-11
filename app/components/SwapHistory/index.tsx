@@ -1,21 +1,22 @@
-import { useRouter } from "next/router"
 import { useCallback, useEffect, useState } from "react"
+import { useRouter } from "next/router"
+
+import Link from "next/link";
+import Image from 'next/image'
+import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll, X } from 'lucide-react';
+
 import BridgeApiClient, { SwapItem, SwapStatusInNumbers, TransactionType } from "../../lib/BridgeApiClient"
 import SpinIcon from "../icons/spinIcon"
-import { ArrowRight, ChevronRight, ExternalLink, Eye, RefreshCcw, Scroll, X } from 'lucide-react';
 import SwapDetails from "./SwapDetailsComponent"
 import { useSettingsState } from "../../context/settings"
-import Image from 'next/image'
 import { classNames } from "../utils/classNames"
 import SubmitButton, { DoubleLineText } from "../buttons/submitButton"
 import { SwapHistoryComponentSceleton } from "../Sceletons"
 import StatusIcon, { } from "./StatusIcons"
 import toast from "react-hot-toast"
-import { SwapStatus } from "../../Models/SwapStatus"
 import ToggleButton from "../buttons/toggleButton";
 import Modal from "../modal/modal";
 import HeaderWithMenu from "../HeaderWithMenu";
-import Link from "next/link";
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
 import { truncateDecimals } from "../utils/RoundDecimals";
@@ -138,7 +139,7 @@ function TransactionsHistory() {
   }
 
   return (
-    <div className='bg-secondary-900 sm:shadow-card rounded-lg mb-6 w-full text-primary-text overflow-hidden relative min-h-[620px]'>
+    <div className='bg-background border border-muted-4  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]'>
       <HeaderWithMenu goBack={goBack} />
       {
         page == 0 && loading ?
@@ -146,7 +147,7 @@ function TransactionsHistory() {
           : <>
             {
               Number(swaps?.length) > 0 ?
-                <div className="w-full flex flex-col justify-between h-full px-6 space-y-5 text-secondary-text">
+                <div className="w-full flex flex-col justify-between h-full px-6 space-y-5">
                   <div className="mt-4">
                     {showToggleButton && <div className="flex justify-end mb-2">
                       <div className='flex space-x-2'>
@@ -157,8 +158,8 @@ function TransactionsHistory() {
                       </div>
                     </div>}
                     <div className="max-h-[450px] styled-scroll overflow-y-auto ">
-                      <table className="w-full divide-y divide-secondary-500">
-                        <thead className="text-secondary-text">
+                      <table className="w-full divide-y divide-muted-2">
+                        <thead className="text-foreground">
                           <tr>
                             <th scope="col" className="text-left text-sm font-semibold">
                               <div className="block">
@@ -197,11 +198,11 @@ function TransactionsHistory() {
 
                               <td
                                 className={classNames(
-                                  index === 0 ? '' : 'border-t border-secondary-500',
+                                  index === 0 ? '' : 'border-t border-muted-2',
                                   'relative text-sm text-primary-text table-cell'
                                 )}
                               >
-                                <div className="text-primary-text flex items-center">
+                                <div className=" flex items-center">
                                   <div className="flex-shrink-0 h-5 w-5 relative">
                                     {source &&
                                       <Image
@@ -226,11 +227,11 @@ function TransactionsHistory() {
                                     }
                                   </div>
                                 </div>
-                                {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-secondary-500" /> : null}
+                                {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-level-1" /> : null}
 
                               </td>
                               <td className={classNames(
-                                index === 0 ? '' : 'border-t border-secondary-500',
+                                index === 0 ? '' : 'border-t border-muted-2',
                                 'relative text-sm table-cell'
                               )}>
                                 <span className="flex items-center">
@@ -239,8 +240,8 @@ function TransactionsHistory() {
                               </td>
                               <td
                                 className={classNames(
-                                  index === 0 ? '' : 'border-t border-secondary-500',
-                                  'px-3 py-3.5 text-sm text-primary-text table-cell'
+                                  index === 0 ? '' : 'border-t border-muted-2',
+                                  'px-3 py-3.5 text-sm table-cell'
                                 )}
                               >
                                 <div className="flex justify-between items-center cursor-pointer" onClick={(e) => { handleopenSwapDetails(swap); e.preventDefault() }}>
@@ -266,14 +267,14 @@ function TransactionsHistory() {
                       </table>
                     </div>
                   </div>
-                  <div className="text-primary-text text-sm flex justify-center">
+                  <div className=" text-sm flex justify-center">
                     {
                       !isLastPage &&
                       <button
                         disabled={isLastPage || loading}
                         type="button"
                         onClick={handleLoadMore}
-                        className="group disabled:text-primary-800 mb-2 text-primary relative flex justify-center py-3 px-4 border-0 font-semibold rounded-md focus:outline-none transform hover:-translate-y-0.5 transition duration-200 ease-in-out"
+                        className="group disabled:text-muted-4 mb-2 text-muted relative flex justify-center py-3 px-4 border-0 font-semibold rounded-md focus:outline-none transform hover:-translate-y-0.5 transition duration-200 ease-in-out"
                       >
                         <span className="flex items-center mr-2">
                           {(!isLastPage && !loading) &&
@@ -293,8 +294,8 @@ function TransactionsHistory() {
                       }
                       {
                         selectedSwap &&
-                        <div className="text-primary-text text-sm mt-6 space-y-3">
-                          <div className="flex flex-row text-primary-text text-base space-x-2">
+                        <div className=" text-sm mt-6 space-y-3">
+                          <div className="flex flex-row  text-base space-x-2">
                             <SubmitButton
                               text_align="center"
                               onClick={() => router.push({
@@ -318,10 +319,10 @@ function TransactionsHistory() {
                 </div>
                 :
                 <div className="absolute top-1/4 right-0 text-center w-full">
-                  <Scroll className='h-40 w-40 text-secondary-700 mx-auto' />
+                  <Scroll className='h-40 w-40 text-muted-3 mx-auto' />
                   <p className="my-2 text-xl">It&apos;s empty here</p>
-                  <p className="px-14 text-primary-text">You can find all your transactions by searching with address in</p>
-                  <Link target="_blank" href={AppSettings.ExplorerURl} className="underline hover:no-underline cursor-pointer hover:text-secondary-text text-primary-text font-light">
+                  <p className="px-14 ">You can find all your transactions by searching with address in</p>
+                  <Link target="_blank" href={AppSettings.ExplorerURl} className="underline hover:no-underline cursor-pointer font-light">
                     <span>Bridge Explorer</span>
                   </Link>
                 </div>

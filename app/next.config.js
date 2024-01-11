@@ -1,3 +1,4 @@
+const withMDX = require('@next/mdx')()
 const { PHASE_PRODUCTION_SERVER } = require('next/constants');
 
 const securityHeaders = [
@@ -50,5 +51,5 @@ module.exports = (phase, { defaultConfig }) => {
     }
   }
 
-  return nextConfig;
+  return withMDX(nextConfig)
 }

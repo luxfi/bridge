@@ -16,7 +16,7 @@ const CopyButton: FC<CopyButtonProps> = ({ className, toCopy, children, iconSize
   const [isCopied, setCopied] = useCopyClipboard()
 
   return (
-      <Tooltip>
+      <Tooltip open={false}>
         <TooltipTrigger>
           <div className={classNames(className)} onClick={() => setCopied(toCopy)}>
             {isCopied && (
