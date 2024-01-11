@@ -1,9 +1,12 @@
-import Layout from '../../components/layout'
+import React from 'react'
+
 import { InferGetServerSidePropsType } from 'next'
+
+import Layout from '../../components/layout'
 import CampaignDetails from '../../components/Campaigns/Details'
 import { getServerSideProps } from '../../helpers/getSettings'
 
-export default function RewardsPage({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+function RewardsPage({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
   return (
     <Layout settings={settings} themeData={themeData}>
@@ -12,4 +15,4 @@ export default function RewardsPage({ settings, themeData }: InferGetServerSideP
   )
 }
 
-export { getServerSideProps };
+export default RewardsPage
