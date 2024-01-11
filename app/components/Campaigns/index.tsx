@@ -1,12 +1,13 @@
+import React, { FC } from "react";
+import useSWR from 'swr'
 import { Gift } from "lucide-react";
-import { useRouter } from "next/router";
-import { FC, useCallback } from "react";
+
+import Image from "next/image";
+
 import { ApiResponse } from "../../Models/ApiResponse";
 import BridgeApiClient, { Campaign } from "../../lib/BridgeApiClient";
 import SpinIcon from "../icons/spinIcon";
-import useSWR from 'swr'
 import { useSettingsState } from "../../context/settings";
-import Image from "next/image";
 import LinkWrapper from "../LinkWraapper";
 import { Layer } from "../../Models/Layer";
 import { Widget } from "../Widget/Index";
@@ -25,10 +26,10 @@ const Rewards = () => {
         <Widget className="min-h-[520px]">
             <Widget.Content>
                 {!isLoading ?
-                    <div className="space-y-5 h-full text-primary-text">
+                    <div className="space-y-5 h-full text-muted">
                         <div className="space-y-2">
                             <p className="font-bold text-left leading-5">Campaigns</p>
-                            <div className="bg-secondary-700 border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg shadow-lg">
+                            <div className="border border-muted-4 transition duration-200 rounded-lg shadow-lg">
                                 <div className="p-3 space-y-4">
                                     {
                                         activeCampaigns.length > 0 ?
@@ -41,7 +42,7 @@ const Rewards = () => {
                                                 />)
                                             :
                                             <div className="flex flex-col items-center justify-center space-y-2">
-                                                <Gift className="h-10 w-10 text-primary" />
+                                                <Gift className="h-10 w-10 text-secondary-lux" />
                                                 <p className="font-bold text-center">There are no active campaigns right now</p>
                                             </div>
                                     }
@@ -52,7 +53,7 @@ const Rewards = () => {
                             inactiveCampaigns.length > 0 &&
                             <div className="space-y-2">
                                 <p className="font-bold text-left leading-5">Old campaigns</p>
-                                <div className="bg-secondary-700 border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg shadow-lg">
+                                <div className='border border-muted-4 transition duration-200 rounded-lg shadow-lg'>
                                     <div className="p-3 dpsv flex flex-col space-y-4">
                                         {inactiveCampaigns.map(c =>
                                             <CampaignItem
@@ -88,7 +89,7 @@ const CampaignItem: FC<CampaignProps> = ({ campaign, layers, resolveImgSrc }) =>
 
     return <LinkWrapper href={`/campaigns/${campaign.name}`}
         className="flex justify-between items-center">
-        <span className="flex items-center gap-1 hover:opacity-70 active:scale-90 duration-200 transition-all">
+        <span className="flex items-center gap-1 hover:text-foreground active:scale-90 duration-200 transition-all">
             <span className="h-5 w-5 relative">
                 {campaignLayer && <Image
                     src={resolveImgSrc(campaignLayer)}
@@ -102,7 +103,7 @@ const CampaignItem: FC<CampaignProps> = ({ campaign, layers, resolveImgSrc }) =>
         </span>
         {
             campaignIsActive &&
-            <span className="text-primary-text-muted text-right text-sm">
+            <span className=" text-right text-sm">
                 {campaignDaysLeft} days left
             </span>
         }
