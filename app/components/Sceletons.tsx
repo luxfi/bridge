@@ -7,7 +7,7 @@ export const SwapHistoryComponentSceleton = () => {
   return <div className="animate-pulse">
     <div className=" mb-10 ">
       <div className="-mx-4 mt-10 sm:-mx-6 md:mx-0 md:rounded-lg ">
-        <table className="min-w-full divide-y divide-secondary-500">
+        <table className="min-w-full divide-y divide-muted-3">
           <thead>
             <tr>
               <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-500 sm:pl-6">
@@ -73,7 +73,7 @@ export const SwapHistoryComponentSceleton = () => {
               <tr key={index}>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'relative py-4 pl-4 sm:pl-6 pr-3 text-sm'
                   )}
                 >
@@ -82,11 +82,11 @@ export const SwapHistoryComponentSceleton = () => {
                       <div className="h-2 w-16 bg-slate-700 rounded col-span-1"></div>
                     </div>
                   </div>
-                  {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-secondary-500" /> : null}
+                  {index !== 0 ? <div className="absolute right-0 left-6 -top-px h-px bg-level-1" /> : null}
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'hidden px-3 py-3.5 text-sm text-primary-text lg:table-cell'
                   )}
                 >
@@ -100,7 +100,7 @@ export const SwapHistoryComponentSceleton = () => {
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'px-3 py-3.5 text-sm text-primary-text table-cell'
                   )}
                 >
@@ -113,7 +113,7 @@ export const SwapHistoryComponentSceleton = () => {
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'hidden px-3 py-3.5 text-sm text-primary-text lg:table-cell'
                   )}
                 >
@@ -123,7 +123,7 @@ export const SwapHistoryComponentSceleton = () => {
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'relative px-3 py-3.5 text-sm text-primary-text'
                   )}
                 >
@@ -133,8 +133,8 @@ export const SwapHistoryComponentSceleton = () => {
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
-                    'px-3 py-3.5 text-sm text-primary-text  hidden lg:table-cell'
+                    index === 0 ? '' : 'border-t border-muted-3',
+                    'px-3 py-3.5 text-sm text-primary-text hidden lg:table-cell'
                   )}
                 >
                   <div className="flex space-x-2">
@@ -146,7 +146,7 @@ export const SwapHistoryComponentSceleton = () => {
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'px-3 py-3.5 text-sm text-primary-text  hidden lg:table-cell'
                   )}
                 >
@@ -157,7 +157,7 @@ export const SwapHistoryComponentSceleton = () => {
                 </td>
                 <td
                   className={classNames(
-                    index === 0 ? '' : 'border-t border-secondary-500',
+                    index === 0 ? '' : 'border-t border-muted-3',
                     'px-3 py-3.5 text-sm text-primary-text  hidden lg:table-cell'
                   )}
                 >
@@ -178,8 +178,8 @@ export const SwapHistoryComponentSceleton = () => {
 
 export const SwapDetailsComponentSceleton = () => {
   return <div className="animate-pulse"><div className="w-full grid grid-flow-row">
-    <div className="rounded-md bg-secondary-900 w-full grid grid-flow-row">
-      <div className="items-center block text-base font-lighter leading-6 text-secondary-text">
+    <div className="rounded-md w-full grid grid-flow-row">
+      <div className="items-center block text-base font-lighter leading-6 ">
         <div className="flex justify-between items-baseline">
           <div className="h-2 m-2 w-1/4 bg-slate-400 rounded col-span-1"></div>
           <div className="h-2 m-2 w-1/4 bg-slate-700 rounded col-span-1"></div>
@@ -228,7 +228,7 @@ export const ExchangesComponentSceleton = () => {
     {[...Array(12)]?.map((item, index) =>
       <div
         key={index}
-        className="animate-pulse bg-secondary-700 select-none rounded-lg py-5 px-3">
+        className="animate-pulse bg-level-1 select-none rounded-lg py-5 px-3">
         <div className="flex justify-between space-x-4 md:space-x-16 px-3">
           <div className="flex space-x-2">
             <div className="rounded-md bg-slate-700 h-8 w-8"></div>
@@ -252,7 +252,7 @@ export const RewardsComponentSceleton = () => {
         <div className="flex justify-start">
           <div className="rounded-md w-48 bg-gray-500 h-[28px] animate-pulse" />
         </div>
-        <div className=" bg-secondary-700 divide-y divide-secondary-500 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+        <div className=" bg-level-1 divide-y divide-muted-3 rounded-lg shadow-lg border transition duration-200">
           <BackgroundField header={<span className="flex justify-between"><span>Pending Earnings</span><span>Next Airdrop</span></span>} withoutBorder>
             <div className="flex justify-between w-full text-2xl">
               <div className="flex items-center space-x-1">
@@ -273,7 +273,7 @@ export const RewardsComponentSceleton = () => {
             </div>
           </BackgroundField>
         </div>
-        <div className="bg-secondary-700 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+        <div className="bg-level-1 rounded-lg shadow-lg border transition duration-200">
           <BackgroundField header='Daily Reward Claimed' withoutBorder>
             <div className="flex flex-col w-full gap-2">
               <div className="rounded-full h-4 bg-gray-500 w-full animate-pulse" />
@@ -289,7 +289,7 @@ export const RewardsComponentSceleton = () => {
         <div className="flex justify-start">
           <div className="rounded-md w-48 bg-gray-500 h-5 animate-pulse" />
         </div>
-        <div className=" bg-secondary-700 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+        <div className=" bg-level-1 rounded-lg shadow-lg border  transition duration-200">
           <div className="p-3">
             <div className="space-y-6">
               {[...Array(4)]?.map((user, index) => (
@@ -306,24 +306,22 @@ export const RewardsComponentSceleton = () => {
   )
 }
 
-export const RewardsComponentLeaderboardSceleton = () => {
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-start">
-        <div className="rounded-md w-48 bg-gray-500 h-5 animate-pulse" />
-      </div>
-      <div className="bg-secondary-700 border border-secondary-700 hover:border-secondary-500 transition duration-200 rounded-lg">
-        <div className="p-3">
-          <div className="space-y-6">
-            {[...Array(4)]?.map((user, index) => (
-              <div key={index} className="items-center flex justify-between">
-                <div className="w-full h-4 rounded-md bg-gray-500 animate-pulse" />
-              </div>
-            ))
-            }
-          </div>
+export const RewardsComponentLeaderboardSceleton = () => (
+  <div className="space-y-2">
+    <div className="flex justify-start">
+      <div className="rounded-md w-48 bg-gray-500 h-5 animate-pulse" />
+    </div>
+    <div className=" transition duration-200 rounded-lg">
+      <div className="p-3">
+        <div className="space-y-6">
+          {[...Array(4)]?.map((user, index) => (
+            <div key={index} className="items-center flex justify-between">
+              <div className="w-full h-4 rounded-md bg-gray-500 animate-pulse" />
+            </div>
+          ))
+          }
         </div>
       </div>
     </div>
-  )
-}
+  </div>
+)
