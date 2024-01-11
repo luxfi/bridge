@@ -1,5 +1,8 @@
-import { FC, MouseEventHandler, PropsWithChildren } from "react";
-import SpinIcon from "../icons/spinIcon";
+import { FC, MouseEventHandler, PropsWithChildren } from "react"
+
+import { cn } from '@luxdefi/ui/util'
+
+import SpinIcon from "../icons/spinIcon"
 
 type buttonStyle = 'outline' | 'filled';
 type buttonSize = 'small' | 'medium' | 'large';
@@ -7,8 +10,8 @@ type text_align = 'center' | 'left'
 type button_align = 'left' | 'right'
 
 function constructClassNames(size: buttonSize, buttonStyle: buttonStyle) {
-  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 disabled:border-muted-4 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform hover:bg-level-1 transition duration-200 ease-in-out'
-  defaultStyle += buttonStyle == 'filled' ? " bg-primary-lux text-primary-fg hover:text-primary-lux" : " text-muted-3";
+  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform hover:bg-level-1 disabled:hover:bg-primary-lux transition duration-200 ease-in-out'
+  defaultStyle += buttonStyle == 'filled' ? " bg-primary-lux text-primary-fg hover:text-primary-lux disabled:hover:text-primary-fg" : " text-muted-3";
 
   switch (size) {
     case 'large':
@@ -47,13 +50,13 @@ const SubmitButton: FC<{
   size = 'medium', 
   text_align = 'center', 
   button_align = 'left', 
-  className 
+  className='' 
 }) => (
   <button
-      disabled={isDisabled || isSubmitting}
-      type={type}
-      onClick={onClick}
-      className={constructClassNames(size, buttonStyle) + className}
+    disabled={isDisabled || isSubmitting}
+    type={type}
+    onClick={onClick}
+    className={cn(constructClassNames(size, buttonStyle), className)}
   >
     <span className={(button_align === "right" ? 'order-last ' : 'order-first ') + (text_align === 'center' ? "absolute left-0 inset-y-0 flex items-center pl-3" : "relative")}>
       {(!isDisabled && !isSubmitting) && icon}

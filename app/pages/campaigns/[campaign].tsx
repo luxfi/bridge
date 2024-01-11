@@ -5,12 +5,11 @@ import { getServerSideProps } from '../../helpers/getSettings'
 
 export default function RewardsPage({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
-    return (<>
-        <Layout settings={settings} themeData={themeData}>
-            <CampaignDetails />
-        </Layout>
-    </>
-    )
+  return (
+    <Layout settings={settings} themeData={themeData}>
+      <CampaignDetails />
+    </Layout>
+  )
 }
 
 export { getServerSideProps };

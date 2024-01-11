@@ -65,7 +65,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
                     >Learn more</a>
                 </span>
             </p>
-            <div className="bg-secondary-700 divide-y divide-secondary-500 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+            <div className="bg-background divide-y divide-muted-3 rounded-lg shadow-lg border border-muted-4 hover:border-muted-2 transition duration-200">
                 {!campaignIsEnded &&
                     <BackgroundField header={<span className="flex justify-between"><span className="flex items-center"><span>Pending Earnings&nbsp;</span><ClickTooltip text={`${campaign?.asset} tokens that will be airdropped periodically.`} /> </span><span>Next Airdrop</span></span>} withoutBorder>
                         <div className="flex justify-between w-full text-2xl">
@@ -116,7 +116,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
             </div>
 
         </div>
-        <div className="bg-secondary-700 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+        <div className=" rounded-lg shadow-lg border border-muted-4 hover:border-muted-2 transition duration-200">
             <BackgroundField header={
                 <>
                     <p className="flex items-center"><span>{campaign?.asset} pool</span>
@@ -127,7 +127,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
                 <div className="flex flex-col w-full gap-2">
                     <Progress value={DistributedAmount === Infinity ? 0 : DistributedAmount} />
                     <div className="flex justify-between w-full font-semibold text-sm ">
-                        <div className="text-primary"><span className="text-primary-text">{campaign?.distributed_amount.toFixed(0)}</span> <span>/</span> {totalBudget} {campaign?.asset}</div>
+                        <div className=""><span className="">{campaign?.distributed_amount.toFixed(0)}</span> <span>/</span> {totalBudget} {campaign?.asset}</div>
                     </div>
                 </div>
             </BackgroundField>
@@ -136,11 +136,11 @@ const Rewards: FC<Props> = ({ campaign }) => {
             payouts.length > 0 &&
             <div className="space-y-1">
                 <p className="font-bold text-lg text-left">Payouts</p>
-                <div className=" bg-secondary-700 divide-y divide-secondary-300 rounded-lg shadow-lg border border-secondary-700 hover:border-secondary-500 transition duration-200">
+                <div className="  divide-y divide-muted-3 rounded-lg shadow-lg border border-muted-4 hover:border-muted-2 transition duration-200">
                     <div className="inline-block min-w-full align-middle">
                         <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-                            <table className="min-w-full divide-y divide-secondary-500">
-                                <thead className="bg-secondary-800/70">
+                            <table className="min-w-full divide-y divide-muted-3">
+                                <thead className="">
                                     <tr>
                                         <th scope="col" className="py-3.5 pl-4 text-left text-sm font-semibold  sm:pl-6">
                                             Tx Id
@@ -153,10 +153,10 @@ const Rewards: FC<Props> = ({ campaign }) => {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-secondary-600">
+                                <tbody className="divide-y divide-muted-3">
                                     {payouts.map((payout) => (
                                         <tr key={payout.transaction_id}>
-                                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-primary-text sm:pl-6 underline hover:no-underline">
+                                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium  sm:pl-6 underline hover:no-underline">
                                                 <a target={"_blank"} href={network?.transaction_explorer_template?.replace("{0}", payout.transaction_id)}>{shortenAddress(payout.transaction_id)}</a>
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-100">{payout.amount}</td>
