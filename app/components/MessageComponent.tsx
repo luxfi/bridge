@@ -57,19 +57,19 @@ const Content = ({ children, icon, center }: MessageComponentProps) => {
 }
 
 const Header = ({ children }) => {
-    return <div className='md:text-3xl text-lg font-bold text-primary-text leading-6 text-center'>
+    return <div className='md:text-3xl text-lg font-bold  leading-6 text-center'>
         {children}
     </div>
 }
 
 const Description = ({ children }) => {
-    return <div className="text-base font-medium space-y-6 text-secondary-text text-center mb-6">
+    return <div className="text-base font-medium space-y-6  text-center mb-6">
         {children}
     </div>
 }
 
 const Buttons = ({ children }) => {
-    return <div className="space-y-3">
+    return <div className="flex flex-row justify-center">
         {children}
     </div>
 }
