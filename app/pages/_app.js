@@ -8,7 +8,7 @@ import '../styles/globals.css'
 import '../styles/dialog-transition.css'
 
 
-const INTERCOM_APP_ID = 'h5zisg78'
+const INTERCOM_APP_ID = 'o1kmvctg'
 import "@rainbow-me/rainbowkit/styles.css";
 
 function App({ Component, pageProps }) {
