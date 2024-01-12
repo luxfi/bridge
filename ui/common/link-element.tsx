@@ -15,7 +15,7 @@ const LinkElement: React.FC<{
   iconAfter?: boolean
 }> = ({ 
   def,
-  size = 'default',
+  size, // no default
   onClick,
   variant,
   className = '',
@@ -54,8 +54,9 @@ const LinkElement: React.FC<{
             variant: variant ?  variant : (defVariant ? defVariant : 'link'), 
             size: (!defVariant || defVariant.includes('link') || variant?.includes('link'))  ? 'link' 
               : (size ? size : defSize)
-          }), 
-          (href ? '' : ' pointer-events-none') + 
+          }
+          ), 
+          ((href || onClick) ? '' : 'pointer-events-none'), 
           className 
         )}
       {...toSpread}
