@@ -8,8 +8,12 @@ type text_align = 'center' | 'left'
 type button_align = 'left' | 'right'
 
 function constructClassNames(size: buttonSize, buttonStyle: buttonStyle) {
-  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform hover:bg-level-1 disabled:hover:bg-primary-lux transition duration-200 ease-in-out'
-  defaultStyle += buttonStyle == 'filled' ? " bg-primary-lux text-primary-fg hover:text-primary-lux disabled:hover:text-primary-fg" : " text-muted-3";
+  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 ' + 
+    'disabled:opacity-80 disabled:cursor-not-allowed ' + 
+    'relative w-full ' + 
+    'flex justify-center ' + 
+    'font-semibold rounded-md transform transition duration-200 ease-in-out'
+  defaultStyle += buttonStyle == 'filled' ? " hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux" : " text-muted-3";
 
   switch (size) {
     case 'large':
