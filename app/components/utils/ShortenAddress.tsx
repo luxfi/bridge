@@ -1,4 +1,4 @@
-export default function shortenAddress(address: string) {
+function shortenAddress(address: string) {
     if (address?.startsWith('ronin:')) {
         var stringAddress = address.replace('ronin:', '')
         return `ronin:${InnerShortenAddress(stringAddress)}`
@@ -15,7 +15,8 @@ export default function shortenAddress(address: string) {
         return `${address?.substring(0, 5)}...${address?.substring(address?.length - 4, address?.length)}`
     }
 }
-export const shortenEmail = (email = '', maxNameLenght = 14) => {
+
+const shortenEmail = (email: string = '', maxNameLenght:number = 14) => {
     const [name, domain] = email.split('@');
     const { length: len } = name;
     let shortName = name;
@@ -24,4 +25,10 @@ export const shortenEmail = (email = '', maxNameLenght = 14) => {
     }
     const maskedEmail = shortName + '@' + domain;
     return maskedEmail;
-};
+}
+
+export {
+  shortenAddress as default,
+  shortenEmail  
+}
+
