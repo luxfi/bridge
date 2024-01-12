@@ -5,8 +5,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../util"
 
 const variant = {
-  primary: "bg-primary text-primary-fg hover:bg-primary-hover font-heading whitespace-nowrap not-typography",
-  secondary: "bg-secondary text-secondary-fg hover:bg-secondary/80 font-heading whitespace-nowrap not-typography",
+  primary: "bg-primary-lux text-primary-fg hover:bg-primary-hover font-heading whitespace-nowrap not-typography",
+  secondary: "bg-secondary-lux text-secondary-fg hover:bg-secondary/80 font-heading whitespace-nowrap not-typography",
   outline: "text-foreground border border-muted-4 hover:bg-level-1 hover:text-accent hover:border-accent font-heading whitespace-nowrap not-typography",
   destructive: "bg-destructive text-destructive-fg font-sans whitespace-nowrap hover:bg-destructive-hover",
   ghost: "text-foreground hover:bg-level-1 hover:text-accent whitespace-nowrap font-sans ",

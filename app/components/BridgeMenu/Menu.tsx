@@ -12,10 +12,8 @@ function Menu ({ children }: PropsWithChildren)  {
 }
 
 const Group: React.FC<PropsWithChildren> = ({ children }) => (
-  <div>
-    <div className="divide-y divide-muted-3 rounded-md overflow-hidden bg-level-1">
-      {children}
-    </div>
+  <div className="divide-y divide-muted-3 rounded-md overflow-hidden bg-level-1">
+    {children}
   </div>
 )
 
@@ -66,7 +64,12 @@ const Item: React.FC<{
 )
 
 const Footer: React.FC<PropsWithChildren> = ({ children }) => (
-  <div className='text-muted bg-background text-base border-t border-muted-2 sticky inset-x-0 bottom-0 z-30 shadow-widget-footer px-6 pt-4 w-full '>
+  <div className={
+      'text-muted bg-background text-base border-t border-muted-2 ' + 
+    'sticky inset-x-0 bottom-0 z-30 ' + 
+    'shadow-widget-footer px-6 pt-4 w-full ' +
+    'flex flex-row justify-center'
+}>
     {children}
   </div>
 )
