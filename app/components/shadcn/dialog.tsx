@@ -48,13 +48,13 @@ const DialogContent = React.forwardRef<
         <DialogPrimitive.Content
             ref={ref}
             className={classNames(
-                "fixed z-50 grid w-full gap-4 rounded-t-lg bg-secondary-800 p-4 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-sm sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0",
+                "fixed z-50 grid w-full gap-4 rounded-t-lg bg-level-1 p-4 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-sm sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0",
                 className
             )}
             {...props}
         >
             {children}
-            <DialogPrimitive.Close className="absolute text-secondary-text right-4 top-3 p-1 justify-self-start hover:brightness-105 hover:scale-110 duartion-100 ring-1 ring-secondary-400 transition bg-secondary-500 hover:text-primary-text focus:outline-none rounded-full items-center">
+            <DialogPrimitive.Close className="absolute  right-4 top-3 p-1 justify-self-start hover:brightness-105 hover:scale-110 duartion-100 ring-1 ring-muted transition bg-level-3 hover:text-foreground focus:outline-none rounded-full items-center">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
@@ -98,7 +98,7 @@ const DialogTitle = React.forwardRef<
     <DialogPrimitive.Title
         ref={ref}
         className={classNames(
-            "text-lg font-semibold leading-none tracking-tight text-primary-text",
+            "text-lg font-semibold leading-none tracking-tight ",
             className
         )}
         {...props}
@@ -112,7 +112,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DialogPrimitive.Description
         ref={ref}
-        className={classNames("text-sm text-secondary-text", className)}
+        className={classNames("text-sm ", className)}
         {...props}
     />
 ))
