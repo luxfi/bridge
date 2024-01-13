@@ -22,6 +22,20 @@
   
 }
 
+body::-webkit-scrollbar {
+  height: 0.375rem !important;
+  width: 0.375rem !important;
+  --tw-bg-opacity: 1;
+  background-color: theme('colors.level.2');
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: theme('colors.level.3') !important;
+  --tw-bg-opacity: 1 !important;
+  border-radius: 0.25rem !important;
+}
+
+
 @layer base {
 
   /* On iOS disabled inputs have default opacitiy */
@@ -120,13 +134,6 @@ select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
   transition: all 5000s ease-in-out 0s;
   transition-property: background-color, color;
-
-  /* border: 1px solid #1A2949; */
-  -webkit-text-fill-color: rgb(var(--ls-colors-primary-text));
-  caret-color: rgb(var(--ls-colors-primary-text));
-  -webkit-box-shadow: 0 0 0px 1000px rgb(var(--ls-colors-secondary-700)) inset;
-  box-shadow: 0 0 0px 1000px rgb(var(--ls-colors-secondary-700)) inset;
-
 }
 
 .shadowed-button {
@@ -139,26 +146,7 @@ hr.horizontal-gradient {
   background-image: linear-gradient(to right, hsla(0, 0%, 100%, 0), #1A2949, hsla(0, 0%, 100%, 0));
 }
 
-.strong-highlight {
-  position: relative;
-  opacity: 1;
-  z-index: 1;
-  display: inline-block;
-  margin: 0 3px;
-}
 
-.strong-highlight::after {
-  /* Highlight color */
-  background-color: theme('colors.secondary.500');
-  content: "";
-  position: absolute;
-  width: calc(100% + 10px);
-  height: 110%;
-  border-radius: 5px;
-  left: -5px;
-  bottom: -5%;
-  z-index: -1;
-}
 
 .iphone-x {
   position: relative;
@@ -321,30 +309,7 @@ input::-webkit-input-placeholder {
 body {
   overflow: overlay;
 }
-body::-webkit-scrollbar {
-  --tw-bg-opacity: 1;
-  background-color: rgb(var(--ls-colors-secondary-700));
-}
 
-body::-webkit-scrollbar {
-  width: 0.375rem !important;
-}
-
-body::-webkit-scrollbar {
-  height: 0.375rem !important;
-}
-
-body::-webkit-scrollbar-thumb {
-  background-color: rgb(var(--ls-colors-secondary-text), 0.4) !important;
-}
-
-body::-webkit-scrollbar-thumb {
-  --tw-bg-opacity: 1 !important;
-}
-
-body::-webkit-scrollbar-thumb {
-  border-radius: 0.25rem !important;
-}
 
 input:disabled,
 textarea:disabled,
