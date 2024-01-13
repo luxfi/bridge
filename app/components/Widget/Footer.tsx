@@ -55,12 +55,12 @@ const Footer = ({ children, hidden, sticky = true }: FooterProps) => {
                     }}
                     custom={{ direction: "back" ? -1 : 1, width: 100 }}
                     variants={variants}
-                    className={`text-primary-text text-base mt-3        
+                    className={` text-base mt-3        
                         max-sm:fixed
                         max-sm:inset-x-0
                         max-sm:bottom-0 
                         max-sm:z-30
-                        max-sm:bg-secondary-900 
+                        max-sm:bg-background 
                         max-sm:shadow-widget-footer 
                         max-sm:p-4 
                         max-sm:px-6 
@@ -69,7 +69,7 @@ const Footer = ({ children, hidden, sticky = true }: FooterProps) => {
                 </motion.div>
                 
                 <div style={{ height: `${height}px` }}
-                    className={`text-primary-text text-base mt-3        
+                    className={` text-base mt-3        
                              max-sm:inset-x-0
                              max-sm:bottom-0 
                              max-sm:p-4 max-sm:w-full invisible sm:hidden`}>
