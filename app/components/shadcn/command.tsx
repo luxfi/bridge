@@ -24,7 +24,7 @@ const CommandWrapper = React.forwardRef<
   React.ElementRef<typeof Command>,
   React.ComponentPropsWithoutRef<typeof Command>
 >(({ className, children, ...props }, ref) => (
-  <Command {...props} className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-secondary-text [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+  <Command {...props} className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
     {children}
   </Command>
 ))
@@ -33,14 +33,14 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="relative z-0 flex items-center mt-1 mb-2 pl-2 border-b border-secondary-500" cmdk-input-wrapper="">
+  <div className="relative z-0 flex items-center mt-1 mb-2 pl-2 border-b border-muted-2" cmdk-input-wrapper="">
     <CommandPrimitive.Input placeholder=" " ref={ref} id="floating_standard"
       {...props} className={classNames(
         "peer/draft placeholder:text-transparent border-0 border-b-0 border-primary-text focus:border-primary-text appearance-none block py-2.5 px-0 w-full h-11 bg-transparent text-lg outline-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )} />
     <span className="absolute left-1 font-thin animate-none peer-placeholder-shown/draft:animate-blinking text-lg peer-focus/draft:invisible invisible peer-placeholder-shown/draft:visible">|</span>
-    <label htmlFor={props.id} className="absolute text-lg text-secondary-text duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-placeholder-shown/draft:scale-100 peer-placeholder-shown/draft:translate-y-0 peer-placeholder-shown/draft:text-secondary-text-muted">
+    <label htmlFor={props.id} className="absolute text-lg  duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-placeholder-shown/draft:scale-100 peer-placeholder-shown/draft:translate-y-0 peer-placeholder-shown/draft:text-muted-3">
       {props.placeholder}
     </label>
   </div>
@@ -81,7 +81,7 @@ const CommandGroup = React.forwardRef<
   <CommandPrimitive.Group
     ref={ref}
     className={classNames(
-      "overflow-hidden p-1 py-1.5 text-primary-text [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-secondary-text",
+      "overflow-hidden p-1 py-1.5  [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:",
       className
     )}
     {...props}
@@ -96,7 +96,7 @@ const CommandSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Separator
     ref={ref}
-    className={classNames("-mx-1 h-px bg-secondary-500", className)}
+    className={classNames("-mx-1 h-px bg-level-2", className)}
     {...props}
   />
 ))
@@ -109,7 +109,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={classNames(
-      "relative cursor-pointer flex select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-secondary-700 aria-selected:text-primary-text",
+      "relative cursor-pointer flex select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-level-1 ",
       className,
       props.disabled && "opacity-30 cursor-not-allowed",
     )}
@@ -126,7 +126,7 @@ const CommandShortcut = ({
   return (
     <span
       className={classNames(
-        "ml-auto text-xs tracking-widest text-secondary-text-muted",
+        "ml-auto text-xs tracking-widest text-muted-3",
         className
       )}
       {...props}

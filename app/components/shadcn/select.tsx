@@ -18,13 +18,13 @@ const SelectTrigger = React.forwardRef<
     <SelectPrimitive.Trigger
         ref={ref}
         className={classNames(
-            "flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-transparent py-2 px-3 text-sm placeholder:text-secondary-text focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-primary-text",
+            "flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-transparent py-2 px-3 text-sm placeholder:text-muted-4 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:",
             className
         )}
         {...props}
     >
         {children}
-        <ChevronRight className="h-4 w-4 text-primary-text" />
+        <ChevronRight className="h-4 w-4 " />
     </SelectPrimitive.Trigger>
 ))
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
@@ -37,7 +37,7 @@ const SelectContent = React.forwardRef<
         <SelectPrimitive.Content
             ref={ref}
             className={classNames(
-                "animate-in fade-in-80 relative z-50 min-w-[8rem] overflow-hidden rounded-md shadow-md ring-1 ring-secondary-500 bg-secondary-700 text-secondary-text",
+                "animate-in fade-in-80 relative z-50 min-w-[8rem] overflow-hidden rounded-md shadow-md ring-1 ring-muted bg-level-1 ",
                 className
             )}
             {...props}

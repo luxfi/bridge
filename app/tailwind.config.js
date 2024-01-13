@@ -46,6 +46,7 @@ module.exports = {
           'buttonTextColor': 'rgb(var(--ls-colors-actionButtonText, 255, 255, 255), <alpha-value>)',
           'logoColor': 'rgb(var(--ls-colors-logo, 255, 0, 147), <alpha-value>)',
         },
+        /*
         secondary: {
           DEFAULT: 'rgb(var(--ls-colors-secondary, 17, 29, 54), <alpha-value>)',
           '50': 'rgb(var(--ls-colors-secondary-50, 49, 60, 155), <alpha-value>)',
@@ -61,6 +62,7 @@ module.exports = {
           '950': 'rgb(var(--ls-colors-secondary-900, 11, 17, 35), <alpha-value>)',
           'text': 'rgb(var(--ls-colors-secondary-text, 171, 181, 209), <alpha-value>)',
         },
+        */
         
       },
       opacity: {
