@@ -14,10 +14,10 @@ export default function GuideLink({ userGuideUrl, text, button, buttonClassNames
                         {button}
                     </SecondaryButton>
                     :
-                    <span className='text-primary cursor-pointer hover:text-primary-400' onClick={() => setShowGuide(true)}>&nbsp;<span>{text}</span></span>
+                    <span className='text-muted cursor-pointer hover:text-muted-2' onClick={() => setShowGuide(true)}>&nbsp;<span>{text}</span></span>
             }
             <Modal
-                className="bg-[#181c1f]"
+                className="bg-background"
                 height="full"
                 header={text || button}
                 show={showGuide}

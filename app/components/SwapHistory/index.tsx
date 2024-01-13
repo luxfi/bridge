@@ -199,7 +199,7 @@ function TransactionsHistory() {
                               <td
                                 className={classNames(
                                   index === 0 ? '' : 'border-t border-muted-2',
-                                  'relative text-sm text-primary-text table-cell'
+                                  'relative text-sm  table-cell'
                                 )}
                               >
                                 <div className=" flex items-center">

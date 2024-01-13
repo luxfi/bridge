@@ -108,9 +108,9 @@ const TransferElements: FC = () => {
                     footerStickiness={false}
                 />
             </Modal>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-secondary-text">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full ">
                 <div className='space-y-4'>
-                    <div className='border-secondary-500 rounded-md border bg-secondary-700 p-3'>
+                    <div className='border-muted-2 rounded-md border bg-level-1 p-3'>
                         {
                             swap?.exchange_account_connected ?
                                 <SubmitButton

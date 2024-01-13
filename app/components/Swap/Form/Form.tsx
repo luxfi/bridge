@@ -278,7 +278,7 @@ function ActionText(errors: FormikErrors<SwapFormValues>, actionDisplayName: str
 
 const TruncatedAdrress = ({ address }: { address: string }) => {
     const shortAddress = shortenAddress(address)
-    return <div className="tracking-wider text-primary-text">{shortAddress}</div>
+    return <div className="tracking-wider ">{shortAddress}</div>
 }
 
 const AddressButton: FC<{

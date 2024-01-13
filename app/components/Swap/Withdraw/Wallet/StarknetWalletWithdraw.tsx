@@ -147,7 +147,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
 
     return (
         <>
-            <div className="w-full space-y-5 flex flex-col justify-between h-full text-secondary-text">
+            <div className="w-full space-y-5 flex flex-col justify-between h-full ">
                 <div className='space-y-4'>
                     {
 
@@ -165,7 +165,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                     {
                         !wallet &&
                         <div className="flex flex-row
-                         text-primary-text text-base space-x-2">
+                          text-base space-x-2">
                             <SubmitButton
                                 isDisabled={loading}
                                 isSubmitting={loading}
@@ -185,7 +185,7 @@ const StarknetWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
                         && depositAddress
                         && !isWrongNetwork
                         && <div className="flex flex-row
-                        text-primary-text text-base space-x-2">
+                         text-base space-x-2">
                             <SubmitButton
                                 isDisabled={!!(loading || transferDone)}
                                 isSubmitting={!!(loading || transferDone)}

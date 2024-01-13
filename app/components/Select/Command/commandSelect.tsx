@@ -42,7 +42,7 @@ export default function CommandSelect({ values, value, setValue, show, setShow, 
                     <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
                     {
                         value?.isAvailable.disabledReason === LayerDisabledReason.LockNetworkIsTrue &&
-                        <div className='text-xs text-left text-secondary-text mb-2'>
+                        <div className='text-xs text-left  mb-2'>
                             <Info className='h-3 w-3 inline-block mb-0.5' /><span>&nbsp;You&apos;re accessing Bridge from a partner&apos;s page. In case you want to transact with other networks, please open bridge.lux.network in a separate tab.</span>
                         </div>
                     }
