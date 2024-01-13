@@ -41,14 +41,14 @@ const ManualTransfer: FC = () => {
     }, [swap, hintsStore])
 
     return (
-        <div className='rounded-md bg-secondary-700 border border-secondary-500 w-full h-full items-center relative'>
+        <div className='rounded-md bg-level-1 border border-muted-2 w-full h-full items-center relative'>
             <div className={!hintClicked ? "absolute w-full h-full flex flex-col items-center px-3 pb-3 text-center" : "hidden"}>
                 <div className="flex flex-col items-center justify-center h-full pb-2">
                     <div className="max-w-xs">
-                        <p className="text-base text-primary-text">
+                        <p className="text-base ">
                             About manual transfers
                         </p>
-                        <p className="text-xs text-secondary-text">
+                        <p className="text-xs ">
                             Transfer assets to Bridge’s deposit address to complete the swap.
                         </p>
                     </div>
@@ -112,12 +112,12 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     //     setSelectedAssetNetwork(n)
     // }, [])
 
-    return <div className='divide-y divide-secondary-500 text-primary-text h-full'>
-        {/* {source_exchange && <div className={`w-full relative rounded-md px-3 py-3 shadow-sm border-secondary-700 border bg-secondary-700 flex flex-col items-center justify-center gap-2`}>
+    return <div className='divide-y divide-muted-2  h-full'>
+        {/* {source_exchange && <div className={`w-full relative rounded-md px-3 py-3 shadow-sm border-muted-3 border bg-level-1 flex flex-col items-center justify-center gap-2`}>
             <ExchangeNetworkPicker onChange={handleChangeSelectedNetwork} />
         </div>
         } */}
-        <div className="flex divide-x divide-secondary-500">
+        <div className="flex divide-x divide-muted-2">
             <BackgroundField Copiable={true} QRable={true} header={"Deposit address"} toCopy={depositAddress} withoutBorder>
                 <div>
                     {
@@ -130,7 +130,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
                     }
                     {
                         (source_network_internal_name === KnownInternalNames.Networks.LoopringMainnet || source_network_internal_name === KnownInternalNames.Networks.LoopringGoerli) &&
-                        <div className='flex text-xs items-center py-1 mt-1 border-2 border-secondary-300 rounded border-dashed text-secondary-text'>
+                        <div className='flex text-xs items-center py-1 mt-1 border-2 border-muted rounded border-dashed '>
                             <p>
                                 This address might not be activated. You can ignore it.
                             </p>
@@ -141,7 +141,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         </div>
         {
             (source_network_internal_name === KnownInternalNames.Networks.LoopringMainnet || source_network_internal_name === KnownInternalNames.Networks.LoopringGoerli) &&
-            <div className='grid grid-cols-3 divide-x divide-secondary-500'>
+            <div className='grid grid-cols-3 divide-x divide-muted-2'>
                 <div className="col-span-2">
                     <BackgroundField header={'Send type'} withoutBorder>
                         <div className='flex items-center text-xs sm:text-sm'>
@@ -160,7 +160,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
             </div>
         }
 
-        <div className='flex divide-x divide-secondary-500'>
+        <div className='flex divide-x divide-muted-2'>
             <BackgroundField Copiable={true} toCopy={requested_amount} header={'Amount'} withoutBorder>
                 <p>
                     {requested_amount}
@@ -185,7 +185,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
                             {sourceAsset?.asset}
                         </span>
                         {sourceAsset?.contract_address && isValidAddress(sourceAsset.contract_address, source) &&
-                            <span className="text-xs text-secondary-text flex items-center leading-3">
+                            <span className="text-xs  flex items-center leading-3">
                                 {shortenAddress(sourceAsset?.contract_address)}
                             </span>
                         }
@@ -217,13 +217,13 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
 //     return <div className='flex items-center gap-1 text-sm my-2'>
 //         <span>Network:</span>
 //         {exchangeAssets?.length === 1 ?
-//             <div className='flex space-x-1 items-center w-fit font-semibold text-primary-text'>
-//                 <Image alt="chainLogo" height='20' width='20' className='h-5 w-5 rounded-md ring-2 ring-secondary-600' src={resolveImgSrc(exchangeAssets?.[0])}></Image>
+//             <div className='flex space-x-1 items-center w-fit font-semibold '>
+//                 <Image alt="chainLogo" height='20' width='20' className='h-5 w-5 rounded-md ring-2 ring-muted-2' src={resolveImgSrc(exchangeAssets?.[0])}></Image>
 //                 <span>{defaultSourceNetwork?.network?.display_name}</span>
 //             </div>
 //             :
 //             <Select onValueChange={handleChangeSelectedNetwork} defaultValue={defaultSourceNetwork?.network_internal_name}>
-//                 <SelectTrigger className="w-fit border-none !text-primary-text !font-semibold !h-fit !p-0">
+//                 <SelectTrigger className="w-fit border-none  !font-semibold !h-fit !p-0">
 //                     <SelectValue />
 //                 </SelectTrigger>
 //                 <SelectContent>
@@ -257,18 +257,18 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
 
 
 const Sceleton = () => {
-    return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-secondary-700 border border-secondary-500">
+    return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-level-2 border border-muted-2">
         <div className="flex-1 space-y-6 py-1 p-8 pt-4 items-center">
-            <div className="h-2 bg-secondary-text rounded self-center w-16 m-auto"></div>
+            <div className="h-2 bg-level-4 rounded self-center w-16 m-auto"></div>
             <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-4">
-                    <div className="h-2 bg-secondary-text rounded col-span-2"></div>
-                    <div className="h-2 bg-secondary-text rounded col-span-1"></div>
+                    <div className="h-2 bg-level-4 rounded col-span-2"></div>
+                    <div className="h-2 bg-level-4 rounded col-span-1"></div>
                 </div>
-                <div className="h-2 bg-secondary-text rounded"></div>
+                <div className="h-2 bg-level-4 rounded"></div>
 
             </div>
-            <div className="h-2 bg-secondary-text rounded"></div>
+            <div className="h-2 bg-level-4 rounded"></div>
         </div>
     </div>
 }

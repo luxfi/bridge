@@ -119,7 +119,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
             <Widget.Content>
                 {
                     !hideHeader ?
-                        <h3 className='md:mb-4 pt-2 text-lg sm:text-xl text-left font-roboto text-primary-text font-semibold'>
+                        <h3 className='md:mb-4 pt-2 text-lg sm:text-xl text-left font-roboto  font-semibold'>
                             Please connect your {exchange_name} account
                         </h3>
                         : <></>
@@ -154,11 +154,11 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                                 name="alreadyFamiliar"
                                 id='alreadyFamiliar'
                                 type="checkbox"
-                                className="h-4 w-4 bg-secondary-600 cursor-pointer rounded border-secondary-400 text-priamry"
+                                className="h-4 w-4 bg-level-1 cursor-pointer rounded border-muted-2 text-priamry"
                                 onChange={handleToggleChange}
                                 checked={alreadyFamiliar}
                             />
-                            <label htmlFor="alreadyFamiliar" className="ml-2 cursor-pointer block text-sm text-primary-text">
+                            <label htmlFor="alreadyFamiliar" className="ml-2 cursor-pointer block text-sm ">
                                 I&apos;m already familiar with the process.
                             </label>
                         </div>
@@ -181,10 +181,10 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                             </SubmitButton>
                         </div>
                     }
-                    <div className="pt-2 font-normal text-xs text-secondary-text">
+                    <div className="pt-2 font-normal text-xs ">
                         <p className="block font-lighter text-left">
                             <span>Even after authorization Bridge can&apos;t initiate a withdrawal without your explicit confirmation.&nbsp;</span>
-                            <a target='_blank' href='https://docs.bridge.lux.network/user-docs/connect-a-coinbase-account' className='text-primary-text underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
+                            <a target='_blank' href='https://docs.bridge.lux.network/user-docs/connect-a-coinbase-account' className=' underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
                     </div>
                 </div>
             </Widget.Footer>

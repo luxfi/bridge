@@ -55,13 +55,13 @@ const Rewards: FC<Props> = ({ campaign }) => {
 
     return <>
         <div className="space-y-4">
-            <p className="text-primary-text">
+            <p className="">
                 <span>
                     <span>Onboarding incentives that are earned by transferring to&nbsp;</span>{network?.display_name}<span>.&nbsp;</span>
                     <a
                         target='_blank'
                         href="https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards"
-                        className="text-primary-text underline hover:no-underline decoration-white cursor-pointer"
+                        className=" underline hover:no-underline decoration-white cursor-pointer"
                     >Learn more</a>
                 </span>
             </p>

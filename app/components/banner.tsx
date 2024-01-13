@@ -21,13 +21,13 @@ const Banner: FC<BannerProps> = ({ localStorageId, desktopMessage, mobileMessage
 
     return (
         <div className={className + ' ' + "w-full mx-auto"}>
-            <div className="p-2 rounded-lg bg-primary-600 shadow-lg">
+            <div className="p-2 rounded-lg bg-secondary-lux shadow-lg">
                 <div className="flex items-center justify-between flex-wrap">
                     <div className="w-0 flex-1 flex items-center">
-                        <span className="flex p-1 text-lg rounded-lg bg-primary-900">
+                        <span className="flex p-1 text-lg rounded-lg">
                             🥳
                         </span>
-                        <p className="ml-3 font-medium text-primary-text truncate">
+                        <p className="ml-3 font-medium  truncate">
                             <span className="md:hidden">{mobileMessage}</span>
                             <span className="hidden md:inline">{desktopMessage}</span>
                         </p>
@@ -36,10 +36,10 @@ const Banner: FC<BannerProps> = ({ localStorageId, desktopMessage, mobileMessage
                         <button
                             type="button"
                             onClick={() => onClickClose()}
-                            className="-mr-1 flex p-2 rounded-md hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-white"
+                            className="-mr-1 flex p-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-foreground"
                         >
                             <span className="sr-only">Dismiss</span>
-                            <X className="h-4 w-5 text-primary-text" aria-hidden="true" />
+                            <X className="h-4 w-5 " aria-hidden="true" />
                         </button>
                     </div>
                 </div>

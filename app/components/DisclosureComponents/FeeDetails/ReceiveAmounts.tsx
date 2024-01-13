@@ -16,7 +16,7 @@ export const ReceiveAmounts: FC<WillReceiveProps> = ({ receive_amount, currency,
     const destinationNetworkCurrency = (to && currency) ? GetDefaultAsset(to, currency.asset) : null
 
     return <>
-        <span className="md:font-semibold text-sm md:text-base text-secondary-text leading-8 md:leading-8 flex-1">
+        <span className="md:font-semibold text-sm md:text-base  leading-8 md:leading-8 flex-1">
             You will receive
         </span>
         <div className='flex items-center space-x-2'>
@@ -60,7 +60,7 @@ export const Refuel: FC<RefuelProps> = ({ to, currency, refuel }) => {
 
     return <>
         {
-            truncated_refuel > 0 ? <p className='text-[12px] text-secondary-text/50'>
+            truncated_refuel > 0 ? <p className='text-[12px] text-muted-3'>
                 <>+</> <span>{truncated_refuel} {destination_native_asset?.asset}</span>
             </p>
                 : null

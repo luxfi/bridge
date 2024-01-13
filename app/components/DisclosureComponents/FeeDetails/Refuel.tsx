@@ -18,7 +18,7 @@ const RefuelToggle = () => {
 
     return (
         <div className="flex items-center justify-between">
-            <div className="font- flex items-center text-primary-text-placeholder text-sm">
+            <div className="font- flex items-center -placeholder text-sm">
                 <span>Refuel</span>
                 <ClickTooltip text={`You will get a small amount of ${destination_native_currency} that you can use to pay for gas fees.`} />
             </div>

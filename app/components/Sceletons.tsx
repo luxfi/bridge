@@ -77,7 +77,7 @@ export const SwapHistoryComponentSceleton = () => {
                     'relative py-4 pl-4 sm:pl-6 pr-3 text-sm'
                   )}
                 >
-                  <div className="text-primary-text hidden lg:block">
+                  <div className=" hidden lg:block">
                     <div className="grid grid-cols-1 gap-4">
                       <div className="h-2 w-16 bg-slate-700 rounded col-span-1"></div>
                     </div>
@@ -87,7 +87,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'hidden px-3 py-3.5 text-sm text-primary-text lg:table-cell'
+                    'hidden px-3 py-3.5 text-sm  lg:table-cell'
                   )}
                 >
                   <div className="flex space-x-2">
@@ -101,7 +101,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'px-3 py-3.5 text-sm text-primary-text table-cell'
+                    'px-3 py-3.5 text-sm  table-cell'
                   )}
                 >
                   <div className="flex space-x-2">
@@ -114,7 +114,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'hidden px-3 py-3.5 text-sm text-primary-text lg:table-cell'
+                    'hidden px-3 py-3.5 text-sm  lg:table-cell'
                   )}
                 >
                   <div className="grid grid-cols-1 gap-4">
@@ -124,7 +124,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'relative px-3 py-3.5 text-sm text-primary-text'
+                    'relative px-3 py-3.5 text-sm '
                   )}
                 >
                   <div className="grid grid-cols-1 gap-4">
@@ -134,7 +134,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'px-3 py-3.5 text-sm text-primary-text hidden lg:table-cell'
+                    'px-3 py-3.5 text-sm  hidden lg:table-cell'
                   )}
                 >
                   <div className="flex space-x-2">
@@ -147,7 +147,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'px-3 py-3.5 text-sm text-primary-text  hidden lg:table-cell'
+                    'px-3 py-3.5 text-sm   hidden lg:table-cell'
                   )}
                 >
                   <div className="grid grid-cols-2 gap-4">
@@ -158,7 +158,7 @@ export const SwapHistoryComponentSceleton = () => {
                 <td
                   className={classNames(
                     index === 0 ? '' : 'border-t border-muted-3',
-                    'px-3 py-3.5 text-sm text-primary-text  hidden lg:table-cell'
+                    'px-3 py-3.5 text-sm   hidden lg:table-cell'
                   )}
                 >
                   <div className="grid grid-cols-1 gap-4">
