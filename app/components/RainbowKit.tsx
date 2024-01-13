@@ -80,7 +80,7 @@ function RainbowKitComponent({ children }: Props) {
 
     const disclaimer: DisclaimerComponent = ({ Text }) => (
         <Text>
-            Thanks for choosing Bridge!
+          Thanks for choosing Bridge!
         </Text>
     );
 

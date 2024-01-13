@@ -42,12 +42,12 @@ const SwapDetails: FC<Props> = ({ swap }) => {
         <>
             <div className="w-full grid grid-flow-row animate-fade-in">
                 <div className="rounded-md w-full grid grid-flow-row">
-                    <div className="items-center space-y-1.5 block text-base font-lighter leading-6 text-secondary-text">
+                    <div className="items-center space-y-1.5 block text-base font-lighter leading-6 ">
                         {
                             swap.id && <>
                                 <div className="flex justify-between p items-baseline">
                                     <span className="text-left">Id </span>
-                                    <span className="text-primary-text">
+                                    <span className="">
                                         <div className='inline-flex items-center'>
                                             {
                                                 swap && <CopyButton toCopy={swap?.id} iconClassName="text-gray-500">
@@ -62,14 +62,14 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         }
                         <div className="flex justify-between p items-baseline">
                             <span className="text-left">Status </span>
-                            <span className="text-primary-text">
+                            <span className="">
                                 {swap && <StatusIcon swap={swap} />}
                             </span>
                         </div>
                         <hr className='horizontal-gradient' />
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">Date </span>
-                            {swap && <span className='text-primary-text font-normal'>{(new Date(swap.created_date)).toLocaleString()}</span>}
+                            {swap && <span className=' font-normal'>{(new Date(swap.created_date)).toLocaleString()}</span>}
                         </div>
                         <hr className='horizontal-gradient' />
                         <div className="flex justify-between items-baseline">
@@ -89,7 +89,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                         }
 
                                     </div>
-                                    <div className="mx-1 text-primary-text">{source?.display_name}</div>
+                                    <div className="mx-1 ">{source?.display_name}</div>
                                 </div>
                             }
                         </div>
@@ -110,14 +110,14 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                             />
                                         }
                                     </div>
-                                    <div className="mx-1 text-primary-text">{destination?.display_name}</div>
+                                    <div className="mx-1 ">{destination?.display_name}</div>
                                 </div>
                             }
                         </div>
                         <hr className='horizontal-gradient' />
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">Address </span>
-                            <span className="text-primary-text">
+                            <span className="">
                                 <div className='inline-flex items-center'>
                                     {swap && <CopyButton toCopy={swap.destination_address} iconClassName="text-gray-500">
                                         {swap?.destination_address.slice(0, 8) + "..." + swap?.destination_address.slice(swap?.destination_address.length - 5, swap?.destination_address.length)}
@@ -130,7 +130,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <hr className='horizontal-gradient' />
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Source Tx </span>
-                                    <span className="text-primary-text">
+                                    <span className="">
                                         <div className='inline-flex items-center'>
                                             <div className='underline hover:no-underline flex items-center space-x-1'>
                                                 <a target={"_blank"} href={input_tx_id?.replace("{0}", swapInputTransaction.transaction_id)}>{shortenAddress(swapInputTransaction.transaction_id)}</a>
@@ -146,7 +146,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <hr className='horizontal-gradient' />
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Destination Tx </span>
-                                    <span className="text-primary-text">
+                                    <span className="">
                                         <div className='inline-flex items-center'>
                                             <div className="">
                                                 {(swapOutputTransaction?.transaction_id && swap?.destination_exchange === KnownInternalNames.Exchanges.Coinbase && (isGuid(swapOutputTransaction?.transaction_id))) ?
@@ -166,7 +166,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         <hr className='horizontal-gradient' />
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">Requested amount</span>
-                            <span className='text-primary-text font-normal flex'>
+                            <span className=' font-normal flex'>
                                 {swap?.requested_amount} {swap?.destination_network_asset}
                             </span>
                         </div>
@@ -176,7 +176,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <hr className='horizontal-gradient' />
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Transfered amount</span>
-                                    <span className='text-primary-text font-normal flex'>
+                                    <span className=' font-normal flex'>
                                         {swapInputTransaction?.amount} {swap?.destination_network_asset}
                                     </span>
                                 </div>
@@ -188,7 +188,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <hr className='horizontal-gradient' />
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Bridge Fee </span>
-                                    <span className='text-primary-text font-normal'>{swap?.fee} {sourceCurrency?.asset}</span>
+                                    <span className=' font-normal'>{swap?.fee} {sourceCurrency?.asset}</span>
                                 </div>
                             </>
                         }
@@ -198,7 +198,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <hr className='horizontal-gradient' />
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Amount You Received</span>
-                                    <span className='text-primary-text font-normal flex'>
+                                    <span className=' font-normal flex'>
                                         {swapOutputTransaction?.amount} {destinationCurrency?.asset}
                                     </span>
                                 </div>

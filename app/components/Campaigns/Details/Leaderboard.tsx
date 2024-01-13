@@ -60,7 +60,7 @@ const Component: FC<Props> = ({ campaign }) => {
                     Top 10
                 </button>
             </div>}
-        <p className="text-sm text-primary-text">Users who earn the most throughout the program will be featured here.</p>
+        <p className="text-sm ">Users who earn the most throughout the program will be featured here.</p>
         <div className=" border border-muted-4 hover:border-muted-2 transition duration-200 rounded-lg shadow-lg">
             <div className="p-3">
                 {leaderboard?.leaderboard?.length > 0 ? <div className="space-y-6">
@@ -182,7 +182,7 @@ const Component: FC<Props> = ({ campaign }) => {
                                                     </p>
                                                 </div>
                                             }>
-                                                <div className='text-secondary-text hover:cursor-pointer hover:text-primary-text ml-0.5 hover:bg-secondary-200 active:ring-2 active:ring-gray-200 active:bg-secondary-400 focus:outline-none cursor-default p-1 rounded'>
+                                                <div className='hover:cursor-pointer hover:text-foreground ml-0.5 hover:bg-level-4 active:ring-2 active:ring-gray-200 active:bg-level-3 focus:outline-none cursor-default p-1 rounded'>
                                                     <Trophy className="h-4 w-4" aria-hidden="true" />
                                                 </div>
                                             </ClickTooltip>
