@@ -1,60 +1,43 @@
-import '@rainbow-me/rainbowkit/styles.css';
-import { FC } from 'react';
-import {
-    ConnectButton,
-} from '@rainbow-me/rainbowkit';
+import { FC, type PropsWithChildren } from 'react'
 
-const RainbowKit: FC<{ children?: React.ReactNode }> = ({ children }) => {
-    return (
-        <ConnectButton.Custom>
-            {({
-                account,
-                chain,
-                openChainModal,
-                openConnectModal,
-                mounted,
-            }) => {
-                const ready = mounted;
-                const connected =
-                    ready &&
-                    account &&
-                    chain
-                return (
-                    <div
-                        {...(!ready && {
-                            'aria-hidden': true,
-                            'style': {
-                                opacity: 0,
-                                pointerEvents: 'none',
-                                userSelect: 'none',
-                            },
-                        })}
-                    >
-                        {(() => {
-                            if (!connected) {
-                                return (
-                                    <span className='w-full cursor-pointer' onClick={openConnectModal} >
-                                        {children}
-                                    </span>
-                                );
-                            }
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
-                            if (chain.unsupported) {
-                                return (
-                                    <button onClick={openChainModal} type="button">
-                                        Change network
-                                    </button>
-                                );
-                            }
-                            return (
-                                <></>
-                            );
-                        })()}
-                    </div>
-                );
-            }}
-        </ConnectButton.Custom>
-    )
-}
+const RainbowKit: FC<PropsWithChildren> = ({ children }) => (
+  <ConnectButton.Custom>
+  {({
+    account,
+    chain,
+    openChainModal,
+    openConnectModal,
+    mounted,
+  }) => {
+      const ready = mounted;
+      const connected = ready && account && chain;
+      return (
+        <div
+          {...(!ready && {
+            'aria-hidden': true,
+            'style': {
+              opacity: 0,
+              pointerEvents: 'none',
+              userSelect: 'none',
+            },
+          })}
+        >
+          {(!connected) && (
+            <span className='w-full cursor-pointer' onClick={openConnectModal} >
+              {children}
+            </span>
+          )}
+          { chain?.unsupported && (
+            <button onClick={openChainModal} type="button">
+              Change network
+            </button>
+          )}
+        </div>
+      )
+  }}
+  </ConnectButton.Custom>
+)
 
 export default RainbowKit;

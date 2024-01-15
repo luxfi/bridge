@@ -1,26 +1,42 @@
-import "@rainbow-me/rainbowkit/styles.css";
+import React, { type PropsWithChildren } from "react"
+
+import { 
+  Chain, 
+  WagmiConfig, 
+  configureChains, 
+  createConfig, 
+  mainnet 
+} from "wagmi"
+import { publicProvider } from 'wagmi/providers/public'
+
 import {
-    darkTheme,
     connectorsForWallets,
     RainbowKitProvider,
     DisclaimerComponent,
     AvatarComponent
-} from '@rainbow-me/rainbowkit';
-const WALLETCONNECT_PROJECT_ID = '28168903b2d30c75e5f7f2d71902581b';
-import { publicProvider } from 'wagmi/providers/public';
-import { walletConnectWallet, rainbowWallet, metaMaskWallet, coinbaseWallet, bitgetWallet, argentWallet, phantomWallet } from '@rainbow-me/rainbowkit/wallets';
-import { useSettingsState } from "../context/settings";
-import { Chain, WagmiConfig, configureChains, createConfig, mainnet } from "wagmi";
-import { NetworkType } from "../Models/CryptoNetwork";
-import resolveChain from "../lib/resolveChain";
-import React from "react";
-import AddressIcon from "./AddressIcon";
+} from '@rainbow-me/rainbowkit'
 
-type Props = {
-    children: JSX.Element | JSX.Element[]
-}
+import { 
+  walletConnectWallet, 
+  rainbowWallet, 
+  metaMaskWallet, 
+  coinbaseWallet, 
+  bitgetWallet, 
+  argentWallet, 
+  phantomWallet 
+} from '@rainbow-me/rainbowkit/wallets'
 
-function RainbowKitComponent({ children }: Props) {
+import { useSettingsState } from "../context/settings"
+import { NetworkType } from "../Models/CryptoNetwork"
+import resolveChain from "../lib/resolveChain"
+import AddressIcon from "./AddressIcon"
+import configureRKTheme from "../styles/configureRKTheme"
+
+const rkTheme = configureRKTheme()
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
+
+const RainbowKitComponent: React.FC<PropsWithChildren> = ({ children }) => {
+
     const settings = useSettingsState();
     const isChain = (c: Chain | undefined): c is Chain => c != undefined
     const settingsChains = settings?.layers
@@ -34,43 +50,26 @@ function RainbowKitComponent({ children }: Props) {
         [publicProvider()]
     )
 
-    const projectId = WALLETCONNECT_PROJECT_ID;
     const connectors = connectorsForWallets([
-        {
-            groupName: 'Popular',
-            wallets: [
-                metaMaskWallet({ projectId, chains }),
-                walletConnectWallet({ projectId, chains }),
-            ],
-        },
-        {
-            groupName: 'Wallets',
-            wallets: [
-                coinbaseWallet({ chains, appName: 'Bridge' }),
-                argentWallet({ projectId, chains }),
-                bitgetWallet({ projectId, chains }),
-                rainbowWallet({ projectId, chains }),
-                phantomWallet({ chains })
-            ],
-        }
+      {
+        groupName: 'Popular',
+        wallets: [
+            metaMaskWallet({ projectId, chains }),
+            walletConnectWallet({ projectId, chains }),
+        ],
+      },
+      {
+        groupName: 'Wallets',
+        wallets: [
+            coinbaseWallet({ chains, appName: 'Bridge' }),
+            argentWallet({ projectId, chains }),
+            bitgetWallet({ projectId, chains }),
+            rainbowWallet({ projectId, chains }),
+            phantomWallet({ chains })
+        ],
+      }
     ])
 
-    const theme = darkTheme({
-        accentColor: 'rgb(var(--ls-colors-primary-500))',
-        accentColorForeground: 'rgb(var(--ls-colors-primary-text))',
-        borderRadius: 'small',
-        fontStack: 'system',
-        overlayBlur: 'small',
-    })
-
-    theme.colors.modalBackground = 'rgb(var(--ls-colors-secondary-900))'
-    theme.colors.modalText = 'rgb(var(--ls-colors-primary-text))'
-    theme.colors.modalTextSecondary = 'rgb(var(--ls-colors-secondary-text))'
-    theme.colors.actionButtonBorder = 'rgb(var(--ls-colors-secondary-500))'
-    theme.colors.actionButtonBorderMobile = 'rgb(var(--ls-colors-secondary-500))'
-    theme.colors.closeButton = 'rgb(var(--ls-colors-secondary-text))'
-    theme.colors.closeButtonBackground = 'rgb(var(--ls-colors-secondary-500))'
-    theme.colors.generalBorder = 'rgb(var(--ls-colors-secondary-500))'
 
     const wagmiConfig = createConfig({
         autoConnect: true,
@@ -79,26 +78,31 @@ function RainbowKitComponent({ children }: Props) {
     })
 
     const disclaimer: DisclaimerComponent = ({ Text }) => (
-        <Text>
-          Thanks for choosing Bridge!
-        </Text>
-    );
+      <Text>
+        Thanks for choosing the Lux Bridge!
+      </Text>
+    )
 
     const CustomAvatar: AvatarComponent = ({ address, size }) => {
         return <AddressIcon address={address} size={size} />
-    };
+    }
 
     return (
-        <WagmiConfig config={wagmiConfig}>
-            <RainbowKitProvider avatar={CustomAvatar} modalSize="compact" chains={chains} theme={theme}
-                appInfo={{
-                    appName: 'Bridge',
-                    learnMoreUrl: 'https://docs.bridge.lux.network/',
-                    disclaimer: disclaimer
-                }}>
-                {children}
-            </RainbowKitProvider>
-        </WagmiConfig>
+      <WagmiConfig config={wagmiConfig}>
+        <RainbowKitProvider 
+          avatar={CustomAvatar} 
+          modalSize="compact" 
+          chains={chains} 
+          theme={rkTheme}
+          appInfo={{
+            appName: 'LuxBridge',
+            learnMoreUrl: 'https://docs.bridge.lux.network/',
+            disclaimer: disclaimer
+          }}
+        >
+            {children}
+        </RainbowKitProvider>
+      </WagmiConfig>
     )
 }
 

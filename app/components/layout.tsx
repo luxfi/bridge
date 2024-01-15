@@ -147,9 +147,11 @@ export default function Layout({ children, settings, themeData }: Props) {
                   <RainbowKit>
                     <Solana>
                       <FeeProvider>
-                        {process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true' ?
-                          <MaintananceContent />
-                          : children}
+                      {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
+                        <MaintananceContent />
+                      ) : (
+                        children
+                      )}
                       </FeeProvider>
                     </Solana>
                   </RainbowKit>

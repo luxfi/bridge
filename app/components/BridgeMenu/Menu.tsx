@@ -1,5 +1,5 @@
 import { ChevronRight, ExternalLink } from "lucide-react"
-import LinkWrapper from "../LinkWraapper"
+import LinkWrapper from "../LinkWrapper"
 import { PropsWithChildren, ReactNode } from "react"
 
 function Menu ({ children }: PropsWithChildren)  {
@@ -32,7 +32,7 @@ const Item: React.FC<{
   target = '_self' 
 }) => (
 
-  pathname ? (
+  false /* pathname */ ? (
     <LinkWrapper 
       href={pathname} 
       target={target} 
