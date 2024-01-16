@@ -32,7 +32,7 @@ const Item: React.FC<{
   target = '_self' 
 }) => (
 
-  false /* pathname */ ? (
+  pathname ? (
     <LinkWrapper 
       href={pathname} 
       target={target} 
