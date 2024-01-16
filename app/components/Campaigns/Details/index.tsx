@@ -10,7 +10,7 @@ import { useAccount } from "wagmi"
 import RainbowKit from "../../Swap/Withdraw/Wallet/RainbowKit"
 import SubmitButton from "../../buttons/submitButton";
 import WalletIcon from "../../icons/WalletIcon";
-import LinkWrapper from "../../LinkWraapper";
+import LinkWrapper from "../../LinkWrapper";
 import { Widget } from "../../Widget/Index";
 import Leaderboard from "./Leaderboard"
 import Rewards from "./Rewards";
