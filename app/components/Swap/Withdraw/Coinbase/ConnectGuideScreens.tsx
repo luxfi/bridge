@@ -1,6 +1,6 @@
 export const FirstScreen = ({ exchange_name }) => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium text-primary'>.01</span><span>&nbsp;After this guide you&apos;ll be redirected to </span>{exchange_name}<span></span></div>
+        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium '>.01</span><span>&nbsp;After this guide you&apos;ll be redirected to </span>{exchange_name}<span></span></div>
         <div className="w-1/2 m-auto">
             <FirstScreenImage />
         </div>
@@ -9,7 +9,7 @@ export const FirstScreen = ({ exchange_name }) => {
 
 export const SecondScreen = () => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium text-primary'>.02</span><span>&nbsp;When in Coinbase, click&nbsp;</span><span className=' font-medium'>Change this amount</span></div>
+        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium '>.02</span><span>&nbsp;When in Coinbase, click&nbsp;</span><span className=' font-medium'>Change this amount</span></div>
         <div className="w-1/2 m-auto">
             <SecondScreenImage />
         </div>
@@ -18,7 +18,7 @@ export const SecondScreen = () => {
 
 export const ThirdScreen = ({ minimalAuthorizeAmount }) => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium text-primary'>.03</span><span>&nbsp;Change the existing 1.0 value to&nbsp;</span><span className=' font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click Save</span></div>
+        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium '>.03</span><span>&nbsp;Change the existing 1.0 value to&nbsp;</span><span className=' font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click Save</span></div>
         <div className="w-1/2  m-auto">
             <ThirdScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
         </div>
@@ -27,7 +27,7 @@ export const ThirdScreen = ({ minimalAuthorizeAmount }) => {
 
 export const FourthScreen = ({ minimalAuthorizeAmount }) => {
     return <div className="inline-flex flex-col relative top-0 left-0 grow w-full">
-        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium text-primary'>.04</span><span>&nbsp;Make sure that the amount is&nbsp;</span><span className=' font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click&nbsp;</span><span className=' font-medium'>Authorize</span></div>
+        <div className='whitespace-normal  grow text-md font-normal pb-2'><span className='font-medium '>.04</span><span>&nbsp;Make sure that the amount is&nbsp;</span><span className=' font-medium'>{minimalAuthorizeAmount}</span><span>&nbsp;and click&nbsp;</span><span className=' font-medium'>Authorize</span></div>
         <div className="w-1/2  m-auto">
             <FourthScreenImage minimalAuthorizeAmount={minimalAuthorizeAmount} />
         </div>
@@ -39,7 +39,7 @@ export const LastScreen = ({ minimalAuthorizeAmount, number }: { minimalAuthoriz
         <div className="inline-flex flex-col left-0 l relative top-0 grow w-full">
             <div className=' text-md font-normal grow w-full pb-2 '>
                 {number &&
-                    <span className='font-medium text-primary'>.05</span>
+                    <span className='font-medium '>.05</span>
                 }
                 <span>&nbsp;Make sure to change the allowed amount to&nbsp;</span>
                 <span className=''>{minimalAuthorizeAmount}</span>

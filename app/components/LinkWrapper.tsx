@@ -6,6 +6,7 @@ import { resolvePersistantQueryParams } from "../helpers/querryHelper";
 const LinkWrapper: FC<Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> & LinkProps & {
     children?: React.ReactNode;
 } & React.RefAttributes<HTMLAnchorElement>> = (props) => {
+  
     const router = useRouter();
     const { children } = props
 

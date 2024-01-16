@@ -133,8 +133,8 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 onChange={e => {
                                                     /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                                 }}
-                                                className="leading-none h-12 text-2xl pl-5   focus:ring-primary text-center focus:border-primary border-muted-2 block
-                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-primary-text"
+                                                className="leading-none h-12 text-2xl pl-5   focus:ring-muted text-center focus:border-muted border-muted-2 block
+                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                             />
                                         </div>
                                         <div className='col-start-4 col-span-2'>
@@ -158,7 +158,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 </span>
                                             </span>
                                         )}>
-                                            <span onClick={handleResendCode} className="decoration underline-offset-1 underline hover:no-underline decoration-primary-text hover:cursor-pointer">
+                                            <span onClick={handleResendCode} className="decoration underline-offset-1 underline hover:no-underline hover:cursor-pointer">
                                                 Resend code
                                             </span>
                                         </TimerWithContext>
@@ -168,7 +168,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                             :
                             <Widget>
                                 <Widget.Content center={true}>
-                                    <MailOpen className='w-16 h-16 mt-auto text-primary self-center' />
+                                    <MailOpen className='w-16 h-16 mt-auto text-secondary self-center' />
                                     <div className='text-center mt-5'>
                                         <p className='text-lg'><span>Please enter the 6 digit code sent to&nbsp;</span><span className='font-medium '>{tempEmail}</span></p>
                                     </div>
@@ -181,8 +181,8 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                             onChange={e => {
                                                 /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                             }}
-                                            className="leading-none h-12 text-2xl pl-5   focus:ring-primary text-center focus:border-primary border-muted-2 block
-                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-primary-text"
+                                            className="leading-none h-12 text-2xl pl-5   focus:ring-secondary text-center focus:border-secondary border-muted-2 block
+                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                         />
                                         <span className="flex text-sm leading-6 items-center mt-1.5">
                                             <TimerWithContext isStarted={started} seconds={timerCountdown} waitingComponent={(remainingTime) => (
@@ -193,7 +193,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                     </span>
                                                 </span>
                                             )}>
-                                                <span onClick={handleResendCode} className="decoration underline-offset-1 underline hover:no-underline decoration-primary hover:cursor-pointer">
+                                                <span onClick={handleResendCode} className="decoration underline-offset-1 underline hover:no-underline hover:cursor-pointer">
                                                     Resend code
                                                 </span>
                                             </TimerWithContext>
@@ -204,11 +204,11 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                     <p className=' text-xs sm:text-sm mb-3 md:mb-5'>
                                         <span>By clicking Confirm you agree to Bridge&apos;s&nbsp;</span><span
                                             onClick={handleOpenTerms}
-                                            className='decoration decoration-primary underline-offset-1 underline hover:no-underline cursor-pointer'> Terms of Service
+                                            className='decoration  underline-offset-1 underline hover:no-underline cursor-pointer'> Terms of Service
                                         </span><span>&nbsp;and&nbsp;</span>
                                         <span
                                             onClick={handleOpenPrivacyPolicy}
-                                            className='decoration decoration-primary underline-offset-1 underline hover:no-underline cursor-pointer'>Privacy Policy
+                                            className='decoration  underline-offset-1 underline hover:no-underline cursor-pointer'>Privacy Policy
                                         </span>
                                     </p>
                                     <TimerWithContext isStarted={started} seconds={timerCountdown} waitingComponent={() => (
