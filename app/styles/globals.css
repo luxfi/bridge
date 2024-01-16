@@ -22,14 +22,14 @@
   
 }
 
-body::-webkit-scrollbar {
+*::-webkit-scrollbar {
   height: 0.375rem !important;
   width: 0.375rem !important;
   --tw-bg-opacity: 1;
   background-color: theme('colors.level.2');
 }
 
-body::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background-color: theme('colors.level.3') !important;
   --tw-bg-opacity: 1 !important;
   border-radius: 0.25rem !important;
