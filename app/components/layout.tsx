@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react"
+import { ErrorBoundary } from "react-error-boundary";
 import Head from "next/head"
 import { useRouter } from "next/router";
+
+import * as Sentry from "@sentry/nextjs";
+
+import LuxThemeProvider from '@luxdefi/ui/context-providers/theme-provider'
+
 import ThemeWrapper from "./themeWrapper";
-import { ErrorBoundary } from "react-error-boundary";
 import MaintananceContent from "./maintanance/maintanance";
 import { AuthProvider } from "../context/authContext";
 import { SettingsProvider } from "../context/settings";
@@ -16,7 +21,6 @@ import { THEME_COLORS, ThemeData } from "../Models/Theme";
 import { TooltipProvider } from "./shadcn/tooltip";
 import ColorSchema from "./ColorSchema";
 import TonConnectProvider from "./TonConnectProvider";
-import * as Sentry from "@sentry/nextjs";
 import { FeeProvider } from "../context/feeContext";
 import RainbowKit from "./RainbowKit";
 import Solana from "./SolanaProvider";
@@ -142,6 +146,7 @@ export default function Layout({ children, settings, themeData }: Props) {
         <AuthProvider>
           <TooltipProvider delayDuration={500}>
             <ErrorBoundary FallbackComponent={ErrorFallback} onError={logErrorToService}>
+              <LuxThemeProvider>
               <ThemeWrapper>
                 <TonConnectProvider basePath={basePath} themeData={themeData}>
                   <RainbowKit>
@@ -157,6 +162,7 @@ export default function Layout({ children, settings, themeData }: Props) {
                   </RainbowKit>
                 </TonConnectProvider>
               </ThemeWrapper>
+              </LuxThemeProvider>
             </ErrorBoundary>
           </TooltipProvider>
         </AuthProvider>

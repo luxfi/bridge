@@ -133,8 +133,8 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 onChange={e => {
                                                     /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                                 }}
-                                                className="leading-none h-12 text-2xl pl-5   focus:ring-primary text-center focus:border-primary border-muted-2 block
-                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-primary-text"
+                                                className="leading-none h-12 text-2xl pl-5   focus:ring-muted text-center focus:border-muted border-muted-2 block
+                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                             />
                                         </div>
                                         <div className='col-start-4 col-span-2'>
@@ -158,7 +158,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 </span>
                                             </span>
                                         )}>
-                                            <span onClick={handleResendCode} className="decoration underline-offset-1 underline hover:no-underline decoration-primary-text hover:cursor-pointer">
+                                            <span onClick={handleResendCode} className="decoration underline-offset-1 underline hover:no-underline hover:cursor-pointer">
                                                 Resend code
                                             </span>
                                         </TimerWithContext>
@@ -182,7 +182,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                             }}
                                             className="leading-none h-12 text-2xl pl-5   focus:ring-secondary text-center focus:border-secondary border-muted-2 block
-                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-primary-text"
+                                    placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                         />
                                         <span className="flex text-sm leading-6 items-center mt-1.5">
                                             <TimerWithContext isStarted={started} seconds={timerCountdown} waitingComponent={(remainingTime) => (
