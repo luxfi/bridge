@@ -170,8 +170,8 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
                                     onChange={e => {
                                         /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                     }}
-                                    className="leading-none h-12 text-2xl pl-5   focus:ring-primary text-center focus:border-primary border-muted-2 block
-                                placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-primary-text"
+                                    className="leading-none h-12 text-2xl pl-5   focus:ring-muted text-center focus:border-muted border-muted-2 block
+                                placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                 />
                             </div>
                             <span className="flex text-sm leading-6 items-center mt-1.5">
@@ -184,7 +184,7 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
                                             </span>
                                         </span>
                                     )}>
-                                    {!loading ? <span onClick={handleResendTwoFACode} className="decoration underline-offset-1 underline hover:no-underline decoration-primary hover:cursor-pointer">
+                                    {!loading ? <span onClick={handleResendTwoFACode} className="decoration underline-offset-1 underline hover:no-underline hover:cursor-pointer">
                                         Resend code
                                     </span>
                                         : <SpinIcon className="animate-spin h-5 w-5" />}
@@ -192,7 +192,7 @@ const Coinbase2FA: FC<Props> = ({ onSuccess, footerStickiness = true }) => {
                             </span>
                             <div className='p-4 bg-level-1  rounded-lg border border-muted-2 my-4'>
                                 <div className="flex items-center">
-                                    <Info className='h-5 w-5 text-primary-600 mr-3' />
+                                    <Info className='h-5 w-5 text-secondary mr-3' />
                                     <label className="block text-sm md:text-base font-medium leading-6">To obtain the 2 step verification code, check:</label>
                                 </div>
                                 <ul className="list-disc font-light space-y-1 text-xs md:text-sm mt-2 ml-8 text-left">

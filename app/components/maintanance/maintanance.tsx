@@ -19,7 +19,6 @@ function MaintananceContent(props) {
     const twitterLogo = <TwitterLogo className=" h-6 w-6" />
     return (
         <div className="flex items-stretch flex-col">
-            <BridgeLogo className="block md:hidden h-8 w-auto  mt-5"></BridgeLogo>
             <CardContainer {...props} >
                 <div className="flex flex-col justify-center space-y-12 p-10  md:min-h-fit min-h-[400px]">
                     <h1 className="text-xl tracking-tight text-gray-200">
@@ -37,5 +36,8 @@ function MaintananceContent(props) {
         </div>
     );
 }
+
+//             <BridgeLogo className="block md:hidden h-8 w-auto  mt-5"></BridgeLogo>
+
 
 export default MaintananceContent;

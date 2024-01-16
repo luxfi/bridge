@@ -8,7 +8,7 @@ import { ApiResponse } from "../../Models/ApiResponse";
 import BridgeApiClient, { Campaign } from "../../lib/BridgeApiClient";
 import SpinIcon from "../icons/spinIcon";
 import { useSettingsState } from "../../context/settings";
-import LinkWrapper from "../LinkWraapper";
+import LinkWrapper from "../LinkWrapper";
 import { Layer } from "../../Models/Layer";
 import { Widget } from "../Widget/Index";
 
@@ -42,7 +42,7 @@ const Rewards = () => {
                                                 />)
                                             :
                                             <div className="flex flex-col items-center justify-center space-y-2">
-                                                <Gift className="h-10 w-10 text-secondary-lux" />
+                                                <Gift className="h-10 w-10 text-secondary" />
                                                 <p className="font-bold text-center">There are no active campaigns right now</p>
                                             </div>
                                     }

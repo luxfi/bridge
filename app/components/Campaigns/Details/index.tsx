@@ -10,7 +10,7 @@ import { useAccount } from "wagmi"
 import RainbowKit from "../../Swap/Withdraw/Wallet/RainbowKit"
 import SubmitButton from "../../buttons/submitButton";
 import WalletIcon from "../../icons/WalletIcon";
-import LinkWrapper from "../../LinkWraapper";
+import LinkWrapper from "../../LinkWrapper";
 import { Widget } from "../../Widget/Index";
 import Leaderboard from "./Leaderboard"
 import Rewards from "./Rewards";
@@ -100,7 +100,7 @@ const BriefInformation: FC<BriefInformationProps> = ({ campaign, network }) =>
             newTab: true,
             href: "https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards" 
           }}
-          className="inline-flex text-primary-lux underline hover:no-underline"
+          className="inline-flex text-primary underline hover:no-underline"
         />
     </p>
 

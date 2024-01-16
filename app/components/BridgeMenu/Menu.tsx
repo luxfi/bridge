@@ -1,5 +1,5 @@
 import { ChevronRight, ExternalLink } from "lucide-react"
-import LinkWrapper from "../LinkWraapper"
+import LinkWrapper from "../LinkWrapper"
 import { PropsWithChildren, ReactNode } from "react"
 
 function Menu ({ children }: PropsWithChildren)  {

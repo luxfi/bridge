@@ -127,7 +127,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                         className="flex items-center justify-between w-full ">
                         <div className='flex items-center gap-3 text-sm'>
                             <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full p-2 bg-primary/20">
-                                <Fuel className="h-5 w-5 text-primary" aria-hidden="true" />
+                                <Fuel className="h-5 w-5" aria-hidden="true" />
                             </span>
                             <p>Refuel</p>
                         </div>

@@ -35,7 +35,7 @@ import socialNav from './social'
 import { LinkElement } from "@luxdefi/ui/common"
 
 const WalletsMenu = dynamic(() => import("../ConnectedWallets").then((comp) => comp.WalletsMenu), {
-    loading: () => <></>
+    loading: () => (<div/>)
 })
 
 

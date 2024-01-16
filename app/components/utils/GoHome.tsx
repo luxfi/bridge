@@ -25,7 +25,7 @@ const GoHomeButton: FC<{
     {children ?? (
       <ContextMenuPrimitive.Root>
         <ContextMenuPrimitive.Trigger>
-          <Logo size='md' className="text-primary-lux"/>
+          <Logo size='md' className="text-primary"/>
         </ContextMenuPrimitive.Trigger>
         <ContextMenuPrimitive.Content className="dialog-overlay absolute z-40 border h-fit text-muted border-muted-2 mt-2 w-fit rounded-md shadow-lg bg-level-1 focus:outline-none">
           <ContextMenuPrimitive.ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full rounded-t hover:bg-level-2 whitespace-nowrap">

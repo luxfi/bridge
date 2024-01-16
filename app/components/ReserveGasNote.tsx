@@ -41,7 +41,7 @@ const ReserveGasNote = ({ onSubmit }: { onSubmit: (walletBalance: Balance, netwo
                 <div>
                     You might not be able to complete the transaction.
                 </div>
-                <div onClick={() => onSubmit(walletBalance, networkGas)} className="cursor-pointer border-b border-dotted border-primary-text w-fit hover:text-primary hover:border-primary ">
+                <div onClick={() => onSubmit(walletBalance, networkGas)} className="cursor-pointer border-b border-dotted border-muted-2 w-fit hover:text-muted hover:border-muted ">
                     <span>Reserve</span> <span>{gasToReserveFormatted}</span> <span>{values?.fromCurrency?.asset}</span> <span>for gas.</span>
                 </div>
             </div>

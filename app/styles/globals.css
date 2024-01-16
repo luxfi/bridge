@@ -1,6 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+/* see https://stackoverflow.com/questions/69746121/using-nextjs-how-can-you-import-in-css-using-tailwind-css */
+@import "@luxdefi/ui/style/lux-tw-base-layer";
+
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 @layer utilities {
 
@@ -22,101 +25,20 @@
   
 }
 
-body::-webkit-scrollbar {
+*::-webkit-scrollbar {
   height: 0.375rem !important;
   width: 0.375rem !important;
   --tw-bg-opacity: 1;
   background-color: theme('colors.level.2');
 }
 
-body::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background-color: theme('colors.level.3') !important;
   --tw-bg-opacity: 1 !important;
   border-radius: 0.25rem !important;
 }
 
 
-@layer base {
-
-  /* On iOS disabled inputs have default opacitiy */
-  .ntdi {
-    opacity: 1;
-    /* required on iOS */
-  }
-  
-  :root, .light, .light-theme {
-    --fg-0: hsl(0 0% 0%);
-    --fg-body: hsl(0 0% 10%);
-    --fg-1: hsl(0 0% 20%);
-    --fg-2: hsl(0 0% 35%);
-    --fg-3: hsl(0 0% 50%);
-    --fg-4: hsl(0 0% 70%);
-    --fg-5: hsl(0 0% 90%);
-
-    --bg-0: hsl(0 0% 100%);
-    --bg-1: hsl(0 0% 90%);
-    --bg-2: hsl(0 0% 75%);
-    --bg-3: hsl(0 0% 55%);
-
-    --bg-inverted: var(--fg-0);
-    --bg-inverted-hover:  hsla(0, 0%, 0%, 0.85);
-
-    --fg-inverted: var(--bg-0);
-
-    --secondary-0: hsl(266, 79%, 80%);
-    --secondary-1: hsl(266, 79%, 70%);
-    --secondary-2: hsl(266, 79%, 60%);
-    --secondary-3: hsl(266, 79%, 50%);
-
-    --primary: var(--bg-inverted);
-    --primary-hover: var(--bg-inverted-hover);
-    --primary-fg: var(--fg-inverted);
-
-    --secondary: var(--secondary-0);
-    --secondary-hover: var(--secondary-2);
-    --secondary-fg: var(--fg-0);
-
-    --nav: var(--fg-4);
-    --nav-current: var(--fg-0);
-    --nav-hover: var(--fg-0);
-
-    --destructive: hsl(0 62.8% 45%);
-    --destructive-hover: hsl(0 62.8% 25%);
-    --destructive-fg: hsl(0 0% 100%);
-
-    --input: var(--bg-1);
-    --ring: var(--fg-1);
-
-    --radius: 0.5rem;
-  }
- 
-  .dark, .dark-theme {
-
-    --fg-0: hsl(0 0% 100%);
-    --fg-body: hsl(0, 0%, 97%);
-    --fg-1: hsl(0 0% 85%);
-    --fg-2: hsl(0 0% 70%);
-    --fg-3: hsl(0 0% 55%);
-    --fg-4: hsl(0 0% 40%);
-    --fg-5: hsl(0 0% 25%);
-
-    --bg-inverted: var(--fg-0);
-    --bg-inverted-hover:  hsla(0, 0%, 100%, 0.85);
-
-    --bg-3: hsl(0 0% 25%);
-    --bg-2: hsl(0 0% 18%);
-    --bg-1: hsl(0 0% 12%);
-    --bg-0: hsl(0 0% 0%);
-
-    --fg-inverted: var(--bg-0);
-
-    --secondary-0: hsl(266, 79%, 40%);
-    --secondary-1: hsl(266, 79%, 50%);
-    --secondary-2: hsl(266, 79%, 60%);
-    --secondary-3: hsl(266, 79%, 70%);
-  }
-
-}
 
 iframe body {
   display: none;
@@ -143,118 +65,8 @@ select:-webkit-autofill:focus {
 hr.horizontal-gradient {
   border: 0;
   height: 1px;
-  background-image: linear-gradient(to right, hsla(0, 0%, 100%, 0), #1A2949, hsla(0, 0%, 100%, 0));
+  background-image: linear-gradient(to right, theme('colors.muted.4'), theme('colors.muted.3'), theme('colors.muted.4'));
 }
-
-
-
-.iphone-x {
-  position: relative;
-  margin: 40px auto;
-  width: 320px;
-  height: 780px;
-  background-color: #7371ee;
-  background-image: url(/cnbs1.png);
-  background-size: contain;
-  border-radius: 40px;
-  box-shadow: 0px 0px 0px 11px #1f1f1f, 0px 0px 0px 13px #191919, 0px 0px 0px 20px #111;
-}
-
-.iphone-x:before,
-.iphone-x:after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.iphone-x:after {
-  bottom: 7px;
-  width: 140px;
-  height: 4px;
-  background-color: #f2f2f2;
-  border-radius: 10px;
-}
-
-.iphone-x:before {
-  top: 0px;
-  width: 56%;
-  height: 30px;
-  background-color: #1f1f1f;
-  border-radius: 0px 0px 40px 40px;
-}
-
-.iphone-x i,
-.iphone-x b,
-.iphone-x s,
-.iphone-x span {
-  position: absolute;
-  display: block;
-  color: transparent;
-}
-
-.iphone-x i {
-  top: 0px;
-  left: 50%;
-  transform: translate(-50%, 6px);
-  height: 8px;
-  width: 15%;
-  background-color: #101010;
-  border-radius: 8px;
-  box-shadow: inset 0px -3px 3px 0px rgba(255, 255, 255, 0.2);
-}
-
-.iphone-x b {
-  left: 10%;
-  top: 0px;
-  transform: translate(180px, 4px);
-  width: 12px;
-  height: 12px;
-  background-color: #101010;
-  border-radius: 12px;
-  box-shadow: inset 0px -3px 2px 0px rgba(255, 255, 255, 0.2);
-}
-
-.iphone-x b:after {
-  content: "";
-  position: absolute;
-  background-color: #2d4d76;
-  width: 6px;
-  height: 6px;
-  top: 2px;
-  left: 2px;
-  top: 3px;
-  left: 3px;
-  display: block;
-  border-radius: 4px;
-  box-shadow: inset 0px -2px 2px rgba(0, 0, 0, 0.5);
-}
-
-.iphone-x s {
-  top: 50px;
-  color: #fff;
-  text-align: center;
-  text-decoration: none;
-  width: 100%;
-  font-size: 70px;
-  font-weight: 100;
-  padding-top: 60px;
-}
-
-.iphone-x span {
-  bottom: 50px;
-  width: 40px;
-  height: 40px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 50%;
-  left: 30px;
-}
-
-.iphone-x span+span {
-  left: auto;
-  right: 30px;
-}
-
 
 
 .carousel {
@@ -319,10 +131,3 @@ textarea:disabled::placeholder {
   /* 2. correct opacity on iOS */
 }
 
-.space-x-reverse {
-  --space-x-reverse: 1
-}
-
-.space-y-reverse {
-  --space-y-reverse: 1
-}
