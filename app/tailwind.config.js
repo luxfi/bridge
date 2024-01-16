@@ -26,7 +26,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        coinbase: { primary: '#4a6cee', diabled: '#192445' },
+          /*
         primary: {
           DEFAULT: 'rgb(var(--ls-colors-primary, 255, 255, 255), <alpha-value>)',
           '50': 'rgb(var(--ls-colors-primary-50, 248, 248, 248), <alpha-value>)',
@@ -46,6 +46,7 @@ module.exports = {
           'buttonTextColor': 'rgb(var(--ls-colors-actionButtonText, 255, 255, 255), <alpha-value>)',
           'logoColor': 'rgb(var(--ls-colors-logo, 255, 0, 147), <alpha-value>)',
         },
+        */
         /*
         secondary: {
           DEFAULT: 'rgb(var(--ls-colors-secondary, 17, 29, 54), <alpha-value>)',
