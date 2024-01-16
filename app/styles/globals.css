@@ -143,7 +143,7 @@ select:-webkit-autofill:focus {
 hr.horizontal-gradient {
   border: 0;
   height: 1px;
-  background-image: linear-gradient(to right, theme('colors.muted.4'), theme('colors.muted.2'), theme('colors.muted.4'));
+  background-image: linear-gradient(to right, theme('colors.muted.4'), theme('colors.muted.3'), theme('colors.muted.4'));
 }
 
 
