@@ -29,7 +29,7 @@ export function DocIframe({ URl, onConfirm, className }: Props) {
                     target="_blank"
                     href={URl}
                     onClick={onConfirm}
-                    className="shadowed-button flex justify-center items-center mt-3 group disabled:bg-secondary-lux/80 disabled:cursor-not-allowed  w-full font-semibold focus:outline-none"
+                    className="shadowed-button flex justify-center items-center mt-3 group disabled:bg-secondary/80 disabled:cursor-not-allowed  w-full font-semibold focus:outline-none"
                 >
                     <span>View in new tab</span>
                     <ExternalLink className='ml-2 h-5 w-5' />

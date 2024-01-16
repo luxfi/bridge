@@ -1,0 +1,85 @@
+@tailwind base;
+/* see https://stackoverflow.com/questions/69746121/using-nextjs-how-can-you-import-in-css-using-tailwind-css */
+
+@layer base {
+
+  /* On iOS disabled inputs have default opacitiy */
+  .ntdi {
+    opacity: 1;
+    /* required on iOS */
+  }
+  
+  :root, .lux-light-theme {
+    --lx-fg-0: hsl(0 0% 0%);
+    --lx-fg-body: hsl(0 0% 10%);
+    --lx-fg-1: hsl(0 0% 20%);
+    --lx-fg-2: hsl(0 0% 35%);
+    --lx-fg-3: hsl(0 0% 50%);
+    --lx-fg-4: hsl(0 0% 70%);
+    --lx-fg-5: hsl(0 0% 90%);
+
+    --lx-bg-0: hsl(0 0% 100%);
+    --lx-bg-1: hsl(0 0% 90%);
+    --lx-bg-2: hsl(0 0% 75%);
+    --lx-bg-3: hsl(0 0% 55%);
+
+    --lx-bg-inverted: var(--lx-fg-0);
+    --lx-bg-inverted-hover:  hsla(0, 0%, 0%, 0.85);
+
+    --lx-fg-inverted: var(--lx-bg-0);
+
+    --lx-secondary-0: hsl(266, 79%, 80%);
+    --lx-secondary-1: hsl(266, 79%, 70%);
+    --lx-secondary-2: hsl(266, 79%, 60%);
+    --lx-secondary-3: hsl(266, 79%, 50%);
+
+    --lx-primary: var(--lx-bg-inverted);
+    --lx-primary-hover: var(--lx-bg-inverted-hover);
+    --lx-primary-fg: var(--lx-fg-inverted);
+
+    --lx-secondary: var(--lx-secondary-0);
+    --lx-secondary-hover: var(--lx-secondary-2);
+    --lx-secondary-fg: var(--lx-fg-0);
+
+    --lx-nav: var(--lx-fg-4);
+    --lx-nav-current: var(--lx-fg-0);
+    --lx-nav-hover: var(--lx-fg-0);
+
+    --lx-destructive: hsl(0 62.8% 45%);
+    --lx-destructive-hover: hsl(0 62.8% 25%);
+    --lx-destructive-fg: hsl(0 0% 100%);
+
+    --lx-input: var(--lx-bg-1);
+    --lx-ring: var(--lx-fg-1);
+
+    --lx-radius: 0.5rem;
+  }
+ 
+  .lux-dark-theme {
+
+    --lx-fg-0: hsl(0 0% 100%);
+    --lx-fg-body: hsl(0, 0%, 97%);
+    --lx-fg-1: hsl(0 0% 85%);
+    --lx-fg-2: hsl(0 0% 70%);
+    --lx-fg-3: hsl(0 0% 55%);
+    --lx-fg-4: hsl(0 0% 40%);
+    --lx-fg-5: hsl(0 0% 25%);
+
+    --lx-bg-inverted: var(--lx-fg-0);
+    --lx-bg-inverted-hover:  hsla(0, 0%, 100%, 0.85);
+
+    --lx-bg-3: hsl(0 0% 25%);
+    --lx-bg-2: hsl(0 0% 18%);
+    --lx-bg-1: hsl(0 0% 12%);
+    --lx-bg-0: hsl(0 0% 0%);
+
+    --lx-fg-inverted: var(--lx-bg-0);
+
+    --lx-secondary-0: hsl(266, 79%, 40%);
+    --lx-secondary-1: hsl(266, 79%, 50%);
+    --lx-secondary-2: hsl(266, 79%, 60%);
+    --lx-secondary-3: hsl(266, 79%, 70%);
+  }
+
+}
+

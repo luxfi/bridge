@@ -298,7 +298,7 @@ const AddressButton: FC<{
     type="button" 
     disabled={disabled} 
     onClick={openAddressModal} 
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-muted-4 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-primary focus:border-primary font-semibold w-full px-3.5 py-3"
+    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-muted-4 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
   >
   {isPartnerWallet &&
     <div className="shrink-0 flex items-center pointer-events-none">
