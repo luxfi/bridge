@@ -37,6 +37,6 @@ If you want Bridge to integrate your exchange or L2 you can reach out to hi@brid
 
 If you're integrating Bridge to your wallet, and want your users to see where their address is coming from, you can reach out to hi@bridge.lux.network and provide the assets and information shown to the user.
 
-<Image className='mx-auto' src="/images/argentIntegr.png" alt="Argent" width="500"/> 
-<Image className='mx-auto' src="/images/imTokenIntegr.png" alt="imToken" width="500"/>
-<Image className='mx-auto' src="/images/tokenPocketIntegr.png" alt="TokenPocket" width="500"/>
+<Image className='mx-auto' src="./images/argentIntegr.png" alt="Argent" width="500"/> 
+<Image className='mx-auto' src="./images/imTokenIntegr.png" alt="imToken" width="500"/>
+<Image className='mx-auto' src="./images/tokenPocketIntegr.png" alt="TokenPocket" width="500"/>
