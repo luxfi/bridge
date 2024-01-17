@@ -20,7 +20,7 @@ export class BridgeAppSettings {
     resolveImgSrc = (item: Layer | NetworkCurrency | Pick<Layer, 'internal_name'> | { asset: string } | Partner | undefined) => {
 
         if (!item) {
-            return "/images/logo_placeholder.png";
+            return "/assets/img/logo_placeholder.png";
         }
 
         const resource_storage_url = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL

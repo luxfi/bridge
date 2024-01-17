@@ -19,6 +19,8 @@ import {
   type ContactInfoFields 
 } from './contact-info'
 
+import type HeadElements from './head-elements'
+
 export {
   type ButtonDef,
   type Dimensions,
@@ -34,5 +36,6 @@ export {
   type ContactInfo,
   type ContactInfoFields,
   type SiteConf,
+  type HeadElements,
 }
 
