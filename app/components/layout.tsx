@@ -114,36 +114,9 @@ export default function Layout({ children, settings, themeData }: Props) {
 
   const basePath = router?.basePath ?? ""
 
-  const mainTitle = getTitleFromTemplateString(metadata.title)
 
   return (<>
-    <Head>
-      {mainTitle && (<title>{mainTitle}</title>) /* must be here, directly under Head component */}
-      <HeadMetadataComponent metadata={metadata} />
-      <TwitterComponent tw={metadata.twitter} />
-      {/*
-      <link rel="apple-touch-icon" sizes="180x180" href={`${basePath}/favicon/apple-touch-icon.png`} />
-      <link rel="icon" type="image/png" sizes="32x32" href={`${basePath}/favicon/favicon-32x32.png`} />
-      <link rel="icon" type="image/png" sizes="16x16" href={`${basePath}/favicon/favicon-16x16.png`} />
-      <link rel="manifest" href={`${basePath}/favicon/site.webmanifest`} />
-      <meta name="msapplication-TileColor" content="#ffffff" />
-      <meta name="theme-color" content={`rgb(${themeData.secondary?.[900]})`} />
-      <meta name="description" content="Move crypto across exchanges, blockchains, and wallets." />
-
-      <meta property="og:url" content={`https://bridge.lux.network/${basePath}`} />
-      <meta property="og:type" content="website" />
-      <meta property="og:title" content="Bridge" />
-      <meta property="og:description" content="Move crypto across exchanges, blockchains, and wallets." />
-      <meta property="og:image" content={`https://bridge.lux.network/${basePath}/opengraph.jpg?v=2`} />
-
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta property="twitter:domain" content="bridge.lux.network" />
-      <meta property="twitter:url" content={`https://bridge.lux.network/${basePath}`} />
-      <meta name="twitter:title" content="Bridge" />
-      <meta name="twitter:description" content="Move crypto across exchanges, blockchains, and wallets." />
-      <meta name="twitter:image" content={`https://bridge.lux.network/${basePath}/opengraphtw.jpg`} />
-    */}
-    </Head>
+    <HeadMetadataComponent metadata={metadata} />
     {
       themeData &&
       <ColorSchema themeData={themeData} />
