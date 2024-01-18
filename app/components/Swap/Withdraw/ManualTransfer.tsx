@@ -1,7 +1,9 @@
 import { FC, useCallback, useEffect } from "react"
+import Image from 'next/image';
+
 import useSWR from "swr"
 import { ArrowLeftRight } from "lucide-react"
-import Image from 'next/image';
+
 import { ApiResponse } from "../../../Models/ApiResponse";
 import { useSettingsState } from "../../../context/settings";
 import { useSwapDataState } from "../../../context/swap";
