@@ -57,6 +57,7 @@ export default {
     title: 'Lux Network Blockchain Bridge - Unifying Multiple Blockchains',
     description: "Experience seamless multi-chain connectivity with Lux Network's Blockchain Bridge. EVM, Solana, Bitcoin, and more, united.",
     images: 'https://bridge.lux.network/assets/img/opengraph-lux.jpg',
+    site: '@luxdefi'
   },
 
   formatDetection: { telephone: false },
