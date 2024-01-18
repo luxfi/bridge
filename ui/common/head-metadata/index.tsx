@@ -1,6 +1,7 @@
 import React from 'react'
 
 import type { Metadata } from 'next'
+import Head from "next/head"
 
 import type {
   IconDescriptor,
@@ -18,14 +19,15 @@ const getURLasString = (url: string | URL) => {
   )
 }
 
+  // https://stackoverflow.com/questions/68746228/next-head-wont-render-meta-tags-inside-of-fragment
 const Icons: React.FC<{icons: IconDescriptor[]}> = ({
   icons
 }) => {
-  return <>
+  return <Head>
   {icons.map(({url, ...rest}: IconDescriptor, index) => (
     <link {...rest} href={getURLasString(url)} key={`icons-${index}`}/>
   ))}
-  </>
+  </Head>
 }
 
 export const getTitleFromTemplateString = (title: string | TemplateString | null | undefined): string | null  => {
@@ -142,53 +144,64 @@ const getTwitterImageURL = (img: TwitterImage | undefined): string | null => {
   return getURLasString(img) // this is a URL or string
 }
 
+  // https://stackoverflow.com/questions/68746228/next-head-wont-render-meta-tags-inside-of-fragment
 const OpenGraphComponent: React.FC<{
   og: OpenGraph | undefined | null
 }> = ({
   og 
-}) => (og && (<>
+}) => (og && (<Head>
   {og.url && (<meta property="og:url" content={(typeof og.url === 'string') ? (og.url as string) : (og.url.href)} />)}
   {(og as any).type && (<meta property="og:type" content={(og as any).type} />)}
   {og.title && (<meta property="og:title" content={getTitleFromTemplateString(og.title)!} />)}
   {og.description && (<meta property="og:description" content={og.description} />)}
   {og.images && (<meta property="og:image" content={getOGImageURL(Array.isArray(og.images) ? og.images[0] : og.images)!} />)}
-</>))
+</Head>))
 
+  // https://stackoverflow.com/questions/68746228/next-head-wont-render-meta-tags-inside-of-fragment
 export const TwitterComponent: React.FC<{
   tw: Twitter | undefined | null
 }> = ({
   tw 
-}) => (tw && (<>
+}) => (tw && (<Head>
   {(tw as any).card && (<meta name="twitter:card" content={(tw as any).card} />)}
   {tw.title && (<meta name="twitter:title" content={getTitleFromTemplateString(tw.title)!} />)}
   {tw.description && (<meta name="twitter:description" content={tw.description} />)}
   {tw.images && (<meta name="twitter:image" content={getTwitterImageURL(Array.isArray(tw.images) ? tw.images[0] : tw.images)!} />)}
-  {/* TO DO twitter:site or twitter:site:id as per https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/markup */ }
-</>))
+  {tw.site && (<meta name="twitter:site" content={tw.site} />)}
+</Head>))
 
 
   // For use with pages router only.
   // App router does this automatically if you export the metadata object
+
+  // https://stackoverflow.com/questions/68746228/next-head-wont-render-meta-tags-inside-of-fragment
 const HeadMetadataComponent: React.FC<{
   metadata: Metadata
 }> = ({
   metadata
-}) => (<>
+}) => {
+  const mainTitle = getTitleFromTemplateString(metadata.title)
 
-    {metadata.description && (      
-      <meta name="description" content={metadata.description} />
-    )}
-    {metadata.applicationName && (      
-      <meta name="application-name" content={metadata.applicationName} />
-    )}
-    <Authors authors={metadata.authors} />
-    <Keywords keywords={metadata.keywords} />
-    <ThemeColor thColors={metadata.themeColor} />
+  return (<>
+    <Head>
+      {mainTitle && (<title>{mainTitle}</title>) /* must be here, directly under Head component */}
+
+      {metadata.description && (      
+        <meta name="description" content={metadata.description} />
+      )}
+      {metadata.applicationName && (      
+        <meta name="application-name" content={metadata.applicationName} />
+      )}
+      <Authors authors={metadata.authors} />
+      <Keywords keywords={metadata.keywords} />
+      <ThemeColor thColors={metadata.themeColor} />
+      <Manifest manifest={metadata.manifest} />
+    </Head>
       {/* Icons: We only support this format for now */}
     <Icons icons={metadata.icons as IconDescriptor[]} />
-    <Manifest manifest={metadata.manifest} />
     <OpenGraphComponent og={metadata.openGraph} />
-  </>
-)
+    <TwitterComponent tw={metadata.twitter} />
+  </>)
+}
 
 export default HeadMetadataComponent
