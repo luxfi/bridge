@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { ErrorBoundary } from "react-error-boundary";
-import Head from "next/head"
 import { useRouter } from "next/router";
 
 import * as Sentry from "@sentry/nextjs";
 
 import LuxThemeProvider from '@luxdefi/ui/context-providers/theme-provider'
-import { HeadMetadata as HeadMetadataComponent, TwitterComponent, getTitleFromTemplateString } from '@luxdefi/ui/common'
+import { HeadMetadata } from '@luxdefi/ui/common'
 
 import ThemeWrapper from "./themeWrapper";
 import MaintananceContent from "./maintanance/maintanance";
@@ -26,7 +25,7 @@ import { FeeProvider } from "../context/feeContext";
 import RainbowKit from "./RainbowKit";
 import Solana from "./SolanaProvider";
 
-import metadata from "../conf/metadata"
+import metadata from "../metadata"
 
 type Props = {
   children: JSX.Element | JSX.Element[];
@@ -116,11 +115,8 @@ export default function Layout({ children, settings, themeData }: Props) {
 
 
   return (<>
-    <HeadMetadataComponent metadata={metadata} />
-    {
-      themeData &&
-      <ColorSchema themeData={themeData} />
-    }
+    <HeadMetadata metadata={metadata} />
+    {themeData && (<ColorSchema themeData={themeData} />)}
     <QueryProvider query={query}>
       <SettingsProvider data={appSettings}>
         <AuthProvider>

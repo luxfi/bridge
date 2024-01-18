@@ -167,9 +167,9 @@ const DataTable: React.FC = () => {
 
   return (
     <div className="w-full my-4 h-full">
-      <div className="max-h-[65vh] w-full pb-2 align-middle overflow-y-auto dataTable">
-        <table className="border-spacing-0 w-full relative border-separate gap-0">
-          <thead className="sticky top-0 z-10 bg-background ">
+      <div className="max-h-[65vh] w-full align-middle border-b border-muted-4 overflow-y-auto dataTable">
+        <table className="border-separate border-spacing-0 w-full relative gap-0">
+          <thead className="sticky top-0 z-10 bg-background">
             <tr>
               <th scope="col" className="cursor-default rounded-tl-lg border-muted-4 border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted">
                   Status
