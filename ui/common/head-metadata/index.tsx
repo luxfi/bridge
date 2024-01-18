@@ -188,7 +188,6 @@ const HeadMetadataComponent: React.FC<{
     <Icons icons={metadata.icons as IconDescriptor[]} />
     <Manifest manifest={metadata.manifest} />
     <OpenGraphComponent og={metadata.openGraph} />
-    <TwitterComponent tw={metadata.twitter} />
   </>
 )
 
