@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import * as Sentry from "@sentry/nextjs";
 
 import LuxThemeProvider from '@luxdefi/ui/context-providers/theme-provider'
+import { HeadMetadata as HeadMetadataComponent, TwitterComponent, getTitleFromTemplateString } from '@luxdefi/ui/common'
 
 import ThemeWrapper from "./themeWrapper";
 import MaintananceContent from "./maintanance/maintanance";
@@ -24,6 +25,8 @@ import TonConnectProvider from "./TonConnectProvider";
 import { FeeProvider } from "../context/feeContext";
 import RainbowKit from "./RainbowKit";
 import Solana from "./SolanaProvider";
+
+import metadata from "../conf/metadata"
 
 type Props = {
   children: JSX.Element | JSX.Element[];
@@ -111,9 +114,14 @@ export default function Layout({ children, settings, themeData }: Props) {
 
   const basePath = router?.basePath ?? ""
 
+  const mainTitle = getTitleFromTemplateString(metadata.title)
+
   return (<>
     <Head>
-      <title>Bridge</title>
+      {mainTitle && (<title>{mainTitle}</title>) /* must be here, directly under Head component */}
+      <HeadMetadataComponent metadata={metadata} />
+      <TwitterComponent tw={metadata.twitter} />
+      {/*
       <link rel="apple-touch-icon" sizes="180x180" href={`${basePath}/favicon/apple-touch-icon.png`} />
       <link rel="icon" type="image/png" sizes="32x32" href={`${basePath}/favicon/favicon-32x32.png`} />
       <link rel="icon" type="image/png" sizes="16x16" href={`${basePath}/favicon/favicon-16x16.png`} />
@@ -122,20 +130,19 @@ export default function Layout({ children, settings, themeData }: Props) {
       <meta name="theme-color" content={`rgb(${themeData.secondary?.[900]})`} />
       <meta name="description" content="Move crypto across exchanges, blockchains, and wallets." />
 
-      {/* Facebook Meta Tags */}
       <meta property="og:url" content={`https://bridge.lux.network/${basePath}`} />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Bridge" />
       <meta property="og:description" content="Move crypto across exchanges, blockchains, and wallets." />
       <meta property="og:image" content={`https://bridge.lux.network/${basePath}/opengraph.jpg?v=2`} />
 
-      {/* Twitter Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta property="twitter:domain" content="bridge.lux.network" />
       <meta property="twitter:url" content={`https://bridge.lux.network/${basePath}`} />
       <meta name="twitter:title" content="Bridge" />
       <meta name="twitter:description" content="Move crypto across exchanges, blockchains, and wallets." />
       <meta name="twitter:image" content={`https://bridge.lux.network/${basePath}/opengraphtw.jpg`} />
+    */}
     </Head>
     {
       themeData &&

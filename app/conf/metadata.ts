@@ -16,13 +16,13 @@ export default {
       rel: 'icon',
       type: 'image/png',
       sizes: '16x16',
-      href: '/assets/lux-site-icons/favicon-16x16.png'   
+      url: '/assets/lux-site-icons/favicon-16x16.png'   
     },
     {
       rel: 'icon',
       type: 'image/png',
       sizes: '32x32',
-      href: '/assets/lux-site-icons/favicon-32x32.png'   
+      url: '/assets/lux-site-icons/favicon-32x32.png'   
     },
     {
       rel: 'icon',
@@ -40,24 +40,23 @@ export default {
       rel: 'apple-touch-icon',
       type: 'image/png',
       sizes: "180x180",
-      href: '/assets/lux-site-icons/apple-touch-icon.png'  
+      url: '/assets/lux-site-icons/apple-touch-icon.png'  
     },
   ],
   manifest: '/site.webmanifest',
   openGraph: {
     title: 'Lux Network Blockchain Bridge - Unifying Multiple Blockchains',
     description: "Connect across EVM, Solana, Bitcoin, and other blockchains with Lux Network's advanced bridge technology. Experience secure and efficient cross-chain functionality.",
-    //image: '',
+    images: 'https://bridge.lux.network/assets/img/opengraph-lux.jpg',
     type: 'website',
-    url: "https://bridge.lux.network/blockchain-bridge",
+    url: "https://bridge.lux.network",
 
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Lux Network Blockchain Bridge - Unifying Multiple Blockchains',
     description: "Experience seamless multi-chain connectivity with Lux Network's Blockchain Bridge. EVM, Solana, Bitcoin, and more, united.",
-    //image: '',
-    url: "https://bridge.lux.network/blockchain-bridge",
+    images: 'https://bridge.lux.network/assets/img/opengraph-lux.jpg',
   },
 
   formatDetection: { telephone: false },
