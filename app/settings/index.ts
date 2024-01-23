@@ -3,21 +3,27 @@ import mainnetCurrencies from './mainnet/currencies.json'
 import mainnetDiscovery from './mainnet/discovery.json'
 import mainnetExchanges from './mainnet/exchanges.json'
 import mainnetNetworks from './mainnet/networks.json'
+import mainnetSources from './mainnet/sources.json'
+import mainnetDestinations from './mainnet/destinations.json'
 
 // Importing JSON files for testnet
 import testnetCurrencies from './testnet/currencies.json'
 import testnetDiscovery from './testnet/discovery.json'
 import testnetExchanges from './testnet/exchanges.json'
 import testnetNetworks from './testnet/networks.json'
+import testnetSources from './testnet/sources.json'
+import testnetDestinations from './testnet/destinations.json'
 
 export const mainnetSettings = {
   data: {
     currencies: mainnetCurrencies,
     discovery: mainnetDiscovery,
     exchanges: mainnetExchanges,
-    networks: mainnetNetworks
+    networks: mainnetNetworks,
   },
-  error: null
+  sources: mainnetSources,
+  destinations: mainnetDestinations,
+  error: null,
 }
 
 export const testnetSettings = {
@@ -25,7 +31,9 @@ export const testnetSettings = {
     currencies: testnetCurrencies,
     discovery: testnetDiscovery,
     exchanges: testnetExchanges,
-    networks: testnetNetworks
+    networks: testnetNetworks,
   },
-  error: null
+  sources: testnetSources,
+  destinations: testnetDestinations,
+  error: null,
 }
