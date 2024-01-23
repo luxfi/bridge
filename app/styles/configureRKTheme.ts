@@ -1,7 +1,8 @@
 import { darkTheme, type Theme } from '@rainbow-me/rainbowkit'
 
 import resolveConfig from 'tailwindcss/resolveConfig'
-import tailwindConfig from '../tailwind.config.js' 
+import tailwindConfig from '../tailwind.config'
+
   // @ts-ignore
 const {theme: twTheme} = resolveConfig(tailwindConfig) as any
 
@@ -31,5 +32,5 @@ export default (): Theme => {
   theme.colors.generalBorderDim = twTheme.colors.muted[4]
 
 
-  return theme 
+  return theme
 }

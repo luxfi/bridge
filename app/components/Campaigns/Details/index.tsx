@@ -16,7 +16,7 @@ import Leaderboard from "./Leaderboard"
 import Rewards from "./Rewards";
 import SpinIcon from "../../icons/spinIcon"
 import { Layer } from "../../../Models/Layer"
-import { LinkElement } from "@luxdefi/ui"
+import { LinkElement } from "@luxdefi/ui/common"
 
 function CampaignDetails() {
 

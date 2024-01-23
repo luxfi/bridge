@@ -2,11 +2,10 @@ import { useRouter } from "next/router";
 import { IntercomProvider } from 'react-use-intercom';
 import { SWRConfig } from 'swr'
 
-import { inter, drukTextWide } from '@luxdefi/ui/style/nextFonts'
+import { inter, drukTextWide } from '@luxdefi/ui/next-fonts'
 
 import '../styles/globals.css'
 import '../styles/dialog-transition.css'
-
 
 const INTERCOM_APP_ID = 'o1kmvctg'
 import "@rainbow-me/rainbowkit/styles.css";

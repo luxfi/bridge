@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 import * as Sentry from "@sentry/nextjs";
 
-import LuxThemeProvider from '@luxdefi/ui/context-providers/theme-provider'
+import { ThemeProvider as LuxThemeProvider} from '@luxdefi/ui/context-providers'
 import { HeadMetadata } from '@luxdefi/ui/common'
 
 import ThemeWrapper from "./themeWrapper";
