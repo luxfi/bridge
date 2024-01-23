@@ -436,118 +436,6 @@ importers:
         specifier: ^5.3.3
         version: 5.3.3
 
-  ui:
-    dependencies:
-      '@hookform/resolvers':
-        specifier: ^3.3.2
-        version: 3.3.4(react-hook-form@7.49.3)
-      '@radix-ui/react-accordion':
-        specifier: ^1.1.2
-        version: 1.1.2(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-dialog':
-        specifier: ^1.0.5
-        version: 1.0.5(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-label':
-        specifier: ^2.0.2
-        version: 2.0.2(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.2
-        version: 1.0.2(@types/react@18.2.47)(react@18.2.0)
-      '@radix-ui/react-toast':
-        specifier: ^1.1.5
-        version: 1.1.5(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@tailwindcss/container-queries':
-        specifier: ^0.1.1
-        version: 0.1.1(tailwindcss@3.4.1)
-      class-variance-authority:
-        specifier: ^0.7.0
-        version: 0.7.0
-      clsx:
-        specifier: ^2.1.0
-        version: 2.1.0
-      lodash.castarray:
-        specifier: ^4.4.0
-        version: 4.4.0
-      lodash.isplainobject:
-        specifier: ^4.0.6
-        version: 4.0.6
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
-      lucide-react:
-        specifier: ^0.307.0
-        version: 0.307.0(react@18.2.0)
-      markdown-to-jsx:
-        specifier: ^7.3.2
-        version: 7.4.0(react@18.2.0)
-      next:
-        specifier: ^14.0.4
-        version: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
-      next-themes:
-        specifier: ^0.2.1
-        version: 0.2.1(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
-      postcss-selector-parser:
-        specifier: ^6.0.13
-        version: 6.0.15
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-device-detect:
-        specifier: ^2.2.3
-        version: 2.2.3(react-dom@18.2.0)(react@18.2.0)
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-hook-form:
-        specifier: ^7.47.0
-        version: 7.49.3(react@18.2.0)
-      react-social-icons:
-        specifier: ^6.4.0
-        version: 6.7.0(react-dom@18.2.0)(react@18.2.0)
-      tailwind-merge:
-        specifier: ^2.2.0
-        version: 2.2.0
-      tailwindcss:
-        specifier: ^3.4.1
-        version: 3.4.1
-      tailwindcss-animate:
-        specifier: ^1.0.6
-        version: 1.0.7(tailwindcss@3.4.1)
-      tailwindcss-interaction-media:
-        specifier: ^0.1.0
-        version: 0.1.0
-      validator:
-        specifier: ^13.11.0
-        version: 13.11.0
-      zod:
-        specifier: 3.21.4
-        version: 3.21.4
-    devDependencies:
-      '@types/mdx':
-        specifier: ^2.0.9
-        version: 2.0.10
-      '@types/node':
-        specifier: ^20.10.7
-        version: 20.10.7
-      '@types/react':
-        specifier: ^18.2.47
-        version: 18.2.47
-      '@types/react-dom':
-        specifier: ^18.2.18
-        version: 18.2.18
-      autoprefixer:
-        specifier: ^10.4.16
-        version: 10.4.16(postcss@8.4.33)
-      postcss:
-        specifier: ^8.4.33
-        version: 8.4.33
-      postcss-import:
-        specifier: ^16.0.0
-        version: 16.0.0(postcss@8.4.33)
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
-
 packages:
 
   /@aashutoshrathi/word-wrap@1.2.6:
@@ -18738,17 +18626,6 @@ packages:
 
   /react-social-icons@6.10.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-b4sbTE7vZBYF2yIa/ObMb6ZfMexnMF+OnciLv1ujzaioiBabZjSMeYS9Pp4Kh6BAeYejF/QByctns4abqy37rA==}
-    peerDependencies:
-      react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
-      react-dom: 15.x.x || 16.x.x || 17.x.x || 18.x.x
-    dependencies:
-      '@babel/runtime': 7.23.8
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /react-social-icons@6.7.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-SgqFyhK8CNNkthPDUCVnvb6n/wa2LxAFrFKT7/0aDDXZfEkQkZnfraJnO36YJGL6iXeIchBs8aKam1awbJv9QA==}
     peerDependencies:
       react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
       react-dom: 15.x.x || 16.x.x || 17.x.x || 18.x.x
