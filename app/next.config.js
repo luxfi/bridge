@@ -28,13 +28,22 @@ module.exports = (phase, { defaultConfig }) => {
       removeConsole: false,
     },
     reactStrictMode: true,
-    webpack: config => {
+    webpack: (config) => {
+
       config.resolve.fallback = { fs: false, net: false, tls: false };
+      /*
+      config.resolve.extensionAlias = {
+        ".js": [".js", ".ts"],
+        ".jsx": [".jsx", ".tsx"],
+      };
+      */
       return config;
     },
     productionBrowserSourceMaps: true,
       // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
-    transpilePackages: ['@luxdefi/ui'],
+    //transpilePackages: ['@luxdefi/ui'],
+
+    experimental: { esmExternals: 'loose' },
   }
   if (process.env.APP_BASE_PATH) {
     nextConfig.basePath = process.env.APP_BASE_PATH
