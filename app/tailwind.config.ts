@@ -1,9 +1,11 @@
 //@ts-check
 
-const defaultColors = require("tailwindcss/colors");
-const plugin = require('tailwindcss/plugin')
+import plugin from 'tailwindcss/plugin'
+import animatePlugin from 'tailwindcss-animate'
+import defaultColors from 'tailwindcss/colors'
+import formsPlugin from '@tailwindcss/forms'
 
-const {colors: luxColors, fontFamily, typographyPlugin} = require('@luxdefi/ui/tailwind')
+import {colors as luxColors, fontFamily, typographyPlugin} from '@luxdefi/ui/tailwind'
 
 const round = (num) =>
   num
@@ -13,11 +15,11 @@ const round = (num) =>
 const rem = (px) => `${round(px / 16)}rem`
 const em = (px, base) => `${round(px / base)}em`
 
-module.exports = {
+export default {
   content: [
     // No spaces in the curlies!!
-    "./pages/**/*.{js,ts,jsx,tsx}", 
-    "./components/**/*.{js,ts,jsx,tsx}", 
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
     '../ui/**/*.{ts,tsx}',
   ],
   darkMode: ["class"],
@@ -191,9 +193,9 @@ module.exports = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms"),
+    animatePlugin,
+    formsPlugin,
     typographyPlugin({ className: 'typography', base: 16 }),
-    require("tailwindcss-animate"),
     plugin(function ({ addVariant }) {
       // Add a `third` variant, ie. `third:pb-0`
       addVariant('scrollbar', '&::-webkit-scrollbar');

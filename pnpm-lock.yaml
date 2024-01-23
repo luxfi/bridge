@@ -26,8 +26,8 @@ importers:
         specifier: 1.4.13
         version: 1.4.13(@babel/core@7.23.7)(react@18.2.0)
       '@luxdefi/ui':
-        specifier: 0.1.35
-        version: 0.1.35(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
+        specifier: 0.1.40
+        version: 0.1.40(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
       '@mdx-js/loader':
         specifier: ^2.3.0
         version: 2.3.0(webpack@5.89.0)
@@ -3078,8 +3078,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@luxdefi/ui@0.1.35(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-XO6K2SwVqhK1CaI5dxy9S/7BI2XPSGfPViwZIAsjCYKdb3Nbh9d2LQmVDQSXnzdRuppfEJptjYUCIXqsuCjVfQ==}
+  /@luxdefi/ui@0.1.40(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-H2EvndAW9Ls2Cj3OJlHsbT1FwegXJq3AIwqbIvfig1aWEAtSnktGBpDgwPJuDIBxgkxyfmNybYcDxuPliazmQg==}
     peerDependencies:
       next: ^14.0.4
       next-themes: ^0.2.1
