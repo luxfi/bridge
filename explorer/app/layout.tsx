@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react'
 import Script from 'next/script'
 
-import { inter, drukTextWide } from '@luxdefi/ui/style/nextFonts'
+import { inter, drukTextWide } from '@luxdefi/ui/next-fonts'
 
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
