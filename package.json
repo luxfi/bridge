@@ -15,11 +15,10 @@
   ],
   "scripts": {
     "build": "pnpm build:all",
-    "build:all": "pnpm build:app && pnpm build:explorer && pnpm build:sdk && pnpm build:ui",
+    "build:all": "pnpm build:app && pnpm build:explorer && pnpm build:sdk",
     "build:app": "pnpm --filter @luxbridge/app build",
     "build:explorer": "pnpm --filter @luxbridge/explorer build",
     "build:sdk": "pnpm --filter @luxbridge/sdk build",
-    "build:ui": "pnpm --filter @luxdefi/ui build",
     "start": "pnpm --filter @luxbridge/app start",
     "dev": "pnpm --filter @luxbridge/app dev"
   },
