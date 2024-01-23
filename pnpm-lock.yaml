@@ -26,8 +26,8 @@ importers:
         specifier: 1.4.13
         version: 1.4.13(@babel/core@7.23.7)(react@18.2.0)
       '@luxdefi/ui':
-        specifier: 0.1.41
-        version: 0.1.41(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
+        specifier: 0.1.42
+        version: 0.1.42(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
       '@mdx-js/loader':
         specifier: ^2.3.0
         version: 2.3.0(webpack@5.89.0)
@@ -336,8 +336,8 @@ importers:
         specifier: 'link:'
         version: 'link:'
       '@luxdefi/ui':
-        specifier: 0.1.41
-        version: 0.1.41(@types/react-dom@18.2.18)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.0)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
+        specifier: 0.1.42
+        version: 0.1.42(@types/react-dom@18.2.18)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.0)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
@@ -432,118 +432,6 @@ importers:
       '@types/node':
         specifier: ^20.10.7
         version: 20.10.7
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
-
-  ui:
-    dependencies:
-      '@hookform/resolvers':
-        specifier: ^3.3.2
-        version: 3.3.4(react-hook-form@7.49.3)
-      '@radix-ui/react-accordion':
-        specifier: ^1.1.2
-        version: 1.1.2(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-dialog':
-        specifier: ^1.0.5
-        version: 1.0.5(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-label':
-        specifier: ^2.0.2
-        version: 2.0.2(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.2
-        version: 1.0.2(@types/react@18.2.47)(react@18.2.0)
-      '@radix-ui/react-toast':
-        specifier: ^1.1.5
-        version: 1.1.5(@types/react-dom@18.2.18)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
-      '@tailwindcss/container-queries':
-        specifier: ^0.1.1
-        version: 0.1.1(tailwindcss@3.4.1)
-      class-variance-authority:
-        specifier: ^0.7.0
-        version: 0.7.0
-      clsx:
-        specifier: ^2.1.0
-        version: 2.1.0
-      lodash.castarray:
-        specifier: ^4.4.0
-        version: 4.4.0
-      lodash.isplainobject:
-        specifier: ^4.0.6
-        version: 4.0.6
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
-      lucide-react:
-        specifier: ^0.307.0
-        version: 0.307.0(react@18.2.0)
-      markdown-to-jsx:
-        specifier: ^7.3.2
-        version: 7.4.0(react@18.2.0)
-      next:
-        specifier: ^14.0.4
-        version: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
-      next-themes:
-        specifier: ^0.2.1
-        version: 0.2.1(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
-      postcss-selector-parser:
-        specifier: ^6.0.13
-        version: 6.0.15
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-device-detect:
-        specifier: ^2.2.3
-        version: 2.2.3(react-dom@18.2.0)(react@18.2.0)
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-hook-form:
-        specifier: ^7.47.0
-        version: 7.49.3(react@18.2.0)
-      react-social-icons:
-        specifier: ^6.4.0
-        version: 6.7.0(react-dom@18.2.0)(react@18.2.0)
-      tailwind-merge:
-        specifier: ^2.2.0
-        version: 2.2.0
-      tailwindcss:
-        specifier: ^3.4.1
-        version: 3.4.1
-      tailwindcss-animate:
-        specifier: ^1.0.6
-        version: 1.0.7(tailwindcss@3.4.1)
-      tailwindcss-interaction-media:
-        specifier: ^0.1.0
-        version: 0.1.0
-      validator:
-        specifier: ^13.11.0
-        version: 13.11.0
-      zod:
-        specifier: 3.21.4
-        version: 3.21.4
-    devDependencies:
-      '@types/mdx':
-        specifier: ^2.0.9
-        version: 2.0.10
-      '@types/node':
-        specifier: ^20.10.7
-        version: 20.10.7
-      '@types/react':
-        specifier: ^18.2.47
-        version: 18.2.47
-      '@types/react-dom':
-        specifier: ^18.2.18
-        version: 18.2.18
-      autoprefixer:
-        specifier: ^10.4.16
-        version: 10.4.16(postcss@8.4.33)
-      postcss:
-        specifier: ^8.4.33
-        version: 8.4.33
-      postcss-import:
-        specifier: ^16.0.0
-        version: 16.0.0(postcss@8.4.33)
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -3078,8 +2966,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@luxdefi/ui@0.1.41(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-R3WZO5o79RAlgtfNwkRq986MazsaJE8MQkYGfxco1ZkUfALtbGihBJz+gqEreOP/XFYuwfJ005E0S/gu3zHErA==}
+  /@luxdefi/ui@0.1.42(@mdx-js/loader@2.3.0)(@mdx-js/react@2.3.0)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-Yw5K3KmsFb15KyVKXFbA6fJuA9pmTezYTqCfqK7gwq/oTXjNGtkogsCnEa0q/E9xO4iJn0mgd6V1kfWAlSjS9w==}
     peerDependencies:
       next: ^14.0.4
       next-themes: ^0.2.1
@@ -3100,7 +2988,6 @@ packages:
       '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.1)
       class-variance-authority: 0.7.0
       clsx: 2.1.0
-      esbuild-style-plugin: 1.6.3
       lodash.castarray: 4.4.0
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
@@ -3108,7 +2995,6 @@ packages:
       markdown-to-jsx: 7.4.0(react@18.2.0)
       next: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
       next-themes: 0.2.1(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
-      path: 0.12.7
       postcss-selector-parser: 6.0.15
       react: 18.2.0
       react-device-detect: 2.2.3(react-dom@18.2.0)(react@18.2.0)
@@ -3128,8 +3014,8 @@ packages:
       - '@types/react-dom'
     dev: false
 
-  /@luxdefi/ui@0.1.41(@types/react-dom@18.2.18)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.0)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-R3WZO5o79RAlgtfNwkRq986MazsaJE8MQkYGfxco1ZkUfALtbGihBJz+gqEreOP/XFYuwfJ005E0S/gu3zHErA==}
+  /@luxdefi/ui@0.1.42(@types/react-dom@18.2.18)(@types/react@18.2.47)(next-themes@0.2.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.0)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-Yw5K3KmsFb15KyVKXFbA6fJuA9pmTezYTqCfqK7gwq/oTXjNGtkogsCnEa0q/E9xO4iJn0mgd6V1kfWAlSjS9w==}
     peerDependencies:
       next: ^14.0.4
       next-themes: ^0.2.1
@@ -3150,7 +3036,6 @@ packages:
       '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.1)
       class-variance-authority: 0.7.0
       clsx: 2.1.0
-      esbuild-style-plugin: 1.6.3
       lodash.castarray: 4.4.0
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
@@ -3158,7 +3043,6 @@ packages:
       markdown-to-jsx: 7.4.0(react@18.2.0)
       next: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
       next-themes: 0.2.1(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
-      path: 0.12.7
       postcss-selector-parser: 6.0.15
       react: 18.2.0
       react-device-detect: 2.2.3(react-dom@18.2.0)(react@18.2.0)
@@ -7831,10 +7715,6 @@ packages:
       '@types/node': 20.10.7
     dev: false
 
-  /@types/less@3.0.6:
-    resolution: {integrity: sha512-PecSzorDGdabF57OBeQO/xFbAkYWo88g4Xvnsx7LRwqLC17I7OoKtA3bQB9uXkY6UkMWCOsA8HSVpaoitscdXw==}
-    dev: false
-
   /@types/lodash@4.14.202:
     resolution: {integrity: sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ==}
     dev: true
@@ -7935,13 +7815,6 @@ packages:
       '@types/node': 20.10.7
     dev: false
 
-  /@types/sass@1.45.0:
-    resolution: {integrity: sha512-jn7qwGFmJHwUSphV8zZneO3GmtlgLsmhs/LQyVvQbIIa+fzGMUiHI4HXJZL3FT8MJmgXWbLGiVVY7ElvHq6vDA==}
-    deprecated: This is a stub types definition. sass provides its own type definitions, so you do not need this installed.
-    dependencies:
-      sass: 1.70.0
-    dev: false
-
   /@types/scheduler@0.16.8:
     resolution: {integrity: sha512-WZLiwShhwLRmeV6zH+GkbOFT6Z6VklCItrDioxUnv+u4Ll+8vKeFySoFyK/0ctcRpOmwAicELfmys1sDc/Rw+A==}
 
@@ -7972,12 +7845,6 @@ packages:
 
   /@types/stack-utils@2.0.3:
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
-    dev: false
-
-  /@types/stylus@0.48.42:
-    resolution: {integrity: sha512-CPGlr5teL4sqdap+EOowMifLuNGeIoLwc0VQ7u/BPxo+ocqiNa5jeVt0H0IVBblEh6ZwX1sGpIQIFnSSr8NBQA==}
-    dependencies:
-      '@types/node': 20.10.7
     dev: false
 
   /@types/triple-beam@1.3.5:
@@ -12202,17 +12069,6 @@ packages:
       - supports-color
     dev: true
 
-  /esbuild-style-plugin@1.6.3:
-    resolution: {integrity: sha512-XPEKf4FjLjEVLv/dJH4UxDzXCrFHYpD93DBO8B+izdZARW5b7nNKQbnKv3J+7VDWJbgCU+hzfgIh2AuIZzlmXQ==}
-    dependencies:
-      '@types/less': 3.0.6
-      '@types/sass': 1.45.0
-      '@types/stylus': 0.48.42
-      glob: 10.3.10
-      postcss: 8.4.33
-      postcss-modules: 6.0.0(postcss@8.4.33)
-    dev: false
-
   /esbuild@0.18.20:
     resolution: {integrity: sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA==}
     engines: {node: '>=12'}
@@ -13830,12 +13686,6 @@ packages:
   /functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  /generic-names@4.0.0:
-    resolution: {integrity: sha512-ySFolZQfw9FoDb3ed9d80Cm9f0+r7qj+HJkWjeD9RBfpxEVTlVhol+gvaQB/78WbwYfbnNh8nWHHBSlg072y6A==}
-    dependencies:
-      loader-utils: 3.2.1
-    dev: false
-
   /gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
@@ -14442,6 +14292,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       postcss: 8.4.33
+    dev: true
 
   /idb-keyval@6.2.1:
     resolution: {integrity: sha512-8Sb3veuYCyrZL+VBt9LJfZjLUPWVvqn8tG28VqYNFCo43KHcKuq+b4EiXGeuaLAQWL2YmyDgMp2aSpH9JHsEQg==}
@@ -14486,10 +14337,6 @@ packages:
     resolution: {integrity: sha512-bc4NBHqOqSfRW7POMkHd51LvClaeMXpm8dx0e8oE2GORbq5aRK7Bxl4FyzVLdGtLmvLKL7BTDBG5ACQm4HWjTA==}
     dev: false
 
-  /immutable@4.3.4:
-    resolution: {integrity: sha512-fsXeu4J4i6WNWSikpI88v/PcVflZz+6kMhUfIwc5SY+poQRPnaf5V7qds6SUyUN3cVxEzuCab7QIoLOQ+DQ1wA==}
-    dev: false
-
   /import-fresh@2.0.0:
     resolution: {integrity: sha512-eZ5H8rcgYazHbKC3PG4ClHNykCSxtAhxSSEM+2mb+7evD2CKF5V7c0dNum7AdpDh0ZdICwZY9sRSn8f+KH96sg==}
     engines: {node: '>=4'}
@@ -14520,10 +14367,6 @@ packages:
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
-
-  /inherits@2.0.3:
-    resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
-    dev: false
 
   /inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -15669,6 +15512,7 @@ packages:
   /loader-utils@3.2.1:
     resolution: {integrity: sha512-ZvFw1KWS3GVyYBYb7qkmRM/WwL2TQQBxgCK62rlvm4WpVQ23Nb4tYjApUlfjrEGvOs7KHEsmyUn75OHZrJMWPw==}
     engines: {node: '>= 12.13.0'}
+    dev: true
 
   /localforage@1.10.0:
     resolution: {integrity: sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==}
@@ -15704,10 +15548,6 @@ packages:
 
   /lodash-es@4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
-    dev: false
-
-  /lodash.camelcase@4.3.0:
-    resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
     dev: false
 
   /lodash.castarray@4.4.0:
@@ -17705,13 +17545,6 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /path@0.12.7:
-    resolution: {integrity: sha512-aXXC6s+1w7otVF9UletFkFcDsJeO7lSZBPUQhtb5O0xJe8LtYhj/GxldoL09bBj9+ZmE2hNoHqQSFMN5fikh4Q==}
-    dependencies:
-      process: 0.11.10
-      util: 0.10.4
-    dev: false
-
   /pathe@1.1.1:
     resolution: {integrity: sha512-d+RQGp0MAYTIaDBIMmOfMwz3E+LOZnxx1HZd5R18mmCZY0QBlK0LDZfPc8FW8Ed2DlvsuE6PRjroDY+wg4+j/Q==}
 
@@ -17938,6 +17771,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       postcss: 8.4.33
+    dev: true
 
   /postcss-modules-local-by-default@4.0.3(postcss@8.4.33):
     resolution: {integrity: sha512-2/u2zraspoACtrbFRnTijMiQtb4GW4BvatjaG/bCjYQo8kLTdevCUlwuBHx2sCnSyrI3x3qj4ZK1j5LQBgzmwA==}
@@ -17949,6 +17783,7 @@ packages:
       postcss: 8.4.33
       postcss-selector-parser: 6.0.15
       postcss-value-parser: 4.2.0
+    dev: true
 
   /postcss-modules-scope@3.1.0(postcss@8.4.33):
     resolution: {integrity: sha512-SaIbK8XW+MZbd0xHPf7kdfA/3eOt7vxJ72IRecn3EzuZVLr1r0orzf0MX/pN8m+NMDoo6X/SQd8oeKqGZd8PXg==}
@@ -17958,6 +17793,7 @@ packages:
     dependencies:
       postcss: 8.4.33
       postcss-selector-parser: 6.0.15
+    dev: true
 
   /postcss-modules-values@4.0.0(postcss@8.4.33):
     resolution: {integrity: sha512-RDxHkAiEGI78gS2ofyvCsu7iycRv7oqw5xMWn9iMoR0N/7mf9D50ecQqUo5BZ9Zh2vH4bCUR/ktCqbB9m8vJjQ==}
@@ -17967,22 +17803,7 @@ packages:
     dependencies:
       icss-utils: 5.1.0(postcss@8.4.33)
       postcss: 8.4.33
-
-  /postcss-modules@6.0.0(postcss@8.4.33):
-    resolution: {integrity: sha512-7DGfnlyi/ju82BRzTIjWS5C4Tafmzl3R79YP/PASiocj+aa6yYphHhhKUOEoXQToId5rgyFgJ88+ccOUydjBXQ==}
-    peerDependencies:
-      postcss: ^8.0.0
-    dependencies:
-      generic-names: 4.0.0
-      icss-utils: 5.1.0(postcss@8.4.33)
-      lodash.camelcase: 4.3.0
-      postcss: 8.4.33
-      postcss-modules-extract-imports: 3.0.0(postcss@8.4.33)
-      postcss-modules-local-by-default: 4.0.3(postcss@8.4.33)
-      postcss-modules-scope: 3.1.0(postcss@8.4.33)
-      postcss-modules-values: 4.0.0(postcss@8.4.33)
-      string-hash: 1.1.3
-    dev: false
+    dev: true
 
   /postcss-nested@6.0.1(postcss@8.4.33):
     resolution: {integrity: sha512-mEp4xPMi5bSWiMbsgoPfcP74lsWLHkQbZc3sY+jWYd65CUwXrUaTp0fmNpa01ZcETKlIgUdFN/MpS2xZtqL9dQ==}
@@ -18747,17 +18568,6 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /react-social-icons@6.7.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-SgqFyhK8CNNkthPDUCVnvb6n/wa2LxAFrFKT7/0aDDXZfEkQkZnfraJnO36YJGL6iXeIchBs8aKam1awbJv9QA==}
-    peerDependencies:
-      react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
-      react-dom: 15.x.x || 16.x.x || 17.x.x || 18.x.x
-    dependencies:
-      '@babel/runtime': 7.23.8
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
   /react-style-singleton@2.2.1(@types/react@18.2.47)(react@18.2.0):
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
     engines: {node: '>=10'}
@@ -19333,16 +19143,6 @@ packages:
       webpack: 5.89.0(@swc/core@1.3.102)(esbuild@0.18.20)
     dev: true
 
-  /sass@1.70.0:
-    resolution: {integrity: sha512-uUxNQ3zAHeAx5nRFskBnrWzDUJrrvpCPD5FNAoRvTi0WwremlheES3tg+56PaVtCs5QDRX5CBLxxKMDJMEa1WQ==}
-    engines: {node: '>=14.0.0'}
-    hasBin: true
-    dependencies:
-      chokidar: 3.5.3
-      immutable: 4.3.4
-      source-map-js: 1.0.2
-    dev: false
-
   /scheduler@0.23.0:
     resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
     dependencies:
@@ -19911,10 +19711,6 @@ packages:
   /strict-uri-encode@2.0.0:
     resolution: {integrity: sha512-QwiXZgpRcKkhTj2Scnn++4PKtWsH0kpzZ62L2R6c/LUVYv7hVnZqcg2+sMuT6R7Jusu1vviK/MFsu6kNJfWlEQ==}
     engines: {node: '>=4'}
-    dev: false
-
-  /string-hash@1.1.3:
-    resolution: {integrity: sha512-kJUvRUFK49aub+a7T1nNE66EJbZBMnBgoC1UbCZ5n6bsZKBRga4KgBRTMn/pFkeCZSYtNeSyMxPDM0AXWELk2A==}
     dev: false
 
   /string-width@3.1.0:
@@ -21150,12 +20946,6 @@ packages:
 
   /util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
-
-  /util@0.10.4:
-    resolution: {integrity: sha512-0Pm9hTQ3se5ll1XihRic3FDIku70C+iHUdT/W926rSgHV5QgXsYbKZN8MSC3tJtSkhuROzvsQjAaFENRXr+19A==}
-    dependencies:
-      inherits: 2.0.3
-    dev: false
 
   /util@0.12.5:
     resolution: {integrity: sha512-kZf/K6hEIrWHI6XqOFUiiMa+79wE/D8Q+NCNAWclkyg3b4d2k7s0QGepNjiABc+aR3N1PAyHL7p6UcLY6LmrnA==}
