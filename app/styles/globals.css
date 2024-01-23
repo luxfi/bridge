@@ -1,4 +1,10 @@
-@tailwind utilities;
+@import "tailwindcss/base";
+/* see https://stackoverflow.com/questions/69746121/using-nextjs-how-can-you-import-in-css-using-tailwind-css */
+@import "@luxdefi/ui/style/lux-tw-base-layer";
+
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
 @layer utilities {
 
   /* Chrome, Safari, Edge, Opera */

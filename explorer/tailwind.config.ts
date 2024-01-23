@@ -1,9 +1,9 @@
-const defaultColors = require("tailwindcss/colors");
-const luxColors = require('@luxdefi/ui/style/colors.tailwind')
-const { fontFamily } = require('@luxdefi/ui/style/fonts.tailwind')
+import animatePlugin from 'tailwindcss-animate'
+import defaultColors from 'tailwindcss/colors'
+import {colors as luxColors, fontFamily} from '@luxdefi/ui/tailwind'
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: ["class"],
   content: [
     './pages/**/*.{ts,tsx}',
@@ -47,5 +47,5 @@ module.exports = {
     }),
     fontFamily,
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animatePlugin],
 }
