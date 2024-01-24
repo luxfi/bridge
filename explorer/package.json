@@ -11,7 +11,7 @@
     "cn": "rm -rf ./.next"
   },
   "dependencies": {
-    "@luxdefi/ui": "0.1.53",
+    "@luxdefi/ui": "0.1.55",
     "@headlessui/react": "^1.7.15",
     "@heroicons/react": "^2.0.18",
     "@luxbridge/explorer": "link:",
