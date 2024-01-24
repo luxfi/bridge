@@ -20,7 +20,7 @@ export default {
     // No spaces in the curlies!!
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
-    '../ui/**/*.{ts,tsx}',
+    './node_modules/@luxdefi/ui/**/*.{ts,tsx}'
   ],
   darkMode: ["class"],
   theme: {
