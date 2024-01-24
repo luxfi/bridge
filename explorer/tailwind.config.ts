@@ -1,6 +1,6 @@
 import animatePlugin from 'tailwindcss-animate'
 import defaultColors from 'tailwindcss/colors'
-import {colors as luxColors, fontFamily} from '@luxdefi/ui/tailwind'
+import {colors as luxColors, fontFamily, typographyPlugin} from '@luxdefi/ui/tailwind'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -9,6 +9,7 @@ export default {
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
+    './node_modules/@luxdefi/ui/**/*.{ts,tsx}'
 	],
   theme: {
     extend: {
@@ -46,5 +47,8 @@ export default {
     }),
     fontFamily,
   },
-  plugins: [animatePlugin],
+  plugins: [
+    animatePlugin,
+    typographyPlugin({ className: 'typography', base: 16 })
+  ],
 }
