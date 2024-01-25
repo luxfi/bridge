@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react'
 import Script from 'next/script'
 
-import { inter, drukTextWide } from '@luxdefi/ui/next-fonts'
+import { luxFonts } from '@luxdefi/ui/next'
 
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -13,7 +13,7 @@ import metadata from "../metadata"
 
 const bodyClasses = 
 'bg-background text-foreground flex min-h-screen flex-col items-center max-w-6xl mx-auto ' + 
-  `${inter.variable} ${drukTextWide.variable} font-sans` 
+  `${luxFonts.map((el) => (el.variable)).join(' ')} font-sans` 
 
 const RootLayout: React.FC<PropsWithChildren> = ({
   children,

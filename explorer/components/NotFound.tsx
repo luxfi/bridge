@@ -1,7 +1,10 @@
 import React from 'react'
-import BackButton from "@/components/buttons/BackButton"
+
 import { ChevronRight } from "lucide-react"
-import { LinkElement } from '@luxdefi/ui/common'
+
+import { LinkElement } from '@luxdefi/ui/primitives'
+
+import BackButton from "@/components/buttons/BackButton"
 
 const NotFound: React.FC = () => (
   <section>
