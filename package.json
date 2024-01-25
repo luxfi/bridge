@@ -19,6 +19,7 @@
     "build:app": "pnpm --filter @luxbridge/app build",
     "build:explorer": "pnpm --filter @luxbridge/explorer build",
     "build:sdk": "pnpm --filter @luxbridge/sdk build",
+    "build:storybook": "pnpm --filter @luxbridge/app build:storybook",
     "start": "pnpm --filter @luxbridge/app start",
     "dev": "pnpm --filter @luxbridge/app dev"
   },
