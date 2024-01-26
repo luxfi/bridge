@@ -1,7 +1,8 @@
 import React from 'react'
 import defaultColors from "tailwindcss/colors"
 import { ServerOff } from "lucide-react"
-import { LinkElement } from "@luxdefi/ui/common"
+
+import { LinkElement } from "@luxdefi/ui/primitives"
 
 const BrokenServerWithCircles: React.FC<{
   size: number

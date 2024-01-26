@@ -29,10 +29,9 @@ import SendFeedback from "../sendFeedback"
 import { shortenEmail } from '../utils/ShortenAddress'
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper"
 import Menu from "./Menu"
-import { Button } from "@luxdefi/ui/primitives"
+import { Button, LinkElement } from "@luxdefi/ui/primitives"
 
 import socialNav from './social'
-import { LinkElement } from "@luxdefi/ui/common"
 
 const WalletsMenu = dynamic(() => import("../ConnectedWallets").then((comp) => comp.WalletsMenu), {
     loading: () => (<div/>)
