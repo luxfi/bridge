@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+
+import { LinkElement } from "@luxdefi/ui/primitives";
+
 import MessageComponent from "./MessageComponent";
 import inIframe from "./utils/inIframe";
-import Link from "next/link";
-import { LinkElement } from "@luxdefi/ui/common";
 
 const NoCookies: React.FC = () => {
 
