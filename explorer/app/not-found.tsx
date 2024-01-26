@@ -1,7 +1,7 @@
 import React from "react"
 import { ChevronRight, ChevronLeft } from "lucide-react"
-import { LinkElement } from '@luxdefi/ui/common'
 
+import { LinkElement } from '@luxdefi/ui/primitives'
 
 const NotFound: React.FC = () => (
   <main className="grid min-h-full place-items-center px-6 py-24 sm:py-32 lg:px-8">

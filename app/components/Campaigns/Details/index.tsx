@@ -1,12 +1,16 @@
-import { useRouter } from "next/router"
 import { FC } from "react"
+import { useRouter } from "next/router"
+
+import { useAccount } from "wagmi"
+
+import { LinkElement } from "@luxdefi/ui/primitives"
+
 import { useSettingsState } from "../../../context/settings"
 import Image from 'next/image'
 import { Gift } from "lucide-react"
 import BridgeApiClient, { Campaign } from "../../../lib/BridgeApiClient"
 import useSWR from "swr"
 import { ApiResponse } from "../../../Models/ApiResponse"
-import { useAccount } from "wagmi"
 import RainbowKit from "../../Swap/Withdraw/Wallet/RainbowKit"
 import SubmitButton from "../../buttons/submitButton";
 import WalletIcon from "../../icons/WalletIcon";
@@ -16,7 +20,6 @@ import Leaderboard from "./Leaderboard"
 import Rewards from "./Rewards";
 import SpinIcon from "../../icons/spinIcon"
 import { Layer } from "../../../Models/Layer"
-import { LinkElement } from "@luxdefi/ui/common"
 
 function CampaignDetails() {
 

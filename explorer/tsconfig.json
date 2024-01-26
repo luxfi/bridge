@@ -21,7 +21,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+        // https://remarkablemark.org/blog/2023/06/30/react-types-reactnode-error/
+      "react": ["./node_modules/@types/react"]
+
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

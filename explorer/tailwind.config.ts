@@ -45,7 +45,7 @@ export default {
       },
       ...luxColors(theme)
     }),
-    fontFamily,
+    fontFamily, 
   },
   plugins: [
     animatePlugin,

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
-import { ChevronLeft, Home } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 
-import { LinkElement } from "@luxdefi/ui/common"
+import { LinkElement } from "@luxdefi/ui/primitives"
 
 import MessageComponent from "../components/MessageComponent"
 import Navbar from "../components/navbar"

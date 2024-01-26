@@ -4,7 +4,8 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import { FileText, Layers } from 'lucide-react'
 
-import { Logo, LinkElement } from '@luxdefi/ui/common'
+import { Logo } from '@luxdefi/ui/common'
+import { LinkElement } from '@luxdefi/ui/primitives'
 
 import Search from './Search'
 
