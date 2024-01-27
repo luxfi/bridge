@@ -16,7 +16,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@luxdefi/ui": "0.2.1",
+    "@luxdefi/ui": "0.2.2",
     "@eth-optimism/contracts-ts": "^0.15.0",
     "@headlessui/react": "^1.7.3",
     "@imtbl/imx-sdk": "2.1.1",
