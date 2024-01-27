@@ -1,5 +1,5 @@
 # bridge
-Bridge for Lux Network.
+Bridge monorepo for Lux Network.
 
 ## To run locally
 
