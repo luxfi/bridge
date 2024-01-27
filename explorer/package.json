@@ -15,7 +15,7 @@
     "@headlessui/react": "^1.7.15",
     "@heroicons/react": "^2.0.18",
     "@luxbridge/explorer": "link:",
-    "@luxdefi/ui": "0.2.2",
+    "@luxdefi/ui": "0.2.3",
     "@next/mdx": "14.1.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.0.5",
