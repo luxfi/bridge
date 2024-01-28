@@ -1,3 +1,5 @@
+'use client'
+
 import { Dispatch, PropsWithChildren, SetStateAction, useCallback, useEffect, useRef } from 'react'
 import { motion, useAnimation } from "framer-motion";
 import { forwardRef } from 'react';

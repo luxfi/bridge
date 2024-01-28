@@ -1,4 +1,6 @@
 
+'use client'
+
 import { FC } from "react"
 import { useSettingsState } from "../../../context/settings"
 import Image from 'next/image'

@@ -1,3 +1,4 @@
+'use client'
 import { FC } from 'react'
 import { useSettingsState } from '../../context/settings';
 import { SwapItem, TransactionType } from '../../lib/BridgeApiClient';

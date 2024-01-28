@@ -1,3 +1,4 @@
+'use client'
 import HeaderWithMenu from "../HeaderWithMenu"
 import { useRouter } from "next/router"
 import { default as Content } from './Content';

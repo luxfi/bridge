@@ -1,3 +1,4 @@
+'use client'
 import { ISelectMenuItem } from '../Shared/Props/selectMenuItem'
 import {
     CommandEmpty,

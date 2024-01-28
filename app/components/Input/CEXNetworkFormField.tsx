@@ -1,3 +1,4 @@
+'use client'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../shadcn/select"
 import { useFormikContext } from "formik";
 import { forwardRef, useCallback, useEffect, useState } from "react";

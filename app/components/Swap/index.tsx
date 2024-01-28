@@ -1,3 +1,4 @@
+'use client'
 import { FC } from 'react'
 import { Widget } from '../Widget/Index';
 import { useSwapDataState } from '../../context/swap';

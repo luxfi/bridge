@@ -1,3 +1,4 @@
+'use client'
 import { AnimatePresence } from "framer-motion";
 import React, { Dispatch, ReactNode, SetStateAction, useEffect, useRef } from "react";
 import { FC } from "react"

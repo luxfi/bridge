@@ -1,3 +1,5 @@
+'use client'
+
 import { FC } from "react";
 import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 import { Layer } from "../../../Models/Layer";

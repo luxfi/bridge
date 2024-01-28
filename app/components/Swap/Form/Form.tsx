@@ -1,3 +1,4 @@
+'use client'
 import { Form, FormikErrors, useFormikContext } from "formik";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import Image from 'next/image';

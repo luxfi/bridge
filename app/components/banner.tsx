@@ -1,3 +1,4 @@
+'use client'
 import { X } from 'lucide-react'
 import { FC } from 'react'
 import { usePersistedState } from '../hooks/usePersistedState';

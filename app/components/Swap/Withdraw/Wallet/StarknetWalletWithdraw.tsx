@@ -1,3 +1,4 @@
+'use client'
 import { Link, ArrowLeftRight } from 'lucide-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import SubmitButton from '../../../buttons/submitButton';

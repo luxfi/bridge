@@ -1,3 +1,4 @@
+'use client'
 import { Info, ScanFace } from 'lucide-react';
 import { Form, Formik, FormikErrors, FormikProps } from 'formik';
 import { FC, useCallback, useRef, useState } from 'react'

@@ -1,3 +1,4 @@
+'use client'
 import { useMemo } from "react"
 import { useBalancesState } from "../context/balances"
 import useWallet from "../hooks/useWallet"

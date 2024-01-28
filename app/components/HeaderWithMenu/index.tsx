@@ -1,3 +1,4 @@
+'use client'
 import { useIntercom } from "react-use-intercom"
 import { useAuthState } from "../../context/authContext"
 import IconButton from "../buttons/iconButton"

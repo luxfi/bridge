@@ -1,3 +1,4 @@
+'use client'
 import { ExternalLink } from 'lucide-react';
 import { FC } from 'react'
 import { Widget } from '../../../Widget/Index';

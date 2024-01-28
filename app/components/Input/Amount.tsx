@@ -1,3 +1,4 @@
+'use client'
 import { useFormikContext } from "formik";
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SwapFormValues } from "../DTOs/SwapFormValues";

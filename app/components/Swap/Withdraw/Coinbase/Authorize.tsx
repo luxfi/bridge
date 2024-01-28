@@ -1,3 +1,4 @@
+'use client'
 import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import { useSettingsState } from '../../../../context/settings';

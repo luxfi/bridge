@@ -1,3 +1,5 @@
+'use client'
+
 import ClickTooltip from "../../Tooltips/ClickTooltip"
 import ToggleButton from "../../buttons/toggleButton"
 import { useFormikContext } from "formik";

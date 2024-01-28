@@ -1,3 +1,4 @@
+'use client'
 import { ArrowLeft } from 'lucide-react';
 import { useCallback } from 'react';
 import { toast } from 'react-hot-toast';

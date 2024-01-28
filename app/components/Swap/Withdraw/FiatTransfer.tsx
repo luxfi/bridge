@@ -1,3 +1,4 @@
+'use client'
 import { Context, FC, createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSwapDataState } from "../../../context/swap";
 import { StripeOnramp, loadStripeOnramp } from "@stripe/crypto";
