@@ -1,3 +1,4 @@
+'use client'
 import { useFormikContext } from "formik";
 import { forwardRef, useCallback, useEffect, useState } from "react";
 import { useSettingsState } from "../../context/settings";

@@ -1,3 +1,5 @@
+'use client'
+
 import React, { Context, FC } from 'react'
 import { BridgeAppSettings } from '../Models/BridgeAppSettings';
 

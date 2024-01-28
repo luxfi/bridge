@@ -1,3 +1,4 @@
+'use client'
 import { useFormikContext } from "formik";
 import { ChangeEvent, FC, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddressBookItem } from "../../lib/BridgeApiClient";

@@ -162,7 +162,7 @@ export default {
               color: '#FFF',
             },
             a: {
-              color: theme('colors.primary.400'),
+              color: theme('colors.accent'),
             },
             strong: {
               color: '#FFF'

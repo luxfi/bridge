@@ -1,3 +1,4 @@
+'use client'
 import { useRouter } from "next/router";
 import { FC, useCallback } from "react";
 import { useFormWizardaUpdate } from "../../context/formWizardProvider";

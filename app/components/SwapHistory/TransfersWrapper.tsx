@@ -1,3 +1,4 @@
+'use client'
 import { FC } from "react";
 import TransactionsHistory from ".";
 import { useAuthState, UserType } from "../../context/authContext";

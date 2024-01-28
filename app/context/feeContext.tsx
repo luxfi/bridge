@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useState, useContext, useEffect } from 'react'
 import { SwapFormValues } from '../components/DTOs/SwapFormValues';
 import BridgeApiClient from '../lib/BridgeApiClient';

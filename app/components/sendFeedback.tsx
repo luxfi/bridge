@@ -1,3 +1,4 @@
+'use client'
 import { Form, Formik, FormikErrors } from 'formik';
 import { FC, useCallback } from 'react'
 import toast from 'react-hot-toast';

@@ -1,3 +1,4 @@
+'use client'
 import { FC, useCallback } from 'react'
 import { AuthConnectResponse } from '../../../Models/BridgeAuth';
 import VerifyEmailCode from '../../VerifyEmailCode';

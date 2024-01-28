@@ -1,3 +1,4 @@
+'use client'
 import { Dispatch, SetStateAction, ReactNode, useEffect } from "react";
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import { Leaflet } from "./leaflet";

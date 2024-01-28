@@ -1,3 +1,4 @@
+'use client'
 import { FC, PropsWithChildren, useEffect, useRef } from 'react'
 import { useFormWizardaUpdate, useFormWizardState } from '../../context/formWizardProvider';
 import { AnimatePresence } from 'framer-motion';

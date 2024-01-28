@@ -1,3 +1,5 @@
+'use client'
+
 import { Context, useCallback, createContext, useContext, useState } from 'react'
 import { useInterval } from '../hooks/useInterval';
 

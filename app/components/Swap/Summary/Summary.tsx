@@ -1,3 +1,4 @@
+'use client'
 import Image from "next/image";
 import { Fuel } from "lucide-react";
 import { FC, useMemo } from "react";

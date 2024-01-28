@@ -1,3 +1,4 @@
+'use client'
 import { FC } from "react"
 import { Layer } from "../../../Models/Layer"
 import BridgeApiClient, { Campaign } from "../../../lib/BridgeApiClient"
