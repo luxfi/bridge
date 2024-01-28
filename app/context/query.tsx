@@ -1,3 +1,5 @@
+'use client'
+
 import React, { Context, FC } from 'react'
 import { QueryParams } from '../Models/QueryParams';
 

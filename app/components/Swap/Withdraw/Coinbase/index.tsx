@@ -1,3 +1,4 @@
+'use client'
 import { FC, useCallback, useState } from 'react'
 import SubmitButton from '../../../buttons/submitButton';
 import Modal from '../../../modal/modal';

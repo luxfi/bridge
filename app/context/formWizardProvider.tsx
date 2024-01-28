@@ -1,3 +1,5 @@
+'use client'
+
 import React, { Context, useCallback, useState, type PropsWithChildren } from 'react'
 import { LSAPIKnownErrorCode } from '../Models/ApiError';
 import { Steps } from '../Models/Wizard';

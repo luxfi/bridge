@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, FC, SetStateAction, Dispatch } from 'react'
 import { useTimerState } from '../context/timerContext';
 

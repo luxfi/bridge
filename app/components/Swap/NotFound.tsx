@@ -1,3 +1,4 @@
+'use client'
 import { FC, useCallback, useEffect } from "react";
 import MessageComponent from "../MessageComponent";
 import SubmitButton, { DoubleLineText } from "../buttons/submitButton";

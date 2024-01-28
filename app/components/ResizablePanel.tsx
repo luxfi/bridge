@@ -1,3 +1,4 @@
+'use client'
 import { useMeasure } from "@uidotdev/usehooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode } from "react";

@@ -1,3 +1,4 @@
+'use client'
 import { FC, ReactNode, useCallback, useMemo } from "react";
 import {
     useSwitchNetwork,

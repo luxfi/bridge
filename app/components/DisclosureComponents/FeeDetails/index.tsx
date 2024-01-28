@@ -1,4 +1,5 @@
 
+'use client'
 import { SwapFormValues } from '../../DTOs/SwapFormValues';
 import { ReceiveAmounts } from './ReceiveAmounts';
 import DetailedEstimates from './DetailedEstimates';

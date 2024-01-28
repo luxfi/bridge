@@ -1,3 +1,5 @@
+'use client'
+
 import React, { FC } from "react";
 import useSWR from 'swr'
 import { Gift } from "lucide-react";

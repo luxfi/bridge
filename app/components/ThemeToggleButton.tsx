@@ -1,3 +1,4 @@
+'use client'
 import { Button } from '@luxdefi/ui/primitives'
 import React, { type PropsWithChildren, useState, useEffect  } from 'react'
 import { useTheme } from 'next-themes'

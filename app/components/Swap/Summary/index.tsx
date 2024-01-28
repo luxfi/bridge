@@ -1,3 +1,4 @@
+'use client'
 import { FC, useEffect } from "react"
 import { useSettingsState } from "../../../context/settings"
 import { useSwapDataState } from "../../../context/swap"

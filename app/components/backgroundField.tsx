@@ -1,3 +1,4 @@
+'use client'
 import { FC, PropsWithChildren } from "react";
 import CopyButton from "./buttons/copyButton";
 import QRCodeModal from "./QRCodeWallet";

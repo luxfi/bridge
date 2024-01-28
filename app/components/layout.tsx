@@ -1,3 +1,4 @@
+'use client'
 import React, { useEffect } from "react"
 import { ErrorBoundary } from "react-error-boundary";
 import { useRouter } from "next/router";

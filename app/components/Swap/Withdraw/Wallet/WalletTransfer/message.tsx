@@ -1,3 +1,4 @@
+'use client'
 import { FC, useState } from "react";
 import FailIcon from "../../../../icons/FailIcon";
 import Modal from "../../../../modal/modal";
