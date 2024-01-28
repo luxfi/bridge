@@ -26,8 +26,8 @@ importers:
         specifier: 1.4.13
         version: 1.4.13(@babel/core@7.23.7)(react@18.2.0)
       '@luxdefi/ui':
-        specifier: 0.2.3
-        version: 0.2.3(@next/mdx@14.1.0)(@types/react-dom@18.2.18)(@types/react@18.2.48)(next-themes@0.2.1)(next@14.1.0)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
+        specifier: 0.2.4
+        version: 0.2.4(@next/mdx@14.1.0)(@types/react-dom@18.2.18)(@types/react@18.2.48)(next-themes@0.2.1)(next@14.1.0)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1)
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
@@ -3013,8 +3013,8 @@ packages:
       - '@types/react-dom'
     dev: false
 
-  /@luxdefi/ui@0.2.3(@next/mdx@14.1.0)(@types/react-dom@18.2.18)(@types/react@18.2.48)(next-themes@0.2.1)(next@14.1.0)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-vhMBWDRW4RhzigaRNl2WvPME19MAE+S2eqxebjvPQY2USCnuStN4TbvVI+2v6tqD08TTZGaYoeDUBaWeXgzpOA==}
+  /@luxdefi/ui@0.2.4(@next/mdx@14.1.0)(@types/react-dom@18.2.18)(@types/react@18.2.48)(next-themes@0.2.1)(next@14.1.0)(react-dom@18.2.0)(react@18.2.0)(tailwind-merge@2.2.1)(tailwindcss-animate@1.0.7)(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-RVXNLvVU70i2L4HmuZOk96TRUSTLNekwmz4NiP4iC/ZKjpe4YZu0ugWD/7w8rfWWPwSAXmnYeQh9tFu1ZajyHw==}
     peerDependencies:
       '@next/mdx': ^14.1.0
       next: ^14.1.0
