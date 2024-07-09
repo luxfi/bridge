@@ -9,7 +9,7 @@ import {
   deleteSwap,
   prepareSwap,
   webhook,
-} from './controller.js';
+} from './controller';
 
 const router = express.Router();
 

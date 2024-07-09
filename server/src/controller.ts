@@ -1,12 +1,13 @@
 import axios from 'axios';
-import { prodHost, apiKey, webhookSecret } from '../env.dev.js';
-import { Swaps } from './model.js';
+import { prodHost, apiKey, webhookSecret } from "@/config";
+import { Swaps } from '@/model';
 import { Webhook } from 'svix';
 import { buffer } from 'micro';
+import express, { Router, Request, Response } from "express";
 
-const getNetworks = async (req, res) => {
+export const getNetworks = async (req: Request, res: Response) => {
   try {
-    const response = await axios.get(`${prodHost}/available_networks?version=any`, {
+    const response = await axios.get(`${prodHost}/networks`, {
       headers: {
         accept: 'application/json',
       },
@@ -18,7 +19,7 @@ const getNetworks = async (req, res) => {
   }
 };
 
-const getRoutes = async (req, res) => {
+export const getRoutes = async (req: Request, res: Response) => {
   const {
     source,
     destination,
@@ -41,7 +42,7 @@ const getRoutes = async (req, res) => {
   }
 };
 
-const getRate = async (req, res) => {
+export const getRate = async (req: Request, res: Response) => {
   const {
     source,
     destination,
@@ -72,7 +73,7 @@ const getRate = async (req, res) => {
   }
 };
 
-const createSwap = async (req, res) => {
+export const createSwap = async (req: Request, res: Response) => {
   const {
     source,
     destination,
@@ -122,14 +123,14 @@ const createSwap = async (req, res) => {
   }
 };
 
-const getSwaps = async (req, res) => {
+export const getSwaps = async (req: Request, res: Response) => {
   try {
     let swaps = await Swaps.findAll({
       attributes: ['swapId'],
       raw: true,
     });
     const responses = await Promise.all(
-      swaps.map(({ swapId }) => {
+      swaps.map(({ swapId }: any) => {
         return axios.get(`${prodHost}/swaps/${swapId}`, {
           headers: {
             'X-LS-APIKEY': apiKey,
@@ -144,7 +145,7 @@ const getSwaps = async (req, res) => {
   }
 };
 
-const getSwap = async (req, res) => {
+export const getSwap = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const response = await axios.get(`${prodHost}/swaps/${id}`, {
@@ -158,7 +159,7 @@ const getSwap = async (req, res) => {
   }
 };
 
-const deleteSwap = async (req, res) => {
+export const deleteSwap = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const response = await axios.delete(`${prodHost}/swaps/${id}`, {
@@ -179,7 +180,8 @@ const deleteSwap = async (req, res) => {
   }
 };
 
-const prepareSwap = async (req, res) => {
+export const prepareSwap = async (req: Request, res: Response) => {
+  const { id } = req.params;
   const { fromAddress } = req.body;
   try {
     const response = await axios.get(`${prodHost}/swaps${id}/prepare?from_address=${fromAddress}`, {
@@ -195,30 +197,19 @@ const prepareSwap = async (req, res) => {
   }
 };
 
-const webhook = async (req, res) => {
-  const payload = req.body;
-  const headers = req.headers;
-  const io = req.io;
-  const wh = new Webhook(webhookSecret);
-  let msg;
-  try {
-    // Convert to string as payload should be string or buffer
-    msg = wh.verify(JSON.stringify(payload), headers);
-    io.emit('message', msg);
-  } catch (err) {
-    return res.status(400).json({});
-  }
-  res.json({});
+export const webhook = async (req: any, res: any) => {
+  // const payload = req.body;
+  // const headers = req.headers;
+  // const io = req.io;
+  // const wh = new Webhook(webhookSecret);
+  // let msg;
+  // try {
+  //   // Convert to string as payload should be string or buffer
+  //   msg = wh.verify(JSON.stringify(payload), headers);
+  //   io.emit('message', msg);
+  // } catch (err) {
+  //   return res.status(400).json({});
+  // }
+  // res.json({});
 };
 
-export {
-  getNetworks,
-  getRoutes,
-  getRate,
-  createSwap,
-  getSwaps,
-  getSwap,
-  deleteSwap,
-  prepareSwap,
-  webhook,
-};

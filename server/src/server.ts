@@ -4,9 +4,9 @@ import cors from 'cors';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
-import { allowedOrigin, port } from './env.dev.js';
-import { sequelize } from './src/model.js';
-import router from './src/routes.js';
+import { allowedOrigin, port } from '@/config';
+import { sequelize } from '@/model';
+import router from '@/routes';
 
 const corsOptions = {
   origin: allowedOrigin,
@@ -25,7 +25,7 @@ io.on('connection', socket => {
     console.log('user disconnected');
   });
 });
-app.use((req, res, next) => {
+app.use((req: any, res: any, next) => {
   req.io = io;
   next();
 });
@@ -41,7 +41,7 @@ app.use(
 
 app.use('/api', router);
 
-await sequelize.sync();
+sequelize.sync();
 
 server.listen(port, () => {
   console.log(`Server is running on port ${port}.`);
