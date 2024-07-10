@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+
   },
   "author": "Lux Partners Limited",
   "dependencies": {
@@ -360,9 +362,7 @@
     "yaeti": "^0.0.6",
     "yallist": "^3.1.1"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+ 
   "devDependencies": {
     "eslint": "^8.22.0"
   }
