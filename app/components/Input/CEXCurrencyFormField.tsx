@@ -21,8 +21,6 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         setFieldValue,
     } = useFormikContext<SwapFormValues>();
 
-    //   console.log("nanana", useFormikContext<SwapFormValues>().values)
-
     const { resolveImgSrc } = useSettingsState();
     const name = "currencyGroup";
 
@@ -65,9 +63,6 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         assets &&
         Object.keys(assets).map((a) => ({ name: a, networks: assets[a] }));
 
-    console.log({assetNames})
-
-
     const lockedCurrency = query?.lockAsset
         ? assetNames?.find(
             (a) => a.name.toUpperCase() === query?.asset?.toUpperCase()
@@ -85,10 +80,8 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         to,
         direction
     );
-
     
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
-    console.log({currencyMenuItems, value})
     
     useEffect(() => {
         if (value) return;
