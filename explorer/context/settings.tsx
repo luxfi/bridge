@@ -12,7 +12,8 @@ const SettingsStateContext = React.createContext<BridgeAppSettings | null>(null)
 export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const fetcher = (url: string) => fetch(url).then(r => r.json());
-  const version = process.env.NEXT_PUBLIC_API_VERSION;
+  // const version = process.env.NEXT_PUBLIC_API_VERSION;
+  const version = 'sandbox'
 
   const { data: netWorkData } = useSWR<ApiResponse<CryptoNetwork[]>>(`${AppSettings.BridgeApiUri}/api/networks?version=${version}`, fetcher, { dedupingInterval: 60000 })
   const { data: exchangeData } = useSWR<ApiResponse<CryptoNetwork[]>>(`${AppSettings.BridgeApiUri}/api/exchanges?version=${version}`, fetcher, { dedupingInterval: 60000 })

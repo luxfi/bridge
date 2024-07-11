@@ -43,7 +43,8 @@ type Transaction = {
 const DataTable: React.FC = () => {
 
   const fetcher = (url: string) => fetch(url).then(r => r.json())
-  const version = process.env.NEXT_PUBLIC_API_VERSION
+  // const version = process.env.NEXT_PUBLIC_API_VERSION
+  const version = 'sandbox'
   const settings = useSettingsState()
 
   const { data, error, isLoading } = useSWR<ApiResponse<Swap[]>>(`${AppSettings.BridgeApiUri}/api/explorer/?statuses=1&statuses=4&version=${version}`, fetcher, { dedupingInterval: 60000 });
