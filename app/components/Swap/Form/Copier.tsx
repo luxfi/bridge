@@ -44,7 +44,7 @@ const ClipboardCopier = ({ text, size }: { text: string, size?: number }) => {
                 setIsCopied(false);
             }, 500);
         } catch (err) {
-
+            console.log(err)
         }
     }
 
