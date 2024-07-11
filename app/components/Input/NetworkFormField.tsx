@@ -125,7 +125,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     >();
 
     useEffect(() => {
-        if (!isLoading && routes?.data) setRoutesData(routes?.data?.data);
+        if (!isLoading && routes?.data) setRoutesData(routes?.data);
     }, [routes]);
 
     if (direction === "from") {
