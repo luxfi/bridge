@@ -16,170 +16,241 @@ import { ApiResponse } from "../../Models/ApiResponse";
 import { Balance } from "../../Models/Balance";
 
 const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
-  const {
-    values: { to, fromCurrency, toCurrency, from, currencyGroup },
-    setFieldValue,
-  } = useFormikContext<SwapFormValues>();
+    const {
+        values: { to, fromCurrency, toCurrency, from, currencyGroup },
+        setFieldValue,
+    } = useFormikContext<SwapFormValues>();
 
-  const { resolveImgSrc } = useSettingsState();
-  const name = "currencyGroup";
+    //   console.log("nanana", useFormikContext<SwapFormValues>().values)
 
-  const query = useQueryState();
+    const { resolveImgSrc } = useSettingsState();
+    const name = "currencyGroup";
 
-  const apiClient = new BridgeApiClient();
-  const version = BridgeApiClient.apiVersion;
+    const query = useQueryState();
 
-  const sourceRoutesURL = `/sources${
-    to && toCurrency
-      ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
-      : "?"
-  }version=${version}`;
-  const destinationRoutesURL = `/destinations${
-    from && fromCurrency
-      ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
-      : "?"
-  }version=${version}`;
+    const apiClient = new BridgeApiClient();
+    const version = BridgeApiClient.apiVersion;
 
-  const { data: sourceRoutes } = useSWR<
-    ApiResponse<
-      {
-        network: string;
-        asset: string;
-      }[]
-    >
-  >(sourceRoutesURL, apiClient.fetcher);
+    const sourceRoutesURL = `/sources${to && toCurrency
+        ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+        : "?"
+        }version=${version}`;
+    const destinationRoutesURL = `/destinations${from && fromCurrency
+        ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
+        : "?"
+        }version=${version}`;
 
-  const { data: destinationRoutes } = useSWR<
-    ApiResponse<
-      {
-        network: string;
-        asset: string;
-      }[]
-    >
-  >(destinationRoutesURL, apiClient.fetcher);
+    const { data: sourceRoutes } = useSWR<
+        ApiResponse<
+            {
+                network: string;
+                asset: string;
+            }[]
+        >
+    >(sourceRoutesURL, apiClient.fetcher);
 
-  const routes =
-    direction === "from"
-      ? sourceRoutes?.data.exchanges
-      : destinationRoutes?.data.exchanges;
-  console.log("routes===>", routes);
+    const { data: destinationRoutes } = useSWR<
+        ApiResponse<
+            {
+                network: string;
+                asset: string;
+            }[]
+        >
+    >(destinationRoutesURL, apiClient.fetcher);
 
-  const assets = routes && groupBy(routes, ({ asset }) => asset);
-  const assetNames =
-    assets &&
-    Object.keys(assets).map((a) => ({ name: a, networks: assets[a] }));
-  const lockedCurrency = query?.lockAsset
-    ? assetNames?.find(
-        (a) => a.name.toUpperCase() === query?.asset?.toUpperCase()
-      )
-    : undefined;
+    // const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
 
-  const filteredCurrencies = lockedCurrency ? [lockedCurrency] : assetNames;
-  const currencyMenuItems = GenerateCurrencyMenuItems(
-    filteredCurrencies!,
-    resolveImgSrc,
-    direction === "from" ? sourceRoutes?.data : destinationRoutes?.data,
-    lockedCurrency,
-    from,
-    to,
-    direction
-  );
+    const routes = [
+        {
+            "network": "ETHEREUM_SEPOLIA",
+            "asset": "ETH"
+        },
+        {
+            "network": "IMMUTABLEX_SEPOLIA",
+            "asset": "ETH"
+        },
+        {
+            "network": "ARBITRUM_SEPOLIA",
+            "asset": "ETH"
+        },
+        {
+            "network": "STARKNET_GOERLI",
+            "asset": "ETH"
+        },
+        {
+            "network": "POLYGON_MUMBAI",
+            "asset": "ETH"
+        },
+        {
+            "network": "LOOPRING_SEPOLIA",
+            "asset": "ETH"
+        },
+        {
+            "network": "ZKSYNCERA_GOERLI",
+            "asset": "ETH"
+        },
+        {
+            "network": "ETHEREUM_SEPOLIA",
+            "asset": "USDC"
+        },
+        {
+            "network": "ARBITRUM_SEPOLIA",
+            "asset": "USDC"
+        },
+        {
+            "network": "STARKNET_GOERLI",
+            "asset": "USDC"
+        },
+        {
+            "network": "OPTIMISM_SEPOLIA",
+            "asset": "USDC"
+        },
+        {
+            "network": "SOLANA_DEVNET",
+            "asset": "USDC"
+        },
+        {
+            "network": "STARKNET_SEPOLIA",
+            "asset": "ETH"
+        },
+        {
+            "network": "STARKNET_SEPOLIA",
+            "asset": "ARUSDC"
+        },
+        {
+            "network": "METIS_SEPOLIA",
+            "asset": "TMETIS"
+        },
+        {
+            "network": "STARKNET_SEPOLIA",
+            "asset": "DAI1"
+        },
+        {
+            "network": "STARKNET_SEPOLIA",
+            "asset": "DAI2"
+        }
+    ]
 
-  const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
+    const assets = routes && groupBy(routes, ({ asset }) => asset);
+    
+    const assetNames =
+        assets &&
+        Object.keys(assets).map((a) => ({ name: a, networks: assets[a] }));
 
-  useEffect(() => {
-    if (value) return;
-    setFieldValue(name, currencyMenuItems?.[0]);
-  }, []);
+    const lockedCurrency = query?.lockAsset
+        ? assetNames?.find(
+            (a) => a.name.toUpperCase() === query?.asset?.toUpperCase()
+        )
+        : undefined;
 
-  const handleSelect = useCallback(
-    (item: SelectMenuItem<AssetGroup>) => {
-      setFieldValue(name, item.baseObject, true);
-    },
-    [name, direction, toCurrency, fromCurrency, from, to]
-  );
+    console.log('lockedcurrency...')
 
-  return (
-    <div className="relative">
-      <PopoverSelectWrapper
-        placeholder="Asset"
-        values={currencyMenuItems}
-        value={value}
-        setValue={handleSelect}
-        disabled={!value?.isAvailable?.value}
-      />
-    </div>
-  );
+    const filteredCurrencies = lockedCurrency ? [lockedCurrency] : assetNames;
+    const currencyMenuItems = GenerateCurrencyMenuItems(
+        filteredCurrencies!,
+        resolveImgSrc,
+        direction === "from" ? sourceRoutes?.data : destinationRoutes?.data,
+        lockedCurrency,
+        from,
+        to,
+        direction
+    );
+
+    const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
+
+    useEffect(() => {
+        if (value) return;
+        setFieldValue(name, currencyMenuItems?.[0]);
+    }, []);
+
+    const handleSelect = useCallback(
+        (item: SelectMenuItem<AssetGroup>) => {
+            setFieldValue(name, item.baseObject, true);
+        },
+        [name, direction, toCurrency, fromCurrency, from, to]
+    );
+
+    return (
+        <div className="relative">
+            <PopoverSelectWrapper
+                placeholder="Asset"
+                values={currencyMenuItems}
+                value={value}
+                setValue={handleSelect}
+                disabled={!value?.isAvailable?.value}
+            />
+        </div>
+    );
 };
 
 export function GenerateCurrencyMenuItems(
-  currencies: AssetGroup[],
-  resolveImgSrc: (item: Layer | NetworkCurrency | undefined) => string,
-  routes?: { network: string; asset: string }[],
-  lockedCurrency?: AssetGroup | undefined,
-  from?: Layer,
-  to?: Layer,
-  direction?: string,
-  balances?: Balance[]
+    currencies: AssetGroup[],
+    resolveImgSrc: (item: Layer | NetworkCurrency | undefined) => string,
+    routes?: { network: string; asset: string }[],
+    lockedCurrency?: AssetGroup | undefined,
+    from?: Layer,
+    to?: Layer,
+    direction?: string,
+    balances?: Balance[]
 ): SelectMenuItem<AssetGroup>[] {
-  let currencyIsAvailable = () => {
-    if (lockedCurrency) {
-      return {
-        value: false,
-        disabledReason: CurrencyDisabledReason.LockAssetIsTrue,
-      };
-    }
-    // else if (from && to && routes?.some(r => r.asset !== currency.asset && r.network !== (direction === 'from' ? from.internal_name : to.internal_name))) {
-    //     return { value: false, disabledReason: CurrencyDisabledReason.InvalidRoute }
-    // }
-    else {
-      return { value: true, disabledReason: null };
-    }
-  };
+    let currencyIsAvailable = () => {
+        if (lockedCurrency) {
+            return {
+                value: false,
+                disabledReason: CurrencyDisabledReason.LockAssetIsTrue,
+            };
+        }
+        // else if (from && to && routes?.some(r => r.asset !== currency.asset && r.network !== (direction === 'from' ? from.internal_name : to.internal_name))) {
+        //     return { value: false, disabledReason: CurrencyDisabledReason.InvalidRoute }
+        // }
+        else {
+            return { value: true, disabledReason: null };
+        }
+    };
 
-  const storageUrl = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL;
+    const storageUrl = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL;
 
-  return currencies
-    ?.map((c) => {
-      const currency = c;
-      const displayName = lockedCurrency?.name ?? currency.name;
+    return currencies
+        ?.map((c) => {
+            const currency = c;
+            const displayName = lockedCurrency?.name ?? currency.name;
 
-      const res: SelectMenuItem<AssetGroup> = {
-        baseObject: c,
-        id: c.name,
-        name: displayName || "-",
-        order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
-        imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
-        isAvailable: currencyIsAvailable(),
-        type: "currency",
-      };
-      return res;
-    })
-    .sort(SortingByOrder);
+            const res: SelectMenuItem<AssetGroup> = {
+                baseObject: c,
+                id: c.name,
+                name: displayName || "-",
+                order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
+                imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
+                isAvailable: currencyIsAvailable(),
+                type: "currency",
+            };
+            return res;
+        })
+        .sort(SortingByOrder);
 }
 
 export enum CurrencyDisabledReason {
-  LockAssetIsTrue = "",
-  InsufficientLiquidity = "Temporarily disabled. Please check later.",
-  InvalidRoute = "Invalid route",
+    LockAssetIsTrue = "",
+    InsufficientLiquidity = "Temporarily disabled. Please check later.",
+    InvalidRoute = "Invalid route",
 }
 
 const groupBy = <T, K extends keyof any>(list: T[], getKey: (item: T) => K) => {
-  console.log("list===>", list);
+    console.log("list===>", list);
 
-  return list.reduce((previous, currentItem) => {
-    const group = getKey(currentItem);
-    if (!previous[group]) previous[group] = [];
-    previous[group].push(currentItem);
-    return previous;
-  }, {} as Record<K, T[]>);
+    return list.reduce((previous, currentItem) => {
+        const group = getKey(currentItem);
+        if (!previous[group]) previous[group] = [];
+        previous[group].push(currentItem);
+        return previous;
+    }, {} as Record<K, T[]>);
 };
 export type AssetGroup = {
-  name: string;
-  networks: {
-    network: string;
-    asset: string;
-  }[];
+    name: string;
+    networks: {
+        network: string;
+        asset: string;
+    }[];
 };
 
 export default CurrencyGroupFormField;
