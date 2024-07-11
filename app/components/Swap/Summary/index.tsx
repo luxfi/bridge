@@ -29,7 +29,7 @@ const SwapSummary: FC = () => {
 
     useEffect(() => {
         valuesChanger({
-            amount: swap?.requested_amount.toString(),
+            amount: swap?.requested_amount?.toString(),
             destination_address: swap?.destination_address,
             from: source_layer,
             to: destination_layer,
