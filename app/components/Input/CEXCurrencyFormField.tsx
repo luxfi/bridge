@@ -80,9 +80,9 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         to,
         direction
     );
-    
+
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
-    
+
     useEffect(() => {
         if (value) return;
         setFieldValue(name, currencyMenuItems?.[0]);
@@ -90,7 +90,22 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
 
     const handleSelect = useCallback(
         (item: SelectMenuItem<AssetGroup>) => {
-            setFieldValue(name, item.baseObject, true);
+            console.log("handleChange....", direction, { item })
+            setFieldValue(`${direction}Currency`, {
+                "name": currencyGroup?.name,
+                "asset": currencyGroup?.networks[0].asset,
+                "contract_address": null,
+                "decimals": 18,
+                "status": "active",
+                "is_deposit_enabled": true,
+                "is_withdrawal_enabled": false,
+                "is_refuel_enabled": false,
+                "max_withdrawal_amount": 0,
+                "deposit_fee": 0.2,
+                "withdrawal_fee": 0.2,
+                "source_base_fee": 1,
+                "destination_base_fee": 1
+            }, true);
         },
         [name, direction, toCurrency, fromCurrency, from, to]
     );
@@ -162,8 +177,6 @@ export enum CurrencyDisabledReason {
 }
 
 const groupBy = <T, K extends keyof any>(list: T[], getKey: (item: T) => K) => {
-    console.log("list===>", list);
-
     return list.reduce((previous, currentItem) => {
         const group = getKey(currentItem);
         if (!previous[group]) previous[group] = [];
