@@ -58,78 +58,11 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         >
     >(destinationRoutesURL, apiClient.fetcher);
 
-    // const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
+    console.log({destinationRoutes, sourceRoutes});
 
-    const routes = [
-        {
-            "network": "ETHEREUM_SEPOLIA",
-            "asset": "ETH"
-        },
-        {
-            "network": "IMMUTABLEX_SEPOLIA",
-            "asset": "ETH"
-        },
-        {
-            "network": "ARBITRUM_SEPOLIA",
-            "asset": "ETH"
-        },
-        {
-            "network": "STARKNET_GOERLI",
-            "asset": "ETH"
-        },
-        {
-            "network": "POLYGON_MUMBAI",
-            "asset": "ETH"
-        },
-        {
-            "network": "LOOPRING_SEPOLIA",
-            "asset": "ETH"
-        },
-        {
-            "network": "ZKSYNCERA_GOERLI",
-            "asset": "ETH"
-        },
-        {
-            "network": "ETHEREUM_SEPOLIA",
-            "asset": "USDC"
-        },
-        {
-            "network": "ARBITRUM_SEPOLIA",
-            "asset": "USDC"
-        },
-        {
-            "network": "STARKNET_GOERLI",
-            "asset": "USDC"
-        },
-        {
-            "network": "OPTIMISM_SEPOLIA",
-            "asset": "USDC"
-        },
-        {
-            "network": "SOLANA_DEVNET",
-            "asset": "USDC"
-        },
-        {
-            "network": "STARKNET_SEPOLIA",
-            "asset": "ETH"
-        },
-        {
-            "network": "STARKNET_SEPOLIA",
-            "asset": "ARUSDC"
-        },
-        {
-            "network": "METIS_SEPOLIA",
-            "asset": "TMETIS"
-        },
-        {
-            "network": "STARKNET_SEPOLIA",
-            "asset": "DAI1"
-        },
-        {
-            "network": "STARKNET_SEPOLIA",
-            "asset": "DAI2"
-        }
-    ]
+    const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
+
+    
 
     const assets = routes && groupBy(routes, ({ asset }) => asset);
     
