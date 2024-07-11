@@ -76,19 +76,22 @@ export default function Form() {
     const handleSubmit = useCallback(async (values: SwapFormValues) => {
         try {
             const accessToken = TokenService.getAuthData()?.access_token
-            if (!accessToken) {
-                try {
-                    var apiClient = new BridgeAuthApiClient();
-                    const res = await apiClient.guestConnectAsync()
-                    updateAuthData(res)
-                    setUserType(UserType.GuestUser)
-                }
-                catch (error) {
-                    toast.error(error.response?.data?.error || error.message)
-                    return;
-                }
-            }
+            console.log(accessToken)
+            // if (!accessToken) {
+            //     try {
+            //         var apiClient = new BridgeAuthApiClient();
+            //         const res = await apiClient.guestConnectAsync()
+            //         updateAuthData(res)
+            //         setUserType(UserType.GuestUser)
+            //     }
+            //     catch (error) {
+            //         toast.error(error.response?.data?.error || error.message)
+            //         return;
+            //     }
+            // }
+            console.log({values, query, partner})
             const swapId = await createSwap(values, query, partner);
+            console.log({swapId})
 
             if (swapId) {
                 setSwapId(swapId)
