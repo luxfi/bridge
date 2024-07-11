@@ -89,6 +89,9 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
     [name]
   );
 
+
+  console.log({name})
+
   const value = menuItems?.find(
     (item) =>
       item.baseObject.asset ===

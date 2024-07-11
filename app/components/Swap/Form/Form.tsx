@@ -218,12 +218,12 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
 
   const sourceCanBeSwapped =
     !destinationLoading &&
-    destinationRoutes?.data?.data?.some((l) => {
+    destinationRoutes?.data?.some((l) => {
       return l.network === source?.internal_name;
     });
   const destinationCanBeSwapped =
     !sourceLoading &&
-    sourceRoutes?.data?.data?.some(
+    sourceRoutes?.data?.some(
       (l) => l.network === destination?.internal_name
     );
 

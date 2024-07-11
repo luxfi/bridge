@@ -79,6 +79,10 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
     >
   >(sourceRoutesURL, apiClient.fetcher);
 
+  useEffect(() => {
+    console.log(values)
+  }, [values])
+
   const { data: destinationRoutes, error: destRoutesError } = useSWR<
     ApiResponse<
       {
@@ -108,8 +112,8 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
     balances[wallet?.address || ""]
   );
 
-  const currencyAsset =
-    direction === "from" ? fromCurrency?.asset : toCurrency?.asset;
+  const currencyAsset = direction === "from" ? fromCurrency?.asset : toCurrency?.asset;
+
   useEffect(() => {
     let currencyIsAvailable =
       (fromCurrency || toCurrency) &&
@@ -193,8 +197,7 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
     [name, direction, toCurrency, fromCurrency, from, to]
   );
 
-  const balanceAmount =
-    direction === "from" ? walletBalanceAmount : destinationBalanceAmount;
+  const balanceAmount = direction === "from" ? walletBalanceAmount : destinationBalanceAmount;
 
   return (
     <div className="relative">
