@@ -84,8 +84,11 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
 
     useEffect(() => {
-        if (!value) return;
+        if (value) return;
         setFieldValue(name, currencyMenuItems?.[0]);
+    }, []);
+
+    useEffect(() => {
         setFieldValue(`${direction}Currency`, {
             "name": currencyGroup?.name,
             "asset": currencyGroup?.name,
@@ -105,7 +108,7 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
             ...fromExchange,
             "assets": [],
         }, true);
-    }, []);
+    }, [fromExchange])
 
     const handleSelect = useCallback(
         (item: SelectMenuItem<AssetGroup>) => {
