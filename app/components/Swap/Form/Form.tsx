@@ -213,8 +213,8 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
       : `/destinations?${apiVersion ? "version=" : ""}${apiVersion}`,
     client.fetcher
   );
-  console.log("sourceLoading====>", sourceRoutes, sourceLoading);
-  console.log("destinationLoading====>", destinationRoutes, destinationLoading);
+  // console.log("sourceLoading====>", {sourceRoutes, sourceLoading});
+  // console.log("destinationLoading====>", {destinationRoutes, destinationLoading});
 
   const sourceCanBeSwapped =
     !destinationLoading &&
