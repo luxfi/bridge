@@ -58,17 +58,15 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         >
     >(destinationRoutesURL, apiClient.fetcher);
 
-    console.log({destinationRoutes, sourceRoutes});
-
     const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
-
-    
-
     const assets = routes && groupBy(routes, ({ asset }) => asset);
-    
+
     const assetNames =
         assets &&
         Object.keys(assets).map((a) => ({ name: a, networks: assets[a] }));
+
+    console.log({assetNames})
+
 
     const lockedCurrency = query?.lockAsset
         ? assetNames?.find(
@@ -76,9 +74,8 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         )
         : undefined;
 
-    console.log('lockedcurrency...')
-
     const filteredCurrencies = lockedCurrency ? [lockedCurrency] : assetNames;
+
     const currencyMenuItems = GenerateCurrencyMenuItems(
         filteredCurrencies!,
         resolveImgSrc,
@@ -89,8 +86,10 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         direction
     );
 
+    
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
-
+    console.log({currencyMenuItems, value})
+    
     useEffect(() => {
         if (value) return;
         setFieldValue(name, currencyMenuItems?.[0]);
@@ -153,7 +152,8 @@ export function GenerateCurrencyMenuItems(
                 id: c.name,
                 name: displayName || "-",
                 order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
-                imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
+                // imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
+                imgSrc: `/assets/tickers/currencies/${c.name.toLowerCase()}.png`,
                 isAvailable: currencyIsAvailable(),
                 type: "currency",
             };
