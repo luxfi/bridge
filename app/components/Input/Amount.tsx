@@ -11,7 +11,7 @@ import useWallet from "../../hooks/useWallet";
 import useBalance from "../../hooks/useBalance";
 
 const AmountField = forwardRef(function AmountField(_, ref: any) {
-
+    
     const { values, setFieldValue, handleChange } = useFormikContext<SwapFormValues>();
     const [requestedAmountInUsd, setRequestedAmountInUsd] = useState<string>();
     const { fromCurrency, from, to, destination_address, toCurrency } = values || {};

@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { useFormikContext } from "formik";
 import { FC, useCallback, useEffect } from "react";
 import { useSettingsState } from "../../context/settings";
@@ -17,37 +17,60 @@ import { Balance } from "../../Models/Balance";
 
 const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     const {
-        values: { to, fromCurrency, toCurrency, from, currencyGroup },
+        values: { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange },
         setFieldValue,
     } = useFormikContext<SwapFormValues>();
 
     const { resolveImgSrc } = useSettingsState();
-    const name = 'currencyGroup'
+    const name = "currencyGroup";
 
-    const query = useQueryState()
+    const query = useQueryState();
 
-    const apiClient = new BridgeApiClient()
-    const version = BridgeApiClient.apiVersion
+    const apiClient = new BridgeApiClient();
+    const version = BridgeApiClient.apiVersion;
 
-    const sourceRoutesURL = `/routes/sources${(to && toCurrency) ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&` : "?"}version=${version}`
-    const destinationRoutesURL = `/routes/destinations${(from && fromCurrency) ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&` : "?"}version=${version}`
+    const sourceRoutesURL = `/sources${to && toCurrency
+        ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+        : "?"
+        }version=${version}`;
+    const destinationRoutesURL = `/destinations${from && fromCurrency
+        ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
+        : "?"
+        }version=${version}`;
 
-    const { data: sourceRoutes } = useSWR<ApiResponse<{
-        network: string,
-        asset: string
-    }[]>>(sourceRoutesURL, apiClient.fetcher)
+    const { data: sourceRoutes } = useSWR<
+        ApiResponse<
+            {
+                network: string;
+                asset: string;
+            }[]
+        >
+    >(sourceRoutesURL, apiClient.fetcher);
 
-    const { data: destinationRoutes } = useSWR<ApiResponse<{
-        network: string,
-        asset: string
-    }[]>>(destinationRoutesURL, apiClient.fetcher)
+    const { data: destinationRoutes } = useSWR<
+        ApiResponse<
+            {
+                network: string;
+                asset: string;
+            }[]
+        >
+    >(destinationRoutesURL, apiClient.fetcher);
 
     const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
-    const assets = routes && groupBy(routes, ({ asset }) => asset)
-    const assetNames = assets && Object.keys(assets).map(a => ({ name: a, networks: assets[a] }))
-    const lockedCurrency = query?.lockAsset ? assetNames?.find(a => a.name.toUpperCase() === (query?.asset)?.toUpperCase()) : undefined
+    const assets = routes && groupBy(routes, ({ asset }) => asset);
 
-    const filteredCurrencies = lockedCurrency ? [lockedCurrency] : assetNames
+    const assetNames =
+        assets &&
+        Object.keys(assets).map((a) => ({ name: a, networks: assets[a] }));
+
+    const lockedCurrency = query?.lockAsset
+        ? assetNames?.find(
+            (a) => a.name.toUpperCase() === query?.asset?.toUpperCase()
+        )
+        : undefined;
+
+    const filteredCurrencies = lockedCurrency ? [lockedCurrency] : assetNames;
+
     const currencyMenuItems = GenerateCurrencyMenuItems(
         filteredCurrencies!,
         resolveImgSrc,
@@ -55,79 +78,145 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         lockedCurrency,
         from,
         to,
-        direction,
-    )
+        direction
+    );
 
-    const value = currencyMenuItems?.find(x => x.id == currencyGroup?.name);
+    const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
 
     useEffect(() => {
-        if (value) return
-        setFieldValue(name, currencyMenuItems?.[0])
-    }, [])
+        if (value) return;
+        setFieldValue(name, currencyMenuItems?.[0]);
+    }, []);
 
-    const handleSelect = useCallback((item: SelectMenuItem<AssetGroup>) => {
-        setFieldValue(name, item.baseObject, true)
-    }, [name, direction, toCurrency, fromCurrency, from, to])
+    useEffect(() => {
+        setFieldValue(`${direction}Currency`, {
+            "name": currencyGroup?.name,
+            "asset": currencyGroup?.name,
+            "contract_address": null,
+            "decimals": 18,
+            "status": "active",
+            "is_deposit_enabled": true,
+            "is_withdrawal_enabled": false,
+            "is_refuel_enabled": false,
+            "max_withdrawal_amount": 0,
+            "deposit_fee": 0.2,
+            "withdrawal_fee": 0.2,
+            "source_base_fee": 1,
+            "destination_base_fee": 1
+        }, true);
+        setFieldValue(`${direction}`, {
+            ...fromExchange,
+            "assets": [],
+        }, true);
+    }, [fromExchange])
 
+    const handleSelect = useCallback(
+        (item: SelectMenuItem<AssetGroup>) => {
+            setFieldValue(name, item.baseObject, true);
+            setFieldValue(`${direction}Currency`, {
+                "name": currencyGroup?.name,
+                "asset": currencyGroup?.name,
+                "contract_address": null,
+                "decimals": 18,
+                "status": "active",
+                "is_deposit_enabled": true,
+                "is_withdrawal_enabled": false,
+                "is_refuel_enabled": false,
+                "max_withdrawal_amount": 0,
+                "deposit_fee": 0.2,
+                "withdrawal_fee": 0.2,
+                "source_base_fee": 1,
+                "destination_base_fee": 1
+            }, true);
+            setFieldValue(`${direction}`, {
+                ...fromExchange,
+                "assets": [],
+            }, true);
+            
+        },
+        [name, direction, toCurrency, fromCurrency, from, to]
+    );
 
-    return <div className="relative">
-        <PopoverSelectWrapper placeholder="Asset" values={currencyMenuItems} value={value} setValue={handleSelect} disabled={!value?.isAvailable?.value} />
-    </div>
+    return (
+        <div className="relative">
+            <PopoverSelectWrapper
+                placeholder="Asset"
+                values={currencyMenuItems}
+                value={value}
+                setValue={handleSelect}
+                disabled={!value?.isAvailable?.value}
+            />
+        </div>
+    );
 };
 
-export function GenerateCurrencyMenuItems(currencies: AssetGroup[], resolveImgSrc: (item: Layer | NetworkCurrency | undefined) => string, routes?: { network: string, asset: string }[], lockedCurrency?: AssetGroup | undefined, from?: Layer, to?: Layer, direction?: string, balances?: Balance[]): SelectMenuItem<AssetGroup>[] {
-
+export function GenerateCurrencyMenuItems(
+    currencies: AssetGroup[],
+    resolveImgSrc: (item: Layer | NetworkCurrency | undefined) => string,
+    routes?: { network: string; asset: string }[],
+    lockedCurrency?: AssetGroup | undefined,
+    from?: Layer,
+    to?: Layer,
+    direction?: string,
+    balances?: Balance[]
+): SelectMenuItem<AssetGroup>[] {
     let currencyIsAvailable = () => {
         if (lockedCurrency) {
-            return { value: false, disabledReason: CurrencyDisabledReason.LockAssetIsTrue }
+            return {
+                value: false,
+                disabledReason: CurrencyDisabledReason.LockAssetIsTrue,
+            };
         }
         // else if (from && to && routes?.some(r => r.asset !== currency.asset && r.network !== (direction === 'from' ? from.internal_name : to.internal_name))) {
         //     return { value: false, disabledReason: CurrencyDisabledReason.InvalidRoute }
         // }
         else {
-            return { value: true, disabledReason: null }
+            return { value: true, disabledReason: null };
         }
-    }
+    };
 
-    const storageUrl = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL
+    const storageUrl = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL;
 
-    return currencies?.map(c => {
-        const currency = c
-        const displayName = lockedCurrency?.name ?? currency.name;
+    return currencies
+        ?.map((c) => {
+            const currency = c;
+            const displayName = lockedCurrency?.name ?? currency.name;
 
-        const res: SelectMenuItem<AssetGroup> = {
-            baseObject: c,
-            id: c.name,
-            name: displayName || "-",
-            order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
-            imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
-            isAvailable: currencyIsAvailable(),
-            type: 'currency'
-        };
-        return res
-    }).sort(SortingByOrder);
+            const res: SelectMenuItem<AssetGroup> = {
+                baseObject: c,
+                id: c.name,
+                name: displayName || "-",
+                order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
+                // imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
+                imgSrc: `/assets/tickers/currencies/${c.name.toLowerCase()}.png`,
+                isAvailable: currencyIsAvailable(),
+                type: "currency",
+            };
+            return res;
+        })
+        .sort(SortingByOrder);
 }
 
 export enum CurrencyDisabledReason {
-    LockAssetIsTrue = '',
-    InsufficientLiquidity = 'Temporarily disabled. Please check later.',
-    InvalidRoute = 'Invalid route'
+    LockAssetIsTrue = "",
+    InsufficientLiquidity = "Temporarily disabled. Please check later.",
+    InvalidRoute = "Invalid route",
 }
 
-
-const groupBy = <T, K extends keyof any>(list: T[], getKey: (item: T) => K) => list.reduce((previous, currentItem) => {
-    const group = getKey(currentItem);
-    if (!previous[group]) previous[group] = [];
-    previous[group].push(currentItem);
-    return previous;
-}, {} as Record<K, T[]>);
-
+const groupBy = <T, K extends keyof any>(list: T[], getKey: (item: T) => K) => {
+    return list.reduce((previous, currentItem) => {
+        const group = getKey(currentItem);
+        if (!previous[group]) previous[group] = [];
+        previous[group].push(currentItem);
+        return previous;
+    }, {} as Record<K, T[]>);
+};
 export type AssetGroup = {
     name: string;
     networks: {
         network: string;
         asset: string;
     }[];
-}
+};
 
-export default CurrencyGroupFormField
+export default CurrencyGroupFormField;

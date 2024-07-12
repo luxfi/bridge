@@ -78,7 +78,7 @@ export default function PopoverSelectWrapper<T>({
                         </div>
                 }
             </PopoverTrigger>
-            <PopoverContent className="w-fit">
+            <PopoverContent className="w-fit bg-[white]">
                 <PopoverSelect setValue={handleSelect} value={value} values={values} />
             </PopoverContent>
         </Popover>

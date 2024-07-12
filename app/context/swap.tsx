@@ -89,6 +89,10 @@ export function SwapDataProvider({ id, children }: { id?: string, children: any 
         const data: PublishedSwapTransactions = JSON.parse(localStorage.getItem('swapTransactions') || "{}")
         const txForSwap = data.state.swapTransactions?.[swapId];
         setSwapTransaction(txForSwap)
+        setSwapTransaction({
+            hash: '1234',
+            status: 0
+        })
     }, [swapId])
 
     const createSwap = useCallback(async (values: SwapFormValues, query: QueryParams, partner: Partner) => {
@@ -121,7 +125,7 @@ export function SwapDataProvider({ id, children }: { id?: string, children: any 
         if (swapResponse?.error) {
             throw swapResponse?.error
         }
-
+        console.log(swapResponse)
         const swapId = swapResponse?.data?.swap_id;
         return swapId;
     }, [])
