@@ -34,10 +34,12 @@ export class BridgeAppSettings {
             return (item as Partner)?.logo_url;
         }
         else if ((item as any)?.internal_name != undefined) {
-            basePath.pathname = `/layerswap/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+            // basePath.pathname = `/layerswap/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+            return `/assets/tickers/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
         }
         else if ((item as any)?.asset != undefined) {
-            basePath.pathname = `/layerswap/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
+            // basePath.pathname = `/layerswap/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
+            return `/assets/tickers/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
         }
 
         return basePath.href;
@@ -52,7 +54,8 @@ export class BridgeAppSettings {
         const networkLayers: Layer[] = networks?.map((n): Layer =>
         ({
             assets: BridgeAppSettings.ResolveNetworkL2Assets(n, sourceRoutes, destinationRoutes),
-            img_url: `${basePath}layerswap/networks/${n?.internal_name?.toLowerCase()}.png`,
+            // img_url: `${basePath}layerswap/networks/${n?.internal_name?.toLowerCase()}.png`,
+            img_url: `/assets/tickers/networks/${n?.internal_name?.toLowerCase()}.png`,
             ...n,
         }))
         return networkLayers

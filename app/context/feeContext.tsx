@@ -60,7 +60,7 @@ export function FeeProvider({ children }) {
         wallet_min_amount: number
         wallet_min_amount_in_usd: number
     }>>((from && fromCurrency && to && toCurrency) ?
-        `/routes/limits/${from?.internal_name}/${fromCurrency?.asset}/${to?.internal_name}/${toCurrency?.asset}?version=${version}` : null, apiClient.fetcher, {
+        `/limits/${from?.internal_name}/${fromCurrency?.asset}/${to?.internal_name}/${toCurrency?.asset}?version=${version}` : null, apiClient.fetcher, {
         refreshInterval: 10000,
     })
 

@@ -3,6 +3,7 @@ import { Formik, FormikProps } from "formik";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettingsState } from "../../../context/settings";
 import { SwapFormValues } from "../../DTOs/SwapFormValues";
+import Copier from './Copier';
 import { useSwapDataState, useSwapDataUpdate } from "../../../context/swap";
 import React from "react";
 import ConnectNetwork from "../../ConnectNetwork";
@@ -76,19 +77,22 @@ export default function Form() {
     const handleSubmit = useCallback(async (values: SwapFormValues) => {
         try {
             const accessToken = TokenService.getAuthData()?.access_token
-            if (!accessToken) {
-                try {
-                    var apiClient = new BridgeAuthApiClient();
-                    const res = await apiClient.guestConnectAsync()
-                    updateAuthData(res)
-                    setUserType(UserType.GuestUser)
-                }
-                catch (error) {
-                    toast.error(error.response?.data?.error || error.message)
-                    return;
-                }
-            }
+            console.log(accessToken)
+            // if (!accessToken) {
+            //     try {
+            //         var apiClient = new BridgeAuthApiClient();
+            //         const res = await apiClient.guestConnectAsync()
+            //         updateAuthData(res)
+            //         setUserType(UserType.GuestUser)
+            //     }
+            //     catch (error) {
+            //         toast.error(error.response?.data?.error || error.message)
+            //         return;
+            //     }
+            // }
+            console.log({values, query, partner})
             const swapId = await createSwap(values, query, partner);
+            console.log({swapId})
 
             if (swapId) {
                 setSwapId(swapId)
@@ -168,9 +172,18 @@ export default function Form() {
         header={`Complete the swap`}
         onClose={handleClosesSwapModal}
       >
-        <ResizablePanel>
+        {/* <ResizablePanel>
           <SwapDetails type="contained" />
-        </ResizablePanel>
+        </ResizablePanel> */}
+        <div className="w-full py-2">
+            <div className="my-5 px-2 py-3 rounded-lg border-[#9e88882c] bg-[black]/20">
+                <div className="">Deposit Address</div>
+                <div className="flex gap-1 items-center">
+                    <div className="text-sm mt-1 truncate">0x2781BDC83A612F0FE382476556C0Cc12fE602294</div>
+                    <Copier text="0x2781BDC83A612F0FE382476556C0Cc12fE602294"/>
+                </div>
+            </div>
+        </div>
       </Modal>
       <Formik
           innerRef={formikRef}
