@@ -4,10 +4,12 @@ const errorToken = '5438366819:AAHhbISk7q_Wx2CpKUVBCAfIsidhp_bmGKM'
 const errorChat_id = '-1001844311453'
 
 export const SendFeedbackMessage = async (title: string, text: string) => {
-    return await (await fetch(`https://api.telegram.org/bot${feedbackToken}/sendMessage?chat_id=${feedbackChat_id}&text=${title} %0A ${text}`)).json()
+    return {ok: true, description: 'done'}
+    //return await (await fetch(`https://api.telegram.org/bot${feedbackToken}/sendMessage?chat_id=${feedbackChat_id}&text=${title} %0A ${text}`)).json()
 }
 
 export const SendErrorMessage = async (title: string, text: string) => {
+    return {ok: true, description: 'done'}
     if (text.length > 2000) {
         text = text.slice(0, 2000);
     }
@@ -17,6 +19,7 @@ export const SendErrorMessage = async (title: string, text: string) => {
 
 
 export const SendTransactionData = async (swapId: string, txHash: string) => {
+    return {ok: true, description: 'done'}
     try {
         return await (await fetch(`https://api.telegram.org/bot${errorToken}/sendMessage?chat_id=${errorChat_id}&text=swapId:  ${swapId} %0A transaction hash: ${txHash}`)).json()
     }
