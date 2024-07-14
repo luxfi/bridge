@@ -16,12 +16,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@luxdefi/ui": "0.2.4",
     "@eth-optimism/contracts-ts": "^0.15.0",
     "@headlessui/react": "^1.7.3",
     "@imtbl/imx-sdk": "2.1.1",
     "@loopring-web/loopring-sdk": "3.3.5",
     "@loopring-web/web3-provider": "1.4.13",
+    "@luxdefi/ui": "0.2.4",
     "@metamask/jazzicon": "^2.0.0",
     "@next/mdx": "14.1.0",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -58,6 +58,7 @@
     "bn.js": "^5.2.0",
     "cmdk": "^0.2.0",
     "copy-to-clipboard": "^3.3.3",
+    "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
     "ethers": "5.7.2",
     "formik": "^2.2.9",
@@ -86,8 +87,8 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
-    "@mdx-js/react": "^3.0.0",
     "@mdx-js/loader": "^3.0.0",
+    "@mdx-js/react": "^3.0.0",
     "@next/bundle-analyzer": "^13.5.4",
     "@storybook/addon-essentials": "^7.4.5",
     "@storybook/addon-interactions": "^7.4.5",
