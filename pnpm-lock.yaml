@@ -136,6 +136,9 @@ importers:
       copy-to-clipboard:
         specifier: ^3.3.3
         version: 3.3.3
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.5
       crypto-js:
         specifier: ^4.1.1
         version: 4.2.0
