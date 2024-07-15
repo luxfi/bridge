@@ -17,7 +17,7 @@ export default [
   },
   {
       title: 'GitHub',
-      href: 'https://github.com/luxdefi',
+      href: 'https://github.com/luxfi',
       icon: <GitHubLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=GitHub'
   },
