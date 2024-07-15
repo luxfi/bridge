@@ -32,7 +32,7 @@ const footerNavigation = {
       },
       {
           name: 'GitHub',
-          href: 'https://github.com/luxdefi',
+          href: 'https://github.com/luxfi',
           icon: (props: any) => (
               <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
                   <path
