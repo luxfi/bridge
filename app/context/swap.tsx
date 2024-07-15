@@ -83,17 +83,17 @@ export function SwapDataProvider({ id, children }: { id?: string, children: any 
         setSelectedAssetNetwork(defaultSourceNetwork)
     }, [defaultSourceNetwork])
 
-    useEffect(() => {
-        if (!swapId)
-            return
-        const data: PublishedSwapTransactions = JSON.parse(localStorage.getItem('swapTransactions') || "{}")
-        const txForSwap = data.state.swapTransactions?.[swapId];
-        setSwapTransaction(txForSwap)
-        setSwapTransaction({
-            hash: '1234',
-            status: 0
-        })
-    }, [swapId])
+    // useEffect(() => {
+    //     if (!swapId)
+    //         return
+    //     const data: PublishedSwapTransactions = JSON.parse(localStorage.getItem('swapTransactions') || "{}")
+    //     const txForSwap = data.state.swapTransactions?.[swapId];
+    //     setSwapTransaction(txForSwap)
+    //     setSwapTransaction({
+    //         hash: '1234',
+    //         status: 0
+    //     })
+    // }, [swapId])
 
     const createSwap = useCallback(async (values: SwapFormValues, query: QueryParams, partner: Partner) => {
         if (!values)
