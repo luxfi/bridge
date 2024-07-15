@@ -9,5 +9,5 @@ export default async function handler(
   const isMainnet = versionFromQuery === 'mainnet' || process.env.NEXT_PUBLIC_API_VERSION === 'mainnet';
   const settings = isMainnet ? mainnetSettings : testnetSettings;
 
-  res.status(200).json(testnetSettings);
+  res.status(200).json(settings);
 }
