@@ -1,7 +1,6 @@
 import { FormikErrors } from "formik";
 import { SwapFormValues } from "../components/DTOs/SwapFormValues";
 import { isValidAddress } from "./addressValidator";
-import React from "react";
 
 export default function MainStepValidation({ maxAllowedAmount, minAllowedAmount }: { minAllowedAmount: number | undefined, maxAllowedAmount: number | undefined }): ((values: SwapFormValues) => FormikErrors<SwapFormValues>) {
     return (values: SwapFormValues) => {
@@ -13,15 +12,15 @@ export default function MainStepValidation({ maxAllowedAmount, minAllowedAmount 
         if (!((values.from && values.fromCurrency) || (values.currencyGroup && values.fromExchange))) {
             (errors.from as any) = 'Select source';
         }
-        if (!values.to) {
+        if (!values.to || !values.toCurrency) {
             (errors.to as any) = 'Select destination';
         }
-        if (!values.fromCurrency) {
-            (errors.fromCurrency as any) = 'Select source asset';
-        }
-        if (!values.toCurrency) {
-            (errors.toCurrency as any) = 'Select destination asset';
-        }
+        // if (!values.fromCurrency) {
+        //     (errors.fromCurrency as any) = 'Select source asset';
+        // }
+        // if (!values.toCurrency) {
+        //     (errors.toCurrency as any) = 'Select destination asset';
+        // }
         if (!amount) {
             errors.amount = 'Enter an amount';
         }
