@@ -1,6 +1,6 @@
 "use client";
 import { useFormikContext } from "formik";
-import { forwardRef, useCallback, useEffect, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { useSettingsState } from "../../context/settings";
 import { SwapFormValues } from "../DTOs/SwapFormValues";
 import {
@@ -79,6 +79,8 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { resolveImgSrc, layers, exchanges } = useSettingsState();
 
+    console.log({layers, exchanges})
+
     let placeholder = "";
     let searchHint = "";
     let filteredLayers: Layer[];
@@ -117,12 +119,16 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         >
     >(routesEndpoint, apiClient.fetcher);
 
+    console.log('routersEdnpoint ==========>', routesEndpoint)
+
     const [routesData, setRoutesData] = useState<
         {
             network: string;
             asset: string;
         }[]
     >();
+
+    console.log('routes data ================>', routes)
 
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
@@ -133,7 +139,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap from";
         filteredLayers = layers.filter(
             (l) =>
-                routesData?.some((r) => r.network === l.internal_name) &&
+                // routesData?.some((r) => r.network === l.internal_name) &&
                 l.internal_name !== filterWith?.internal_name
         );
         menuItems = GenerateMenuItems(
@@ -148,7 +154,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap to";
         filteredLayers = layers.filter(
             (l) =>
-                routesData?.some((r) => r.network === l.internal_name) &&
+                // routesData?.some((r) => r.network === l.internal_name) &&
                 l.internal_name !== filterWith?.internal_name
         );
         menuItems = GenerateMenuItems(
@@ -160,6 +166,8 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         );
     }
     valueGrouper = groupByType;
+
+    console.log("menu items ==================>", menuItems)
 
     const value = menuItems.find((x) =>
         x.type === "layer"
@@ -187,6 +195,10 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         fee.walletReceiveAmount?.toFixed(toCurrency?.precision) || ""
     );
     const destinationNetworkCurrency = to && toCurrency ? toCurrency : null;
+
+    React.useEffect(() => {
+        console.log("current selected value =============>", value)
+    }, [value])
 
     return (
         <div className={`p-3 ${className}`}>
@@ -222,6 +234,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                             )}
                         </div> : <>-</>
                     }
+                    {value?.type}
                     {value?.type === "cex" ? (
                         <CurrencyGroupFormField direction={name} />
                     ) : (
