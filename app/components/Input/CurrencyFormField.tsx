@@ -21,6 +21,9 @@ import { Balance } from "../../Models/Balance";
 const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const { values, setFieldValue } = useFormikContext<SwapFormValues>();
   const { to, fromCurrency, toCurrency, from, currencyGroup } = values;
+
+  console.log("network currency form field =====", values)
+
   const [allRoutes, setAllRoutes] = useState<string[]>([]);
   const { resolveImgSrc } = useSettingsState();
   const name = direction === "from" ? "fromCurrency" : "toCurrency";
@@ -59,16 +62,27 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const apiClient = new BridgeApiClient();
   const version = BridgeApiClient.apiVersion;
 
-  const sourceRoutesURL = `/sources${
-    to && toCurrency
-      ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
-      : "?"
-  }version=${version}`;
-  const destinationRoutesURL = `/destinations${
-    from && fromCurrency
-      ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
-      : "?"
-  }version=${version}`;
+  // const sourceRoutesURL = `/sources${
+  //   to && toCurrency
+  //     ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+  //     : "?"
+  // }version=${version}`;
+  // const destinationRoutesURL = `/destinations${
+  //   from && fromCurrency
+  //     ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
+  //     : "?"
+  // }version=${version}`;
+
+  const destinationRoutesURL = `/destinations${to && toCurrency
+    ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+    : "?"
+    }version=${version}`;
+
+  //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
+  const sourceRoutesURL = `/sources${from
+    ? `?source_network=${from.internal_name}&source_asset=${fromCurrency?.asset}&`
+    : "?"
+    }version=${version}`;
 
   const { data: sourceRoutes, error: sourceRoutesError } = useSWR<
     ApiResponse<
