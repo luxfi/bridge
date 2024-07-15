@@ -79,10 +79,6 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
     >
   >(sourceRoutesURL, apiClient.fetcher);
 
-  useEffect(() => {
-    console.log(values)
-  }, [values])
-
   const { data: destinationRoutes, error: destRoutesError } = useSWR<
     ApiResponse<
       {
