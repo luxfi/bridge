@@ -15,10 +15,8 @@ export interface SwapTransactionRequest {
   use_deposit_address: boolean;
 }
 
-// 初始化 Prisma 客户端
 const prisma = new PrismaClient();
 
-// 定义请求体的校验模式
 const swapTransactionSchema = Joi.object({
   amount: Joi.number().required(),
   destination_address: Joi.string().required(),
@@ -77,7 +75,6 @@ export default async function handler(
         .json({ error: "Error adding swap transaction to the database" });
     }
   } else {
-    // 如果请求方法不是 POST，返回 405 方法不允许
     res.status(405).json({ error: "Method not allowed" });
   }
 }
