@@ -99,19 +99,16 @@ export function SwapDataProvider({ id, children }: { id?: string, children: any 
         if (!values)
             throw new Error("No swap data")
 
-        const { to, fromCurrency, toCurrency, from, refuel, fromExchange, toExchange } = values
+        const { to, fromCurrency, currencyGroup, toCurrency, from, refuel, fromExchange, toExchange } = values
 
-        if (!to || !fromCurrency || !toCurrency || !from || !values.amount || !values.destination_address)
+        if (!to || (!fromCurrency && !currencyGroup) || !toCurrency || (!from && !fromExchange) || !values.amount || !values.destination_address)
             throw new Error("Form data is missing")
-
-        const sourceLayer = from
-        const destinationLayer = to
 
         const data: CreateSwapParams = {
             amount: values.amount,
-            source: sourceLayer?.internal_name,
-            destination: destinationLayer?.internal_name,
-            source_asset: fromCurrency.asset,
+            source: from?.internal_name ?? fromExchange?.internal_name as string,
+            destination: to?.internal_name,
+            source_asset: fromCurrency?.asset ?? currencyGroup?.name as string,
             destination_asset: toCurrency.asset,
             source_exchange: fromExchange?.internal_name,
             destination_exchange: toExchange?.internal_name,
