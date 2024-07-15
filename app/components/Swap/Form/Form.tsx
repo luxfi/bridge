@@ -51,6 +51,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
     to: destination,
     fromCurrency,
     toCurrency,
+    currencyGroup,
     from: source,
     fromExchange,
     toExchange,
@@ -289,7 +290,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                   {`To ${values?.to?.display_name || ""} address`}
                 </label>
                 <AddressButton
-                  disabled={!values.to || !values.from}
+                  disabled={!values.to || (!values.from && !currencyGroup)}
                   isPartnerWallet={!!isPartnerWallet}
                   openAddressModal={() => setShowAddressModal(true)}
                   partnerImage={partnerImage}

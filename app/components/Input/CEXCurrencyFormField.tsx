@@ -116,11 +116,6 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
 
     // useEffect(() => {
-    //     if (value) return;
-    //     setFieldValue(name, currencyMenuItems?.[0]);
-    // }, []);
-
-    // useEffect(() => {
     //     if (currencyMenuItems?.length > 0) {
     //         setFieldValue(name, currencyMenuItems[0].baseObject, true);
     //     }
