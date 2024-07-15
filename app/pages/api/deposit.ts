@@ -3,6 +3,18 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import Joi from "joi";
 
+export interface SwapTransactionRequest {
+  amount: number;
+  destination_address: string;
+  destination_network: string;
+  destination_token: string;
+  refuel: boolean;
+  source_address: string;
+  source_network: string;
+  source_token: string;
+  use_deposit_address: boolean;
+}
+
 // 初始化 Prisma 客户端
 const prisma = new PrismaClient();
 
@@ -40,7 +52,7 @@ export default async function handler(
       source_network,
       source_token,
       use_deposit_address,
-    } = req.body;
+    }: SwapTransactionRequest = value;
 
     try {
       const newSwapTransaction = await prisma.swapUserInfo.create({
