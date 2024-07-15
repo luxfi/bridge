@@ -1,13 +1,16 @@
 import { FormikErrors } from "formik";
 import { SwapFormValues } from "../components/DTOs/SwapFormValues";
 import { isValidAddress } from "./addressValidator";
+import React from "react";
 
 export default function MainStepValidation({ maxAllowedAmount, minAllowedAmount }: { minAllowedAmount: number | undefined, maxAllowedAmount: number | undefined }): ((values: SwapFormValues) => FormikErrors<SwapFormValues>) {
     return (values: SwapFormValues) => {
         let errors: FormikErrors<SwapFormValues> = {};
         let amount = Number(values.amount);
 
-        if (!values.from) {
+        console.log("validateor >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", values)
+
+        if (!((values.from && values.fromCurrency) || (values.currencyGroup && values.fromExchange))) {
             (errors.from as any) = 'Select source';
         }
         if (!values.to) {
