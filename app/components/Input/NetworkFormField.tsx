@@ -79,8 +79,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { resolveImgSrc, layers, exchanges } = useSettingsState();
 
-    console.log({layers, exchanges})
-
     let placeholder = "";
     let searchHint = "";
     let filteredLayers: Layer[];
@@ -119,7 +117,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         >
     >(routesEndpoint, apiClient.fetcher);
 
-    console.log('routersEdnpoint ==========>', routesEndpoint)
+    // console.log('routersEdnpoint ==========>', routesEndpoint)
 
     const [routesData, setRoutesData] = useState<
         {
@@ -128,7 +126,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         }[]
     >();
 
-    console.log('routes data ================>', routes)
+    // console.log('routes data ================>', routes)
 
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
@@ -154,20 +152,18 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap to";
         filteredLayers = layers.filter(
             (l) =>
-                // routesData?.some((r) => r.network === l.internal_name) &&
+                l.internal_name === 'LUX_MAINNET' &&
                 l.internal_name !== filterWith?.internal_name
         );
         menuItems = GenerateMenuItems(
             filteredLayers,
-            fromExchange ? [] : exchanges,
+            fromExchange ? [] : [],
             resolveImgSrc,
             direction,
             !!(to && lockTo)
         );
     }
     valueGrouper = groupByType;
-
-    console.log("menu items ==================>", menuItems)
 
     const value = menuItems.find((x) =>
         x.type === "layer"
@@ -179,8 +175,8 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     const handleSelect = useCallback(
         (item: SelectMenuItem<Layer | Exchange>) => {
             if (item.type === "cex") {
+                setFieldValue("from", null, true);
                 setFieldValue(`${name}Exchange`, item.baseObject, true);
-                setFieldValue(name, null, true);
             } else {
                 setFieldValue(`${name}Exchange`, null, true);
                 setFieldValue(name, item.baseObject, true);
@@ -196,9 +192,9 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     );
     const destinationNetworkCurrency = to && toCurrency ? toCurrency : null;
 
-    React.useEffect(() => {
-        console.log("current selected value =============>", value)
-    }, [value])
+    // React.useEffect(() => {
+    //     console.log("current selected value =============>", value)
+    // }, [value])
 
     return (
         <div className={`p-3 ${className}`}>
@@ -234,7 +230,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                             )}
                         </div> : <>-</>
                     }
-                    {value?.type}
+                    {/* {value?.type} */}
                     {value?.type === "cex" ? (
                         <CurrencyGroupFormField direction={name} />
                     ) : (
