@@ -7,8 +7,7 @@ export default async function handler(
 ) {
     const versionFromQuery = req.query.version as string;
     const isMainnet = versionFromQuery === 'mainnet' || process.env.NEXT_PUBLIC_API_VERSION === 'mainnet';
-    // const settings = isMainnet ? mainnetSettings : testnetSettings;
-    const settings = testnetSettings;
+    const settings = isMainnet ? mainnetSettings : testnetSettings;
 
     res.status(200).json({
         data: {
