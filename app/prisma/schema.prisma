@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// pnpx prisma generate    
+// npx prisma db push                                  
+
+model SwapUserInfo {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount             Float?
+  destinationAddress String?
+  destinationNetwork String?
+  destinationToken   String?
+  refuel             Boolean? @default(false)
+  sourceAddress      String?
+  sourceNetwork      String?
+  sourceToken        String?
+  useDepositAddress  Boolean? @default(false)
+  createdAt          DateTime @default(now())
+}
