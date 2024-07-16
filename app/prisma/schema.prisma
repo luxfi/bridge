@@ -9,23 +9,23 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.sqlite"
 }
 
 // pnpx prisma generate    
 // npx prisma db push                                  
 
 model SwapUserInfo {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                 String   @id @unique @default(uuid()) @map("_id")
   amount             Float?
   destinationAddress String?
   destinationNetwork String?
   destinationToken   String?
-  refuel             Boolean? @default(false)
+  refuel             Boolean  @default(false)
   sourceAddress      String?
   sourceNetwork      String?
   sourceToken        String?
-  useDepositAddress  Boolean? @default(false)
+  useDepositAddress  Boolean  @default(false)
   createdAt          DateTime @default(now())
 }
