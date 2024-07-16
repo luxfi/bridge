@@ -5,7 +5,8 @@ export enum NetworkType {
     Cosmos = "cosmos",
     StarkEx = "stark_ex",
     ZkSyncLite = "zk_sync_lite",
-    TON = 'ton'
+    TON = "ton",
+    Bitocoin = "btc"
 }
 
 export class CryptoNetwork {

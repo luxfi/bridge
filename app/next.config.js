@@ -22,12 +22,25 @@ module.exports = (phase, { defaultConfig }) => {
       defaultLocale: "en",
     },
     images: {
-      domains: ["stagelslayerswapbridgesa.blob.core.windows.net", "bransferstorage.blob.core.windows.net", "devlslayerswapbridgesa.blob.core.windows.net", "prodlslayerswapbridgesa.blob.core.windows.net"],
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: "stagelslayerswapbridgesa.blob.core.windows.net"
+        },
+        {
+          protocol: 'https',
+          hostname: "devlslayerswapbridgesa.blob.core.windows.net"
+        },
+        {
+          protocol: 'https',
+          hostname: "prodlslayerswapbridgesa.blob.core.windows.net"
+        },
+      ],
     },
     compiler: {
       removeConsole: false,
     },
-    reactStrictMode: true,
+    reactStrictMode: false,
     webpack: (config) => {
 
       config.resolve.fallback = { fs: false, net: false, tls: false };

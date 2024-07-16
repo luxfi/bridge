@@ -57,7 +57,8 @@ const options = {
 };
 
 const basePath = process.env.NEXT_PUBLIC_APP_BASE_PATH
-const version = process.env.NEXT_PUBLIC_API_VERSION
+// const version = process.env.NEXT_PUBLIC_API_VERSION
+const version = 'sandbox'
 
 export default function SearchData({ searchParam }: { searchParam: string }) {
 

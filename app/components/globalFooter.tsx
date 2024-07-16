@@ -32,7 +32,7 @@ const GlobalFooter = () => {
             },
             {
                 name: 'GitHub',
-                href: 'https://github.com/luxdefi',
+                href: 'https://github.com/luxfi',
                 icon: () => (
                     <GitHubLogo className="h-6 w-6" aria-hidden="true" />
                 ),

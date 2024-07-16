@@ -51,6 +51,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
     to: destination,
     fromCurrency,
     toCurrency,
+    currencyGroup,
     from: source,
     fromExchange,
     toExchange,
@@ -213,17 +214,17 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
       : `/destinations?${apiVersion ? "version=" : ""}${apiVersion}`,
     client.fetcher
   );
-  console.log("sourceLoading====>", sourceRoutes, sourceLoading);
-  console.log("destinationLoading====>", destinationRoutes, destinationLoading);
+  // console.log("sourceLoading====>", {sourceRoutes, sourceLoading});
+  // console.log("destinationLoading====>", {destinationRoutes, destinationLoading});
 
   const sourceCanBeSwapped =
     !destinationLoading &&
-    destinationRoutes?.data?.data?.some((l) => {
+    destinationRoutes?.data?.some((l) => {
       return l.network === source?.internal_name;
     });
   const destinationCanBeSwapped =
     !sourceLoading &&
-    sourceRoutes?.data?.data?.some(
+    sourceRoutes?.data?.some(
       (l) => l.network === destination?.internal_name
     );
 
@@ -289,7 +290,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                   {`To ${values?.to?.display_name || ""} address`}
                 </label>
                 <AddressButton
-                  disabled={!values.to || !values.from}
+                  disabled={!values.to || (!values.from && !currencyGroup)}
                   isPartnerWallet={!!isPartnerWallet}
                   openAddressModal={() => setShowAddressModal(true)}
                   partnerImage={partnerImage}

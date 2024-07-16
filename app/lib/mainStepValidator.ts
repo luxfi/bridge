@@ -7,18 +7,22 @@ export default function MainStepValidation({ maxAllowedAmount, minAllowedAmount 
         let errors: FormikErrors<SwapFormValues> = {};
         let amount = Number(values.amount);
 
-        if (!values.from) {
+        console.log("validateor >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", values)
+
+        if (!((values.from && values.fromCurrency) || (values.currencyGroup && values.fromExchange))) {
             (errors.from as any) = 'Select source';
         }
-        if (!values.to) {
+        if (!values.to || !values.toCurrency) {
             (errors.to as any) = 'Select destination';
         }
-        if (!values.fromCurrency) {
-            (errors.fromCurrency as any) = 'Select source asset';
-        }
-        if (!values.toCurrency) {
-            (errors.toCurrency as any) = 'Select destination asset';
-        }
+
+        // if (!values.fromCurrency) {
+        //     (errors.fromCurrency as any) = 'Select source asset';
+        // }
+        // if (!values.toCurrency) {
+        //     (errors.toCurrency as any) = 'Select destination asset';
+        // }
+        
         if (!amount) {
             errors.amount = 'Enter an amount';
         }
