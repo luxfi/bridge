@@ -22,7 +22,8 @@ const swapTransactionSchema = Joi.object({
   destination_address: Joi.string().required(),
   destination_network: Joi.string().required(),
   destination_token: Joi.string().required(),
-
+  refuel: Joi.boolean(),
+  use_deposit_address: Joi.boolean(),
   source_address: Joi.string().required(),
   source_network: Joi.string().required(),
   source_token: Joi.string().required(),
