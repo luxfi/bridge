@@ -290,7 +290,10 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                   {`To ${values?.to?.display_name || ""} address`}
                 </label>
                 <AddressButton
-                  disabled={!values.to || (!values.from && !currencyGroup)}
+                  disabled={
+                    !values.to || !values.toCurrency || 
+                    (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup)
+                  }
                   isPartnerWallet={!!isPartnerWallet}
                   openAddressModal={() => setShowAddressModal(true)}
                   partnerImage={partnerImage}
@@ -305,7 +308,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                 >
                   <Address
                     close={() => setShowAddressModal(false)}
-                    disabled={lockAddress || !values.to || !values.from}
+                    disabled={lockAddress || !values.to || (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) || !values.toCurrency}
                     name={"destination_address"}
                     partnerImage={partnerImage}
                     isPartnerWallet={!!isPartnerWallet}
@@ -389,7 +392,9 @@ function ActionText(
 ): string {
   return (
     errors.from?.toString() ||
+    errors.fromCurrency?.toString () ||
     errors.to?.toString() ||
+    errors.toCurrency?.toString () ||
     errors.amount ||
     errors.destination_address ||
     actionDisplayName
