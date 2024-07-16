@@ -3,324 +3,324 @@ import { BridgeSettings } from "../../Models/BridgeSettings";
 
 export const Settings: BridgeSettings = {
     "exchanges": [
-        {
-            "display_name": "Kucoin",
-            "internal_name": "KUCOIN",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        // {
+        //     "display_name": "Kucoin",
+        //     "internal_name": "KUCOIN",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2021-07-15T20:32:51.223453+00:00"
-        },
-        {
-            "display_name": "Coinspot",
-            "internal_name": "COINSPOT",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2021-07-15T20:32:51.223453+00:00"
+        // },
+        // {
+        //     "display_name": "Coinspot",
+        //     "internal_name": "COINSPOT",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2022-07-14T20:23:10.387669+00:00"
-        },
-        {
-            "display_name": "LUXUSA.NET",
-            "internal_name": "LUXUSA",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2022-07-14T20:23:10.387669+00:00"
+        // },
+        // {
+        //     "display_name": "LUXUSA.NET",
+        //     "internal_name": "LUXUSA",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2021-11-03T18:59:10.567873+00:00"
-        },
-        {
-            "display_name": "Kraken",
-            "internal_name": "KRAKEN",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2021-11-03T18:59:10.567873+00:00"
+        // },
+        // {
+        //     "display_name": "Kraken",
+        //     "internal_name": "KRAKEN",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2022-04-06T15:12:15.394338+00:00"
-        },
-        {
-            "display_name": "LUX.LINK",
-            "internal_name": "LUX",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2022-04-06T15:12:15.394338+00:00"
+        // },
+        // {
+        //     "display_name": "LUX.LINK",
+        //     "internal_name": "LUX",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2021-11-19T13:16:03.731917+00:00"
-        },
-        {
-            "display_name": "OKX",
-            "internal_name": "OKEX",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": true,
-            "metadata": {
+        //     },
+        //     "created_date": "2021-11-19T13:16:03.731917+00:00"
+        // },
+        // {
+        //     "display_name": "OKX",
+        //     "internal_name": "OKEX",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": true,
+        //     "metadata": {
 
-            },
-            "created_date": "2021-12-04T07:33:13.42+00:00"
-        },
-        {
-            "display_name": "Binance",
-            "internal_name": "BINANCE",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": true,
-            "metadata": {
+        //     },
+        //     "created_date": "2021-12-04T07:33:13.42+00:00"
+        // },
+        // {
+        //     "display_name": "Binance",
+        //     "internal_name": "BINANCE",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": true,
+        //     "metadata": {
 
-            },
-            "created_date": "2021-07-15T20:32:51.223453+00:00"
-        },
-        {
-            "display_name": "Bittrex Global",
-            "internal_name": "BITTREX",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2021-07-15T20:32:51.223453+00:00"
+        // },
+        // {
+        //     "display_name": "Bittrex Global",
+        //     "internal_name": "BITTREX",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2022-04-20T11:12:45.601969+00:00"
-        },
-        {
-            "display_name": "Huobi Global",
-            "internal_name": "HUOBI",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2022-04-20T11:12:45.601969+00:00"
+        // },
+        // {
+        //     "display_name": "Huobi Global",
+        //     "internal_name": "HUOBI",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2021-10-04T13:47:57.841453+00:00"
-        },
-        {
-            "display_name": "Coinbase",
-            "internal_name": "COINBASE",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2021-10-04T13:47:57.841453+00:00"
+        // },
+        // {
+        //     "display_name": "Coinbase",
+        //     "internal_name": "COINBASE",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2021-07-15T20:32:51.223453+00:00"
-        },
-        {
-            "display_name": "Bitfinex",
-            "internal_name": "BITFINEX",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2021-07-15T20:32:51.223453+00:00"
+        // },
+        // {
+        //     "display_name": "Bitfinex",
+        //     "internal_name": "BITFINEX",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2022-03-11T12:19:44.846116+00:00"
-        },
-        {
-            "display_name": "Crypto.com Exchange",
-            "internal_name": "CRYPTOCOM",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2022-03-11T12:19:44.846116+00:00"
+        // },
+        // {
+        //     "display_name": "Crypto.com Exchange",
+        //     "internal_name": "CRYPTOCOM",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2022-04-20T11:12:45.226973+00:00"
-        },
-        {
-            "display_name": "Blocktane",
-            "internal_name": "BLOCKTANE",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2022-04-20T11:12:45.226973+00:00"
+        // },
+        // {
+        //     "display_name": "Blocktane",
+        //     "internal_name": "BLOCKTANE",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2022-05-25T12:41:10.828229+00:00"
-        },
-        {
-            "display_name": "Gate.io",
-            "internal_name": "GATEIO",
-            "type": "cex",
-            "is_featured": false,"o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2022-05-25T12:41:10.828229+00:00"
+        // },
+        // {
+        //     "display_name": "Gate.io",
+        //     "internal_name": "GATEIO",
+        //     "type": "cex",
+        //     "is_featured": false,"o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2023-01-24T07:35:23.018867+00:00"
-        },
-        {
-            "display_name": "MEXC Global",
-            "internal_name": "MEXC",
-            "type": "cex",
-            "is_featured": false,"o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2023-01-24T07:35:23.018867+00:00"
+        // },
+        // {
+        //     "display_name": "MEXC Global",
+        //     "internal_name": "MEXC",
+        //     "type": "cex",
+        //     "is_featured": false,"o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2023-01-24T07:37:59.220166+00:00"
-        },
-        {
-            "display_name": "BitGet",
-            "internal_name": "BITGET",
-            "type": "cex",
-            "is_featured": false,"o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2023-01-24T07:37:59.220166+00:00"
+        // },
+        // {
+        //     "display_name": "BitGet",
+        //     "internal_name": "BITGET",
+        //     "type": "cex",
+        //     "is_featured": false,"o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2023-01-24T07:39:09.156272+00:00"
-        },
-        {
-            "display_name": "Swyftx",
-            "internal_name": "SWYFTX",
-            "type": "cex",
-            "is_featured": false,"o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2023-01-24T07:39:09.156272+00:00"
+        // },
+        // {
+        //     "display_name": "Swyftx",
+        //     "internal_name": "SWYFTX",
+        //     "type": "cex",
+        //     "is_featured": false,"o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2023-01-24T07:39:42.908059+00:00"
-        },
-        {
-            "display_name": "Gemini",
-            "internal_name": "GEMINI",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2023-01-24T07:39:42.908059+00:00"
+        // },
+        // {
+        //     "display_name": "Gemini",
+        //     "internal_name": "GEMINI",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2023-01-24T07:39:56.495305+00:00"
-        },
-        {
-            "display_name": "Crypto.com APP",
-            "internal_name": "CRYPTOCOMAPP",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2023-01-24T07:39:56.495305+00:00"
+        // },
+        // {
+        //     "display_name": "Crypto.com APP",
+        //     "internal_name": "CRYPTOCOMAPP",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2023-01-24T07:40:26.335368+00:00"
-        },
-        {
-            "display_name": "Newton",
-            "internal_name": "NEWTON",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2023-01-24T07:40:26.335368+00:00"
+        // },
+        // {
+        //     "display_name": "Newton",
+        //     "internal_name": "NEWTON",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2023-03-06T10:43:35.112998+00:00"
-        },
-        {
-            "display_name": "Binance US",
-            "internal_name": "BINANCEUS",
-            "type": "cex",
-            "is_featured": false,
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "metadata": {
+        //     },
+        //     "created_date": "2023-03-06T10:43:35.112998+00:00"
+        // },
+        // {
+        //     "display_name": "Binance US",
+        //     "internal_name": "BINANCEUS",
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "metadata": {
 
-            },
-            "created_date": "2023-03-09T13:47:54.104821+00:00"
-        },
-        {
-            "display_name": "Bybit",
-            "internal_name": "BYBIT",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "cex",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2023-03-09T13:47:54.104821+00:00"
+        // },
+        // {
+        //     "display_name": "Bybit",
+        //     "internal_name": "BYBIT",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "cex",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2023-06-01T15:31:13.965751+00:00"
-        },
-        {
-            "display_name": "US Bank or Card (via Stripe)",
-            "internal_name": "STRIPE",
-            "o_auth": {
-                "authorize_url": "test",
-                "connect_url": "test"
-            },
-            "type": "fiat",
-            "is_featured": false,
-            "metadata": {
+        //     },
+        //     "created_date": "2023-06-01T15:31:13.965751+00:00"
+        // },
+        // {
+        //     "display_name": "US Bank or Card (via Stripe)",
+        //     "internal_name": "STRIPE",
+        //     "o_auth": {
+        //         "authorize_url": "test",
+        //         "connect_url": "test"
+        //     },
+        //     "type": "fiat",
+        //     "is_featured": false,
+        //     "metadata": {
 
-            },
-            "created_date": "2023-07-25T10:03:26.889752+00:00"
-        }
+        //     },
+        //     "created_date": "2023-07-25T10:03:26.889752+00:00"
+        // }
     ],
     "networks": [
         {

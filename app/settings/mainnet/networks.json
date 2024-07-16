@@ -2596,5 +2596,44 @@
     ],
     "nodes": [],
     "created_date": "2023-05-01T15:13:15.929+00:00"
+  },
+  {
+    "display_name": "Bitcoin",
+    "internal_name": "Bitcoin_MAINNET",
+    "native_currency": "BTC",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "btc",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://btcscan.org/tx/{0}",
+    "account_explorer_template": "https://btcscan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": "",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.05,
+        "withdrawal_fee": 0.01,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
   }
 ]
