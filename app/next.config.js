@@ -35,6 +35,10 @@ module.exports = (phase, { defaultConfig }) => {
           protocol: 'https',
           hostname: "prodlslayerswapbridgesa.blob.core.windows.net"
         },
+        {
+          protocol: 'https',
+          hostname: "cdn.lux.network"
+        },
       ],
     },
     compiler: {

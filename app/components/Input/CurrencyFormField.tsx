@@ -21,6 +21,9 @@ import { Balance } from "../../Models/Balance";
 const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const { values, setFieldValue } = useFormikContext<SwapFormValues>();
   const { to, fromCurrency, toCurrency, from, currencyGroup } = values;
+
+  console.log("network currency form field =====", values)
+
   const [allRoutes, setAllRoutes] = useState<string[]>([]);
   const { resolveImgSrc } = useSettingsState();
   const name = direction === "from" ? "fromCurrency" : "toCurrency";
@@ -59,16 +62,27 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const apiClient = new BridgeApiClient();
   const version = BridgeApiClient.apiVersion;
 
-  const sourceRoutesURL = `/sources${
-    to && toCurrency
-      ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
-      : "?"
-  }version=${version}`;
-  const destinationRoutesURL = `/destinations${
-    from && fromCurrency
-      ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
-      : "?"
-  }version=${version}`;
+  // const sourceRoutesURL = `/sources${
+  //   to && toCurrency
+  //     ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+  //     : "?"
+  // }version=${version}`;
+  // const destinationRoutesURL = `/destinations${
+  //   from && fromCurrency
+  //     ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
+  //     : "?"
+  // }version=${version}`;
+
+  const destinationRoutesURL = `/destinations${to && toCurrency
+    ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+    : "?"
+    }version=${version}`;
+
+  //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
+  const sourceRoutesURL = `/sources${from
+    ? `?source_network=${from.internal_name}&source_asset=${fromCurrency?.asset}&`
+    : "?"
+    }version=${version}`;
 
   const { data: sourceRoutes, error: sourceRoutesError } = useSWR<
     ApiResponse<
@@ -78,10 +92,6 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
       }[]
     >
   >(sourceRoutesURL, apiClient.fetcher);
-
-  useEffect(() => {
-    console.log(values)
-  }, [values])
 
   const { data: destinationRoutes, error: destRoutesError } = useSWR<
     ApiResponse<
@@ -114,47 +124,47 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
 
   const currencyAsset = direction === "from" ? fromCurrency?.asset : toCurrency?.asset;
 
-  useEffect(() => {
-    let currencyIsAvailable =
-      (fromCurrency || toCurrency) &&
-      currencyMenuItems?.some((c) => c?.baseObject.asset === currencyAsset);
+  // useEffect(() => {
+  //   let currencyIsAvailable =
+  //     (fromCurrency || toCurrency) &&
+  //     currencyMenuItems?.some((c) => c?.baseObject.asset === currencyAsset);
 
-    if (currencyIsAvailable) return;
+  //   if (currencyIsAvailable) return;
 
-    const default_currency =
-      currencyMenuItems?.find(
-        (c) =>
-          c.baseObject?.asset?.toUpperCase() === query?.asset?.toUpperCase()
-      ) || currencyMenuItems?.[0];
-    const selected_currency = currencyMenuItems?.find(
-      (c) =>
-        c.baseObject?.asset?.toUpperCase() ===
-        (
-          currencyGroup?.name ||
-          (direction === "to" ? fromCurrency?.asset : toCurrency?.asset)
-        )?.toUpperCase()
-    );
+  //   const default_currency =
+  //     currencyMenuItems?.find(
+  //       (c) =>
+  //         c.baseObject?.asset?.toUpperCase() === query?.asset?.toUpperCase()
+  //     ) || currencyMenuItems?.[0];
+  //   const selected_currency = currencyMenuItems?.find(
+  //     (c) =>
+  //       c.baseObject?.asset?.toUpperCase() ===
+  //       (
+  //         currencyGroup?.name ||
+  //         (direction === "to" ? fromCurrency?.asset : toCurrency?.asset)
+  //       )?.toUpperCase()
+  //   );
 
-    if (
-      direction === "to" &&
-      selected_currency &&
-      destinationRoutes?.data
-        ?.filter((r) => r.network === to?.internal_name)
-        ?.some((r) => r.asset === selected_currency.name)
-    ) {
-      setFieldValue(name, selected_currency.baseObject);
-    } else if (
-      direction === "from" &&
-      selected_currency &&
-      sourceRoutes?.data
-        ?.filter((r) => r.network === from?.internal_name)
-        ?.some((r) => r.asset === selected_currency.name)
-    ) {
-      setFieldValue(name, selected_currency.baseObject);
-    } else if (default_currency) {
-      setFieldValue(name, default_currency.baseObject);
-    }
-  }, [from, to, query]);
+  //   if (
+  //     direction === "to" &&
+  //     selected_currency &&
+  //     destinationRoutes?.data
+  //       ?.filter((r) => r.network === to?.internal_name)
+  //       ?.some((r) => r.asset === selected_currency.name)
+  //   ) {
+  //     setFieldValue(name, selected_currency.baseObject);
+  //   } else if (
+  //     direction === "from" &&
+  //     selected_currency &&
+  //     sourceRoutes?.data
+  //       ?.filter((r) => r.network === from?.internal_name)
+  //       ?.some((r) => r.asset === selected_currency.name)
+  //   ) {
+  //     setFieldValue(name, selected_currency.baseObject);
+  //   } else if (default_currency) {
+  //     setFieldValue(name, default_currency.baseObject);
+  //   }
+  // }, [from, to, query]);
 
   useEffect(() => {
     if (direction === "to" && fromCurrency && toCurrency) {

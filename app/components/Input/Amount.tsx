@@ -14,7 +14,7 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
     
     const { values, setFieldValue, handleChange } = useFormikContext<SwapFormValues>();
     const [requestedAmountInUsd, setRequestedAmountInUsd] = useState<string>();
-    const { fromCurrency, from, to, destination_address, toCurrency } = values || {};
+    const { fromCurrency, from, to, destination_address, toCurrency, currencyGroup } = values || {};
     const { minAllowedAmount, maxAllowedAmount: maxAmountFromApi } = useFee()
     const [isAmountVisible, setIsAmountVisible] = useState(false);
 
@@ -90,7 +90,7 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
         <div className="flex w-full justify-between items-center">
             <div className="relative w-full">
                 <NumericInput
-                    disabled={!fromCurrency || !toCurrency}
+                    disabled={(!fromCurrency && !currencyGroup) || !toCurrency}
                     placeholder={placeholder}
                     min={minAllowedAmount}
                     max={maxAllowedAmount}
