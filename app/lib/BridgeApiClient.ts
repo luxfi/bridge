@@ -223,7 +223,7 @@ export default class BridgeApiClient {
         },
       });
 
-      console.log(`BridgeApiClient.AuthenticatedRequest succ: ${res}`, res);
+    //   console.log(`BridgeApiClient.AuthenticatedRequest succ: ${res}`, res);
 
       return { ...res?.data, loading: false } as T;
     } catch (reason) {

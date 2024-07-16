@@ -124,21 +124,21 @@ export default function Layout({ children, settings, themeData }: Props) {
           <TooltipProvider delayDuration={500}>
             <ErrorBoundary FallbackComponent={ErrorFallback} onError={logErrorToService}>
               <LuxThemeProvider>
-              <ThemeWrapper>
-                <TonConnectProvider basePath={basePath} themeData={themeData}>
-                  <RainbowKit>
-                    <Solana>
-                      <FeeProvider>
-                      {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
-                        <MaintananceContent />
-                      ) : (
-                        children
-                      )}
-                      </FeeProvider>
-                    </Solana>
-                  </RainbowKit>
-                </TonConnectProvider>
-              </ThemeWrapper>
+                <ThemeWrapper>
+                  <TonConnectProvider basePath={basePath} themeData={themeData}>
+                    <RainbowKit>
+                      <Solana>
+                        <FeeProvider>
+                        {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
+                          <MaintananceContent />
+                        ) : (
+                          children
+                        )}
+                        </FeeProvider>
+                      </Solana>
+                    </RainbowKit>
+                  </TonConnectProvider>
+                </ThemeWrapper>
               </LuxThemeProvider>
             </ErrorBoundary>
           </TooltipProvider>
