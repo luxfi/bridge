@@ -308,7 +308,7 @@ export const Settings: BridgeSettings = {
         //     "created_date": "2023-06-01T15:31:13.965751+00:00"
         // },
         // {
-        //     "display_name": "US Bank or Card (via Stripe)",
+        //     "display_name": "US Bank or Card",
         //     "internal_name": "STRIPE",
         //     "o_auth": {
         //         "authorize_url": "test",
