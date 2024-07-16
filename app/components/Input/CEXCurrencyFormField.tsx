@@ -217,7 +217,7 @@ export function GenerateCurrencyMenuItems(
                 name: displayName || "-",
                 order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
                 // imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
-                imgSrc: `https://cdn.lux.network/bridge/currencies/${c.name.toLowerCase()}.png`,
+                imgSrc: `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/currencies/${c.name.toLowerCase()}.png`,
                 isAvailable: currencyIsAvailable(),
                 type: "currency",
             };
