@@ -10,7 +10,8 @@ import { LinkElement } from '@luxdefi/ui/primitives'
 import Search from './Search'
 
 const basePath = process.env.NEXT_PUBLIC_APP_BASE_PATH
-const version = process.env.NEXT_PUBLIC_API_VERSION
+// const version = process.env.NEXT_PUBLIC_API_VERSION
+const version = 'sandbox'
 
 const Header: React.FC = () => {
 

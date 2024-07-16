@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import { ISelectMenuItem, SelectMenuItem } from '../Shared/Props/selectMenuItem'
@@ -36,6 +36,12 @@ export default function CommandSelectWrapper<T>({
         setValue(item)
         setShowModal(false)
     }, [])
+
+    // useEffect(() => {
+    //     console.log({value, values})
+    // }, [value, values])
+
+    
 
     return (
         <>
