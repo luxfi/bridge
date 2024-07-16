@@ -21,6 +21,8 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
         setFieldValue,
     } = useFormikContext<SwapFormValues>();
 
+    console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange })
+
     const { resolveImgSrc } = useSettingsState();
     const name = "currencyGroup";
 
@@ -29,12 +31,40 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     const apiClient = new BridgeApiClient();
     const version = BridgeApiClient.apiVersion;
 
-    const sourceRoutesURL = `/sources${to && toCurrency
-        ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+    // const sourceRoutesURL = `/sources${to && toCurrency
+    //     ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+    //     : "?"
+    //     }version=${version}`;
+    // const destinationRoutesURL = `/destinations${from && fromCurrency
+    //     ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
+    //     : "?"
+    //     }version=${version}`;
+
+    // const { data: sourceRoutes } = useSWR<
+    //     ApiResponse<
+    //         {
+    //             network: string;
+    //             asset: string;
+    //         }[]
+    //     >
+    // >(sourceRoutesURL, apiClient.fetcher);
+
+    // const { data: destinationRoutes } = useSWR<
+    //     ApiResponse<
+    //         {
+    //             network: string;
+    //             asset: string;
+    //         }[]
+    //     >
+    // >(destinationRoutesURL, apiClient.fetcher);
+    const destinationRoutesURL = `/destinations${to && toCurrency
+        ? `?source_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
         : "?"
         }version=${version}`;
-    const destinationRoutesURL = `/destinations${from && fromCurrency
-        ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
+    
+    //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
+    const sourceRoutesURL = `/sources${fromExchange 
+        ? `?source_network=${fromExchange.internal_name}&source_asset=${fromCurrency?.asset}&`
         : "?"
         }version=${version}`;
 
@@ -55,6 +85,8 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
             }[]
         >
     >(destinationRoutesURL, apiClient.fetcher);
+
+    console.log("urls ==========>", {sourceRoutesURL, destinationRoutesURL})
 
     const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
     const assets = routes && groupBy(routes, ({ asset }) => asset);
@@ -83,56 +115,53 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
 
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
 
-    useEffect(() => {
-        if (value) return;
-        setFieldValue(name, currencyMenuItems?.[0]);
-    }, []);
-
-    useEffect(() => {
-        setFieldValue(`${direction}Currency`, {
-            "name": currencyGroup?.name,
-            "asset": currencyGroup?.name,
-            "contract_address": null,
-            "decimals": 18,
-            "status": "active",
-            "is_deposit_enabled": true,
-            "is_withdrawal_enabled": false,
-            "is_refuel_enabled": false,
-            "max_withdrawal_amount": 0,
-            "deposit_fee": 0.2,
-            "withdrawal_fee": 0.2,
-            "source_base_fee": 1,
-            "destination_base_fee": 1
-        }, true);
-        setFieldValue(`${direction}`, {
-            ...fromExchange,
-            "assets": [],
-        }, true);
-    }, [fromExchange])
+    // useEffect(() => {
+    //     if (currencyMenuItems?.length > 0) {
+    //         setFieldValue(name, currencyMenuItems[0].baseObject, true);
+    //     }
+    //     // setFieldValue(`${direction}Currency`, {
+    //     //     "name": currencyGroup?.name,
+    //     //     "asset": currencyGroup?.name,
+    //     //     "contract_address": null,
+    //     //     "decimals": 18,
+    //     //     "status": "active",
+    //     //     "is_deposit_enabled": true,
+    //     //     "is_withdrawal_enabled": false,
+    //     //     "is_refuel_enabled": false,
+    //     //     "max_withdrawal_amount": 0,
+    //     //     "deposit_fee": 0.2,
+    //     //     "withdrawal_fee": 0.2,
+    //     //     "source_base_fee": 1,
+    //     //     "destination_base_fee": 1
+    //     // }, true);
+    //     // setFieldValue(`${direction}`, {
+    //     //     ...fromExchange,
+    //     //     "assets": [],
+    //     // }, true);
+    // }, [currencyMenuItems?.length])
 
     const handleSelect = useCallback(
         (item: SelectMenuItem<AssetGroup>) => {
             setFieldValue(name, item.baseObject, true);
-            setFieldValue(`${direction}Currency`, {
-                "name": currencyGroup?.name,
-                "asset": currencyGroup?.name,
-                "contract_address": null,
-                "decimals": 18,
-                "status": "active",
-                "is_deposit_enabled": true,
-                "is_withdrawal_enabled": false,
-                "is_refuel_enabled": false,
-                "max_withdrawal_amount": 0,
-                "deposit_fee": 0.2,
-                "withdrawal_fee": 0.2,
-                "source_base_fee": 1,
-                "destination_base_fee": 1
-            }, true);
-            setFieldValue(`${direction}`, {
-                ...fromExchange,
-                "assets": [],
-            }, true);
-            
+            // setFieldValue(`${direction}Currency`, {
+            //     "name": currencyGroup?.name,
+            //     "asset": currencyGroup?.name,
+            //     "contract_address": null,
+            //     "decimals": 18,
+            //     "status": "active",
+            //     "is_deposit_enabled": true,
+            //     "is_withdrawal_enabled": false,
+            //     "is_refuel_enabled": false,
+            //     "max_withdrawal_amount": 0,
+            //     "deposit_fee": 0.2,
+            //     "withdrawal_fee": 0.2,
+            //     "source_base_fee": 1,
+            //     "destination_base_fee": 1
+            // }, true);
+            // setFieldValue(`${direction}`, {
+            //     ...fromExchange,
+            //     "assets": [],
+            // }, true);
         },
         [name, direction, toCurrency, fromCurrency, from, to]
     );
@@ -188,7 +217,7 @@ export function GenerateCurrencyMenuItems(
                 name: displayName || "-",
                 order: CurrencySettings.KnownSettings[c.name]?.Order ?? 5,
                 // imgSrc: `${storageUrl}layerswap/currencies/${c.name.toLowerCase()}.png`,
-                imgSrc: `/assets/tickers/currencies/${c.name.toLowerCase()}.png`,
+                imgSrc: `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/currencies/${c.name.toLowerCase()}.png`,
                 isAvailable: currencyIsAvailable(),
                 type: "currency",
             };
