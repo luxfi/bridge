@@ -168,3 +168,15 @@ export async function handleSwapCreation(data: SwapData) {
     );
   }
 }
+
+export async function handlerGetSwap(id: string) {
+  try {
+    const swap = await prisma.swap.findUnique({
+      where: { id },
+    });
+
+    return swap;
+  } catch (error) {
+    throw new Error(`Error getting swap: ${error.message}`);
+  }
+}
