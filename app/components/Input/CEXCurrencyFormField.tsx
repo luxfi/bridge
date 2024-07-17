@@ -57,13 +57,12 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     //         }[]
     //     >
     // >(destinationRoutesURL, apiClient.fetcher);
-    const destinationRoutesURL = `/destinations${to && toCurrency
+    const destinationRoutesURL = `/destination_currencies${to && toCurrency
         ? `?source_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
         : "?"
         }version=${version}`;
     
-    //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
-    const sourceRoutesURL = `/sources${fromExchange 
+    const sourceRoutesURL = `/source_currencies${fromExchange 
         ? `?source_network=${fromExchange.internal_name}&source_asset=${fromCurrency?.asset}&`
         : "?"
         }version=${version}`;
