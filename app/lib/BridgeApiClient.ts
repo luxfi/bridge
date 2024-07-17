@@ -409,7 +409,7 @@ export type ConnectParams = {
   exchange: string;
 };
 
-export type CreateSwapData<T> = {
+export type CreateSwapData = {
   swap_id: string;
 };
 
