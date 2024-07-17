@@ -17,11 +17,11 @@ import { Balance } from "../../Models/Balance";
 
 const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     const {
-        values: { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange },
+        values: { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange, toExchange },
         setFieldValue,
     } = useFormikContext<SwapFormValues>();
 
-    console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange })
+    console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange, toExchange })
 
     const { resolveImgSrc } = useSettingsState();
     const name = "currencyGroup";
@@ -57,13 +57,13 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     //         }[]
     //     >
     // >(destinationRoutesURL, apiClient.fetcher);
-    const destinationRoutesURL = `/destination_currencies${to && toCurrency
-        ? `?source_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+    const destinationRoutesURL = `/destination_currencies${toExchange
+        ? `?destination_network=${toExchange.internal_name}&destination_asset=${currencyGroup?.name}&`
         : "?"
         }version=${version}`;
-    
-    const sourceRoutesURL = `/source_currencies${fromExchange 
-        ? `?source_network=${fromExchange.internal_name}&source_asset=${fromCurrency?.asset}&`
+
+    const sourceRoutesURL = `/source_currencies${fromExchange
+        ? `?source_network=${fromExchange.internal_name}&source_asset=${currencyGroup?.name}&`
         : "?"
         }version=${version}`;
 
@@ -84,8 +84,6 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
             }[]
         >
     >(destinationRoutesURL, apiClient.fetcher);
-
-    console.log("urls ==========>", {sourceRoutesURL, destinationRoutesURL})
 
     const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
     const assets = routes && groupBy(routes, ({ asset }) => asset);

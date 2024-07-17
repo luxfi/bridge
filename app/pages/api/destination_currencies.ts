@@ -14,11 +14,8 @@ export default async function handler(
   try {
     const versionFromQuery = req.query.version as string;
     const destination_network = req.query.destination_network as string;
-    const isMainnet =
-      versionFromQuery === "mainnet" ||
-      process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet = versionFromQuery === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     const settings = isMainnet ? mainnetSettings : testnetSettings;
-    // const settings = testnetSettings;
 
     const { exchanges, networks } = settings.data;
 
@@ -48,7 +45,7 @@ export default async function handler(
       return res.status(200).json({ data: [] });
     }
   } catch (error) {
-    console.error("Error in fetching destinations", error);
+    console.error("Error in fetching destination currencies", error);
     res.status(500).json({ data: error.message });
   }
 }
