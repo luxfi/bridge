@@ -35,6 +35,8 @@ yarn-error.log*
 
 # Moving to yarn
 package-lock.json
+pnpm-lock.yml
+yarn.lock
 storybook-static/*
 # Sentry Config File
 .sentryclirc

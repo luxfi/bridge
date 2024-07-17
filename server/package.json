@@ -8,7 +8,6 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
-
   },
   "author": "Lux Partners Limited",
   "dependencies": {
@@ -27,7 +26,6 @@
     "available-typed-arrays": "^1.0.2",
     "aws-sign2": "^0.7.0",
     "aws4": "^1.11.0",
-    "axios": "^0.21.1",
     "axios": "^1.4.0",
     "base-x": "^3.0.8",
     "base64-js": "^1.5.1",
@@ -68,7 +66,6 @@
     "cookie-signature": "^1.0.6",
     "cookiejar": "^2.1.2",
     "core-util-is": "^1.0.2",
-    "cors": "^2.8.5",
     "cors": "^2.8.5",
     "cra-template": "^1.1.0",
     "create-ecdh": "^4.0.4",
@@ -362,7 +359,6 @@
     "yaeti": "^0.0.6",
     "yallist": "^3.1.1"
   },
- 
   "devDependencies": {
     "eslint": "^8.22.0"
   }
