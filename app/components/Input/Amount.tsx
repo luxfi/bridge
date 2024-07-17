@@ -92,7 +92,7 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
                 <NumericInput
                     disabled={
                         (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
-                        (!values.to || !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+                        (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
                     }
                     placeholder={placeholder}
                     min={minAllowedAmount}
