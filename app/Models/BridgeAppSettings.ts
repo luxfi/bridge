@@ -35,11 +35,11 @@ export class BridgeAppSettings {
         }
         else if ((item as any)?.internal_name != undefined) {
             // basePath.pathname = `/layerswap/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
-            return `/assets/tickers/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+            return `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
         }
         else if ((item as any)?.asset != undefined) {
             // basePath.pathname = `/layerswap/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
-            return `/assets/tickers/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
+            return `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
         }
 
         return basePath.href;
@@ -55,7 +55,7 @@ export class BridgeAppSettings {
         ({
             assets: BridgeAppSettings.ResolveNetworkL2Assets(n, sourceRoutes, destinationRoutes),
             // img_url: `${basePath}layerswap/networks/${n?.internal_name?.toLowerCase()}.png`,
-            img_url: `/assets/tickers/networks/${n?.internal_name?.toLowerCase()}.png`,
+            img_url: `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/networks/${n?.internal_name?.toLowerCase()}.png`,
             ...n,
         }))
         return networkLayers
