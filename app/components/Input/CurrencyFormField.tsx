@@ -22,8 +22,6 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const { values, setFieldValue } = useFormikContext<SwapFormValues>();
   const { to, fromCurrency, toCurrency, from, currencyGroup } = values;
 
-  console.log("network currency form field =====", values)
-
   const [allRoutes, setAllRoutes] = useState<string[]>([]);
   const { resolveImgSrc } = useSettingsState();
   const name = direction === "from" ? "fromCurrency" : "toCurrency";
