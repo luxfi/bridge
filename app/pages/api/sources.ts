@@ -19,6 +19,7 @@ export default async function handler(
   
   const exchange = exchanges.find (e => e.internal_name === source_network);
   const network = networks.find (e => e.internal_name === source_network);
+  
   if (exchange) {
     res.status(200).json({ data: exchange.currencies.map ((c: any) => ({ network: c.network, asset: c.asset })) });
   } else if (network) {
@@ -26,6 +27,4 @@ export default async function handler(
   } else {
     res.status(200).json({ data: [] });
   }
-
-  res.status(200).json({ data: settings.sources.data });
 }
