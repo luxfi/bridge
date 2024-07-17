@@ -292,7 +292,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                 <AddressButton
                   disabled={
                     (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
-                    (!values.to || !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+                    (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
                   }
                   isPartnerWallet={!!isPartnerWallet}
                   openAddressModal={() => setShowAddressModal(true)}
@@ -310,7 +310,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                     close={() => setShowAddressModal(false)}
                     disabled={
                       lockAddress || (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
-                      (!values.to || !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+                      (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
                     }
                     name={"destination_address"}
                     partnerImage={partnerImage}

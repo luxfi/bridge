@@ -163,14 +163,13 @@ export function SwapDataProvider({
       } = values;
 
       if (
-        !to ||
-        (!fromCurrency && !currencyGroup) ||
-        !toCurrency ||
-        (!from && !fromExchange) ||
+        (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+        (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup) ||
         !values.amount ||
         !values.destination_address
-      )
+      ) {
         throw new Error("Form data is missing");
+      }
 
       const data: CreateSwapParams = {
         amount: Number(values.amount),
