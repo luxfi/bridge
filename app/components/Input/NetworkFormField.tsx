@@ -126,9 +126,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         }[]
     >();
 
-    console.log('routes data ================>', routes)
-    console.log('routersEdnpoint ==========>', routesEndpoint)
-
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
     }, [routes]);
@@ -138,13 +135,13 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap from";
         filteredLayers = layers.filter(
             (l) =>
-                routesData?.some((r) => r.network === l.internal_name) &&
-                l.internal_name !== filterWith?.internal_name
+                // l.internal_name !== filterWith?.internal_name &&
+                routesData?.some((r) => r.network === l.internal_name)
         );
         filteredExchanges = exchanges.filter(
             (e) =>
-                routesData?.some((r) => r.network === e.internal_name) &&
-                e.internal_name !== filterWith?.internal_name
+                // e.internal_name !== filterWith?.internal_name &&
+                routesData?.some((r) => r.network === e.internal_name)
         );
         menuItems = GenerateMenuItems(
             filteredLayers,
