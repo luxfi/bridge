@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { number } from "joi";
 
 const prisma = new PrismaClient();
 
@@ -140,6 +141,7 @@ export async function handleSwapCreation(data: SwapData) {
           feeToken: { ...destinationTokenRecord },
         },
       ],
+      swap_id: swap.id,
       swap: {
         ...swap,
         sourceNetwork: {
@@ -166,5 +168,17 @@ export async function handleSwapCreation(data: SwapData) {
     throw new Error(
       `Error creating swap and related entities: ${error.message}`
     );
+  }
+}
+
+export async function handlerGetSwap(id: string) {
+  try {
+    const swap = await prisma.swap.findUnique({
+      where: { id },
+    });
+
+    return swap;
+  } catch (error) {
+    throw new Error(`Error getting swap: ${error.message}`);
   }
 }
