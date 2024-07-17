@@ -103,7 +103,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                 ? `?${direction === "from"
                     ? "destination_asset_group"
                     : "source_asset_group"
-                }=${currencyGroup?.name}&`
+                }=${filterWithExchange?.internal_name}&`
                 : "?"
         }version=${version}`;
 
@@ -189,18 +189,14 @@ const NetworkFormField = forwardRef(function NetworkFormField(
             if (item.type === "cex") {
                 console.log("emtpry network ====================================>", name)
                 setFieldValue(`${name}Exchange`, item.baseObject, true);
-                setFieldValue("from", null, true);
-                setFieldValue(`currencyGroup`, null);
+                setFieldValue(name, null, true);
+                setFieldValue(`currencyGroup`, null, true);
                 setFieldValue(`${name}Currency`, null);
             } else {
                 console.log("emtpy cex ====================================>", name)
                 setFieldValue(name, item.baseObject, true);
                 setFieldValue(`${name}Exchange`, null, true);
                 setFieldValue(`${name}Currency`, null);
-            }
-            // if selected network or exchange is from, clear currencyGroup
-            if (name === 'from') {
-                setFieldValue(`currencyGroup`, null);
             }
         },
         [name]
