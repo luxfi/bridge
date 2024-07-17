@@ -175,11 +175,17 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     const handleSelect = useCallback(
         (item: SelectMenuItem<Layer | Exchange>) => {
             if (item.type === "cex") {
-                setFieldValue("from", null, true);
+                console.log("emtpry network ====================================>", name)
                 setFieldValue(`${name}Exchange`, item.baseObject, true);
+                setFieldValue("from", null, true);
+                setFieldValue (`currencyGroup`, null);
+                setFieldValue (`${name}Currency`, null);
             } else {
-                setFieldValue(`${name}Exchange`, null, true);
+                console.log("emtpry cex ====================================>", name)
                 setFieldValue(name, item.baseObject, true);
+                setFieldValue(`${name}Exchange`, null, true);
+                setFieldValue (`currencyGroup`, null);
+                setFieldValue (`${name}Currency`, null);
             }
         },
         [name]
