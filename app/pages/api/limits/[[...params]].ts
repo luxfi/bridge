@@ -28,9 +28,9 @@ export default async function handler(
 
     res.status(200).json({
         data: {
-            manual_min_amount: 0,
+            manual_min_amount: 0.1,
             manual_min_amount_in_usd: 0,
-            max_amount: 0,
+            max_amount: 100,
             max_amount_in_usd: 0,
             wallet_min_amount: 0,
             wallet_min_amount_in_usd: 0
