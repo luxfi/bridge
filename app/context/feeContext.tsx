@@ -32,7 +32,7 @@ export type Fee = {
 export function FeeProvider({ children }) {
 
     const [values, setValues] = useState<SwapFormValues>()
-    const { fromCurrency, toCurrency, from, to, amount } = values || {}
+    const { fromCurrency, toCurrency, from, to, amount, fromExchange, currencyGroup } = values || {}
     const [debouncedAmount, setDebouncedAmount] = useState(amount);
 
     const valuesChanger = (values: SwapFormValues) => {
@@ -59,8 +59,8 @@ export function FeeProvider({ children }) {
         max_amount_in_usd: number
         wallet_min_amount: number
         wallet_min_amount_in_usd: number
-    }>>((from && fromCurrency && to && toCurrency) ?
-        `/limits/${from?.internal_name}/${fromCurrency?.asset}/${to?.internal_name}/${toCurrency?.asset}?version=${version}` : null, apiClient.fetcher, {
+    }>>(((from || fromExchange) && (fromCurrency || currencyGroup) && to && toCurrency) ?
+        `/limits/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name}/${toCurrency?.asset}?version=${version}` : null, apiClient.fetcher, {
         refreshInterval: 10000,
     })
 
@@ -77,8 +77,8 @@ export function FeeProvider({ children }) {
             total_hours: number
         },
         fee_usd_price: number
-    }>>((from && fromCurrency && to && toCurrency && debouncedAmount) ?
-        `/routes/rate/${from?.internal_name}/${fromCurrency?.asset}/${to?.internal_name}/${toCurrency?.asset}?amount=${debouncedAmount}&version=${version}` : null, apiClient.fetcher, { refreshInterval: 10000 })
+    }>>(((from || fromExchange) && (fromCurrency || currencyGroup) && to && toCurrency && debouncedAmount) ?
+        `/rate/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name}/${toCurrency?.asset}?amount=${debouncedAmount}&version=${version}` : null, apiClient.fetcher, { refreshInterval: 10000 })
 
     const fee = {
         walletFee: lsFee?.data?.wallet_fee,
