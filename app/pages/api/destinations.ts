@@ -47,9 +47,6 @@ export default async function handler(
       // If neither exchange nor network is found
       return res.status(200).json({ data: [] });
     }
-
-    // Avoid this block if you already sent a response above
-    // res.status(200).json({ data: settings.destinations.data });
   } catch (error) {
     console.error("Error in fetching destinations", error);
     res.status(500).json({ data: error.message });
