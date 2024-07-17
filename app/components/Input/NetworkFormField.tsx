@@ -130,10 +130,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
     }, [routes]);
 
-    if (direction === 'from') {
-        console.error(routesEndpoint)
-    }
-
     if (direction === "from") {
         placeholder = "Source";
         searchHint = "Swap from";
