@@ -73,13 +73,13 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   //     : "?"
   // }version=${version}`;
 
-  const destinationRoutesURL = `/destinations${to && toCurrency
+  const destinationRoutesURL = `/destination_currencies${to && toCurrency
     ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
     : "?"
     }version=${version}`;
 
   //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
-  const sourceRoutesURL = `/sources${from
+  const sourceRoutesURL = `/source_currencies${from
     ? `?source_network=${from.internal_name}&source_asset=${fromCurrency?.asset}&`
     : "?"
     }version=${version}`;
