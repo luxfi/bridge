@@ -82,6 +82,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     let placeholder = "";
     let searchHint = "";
     let filteredLayers: Layer[];
+    let filteredExchanges: Exchange[];
     let menuItems: SelectMenuItem<Layer | Exchange>[];
 
     let valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
@@ -117,7 +118,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         >
     >(routesEndpoint, apiClient.fetcher);
 
-    // console.log('routersEdnpoint ==========>', routesEndpoint)
 
     const [routesData, setRoutesData] = useState<
         {
@@ -126,7 +126,8 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         }[]
     >();
 
-    // console.log('routes data ================>', routes)
+    console.log('routes data ================>', routes)
+    console.log('routersEdnpoint ==========>', routesEndpoint)
 
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
@@ -137,8 +138,13 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap from";
         filteredLayers = layers.filter(
             (l) =>
-                // routesData?.some((r) => r.network === l.internal_name) &&
+                routesData?.some((r) => r.network === l.internal_name) &&
                 l.internal_name !== filterWith?.internal_name
+        );
+        filteredExchanges = exchanges.filter(
+            (e) =>
+                routesData?.some((r) => r.network === e.internal_name) &&
+                e.internal_name !== filterWith?.internal_name
         );
         menuItems = GenerateMenuItems(
             filteredLayers,
@@ -152,12 +158,17 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap to";
         filteredLayers = layers.filter(
             (l) =>
-                l.internal_name === 'LUX_MAINNET' &&
+                routesData?.some((r) => r.network === l.internal_name) &&
                 l.internal_name !== filterWith?.internal_name
+        );
+        filteredExchanges = exchanges.filter(
+            (e) =>
+                routesData?.some((r) => r.network === e.internal_name) &&
+                e.internal_name !== filterWith?.internal_name
         );
         menuItems = GenerateMenuItems(
             filteredLayers,
-            fromExchange ? [] : [],
+            fromExchange ? [] : filteredExchanges, // cex -> net
             resolveImgSrc,
             direction,
             !!(to && lockTo)
@@ -178,14 +189,17 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                 console.log("emtpry network ====================================>", name)
                 setFieldValue(`${name}Exchange`, item.baseObject, true);
                 setFieldValue("from", null, true);
-                setFieldValue (`currencyGroup`, null);
-                setFieldValue (`${name}Currency`, null);
+                setFieldValue(`currencyGroup`, null);
+                setFieldValue(`${name}Currency`, null);
             } else {
-                console.log("emtpry cex ====================================>", name)
+                console.log("emtpy cex ====================================>", name)
                 setFieldValue(name, item.baseObject, true);
                 setFieldValue(`${name}Exchange`, null, true);
-                setFieldValue (`currencyGroup`, null);
-                setFieldValue (`${name}Currency`, null);
+                setFieldValue(`${name}Currency`, null);
+            }
+            // if selected network or exchange is from, clear currencyGroup
+            if (name === 'from') {
+                setFieldValue(`currencyGroup`, null);
             }
         },
         [name]
@@ -224,17 +238,17 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                 </div>
                 <div className="flex justify-between items-center mt-2 pl-3 pr-4">
                     {
-                        direction === "from" ?  <AmountField /> :
-                        parsedReceiveAmount > 0 ? 
-                        <div className="font-semibold md:font-bold text-right leading-4">
-                            <p>
-                                <span>{parsedReceiveAmount}</span>&nbsp;
-                                <span>{destinationNetworkCurrency?.asset}</span>
-                            </p>
-                            {refuel && (
-                                <Refuel currency={toCurrency} to={to} refuel={refuel} />
-                            )}
-                        </div> : <>-</>
+                        direction === "from" ? <AmountField /> :
+                            parsedReceiveAmount > 0 ?
+                                <div className="font-semibold md:font-bold text-right leading-4">
+                                    <p>
+                                        <span>{parsedReceiveAmount}</span>&nbsp;
+                                        <span>{destinationNetworkCurrency?.asset}</span>
+                                    </p>
+                                    {refuel && (
+                                        <Refuel currency={toCurrency} to={to} refuel={refuel} />
+                                    )}
+                                </div> : <>-</>
                     }
                     {/* {value?.type} */}
                     {value?.type === "cex" ? (

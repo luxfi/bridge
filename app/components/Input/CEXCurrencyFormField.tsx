@@ -115,30 +115,30 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
 
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
 
-    // useEffect(() => {
-    //     if (currencyMenuItems?.length > 0) {
-    //         setFieldValue(name, currencyMenuItems[0].baseObject, true);
-    //     }
-    //     // setFieldValue(`${direction}Currency`, {
-    //     //     "name": currencyGroup?.name,
-    //     //     "asset": currencyGroup?.name,
-    //     //     "contract_address": null,
-    //     //     "decimals": 18,
-    //     //     "status": "active",
-    //     //     "is_deposit_enabled": true,
-    //     //     "is_withdrawal_enabled": false,
-    //     //     "is_refuel_enabled": false,
-    //     //     "max_withdrawal_amount": 0,
-    //     //     "deposit_fee": 0.2,
-    //     //     "withdrawal_fee": 0.2,
-    //     //     "source_base_fee": 1,
-    //     //     "destination_base_fee": 1
-    //     // }, true);
-    //     // setFieldValue(`${direction}`, {
-    //     //     ...fromExchange,
-    //     //     "assets": [],
-    //     // }, true);
-    // }, [currencyMenuItems?.length])
+    useEffect(() => {
+        if (currencyMenuItems?.length > 0) {
+            setFieldValue(name, currencyMenuItems[0].baseObject, true);
+        }
+        // setFieldValue(`${direction}Currency`, {
+        //     "name": currencyGroup?.name,
+        //     "asset": currencyGroup?.name,
+        //     "contract_address": null,
+        //     "decimals": 18,
+        //     "status": "active",
+        //     "is_deposit_enabled": true,
+        //     "is_withdrawal_enabled": false,
+        //     "is_refuel_enabled": false,
+        //     "max_withdrawal_amount": 0,
+        //     "deposit_fee": 0.2,
+        //     "withdrawal_fee": 0.2,
+        //     "source_base_fee": 1,
+        //     "destination_base_fee": 1
+        // }, true);
+        // setFieldValue(`${direction}`, {
+        //     ...fromExchange,
+        //     "assets": [],
+        // }, true);
+    }, [currencyMenuItems?.length])
 
     const handleSelect = useCallback(
         (item: SelectMenuItem<AssetGroup>) => {
