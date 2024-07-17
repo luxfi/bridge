@@ -31,8 +31,8 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const { balances, isBalanceLoading } = useBalancesState();
   const lockedCurrency = query?.lockAsset
     ? from?.assets?.find(
-        (c) => c?.asset?.toUpperCase() === query?.asset?.toUpperCase()
-      )
+      (c) => c?.asset?.toUpperCase() === query?.asset?.toUpperCase()
+    )
     : undefined;
   const assets = direction === "from" ? from?.assets : to?.assets;
   const { getAutofillProvider: getProvider } = useWallet();
@@ -73,16 +73,10 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   //     : "?"
   // }version=${version}`;
 
-  const destinationRoutesURL = `/destination_currencies${to && toCurrency
-    ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
-    : "?"
-    }version=${version}`;
-
-  //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
-  const sourceRoutesURL = `/source_currencies${from
-    ? `?source_network=${from.internal_name}&source_asset=${fromCurrency?.asset}&`
-    : "?"
-    }version=${version}`;
+  //destination_currencies?source_network=BINANCE&source_asset=undefined&version=mainnet
+  const destinationRoutesURL = `/destination_currencies${to ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency?.asset}&` : "?"}version=${version}`;
+  //source_currencies?source_network=BINANCE&source_asset=undefined&version=mainnet
+  const sourceRoutesURL = `/source_currencies${from ? `?source_network=${from.internal_name}&source_asset=${fromCurrency?.asset}&` : "?"}version=${version}`;
 
   const { data: sourceRoutes, error: sourceRoutesError } = useSWR<
     ApiResponse<
