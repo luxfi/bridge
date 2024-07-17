@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { number } from "joi";
 
 const prisma = new PrismaClient();
 
@@ -140,6 +141,7 @@ export async function handleSwapCreation(data: SwapData) {
           feeToken: { ...destinationTokenRecord },
         },
       ],
+      swap_id: swap.id,
       swap: {
         ...swap,
         sourceNetwork: {
