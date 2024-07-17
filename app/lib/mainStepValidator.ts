@@ -9,20 +9,19 @@ export default function MainStepValidation({ maxAllowedAmount, minAllowedAmount 
 
         console.log("validateor >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", values)
 
-        if (!((values.from && values.fromCurrency) || (values.currencyGroup && values.fromExchange))) {
+        if (!values.from && !values.fromExchange) {
             (errors.from as any) = 'Select source';
         }
-        if (!values.to || !values.toCurrency) {
+        if (!values.fromCurrency && !values.currencyGroup) {
+            (errors.fromCurrency as any) = 'Select source asset';
+        }
+        if (!values.to) {
             (errors.to as any) = 'Select destination';
         }
+        if (!values.toCurrency) {
+            (errors.toCurrency as any) = 'Select destination asset';
+        }
 
-        // if (!values.fromCurrency) {
-        //     (errors.fromCurrency as any) = 'Select source asset';
-        // }
-        // if (!values.toCurrency) {
-        //     (errors.toCurrency as any) = 'Select destination asset';
-        // }
-        
         if (!amount) {
             errors.amount = 'Enter an amount';
         }

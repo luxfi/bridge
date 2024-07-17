@@ -76,15 +76,15 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
 
   const handleSelect = useCallback(
     (item: SelectMenuItem<{ network: string; asset: string }>) => {
-      if (!item) return;
-      const layer = layers.find(
-        (l) => l.internal_name === item.baseObject.network
-      );
-      const currency = layer?.assets.find(
-        (a) => a.asset === item.baseObject.asset
-      );
-      setFieldValue(name, layer, true);
-      setFieldValue(`${name}Currency`, currency, true);
+      // if (!item) return;
+      // const layer = layers.find(
+      //   (l) => l.internal_name === item.baseObject.network
+      // );
+      // const currency = layer?.assets.find(
+      //   (a) => a.asset === item.baseObject.asset
+      // );
+      // setFieldValue(name, layer, true);
+      // setFieldValue(`${name}Currency`, currency, true);
     },
     [name]
   );

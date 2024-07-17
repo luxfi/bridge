@@ -22,12 +22,12 @@ export default function FeeDetailsComponent({ values }: { values: SwapFormValues
         <>
             <FeeDetails>
 
-                {
+                {/* {
                     ((fromExchange || toExchange) && (from || to)) &&
                     <FeeDetails.Item>
                         <CEXNetworkFormField direction={fromExchange ? 'from' : 'to'} />
                     </FeeDetails.Item>
-                }
+                } */}
                 {to && toCurrency && to.assets.find(a => a.asset === toCurrency.asset)?.is_refuel_enabled && !query?.hideRefuel &&
 
                     <FeeDetails.Item>
