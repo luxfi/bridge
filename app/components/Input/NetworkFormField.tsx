@@ -88,24 +88,22 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     let valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
 
     const filterWith = direction === "from" ? to : from;
-    const filterWithAsset =
-        direction === "from" ? toCurrency?.asset : fromCurrency?.asset;
-
+    const filterWithAsset = direction === "from" ? toCurrency?.asset : fromCurrency?.asset;
     const filterWithExchange = direction === "from" ? toExchange : fromExchange;
 
     const apiClient = new BridgeApiClient();
     const version = BridgeApiClient.apiVersion;
 
     const routesEndpoint = `/${direction === "from" ? "sources" : "destinations"
-        }${filterWith && filterWithAsset
+        }${filterWith
             ? `?${direction === "to" ? "source_network" : "destination_network"}=${filterWith.internal_name
             }&${direction === "to" ? "source_asset" : "destination_asset"
             }=${filterWithAsset}&`
-            : filterWithExchange && currencyGroup
+            : filterWithExchange
                 ? `?${direction === "from"
                     ? "destination_asset_group"
                     : "source_asset_group"
-                }=${currencyGroup.name}&`
+                }=${currencyGroup?.name}&`
                 : "?"
         }version=${version}`;
 
@@ -126,9 +124,15 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         }[]
     >();
 
+    
+
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
     }, [routes]);
+
+    if (direction === 'from') {
+        console.error(routesEndpoint)
+    }
 
     if (direction === "from") {
         placeholder = "Source";
