@@ -223,7 +223,7 @@ export default class BridgeApiClient {
         },
       });
 
-    //   console.log(`BridgeApiClient.AuthenticatedRequest succ: ${res}`, res);
+      //   console.log(`BridgeApiClient.AuthenticatedRequest succ: ${res}`, res);
 
       return { ...res?.data, loading: false } as T;
     } catch (reason) {
@@ -266,17 +266,25 @@ export type NetworkAccount = {
 };
 
 export type CreateSwapParams = {
-  amount: string;
-  source: string;
-  destination: string;
-  source_asset: string;
-  destination_asset: string;
+  amount: number;
+  // source: string;
+  // destination: string;
+  // source_asset: string;
+  // destination_asset: string;
   source_exchange?: string;
   destination_exchange?: string;
-  destination_address: string;
+  // destination_address: string;
   app_name?: string;
   reference_id?: string;
   refuel?: boolean;
+
+  destinationNetwork?: string;
+  sourceNetwork?: string;
+  destinationAddress?: string;
+  sourceAddress?: string;
+  useDepositAddress?: boolean;
+  sourceToken: string;
+  destinationToken: string;
 };
 
 export type SwapItem = {
@@ -401,7 +409,7 @@ export type ConnectParams = {
   exchange: string;
 };
 
-export type CreateSwapData = {
+export type CreateSwapData<T> = {
   swap_id: string;
 };
 
