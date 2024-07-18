@@ -155,8 +155,8 @@ model DepositAction {
 //  * - quotes: 关联的报价 / Associated quotes
 //  */
 model Swap {
-  id                     String          @id @default(uuid())
-  createdDate            DateTime        @default(now())
+  id                     String           @id @default(uuid())
+  createdDate            DateTime         @default(now())
   sourceNetworkName      String
   destinationNetworkName String
   sourceTokenSymbol      String
@@ -164,7 +164,7 @@ model Swap {
   destinationAddress     String
   refuel                 Boolean
   useDepositAddress      Boolean
-  isDeleted              Boolean         @default(false)
+  isDeleted              Boolean          @default(false)
   sourceAddress          String
   requestedAmount        Float
   status                 String
@@ -172,6 +172,15 @@ model Swap {
   metadataSequenceNumber Int?
   depositActions         DepositAction[]
   quotes                 Quote[]
+  contractAddress        ContractAddress?
+}
+
+model ContractAddress {
+  swapId  String? @unique @map("swap_id")
+  swap    Swap?   @relation(fields: [swapId], references: [id])
+  id      Int     @id @default(autoincrement())
+  address String?
+  name    String?
 }
 
 // /**

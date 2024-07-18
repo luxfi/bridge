@@ -13,6 +13,10 @@ export interface SwapData {
   refuel: boolean;
   useDepositAddress: boolean;
   sourceAddress: string;
+  contractAddress: {
+    contract_name: string;
+    contract_address: string;
+  };
 }
 
 export async function handleSwapCreation(data: SwapData) {
@@ -26,6 +30,7 @@ export async function handleSwapCreation(data: SwapData) {
     refuel,
     useDepositAddress,
     sourceAddress,
+    contractAddress: cAddress,
   } = data;
 
   try {
@@ -122,6 +127,17 @@ export async function handleSwapCreation(data: SwapData) {
       },
     });
 
+    const nAddress =
+      (cAddress?.contract_address &&
+        (await prisma.contractAddress.create({
+          data: {
+            swapId: swap.id,
+            name: cAddress?.contract_name,
+            address: cAddress?.contract_address,
+          },
+        }))) ||
+      {};
+
     // const depositAction = await prisma.depositAction.create({
     //   data: {
     //     type: "transfer",
@@ -168,6 +184,7 @@ export async function handleSwapCreation(data: SwapData) {
       swap_id: swap.id,
       swap: {
         ...swap,
+        contract_address: nAddress,
         sourceNetwork: {
           ...sourceNetworkRecord,
           token: { ...sourceTokenRecord },
@@ -200,7 +217,7 @@ export async function handlerGetSwap(id: string) {
     const swap = await prisma.swap.findUnique({
       where: { id },
 
-      include: { depositActions: true, quotes: true },
+      include: { depositActions: true, quotes: true, contractAddress: true },
     });
 
     return swap;
