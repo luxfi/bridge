@@ -62,9 +62,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     ref: any
 ) {
     const { values, setFieldValue } = useFormikContext<SwapFormValues>();
-
     const name = direction;
-
     const {
         from,
         to,
@@ -116,15 +114,12 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         >
     >(routesEndpoint, apiClient.fetcher);
 
-
     const [routesData, setRoutesData] = useState<
         {
             network: string;
             asset: string;
         }[]
     >();
-
-    
 
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
@@ -336,9 +331,7 @@ function GenerateMenuItems(
             return res;
         })
         .sort(SortingByOrder);
-
     const items = [...mappedExchanges, ...mappedLayers];
-
     return items;
 }
 

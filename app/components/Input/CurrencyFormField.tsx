@@ -60,17 +60,6 @@ const CurrencyFormField: FC<{ direction: string }> = ({ direction }) => {
   const apiClient = new BridgeApiClient();
   const version = BridgeApiClient.apiVersion;
 
-  // const sourceRoutesURL = `/sources${
-  //   to && toCurrency
-  //     ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
-  //     : "?"
-  // }version=${version}`;
-  // const destinationRoutesURL = `/destinations${
-  //   from && fromCurrency
-  //     ? `?source_network=${from.internal_name}&source_asset=${fromCurrency.asset}&`
-  //     : "?"
-  // }version=${version}`;
-
   //destination_currencies?source_network=BINANCE&source_asset=undefined&version=mainnet
   const destinationRoutesURL = `/destination_currencies${to ? `?destination_network=${to.internal_name}&destination_asset=${toCurrency?.asset}&` : "?"}version=${version}`;
   //source_currencies?source_network=BINANCE&source_asset=undefined&version=mainnet
