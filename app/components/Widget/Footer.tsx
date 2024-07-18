@@ -1,7 +1,7 @@
 'use client'
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react"
-import ReactPortal from "../Common/ReactPortal";
+import ReactPortal from "../../../Common/ReactPortal";
 
 
 const variants = {
