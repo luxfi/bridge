@@ -177,7 +177,7 @@ export function SwapDataProvider({
           from?.internal_name ?? (fromExchange?.internal_name as string),
         destinationNetwork: to?.internal_name,
         sourceToken: fromCurrency?.asset ?? (currencyGroup?.name as string),
-        destinationToken: toCurrency.asset,
+        destinationToken: toCurrency?.asset ?? (currencyGroup?.name as string),
         source_exchange: fromExchange?.internal_name,
         destinationAddress: values.destination_address,
         refuel: !!refuel,
