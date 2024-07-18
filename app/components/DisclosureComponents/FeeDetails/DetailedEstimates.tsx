@@ -4,7 +4,7 @@ import { FC } from "react";
 import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 import { Layer } from "../../../Models/Layer";
 import { truncateDecimals } from "../../utils/RoundDecimals";
-import AverageCompletionTime from "../../../../Common/AverageCompletionTime";
+import AverageCompletionTime from "../../Common/AverageCompletionTime";
 import { useBalancesState } from "../../../context/balances";
 import { useFormikContext } from "formik";
 import { SwapFormValues } from "../../DTOs/SwapFormValues";
