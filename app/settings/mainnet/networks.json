@@ -14,21 +14,6 @@
     "account_explorer_template": "https://explore.lux.network/address/{0}",
     "currencies": [
       {
-        "name": "USDT",
-        "asset": "USDT",
-        "contract_address": null,
-        "decimals": 6,
-        "status": "active",
-        "is_deposit_enabled": true,
-        "is_withdrawal_enabled": false,
-        "is_refuel_enabled": false,
-        "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1
-      },
-      {
         "name": "LUX",
         "asset": "LUX",
         "contract_address": null,
@@ -44,6 +29,21 @@
         "destination_base_fee": 100.0
       },
       {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545
+      },
+      {
         "name": "ETH",
         "asset": "ETH",
         "contract_address": null,
@@ -57,6 +57,36 @@
         "withdrawal_fee": 0.000108,
         "source_base_fee": 0.000545,
         "destination_base_fee": 0.000545
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1
       }
     ],
     "metadata": null,
