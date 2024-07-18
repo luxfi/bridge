@@ -114,20 +114,22 @@ model Token {
 //  */
 model DepositAction {
   id                Int     @id @default(autoincrement())
-  type              String  @default("transfer")
-  toAddress         String
-  amount            Float
-  orderNumber       Int
-  amountInBaseUnits String
+  type              String? @default("transfer")
+  toAddress         String?
+  amount            Float?
+  orderNumber       Int?
+  amountInBaseUnits String?
   networkId         Int
   network           Network @relation(fields: [networkId], references: [id])
   tokenId           Int     @unique
   token             Token   @relation("DepositActionToken", fields: [tokenId], references: [id])
   feeTokenId        Int     @unique
   feeToken          Token   @relation("DepositActionFeeToken", fields: [feeTokenId], references: [id])
-  callData          String
-  swapId            String  @map("swap_id")
+  callData          String?
+  swapId            String  @unique @map("swap_id")
   swap              Swap    @relation(fields: [swapId], references: [id])
+
+  @@index([swapId])
 }
 
 // /**
@@ -153,8 +155,8 @@ model DepositAction {
 //  * - quotes: 关联的报价 / Associated quotes
 //  */
 model Swap {
-  id                     String          @id @default(uuid())
-  createdDate            DateTime        @default(now())
+  id                     String           @id @default(uuid())
+  createdDate            DateTime         @default(now())
   sourceNetworkName      String
   destinationNetworkName String
   sourceTokenSymbol      String
@@ -162,6 +164,7 @@ model Swap {
   destinationAddress     String
   refuel                 Boolean
   useDepositAddress      Boolean
+  isDeleted              Boolean          @default(false)
   sourceAddress          String
   requestedAmount        Float
   status                 String
@@ -169,6 +172,15 @@ model Swap {
   metadataSequenceNumber Int?
   depositActions         DepositAction[]
   quotes                 Quote[]
+  contractAddress        ContractAddress?
+}
+
+model ContractAddress {
+  swapId  String? @unique @map("swap_id")
+  swap    Swap?   @relation(fields: [swapId], references: [id])
+  id      Int     @id @default(autoincrement())
+  address String?
+  name    String?
 }
 
 // /**
