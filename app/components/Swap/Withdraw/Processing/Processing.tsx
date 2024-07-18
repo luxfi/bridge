@@ -6,7 +6,7 @@ import shortenAddress from '../../../utils/ShortenAddress';
 import Steps from '../../StepsComponent';
 import SwapSummary from '../../Summary';
 import { GetDefaultAsset } from '../../../../helpers/settingsHelper';
-import AverageCompletionTime from '../../../Common/AverageCompletionTime';
+import AverageCompletionTime from '../../../../../Common/AverageCompletionTime';
 import { SwapItem, TransactionStatus, TransactionType } from '../../../../lib/BridgeApiClient';
 import { truncateDecimals } from '../../../utils/RoundDecimals';
 import { BridgeAppSettings } from '../../../../Models/BridgeAppSettings';

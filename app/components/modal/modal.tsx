@@ -4,7 +4,7 @@ import React, { Dispatch, ReactNode, SetStateAction, useEffect, useRef } from "r
 import { FC } from "react"
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import { Leaflet, LeafletHeight } from "./leaflet";
-import ReactPortal from "../Common/ReactPortal";
+import ReactPortal from "../../../Common/ReactPortal";
 
 export interface ModalProps {
     header?: ReactNode;
