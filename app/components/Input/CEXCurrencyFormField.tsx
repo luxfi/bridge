@@ -17,11 +17,11 @@ import { Balance } from "../../Models/Balance";
 
 const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     const {
-        values: { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange },
+        values: { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange, toExchange },
         setFieldValue,
     } = useFormikContext<SwapFormValues>();
 
-    console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange })
+    console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange, toExchange })
 
     const { resolveImgSrc } = useSettingsState();
     const name = "currencyGroup";
@@ -57,14 +57,13 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
     //         }[]
     //     >
     // >(destinationRoutesURL, apiClient.fetcher);
-    const destinationRoutesURL = `/destinations${to && toCurrency
-        ? `?source_network=${to.internal_name}&destination_asset=${toCurrency.asset}&`
+    const destinationRoutesURL = `/destination_currencies${toExchange
+        ? `?destination_network=${toExchange.internal_name}&destination_asset=${currencyGroup?.name}&`
         : "?"
         }version=${version}`;
-    
-    //sources?source_network=BINANCE&source_asset=undefined&version=mainnet
-    const sourceRoutesURL = `/sources${fromExchange 
-        ? `?source_network=${fromExchange.internal_name}&source_asset=${fromCurrency?.asset}&`
+
+    const sourceRoutesURL = `/source_currencies${fromExchange
+        ? `?source_network=${fromExchange.internal_name}&source_asset=${currencyGroup?.name}&`
         : "?"
         }version=${version}`;
 
@@ -85,8 +84,6 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
             }[]
         >
     >(destinationRoutesURL, apiClient.fetcher);
-
-    console.log("urls ==========>", {sourceRoutesURL, destinationRoutesURL})
 
     const routes = direction === 'from' ? sourceRoutes?.data : destinationRoutes?.data
     const assets = routes && groupBy(routes, ({ asset }) => asset);
@@ -115,30 +112,30 @@ const CurrencyGroupFormField: FC<{ direction: string }> = ({ direction }) => {
 
     const value = currencyMenuItems?.find((x) => x.id == currencyGroup?.name);
 
-    // useEffect(() => {
-    //     if (currencyMenuItems?.length > 0) {
-    //         setFieldValue(name, currencyMenuItems[0].baseObject, true);
-    //     }
-    //     // setFieldValue(`${direction}Currency`, {
-    //     //     "name": currencyGroup?.name,
-    //     //     "asset": currencyGroup?.name,
-    //     //     "contract_address": null,
-    //     //     "decimals": 18,
-    //     //     "status": "active",
-    //     //     "is_deposit_enabled": true,
-    //     //     "is_withdrawal_enabled": false,
-    //     //     "is_refuel_enabled": false,
-    //     //     "max_withdrawal_amount": 0,
-    //     //     "deposit_fee": 0.2,
-    //     //     "withdrawal_fee": 0.2,
-    //     //     "source_base_fee": 1,
-    //     //     "destination_base_fee": 1
-    //     // }, true);
-    //     // setFieldValue(`${direction}`, {
-    //     //     ...fromExchange,
-    //     //     "assets": [],
-    //     // }, true);
-    // }, [currencyMenuItems?.length])
+    useEffect(() => {
+        if (currencyMenuItems?.length > 0) {
+            setFieldValue(name, currencyMenuItems[0].baseObject, true);
+        }
+        // setFieldValue(`${direction}Currency`, {
+        //     "name": currencyGroup?.name,
+        //     "asset": currencyGroup?.name,
+        //     "contract_address": null,
+        //     "decimals": 18,
+        //     "status": "active",
+        //     "is_deposit_enabled": true,
+        //     "is_withdrawal_enabled": false,
+        //     "is_refuel_enabled": false,
+        //     "max_withdrawal_amount": 0,
+        //     "deposit_fee": 0.2,
+        //     "withdrawal_fee": 0.2,
+        //     "source_base_fee": 1,
+        //     "destination_base_fee": 1
+        // }, true);
+        // setFieldValue(`${direction}`, {
+        //     ...fromExchange,
+        //     "assets": [],
+        // }, true);
+    }, [currencyMenuItems?.length])
 
     const handleSelect = useCallback(
         (item: SelectMenuItem<AssetGroup>) => {
