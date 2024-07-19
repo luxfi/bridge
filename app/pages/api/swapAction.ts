@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { number } from "joi";
 
-const prisma = new PrismaClient();
+import prisma from "../../lib/db";
 
 export interface SwapData {
   amount: number;
@@ -206,6 +206,7 @@ export async function handleSwapCreation(data: SwapData) {
 
     return result;
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(
       `Error creating swap and related entities: ${error.message}`
     );
@@ -220,8 +221,104 @@ export async function handlerGetSwap(id: string) {
       include: { depositActions: true, quotes: true, contractAddress: true },
     });
 
-    return swap;
+    return {
+      ...swap,
+      transactions: [
+        {
+          from: "0x3d301f2784646316b5ba594559f4afd3d7435edf",
+          to: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
+          timestamp: "2024-07-16T03:16:36+00:00",
+          transaction_hash:
+            "0x2ac5d8ec5000437e11d2e41707a5dbe3c86121efbe153575bf60a4a493d25d63",
+          confirmations: 3,
+          max_confirmations: 3,
+          amount: 0.000326,
+          type: "input",
+          status: "completed",
+          token: {
+            symbol: "ETH",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+            contract: null,
+            decimals: 18,
+            price_in_usd: 3413.11,
+            precision: 6,
+            listing_date: "2023-05-18T13:41:38.401615+00:00",
+          },
+          network: {
+            name: "ETHEREUM_SEPOLIA",
+            display_name: "Ethereum Sepolia",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/ethereum_sepolia.png",
+            chain_id: "11155111",
+            node_url:
+              "https://eth-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
+            type: "evm",
+            transaction_explorer_template:
+              "https://sepolia.etherscan.io/tx/{0}",
+            account_explorer_template:
+              "https://sepolia.etherscan.io/address/{0}",
+            token: {
+              symbol: "ETH",
+              logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+              contract: null,
+              decimals: 18,
+              price_in_usd: 3413.11,
+              precision: 6,
+              listing_date: "2023-05-18T13:41:38.401615+00:00",
+            },
+            metadata: {
+              listing_date: "2023-12-27T16:46:50.617075+00:00",
+            },
+          },
+        },
+        {
+          from: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
+          to: "0x3d301f2784646316b5ba594559f4afd3d7435edf",
+          timestamp: "2024-07-16T03:17:13+00:00",
+          transaction_hash:
+            "0xba4fc26d059f7268d825ffb0bad54878778d09cd9bdca59f7f241a233834b26b",
+          confirmations: 1,
+          max_confirmations: 1,
+          amount: 0.000288,
+          type: "output",
+          status: "completed",
+          token: {
+            symbol: "ETH",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+            contract: null,
+            decimals: 18,
+            price_in_usd: 3413.11,
+            precision: 6,
+            listing_date: "2023-05-18T13:41:38.555738+00:00",
+          },
+          network: {
+            name: "ARBITRUM_SEPOLIA",
+            display_name: "Arbitrum One Sepolia",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/arbitrum_sepolia.png",
+            chain_id: "421614",
+            node_url:
+              "https://arbitrum-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
+            type: "evm",
+            transaction_explorer_template: "https://sepolia.arbiscan.io/tx/{0}",
+            account_explorer_template:
+              "https://sepolia.arbiscan.io/address/{0}",
+            token: {
+              symbol: "ETH",
+              logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+              contract: null,
+              decimals: 18,
+              price_in_usd: 3413.11,
+              precision: 6,
+              listing_date: "2023-05-18T13:41:38.555738+00:00",
+            },
+            metadata: {
+              listing_date: "2023-12-27T16:46:50.617075+00:00",
+            },
+          },
+        },
+      ],
+    };
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
 }
@@ -241,9 +338,105 @@ export async function handlerGetSwaps(
 
       // include: { depositActions: true, quotes: true },
     });
+    swap.map((swap) => {
+      swap.transactions = [
+        {
+          from: "0x3d301f2784646316b5ba594559f4afd3d7435edf",
+          to: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
+          timestamp: "2024-07-16T03:16:36+00:00",
+          transaction_hash:
+            "0x2ac5d8ec5000437e11d2e41707a5dbe3c86121efbe153575bf60a4a493d25d63",
+          confirmations: 3,
+          max_confirmations: 3,
+          amount: 0.000326,
+          type: "input",
+          status: "completed",
+          token: {
+            symbol: "ETH",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+            contract: null,
+            decimals: 18,
+            price_in_usd: 3413.11,
+            precision: 6,
+            listing_date: "2023-05-18T13:41:38.401615+00:00",
+          },
+          network: {
+            name: "ETHEREUM_SEPOLIA",
+            display_name: "Ethereum Sepolia",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/ethereum_sepolia.png",
+            chain_id: "11155111",
+            node_url:
+              "https://eth-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
+            type: "evm",
+            transaction_explorer_template:
+              "https://sepolia.etherscan.io/tx/{0}",
+            account_explorer_template:
+              "https://sepolia.etherscan.io/address/{0}",
+            token: {
+              symbol: "ETH",
+              logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+              contract: null,
+              decimals: 18,
+              price_in_usd: 3413.11,
+              precision: 6,
+              listing_date: "2023-05-18T13:41:38.401615+00:00",
+            },
+            metadata: {
+              listing_date: "2023-12-27T16:46:50.617075+00:00",
+            },
+          },
+        },
+        {
+          from: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
+          to: "0x3d301f2784646316b5ba594559f4afd3d7435edf",
+          timestamp: "2024-07-16T03:17:13+00:00",
+          transaction_hash:
+            "0xba4fc26d059f7268d825ffb0bad54878778d09cd9bdca59f7f241a233834b26b",
+          confirmations: 1,
+          max_confirmations: 1,
+          amount: 0.000288,
+          type: "output",
+          status: "completed",
+          token: {
+            symbol: "ETH",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+            contract: null,
+            decimals: 18,
+            price_in_usd: 3413.11,
+            precision: 6,
+            listing_date: "2023-05-18T13:41:38.555738+00:00",
+          },
+          network: {
+            name: "ARBITRUM_SEPOLIA",
+            display_name: "Arbitrum One Sepolia",
+            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/arbitrum_sepolia.png",
+            chain_id: "421614",
+            node_url:
+              "https://arbitrum-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
+            type: "evm",
+            transaction_explorer_template: "https://sepolia.arbiscan.io/tx/{0}",
+            account_explorer_template:
+              "https://sepolia.arbiscan.io/address/{0}",
+            token: {
+              symbol: "ETH",
+              logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+              contract: null,
+              decimals: 18,
+              price_in_usd: 3413.11,
+              precision: 6,
+              listing_date: "2023-05-18T13:41:38.555738+00:00",
+            },
+            metadata: {
+              listing_date: "2023-12-27T16:46:50.617075+00:00",
+            },
+          },
+        },
+      ];
+    });
 
-    return swap;
+    return [...swap];
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
 }
@@ -256,6 +449,15 @@ export async function handlerUpdateSwaps(swapdata: { id: string }) {
     });
     return "success";
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(`Error deleting swaps: ${error.message}`);
+  }
+}
+
+function catchPrismaKnowError(error: Error) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    throw new Error(
+      `Error getting Prisma code: ${error.code} msg:${error.message}`
+    );
   }
 }
