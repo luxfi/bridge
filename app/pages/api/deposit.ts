@@ -67,7 +67,6 @@ export default async function handler(
           useDepositAddress: use_deposit_address,
         },
       });
-
       res.status(200).json({ id: newSwapTransaction.id, message: "Success" });
     } catch (error) {
       console.error(error);
