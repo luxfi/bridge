@@ -62,9 +62,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     ref: any
 ) {
     const { values, setFieldValue } = useFormikContext<SwapFormValues>();
-
     const name = direction;
-
     const {
         from,
         to,
@@ -82,29 +80,28 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     let placeholder = "";
     let searchHint = "";
     let filteredLayers: Layer[];
+    let filteredExchanges: Exchange[];
     let menuItems: SelectMenuItem<Layer | Exchange>[];
 
     let valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
 
     const filterWith = direction === "from" ? to : from;
-    const filterWithAsset =
-        direction === "from" ? toCurrency?.asset : fromCurrency?.asset;
-
+    const filterWithAsset = direction === "from" ? toCurrency?.asset : fromCurrency?.asset;
     const filterWithExchange = direction === "from" ? toExchange : fromExchange;
 
     const apiClient = new BridgeApiClient();
     const version = BridgeApiClient.apiVersion;
 
     const routesEndpoint = `/${direction === "from" ? "sources" : "destinations"
-        }${filterWith && filterWithAsset
+        }${filterWith
             ? `?${direction === "to" ? "source_network" : "destination_network"}=${filterWith.internal_name
             }&${direction === "to" ? "source_asset" : "destination_asset"
             }=${filterWithAsset}&`
-            : filterWithExchange && currencyGroup
+            : filterWithExchange
                 ? `?${direction === "from"
                     ? "destination_asset_group"
                     : "source_asset_group"
-                }=${currencyGroup.name}&`
+                }=${filterWithExchange?.internal_name}&`
                 : "?"
         }version=${version}`;
 
@@ -117,16 +114,12 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         >
     >(routesEndpoint, apiClient.fetcher);
 
-    // console.log('routersEdnpoint ==========>', routesEndpoint)
-
     const [routesData, setRoutesData] = useState<
         {
             network: string;
             asset: string;
         }[]
     >();
-
-    // console.log('routes data ================>', routes)
 
     useEffect(() => {
         if (!isLoading && routes?.data) setRoutesData(routes?.data);
@@ -137,8 +130,13 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap from";
         filteredLayers = layers.filter(
             (l) =>
-                // routesData?.some((r) => r.network === l.internal_name) &&
-                l.internal_name !== filterWith?.internal_name
+                // l.internal_name !== filterWith?.internal_name &&
+                routesData?.some((r) => r.network === l.internal_name)
+        );
+        filteredExchanges = exchanges.filter(
+            (e) =>
+                // e.internal_name !== filterWith?.internal_name &&
+                routesData?.some((r) => r.network === e.internal_name)
         );
         menuItems = GenerateMenuItems(
             filteredLayers,
@@ -152,12 +150,17 @@ const NetworkFormField = forwardRef(function NetworkFormField(
         searchHint = "Swap to";
         filteredLayers = layers.filter(
             (l) =>
-                l.internal_name === 'LUX_MAINNET' &&
+                routesData?.some((r) => r.network === l.internal_name) &&
                 l.internal_name !== filterWith?.internal_name
+        );
+        filteredExchanges = exchanges.filter(
+            (e) =>
+                routesData?.some((r) => r.network === e.internal_name) &&
+                e.internal_name !== filterWith?.internal_name
         );
         menuItems = GenerateMenuItems(
             filteredLayers,
-            fromExchange ? [] : [],
+            fromExchange ? [] : filteredExchanges, // cex -> net
             resolveImgSrc,
             direction,
             !!(to && lockTo)
@@ -175,17 +178,14 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     const handleSelect = useCallback(
         (item: SelectMenuItem<Layer | Exchange>) => {
             if (item.type === "cex") {
-                console.log("emtpry network ====================================>", name)
                 setFieldValue(`${name}Exchange`, item.baseObject, true);
-                setFieldValue("from", null, true);
-                setFieldValue (`currencyGroup`, null);
-                setFieldValue (`${name}Currency`, null);
+                setFieldValue(name, null, true);
+                setFieldValue(`currencyGroup`, null, true);
+                setFieldValue(`${name}Currency`, null, true);
             } else {
-                console.log("emtpry cex ====================================>", name)
                 setFieldValue(name, item.baseObject, true);
                 setFieldValue(`${name}Exchange`, null, true);
-                setFieldValue (`currencyGroup`, null);
-                setFieldValue (`${name}Currency`, null);
+                setFieldValue(`${name}Currency`, null, true);
             }
         },
         [name]
@@ -224,17 +224,17 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                 </div>
                 <div className="flex justify-between items-center mt-2 pl-3 pr-4">
                     {
-                        direction === "from" ?  <AmountField /> :
-                        parsedReceiveAmount > 0 ? 
-                        <div className="font-semibold md:font-bold text-right leading-4">
-                            <p>
-                                <span>{parsedReceiveAmount}</span>&nbsp;
-                                <span>{destinationNetworkCurrency?.asset}</span>
-                            </p>
-                            {refuel && (
-                                <Refuel currency={toCurrency} to={to} refuel={refuel} />
-                            )}
-                        </div> : <>-</>
+                        direction === "from" ? <AmountField /> :
+                            parsedReceiveAmount > 0 ?
+                                <div className="font-semibold md:font-bold text-right leading-4">
+                                    <p>
+                                        <span>{parsedReceiveAmount}</span>&nbsp;
+                                        <span>{destinationNetworkCurrency?.asset}</span>
+                                    </p>
+                                    {refuel && (
+                                        <Refuel currency={toCurrency} to={to} refuel={refuel} />
+                                    )}
+                                </div> : <>-</>
                     }
                     {/* {value?.type} */}
                     {value?.type === "cex" ? (
@@ -331,9 +331,7 @@ function GenerateMenuItems(
             return res;
         })
         .sort(SortingByOrder);
-
     const items = [...mappedExchanges, ...mappedLayers];
-
     return items;
 }
 
