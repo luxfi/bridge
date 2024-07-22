@@ -293,6 +293,8 @@ function GenerateMenuItems(
         }
     };
 
+    console.log(layers)
+
     const mappedLayers = layers
         .map((l) => {
             let orderProp: keyof NetworkSettings | keyof ExchangeSettings =
