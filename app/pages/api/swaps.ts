@@ -35,6 +35,8 @@ export default async function handler(
       undefined;
     console.log("isDeleted", isDeleted, req.query.isDeleted);
 
+    console.log(req.query)
+
     const result = await handlerGetSwaps(
       req.query.address as string,
       isDeleted

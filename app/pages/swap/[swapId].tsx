@@ -6,18 +6,18 @@ import { SwapDataProvider } from '../../context/swap';
 import { TimerProvider } from '../../context/timerContext';
 import { getThemeData } from '../../helpers/settingsHelper';
 import SwapWithdrawal from '../../components/SwapWithdrawal'
-import { ApiError } from 'next/dist/server/api-utils';
 
 const SwapDetails = ({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
 
   return (<>
-    <Layout settings={settings} themeData={themeData}>
+    {/* <Layout settings={settings} themeData={themeData}>
       <SwapDataProvider >
         <TimerProvider>
           <SwapWithdrawal />
         </TimerProvider>
       </SwapDataProvider >
-    </Layout>
+    </Layout> */}
+    <div>swap</div>
   </>)
 }
 
@@ -33,29 +33,27 @@ export const getServerSideProps = async (ctx) => {
     }
   }
 
-  console.log(params)
-  
   const apiClient = new BridgeApiClient()
-  
   const { data: networkData } = await apiClient.GetLSNetworksAsync()
   const { data: exchangeData } = await apiClient.GetExchangesAsync()
 
-
   if (!networkData || !exchangeData) return
 
-  const settings = {
-    networks: networkData,
-    exchanges: exchangeData,
-  }
+//   const settings = {
+//     networks: networkData,
+//     exchanges: exchangeData,
+//   }
 
-  const themeData = await getThemeData(ctx.query)
+//   console.log(settings)
 
-  return {
-    props: {
-      settings,
-      themeData
-    }
-  }
+//   const themeData = await getThemeData(ctx.query)
+
+//   return {
+//     props: {
+//       settings,
+//       themeData
+//     }
+//   }
 }
 
 export default SwapDetails
