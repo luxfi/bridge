@@ -181,9 +181,8 @@ export function SwapDataProvider({
         source_exchange: fromExchange?.internal_name,
         destinationAddress: values.destination_address,
         refuel: !!refuel,
-        useDepositAddress: false,
+        useDepositAddress: true,
         sourceAddress: values.destination_address,
-
         destination_exchange: toExchange?.internal_name,
 
         app_name: partner
@@ -193,6 +192,8 @@ export function SwapDataProvider({
           : "Bridge",
         reference_id: query.externalId,
       };
+
+      console.log("swap data ===========", data);
 
       const swapResponse = await client.CreateSwapAsync(data);
       if (swapResponse?.error) {
