@@ -271,20 +271,19 @@ export type CreateSwapParams = {
   // destination: string;
   // source_asset: string;
   // destination_asset: string;
-  source_exchange?: string;
-  destination_exchange?: string;
-  // destination_address: string;
   app_name?: string;
   reference_id?: string;
   refuel?: boolean;
-
-  destinationNetwork?: string;
-  sourceNetwork?: string;
-  destinationAddress?: string;
-  sourceAddress?: string;
-  useDepositAddress?: boolean;
-  sourceToken: string;
-  destinationToken: string;
+  source_network?: string;
+  source_exchange?: string;
+  source_asset: string;
+  source_address?: string;
+  // destination_address: string;
+  destination_network?: string;
+  destination_exchange?: string;
+  destination_asset: string;
+  destination_address?: string;
+  use_deposit_address?: boolean;
 };
 
 export type SwapItem = {

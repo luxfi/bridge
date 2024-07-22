@@ -12,19 +12,20 @@ export default async function handler(
     const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     const settings = isMainnet ? mainnetSettings : testnetSettings;
 
-    let contractAddress =
-      req.body.sourceNetwork.includes("STARKNET") &&
+    let contract_address =
+      req.body.source_network?.includes("STARKNET") &&
       settings.contractAddress.data.find((res) => {
         return res.contract_name === "STARKNET";
       });
 
-    if (!contractAddress) {
-      contractAddress = getRandomObjectExceptSTARKNET(
+    if (!contract_address) {
+      contract_address = getRandomObjectExceptSTARKNET(
         settings.contractAddress.data
       );
     }
+
     try {
-      const result = await handleSwapCreation({ ...req.body, contractAddress });
+      const result = await handleSwapCreation({ ...req.body, contract_address });
       res.status(200).json({ data: { ...result } });
     } catch (error) {
       res.status(500).json({ error: error.message });
