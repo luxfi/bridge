@@ -107,67 +107,96 @@ export async function handleSwapCreation(data: SwapData) {
     });
 
     // 最后创建 Transaction
-    // const transaction = await prisma.transaction.create({
-    //   data: {
-    //     status: "completed",
-    //     type: "input",
-    //     from: "0xc9cbb47b26e720c2e70c964f190f1f2d4714a5a8",
-    //     to: "0x2fc617e933a52713247ce25730f6695920b3befe",
-    //     transaction_hash:
-    //       "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
-    //     confirmations: 2,
-    //     max_confirmations: 2,
-    //     amount: 0.0009935399091,
-    //     swap: {
-    //       connect: {
-    //         id: swap.id,
-    //       },
-    //     },
-    //     token: {
-    //       connect: {
-    //         id: token.id,
-    //       },
-    //     },
-    //     network: {
-    //       connect: {
-    //         id: network.id,
-    //       },
-    //     },
-    //   },
-    // });
-
-    await prisma.transaction.createMany({
-      data: [
-        {
-          status: "completed",
-          type: "input",
-          from: sourceNetwork,
-          to: "0x2fc617e933a52713247ce25730f6695920b3befe",
-          transaction_hash:
-            "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
-          confirmations: 2,
-          max_confirmations: 2,
-          amount: amount,
-          tokenId: token.id,
-          networkId: network.id,
-          swapId: swap.id,
+    await prisma.transaction.create({
+      data: {
+        status: "completed",
+        type: "input",
+        from: sourceNetwork,
+        to: "0x2fc617e933a52713247ce25730f6695920b3befe",
+        transaction_hash:
+          "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+        confirmations: 2,
+        max_confirmations: 2,
+        amount: amount,
+        swap: {
+          connect: {
+            id: swap.id,
+          },
         },
-        {
-          status: "completed",
-          type: "output",
-          from: "0x2fc617e933a52713247ce25730f6695920b3befe",
-          to: sourceNetwork,
-          transaction_hash:
-            "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
-          confirmations: 2,
-          max_confirmations: 2,
-          amount: amount,
-          tokenId: token.id,
-          networkId: network.id,
-          swapId: swap.id,
+        token: {
+          connect: {
+            id: token.id,
+          },
         },
-      ],
+        network: {
+          connect: {
+            id: network.id,
+          },
+        },
+      },
     });
+
+    await prisma.transaction.create({
+      data: {
+        status: "completed",
+        type: "output",
+        to: sourceNetwork,
+        from: "0x2fc617e933a52713247ce25730f6695920b3befe",
+        transaction_hash:
+          "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+        confirmations: 2,
+        max_confirmations: 2,
+        amount: amount,
+        swap: {
+          connect: {
+            id: swap.id,
+          },
+        },
+        token: {
+          connect: {
+            id: token.id,
+          },
+        },
+        network: {
+          connect: {
+            id: network.id,
+          },
+        },
+      },
+    });
+
+    // await prisma.transaction.createMany({
+    //   data: [
+    //     {
+    //       status: "completed",
+    //       type: "input",
+    //       from: sourceNetwork,
+    //       to: "0x2fc617e933a52713247ce25730f6695920b3befe",
+    //       transaction_hash:
+    //         "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+    //       confirmations: 2,
+    //       max_confirmations: 2,
+    //       amount: amount,
+    //       tokenId: token.id,
+    //       networkId: network.id,
+    //       swapId: swap.id,
+    //     },
+    //     {
+    //       status: "completed",
+    //       type: "output",
+    //       from: "0x2fc617e933a52713247ce25730f6695920b3befe",
+    //       to: sourceNetwork,
+    //       transaction_hash:
+    //         "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+    //       confirmations: 2,
+    //       max_confirmations: 2,
+    //       amount: amount,
+    //       tokenId: token.id,
+    //       networkId: network.id,
+    //       swapId: swap.id,
+    //     },
+    //   ],
+    // });
 
     const depositAction = await prisma.depositAction.findFirstOrThrow({
       where: {
