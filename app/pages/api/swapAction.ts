@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { number } from "joi";
 
-const prisma = new PrismaClient();
+import prisma from "../../lib/db";
 
 export interface SwapData {
   amount: number;
@@ -121,6 +121,20 @@ export async function handleSwapCreation(data: SwapData) {
       },
     });
 
+    const transaction = await prisma.transaction.create({
+      data: {
+        swapId: swap.id,
+        status: "pending",
+        type: "swap",
+        from: "0x222www2",
+        to: "0x31232xxx",
+        transaction_hash: "0x343112222s",
+        confirmations: 2,
+        max_confirmations: 2,
+        amount: 0.3,
+      },
+    });
+
     const depositAction = await prisma.depositAction.findFirstOrThrow({
       where: {
         swapId: swap.id,
@@ -206,6 +220,7 @@ export async function handleSwapCreation(data: SwapData) {
 
     return result;
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(
       `Error creating swap and related entities: ${error.message}`
     );
@@ -217,11 +232,19 @@ export async function handlerGetSwap(id: string) {
     const swap = await prisma.swap.findUnique({
       where: { id },
 
-      include: { depositActions: true, quotes: true, contractAddress: true },
+      include: {
+        depositActions: true,
+        quotes: true,
+        contractAddress: true,
+        transactions: true,
+      },
     });
 
-    return swap;
+    return {
+      ...swap,
+    };
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
 }
@@ -239,11 +262,12 @@ export async function handlerGetSwaps(
       },
       where: { sourceAddress: address, isDeleted: isDe },
 
-      // include: { depositActions: true, quotes: true },
+      include: { depositActions: true, quotes: true, transactions: true },
     });
 
     return swap;
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
 }
@@ -256,6 +280,15 @@ export async function handlerUpdateSwaps(swapdata: { id: string }) {
     });
     return "success";
   } catch (error) {
+    catchPrismaKnowError(error);
     throw new Error(`Error deleting swaps: ${error.message}`);
+  }
+}
+
+function catchPrismaKnowError(error: Error) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    throw new Error(
+      `Error getting Prisma code: ${error.code} msg:${error.message}`
+    );
   }
 }
