@@ -17,6 +17,7 @@ const SwapDetails = ({ settings, themeData }: InferGetServerSidePropsType<typeof
         </TimerProvider>
       </SwapDataProvider >
     </Layout>
+    <div>swap</div>
   </>)
 }
 
@@ -36,12 +37,15 @@ export const getServerSideProps = async (ctx) => {
   const { data: networkData } = await apiClient.GetLSNetworksAsync()
   const { data: exchangeData } = await apiClient.GetExchangesAsync()
 
+  console.log(!networkData || !exchangeData)
   if (!networkData || !exchangeData) return
 
   const settings = {
     networks: networkData,
     exchanges: exchangeData,
   }
+
+  console.log(settings)
 
   const themeData = await getThemeData(ctx.query)
 
