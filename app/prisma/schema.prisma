@@ -9,9 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  provider  = "sqlite"
+  url       = "file:dev.sqlite" // uses connection pooling
+  directUrl = "file:dev.sqlite" // uses a direct connection
 }
 
 // pnpx prisma generate    
@@ -20,17 +20,19 @@ datasource db {
 // prisma migrate dev     
 
 model SwapUserInfo {
-  id                 String   @id @unique @default(uuid()) @map("_id")
-  amount             Float?
-  destinationAddress String?
-  destinationNetwork String?
-  destinationToken   String?
-  refuel             Boolean  @default(false)
-  sourceAddress      String?
-  sourceNetwork      String?
-  sourceToken        String?
-  useDepositAddress  Boolean  @default(false)
-  createdAt          DateTime @default(now())
+  id                      String   @id @unique @default(uuid()) @map("_id")
+  amount                  Float?
+  source_network          String?
+  source_exchange         String?
+  source_asset            String?
+  source_address          String?
+  destination_network     String?
+  destination_exchange    String?
+  destination_asset       String?
+  destination_address     String?
+  refuel                  Boolean  @default(false)
+  use_deposit_address     Boolean  @default(false)
+  createdAt               DateTime @default(now())
 }
 
 // /**
@@ -40,28 +42,28 @@ model SwapUserInfo {
 //  * Fields:
 //  * - id: 主键，自动递增 / Primary key, auto increment
 //  * - name: 网络名称 / Network name
-//  * - displayName: 网络显示名称 / Network display name
+//  * - display_name: 网络显示名称 / Network display name
 //  * - logo: 网络标识 / Network logo
-//  * - chainId: 网络链ID / Network chain ID
-//  * - nodeUrl: 网络节点URL / Network node URL
+//  * - chain_id: 网络链ID / Network chain ID
+//  * - node_url: 网络节点URL / Network node URL
 //  * - type: 网络类型 / Network type
-//  * - transactionExplorerTemplate: 交易浏览器模板URL / Transaction explorer template URL
-//  * - accountExplorerTemplate: 账户浏览器模板URL / Account explorer template URL
-//  * - listingDate: 上市日期 / Listing date
-//  * - depositActions: 关联的存款操作 / Associated deposit actions
+//  * - transaction_explorer_template: 交易浏览器模板URL / Transaction explorer template URL
+//  * - account_explorer_template: 账户浏览器模板URL / Account explorer template URL
+//  * - listing_date: 上市日期 / Listing date
+//  * - deposit_actions: 关联的存款操作 / Associated deposit actions
 //  */
 model Network {
-  id                          Int             @id @default(autoincrement())
-  name                        String
-  displayName                 String
-  logo                        String
-  chainId                     String
-  nodeUrl                     String
-  type                        String
-  transactionExplorerTemplate String
-  accountExplorerTemplate     String
-  listingDate                 DateTime
-  depositActions              DepositAction[]
+  id                               Int             @id @default(autoincrement())
+  name                             String
+  display_name                     String
+  logo                             String
+  chain_id                         String
+  node_url                         String
+  type                             String
+  transaction_explorer_template    String
+  account_explorer_template        String
+  listing_date                     DateTime
+  deposit_actions                  DepositAction[]
 }
 
 // /**
@@ -74,23 +76,23 @@ model Network {
 //  * - logo: 代币标识 / Token logo
 //  * - contract: 代币合约地址（可选） / Token contract address (optional)
 //  * - decimals: 小数位数 / Decimals
-//  * - priceInUsd: 代币的美元价格 / Token price in USD
+//  * - price_in_usd: 代币的美元价格 / Token price in USD
 //  * - precision: 精度 / Precision
-//  * - listingDate: 上市日期 / Listing date
-//  * - depositActionToken: 关联的存款操作（代币） / Associated deposit action (token)
-//  * - depositActionFeeToken: 关联的存款操作（费用代币） / Associated deposit action (fee token)
+//  * - listing_date: 上市日期 / Listing date
+//  * - deposit_action_token: 关联的存款操作（代币） / Associated deposit action (token)
+//  * - deposit_action_fee_token: 关联的存款操作（费用代币） / Associated deposit action (fee token)
 //  */
 model Token {
-  id                    Int            @id @default(autoincrement())
-  symbol                String
-  logo                  String
-  contract              String?
-  decimals              Int
-  priceInUsd            Float
-  precision             Int
-  listingDate           DateTime
-  depositActionToken    DepositAction? @relation("DepositActionToken")
-  depositActionFeeToken DepositAction? @relation("DepositActionFeeToken")
+  id                        Int            @id @default(autoincrement())
+  symbol                    String
+  logo                      String
+  contract                  String?
+  decimals                  Int
+  price_in_usd              Float
+  precision                 Int
+  listing_date              DateTime
+  deposit_action_token      DepositAction? @relation("DepositActionToken")
+  deposit_action_fee_token  DepositAction? @relation("DepositActionFeeToken")
 }
 
 // /**
@@ -100,38 +102,38 @@ model Token {
 //  * Fields:
 //  * - id: 主键，自动递增 / Primary key, auto increment
 //  * - type: 操作类型，默认为 "transfer" / Action type, default is "transfer"
-//  * - toAddress: 接收地址 / To address
+//  * - to_address: 接收地址 / To address
 //  * - amount: 数量 / Amount
-//  * - orderNumber: 订单号 / Order number
-//  * - amountInBaseUnits: 基础单位数量 / Amount in base units
-//  * - networkId: 外键，引用 Network / Foreign key, references Network
+//  * - order_number: 订单号 / Order number
+//  * - amount_in_base_units: 基础单位数量 / Amount in base units
+//  * - network_id: 外键，引用 Network / Foreign key, references Network
 //  * - network: 关联的网络 / Associated network
-//  * - tokenId: 外键，引用 Token 作为 token / Foreign key, references Token as token
+//  * - token_id: 外键，引用 Token 作为 token / Foreign key, references Token as token
 //  * - token: 关联的代币 / Associated token
-//  * - feeTokenId: 外键，引用 Token 作为 feeToken / Foreign key, references Token as feeToken
-//  * - feeToken: 关联的费用代币 / Associated fee token
-//  * - callData: 调用数据 / Call data
-//  * - swapId: 外键，引用 Swap / Foreign key, references Swap
+//  * - fee_token_id: 外键，引用 Token 作为 fee_token / Foreign key, references Token as fee_token
+//  * - fee_token: 关联的费用代币 / Associated fee token
+//  * - call_data: 调用数据 / Call data
+//  * - swap_id: 外键，引用 Swap / Foreign key, references Swap
 //  * - swap: 关联的交换 / Associated swap
 //  */
 model DepositAction {
-  id                Int     @id @default(autoincrement())
-  type              String? @default("transfer")
-  toAddress         String?
-  amount            Float?
-  orderNumber       Int?
-  amountInBaseUnits String?
-  networkId         Int
-  network           Network @relation(fields: [networkId], references: [id])
-  tokenId           Int     @unique
-  token             Token   @relation("DepositActionToken", fields: [tokenId], references: [id])
-  feeTokenId        Int     @unique
-  feeToken          Token   @relation("DepositActionFeeToken", fields: [feeTokenId], references: [id])
-  callData          String?
-  swapId            String  @unique @map("swap_id")
-  swap              Swap    @relation(fields: [swapId], references: [id])
+  id                    Int     @id @default(autoincrement())
+  type                  String? @default("transfer")
+  to_address            String?
+  amount                Float?
+  order_number          Int?
+  amount_in_base_units  String?
+  network_id            Int
+  network               Network @relation(fields: [network_id], references: [id])
+  token_id              Int     @unique
+  token                 Token   @relation("DepositActionToken", fields: [token_id], references: [id])
+  fee_token_id          Int     @unique
+  fee_token             Token   @relation("DepositActionFeeToken", fields: [fee_token_id], references: [id])
+  call_data             String?
+  swap_id               String  @unique @map("swap_id")
+  swap                  Swap    @relation(fields: [swap_id], references: [id])
 
-  @@index([swapId])
+  @@index([swap_id])
 }
 
 // /**
@@ -140,65 +142,69 @@ model DepositAction {
 //  * 
 //  * Fields:
 //  * - id: 主键，UUID / Primary key, UUID
-//  * - createdDate: 创建日期 / Created date
-//  * - sourceNetworkName: 源网络名称 / Source network name
-//  * - destinationNetworkName: 目标网络名称 / Destination network name
-//  * - sourceTokenSymbol: 源代币符号 / Source token symbol
-//  * - destinationTokenSymbol: 目标代币符号 / Destination token symbol
-//  * - destinationAddress: 目标地址 / Destination address
+//  * - created_date: 创建日期 / Created date
+//  * - source_network: 源网络名称 / Source network name
+//  * - source_exchange: 源网络名称 / Source source name
+//  * - source_asset: 源代币符号 / Source token symbol
+//  * - source_address: 源地址 / Source address
+//  * - destination_network: 目标网络名称 / Destination network name
+//  * - destination_exchange: 目标网络名称 / Destination exchange name
+//  * - destination_asset: 目标代币符号 / Destination token symbol
+//  * - destination_address: 目标地址 / Destination address
 //  * - refuel: 是否重新加油 / Whether to refuel
-//  * - useDepositAddress: 是否使用存款地址 / Whether to use deposit address
-//  * - sourceAddress: 源地址 / Source address
-//  * - requestedAmount: 请求数量 / Requested amount
+//  * - use_deposit_address: 是否使用存款地址 / Whether to use deposit address
+//  * - requested_amount: 请求数量 / Requested amount
 //  * - status: 状态 / Status
-//  * - failReason: 失败原因（可选） / Fail reason (optional)
-//  * - metadataSequenceNumber: 元数据序列号（可选） / Metadata sequence number (optional)
-//  * - depositActions: 关联的存款操作 / Associated deposit actions
+//  * - fail_reason: 失败原因（可选） / Fail reason (optional)
+//  * - metadata_sequence_number: 元数据序列号（可选） / Metadata sequence number (optional)
+//  * - deposit_actions: 关联的存款操作 / Associated deposit actions
 //  * - quotes: 关联的报价 / Associated quotes
 //  */
 model Swap {
-  id                     String           @id @default(uuid())
-  createdDate            DateTime         @default(now())
-  sourceNetworkName      String
-  destinationNetworkName String
-  sourceTokenSymbol      String
-  destinationTokenSymbol String
-  destinationAddress     String
-  refuel                 Boolean
-  useDepositAddress      Boolean
-  isDeleted              Boolean          @default(false)
-  sourceAddress          String
-  requestedAmount        Float
-  status                 String
-  failReason             String?
-  metadataSequenceNumber Int?
-  depositActions         DepositAction[]
-  quotes                 Quote[]
-  contractAddress        ContractAddress?
-  transactions           Transaction[]
+  id                        String           @id @default(uuid())
+  created_date              DateTime         @default(now())
+  source_network            String
+  source_exchange           String?
+  source_asset              String
+  source_address            String
+  destination_network       String
+  destination_exchange      String?
+  destination_asset         String
+  destination_address       String
+  refuel                    Boolean
+  use_deposit_address       Boolean
+  is_deleted                Boolean          @default(false)
+  requested_amount          Float
+  status                    String
+  fail_reason               String?
+  metadata_sequence_number  Int?
+  deposit_actions           DepositAction[]
+  quotes                    Quote[]
+  contract_address          ContractAddress?
+  transactions              Transaction[]
 }
 
 model Transaction {
-  id                Int      @id @default(autoincrement())
-  from              String
-  to                String
-  timestamp         DateTime @default(now())
-  transaction_hash  String
-  confirmations     Int
-  max_confirmations Int
-  amount            Float
-  type              String
-  status            String
-  Swap              Swap?    @relation(fields: [swapId], references: [id])
-  swapId            String?
+  id                  Int      @id @default(autoincrement())
+  from                String
+  to                  String
+  timestamp           DateTime @default(now())
+  transaction_hash    String
+  confirmations       Int
+  max_confirmations   Int
+  amount              Float
+  type                String
+  status              String
+  swap                Swap?    @relation(fields: [swap_id], references: [id])
+  swap_id             String?
 }
 
 model ContractAddress {
-  swapId  String? @unique @map("swap_id")
-  swap    Swap?   @relation(fields: [swapId], references: [id])
-  id      Int     @id @default(autoincrement())
-  address String?
-  name    String?
+  swap_id  String? @unique @map("swap_id")
+  swap     Swap?   @relation(fields: [swap_id], references: [id])
+  id       Int     @id @default(autoincrement())
+  address  String?
+  name     String?
 }
 
 // /**
@@ -207,27 +213,27 @@ model ContractAddress {
 //  * 
 //  * Fields:
 //  * - id: 主键，自动递增 / Primary key, auto increment
-//  * - swapId: 外键，引用 Swap / Foreign key, references Swap
-//  * - receiveAmount: 接收数量 / Receive amount
-//  * - minReceiveAmount: 最小接收数量 / Minimum receive amount
-//  * - blockchainFee: 区块链费用 / Blockchain fee
-//  * - serviceFee: 服务费用 / Service fee
-//  * - avgCompletionTime: 平均完成时间 / Average completion time
+//  * - swap_id: 外键，引用 Swap / Foreign key, references Swap
+//  * - receive_amount: 接收数量 / Receive amount
+//  * - min_receive_amount: 最小接收数量 / Minimum receive amount
+//  * - blockchain_fee: 区块链费用 / Blockchain fee
+//  * - service_fee: 服务费用 / Service fee
+//  * - avg_completion_time: 平均完成时间 / Average completion time
 //  * - slippage: 滑点 / Slippage
-//  * - totalFee: 总费用 / Total fee
-//  * - totalFeeInUsd: 费用总额（美元） / Total fee in USD
+//  * - total_fee: 总费用 / Total fee
+//  * - total_fee_in_usd: 费用总额（美元） / Total fee in USD
 //  * - swap: 关联的交换 / Associated swap
 //  */
 model Quote {
-  id                Int    @id @default(autoincrement())
-  swapId            String @map("swap_id")
-  receiveAmount     Float
-  minReceiveAmount  Float
-  blockchainFee     Float
-  serviceFee        Float
-  avgCompletionTime String
-  slippage          Float
-  totalFee          Float
-  totalFeeInUsd     Float
-  swap              Swap   @relation(fields: [swapId], references: [id])
+  id                    Int    @id @default(autoincrement())
+  swap_id               String @map("swap_id")
+  receive_amount        Float
+  min_receive_amount    Float
+  blockchain_fee        Float
+  service_fee           Float
+  avg_completion_time   String
+  slippage              Float
+  total_fee             Float
+  total_fee_in_usd      Float
+  swap                  Swap   @relation(fields: [swap_id], references: [id])
 }
