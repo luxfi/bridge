@@ -18,11 +18,15 @@ export default async function handler(
         return res.contract_name === "STARKNET";
       });
 
+
     if (!contractAddress) {
       contractAddress = getRandomObjectExceptSTARKNET(
         settings.contractAddress.data
       );
     }
+    console.log({ data: req.body })
+
+    return
     try {
       const result = await handleSwapCreation({ ...req.body, contractAddress });
       res.status(200).json({ data: { ...result } });
