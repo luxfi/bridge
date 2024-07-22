@@ -34,59 +34,44 @@ export async function handleSwapCreation(data: SwapData) {
   } = data;
 
   try {
-    const sourceNetworkRecord = await prisma.network.create({
+    // 首先创建 Token
+    const token = await prisma.token.create({
       data: {
-        name: sourceNetwork,
-        displayName: "Ethereum Sepolia",
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/ethereum_sepolia.png",
-        chainId: "11155111",
-        nodeUrl:
-          "https://eth-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
-        type: "evm",
-        transactionExplorerTemplate: "https://sepolia.etherscan.io/tx/{0}",
-        accountExplorerTemplate: "https://sepolia.etherscan.io/address/{0}",
-        listingDate: new Date(),
-      },
-    });
-
-    const destinationNetworkRecord = await prisma.network.create({
-      data: {
-        name: destinationNetwork,
-        displayName: "Arbitrum One Sepolia",
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/arbitrum_sepolia.png",
-        chainId: "421614",
-        nodeUrl:
-          "https://arbitrum-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
-        type: "evm",
-        transactionExplorerTemplate: "https://sepolia.arbiscan.io/tx/{0}",
-        accountExplorerTemplate: "https://sepolia.arbiscan.io/address/{0}",
-        listingDate: new Date(),
-      },
-    });
-
-    const sourceTokenRecord = await prisma.token.create({
-      data: {
-        symbol: sourceToken,
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
-        contract: null,
+        symbol: "ETH",
+        logo: "https://prodlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
+        contract: "0",
         decimals: 18,
-        priceInUsd: 3413.69,
-        precision: 6,
-        listingDate: new Date(),
+        priceInUsd: 3482.44,
+        precision: 8,
+        listingDate: new Date("2021-12-21T16:59:11.139Z"),
       },
     });
 
-    const destinationTokenRecord = await prisma.token.create({
+    // 然后创建 Network
+    const network = await prisma.network.create({
       data: {
-        symbol: destinationToken,
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
-        contract: null,
-        decimals: 18,
-        priceInUsd: 3413.69,
-        precision: 6,
-        listingDate: new Date(),
+        name: "ZKSYNC_MAINNET",
+        displayName: "zkSync Lite",
+        logo: "https://prodlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/zksync_mainnet.png",
+        chainId: "mainnet",
+        nodeUrl: "https://api.zksync.io/",
+        type: "zksynclite",
+        transactionExplorerTemplate:
+          "https://zkscan.io/explorer/transactions/{0}",
+        accountExplorerTemplate: "https://zkscan.io/explorer/accounts/{0}",
+        listingDate: new Date("2021-12-21T16:59:11.139Z"),
+        token: {
+          connect: {
+            id: token.id,
+          },
+        },
       },
     });
+    const destinationNetworkRecord = network;
+    const sourceNetworkRecord = network;
+    const destinationTokenRecord = token;
+
+    const sourceTokenRecord = token;
 
     const swap = await prisma.swap.create({
       data: {
@@ -121,18 +106,67 @@ export async function handleSwapCreation(data: SwapData) {
       },
     });
 
-    const transaction = await prisma.transaction.create({
-      data: {
-        swapId: swap.id,
-        status: "pending",
-        type: "swap",
-        from: "0x222www2",
-        to: "0x31232xxx",
-        transaction_hash: "0x343112222s",
-        confirmations: 2,
-        max_confirmations: 2,
-        amount: 0.3,
-      },
+    // 最后创建 Transaction
+    // const transaction = await prisma.transaction.create({
+    //   data: {
+    //     status: "completed",
+    //     type: "input",
+    //     from: "0xc9cbb47b26e720c2e70c964f190f1f2d4714a5a8",
+    //     to: "0x2fc617e933a52713247ce25730f6695920b3befe",
+    //     transaction_hash:
+    //       "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+    //     confirmations: 2,
+    //     max_confirmations: 2,
+    //     amount: 0.0009935399091,
+    //     swap: {
+    //       connect: {
+    //         id: swap.id,
+    //       },
+    //     },
+    //     token: {
+    //       connect: {
+    //         id: token.id,
+    //       },
+    //     },
+    //     network: {
+    //       connect: {
+    //         id: network.id,
+    //       },
+    //     },
+    //   },
+    // });
+
+    await prisma.transaction.createMany({
+      data: [
+        {
+          status: "completed",
+          type: "input",
+          from: sourceNetwork,
+          to: "0x2fc617e933a52713247ce25730f6695920b3befe",
+          transaction_hash:
+            "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+          confirmations: 2,
+          max_confirmations: 2,
+          amount: amount,
+          tokenId: token.id,
+          networkId: network.id,
+          swapId: swap.id,
+        },
+        {
+          status: "completed",
+          type: "output",
+          from: "0x2fc617e933a52713247ce25730f6695920b3befe",
+          to: sourceNetwork,
+          transaction_hash:
+            "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+          confirmations: 2,
+          max_confirmations: 2,
+          amount: amount,
+          tokenId: token.id,
+          networkId: network.id,
+          swapId: swap.id,
+        },
+      ],
     });
 
     const depositAction = await prisma.depositAction.findFirstOrThrow({
@@ -236,9 +270,19 @@ export async function handlerGetSwap(id: string) {
         depositActions: true,
         quotes: true,
         contractAddress: true,
-        transactions: true,
+        transactions: {
+          include: {
+            token: true,
+            network: {
+              include: {
+                token: true,
+              },
+            },
+          },
+        },
       },
     });
+    console.log("🚀 ~ handlerGetSwap ~ swap:", swap, swap?.id);
 
     return {
       ...swap,
@@ -262,7 +306,20 @@ export async function handlerGetSwaps(
       },
       where: { sourceAddress: address, isDeleted: isDe },
 
-      include: { depositActions: true, quotes: true, transactions: true },
+      include: {
+        depositActions: true,
+        quotes: true,
+        transactions: {
+          include: {
+            token: true,
+            network: {
+              include: {
+                token: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return swap;
