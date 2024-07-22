@@ -66,6 +66,8 @@ const basePath = process.env.NEXT_PUBLIC_APP_BASE_PATH;
 const version = "sandbox";
 
 export default function SearchData({ searchParam }: { searchParam: string }) {
+  console.log("🚀 ~ SearchData ~ searchParam:", searchParam);
+
   const settings = useSettingsState();
   const router = useRouter();
   const pathname = usePathname();
@@ -496,7 +498,10 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             <span className=" sm:ml-1">and cost</span>
                             <span className="">
                               &nbsp;
-                              {truncateDecimals(cost, sourceToken?.precision)}{" "}
+                              {truncateDecimals(
+                                cost,
+                                sourceToken?.precision
+                              )}{" "}
                               {swap?.source_network_asset}
                             </span>
                           </p>
