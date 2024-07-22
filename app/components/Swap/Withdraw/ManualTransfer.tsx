@@ -86,7 +86,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     const destination = layers.find(n => n.internal_name === destination_network_internal_name)
     const destinationAsset = destination?.assets.find(c => c.asset == destination_network_asset)
 
-    console.log({swap})
+    console.log({swap, layers, source, destination })
 
     // useEffect(() => {
     //     if (swap) {
