@@ -19,7 +19,7 @@ const SwapSummary: FC = () => {
         destination_network_asset
     } = swap || {}
 
-    const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
+    // const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
     const { fee: feeData, valuesChanger, minAllowedAmount } = useFee()
 
     const source_layer = layers.find(n => n.internal_name === (source_exchange_internal_name ?? source_network_internal_name))
@@ -53,15 +53,15 @@ const SwapSummary: FC = () => {
     const walletTransferFee = feeData?.walletFee;
     const manualTransferFee = feeData?.manualFee;
 
-    if (isContractWallet?.ready) {
-        if (withdrawType === WithdrawType.Wallet && canDoSweepless) {
-            fee = walletTransferFee;
-            min_amount = minAllowedAmount;
-        } else {
-            fee = manualTransferFee;
-            min_amount = minAllowedAmount;
-        }
-    }
+    // if (isContractWallet?.ready) {
+    //     if (withdrawType === WithdrawType.Wallet && canDoSweepless) {
+    //         fee = walletTransferFee;
+    //         min_amount = minAllowedAmount;
+    //     } else {
+    //         fee = manualTransferFee;
+    //         min_amount = minAllowedAmount;
+    //     }
+    // }
 
     if (swap?.fee && swapOutputTransaction) {
         fee = swap?.fee
