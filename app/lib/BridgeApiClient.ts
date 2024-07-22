@@ -276,15 +276,14 @@ export type CreateSwapParams = {
   refuel?: boolean;
   source_network?: string;
   source_exchange?: string;
-  source_address?: string;
   source_asset: string;
+  source_address?: string;
   // destination_address: string;
-  
   destination_network?: string;
   destination_exchange?: string;
+  destination_asset: string;
   destination_address?: string;
   use_deposit_address?: boolean;
-  destination_asset: string;
 };
 
 export type SwapItem = {

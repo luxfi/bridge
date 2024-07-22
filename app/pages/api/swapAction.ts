@@ -5,15 +5,17 @@ import prisma from "../../lib/db";
 
 export interface SwapData {
   amount: number;
-  sourceNetwork: string;
-  destinationNetwork: string;
-  sourceToken: string;
-  destinationToken: string;
-  destinationAddress: string;
+  source_network: string;
+  source_exchange?: string;
+  source_asset: string;
+  source_address: string;
+  destination_network: string;
+  destination_exchange?: string;
+  destination_asset: string;
+  destination_address: string;
   refuel: boolean;
-  useDepositAddress: boolean;
-  sourceAddress: string;
-  contractAddress: {
+  use_deposit_address: boolean;
+  contract_address: {
     contract_name: string;
     contract_address: string;
   };
@@ -22,97 +24,116 @@ export interface SwapData {
 export async function handleSwapCreation(data: SwapData) {
   const {
     amount,
-    sourceNetwork,
-    destinationNetwork,
-    sourceToken,
-    destinationToken,
-    destinationAddress,
+    source_network,
+    source_exchange,
+    source_asset,
+    source_address,
+    destination_network,
+    destination_exchange,
+    destination_asset,
+    destination_address,
     refuel,
-    useDepositAddress,
-    sourceAddress,
-    contractAddress: cAddress,
+    use_deposit_address,
+    contract_address: cAddress,
   } = data;
+
+  console.log("test================================>", {
+    amount,
+    source_network,
+    source_exchange,
+    source_asset,
+    source_address,
+    destination_network,
+    destination_exchange,
+    destination_asset,
+    destination_address,
+    refuel,
+    use_deposit_address,
+    cAddress
+  })
 
   try {
     const sourceNetworkRecord = await prisma.network.create({
       data: {
-        name: sourceNetwork,
-        displayName: "Ethereum Sepolia",
+        name: source_network,
+        display_name: "Ethereum Sepolia",
         logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/ethereum_sepolia.png",
-        chainId: "11155111",
-        nodeUrl:
+        chain_id: "11155111",
+        node_url:
           "https://eth-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
         type: "evm",
-        transactionExplorerTemplate: "https://sepolia.etherscan.io/tx/{0}",
-        accountExplorerTemplate: "https://sepolia.etherscan.io/address/{0}",
-        listingDate: new Date(),
+        transaction_explorer_template: "https://sepolia.etherscan.io/tx/{0}",
+        account_explorer_template: "https://sepolia.etherscan.io/address/{0}",
+        listing_date: new Date(),
       },
     });
 
     const destinationNetworkRecord = await prisma.network.create({
       data: {
-        name: destinationNetwork,
-        displayName: "Arbitrum One Sepolia",
+        name: destination_network,
+        display_name: "Arbitrum One Sepolia",
         logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/arbitrum_sepolia.png",
-        chainId: "421614",
-        nodeUrl:
+        chain_id: "421614",
+        node_url:
           "https://arbitrum-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
         type: "evm",
-        transactionExplorerTemplate: "https://sepolia.arbiscan.io/tx/{0}",
-        accountExplorerTemplate: "https://sepolia.arbiscan.io/address/{0}",
-        listingDate: new Date(),
+        transaction_explorer_template: "https://sepolia.arbiscan.io/tx/{0}",
+        account_explorer_template: "https://sepolia.arbiscan.io/address/{0}",
+        listing_date: new Date(),
       },
     });
 
     const sourceTokenRecord = await prisma.token.create({
       data: {
-        symbol: sourceToken,
+        symbol: source_asset,
         logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
         contract: null,
         decimals: 18,
-        priceInUsd: 3413.69,
+        price_in_usd: 3413.69,
         precision: 6,
-        listingDate: new Date(),
+        listing_date: new Date(),
       },
     });
 
     const destinationTokenRecord = await prisma.token.create({
       data: {
-        symbol: destinationToken,
+        symbol: destination_asset,
         logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
         contract: null,
         decimals: 18,
-        priceInUsd: 3413.69,
+        price_in_usd: 3413.69,
         precision: 6,
-        listingDate: new Date(),
+        listing_date: new Date(),
       },
     });
 
     const swap = await prisma.swap.create({
       data: {
-        requestedAmount: amount,
-        sourceNetworkName: sourceNetwork,
-        destinationNetworkName: destinationNetwork,
-        sourceTokenSymbol: sourceToken,
-        destinationTokenSymbol: destinationToken,
-        destinationAddress,
+        requested_amount: amount,
+        source_network,
+        source_exchange,
+        source_asset,
+        source_address,
+        destination_network,
+        destination_exchange,
+        destination_asset,
+        destination_address,
         refuel,
-        useDepositAddress,
-        sourceAddress,
+        use_deposit_address,
         status: "user_transfer_pending",
-        depositActions: {
+        deposit_actions: {
           createMany: {
             data: [
               {
                 type: "transfer",
-                toAddress: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
+                to_address: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
                 amount,
-                orderNumber: 0,
-                amountInBaseUnits: "331000000000000",
-                networkId: sourceNetworkRecord.id,
-                tokenId: sourceTokenRecord.id,
-                feeTokenId: destinationTokenRecord.id,
-                callData: "0x168b",
+                order_number: 0,
+                amount_in_base_units: "331000000000000",
+                network_id: sourceNetworkRecord.id,
+                token_id: sourceTokenRecord.id,
+                fee_token_id: destinationTokenRecord.id,
+                call_data: "0x168b",
               },
             ],
           },
@@ -123,7 +144,7 @@ export async function handleSwapCreation(data: SwapData) {
 
     const transaction = await prisma.transaction.create({
       data: {
-        swapId: swap.id,
+        swap_id: swap.id,
         status: "pending",
         type: "swap",
         from: "0x222www2",
@@ -137,7 +158,7 @@ export async function handleSwapCreation(data: SwapData) {
 
     const depositAction = await prisma.depositAction.findFirstOrThrow({
       where: {
-        swapId: swap.id,
+        swap_id: swap.id,
       },
     });
 
@@ -145,7 +166,7 @@ export async function handleSwapCreation(data: SwapData) {
       (cAddress?.contract_address &&
         (await prisma.contractAddress.create({
           data: {
-            swapId: swap.id,
+            swap_id: swap.id,
             name: cAddress?.contract_name,
             address: cAddress?.contract_address,
           },
@@ -169,15 +190,15 @@ export async function handleSwapCreation(data: SwapData) {
 
     const quote = await prisma.quote.create({
       data: {
-        swapId: swap.id,
-        receiveAmount: 0.000293,
-        minReceiveAmount: 0.000285,
-        blockchainFee: 0.000009,
-        serviceFee: 0.000029,
-        avgCompletionTime: "00:01:04.2764650",
+        swap_id: swap.id,
+        receive_amount: 0.000293,
+        min_receive_amount: 0.000285,
+        blockchain_fee: 0.000009,
+        service_fee: 0.000029,
+        avg_completion_time: "00:01:04.2764650",
         slippage: 0.025,
-        totalFee: 0.000038,
-        totalFeeInUsd: 0.12972,
+        total_fee: 0.000038,
+        total_fee_in_usd: 0.12972,
       },
     });
 
@@ -188,7 +209,7 @@ export async function handleSwapCreation(data: SwapData) {
           network: {
             ...sourceNetworkRecord,
             token: { ...sourceTokenRecord },
-            metadata: { listingDate: sourceNetworkRecord.listingDate },
+            metadata: { listingDate: sourceNetworkRecord.listing_date },
             depositMethods: ["deposit_address", "wallet"],
           },
           token: { ...sourceTokenRecord },
@@ -202,13 +223,13 @@ export async function handleSwapCreation(data: SwapData) {
         sourceNetwork: {
           ...sourceNetworkRecord,
           token: { ...sourceTokenRecord },
-          metadata: { listingDate: sourceNetworkRecord.listingDate },
+          metadata: { listingDate: sourceNetworkRecord.listing_date },
         },
         sourceToken: { ...sourceTokenRecord },
         destinationNetwork: {
           ...destinationNetworkRecord,
           token: { ...destinationTokenRecord },
-          metadata: { listingDate: destinationNetworkRecord.listingDate },
+          metadata: { listingDate: destinationNetworkRecord.listing_date },
         },
         destinationToken: { ...destinationTokenRecord },
         transactions: [],
@@ -233,9 +254,9 @@ export async function handlerGetSwap(id: string) {
       where: { id },
 
       include: {
-        depositActions: true,
+        deposit_actions: true,
         quotes: true,
-        contractAddress: true,
+        contract_address: true,
         transactions: true,
       },
     });
@@ -258,11 +279,11 @@ export async function handlerGetSwaps(
 
     const swap = await prisma.swap.findMany({
       orderBy: {
-        createdDate: "desc",
+        created_date: "desc",
       },
-      where: { sourceAddress: address, isDeleted: isDe },
+      where: { source_address: address, is_deleted: isDe },
 
-      include: { depositActions: true, quotes: true, transactions: true },
+      include: { deposit_actions: true, quotes: true, transactions: true },
     });
 
     return swap;
