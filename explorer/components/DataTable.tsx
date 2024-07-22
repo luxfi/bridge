@@ -38,6 +38,7 @@ type Transaction = {
   usd_price: number;
   usd_value: number;
   type: string;
+  transaction_hash: string;
 };
 
 const DataTable: React.FC = () => {
@@ -101,6 +102,8 @@ const DataTable: React.FC = () => {
     const output_transaction = swap?.transactions?.find(
       (t) => t?.type == TransactionType.Output
     );
+    console.log("🚀 ~ input_transaction:", input_transaction);
+    console.log("🚀 ~ output_transaction:", output_transaction);
 
     return (
       <tr
@@ -170,7 +173,7 @@ const DataTable: React.FC = () => {
                 </div>
                 <div className="mx-2 ">
                   <Link
-                    href={`${input_transaction?.explorer_url}`}
+                    href={`/${input_transaction?.transaction_hash}`}
                     onClick={(e) => e.stopPropagation()}
                     target="_blank"
                     className="hover:text-gray-300 inline-flex items-center w-fit"
@@ -245,9 +248,9 @@ const DataTable: React.FC = () => {
                   </span>
                 </div>
                 <div className="mx-2 ">
-                  {output_transaction?.explorer_url ? (
+                  {output_transaction?.transaction_hash ? (
                     <Link
-                      href={`${output_transaction?.explorer_url}`}
+                      href={`/${output_transaction?.transaction_hash}`}
                       onClick={(e) => e.stopPropagation()}
                       target="_blank"
                       className={`${
@@ -258,15 +261,15 @@ const DataTable: React.FC = () => {
                         className={`underline mx-0.5 hover:text-gray-300 hover:no-underline`}
                       >
                         {destinationExchange
-                          ? destinationExchange?.display_name
-                          : destinationLayer?.display_name}
+                          ? destinationExchange?.displayName
+                          : destinationLayer?.displayName}
                       </span>
                     </Link>
                   ) : (
                     <span className={`mx-0.5`}>
                       {destinationExchange
-                        ? destinationExchange?.display_name
-                        : destinationLayer?.display_name}
+                        ? destinationExchange?.displayName
+                        : destinationLayer?.displayName}
                     </span>
                   )}
                 </div>
