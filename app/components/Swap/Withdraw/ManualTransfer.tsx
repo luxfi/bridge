@@ -52,7 +52,7 @@ const ManualTransfer: FC = () => {
                             About manual transfers
                         </p>
                         <p className="text-xs ">
-                            Transfer assets to Bridge’s deposit address to complete the swap.
+                            Transfer assets to Lux Bridge’s deposit address to complete the swap.
                         </p>
                     </div>
                 </div>
@@ -86,19 +86,21 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     const destination = layers.find(n => n.internal_name === destination_network_internal_name)
     const destinationAsset = destination?.assets.find(c => c.asset == destination_network_asset)
 
-    useEffect(() => {
-        if (swap) {
-            valuesChanger({
-                amount: swap.requested_amount.toString(),
-                destination_address: swap.destination_address,
-                from: source,
-                fromCurrency: sourceAsset,
-                to: destination,
-                toCurrency: destinationAsset,
-                refuel: swap.has_refuel,
-            })
-        }
-    }, [swap])
+    console.log({swap})
+
+    // useEffect(() => {
+    //     if (swap) {
+    //         valuesChanger({
+    //             amount: swap.requested_amount.toString(),
+    //             destination_address: swap.destination_address,
+    //             from: source,
+    //             fromCurrency: sourceAsset,
+    //             to: destination,
+    //             toCurrency: destinationAsset,
+    //             refuel: swap.has_refuel,
+    //         })
+    //     }
+    // }, [swap])
 
     const client = new BridgeApiClient()
     const generateDepositParams = shouldGenerateAddress ? [source?.internal_name ?? null] : null

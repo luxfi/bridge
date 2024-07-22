@@ -90,6 +90,7 @@ export function SwapDataProvider({
   const client = new BridgeApiClient();
   const apiVersion = BridgeApiClient.apiVersion;
   const swap_details_endpoint = `/swaps/${swapId}?version=${apiVersion}`;
+  console.log({swap_details_endpoint})
   const [interval, setInterval] = useState(0);
   const {
     data: swapResponse,
@@ -100,7 +101,7 @@ export function SwapDataProvider({
     client.fetcher,
     { refreshInterval: interval }
   );
-  console.log(swapResponse, "swapResponse");
+  console.log(swapResponse, "swapResponse", swap_details_endpoint);
 
   const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>();
   const source_exchange = layers.find(
