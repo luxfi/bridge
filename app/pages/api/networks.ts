@@ -5,7 +5,7 @@ import { CryptoNetwork } from "../../Models/CryptoNetwork";
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<{
-        data: CryptoNetwork[];
+        data: CryptoNetwork[] | any;
     }>
 ) {
     try {
@@ -14,7 +14,11 @@ export default async function handler(
         // settings
         const settings = isMainnet ? mainnetSettings : testnetSettings;
         const { networks } = settings.data;
-        return networks;
+        return res.status(200).json(
+            {
+                data: networks
+            }
+        )
     } catch (error) {
         console.error("Error in fetching networks", error);
         res.status(500).json({ data: error.message });

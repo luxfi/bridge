@@ -31,7 +31,7 @@ export class NetworkCurrency {
     is_refuel_enabled: boolean;
     is_native: boolean
     //TODO may be plain string
-    contract_address: `0x${string}` | null | undefined;
+    contract_address?: `0x${string}` | null;
     decimals: number;
     precision: number;
     usd_price: number;
