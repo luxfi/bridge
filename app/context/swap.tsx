@@ -90,7 +90,7 @@ export function SwapDataProvider({
   const client = new BridgeApiClient();
   const apiVersion = BridgeApiClient.apiVersion;
   const swap_details_endpoint = `/swaps/${swapId}?version=${apiVersion}`;
-  console.log({swap_details_endpoint})
+  console.log({ swap_details_endpoint })
   const [interval, setInterval] = useState(0);
   const {
     data: swapResponse,
@@ -174,23 +174,24 @@ export function SwapDataProvider({
 
       const data: CreateSwapParams = {
         amount: Number(values.amount),
-        sourceNetwork:
-          from?.internal_name ?? (fromExchange?.internal_name as string),
-        destinationNetwork: to?.internal_name,
-        sourceToken: fromCurrency?.asset ?? (currencyGroup?.name as string),
-        destinationToken: toCurrency?.asset ?? (currencyGroup?.name as string),
+
+        source_network: from?.internal_name ?? (fromExchange?.internal_name as string),
         source_exchange: fromExchange?.internal_name,
-        destinationAddress: values.destination_address,
-        refuel: !!refuel,
-        useDepositAddress: true,
-        sourceAddress: values.destination_address,
+        source_asset: fromCurrency?.asset ?? (currencyGroup?.name as string),
+        source_address: values.destination_address,
+
+        destination_network: to?.internal_name ?? (toExchange?.internal_name as string),
         destination_exchange: toExchange?.internal_name,
+        destination_asset: toCurrency?.asset ?? (currencyGroup?.name as string),
+        destination_address: values.destination_address,
+        refuel: !!refuel,
+        use_deposit_address: true,
 
         app_name: partner
           ? query?.appName
           : apiVersion === "sandbox"
-          ? "BridgeSandbox"
-          : "Bridge",
+            ? "BridgeSandbox"
+            : "Bridge",
         reference_id: query.externalId,
       };
 
