@@ -288,7 +288,7 @@ export async function handlerUpdateSwaps(swapdata: { id: string }) {
 function catchPrismaKnowError(error: Error) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     throw new Error(
-      `Error getting Prisma code: ${error.code} msg:${error.message}`
+      `Error getting Prisma code: ${error.name} msg:${error.message}`
     );
   }
 }
