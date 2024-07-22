@@ -12,14 +12,12 @@ export default async function handler(
     const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     const settings = isMainnet ? mainnetSettings : testnetSettings;
 
-    
     let contract_address =
-    req.body.source_network?.includes("STARKNET") &&
-    settings.contractAddress.data.find((res) => {
-      return res.contract_name === "STARKNET";
-    });
-    
-    
+      req.body.source_network?.includes("STARKNET") &&
+      settings.contractAddress.data.find((res) => {
+        return res.contract_name === "STARKNET";
+      });
+
     if (!contract_address) {
       contract_address = getRandomObjectExceptSTARKNET(
         settings.contractAddress.data
