@@ -172,10 +172,10 @@ export default function Form() {
         header={`Complete the swap`}
         onClose={handleClosesSwapModal}
       >
-        {/* <ResizablePanel>
+        <ResizablePanel>
           <SwapDetails type="contained" />
-        </ResizablePanel> */}
-        <div className="w-full py-2">
+        </ResizablePanel>
+        {/* <div className="w-full py-2">
             <div className="my-5 px-2 py-3 rounded-lg border-[#9e88882c] bg-[black]/20">
                 <div className="">Deposit Address</div>
                 <div className="flex gap-1 items-center">
@@ -183,7 +183,7 @@ export default function Form() {
                     <Copier text="0x2781BDC83A612F0FE382476556C0Cc12fE602294"/>
                 </div>
             </div>
-        </div>
+        </div> */}
       </Modal>
       <Formik
           innerRef={formikRef}
