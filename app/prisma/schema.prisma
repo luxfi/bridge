@@ -9,9 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "sqlite"
-  url       = "file:dev.sqlite" // uses connection pooling
-  directUrl = "file:dev.sqlite" // uses a direct connection
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
 // pnpx prisma generate    
