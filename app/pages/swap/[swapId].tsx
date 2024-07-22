@@ -10,13 +10,13 @@ import SwapWithdrawal from '../../components/SwapWithdrawal'
 const SwapDetails = ({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
 
   return (<>
-    {/* <Layout settings={settings} themeData={themeData}>
+    <Layout settings={settings} themeData={themeData}>
       <SwapDataProvider >
         <TimerProvider>
           <SwapWithdrawal />
         </TimerProvider>
       </SwapDataProvider >
-    </Layout> */}
+    </Layout>
     <div>swap</div>
   </>)
 }
@@ -37,23 +37,24 @@ export const getServerSideProps = async (ctx) => {
   const { data: networkData } = await apiClient.GetLSNetworksAsync()
   const { data: exchangeData } = await apiClient.GetExchangesAsync()
 
+  console.log(!networkData || !exchangeData)
   if (!networkData || !exchangeData) return
 
-//   const settings = {
-//     networks: networkData,
-//     exchanges: exchangeData,
-//   }
+  const settings = {
+    networks: networkData,
+    exchanges: exchangeData,
+  }
 
-//   console.log(settings)
+  console.log(settings)
 
-//   const themeData = await getThemeData(ctx.query)
+  const themeData = await getThemeData(ctx.query)
 
-//   return {
-//     props: {
-//       settings,
-//       themeData
-//     }
-//   }
+  return {
+    props: {
+      settings,
+      themeData
+    }
+  }
 }
 
 export default SwapDetails
