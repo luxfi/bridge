@@ -6,40 +6,58 @@ import Summary from "./Summary"
 import { TransactionType, WithdrawType } from "../../../lib/BridgeApiClient"
 import useWalletTransferOptions from "../../../hooks/useWalletTransferOptions"
 import { useFee } from "../../../context/feeContext"
+import { Exchange } from "../../../Models/Exchange"
+import { NetworkCurrency } from "../../../Models/CryptoNetwork"
+import { Layer } from "../../../Models/Layer"
+
+const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) : NetworkCurrency | undefined => {
+    if (!exchange || !asset) {
+        return undefined;
+    } else {
+        const currency = exchange?.currencies?.find(c => c.asset === asset);
+        const layer = layers.find(n => n.internal_name === currency?.network);
+        return layer?.assets?.find(a => a?.asset === asset)
+    }
+}
 
 const SwapSummary: FC = () => {
-    const { layers } = useSettingsState()
+    const { layers, exchanges } = useSettingsState()
     const { swap, withdrawType } = useSwapDataState()
     const {
         source_network: source_network_internal_name,
         source_exchange: source_exchange_internal_name,
         destination_exchange: destination_exchange_internal_name,
         destination_network: destination_network_internal_name,
-        source_network_asset,
-        destination_network_asset
+        source_asset,
+        destination_asset
     } = swap || {}
 
     // const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
     const { fee: feeData, valuesChanger, minAllowedAmount } = useFee()
 
-    const source_layer = layers.find(n => n.internal_name === (source_exchange_internal_name ?? source_network_internal_name))
-    const sourceAsset = source_layer?.assets?.find(currency => currency?.asset === source_network_asset)
-    const destination_layer = layers?.find(l => l.internal_name === (destination_exchange_internal_name ?? destination_network_internal_name))
-    const destinationAsset = destination_layer?.assets?.find(currency => currency?.asset === destination_network_asset)
+    const sourceLayer = layers.find(n => n.internal_name === source_network_internal_name)
+    const sourceExchange = exchanges.find(e => e.internal_name === source_exchange_internal_name)
+    const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset (layers, sourceExchange, source_asset)
 
-    useEffect(() => {
-        valuesChanger({
-            amount: swap?.requested_amount?.toString(),
-            destination_address: swap?.destination_address,
-            from: source_layer,
-            to: destination_layer,
-            fromCurrency: sourceAsset,
-            toCurrency: destinationAsset,
-            refuel: swap?.has_refuel
-        })
-    }, [swap])
+    const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
+    const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
+    const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, destinationExchange, destination_asset)
 
-    if (!swap || !source_layer || !sourceAsset || !destinationAsset || !destination_layer) {
+    console.log("swap summary =======>", { source_asset, sourceLayer, sourceAsset, destinationLayer, destinationAsset, sourceExchange, destinationExchange })
+
+    // useEffect(() => {
+    //     valuesChanger({
+    //         amount: swap?.requested_amount?.toString(),
+    //         destination_address: swap?.destination_address,
+    //         from: sourceLayer,
+    //         to: destinationLayer,
+    //         fromCurrency: sourceAsset,
+    //         toCurrency: destinationAsset,
+    //         refuel: swap?.refuel
+    //     })
+    // }, [swap])
+
+    if (!swap || (!sourceLayer && !sourceExchange) || !sourceAsset || !destinationAsset || (!destinationLayer && !destinationExchange)) {
         return <></>
     }
 
@@ -67,33 +85,31 @@ const SwapSummary: FC = () => {
         fee = swap?.fee
     }
 
-    const requested_amount = (swapInputTransaction?.amount ??
-        (Number(min_amount) > Number(swap.requested_amount) ? min_amount : swap.requested_amount)) || undefined
+    const requested_amount = (swapInputTransaction?.amount ?? swap.requested_amount) || undefined
 
-    const destinationNetworkNativeAsset = layers.find(n => n.internal_name === destination_layer?.internal_name)?.assets.find(a => a.is_native);
-    const refuel_amount_in_usd = Number(destination_layer?.refuel_amount_in_usd)
+    const destinationNetworkNativeAsset = layers.find(n => n.internal_name === destinationLayer?.internal_name)?.assets.find(a => a.is_native);
+    const refuel_amount_in_usd = Number(destinationLayer?.refuel_amount_in_usd)
     const native_usd_price = Number(destinationNetworkNativeAsset?.usd_price)
     const currency_usd_price = Number(sourceAsset?.usd_price)
 
-    const refuelAmountInNativeCurrency = swap?.has_refuel
+    const refuelAmountInNativeCurrency = swap?.refuel
         ? ((swapRefuelTransaction?.amount ??
             (refuel_amount_in_usd / native_usd_price))) : undefined;
 
-    const refuelAmountInSelectedCurrency = swap?.has_refuel &&
+    const refuelAmountInSelectedCurrency = swap?.refuel &&
         (refuel_amount_in_usd / currency_usd_price);
 
-    const receive_amount = fee != undefined ? (swapOutputTransaction?.amount
-        ?? (Number(requested_amount) - fee - Number(refuelAmountInSelectedCurrency)))
-        : undefined
+    // const receive_amount = fee !== undefined ? (swapOutputTransaction?.amount ?? (Number(requested_amount) - fee ?? 0 - Number(refuelAmountInSelectedCurrency))) : undefined
+    const receive_amount = Number(requested_amount) * 0.99 - Number(refuelAmountInSelectedCurrency)
 
     return <Summary
         currency={sourceAsset}
-        source={source_layer}
-        destination={destination_layer}
-        requestedAmount={requested_amount as number}
+        source={sourceLayer ?? sourceExchange}
+        destination={destinationLayer ?? destinationExchange}
+        requestedAmount={requested_amount}
         receiveAmount={receive_amount}
         destinationAddress={swap.destination_address}
-        hasRefuel={swap?.has_refuel}
+        hasRefuel={swap?.refuel}
         refuelAmount={refuelAmountInNativeCurrency}
         fee={fee}
         exchange_account_connected={swap?.exchange_account_connected}
