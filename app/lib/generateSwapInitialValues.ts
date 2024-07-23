@@ -46,13 +46,13 @@ export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: Brid
     const {
         destination_address,
         requested_amount,
-        source_network_asset,
-        destination_network_asset,
+        source_asset,
+        destination_asset,
         source_network,
         destination_network,
         source_exchange,
         destination_exchange,
-        has_refuel
+        refuel
     } = swap
 
     const { layers } = settings || {}
@@ -65,8 +65,8 @@ export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: Brid
         layers.find(l => l.internal_name === destination_exchange)
         : layers.find(l => l.internal_name === destination_network)
 
-    const fromCurrency = from?.assets.find(c => c.asset === source_network_asset)
-    const toCurrency = to?.assets.find(c => c.asset === destination_network_asset)
+    const fromCurrency = from?.assets.find(c => c.asset === source_asset)
+    const toCurrency = to?.assets.find(c => c.asset === destination_asset)
 
     const result: SwapFormValues = {
         from,
@@ -75,7 +75,7 @@ export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: Brid
         fromCurrency,
         toCurrency,
         destination_address,
-        refuel: has_refuel
+        refuel: refuel
     }
 
     return result

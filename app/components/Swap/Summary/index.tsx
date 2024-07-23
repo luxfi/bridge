@@ -37,8 +37,8 @@ const SwapSummary: FC = () => {
 
     const sourceLayer = layers.find(n => n.internal_name === source_network_internal_name)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange_internal_name)
-
     const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset (layers, sourceExchange, source_asset)
+
     const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
     const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, destinationExchange, destination_asset)

@@ -23,14 +23,14 @@ const SwapDetails: FC<Props> = ({ swap }) => {
         destination_network: destination_network_internal_name,
         source_network: source_network_internal_name,
         destination_exchange: destination_exchange_internal_name,
-        source_network_asset
+        source_asset
     } = swap || {}
 
     const source = layers.find(e => e.internal_name === source_network_internal_name)
     const destination = layers.find(n => n.internal_name === destination_network_internal_name)
 
-    const sourceCurrency = source?.assets.find(c => c.asset === source_network_asset)
-    const destinationCurrency = destination?.assets.find(c => c.asset === source_network_asset)
+    const sourceCurrency = source?.assets.find(c => c.asset === source_asset)
+    const destinationCurrency = destination?.assets.find(c => c.asset === source_asset)
 
     const input_tx_id = source?.transaction_explorer_template
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
@@ -168,7 +168,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">Requested amount</span>
                             <span className=' font-normal flex'>
-                                {swap?.requested_amount} {swap?.destination_network_asset}
+                                {swap?.requested_amount} {swap?.destination_asset}
                             </span>
                         </div>
                         {
@@ -178,7 +178,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Transfered amount</span>
                                     <span className=' font-normal flex'>
-                                        {swapInputTransaction?.amount} {swap?.destination_network_asset}
+                                        {swapInputTransaction?.amount} {swap?.destination_asset}
                                     </span>
                                 </div>
                             </>
