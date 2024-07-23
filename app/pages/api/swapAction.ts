@@ -117,7 +117,7 @@ export async function handleSwapCreation(data: SwapData) {
         destination_address,
         refuel,
         use_deposit_address,
-        status: SwapStatus.LsTransferPending,
+        status: SwapStatus.UserTransferPending,
         deposit_actions: {
           createMany: {
             data: [
