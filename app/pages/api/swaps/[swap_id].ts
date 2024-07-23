@@ -19,7 +19,7 @@ export default async function handler(
   if (req.method === "GET") {
     try {
       const result = await handlerGetSwap(swap_id as string);
-      console.log("🚀 ~ result:", result);
+      console.log("swap get result:", { result });
 
       res.status(200).json({ data: result });
     } catch (error) {
