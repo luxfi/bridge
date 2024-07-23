@@ -139,7 +139,7 @@ export async function handleSwapCreation(data: SwapData) {
       },
     });
 
-    // 最后创建 Transaction
+    // Transaction
     // await prisma.transaction.create({
     //   data: {
     //     status: "completed",
