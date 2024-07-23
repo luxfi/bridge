@@ -20,7 +20,7 @@ import { Layer } from "../../../Models/Layer";
 import { Exchange } from "../../../Models/Exchange";
 import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 
-const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) : NetworkCurrency | undefined => {
+const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string): NetworkCurrency | undefined => {
     if (!exchange || !asset) {
         return undefined;
     } else {
@@ -30,7 +30,7 @@ const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) 
     }
 }
 
-const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string) : string | undefined => {
+const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string): string | undefined => {
     if (!exchange || !asset) {
         return undefined;
     } else {
@@ -44,16 +44,16 @@ const ManualTransfer: FC = () => {
     const { swap } = useSwapDataState()
     const hintsStore = useSwapDepositHintClicked()
     const hintClicked = hintsStore.swapTransactions[swap?.id || ""]
-    const { 
-        source_network, 
+    const {
+        source_network,
         source_exchange,
-        source_asset 
+        source_asset
     } = swap || {}
 
     const { layers, exchanges, resolveImgSrc } = useSettingsState()
     const sourceLayer = layers.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
-    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork (layers, sourceExchange, source_asset);
+    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
 
     const client = new BridgeApiClient()
     const {
@@ -117,21 +117,21 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
 
     const sourceLayer = layers.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
-    const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset (layers, sourceExchange, source_asset)
-    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork (layers, sourceExchange, source_asset);
+    const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset(layers, sourceExchange, source_asset)
+    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
 
     const destinationLayer = layers?.find(l => l.internal_name === destination_network)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange)
-    const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, destinationExchange, destination_asset)
+    const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
 
 
-    console.log("TransferInvoice => ", { 
-        sourceLayer, 
-        sourceExchange, 
-        sourceAsset, 
-        destinationLayer, 
-        destinationExchange, 
-        destinationAsset, 
+    console.log("TransferInvoice => ", {
+        sourceLayer,
+        sourceExchange,
+        sourceAsset,
+        destinationLayer,
+        destinationExchange,
+        destinationAsset,
     })
 
     // useEffect(() => {
@@ -155,13 +155,13 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         data: generatedDeposit
     } = useSWR<ApiResponse<DepositAddress>>(generateDepositParams, ([network]) => client.GenerateDepositAddress(network), { dedupingInterval: 60000 })
 
-    console.log({shouldGenerateAddress, generateDepositParams})
+    console.log({ shouldGenerateAddress, generateDepositParams })
 
     //TODO pick manual transfer minAllowedAmount when its available
     const requested_amount = Number(minAllowedAmount) > Number(swap?.requested_amount) ? minAllowedAmount : swap?.requested_amount
     const depositAddress = existingDepositAddress || generatedDeposit?.data?.address
 
-    console.log({existingDepositAddress})
+    console.log({ existingDepositAddress })
     // console.log({depositAddress, generateDepositParams, generatedDeposit, shouldGenerateAddress, source})
 
     // const handleChangeSelectedNetwork = useCallback((n: NetworkCurrency) => {
@@ -222,7 +222,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
                     {requested_amount}
                 </p>
             </BackgroundField>
-            {/* <BackgroundField header={'Asset'} withoutBorder Explorable={sourceAsset?.contract_address != null && isValidAddress(sourceAsset?.contract_address, source)} toExplore={sourceAsset?.contract_address != null ? source?.account_explorer_template?.replace("{0}", sourceAsset?.contract_address) : undefined}>
+            <BackgroundField header={'Asset'} withoutBorder Explorable={sourceAsset?.contract_address != null && isValidAddress(sourceAsset?.contract_address, sourceLayer)} toExplore={sourceAsset?.contract_address != null ? sourceLayer?.account_explorer_template?.replace("{0}", sourceAsset?.contract_address) : undefined}>
                 <div className="flex items-center gap-2">
                     <div className="flex-shrink-0 h-7 w-7 relative">
                         {
@@ -240,14 +240,14 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
                         <span className="font-semibold leading-4">
                             {sourceAsset?.asset}
                         </span>
-                        {sourceAsset?.contract_address && isValidAddress(sourceAsset.contract_address, source) &&
+                        {sourceAsset?.contract_address && isValidAddress(sourceAsset.contract_address, sourceLayer) &&
                             <span className="text-xs  flex items-center leading-3">
                                 {shortenAddress(sourceAsset?.contract_address)}
                             </span>
                         }
                     </div>
                 </div>
-            </BackgroundField> */}
+            </BackgroundField>
         </div>
     </div>
 }
