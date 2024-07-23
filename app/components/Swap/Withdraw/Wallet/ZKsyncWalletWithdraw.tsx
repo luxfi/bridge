@@ -33,7 +33,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
     const { source_network: source_network_internal_name } = swap || {};
     const source_network = layers.find(n => n.internal_name === source_network_internal_name);
     const source_layer = layers.find(l => l.internal_name === source_network_internal_name)
-    const source_currency = source_network?.assets?.find(c => c.asset.toLocaleUpperCase() === swap?.source_network_asset.toLocaleUpperCase());
+    const source_currency = source_network?.assets?.find(c => c.asset.toLocaleUpperCase() === swap?.source_asset.toLocaleUpperCase());
     const defaultProvider = swap?.source_network?.split('_')?.[1]?.toLowerCase() == "mainnet" ? "mainnet" : "goerli";
     const l1Network = layers.find(n => n.internal_name === source_network?.metadata?.L1Network);
 
@@ -79,7 +79,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
         try {
             const tf = await syncWallet?.syncTransfer({
                 to: depositAddress,
-                token: swap?.source_network_asset,
+                token: swap?.source_asset,
                 amount: zksync.closestPackableTransactionAmount(utils.parseUnits(amount.toString(), source_currency?.decimals)),
                 validUntil: zksync.utils.MAX_TIMESTAMP - swap?.sequence_number,
             });

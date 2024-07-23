@@ -143,7 +143,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     //             fromCurrency: sourceAsset,
     //             to: destination,
     //             toCurrency: destinationAsset,
-    //             refuel: swap.has_refuel,
+    //             refuel: swap.refuel,
     //         })
     //     }
     // }, [swap])
@@ -258,10 +258,10 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
 //     const {
 //         source_exchange: source_exchange_internal_name,
 //         destination_network,
-//         source_network_asset } = swap || {}
+//         source_asset } = swap || {}
 //     const source_exchange = layers.find(n => n.internal_name === source_exchange_internal_name)
 
-//     const exchangeAssets = source_exchange?.assets?.filter(a => a.asset === source_network_asset && a.network_internal_name !== destination_network && a.network?.status !== "inactive")
+//     const exchangeAssets = source_exchange?.assets?.filter(a => a.asset === source_asset && a.network_internal_name !== destination_network && a.network?.status !== "inactive")
 //     const defaultSourceNetwork = exchangeAssets?.find(sn => sn.is_default) || exchangeAssets?.[0]
 
 //     const handleChangeSelectedNetwork = useCallback((n: string) => {

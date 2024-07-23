@@ -22,7 +22,7 @@ type Swap = {
   destination_asset: string;
   destination_network: string;
   destination_exchange: string;
-  has_refuel: boolean;
+  refuel: boolean;
   transactions: Transaction[];
 };
 
