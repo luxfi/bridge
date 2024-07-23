@@ -8,6 +8,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  // res.setHeader('Access-Control-Allow-Origin', 'https://example.com');
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
   if (req.method === "POST") {
     const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     const settings = isMainnet ? mainnetSettings : testnetSettings;
