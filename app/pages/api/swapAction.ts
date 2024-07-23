@@ -244,16 +244,16 @@ export async function handleSwapCreation(data: SwapData) {
     //   },
     // });
 
-    // const nAddress =
-    //   (cAddress?.contract_address &&
-    //     (await prisma.contractAddress.create({
-    //       data: {
-    //         swap_id: swap.id,
-    //         name: cAddress?.contract_name,
-    //         address: cAddress?.contract_address,
-    //       },
-    //     }))) ||
-    //   {};
+    const nAddress =
+      (cAddress?.contract_address &&
+        (await prisma.contractAddress.create({
+          data: {
+            swap_id: swap.id,
+            name: cAddress?.contract_name,
+            address: cAddress?.contract_address,
+          },
+        }))) ||
+      {};
 
     // const depositAction = await prisma.depositAction.create({
     //   data: {
@@ -301,7 +301,7 @@ export async function handleSwapCreation(data: SwapData) {
       swap_id: swap.id,
       swap: {
         ...swap,
-        // contract_address: nAddress,
+        contract_address: nAddress,
         sourceNetwork: {
           ...sourceNetworkRecord,
           token: { ...sourceTokenRecord },
