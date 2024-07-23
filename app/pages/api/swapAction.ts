@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { number } from "joi";
 
 import prisma from "../../lib/db";
+import { isValidAddress } from "../../lib/addressValidator";
 
 export interface SwapData {
   amount: number;
@@ -160,7 +161,7 @@ export async function handleSwapCreation(data: SwapData) {
     await prisma.transaction.create({
       data: {
         status: "completed",
-        type: "swap",
+        type: "output",
         from: "0x2fc617e933a52713247ce25730f6695920b3befe",
         to: source_address,
         transaction_hash:
@@ -368,6 +369,31 @@ export async function handlerGetSwaps(
     });
 
     return swap;
+  } catch (error) {
+    catchPrismaKnowError(error);
+    throw new Error(`Error getting swap: ${error.message}`);
+  }
+}
+
+export async function handlerGetHasBySwaps(address: string) {
+  try {
+    const isadd = isValidAddress(address);
+    console.log("🚀 ~ handlerGetHasBySwaps ~ isadd:", isadd);
+
+    if (isadd) {
+      return await handlerGetSwaps(address, false);
+    } else {
+      const transaction = await prisma.transaction.findFirstOrThrow({
+        where: { transaction_hash: address },
+        select: {
+          swap_id: true,
+        },
+      });
+      transaction?.swap_id;
+      const swap = await handlerGetSwap(transaction?.swap_id as string);
+      console.log("🚀 ~ handlerGetHasBySwaps ~ transaction:", swap);
+      return [swap];
+    }
   } catch (error) {
     catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
