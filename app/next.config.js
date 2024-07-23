@@ -1,16 +1,17 @@
-const withMDX = require('@next/mdx')()
-const { PHASE_PRODUCTION_SERVER } = require('next/constants');
+const withMDX = require("@next/mdx")();
+const { PHASE_PRODUCTION_SERVER } = require("next/constants");
 
 const securityHeaders = [
+  // { key: "Access-Control-Allow-Origin", value: "*" },
   {
-    key: 'X-Frame-Options',
-    value: 'SAMEORIGIN'
+    key: "X-Frame-Options",
+    value: "SAMEORIGIN",
   },
   {
-    key: 'Content-Security-Policy',
-    value: 'frame-ancestors *.immutable.com'
+    key: "Content-Security-Policy",
+    value: "frame-ancestors *.immutable.com",
   },
-]
+];
 
 module.exports = (phase, { defaultConfig }) => {
   /**
@@ -24,20 +25,20 @@ module.exports = (phase, { defaultConfig }) => {
     images: {
       remotePatterns: [
         {
-          protocol: 'https',
-          hostname: "stagelslayerswapbridgesa.blob.core.windows.net"
+          protocol: "https",
+          hostname: "stagelslayerswapbridgesa.blob.core.windows.net",
         },
         {
-          protocol: 'https',
-          hostname: "devlslayerswapbridgesa.blob.core.windows.net"
+          protocol: "https",
+          hostname: "devlslayerswapbridgesa.blob.core.windows.net",
         },
         {
-          protocol: 'https',
-          hostname: "prodlslayerswapbridgesa.blob.core.windows.net"
+          protocol: "https",
+          hostname: "prodlslayerswapbridgesa.blob.core.windows.net",
         },
         {
-          protocol: 'https',
-          hostname: "cdn.lux.network"
+          protocol: "https",
+          hostname: "cdn.lux.network",
         },
       ],
     },
@@ -46,28 +47,27 @@ module.exports = (phase, { defaultConfig }) => {
     },
     reactStrictMode: false,
     webpack: (config) => {
-
       config.resolve.fallback = { fs: false, net: false, tls: false };
       return config;
     },
     productionBrowserSourceMaps: true,
-      // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
-    transpilePackages: ['@luxdefi/ui'],
-  }
+    // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
+    transpilePackages: ["@luxdefi/ui"],
+  };
   if (process.env.APP_BASE_PATH) {
-    nextConfig.basePath = process.env.APP_BASE_PATH
+    nextConfig.basePath = process.env.APP_BASE_PATH;
   }
   if (phase === PHASE_PRODUCTION_SERVER) {
     nextConfig.headers = async () => {
       return [
         {
           // Apply these headers to all routes in your application.
-          source: '/:path*',
+          source: "/:path*",
           headers: securityHeaders,
         },
-      ]
-    }
+      ];
+    };
   }
 
-  return withMDX(nextConfig)
-}
+  return withMDX(nextConfig);
+};
