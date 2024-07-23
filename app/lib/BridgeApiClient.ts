@@ -165,7 +165,7 @@ export default class BridgeApiClient {
   ): Promise<ApiResponse<DepositAddress>> {
     return await this.AuthenticatedRequest<ApiResponse<any>>(
       "POST",
-      `/networks/${network}/deposit_addresses`
+      `/deposit_addresses/${network}`
     );
   }
 
@@ -289,7 +289,7 @@ export type CreateSwapParams = {
 export type SwapItem = {
   id: string;
   created_date: string;
-  fee: number;
+  fee?: number;
   status: SwapStatus;
   destination_address: `0x${string}`;
   requested_amount: number;
@@ -298,14 +298,14 @@ export type SwapItem = {
   app_name?: string;
   refuel_price?: number;
   refuel_transaction_id?: string;
-  source_network_asset: string;
+  source_asset: string;
   source_network: string;
   source_exchange?: string;
-  destination_network_asset: string;
+  destination_asset: string;
   destination_network: string;
   destination_exchange?: string;
   transactions: Transaction[];
-  has_refuel?: boolean;
+  refuel?: boolean;
   exchange_account_connected: boolean;
   exchange_account_name?: string;
   fiat_session_id?: string;

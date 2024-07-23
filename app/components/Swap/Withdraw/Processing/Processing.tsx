@@ -35,7 +35,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
     const input_tx_explorer = source_network?.transaction_explorer_template
     const output_tx_explorer = destination_layer?.transaction_explorer_template
 
-    const destinationNetworkCurrency = destination_layer ? GetDefaultAsset(destination_layer, swap?.destination_network_asset) : null
+    const destinationNetworkCurrency = destination_layer ? GetDefaultAsset(destination_layer, swap?.destination_asset) : null
 
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const storedWalletTransaction = storedWalletTransactions.swapTransactions?.[swap?.id]
@@ -122,7 +122,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
                 description: null
             },
             complete: {
-                name: `${swapOutputTransaction?.amount} ${swap?.destination_network_asset} was sent to your address`,
+                name: `${swapOutputTransaction?.amount} ${swap?.destination_asset} was sent to your address`,
                 description: swapOutputTransaction ? <div className="flex flex-col">
                     <div className='flex items-center space-x-1'>
                         <span>Transaction: </span>
@@ -273,7 +273,7 @@ const getProgressStatuses = (swap: SwapItem, swapStatus: SwapStatus): { stepStat
                 : ProgressStatus.Upcoming;
 
     let refuel_transfer =
-        (swap.has_refuel && !swapRefuelTransaction) ? ProgressStatus.Upcoming
+        (swap.refuel && !swapRefuelTransaction) ? ProgressStatus.Upcoming
             : swapRefuelTransaction?.status == TransactionStatus.Pending ? ProgressStatus.Current
                 : swapRefuelTransaction?.status == TransactionStatus.Initiated || swapRefuelTransaction?.status == TransactionStatus.Completed ? ProgressStatus.Complete
                     : ProgressStatus.Removed;

@@ -35,7 +35,7 @@ type Swap = {
   destination_asset: string;
   destination_network: string;
   destination_exchange: string;
-  has_refuel: boolean;
+  refuel: boolean;
   transactions: Transaction[];
 };
 
@@ -846,7 +846,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                     </div>
                   </div>
                 </div>
-                {swap?.has_refuel && (
+                {swap?.refuel && (
                   <>
                     <div className="flex items-center ">
                       <div className="mr-2  text-2xl font-medium">
