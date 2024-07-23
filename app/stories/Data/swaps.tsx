@@ -14,11 +14,11 @@ export const swap: SwapItem = {
     "created_date": "2023-08-16T16:31:11.934618+00:00",
     "status": SwapStatus.Created,
     "destination_address": "0x142c03fC8fd30d11Ed17eF0F48a9941fD4A66953",
-    "source_network_asset": "ETH",
+    "source_asset": "ETH",
     "source_network": "ETHEREUM_GOERLI",
-    "destination_network_asset": "ETH",
+    "destination_asset": "ETH",
     "destination_network": "ARBITRUM_GOERLI",
-    "has_refuel": true,
+    "refuel": true,
     "fail_reason": "",
     "transactions": [
         {
@@ -82,11 +82,11 @@ export const failedSwap: SwapItem = {
     "created_date": "2023-08-30T09:04:41.673486+00:00",
     "status": SwapStatus.Failed,
     "destination_address": "0x142c03fC8fd30d11Ed17eF0F48a9941fD4A66953",
-    "source_network_asset": "ETH",
+    "source_asset": "ETH",
     "source_network": "ETHEREUM_GOERLI",
-    "destination_network_asset": "ETH",
+    "destination_asset": "ETH",
     "destination_network": "ARBITRUM_GOERLI",
-    "has_refuel": false,
+    "refuel": false,
     "fail_reason": "",
     "transactions": [
         {
@@ -120,11 +120,11 @@ export const failedSwapOutOfRange: SwapItem = {
     "created_date": "2023-08-29T14:16:02.389108+00:00",
     "status": SwapStatus.Failed,
     "destination_address": "0x142c03fC8fd30d11Ed17eF0F48a9941fD4A66953",
-    "source_network_asset": "ETH",
+    "source_asset": "ETH",
     "source_network": "ETHEREUM_GOERLI",
-    "destination_network_asset": "ETH",
+    "destination_asset": "ETH",
     "destination_network": "ARBITRUM_GOERLI",
-    "has_refuel": true,
+    "refuel": true,
     "fail_reason": "received_more_than_valid_range",
     "transactions": [
         {
@@ -173,11 +173,11 @@ export const cancelled: SwapItem = {
     "created_date": "2023-08-29T14:16:02.389108+00:00",
     "status": SwapStatus.Cancelled,
     "destination_address": "0x142c03fC8fd30d11Ed17eF0F48a9941fD4A66953",
-    "source_network_asset": "ETH",
+    "source_asset": "ETH",
     "source_network": "ETHEREUM_GOERLI",
-    "destination_network_asset": "ETH",
+    "destination_asset": "ETH",
     "destination_network": "ARBITRUM_GOERLI",
-    "has_refuel": true,
+    "refuel": true,
     "fail_reason": "",
     "transactions": [
         
@@ -197,11 +197,11 @@ export const expired: SwapItem = {
     "created_date": "2023-08-29T14:16:02.389108+00:00",
     "status": SwapStatus.Expired,
     "destination_address": "0x142c03fC8fd30d11Ed17eF0F48a9941fD4A66953",
-    "source_network_asset": "ETH",
+    "source_asset": "ETH",
     "source_network": "ETHEREUM_GOERLI",
-    "destination_network_asset": "ETH",
+    "destination_asset": "ETH",
     "destination_network": "ARBITRUM_GOERLI",
-    "has_refuel": true,
+    "refuel": true,
     "fail_reason": "",
     "transactions": [
         

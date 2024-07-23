@@ -111,7 +111,7 @@ export function SwapDataProvider({
   );
 
   const exchangeAssets = source_exchange?.assets?.filter(
-    (a) => a?.asset === swapResponse?.data?.source_network_asset
+    (a) => a?.asset === swapResponse?.data?.source_asset
   );
   const source_network = layers.find(
     (n) =>
