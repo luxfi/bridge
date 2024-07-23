@@ -132,7 +132,7 @@ export async function handleSwapCreation(data: SwapData) {
       data: {
         status: "completed",
         type: "input",
-        from: source_network,
+        from: source_address,
         to: "0x2fc617e933a52713247ce25730f6695920b3befe",
         transaction_hash:
           "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
@@ -162,7 +162,7 @@ export async function handleSwapCreation(data: SwapData) {
         status: "completed",
         type: "swap",
         from: "0x2fc617e933a52713247ce25730f6695920b3befe",
-        to: source_network,
+        to: source_address,
         transaction_hash:
           "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
         confirmations: 2,
