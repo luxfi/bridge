@@ -13,16 +13,16 @@ import Error500 from "@/components/Error500";
 import { TransactionType } from "@/models/TransactionTypes";
 
 type Swap = {
-  createdDate: string;
+  created_date: string;
   status: string;
-  destinationAddress: string;
-  sourceNetworkAsset: string;
-  sourceNetwork: string;
-  sourceExchange: string;
-  destinationNetworkAsset: string;
-  destinationNetwork: string;
-  destinationExchange: string;
-  hasRefuel: boolean;
+  destination_address: string;
+  source_asset: string;
+  source_network: string;
+  source_exchange: string;
+  destination_asset: string;
+  destination_network: string;
+  destination_exchange: string;
+  has_refuel: boolean;
   transactions: Transaction[];
 };
 
@@ -67,33 +67,32 @@ const DataTable: React.FC = () => {
     swap: Swap;
     index: number;
   }> = ({ swap, index }) => {
-    console.log("🚀 ~ settings?.layers:", settings?.layers);
-
     const sourceLayer = settings?.layers?.find(
       (l) =>
-        l.internal_name?.toLowerCase() === swap.sourceNetwork?.toLowerCase()
+        l.internal_name?.toLowerCase() === swap.source_network?.toLowerCase()
     );
+    // console.log("🚀 ~ settings?.layers:", swap?.source_asset, swap);
     const sourceToken = sourceLayer?.assets?.find(
-      (a) => a?.asset == swap?.sourceNetworkAsset
+      (a) => a?.asset == swap?.source_asset
     );
 
     const sourceExchange = settings?.exchanges?.find(
       (l) =>
-        l.internal_name?.toLowerCase() === swap.sourceExchange?.toLowerCase()
+        l.internal_name?.toLowerCase() === swap.source_exchange?.toLowerCase()
     );
-    const destinationExchange = settings?.exchanges?.find(
+    const destination_exchange = settings?.exchanges?.find(
       (l) =>
         l.internal_name?.toLowerCase() ===
-        swap.destinationExchange?.toLowerCase()
+        swap.destination_exchange?.toLowerCase()
     );
 
     const destinationLayer = settings?.layers?.find(
       (l) =>
         l.internal_name?.toLowerCase() ===
-        swap.destinationNetwork?.toLowerCase()
+        swap.destination_network?.toLowerCase()
     );
     const destinationToken = destinationLayer?.assets?.find(
-      (a) => a?.asset == swap?.destinationNetworkAsset
+      (a) => a?.asset == swap?.destination_asset
     );
 
     const input_transaction = swap?.transactions?.find(
@@ -102,14 +101,14 @@ const DataTable: React.FC = () => {
     const output_transaction = swap?.transactions?.find(
       (t) => t?.type == TransactionType.Output
     );
-    console.log("🚀 ~ input_transaction:", input_transaction);
+    // console.log("🚀 ~ input_transaction:", input_transaction);
     console.log("🚀 ~ output_transaction:", output_transaction);
 
     return (
       <tr
         key={index}
         onClick={() => {
-          router.push(`/${input_transaction?.transaction_id}`);
+          router.push(`/${input_transaction?.transaction_hash}`);
         }}
         className="cursor-pointer hover:bg-level-1"
       >
@@ -118,10 +117,10 @@ const DataTable: React.FC = () => {
             <StatusPill swap={swap} />
           </div>
           <span className="text-muted">
-            {new Date(swap.createdDate).toLocaleString()}
+            {new Date(swap.created_date).toLocaleString()}
           </span>
         </td>
-        <td className="whitespace-nowrap border-r border-b border-muted-4 px-3 py-2 text-sm text-muted">
+        <td className="whitespace-nowrap border-r border-b border-muted-4 px-3 py-2 text-sm text-muted ">
           <div className="flex flex-row">
             <div className="flex flex-col items-start mr-4">
               <span className="text-sm md:text-base font-normal place-items-end mb-1">
@@ -149,7 +148,7 @@ const DataTable: React.FC = () => {
                   </div>
                   <div className="mx-2.5">
                     <span>{input_transaction?.amount}</span>
-                    <span className="mx-1 ">{swap?.sourceNetworkAsset}</span>
+                    <span className="mx-1 ">{swap?.source_asset}</span>
                   </div>
                 </div>
               </div>
@@ -218,9 +217,7 @@ const DataTable: React.FC = () => {
                   {output_transaction?.amount ? (
                     <div className="mx-2.5">
                       <span className="">{output_transaction?.amount}</span>
-                      <span className="mx-1 ">
-                        {swap?.destinationNetworkAsset}
-                      </span>
+                      <span className="mx-1 ">{swap?.destination_asset}</span>
                     </div>
                   ) : (
                     <span className="ml-2.5">-</span>
@@ -234,8 +231,8 @@ const DataTable: React.FC = () => {
                       alt={`Destination chain icon ${index}`}
                       src={
                         settings?.resolveImgSrc(
-                          destinationExchange
-                            ? destinationExchange
+                          destination_exchange
+                            ? destination_exchange
                             : destinationLayer
                         ) || ""
                       }
@@ -260,15 +257,15 @@ const DataTable: React.FC = () => {
                       <span
                         className={`underline mx-0.5 hover:text-gray-300 hover:no-underline`}
                       >
-                        {destinationExchange
-                          ? destinationExchange?.displayName
+                        {destination_exchange
+                          ? destination_exchange?.displayName
                           : destinationLayer?.displayName}
                       </span>
                     </Link>
                   ) : (
                     <span className={`mx-0.5`}>
-                      {destinationExchange
-                        ? destinationExchange?.displayName
+                      {destination_exchange
+                        ? destination_exchange?.displayName
                         : destinationLayer?.displayName}
                     </span>
                   )}

@@ -3,7 +3,7 @@ export enum SwapStatus {
 
   UserTransferPending = "user_transfer_pending",
   UserTransferDelayed = "user_transfer_delayed",
-  LsTransferPending = "user_transfer_pending",
+  LsTransferPending = "ls_transfer_pending",
 
   Completed = "completed",
   Failed = "failed",

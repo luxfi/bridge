@@ -29,10 +29,10 @@ type Swap = {
   created_date: string;
   status: string;
   destination_address: string;
-  source_network_asset: string;
+  source_asset: string;
   source_network: string;
   source_exchange: string;
-  destination_network_asset: string;
+  destination_asset: string;
   destination_network: string;
   destination_exchange: string;
   has_refuel: boolean;
@@ -44,7 +44,7 @@ type Transaction = {
   to: string;
   created_date: string;
   timestamp: string;
-  transaction_id: string;
+  transaction_hash: string;
   explorer_url: string;
   confirmations: number;
   max_confirmations: number;
@@ -71,9 +71,12 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
   const settings = useSettingsState();
   const router = useRouter();
   const pathname = usePathname();
-  const fetcher = (url: string) => fetch(url).then((r) => r.json());
+  const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    return res.json();
+  };
   const { data, error, isLoading } = useSWR<ApiResponse<Swap[]>>(
-    `${AppSettings.BridgeApiUri}/api/swaps/${searchParam}?version=${version}`,
+    `${AppSettings.BridgeApiUri}/api/exporler/${searchParam}?version=${version}`,
     fetcher,
     { dedupingInterval: 60000 }
   );
@@ -94,7 +97,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
       l.internal_name?.toLowerCase() === swap?.source_network?.toLowerCase()
   );
   const sourceToken = sourceLayer?.assets?.find(
-    (a) => a?.asset == swap?.source_network_asset
+    (a) => a?.asset == swap?.source_asset
   );
 
   const sourceExchange =
@@ -117,9 +120,16 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
       swap?.destination_network?.toLowerCase()
   );
   const destinationToken = destinationLayer?.assets?.find(
-    (a) => a?.asset == swap?.destination_network_asset
+    (a) => a?.asset == swap?.destination_asset
   );
 
+  console.log("🚀 ~ SearchData ~ destinationExchange:", destinationExchange);
+
+  console.log("🚀 ~ SearchData ~ sourceLayer:", sourceLayer);
+  console.log("🚀 ~ SearchData ~ sourceToken:", sourceToken);
+
+  console.log("🚀 ~ SearchData ~ destinationToken:", destinationToken);
+  console.log("🚀 ~ SearchData ~ destinationLayer:", destinationLayer);
   const cost =
     Number(input_transaction?.amount) - Number(output_transaction?.amount);
 
@@ -147,7 +157,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
         l.internal_name?.toLowerCase() === swap.source_network?.toLowerCase()
     );
     const sourceToken = sourceLayer?.assets?.find(
-      (a) => a?.asset == swap?.source_network_asset
+      (a) => a?.asset == swap?.source_asset
     );
 
     const sourceExchange = settings?.exchanges?.find(
@@ -166,7 +176,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
         swap.destination_network?.toLowerCase()
     );
     const destinationToken = destinationLayer?.assets?.find(
-      (a) => a?.asset == swap?.destination_network_asset
+      (a) => a?.asset == swap?.destination_asset
     );
 
     const inputTransaction = swap?.transactions?.find(
@@ -181,16 +191,16 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
     return (
       <tr
         key={index}
-        onClick={(e) => router.push(`/${inputTransaction?.transaction_id}`)}
+        onClick={(e) => router.push(`/${inputTransaction?.transaction_hash}`)}
         className="hover:bg-level-2 hover:cursor-pointer"
       >
         <td className="whitespace-nowrap border-l border-r border-b border-muted-4 py-2 px-3 text-sm font-medium">
           <Link
-            href={`/${inputTransaction?.transaction_id}`}
+            href={`/${inputTransaction?.transaction_hash}`}
             onClick={(e) => e.stopPropagation()}
             className="hover:text-gray-300 inline-flex items-center w-fit"
           >
-            {shortenAddress(inputTransaction?.transaction_id)}
+            {shortenAddress(inputTransaction?.transaction_hash)}
           </Link>
           <div className="">
             <StatusIcon swap={swap.status} className="mr-1" />
@@ -226,7 +236,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                   </div>
                   <div className="mx-2.5">
                     <span className="">{inputTransaction?.amount}</span>
-                    <span className="mx-1 ">{swap?.source_network_asset}</span>
+                    <span className="mx-1 ">{swap?.source_asset}</span>
                   </div>
                 </div>
               </div>
@@ -298,9 +308,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                       <span className=" mx-0.5">
                         {outputTransaction?.amount}
                       </span>
-                      <span className="">
-                        {swap?.destination_network_asset}
-                      </span>
+                      <span className="">{swap?.destination_asset}</span>
                     </div>
                   ) : (
                     <span className="ml-2.5">-</span>
@@ -502,7 +510,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                                 cost,
                                 sourceToken?.precision
                               )}{" "}
-                              {swap?.source_network_asset}
+                              {swap?.source_asset}
                             </span>
                           </p>
                         </div>
@@ -571,8 +579,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             data-nimg="responsive"
                             className="rounded-md mr-0.5"
                           />
-                          {input_transaction?.amount}{" "}
-                          {swap?.source_network_asset}
+                          {input_transaction?.amount} {swap?.source_asset}
                         </span>
                       </div>
                     </div>
@@ -650,16 +657,21 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                     <div className="text-sm lg:text-base font-medium text-tx-base w-full">
                       <div className="flex items-center justify-between  hover:">
                         <Link
-                          href={`${input_transaction?.explorer_url}`}
+                          href={`${sourceLayer?.transaction_explorer_template.replace(
+                            "{0}",
+                            input_transaction?.transaction_hash
+                          )}`}
                           target="_blank"
                           className="hover:text-gray-300 w-fit contents items-center second-link"
                         >
                           <span className="break-all link link-underline link-underline-black">
-                            {shortenAddress(input_transaction?.transaction_id)}
+                            {shortenAddress(
+                              input_transaction?.transaction_hash
+                            )}
                           </span>
                         </Link>
                         <CopyButton
-                          toCopy={input_transaction?.transaction_id}
+                          toCopy={input_transaction?.transaction_hash}
                           iconHeight={16}
                           iconClassName="order-2"
                           iconWidth={16}
@@ -716,7 +728,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                             />
                             <span className="text-sm lg:text-base font-medium text-socket-table  ml-0.5">
                               {output_transaction?.amount}{" "}
-                              {swap?.destination_network_asset}
+                              {swap?.destination_asset}
                             </span>
                           </div>
                         ) : (
@@ -777,10 +789,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                       {output_transaction?.to ? (
                         <div className="flex items-center justify-between  hover:">
                           <Link
-                            href={`${(destinationExchange
-                              ? destinationLayer
-                              : sourceLayer
-                            )?.account_explorer_template?.replace(
+                            href={`${destinationLayer?.account_explorer_template?.replace(
                               "{0}",
                               output_transaction?.to
                             )}`}
@@ -807,21 +816,24 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                   <div className="flex flex-col mt-6">
                     <div className="text-base font-normal ">Transaction</div>
                     <div className="text-sm lg:text-base font-medium text-tx-base w-full">
-                      {output_transaction?.transaction_id ? (
+                      {output_transaction?.transaction_hash ? (
                         <div className="flex items-center justify-between  hover:">
                           <Link
-                            href={`${output_transaction?.explorer_url}`}
+                            href={`${destinationLayer?.transaction_explorer_template.replace(
+                              "{0}",
+                              output_transaction?.transaction_hash
+                            )}`}
                             target="_blank"
                             className="hover:text-gray-300 w-fit contents items-center"
                           >
                             <span className="break-all link link-underline link-underline-black">
                               {shortenAddress(
-                                output_transaction?.transaction_id
+                                output_transaction?.transaction_hash
                               )}
                             </span>
                           </Link>
                           <CopyButton
-                            toCopy={output_transaction?.transaction_id}
+                            toCopy={output_transaction?.transaction_hash}
                             iconHeight={16}
                             iconClassName="order-2"
                             iconWidth={16}
@@ -875,7 +887,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                           <div className="text-base font-normal ">
                             Transaction
                           </div>
-                          {refuel_transaction?.transaction_id ? (
+                          {refuel_transaction?.transaction_hash ? (
                             <div className="flex items-center justify-between  hover:">
                               <Link
                                 href={`${refuel_transaction?.explorer_url}`}
@@ -884,12 +896,12 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                               >
                                 <span className="break-all link link-underline link-underline-black">
                                   {shortenHash(
-                                    refuel_transaction?.transaction_id
+                                    refuel_transaction?.transaction_hash
                                   )}
                                 </span>
                               </Link>
                               <CopyButton
-                                toCopy={refuel_transaction?.transaction_id}
+                                toCopy={refuel_transaction?.transaction_hash}
                                 iconHeight={16}
                                 iconClassName="order-2"
                                 iconWidth={16}
