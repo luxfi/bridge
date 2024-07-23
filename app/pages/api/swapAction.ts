@@ -3,6 +3,7 @@ import { number } from "joi";
 
 import prisma from "../../lib/db";
 import { isValidAddress } from "../../lib/addressValidator";
+import { SwapStatus } from "../../Models/SwapStatus";
 
 export interface SwapData {
   amount: number;
@@ -20,6 +21,16 @@ export interface SwapData {
     contract_name: string;
     contract_address: string;
   };
+}
+
+function generateRandomString(): string {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 5; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
 }
 
 export async function handleSwapCreation(data: SwapData) {
@@ -106,7 +117,7 @@ export async function handleSwapCreation(data: SwapData) {
         destination_address,
         refuel,
         use_deposit_address,
-        status: "user_transfer_pending",
+        status: SwapStatus.LsTransferPending,
         deposit_actions: {
           createMany: {
             data: [
@@ -134,9 +145,13 @@ export async function handleSwapCreation(data: SwapData) {
         status: "completed",
         type: "input",
         from: source_address,
-        to: "0x2fc617e933a52713247ce25730f6695920b3befe",
-        transaction_hash:
-          "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+        to: cAddress?.contract_address,
+        transaction_hash: `0x${
+          generateRandomString() +
+          "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
+          generateRandomString()
+        }`,
+
         confirmations: 2,
         max_confirmations: 2,
         amount: amount,
@@ -162,10 +177,13 @@ export async function handleSwapCreation(data: SwapData) {
       data: {
         status: "completed",
         type: "output",
-        from: "0x2fc617e933a52713247ce25730f6695920b3befe",
+        from: cAddress?.contract_address,
         to: source_address,
-        transaction_hash:
-          "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
+        transaction_hash: `0x${
+          generateRandomString() +
+          "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
+          generateRandomString()
+        }`,
         confirmations: 2,
         max_confirmations: 2,
         amount: amount,
