@@ -118,92 +118,92 @@ export async function handleSwapCreation(data: SwapData) {
         refuel,
         use_deposit_address,
         status: SwapStatus.UserTransferPending,
-        deposit_actions: {
-          createMany: {
-            data: [
-              {
-                type: "transfer",
-                to_address: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
-                amount,
-                order_number: 0,
-                amount_in_base_units: "331000000000000",
-                network_id: sourceNetworkRecord.id,
-                token_id: sourceTokenRecord.id,
-                fee_token_id: destinationTokenRecord.id,
-                call_data: "0x168b",
-              },
-            ],
-          },
-        },
+        // deposit_actions: {
+        //   createMany: {
+        //     data: [
+        //       {
+        //         type: "transfer",
+        //         to_address: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
+        //         amount,
+        //         order_number: 0,
+        //         amount_in_base_units: "331000000000000",
+        //         network_id: sourceNetworkRecord.id,
+        //         token_id: sourceTokenRecord.id,
+        //         fee_token_id: destinationTokenRecord.id,
+        //         call_data: "0x168b",
+        //       },
+        //     ],
+        //   },
+        // },
         quotes: {},
       },
     });
 
     // 最后创建 Transaction
-    await prisma.transaction.create({
-      data: {
-        status: "completed",
-        type: "input",
-        from: source_address,
-        to: cAddress?.contract_address,
-        transaction_hash: `0x${
-          generateRandomString() +
-          "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
-          generateRandomString()
-        }`,
+    // await prisma.transaction.create({
+    //   data: {
+    //     status: "completed",
+    //     type: "input",
+    //     from: source_address,
+    //     to: cAddress?.contract_address,
+    //     transaction_hash: `0x${
+    //       generateRandomString() +
+    //       "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
+    //       generateRandomString()
+    //     }`,
 
-        confirmations: 2,
-        max_confirmations: 2,
-        amount: amount,
-        swap: {
-          connect: {
-            id: swap.id,
-          },
-        },
-        token: {
-          connect: {
-            id: token.id,
-          },
-        },
-        network: {
-          connect: {
-            id: network.id,
-          },
-        },
-      },
-    });
+    //     confirmations: 2,
+    //     max_confirmations: 2,
+    //     amount: amount,
+    //     swap: {
+    //       connect: {
+    //         id: swap.id,
+    //       },
+    //     },
+    //     token: {
+    //       connect: {
+    //         id: token.id,
+    //       },
+    //     },
+    //     network: {
+    //       connect: {
+    //         id: network.id,
+    //       },
+    //     },
+    //   },
+    // });
 
-    await prisma.transaction.create({
-      data: {
-        status: "completed",
-        type: "output",
-        from: cAddress?.contract_address,
-        to: source_address,
-        transaction_hash: `0x${
-          generateRandomString() +
-          "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
-          generateRandomString()
-        }`,
-        confirmations: 2,
-        max_confirmations: 2,
-        amount: amount,
-        swap: {
-          connect: {
-            id: swap.id,
-          },
-        },
-        token: {
-          connect: {
-            id: token.id,
-          },
-        },
-        network: {
-          connect: {
-            id: network.id,
-          },
-        },
-      },
-    });
+    // await prisma.transaction.create({
+    //   data: {
+    //     status: "completed",
+    //     type: "output",
+    //     from: cAddress?.contract_address,
+    //     to: source_address,
+    //     transaction_hash: `0x${
+    //       generateRandomString() +
+    //       "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
+    //       generateRandomString()
+    //     }`,
+    //     confirmations: 2,
+    //     max_confirmations: 2,
+    //     amount: amount,
+    //     swap: {
+    //       connect: {
+    //         id: swap.id,
+    //       },
+    //     },
+    //     token: {
+    //       connect: {
+    //         id: token.id,
+    //       },
+    //     },
+    //     network: {
+    //       connect: {
+    //         id: network.id,
+    //       },
+    //     },
+    //   },
+    // });
 
     // await prisma.transaction.createMany({
     //   data: [
@@ -238,22 +238,22 @@ export async function handleSwapCreation(data: SwapData) {
     //   ],
     // });
 
-    const depositAction = await prisma.depositAction.findFirstOrThrow({
-      where: {
-        swap_id: swap.id,
-      },
-    });
+    // const depositAction = await prisma.depositAction.findFirstOrThrow({
+    //   where: {
+    //     swap_id: swap.id,
+    //   },
+    // });
 
-    const nAddress =
-      (cAddress?.contract_address &&
-        (await prisma.contractAddress.create({
-          data: {
-            swap_id: swap.id,
-            name: cAddress?.contract_name,
-            address: cAddress?.contract_address,
-          },
-        }))) ||
-      {};
+    // const nAddress =
+    //   (cAddress?.contract_address &&
+    //     (await prisma.contractAddress.create({
+    //       data: {
+    //         swap_id: swap.id,
+    //         name: cAddress?.contract_name,
+    //         address: cAddress?.contract_address,
+    //       },
+    //     }))) ||
+    //   {};
 
     // const depositAction = await prisma.depositAction.create({
     //   data: {
@@ -287,7 +287,7 @@ export async function handleSwapCreation(data: SwapData) {
     const result = {
       depositActions: [
         {
-          ...depositAction,
+          // ...depositAction,
           network: {
             ...sourceNetworkRecord,
             token: { ...sourceTokenRecord },
@@ -301,7 +301,7 @@ export async function handleSwapCreation(data: SwapData) {
       swap_id: swap.id,
       swap: {
         ...swap,
-        contract_address: nAddress,
+        // contract_address: nAddress,
         sourceNetwork: {
           ...sourceNetworkRecord,
           token: { ...sourceTokenRecord },

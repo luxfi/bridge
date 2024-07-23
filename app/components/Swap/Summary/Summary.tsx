@@ -14,12 +14,13 @@ import KnownInternalNames from "../../../lib/knownIds";
 import useWallet from "../../../hooks/useWallet";
 import { useQueryState } from "../../../context/query";
 import { NetworkCurrency } from "../../../Models/CryptoNetwork";
+import { Exchange } from "../../../Models/Exchange";
 
 type SwapInfoProps = {
     currency: NetworkCurrency,
-    source: Layer,
-    destination: Layer;
-    requestedAmount: number;
+    source: Layer | Exchange | undefined,
+    destination: Layer | Exchange | undefined;
+    requestedAmount?: number;
     receiveAmount?: number;
     destinationAddress: string;
     hasRefuel?: boolean;
@@ -32,11 +33,13 @@ type SwapInfoProps = {
 const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, requestedAmount, receiveAmount, destinationAddress, hasRefuel, refuelAmount, fee, exchange_account_connected, exchange_account_name }) => {
     const { resolveImgSrc, layers } = useSettingsState()
     const { getWithdrawalProvider: getProvider } = useWallet()
-    const provider = useMemo(() => {
-        return from && getProvider(from)
-    }, [from, getProvider])
+    // const provider = useMemo(() => {
+    //     return from && getProvider(from)
+    // }, [from, getProvider])
 
-    const wallet = provider?.getConnectedWallet()
+    console.log({from, to})
+
+    // const wallet = provider?.getConnectedWallet()
 
     const {
         hideFrom,
@@ -53,27 +56,36 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
     const source = hideFrom ? partner : from
     const destination = hideTo ? partner : to
 
-    const requestedAmountInUsd = (currency?.usd_price * requestedAmount).toFixed(2)
-    const receiveAmountInUsd = receiveAmount ? (currency?.usd_price * receiveAmount).toFixed(2) : undefined
-    const nativeCurrency = refuelAmount && from.assets.find(c => c.is_native)
+    const requestedAmountInUsd = (currency?.usd_price ?? 1 * Number(requestedAmount)).toFixed(2)
+    const receiveAmountInUsd = receiveAmount ? (currency?.usd_price ?? 1 * receiveAmount).toFixed(2) : undefined
+    // const nativeCurrency = refuelAmount && from.assets.find(c => c.is_native)
 
-    const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?
-        truncateDecimals(refuelAmount, nativeCurrency?.precision) : null
-    const refuelAmountInUsd = nativeCurrency && ((nativeCurrency?.usd_price || 1) * (truncatedRefuelAmount || 0)).toFixed(2)
+    // const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?
+    //     truncateDecimals(refuelAmount, nativeCurrency?.precision) : null
+    // const refuelAmountInUsd = nativeCurrency && ((nativeCurrency?.usd_price || 1) * (truncatedRefuelAmount || 0)).toFixed(2)
 
     let sourceAccountAddress = ""
-    if (hideFrom && account) {
-        sourceAccountAddress = shortenAddress(account);
-    }
-    else if (wallet) {
-        sourceAccountAddress = shortenAddress(wallet.address);
-    }
-    else if (from?.internal_name === KnownInternalNames.Exchanges.Coinbase && exchange_account_connected) {
-        sourceAccountAddress = shortenEmail(exchange_account_name, 10);
-    }
-    // else if (from?.isExchange) {
-    //     sourceAccountAddress = "Exchange"
+    // if (hideFrom && account) {
+    //     sourceAccountAddress = shortenAddress(account);
     // }
+    // else if (wallet) {
+    //     sourceAccountAddress = shortenAddress(wallet.address);
+    // }
+    // else if (from?.internal_name === KnownInternalNames.Exchanges.Coinbase && exchange_account_connected) {
+    //     sourceAccountAddress = shortenEmail(exchange_account_name, 10);
+    // }
+    // // else if (from?.isExchange) {
+    // //     sourceAccountAddress = "Exchange"
+    // // }
+    // else {
+    //     sourceAccountAddress = "Network"
+    // }
+
+    if (from?.internal_name === KnownInternalNames.Exchanges.Coinbase && exchange_account_connected) {
+        sourceAccountAddress = shortenEmail(exchange_account_name, 10);
+    } else if (from?.type === 'cex') {
+        sourceAccountAddress = "Exchange"
+    }
     else {
         sourceAccountAddress = "Network"
     }
@@ -82,6 +94,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
     const sourceCurrencyName = currency?.asset
     const destCurrencyName = layers?.find(n => n.internal_name === to?.internal_name)?.assets?.find(c => c?.asset === currency?.asset)?.asset || currency?.asset
 
+    console.log({requestedAmount, currency, requestedAmountInUsd})
     return (
         <div>
             <div className="font-normal flex flex-col w-full relative z-10 space-y-4">
@@ -97,7 +110,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                         </div>
                     </div>
                     <div className="flex flex-col">
-                        <p className=" text-sm">{truncateDecimals(requestedAmount, currency.precision)} {sourceCurrencyName}</p>
+                        <p className=" text-sm">{truncateDecimals(Number(requestedAmount), currency?.precision ?? 4)} {sourceCurrencyName}</p>
                         <p className=" text-sm flex justify-end">${requestedAmountInUsd}</p>
                     </div>
                 </div>
@@ -109,7 +122,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                             <p className="text-sm ">{shortenAddress(destAddress as string)}</p>
                         </div>
                     </div>
-                    {
+                    {/* {
                         fee != undefined && receiveAmount != undefined && fee >= 0 ?
                             <div className="flex flex-col justify-end">
                                 <p className=" text-sm">{truncateDecimals(receiveAmount, currency.precision)} {destCurrencyName}</p>
@@ -120,9 +133,21 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                                 <div className="h-[10px] my-[5px] w-20 animate-pulse rounded bg-gray-500" />
                                 <div className="h-[10px] my-[5px] w-10 animate-pulse rounded bg-gray-500 ml-auto" />
                             </div>
+                    } */}
+                    {
+                        receiveAmount != undefined ?
+                            <div className="flex flex-col justify-end">
+                                <p className=" text-sm">{truncateDecimals(receiveAmount, currency?.precision ?? 4)} {destCurrencyName}</p>
+                                <p className=" text-sm flex justify-end">${receiveAmountInUsd}</p>
+                            </div>
+                            :
+                            <div className="flex flex-col justify-end">
+                                <div className="h-[10px] my-[5px] w-20 animate-pulse rounded bg-gray-500" />
+                                <div className="h-[10px] my-[5px] w-10 animate-pulse rounded bg-gray-500 ml-auto" />
+                            </div>
                     }
                 </div>
-                {
+                {/* {
                     hasRefuel && refuelAmount !== undefined && nativeCurrency &&
                     <div
                         className="flex items-center justify-between w-full ">
@@ -137,7 +162,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                             <p className=" text-sm flex justify-end">${refuelAmountInUsd}</p>
                         </div>
                     </div>
-                }
+                } */}
             </div>
         </div>
     )
