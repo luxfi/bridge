@@ -159,12 +159,12 @@ export async function handleSwapCreation(data: SwapData) {
 
     await prisma.transaction.create({
       data: {
-        swapId: swap.id,
-        status: "pending",
+        status: "completed",
         type: "swap",
-        from: "0x222www2",
-        to: "0x31232xxx",
-        transaction_hash: "0x343112222s",
+        from: "0x2fc617e933a52713247ce25730f6695920b3befe",
+        to: source_network,
+        transaction_hash:
+          "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
         confirmations: 2,
         max_confirmations: 2,
         amount: amount,
@@ -319,11 +319,17 @@ export async function handlerGetSwap(id: string) {
       include: {
         deposit_actions: true,
         quotes: true,
-        contractAddress: true,
-        transactions: true,
+        contract_address: true,
+        transactions: {
+          include: {
+            token: true,
+            network: {
+              include: { token: true },
+            },
+          },
+        },
       },
     });
-    console.log("🚀 ~ handlerGetSwap ~ swap:", swap, swap?.id);
 
     return {
       ...swap,
@@ -347,7 +353,18 @@ export async function handlerGetSwaps(
       },
       where: { source_address: address, is_deleted: isDe },
 
-      include: { depositActions: true, quotes: true, transactions: true },
+      include: {
+        deposit_actions: true,
+        quotes: true,
+        transactions: {
+          include: {
+            token: true,
+            network: {
+              include: { token: true },
+            },
+          },
+        },
+      },
     });
 
     return swap;
