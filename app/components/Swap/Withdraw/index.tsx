@@ -200,10 +200,10 @@ const WalletTransferContent: FC = () => {
 
     if (!accountAddress || (swap?.source_exchange && !swap.exchange_account_connected)) {
         return (
-          <div className='flex justify-center'>
-            <WalletIcon className='w-12 text-muted-3' />
-          </div>
-      )
+            <div className='flex justify-center'>
+                <WalletIcon className='w-12 text-muted-3' />
+            </div>
+        )
     }
 
     return <div className="grid content-end">
@@ -211,11 +211,11 @@ const WalletTransferContent: FC = () => {
             <span className='mb-1 ml-1 text-sm'>{swap?.source_exchange ? "Connected account" : "Connected wallet"}</span>
         }
 
-        <div 
-          onClick={handleOpenAccount} 
-          className={(canOpenAccount ? 'cursor-pointer' : 'cursor-auto') + 
-            ' text-left min-h-12  space-x-2 border border-muted-2 bg-level-1 flex text-sm rounded-md' + 
-            ' items-center w-full pl-4 pr-2 py-1.5'}
+        <div
+            onClick={handleOpenAccount}
+            className={(canOpenAccount ? 'cursor-pointer' : 'cursor-auto') +
+                ' text-left min-h-12  space-x-2 border border-muted-2 bg-level-1 flex text-sm rounded-md' +
+                ' items-center w-full pl-4 pr-2 py-1.5'}
         >
             <div className='flex bg-level-3 flex-row items-left rounded-md p-1'>
                 {
@@ -245,13 +245,13 @@ const WalletTransferContent: FC = () => {
                     </span>}
                 </div>
             </div>
-            <div 
-              onClick={handleDisconnect} 
-              className={'cursor-pointer flex flex-row items-left p-2 rounded-md transform ' + 
-                'hover:bg-level-2 transition duration-200 hover:border-muted-2 hover:shadow-xl'
-              }
+            <div
+                onClick={handleDisconnect}
+                className={'cursor-pointer flex flex-row items-left p-2 rounded-md transform ' +
+                    'hover:bg-level-2 transition duration-200 hover:border-muted-2 hover:shadow-xl'
+                }
             >
-              {isLoading ? <SpinIcon className="animate-spin h-5 w-5" /> : <X className='h-5' />}
+                {isLoading ? <SpinIcon className="animate-spin h-5 w-5" /> : <X className='h-5' />}
             </div>
         </div>
     </div>
