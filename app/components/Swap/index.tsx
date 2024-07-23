@@ -20,55 +20,47 @@ const SwapDetails: FC<Props> = ({ type }) => {
     const swapStatus = swap?.status;
     const storedWalletTransactions = useSwapTransactionStore()
 
-    console.log("swap status ===============>", swap?.status, swap)
+    console.log("swap ===>", {swap})
 
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const storedWalletTransaction = storedWalletTransactions.swapTransactions?.[swap?.id || '']
 
     const sourceNetwork = settings.layers.find(l => l.internal_name === swap?.source_network)
-    const currency = sourceNetwork?.assets.find(c => c.asset === swap?.source_network_asset)
+    const currency = sourceNetwork?.assets.find(c => c.asset === swap?.source_asset)
 
-    if (!swap) return <>
-        <div className="w-full h-[430px]">
-            <div className="animate-pulse flex space-x-4">
-                <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
+
+    if (!swap) {
+        return (
+            <div className="w-full h-[430px]">
+                <div className="animate-pulse flex space-x-4">
+                    <div className="flex-1 space-y-6 py-1">
+                        <div className="h-32 bg-level-1 rounded-lg"></div>
+                        <div className="h-40 bg-level-1 rounded-lg"></div>
+                        <div className="h-12 bg-level-1 rounded-lg"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </>
-
-    if (!swap) return <>
-        <div className="w-full h-[430px]">
-            <div className="animate-pulse flex space-x-4">
-                <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
-                </div>
-            </div>
-        </div>
-    </>
-
-    return (
-        <>
-            <Container type={type}>
+        )
+    } else {
+        console.log(swapStatus)
+        return (
+            <>
+                <Container type={type}>
+                    {
+                        ((swapStatus === SwapStatus.UserTransferPending
+                            && !(swapInputTransaction || (storedWalletTransaction && storedWalletTransaction.status !== PublishedSwapTransactionStatus.Error)))) ?
+                            <Withdraw /> : <Processing />
+                    }
+                </Container>
                 {
-                    ((swapStatus === SwapStatus.UserTransferPending
-                        && !(swapInputTransaction || (storedWalletTransaction && storedWalletTransaction.status !== PublishedSwapTransactionStatus.Error)))) ?
-                        <Withdraw /> : <Processing />
+                    process.env.NEXT_PUBLIC_SHOW_GAS_DETAILS === 'true'
+                    && sourceNetwork
+                    && currency &&
+                    <GasDetails network={sourceNetwork} currency={currency} />
                 }
-            </Container>
-            {
-                process.env.NEXT_PUBLIC_SHOW_GAS_DETAILS === 'true'
-                && sourceNetwork
-                && currency &&
-                <GasDetails network={sourceNetwork} currency={currency} />
-            }
-        </>
-    )
+            </>
+        )
+    }
 }
 
 const Container = ({ type, children }: Props & {
