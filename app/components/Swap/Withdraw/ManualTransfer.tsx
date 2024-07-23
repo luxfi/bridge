@@ -20,19 +20,46 @@ import { Layer } from "../../../Models/Layer";
 import { Exchange } from "../../../Models/Exchange";
 import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 
+const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) : NetworkCurrency | undefined => {
+    if (!exchange || !asset) {
+        return undefined;
+    } else {
+        const currency = exchange?.currencies?.find(c => c.asset === asset);
+        const layer = layers.find(n => n.internal_name === currency?.network);
+        return layer?.assets?.find(a => a?.asset === asset)
+    }
+}
+
+const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string) : string | undefined => {
+    if (!exchange || !asset) {
+        return undefined;
+    } else {
+        const currency = exchange?.currencies?.find(c => c.asset === asset);
+        const layer = layers.find(n => n.internal_name === currency?.network);
+        return layer?.internal_name
+    }
+}
+
 const ManualTransfer: FC = () => {
     const { swap } = useSwapDataState()
     const hintsStore = useSwapDepositHintClicked()
     const hintClicked = hintsStore.swapTransactions[swap?.id || ""]
-    const { source_network: source_network, source_asset } = swap || {}
+    const { 
+        source_network, 
+        source_exchange,
+        source_asset 
+    } = swap || {}
 
-    console.log({source_asset})
+    const { layers, exchanges, resolveImgSrc } = useSettingsState()
+    const sourceLayer = layers.find(n => n.internal_name === source_network)
+    const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
+    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork (layers, sourceExchange, source_asset);
 
     const client = new BridgeApiClient()
     const {
         data: generatedDeposit,
         isLoading
-    } = useSWR<ApiResponse<DepositAddress>>(`/deposit_addresses/${source_network}`,
+    } = useSWR<ApiResponse<DepositAddress>>(`/deposit_addresses/${source_network_internal_name}`,
         client.fetcher,
         {
             dedupingInterval: 60000,
@@ -73,16 +100,6 @@ const ManualTransfer: FC = () => {
 
 }
 
-const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) : NetworkCurrency | undefined => {
-    if (!exchange || !asset) {
-        return undefined;
-    } else {
-        const currency = exchange?.currencies?.find(c => c.asset === asset);
-        const layer = layers.find(n => n.internal_name === currency?.network);
-        return layer?.assets?.find(a => a?.asset === asset)
-    }
-}
-
 const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> = ({ address: existingDepositAddress, shouldGenerateAddress }) => {
 
     const { layers, exchanges, resolveImgSrc } = useSettingsState()
@@ -101,10 +118,12 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     const sourceLayer = layers.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
     const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset (layers, sourceExchange, source_asset)
+    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork (layers, sourceExchange, source_asset);
 
     const destinationLayer = layers?.find(l => l.internal_name === destination_network)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange)
     const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, destinationExchange, destination_asset)
+
 
     console.log("TransferInvoice => ", { 
         sourceLayer, 
@@ -130,13 +149,13 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     // }, [swap])
 
     const client = new BridgeApiClient()
-    const generateDepositParams = shouldGenerateAddress ? [sourceLayer?.internal_name ?? sourceExchange?.internal_name ?? null] : null
+    const generateDepositParams = shouldGenerateAddress ? [source_network_internal_name] : null
 
     const {
         data: generatedDeposit
     } = useSWR<ApiResponse<DepositAddress>>(generateDepositParams, ([network]) => client.GenerateDepositAddress(network), { dedupingInterval: 60000 })
 
-    console.log({generateDepositParams})
+    console.log({shouldGenerateAddress, generateDepositParams})
 
     //TODO pick manual transfer minAllowedAmount when its available
     const requested_amount = Number(minAllowedAmount) > Number(swap?.requested_amount) ? minAllowedAmount : swap?.requested_amount
