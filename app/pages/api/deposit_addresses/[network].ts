@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { handlerGetSwap } from "../swapAction";
+import { mainnetSettings, testnetSettings } from "../../../settings";
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,9 +10,12 @@ export default async function handler(
   const { network } = req.query;
 
   // Get version from query parameter
-  const version = req.query.version;
+  const { version } = req.query;
+  const isMainnet = version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  // settings
+  const settings = isMainnet ? mainnetSettings : testnetSettings;
+  const { exchanges, networks } = settings.data;
   console.log("network for deposit address ====>", network);
-  res.setHeader("Access-Control-Allow-Origin", "*");
 
   res.status(200).json({ data: {
     type: "evm",

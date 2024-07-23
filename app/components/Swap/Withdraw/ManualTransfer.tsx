@@ -24,7 +24,9 @@ const ManualTransfer: FC = () => {
     const { swap } = useSwapDataState()
     const hintsStore = useSwapDepositHintClicked()
     const hintClicked = hintsStore.swapTransactions[swap?.id || ""]
-    const { source_network: source_network } = swap || {}
+    const { source_network: source_network, source_asset } = swap || {}
+
+    console.log({source_asset})
 
     const client = new BridgeApiClient()
     const {
