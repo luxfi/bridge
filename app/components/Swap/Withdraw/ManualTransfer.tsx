@@ -104,7 +104,6 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange)
     const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, destinationExchange, destination_asset)
 
-
     console.log("TransferInvoice => ", { 
         sourceLayer, 
         sourceExchange, 
