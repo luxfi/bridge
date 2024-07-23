@@ -209,7 +209,7 @@ function TransactionsHistory() {
                           source_network: source_network_internal_name,
                           destination_exchange:
                             destination_exchange_internal_name,
-                          source_network_asset,
+                          source_asset,
                         } = swap;
 
                         const source = layers.find(
@@ -217,7 +217,7 @@ function TransactionsHistory() {
                             e.internal_name === source_network_internal_name
                         );
                         const source_currency = source?.assets?.find(
-                          (c) => c.asset === source_network_asset
+                          (c) => c.asset === source_asset
                         );
                         const destination = layers.find(
                           (n) =>
@@ -309,7 +309,7 @@ function TransactionsHistory() {
                                     </span>
                                   )}
                                   <span className="ml-1">
-                                    {swap.destination_network_asset}
+                                    {swap.destination_asset}
                                   </span>
                                 </div>
                                 <ChevronRight className="h-5 w-5" />
