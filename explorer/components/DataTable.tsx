@@ -112,7 +112,7 @@ const DataTable: React.FC = () => {
         }}
         className="cursor-pointer hover:bg-level-1"
       >
-        <td className="whitespace-nowrap border-l border-r border-b border-muted-4 py-2 px-3 text-sm font-medium flex flex-col">
+        <td className="whitespace-nowrap border-l border-r border-b border-[#404040] py-2 px-3 text-sm font-medium flex flex-col">
           <div className="flex flex-row items-center py-1 rounded">
             <StatusPill swap={swap} />
           </div>
@@ -120,7 +120,7 @@ const DataTable: React.FC = () => {
             {new Date(swap.created_date).toLocaleString()}
           </span>
         </td>
-        <td className="whitespace-nowrap border-r border-b border-muted-4 px-3 py-2 text-sm text-muted ">
+        <td className="whitespace-nowrap border-r border-b border-[#404040] px-3 py-2 text-sm text-muted ">
           <div className="flex flex-row">
             <div className="flex flex-col items-start mr-4">
               <span className="text-sm md:text-base font-normal place-items-end mb-1">
@@ -188,7 +188,7 @@ const DataTable: React.FC = () => {
             </div>
           </div>
         </td>
-        <td className="whitespace-nowrap border-b border-muted-4 px-3 py-2 text-sm text-muted">
+        <td className="whitespace-nowrap border-b border-[#404040] px-3 py-2 text-sm text-muted">
           <div className="flex flex-row">
             <div className="flex flex-col items-start">
               <span className="text-sm md:text-base font-normal place-items-end mb-1">
@@ -274,7 +274,7 @@ const DataTable: React.FC = () => {
             </div>
           </div>
         </td>
-        <td className="whitespace-nowrap border-b border-muted-4 text-sm mr-4 text-foreground">
+        <td className="whitespace-nowrap border-b border-[#404040] text-sm mr-4 text-foreground">
           <ChevronRight />
         </td>
       </tr>
@@ -283,31 +283,31 @@ const DataTable: React.FC = () => {
 
   return (
     <div className="w-full my-4 h-full">
-      <div className="max-h-[65vh] w-full align-middle border-b border-muted-4 overflow-y-auto dataTable">
+      <div className="max-h-[65vh] w-full align-middle border-b border-[#404040] overflow-y-auto dataTable">
         <table className="border-separate border-spacing-0 w-full relative gap-0">
           <thead className="sticky top-0 z-10 bg-background">
             <tr>
               <th
                 scope="col"
-                className="cursor-default rounded-tl-lg border-muted-4 border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
+                className="cursor-default rounded-tl-lg border-[#404040] border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="cursor-default border-muted-4 border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
+                className="cursor-default border-[#404040] border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
               >
                 Source
               </th>
               <th
                 scope="col"
-                className="cursor-default border-muted-4 border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted "
+                className="cursor-default border-[#404040] border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted "
               >
                 Destination
               </th>
               <th
                 scope="col"
-                className="border-muted-4 border-b border-t px-4 py-3.5 text-left text-sm font-semibold text-muted "
+                className="border-[#404040] border-b border-t px-4 py-3.5 text-left text-sm font-semibold text-muted "
               />
             </tr>
           </thead>

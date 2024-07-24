@@ -219,7 +219,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
             <label htmlFor={name} className="block font-semibold text-xs">
                 {label}
             </label>
-            <div className="border border-[#404040]-4 bg-level-1 rounded-lg mt-1.5 pb-2">
+            <div className="border border-[#404040] bg-level-1 rounded-lg mt-1.5 pb-2">
                 <div ref={ref}>
                     <div className="w-full">
                         <CommandSelectWrapper

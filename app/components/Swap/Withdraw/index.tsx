@@ -113,7 +113,7 @@ const Withdraw: FC = () => {
             <Widget.Content>
                 <div className="w-full flex flex-col justify-between  ">
                     <div className='grid grid-cols-1 gap-4 '>
-                        <div className="bg-level-1 rounded-lg px-3 py-4 border border-muted-2 w-full relative z-10 space-y-4">
+                        <div className="bg-level-1 rounded-lg px-3 py-4 border border-[#404040] w-full relative z-10 space-y-4">
                             <SwapSummary />
                         </div>
                         <span>
@@ -214,7 +214,7 @@ const WalletTransferContent: FC = () => {
         <div
             onClick={handleOpenAccount}
             className={(canOpenAccount ? 'cursor-pointer' : 'cursor-auto') +
-                ' text-left min-h-12  space-x-2 border border-muted-2 bg-level-1 flex text-sm rounded-md' +
+                ' text-left min-h-12  space-x-2 border border-[#404040] bg-level-1 flex text-sm rounded-md' +
                 ' items-center w-full pl-4 pr-2 py-1.5'}
         >
             <div className='flex bg-level-3 flex-row items-left rounded-md p-1'>
@@ -248,7 +248,7 @@ const WalletTransferContent: FC = () => {
             <div
                 onClick={handleDisconnect}
                 className={'cursor-pointer flex flex-row items-left p-2 rounded-md transform ' +
-                    'hover:bg-level-2 transition duration-200 hover:border-muted-2 hover:shadow-xl'
+                    'hover:bg-level-2 transition duration-200 hover:border-[#404040] hover:shadow-xl'
                 }
             >
                 {isLoading ? <SpinIcon className="animate-spin h-5 w-5" /> : <X className='h-5' />}

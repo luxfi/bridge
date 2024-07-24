@@ -76,7 +76,7 @@ const ManualTransfer: FC = () => {
     }, [swap, hintsStore])
 
     return (
-        <div className='rounded-md bg-level-1 border border-muted-2 w-full h-full items-center relative'>
+        <div className='rounded-md bg-level-1 border border-[#404040] w-full h-full items-center relative'>
             <div className={!hintClicked ? "absolute w-full h-full flex flex-col items-center px-3 pb-3 text-center" : "hidden"}>
                 <div className="flex flex-col items-center justify-center h-full pb-2">
                     <div className="max-w-xs">
@@ -168,12 +168,12 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     //     setSelectedAssetNetwork(n)
     // }, [])
 
-    return <div className='divide-y w-full divide-muted-2  h-full'>
+    return <div className='divide-y w-full divide-[#404040]  h-full'>
         {/* {source_exchange && <div className={`w-full relative rounded-md px-3 py-3 shadow-sm border-muted-3 border bg-level-1 flex flex-col items-center justify-center gap-2`}>
             <ExchangeNetworkPicker onChange={handleChangeSelectedNetwork} />
         </div>
         } */}
-        <div className="flex divide-x divide-muted-2">
+        <div className="flex divide-x divide-[#404040]">
             <BackgroundField Copiable={true} QRable={true} header={"Deposit address"} toCopy={depositAddress} withoutBorder>
                 <div>
                     {
@@ -197,7 +197,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         </div>
         {
             (source_network === KnownInternalNames.Networks.LoopringMainnet || source_network === KnownInternalNames.Networks.LoopringGoerli) &&
-            <div className='grid grid-cols-3 divide-x divide-muted-2'>
+            <div className='grid grid-cols-3 divide-x divide-[#404040]'>
                 <div className="col-span-2">
                     <BackgroundField header={'Send type'} withoutBorder>
                         <div className='flex items-center text-xs sm:text-sm'>
@@ -216,7 +216,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
             </div>
         }
 
-        <div className='flex divide-x divide-muted-2'>
+        <div className='flex divide-x divide-[#404040]'>
             <BackgroundField Copiable={true} toCopy={requested_amount} header={'Amount'} withoutBorder>
                 <p>
                     {requested_amount}
@@ -313,7 +313,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
 
 
 const Sceleton = () => {
-    return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-level-2 border border-muted-2">
+    return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-level-2 border border-[#404040]">
         <div className="flex-1 space-y-6 py-1 p-8 pt-4 items-center">
             <div className="h-2 bg-level-4 rounded self-center w-16 m-auto"></div>
             <div className="space-y-3">
