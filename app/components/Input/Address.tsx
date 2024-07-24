@@ -133,7 +133,7 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                   <label htmlFor={name}>Address</label>
                   {isPartnerWallet && partner && <span className='truncate text-sm text-indigo-200'> ({partner?.display_name})</span>}
                   <div className="flex flex-wrap flex-col md:flex-row">
-                      <div className="relative flex grow rounded-lg shadow-sm mt-1.5 bg-level-1 border-muted-2 border focus-within:ring-0 focus-within:ring-foreground focus-within:border-foreground">
+                      <div className="relative flex grow rounded-lg shadow-sm mt-1.5 bg-level-1 border-[#404040] border focus-within:ring-0 focus-within:ring-foreground focus-within:border-foreground">
                           {isPartnerWallet &&
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                   {
@@ -235,7 +235,7 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                   && destinationAsset
                   && values.toExchange
                   &&
-                  <div className='text-left p-4 bg-level-1 rounded-lg border border-muted-2'>
+                  <div className='text-left p-4 bg-level-1 rounded-lg border border-[#404040]'>
                       <div className="flex items-center">
                           <Info className='h-5 w-5 mr-3' />
                           <label className="block text-sm md:text-base font-medium leading-6">How to find your {values.toExchange.display_name} deposit address</label>
@@ -298,7 +298,7 @@ const Address: FC<Input> = forwardRef<HTMLInputElement, Input>(function Address
                             return (
                               <RadioGroup.Description
                                   as="span"
-                                  className={`space-x-2 flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 border border-muted-4 hover:border-muted-2 hover:bg-level-1 hover:shadow-xl ${checked && 'border-muted-3'}`}
+                                  className={`space-x-2 flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 border border-[#404040] hover:border-[#404040] hover:bg-level-1 hover:shadow-xl ${checked && 'border-muted-3'}`}
                               >
                                 <div className='flex bg-level-3  flex-row items-left rounded-md p-2'>
                                     <AddressIcon address={a.address} size={20} />

@@ -33,7 +33,7 @@ const Header: FC<{
       {activeTabId === tab.id && (
         <motion.span
             layoutId="bubble"
-            className="absolute inset-0 z-29 bg-level-1/40  border-2 border-muted-2"
+            className="absolute inset-0 z-29 bg-level-1/40  border-2 border-[#404040]"
             style={{ borderRadius: '6px' }}
             transition={{ type: "spring", bounce: 0.1, duration: 0.3 }}
         />

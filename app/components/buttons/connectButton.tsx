@@ -66,7 +66,7 @@ const ConnectButton = ({
     return isMobile ? (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger aria-label="Connect wallet">{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] text-muted bg-level-1 border-muted-2">
+            <DialogContent className="sm:max-w-[425px] text-muted bg-level-1 border-[#404040]">
                 <DialogHeader>
                     <DialogTitle className="text-center">
                         Link a new wallet
@@ -110,7 +110,7 @@ const ConnectButton = ({
             >
                 {children}
             </PopoverTrigger>
-            <PopoverContent className="flex flex-col items-start gap-2 w-fit bg-level-1 border-muted-2">
+            <PopoverContent className="flex flex-col items-start gap-2 w-fit bg-level-1 border-[#404040]">
                 {filteredConnectors.map((connector, index) => (
                     <button
                         type="button"

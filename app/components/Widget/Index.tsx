@@ -33,7 +33,7 @@ const Widget = ({ children, className, hideMenu }: Props) => {
   const sandbox = BridgeApiClient.apiVersion === 'sandbox'
 
   return <>
-    <div className='rounded-lg w-full sm:overflow-hidden relative border border-muted-4'>
+    <div className='rounded-lg w-full sm:overflow-hidden relative border border-[#404040]'>
     {sandbox && (
       <div className="relative z-20 pb-2">
         <div className="h-1 bg-secondary" />

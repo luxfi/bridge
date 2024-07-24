@@ -67,7 +67,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
                     >Learn more</a>
                 </span>
             </p>
-            <div className="bg-background divide-y divide-muted-3 rounded-lg shadow-lg border border-muted-4 hover:border-muted-2 transition duration-200">
+            <div className="bg-background divide-y divide-muted-3 rounded-lg shadow-lg border border-[#404040] hover:border-[#404040] transition duration-200">
                 {!campaignIsEnded &&
                     <BackgroundField header={<span className="flex justify-between"><span className="flex items-center"><span>Pending Earnings&nbsp;</span><ClickTooltip text={`${campaign?.asset} tokens that will be airdropped periodically.`} /> </span><span>Next Airdrop</span></span>} withoutBorder>
                         <div className="flex justify-between w-full text-2xl">
@@ -118,7 +118,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
             </div>
 
         </div>
-        <div className=" rounded-lg shadow-lg border border-muted-4 hover:border-muted-2 transition duration-200">
+        <div className=" rounded-lg shadow-lg border border-[#404040] hover:border-[#404040] transition duration-200">
             <BackgroundField header={
                 <>
                     <p className="flex items-center"><span>{campaign?.asset} pool</span>
@@ -138,7 +138,7 @@ const Rewards: FC<Props> = ({ campaign }) => {
             payouts.length > 0 &&
             <div className="space-y-1">
                 <p className="font-bold text-lg text-left">Payouts</p>
-                <div className="  divide-y divide-muted-3 rounded-lg shadow-lg border border-muted-4 hover:border-muted-2 transition duration-200">
+                <div className="  divide-y divide-muted-3 rounded-lg shadow-lg border border-[#404040] hover:border-[#404040] transition duration-200">
                     <div className="inline-block min-w-full align-middle">
                         <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                             <table className="min-w-full divide-y divide-muted-3">
