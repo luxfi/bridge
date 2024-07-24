@@ -18,7 +18,7 @@ const GlobalFooter = () => {
         social: [
             {
                 name: 'Twitter',
-                href: 'https://twitter.com/luxdefi',
+                href: 'https://twitter.com/luxfi',
                 icon: () => (
                     <TwitterLogo className="h-6 w-6" aria-hidden="true" />
                 ),
@@ -39,7 +39,7 @@ const GlobalFooter = () => {
             },
             {
                 name: 'YouTube',
-                href: 'https://www.youtube.com/@luxdefi',
+                href: 'https://www.youtube.com/@luxfi',
                 icon: () => (
                     <YoutubeLogo className="h-6 w-6" aria-hidden="true" />
                 ),

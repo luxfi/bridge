@@ -56,8 +56,11 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
     const source = hideFrom ? partner : from
     const destination = hideTo ? partner : to
 
-    const requestedAmountInUsd = (currency?.usd_price ?? 1 * Number(requestedAmount)).toFixed(2)
-    const receiveAmountInUsd = receiveAmount ? (currency?.usd_price ?? 1 * receiveAmount).toFixed(2) : undefined
+    const apiClient = new BridgeApiClient()
+    const { data: sourceAssetPriceData, isLoading } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${currency?.asset}`, apiClient.fetcher);
+
+    const requestedAmountInUsd = (Number(sourceAssetPriceData?.data?.price) * Number(requestedAmount)).toFixed(2)
+    const receiveAmountInUsd = receiveAmount ? (Number(sourceAssetPriceData?.data?.price) * receiveAmount).toFixed(2) : undefined
     // const nativeCurrency = refuelAmount && from.assets.find(c => c.is_native)
 
     // const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?

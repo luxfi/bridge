@@ -194,7 +194,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
         onClick={(e) => router.push(`/${inputTransaction?.transaction_hash}`)}
         className="hover:bg-level-2 hover:cursor-pointer"
       >
-        <td className="whitespace-nowrap border-l border-r border-b border-muted-4 py-2 px-3 text-sm font-medium">
+        <td className="whitespace-nowrap border-l border-r border-b border-[#404040] py-2 px-3 text-sm font-medium">
           <Link
             href={`/${inputTransaction?.transaction_hash}`}
             onClick={(e) => e.stopPropagation()}
@@ -207,7 +207,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
             {new Date(swap.created_date).toLocaleString()}
           </div>
         </td>
-        <td className="whitespace-nowrap border-r border-b border-muted-4 px-3 py-2 text-sm ">
+        <td className="whitespace-nowrap border-r border-b border-[#404040] px-3 py-2 text-sm ">
           <div className="flex flex-row">
             <div className="flex flex-col items-start ">
               <span className="text-sm md:text-base font-normal text-socket-ternary place-items-end mb-1">
@@ -277,7 +277,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
             </div>
           </div>
         </td>
-        <td className="whitespace-nowrap border-b border-muted-4 px-3 py-2 text-sm ">
+        <td className="whitespace-nowrap border-b border-[#404040] px-3 py-2 text-sm ">
           <div className="flex flex-row">
             <div className="flex flex-col items-start ">
               <span className="text-sm md:text-base font-normal text-socket-ternary place-items-end mb-1">
@@ -362,7 +362,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
         </td>
         <td
           className={
-            "whitespace-nowrap border-b border-muted-4 text-sm mr-4 " +
+            "whitespace-nowrap border-b border-[#404040] text-sm mr-4 " +
             (resultsCouldScroll ? "" : "border-r ")
           }
         >
@@ -385,7 +385,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
       )}
       <div className="flow-root w-full">
         <div
-          className="p-4 mb-4 flex gap-1 rounded-lg border border-muted-4 border-1"
+          className="p-4 mb-4 flex gap-1 rounded-lg border border-[#404040] border-1"
           style={{ width: "fit-content" }}
         >
           <span className="font-bold mr-1 ">Address:</span>
@@ -413,26 +413,26 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                 <tr>
                   <th
                     scope="col"
-                    className="cursor-default rounded-tl-lg border-muted-4 border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
+                    className="cursor-default rounded-tl-lg border-[#404040] border-l border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
                   >
                     Source Tx Hash
                   </th>
                   <th
                     scope="col"
-                    className="cursor-default border-muted-4 border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
+                    className="cursor-default border-[#404040] border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted"
                   >
                     Source
                   </th>
                   <th
                     scope="col"
-                    className="cursor-default border-muted-4 border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted "
+                    className="cursor-default border-[#404040] border-b border-t px-3 py-3.5 text-left text-sm font-semibold text-muted "
                   >
                     Destination
                   </th>
                   <th
                     scope="col"
                     className={
-                      "border-muted-4 border-b border-t px-4 py-3.5 text-left text-sm font-semibold text-muted " +
+                      "border-[#404040] border-b border-t px-4 py-3.5 text-left text-sm font-semibold text-muted " +
                       (Number(filteredData?.length) > 5
                         ? ""
                         : "border-r rounded-tr-lg ")

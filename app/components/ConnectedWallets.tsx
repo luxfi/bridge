@@ -136,7 +136,7 @@ const ConnectedWalletsDialog = ({ openDialog, setOpenDialog }: { openDialog: boo
                 </DialogHeader>
                 <div className="flex flex-col justify-start space-y-2">
                 {wallets.map((wallet, index) => (
-                  <div key={index} className="w-full relative items-center justify-between gap-2 flex rounded-md outline-none bg-level-1 p-3 border border-muted-2 ">
+                  <div key={index} className="w-full relative items-center justify-between gap-2 flex rounded-md outline-none bg-level-1 p-3 border border-[#404040] ">
                       <div className="flex space-x-4 items-center">
                       {wallet.connector && (
                         <div className="inline-flex items-center relative">

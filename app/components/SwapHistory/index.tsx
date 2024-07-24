@@ -154,7 +154,7 @@ function TransactionsHistory() {
   };
 
   return (
-    <div className="bg-background border border-muted-4  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]">
+    <div className="bg-background border border-[#404040]  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]">
       <HeaderWithMenu goBack={goBack} />
       {page == 0 && loading ? (
         <SwapHistoryComponentSceleton />
@@ -177,7 +177,7 @@ function TransactionsHistory() {
                   </div>
                 )}
                 <div className="max-h-[450px] styled-scroll overflow-y-auto ">
-                  <table className="w-full divide-y divide-muted-2">
+                  <table className="w-full divide-y divide-[#404040]">
                     <thead className="text-foreground">
                       <tr>
                         <th
@@ -234,7 +234,7 @@ function TransactionsHistory() {
                           >
                             <td
                               className={classNames(
-                                index === 0 ? "" : "border-t border-muted-2",
+                                index === 0 ? "" : "border-t border-[#404040]",
                                 "relative text-sm  table-cell"
                               )}
                             >
@@ -269,7 +269,7 @@ function TransactionsHistory() {
                             </td>
                             <td
                               className={classNames(
-                                index === 0 ? "" : "border-t border-muted-2",
+                                index === 0 ? "" : "border-t border-[#404040]",
                                 "relative text-sm table-cell"
                               )}
                             >
@@ -279,7 +279,7 @@ function TransactionsHistory() {
                             </td>
                             <td
                               className={classNames(
-                                index === 0 ? "" : "border-t border-muted-2",
+                                index === 0 ? "" : "border-t border-[#404040]",
                                 "px-3 py-3.5 text-sm table-cell"
                               )}
                             >
