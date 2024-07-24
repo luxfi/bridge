@@ -65,7 +65,7 @@ const Item: React.FC<{
 
 const Footer: React.FC<PropsWithChildren> = ({ children }) => (
   <div className={
-      'text-muted bg-background text-base border-t border-muted-2 ' + 
+      'text-muted bg-background text-base border-t border-[#404040] ' + 
     'sticky inset-x-0 bottom-0 z-30 ' + 
     'shadow-widget-footer px-6 pt-4 w-full ' +
     'flex flex-row justify-center'

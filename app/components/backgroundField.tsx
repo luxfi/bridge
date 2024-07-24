@@ -36,7 +36,7 @@ const BackgroundField: FC< {
                     <div className="animate-pulse w-full h-full mx-auto rotate-180 opacity-30 blur-lg filter" style={{ background: 'linear-gradient(90deg, #E42575 -0.55%, #A6335E 22.86%, #E42575 48.36%, #ED6EA3 73.33%, #E42575 99.34%)' }}></div>
                 </div>
             }
-            <div className={`w-full relative px-3 py-3 shadow-sm ${withoutBorder ? '' : 'border-muted-2 rounded-md border bg-level-1'}`}>
+            <div className={`w-full relative px-3 py-3 shadow-sm ${withoutBorder ? '' : 'border-[#404040] rounded-md border bg-level-1'}`}>
                 {
                     header && <p className="block font-semibold text-sm ">
                         {header}

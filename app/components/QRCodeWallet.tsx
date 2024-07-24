@@ -40,7 +40,7 @@ const QRCodeModal: FC<QRCodeModalProps> = ({ qrUrl, className, iconSize, iconCla
                         </TooltipContent>
                     </Tooltip>
                 </PopoverTrigger>
-                <PopoverContent className="w-full bg-[#000000] p-4" side="left">
+                <PopoverContent className="w-full border-[#404040] bg-[#000000] p-4" side="left">
                     <motion.div whileHover={{
                         scale: 1.2,
                         transition: { duration: 0.5 },

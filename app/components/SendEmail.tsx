@@ -104,7 +104,7 @@ const SendEmail: FC<Props> = ({ onSend, disclosureLogin }) => {
                         placeholder="john@example.com"
                         autoComplete="email"
                         type="email"
-                        className="h-12 pb-1 pt-0 text-muted  focus:ring-muted focus:border-muted border-muted-4 pr-42 block
+                        className="h-12 pb-1 pt-0 text-muted  focus:ring-muted focus:border-muted border-[#404040] pr-42 block
                           placeholder:text-sm placeholder:font-normal placeholder:text-muted-2 bg-level-1 w-full rounded-md"
                     />
                   )}
@@ -137,7 +137,7 @@ const SendEmail: FC<Props> = ({ onSend, disclosureLogin }) => {
                                   placeholder="john@example.com"
                                   autoComplete="email"
                                   type="email"
-                                  className="h-12 pb-1 pt-0 text-muted  focus:ring-muted-1 focus:border-muted-2 border-muted-4 pr-42 block
+                                  className="h-12 pb-1 pt-0 text-muted  focus:ring-muted-1 focus:border-[#404040] border-[#404040] pr-42 block
                                placeholder:text-sm placeholder:font-normal placeholder:text-muted-2 bg-level-1 w-full rounded-md"
                               />
                           )}

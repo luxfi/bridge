@@ -63,7 +63,7 @@ const Component: FC<Props> = ({ campaign }) => {
                 </button>
             </div>}
         <p className="text-sm ">Users who earn the most throughout the program will be featured here.</p>
-        <div className=" border border-muted-4 hover:border-muted-2 transition duration-200 rounded-lg shadow-lg">
+        <div className=" border border-[#404040] hover:border-[#404040] transition duration-200 rounded-lg shadow-lg">
             <div className="p-3">
                 {leaderboard?.leaderboard?.length > 0 ? <div className="space-y-6">
                     {
@@ -144,7 +144,7 @@ const Component: FC<Props> = ({ campaign }) => {
             </div >
         </div >
         <Modal height="full" header='Leaderboard' show={openTopModal} setShow={setOpenTopModal} >
-            <div className="bg-background border border-muted-4 mt-2 hover:border-muted-2 transition duration-200 rounded-lg shadow-lg text-muted">
+            <div className="bg-background border border-[#404040] mt-2 hover:border-[#404040] transition duration-200 rounded-lg shadow-lg text-muted">
                 <div className="p-3">
                     <div className="space-y-6">
                         {

@@ -134,7 +134,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                                 onChange={e => {
                                                     /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                                 }}
-                                                className="leading-none h-12 text-2xl pl-5   focus:ring-muted text-center focus:border-muted border-muted-2 block
+                                                className="leading-none h-12 text-2xl pl-5   focus:ring-muted text-center focus:border-muted border-[#404040] block
                                     placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                             />
                                         </div>
@@ -182,7 +182,7 @@ const VerifyEmailCode: FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclo
                                             onChange={e => {
                                                 /^[0-9]*$/.test(e.target.value) && handleChange(e)
                                             }}
-                                            className="leading-none h-12 text-2xl pl-5   focus:ring-secondary text-center focus:border-secondary border-muted-2 block
+                                            className="leading-none h-12 text-2xl pl-5   focus:ring-secondary text-center focus:border-secondary border-[#404040] block
                                     placeholder:text-2xl placeholder:text-center tracking-widest placeholder:font-normal placeholder:opacity-50 bg-level-1  w-full font-semibold rounded-md placeholder-muted-2"
                                         />
                                         <span className="flex text-sm leading-6 items-center mt-1.5">
