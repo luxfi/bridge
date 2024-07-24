@@ -13,6 +13,6 @@ export const getTokenPrice = async (token_id: string) => {
     return Number(data.amount);
   } catch (err) {
     console.log(err)
-    return 0;
+    return 1;
   }
 }
