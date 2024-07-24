@@ -48,7 +48,7 @@ const Widget = ({ children, className, hideMenu }: Props) => {
       <div className="relative px-6">
         <div className="flex items-start" ref={wrapper}>
           <div className='flex flex-nowrap grow'>
-            <div className={'w-full pb-6 flex flex-col justify-between space-y-5 h-full' + className ?? ''}>
+            <div className={'w-full pb-6 flex flex-col justify-between space-y-1 h-full' + className ?? ''}>
               {children}
             </div>
           </div>

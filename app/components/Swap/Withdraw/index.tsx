@@ -112,7 +112,7 @@ const Withdraw: FC = () => {
         <>
             <Widget.Content>
                 <div className="w-full flex flex-col justify-between  ">
-                    <div className='grid grid-cols-1 gap-4 '>
+                    <div className='grid grid-cols-1'>
                         <div className="bg-level-1 rounded-lg px-3 py-4 border border-[#404040] w-full relative z-10 space-y-4">
                             <SwapSummary />
                         </div>
