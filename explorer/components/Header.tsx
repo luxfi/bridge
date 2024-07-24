@@ -19,7 +19,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="max-w-6xl w-full mx-auto">
-      {
+      {/* {
         version === 'sandbox' &&
         <div className='px-6 lg:px-8'>
           <div className="h-0.5 bg-[#D95E1B] rounded-full " />
@@ -27,7 +27,7 @@ const Header: React.FC = () => {
             TESTNET
           </div>
         </div>
-      }
+      } */}
       <nav className='mx-auto max-w-6xl flex flex-row items-center py-6 px-6' aria-label="Global">
         <Logo className="p-1.5 " />
         <div className='max-w-2xl w-full mx-auto '>
