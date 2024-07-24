@@ -77,6 +77,18 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { resolveImgSrc, layers, exchanges } = useSettingsState();
 
+    console.log("values =======================>", 
+        {
+            from,
+            to,
+            fromCurrency,
+            toCurrency,
+            fromExchange,
+            toExchange,
+            currencyGroup
+        }
+    )
+
     let placeholder = "";
     let searchHint = "";
     let filteredLayers: Layer[];
@@ -207,7 +219,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
             <label htmlFor={name} className="block font-semibold text-xs">
                 {label}
             </label>
-            <div className="border border-muted-4 bg-level-1 rounded-lg mt-1.5 pb-2">
+            <div className="border border-[#404040]-4 bg-level-1 rounded-lg mt-1.5 pb-2">
                 <div ref={ref}>
                     <div className="w-full">
                         <CommandSelectWrapper
@@ -292,8 +304,6 @@ function GenerateMenuItems(
             return { value: true, disabledReason: null };
         }
     };
-
-    console.log(layers)
 
     const mappedLayers = layers
         .map((l) => {
