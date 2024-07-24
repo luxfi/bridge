@@ -4,6 +4,7 @@ import { number } from "joi";
 import prisma from "../../lib/db";
 import { isValidAddress } from "../../lib/addressValidator";
 import { SwapStatus } from "../../Models/SwapStatus";
+import { TransactionType } from "../../Models/TransactionTypes";
 
 export interface SwapData {
   amount: number;
@@ -31,6 +32,43 @@ function generateRandomString(): string {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
+}
+
+export async function handleUpdateSwapTransactionByID(
+  swapId: string,
+  tokenId: number,
+  networkId: number,
+  type: TransactionType
+) {
+  // Transaction
+  await prisma.transaction.create({
+    data: {
+      status: "completed",
+      type: type,
+      from: "",
+      to: "",
+      transaction_hash: "",
+
+      confirmations: 2,
+      max_confirmations: 2,
+      amount: 2,
+      swap: {
+        connect: {
+          id: swapId,
+        },
+      },
+      token: {
+        connect: {
+          id: tokenId,
+        },
+      },
+      network: {
+        connect: {
+          id: networkId,
+        },
+      },
+    },
+  });
 }
 
 export async function handleSwapCreation(data: SwapData) {
