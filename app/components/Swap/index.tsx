@@ -69,7 +69,7 @@ const Container = ({ type, children }: Props & {
     if (type === "widget")
         return <Widget><>{children}</></Widget>
     else
-        return <div className="w-full flex flex-col justify-between h-full space-y-5 ">
+        return <div className="w-full flex flex-col justify-between h-full space-y-2">
             {children}
         </div>
 

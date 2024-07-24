@@ -8,7 +8,7 @@ type text_align = 'center' | 'left'
 type button_align = 'left' | 'right'
 
 function constructClassNames(size: buttonSize, buttonStyle: buttonStyle) {
-  let defaultStyle = ' border border-muted-3 disabled:border-muted-4 items-center space-x-1 ' + 
+  let defaultStyle = ' border border-muted-3 disabled:border-[#404040] items-center space-x-1 ' + 
     'disabled:opacity-80 disabled:cursor-not-allowed ' + 
     'relative w-full ' + 
     'flex justify-center ' + 
