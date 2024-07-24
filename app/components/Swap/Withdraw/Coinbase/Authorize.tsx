@@ -155,7 +155,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                                 name="alreadyFamiliar"
                                 id='alreadyFamiliar'
                                 type="checkbox"
-                                className="h-4 w-4 bg-level-1 cursor-pointer rounded border-muted-2 text-priamry"
+                                className="h-4 w-4 bg-level-1 cursor-pointer rounded border-[#404040] text-priamry"
                                 onChange={handleToggleChange}
                                 checked={alreadyFamiliar}
                             />

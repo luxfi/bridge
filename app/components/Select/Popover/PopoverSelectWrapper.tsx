@@ -78,7 +78,7 @@ export default function PopoverSelectWrapper<T>({
                         </div>
                 }
             </PopoverTrigger>
-            <PopoverContent className="w-fit bg-[black] border-muted-4">
+            <PopoverContent className="w-fit bg-[black] border-[#404040]">
                 <PopoverSelect setValue={handleSelect} value={value} values={values} />
             </PopoverContent>
         </Popover>
@@ -101,7 +101,7 @@ const Placeholder = ({ placeholder }: { placeholder: string | undefined }) => {
 
 const LockedAsset = ({ value }: { value: ISelectMenuItem }) => {
     return (
-        <div className="rounded-lg focus-peer:ring-foreground focus-peer:border-muted-1 focus-peer:border focus-peer:ring-1 focus:outline-none disabled:cursor-not-allowed relative grow h-12 flex items-center text-left justify-bottom w-full pl-3 pr-2 py-2 bg-level-1 border border-muted-2 font-semibold align-sub ">
+        <div className="rounded-lg focus-peer:ring-foreground focus-peer:border-muted-1 focus-peer:border focus-peer:ring-1 focus:outline-none disabled:cursor-not-allowed relative grow h-12 flex items-center text-left justify-bottom w-full pl-3 pr-2 py-2 bg-level-1 border border-[#404040] font-semibold align-sub ">
             <div className='w-full border-transparent bg-transparent font-semibold rounded-md'>
                 <span className="flex items-center">
                     <div className="flex-shrink-0 h-6 w-6 relative">

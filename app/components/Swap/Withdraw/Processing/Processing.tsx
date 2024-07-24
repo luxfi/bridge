@@ -211,11 +211,11 @@ const Processing: FC<Props> = ({ settings, swap }) => {
             <div className={`w-full min-h-[422px] space-y-5 flex flex-col justify-between `}>
                 <div className='space-y-5'>
                     <div className="w-full flex flex-col h-full space-y-5">
-                        <div className="bg-level-1 font-normal px-3 py-4 rounded-lg flex flex-col border border-muted-2 w-full relative z-10">
+                        <div className="bg-level-1 font-normal px-3 py-4 rounded-lg flex flex-col border border-[#404040] w-full relative z-10">
                             <SwapSummary></SwapSummary>
                         </div>
                     </div>
-                    <div className="bg-level-1 font-normal px-3 py-6 rounded-lg flex flex-col border border-muted-2 w-full relative z-10 divide-y-2 divide-level-2 divide-dashed">
+                    <div className="bg-level-1 font-normal px-3 py-6 rounded-lg flex flex-col border border-[#404040] w-full relative z-10 divide-y-2 divide-level-2 divide-dashed">
                         <div className='pb-4'>
                             <div className='flex flex-col gap-2 items-center'>
                                 <div className='flex items-center'>
