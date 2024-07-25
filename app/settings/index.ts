@@ -6,7 +6,6 @@ import mainnetNetworks from "./mainnet/networks.json";
 import mainnetSources from "./mainnet/sources.json";
 import mainnetDestinations from "./mainnet/destinations.json";
 import mainnetDepositContractAddress from "./testnet/deposit.json";
-
 // Importing JSON files for testnet
 import testnetCurrencies from "./testnet/currencies.json";
 import testnetDiscovery from "./testnet/discovery.json";

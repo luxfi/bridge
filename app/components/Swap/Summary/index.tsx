@@ -49,17 +49,19 @@ const SwapSummary: FC = () => {
     const apiClient = new BridgeApiClient()
     const { data: sourceAssetPriceData, isLoading } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${sourceAsset?.asset}`, apiClient.fetcher);
 
-    // useEffect(() => {
-    //     valuesChanger({
-    //         amount: swap?.requested_amount?.toString(),
-    //         destination_address: swap?.destination_address,
-    //         from: sourceLayer,
-    //         to: destinationLayer,
-    //         fromCurrency: sourceAsset,
-    //         toCurrency: destinationAsset,
-    //         refuel: swap?.refuel
-    //     })
-    // }, [swap])
+    useEffect(() => {
+        valuesChanger({
+            amount: swap?.requested_amount?.toString(),
+            destination_address: swap?.destination_address,
+            from: sourceLayer,
+            fromExchange: sourceExchange,
+            fromCurrency: sourceAsset,
+            to: destinationLayer,
+            toExchange: destinationExchange,
+            toCurrency: destinationAsset,
+            refuel: swap?.refuel
+        })
+    }, [swap])
 
     if (!swap || (!sourceLayer && !sourceExchange) || !sourceAsset || !destinationAsset || (!destinationLayer && !destinationExchange)) {
         return <></>
