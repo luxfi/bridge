@@ -17,7 +17,7 @@ export class BridgeAppSettings {
     sourceRoutes: Route[]
     destinationRoutes: Route[]
 
-    resolveImgSrc = (item: Layer | NetworkCurrency | Pick<Layer, 'internal_name'> | { asset: string } | Partner | undefined) => {
+    resolveImgSrc = (item: Layer | NetworkCurrency | Exchange | Pick<Layer, 'internal_name'> | { asset: string } | Partner | undefined) => {
 
         if (!item) {
             return "/assets/img/logo_placeholder.png";
