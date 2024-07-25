@@ -206,8 +206,11 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { fee } = useFee();
 
+    console.log("fee ==========================>", fee)
+
     const parsedReceiveAmount = parseFloat(
-        fee.walletReceiveAmount?.toFixed(toCurrency?.precision) || ""
+        // fee.walletReceiveAmount?.toFixed(toCurrency?.precision) || ""
+        fee.manualReceiveAmount?.toFixed(toCurrency?.precision) || ""
     );
     const destinationNetworkCurrency = to && toCurrency ? toCurrency : null;
 

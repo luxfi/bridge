@@ -50,10 +50,8 @@ export function generateSwapInitialValues(settings: BridgeAppSettings, queryPara
         toCurrency: initialCurrency,
         destination_address: initialAddress ? initialAddress : '',
     }
-
     return result
 }
-
 
 export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: BridgeAppSettings): SwapFormValues {
     const {
