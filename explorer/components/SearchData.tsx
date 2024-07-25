@@ -76,7 +76,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
     return res.json();
   };
   const { data, error, isLoading } = useSWR<ApiResponse<Swap[]>>(
-    `${AppSettings.BridgeApiUri}/api/exporler/${searchParam}?version=${version}`,
+    `${AppSettings.BridgeApiUri}/api/explorer/${searchParam}?version=${version}`,
     fetcher,
     { dedupingInterval: 60000 }
   );

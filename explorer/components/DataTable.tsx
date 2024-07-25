@@ -51,7 +51,7 @@ const DataTable: React.FC = () => {
   const settings = useSettingsState();
 
   const { data, error, isLoading } = useSWR<ApiResponse<Swap[]>>(
-    `${AppSettings.BridgeApiUri}/api/swaps?statuses=1&statuses=4&version=${version}`,
+    `${AppSettings.BridgeApiUri}/api/explorer?statuses=3&statuses=4&version=${version}`,
     fetcher,
     { dedupingInterval: 60000 }
   );
