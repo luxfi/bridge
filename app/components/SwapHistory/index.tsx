@@ -212,6 +212,8 @@ function TransactionsHistory() {
                           source_asset,
                         } = swap;
 
+                        console.log({swap})
+
                         const source = layers.find(
                           (e) =>
                             e.internal_name === source_network_internal_name
