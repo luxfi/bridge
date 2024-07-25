@@ -10,6 +10,9 @@ import StatusIcon from './StatusIcons';
 import { ExternalLink } from 'lucide-react';
 import isGuid from '../utils/isGuid';
 import KnownInternalNames from '../../lib/knownIds';
+import { Layer } from '../../Models/Layer';
+import { Exchange } from '../../Models/Exchange';
+import { NetworkCurrency } from '../../Models/CryptoNetwork';
 
 type Props = {
     swap: SwapItem
@@ -17,22 +20,26 @@ type Props = {
 
 const SwapDetails: FC<Props> = ({ swap }) => {
     const settings = useSettingsState()
-    const { layers, resolveImgSrc } = settings
+    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = settings
 
     const { source_exchange: source_exchange_internal_name,
         destination_network: destination_network_internal_name,
         source_network: source_network_internal_name,
         destination_exchange: destination_exchange_internal_name,
+        destination_asset,
         source_asset
     } = swap || {}
 
-    const source = layers.find(e => e.internal_name === source_network_internal_name)
-    const destination = layers.find(n => n.internal_name === destination_network_internal_name)
+    const sourceLayer = layers.find(n => n.internal_name === source_network_internal_name)
+    const sourceExchange = exchanges.find(e => e.internal_name === source_exchange_internal_name)
+    const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset(layers, sourceExchange, source_asset)
 
-    const sourceCurrency = source?.assets.find(c => c.asset === source_asset)
-    const destinationCurrency = destination?.assets.find(c => c.asset === source_asset)
+    const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
+    const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
+    const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
+    const output_transaction = swap.transactions.find((t) => t.type === TransactionType.Output);
 
-    const input_tx_id = source?.transaction_explorer_template
+    const input_tx_id = sourceLayer?.transaction_explorer_template
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
 
@@ -76,11 +83,11 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">From  </span>
                             {
-                                source && <div className="flex items-center">
+                                (sourceLayer || sourceExchange) && <div className="flex items-center">
                                     <div className="flex-shrink-0 h-5 w-5 relative">
                                         {
                                             <Image
-                                                src={resolveImgSrc(source)}
+                                                src={resolveImgSrc(sourceLayer ?? sourceExchange)}
                                                 alt="Exchange Logo"
                                                 height="60"
                                                 width="60"
@@ -90,7 +97,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                         }
 
                                     </div>
-                                    <div className="mx-1 ">{source?.display_name}</div>
+                                    <div className="mx-1 ">{sourceLayer?.display_name ?? sourceExchange?.display_name}</div>
                                 </div>
                             }
                         </div>
@@ -98,11 +105,11 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">To </span>
                             {
-                                destination && <div className="flex items-center">
+                                (destinationLayer || destinationExchange) && <div className="flex items-center">
                                     <div className="flex-shrink-0 h-5 w-5 relative">
                                         {
                                             <Image
-                                                src={resolveImgSrc(destination)}
+                                                src={resolveImgSrc(destinationLayer ?? destinationExchange)}
                                                 alt="Exchange Logo"
                                                 height="60"
                                                 width="60"
@@ -111,7 +118,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                             />
                                         }
                                     </div>
-                                    <div className="mx-1 ">{destination?.display_name}</div>
+                                    <div className="mx-1 ">{destinationLayer?.display_name ?? destinationExchange?.display_name}</div>
                                 </div>
                             }
                         </div>
@@ -154,7 +161,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                                     <span><CopyButton toCopy={swapOutputTransaction.transaction_id} iconClassName="text-gray-500">{shortenAddress(swapOutputTransaction.transaction_id)}</CopyButton></span>
                                                     :
                                                     <div className='underline hover:no-underline flex items-center space-x-1'>
-                                                        <a target={"_blank"} href={destination?.transaction_explorer_template?.replace("{0}", swapOutputTransaction.transaction_id)}>{shortenAddress(swapOutputTransaction.transaction_id)}</a>
+                                                        <a target={"_blank"} href={destinationLayer?.transaction_explorer_template?.replace("{0}", swapOutputTransaction.transaction_id)}>{shortenAddress(swapOutputTransaction.transaction_id)}</a>
                                                         <ExternalLink className='h-4' />
                                                     </div>
                                                 }
@@ -189,7 +196,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <hr className='horizontal-gradient' />
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Bridge Fee </span>
-                                    <span className=' font-normal'>{swap?.fee} {sourceCurrency?.asset}</span>
+                                    <span className=' font-normal'>{swap?.fee} {sourceAsset?.asset}</span>
                                 </div>
                             </>
                         }
@@ -200,7 +207,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Amount You Received</span>
                                     <span className=' font-normal flex'>
-                                        {swapOutputTransaction?.amount} {destinationCurrency?.asset}
+                                        {swapOutputTransaction?.amount} {destinationAsset?.asset}
                                     </span>
                                 </div>
                             </>

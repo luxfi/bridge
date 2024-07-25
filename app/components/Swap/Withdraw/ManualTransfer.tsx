@@ -20,16 +20,6 @@ import { Layer } from "../../../Models/Layer";
 import { Exchange } from "../../../Models/Exchange";
 import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 
-const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string): NetworkCurrency | undefined => {
-    if (!exchange || !asset) {
-        return undefined;
-    } else {
-        const currency = exchange?.currencies?.find(c => c.asset === asset);
-        const layer = layers.find(n => n.internal_name === currency?.network);
-        return layer?.assets?.find(a => a?.asset === asset)
-    }
-}
-
 const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string): string | undefined => {
     if (!exchange || !asset) {
         return undefined;
@@ -50,7 +40,7 @@ const ManualTransfer: FC = () => {
         source_asset
     } = swap || {}
 
-    const { layers, exchanges, resolveImgSrc } = useSettingsState()
+    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettingsState()
     const sourceLayer = layers.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
     const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
@@ -102,7 +92,7 @@ const ManualTransfer: FC = () => {
 
 const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> = ({ address: existingDepositAddress, shouldGenerateAddress }) => {
 
-    const { layers, exchanges, resolveImgSrc } = useSettingsState()
+    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettingsState()
     const { swap } = useSwapDataState()
     const { valuesChanger, minAllowedAmount } = useFee()
 
