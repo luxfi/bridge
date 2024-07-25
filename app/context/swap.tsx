@@ -101,7 +101,7 @@ export function SwapDataProvider({
     client.fetcher,
     { refreshInterval: interval }
   );
-  console.log(swapResponse, "swapResponse", swap_details_endpoint);
+  console.log("swapResponse ============>", swapResponse, swap_details_endpoint);
 
   const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>();
   const source_exchange = layers.find(
