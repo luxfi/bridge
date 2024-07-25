@@ -36,10 +36,10 @@ export default async function handler(
         data: {
             wallet_fee_in_usd: 10,
             wallet_fee: 0.1,
-            wallet_receive_amount: 0,
+            wallet_receive_amount: Number(amount),
             manual_fee_in_usd: 0,
             manual_fee: 0,
-            manual_receive_amount: 0,
+            manual_receive_amount: Number(amount),
             avg_completion_time: {
                 total_minutes: 2,
                 total_seconds: 0,
