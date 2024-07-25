@@ -224,7 +224,6 @@ function TransactionsHistory() {
                         const output_transaction = swap.transactions.find((t) => t.type === TransactionType.Output);
 
                         // const sourceLayer = layers.find((e) => e.internal_name === source_network_internal_name);
-                        // const source
                         // const source_currency = source?.assets?.find((c) => c.asset === source_asset);
                         // const destination = layers.find((n) => n.internal_name === destination_network_internal_name);
 
