@@ -20,7 +20,7 @@ type Props = {
 
 const SwapDetails: FC<Props> = ({ swap }) => {
     const settings = useSettingsState()
-    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = settings
+    const { layers, exchanges, resolveImgSrc, getExchangeAsset, getTransactionExplorerTemplate } = settings
 
     const { source_exchange: source_exchange_internal_name,
         destination_network: destination_network_internal_name,
@@ -37,11 +37,12 @@ const SwapDetails: FC<Props> = ({ swap }) => {
     const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
     const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
-    const output_transaction = swap.transactions.find((t) => t.type === TransactionType.Output);
 
-    const input_tx_id = sourceLayer?.transaction_explorer_template
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
+
+    const sourceTransactionExplorerTemplate = getTransactionExplorerTemplate (layers, sourceLayer, sourceExchange, source_asset);
+    const destinationTransactionExplorerTemplate = getTransactionExplorerTemplate (layers, destinationLayer, destinationExchange, destination_asset);
 
     if (!swap)
         return <SwapDetailsComponentSceleton />
@@ -141,7 +142,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                     <span className="">
                                         <div className='inline-flex items-center'>
                                             <div className='underline hover:no-underline flex items-center space-x-1'>
-                                                <a target={"_blank"} href={input_tx_id?.replace("{0}", swapInputTransaction.transaction_id)}>{shortenAddress(swapInputTransaction.transaction_id)}</a>
+                                                <a target={"_blank"} href={sourceTransactionExplorerTemplate?.replace("{0}", swapInputTransaction.transaction_id)}>{shortenAddress(swapInputTransaction.transaction_id)}</a>
                                                 <ExternalLink className='h-4' />
                                             </div>
                                         </div>
@@ -161,7 +162,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                                     <span><CopyButton toCopy={swapOutputTransaction.transaction_id} iconClassName="text-gray-500">{shortenAddress(swapOutputTransaction.transaction_id)}</CopyButton></span>
                                                     :
                                                     <div className='underline hover:no-underline flex items-center space-x-1'>
-                                                        <a target={"_blank"} href={destinationLayer?.transaction_explorer_template?.replace("{0}", swapOutputTransaction.transaction_id)}>{shortenAddress(swapOutputTransaction.transaction_id)}</a>
+                                                        <a target={"_blank"} href={destinationTransactionExplorerTemplate?.replace("{0}", swapOutputTransaction.transaction_id)}>{shortenAddress(swapOutputTransaction.transaction_id)}</a>
                                                         <ExternalLink className='h-4' />
                                                     </div>
                                                 }
