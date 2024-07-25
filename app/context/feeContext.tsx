@@ -52,6 +52,8 @@ export function FeeProvider({ children }) {
     const apiClient = new BridgeApiClient()
     const version = BridgeApiClient.apiVersion
 
+
+
     const { data: amountRange } = useSWR<ApiResponse<{
         manual_min_amount: number
         manual_min_amount_in_usd: number
@@ -60,9 +62,11 @@ export function FeeProvider({ children }) {
         wallet_min_amount: number
         wallet_min_amount_in_usd: number
     }>>(((from || fromExchange) && (fromCurrency || currencyGroup) && (to || toExchange) && (toCurrency || currencyGroup)) ?
-        `/limits/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name}/${toCurrency?.asset}?version=${version}` : null, apiClient.fetcher, {
+        `/limits/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name ?? toExchange?.internal_name}/${toCurrency?.asset ?? currencyGroup?.name}?version=${version}` : null, apiClient.fetcher, {
         refreshInterval: 10000,
     })
+
+    console.log("fee calc =================>", {fromCurrency, toCurrency, from, to, toExchange, amount, fromExchange, currencyGroup})
 
     const { data: lsFee, mutate: mutateFee, isLoading: isFeeLoading } = useSWR<ApiResponse<{
         wallet_fee_in_usd: number,
@@ -77,8 +81,8 @@ export function FeeProvider({ children }) {
             total_hours: number
         },
         fee_usd_price: number
-    }>>(((from || fromExchange) && (fromCurrency || currencyGroup) && to && toCurrency && debouncedAmount) ?
-        `/rate/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name}/${toCurrency?.asset}?amount=${debouncedAmount}&version=${version}` : null, apiClient.fetcher, { refreshInterval: 10000 })
+    }>>(((from || fromExchange) && (fromCurrency || currencyGroup) && (to || toExchange) && (toCurrency || currencyGroup) && amount) ?
+        `/rate/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name ?? toExchange?.internal_name}/${toCurrency?.asset ?? currencyGroup?.name}?amount=${amount}&version=${version}` : null, apiClient.fetcher, { refreshInterval: 10000 })
 
     const fee = {
         walletFee: lsFee?.data?.wallet_fee,
