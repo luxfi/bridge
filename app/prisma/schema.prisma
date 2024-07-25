@@ -57,6 +57,8 @@ model Network {
   deposit_actions               DepositAction[]
   transaction                   Transaction[]
   transaction_id                Int?            @unique
+
+  @@index([transaction_id])
 }
 
 model Token {
@@ -73,6 +75,8 @@ model Token {
   transaction              Transaction[]
   network                  Network[]
   transaction_id           Int?           @unique
+
+  @@index([transaction_id])
 }
 
 model DepositAction {
@@ -117,6 +121,8 @@ model Swap {
   quotes                   Quote?
   contract_address         ContractAddress?
   transactions             Transaction[]
+
+  @@index([id])
 }
 
 model Transaction {
@@ -137,6 +143,12 @@ model Transaction {
   token             Token?   @relation(fields: [token_id], references: [id])
   network           Network? @relation(fields: [network_id], references: [id])
   swap              Swap?    @relation(fields: [swap_id], references: [id])
+
+  @@index([swap_id])
+  @@index([status])
+  @@index([transaction_hash])
+  @@index([token_id])
+  @@index([network_id])
 }
 
 model ContractAddress {
