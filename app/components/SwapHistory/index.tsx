@@ -36,20 +36,10 @@ import { Layer } from "../../Models/Layer";
 import { Exchange } from "../../Models/Exchange";
 import { NetworkCurrency } from "../../Models/CryptoNetwork";
 
-const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) : NetworkCurrency | undefined => {
-  if (!exchange || !asset) {
-      return undefined;
-  } else {
-      const currency = exchange?.currencies?.find(c => c.asset === asset);
-      const layer = layers.find(n => n.internal_name === currency?.network);
-      return layer?.assets?.find(a => a?.asset === asset)
-  }
-}
-
 function TransactionsHistory() {
   const [page, setPage] = useState(0);
   const settings = useSettingsState();
-  const { layers, exchanges, resolveImgSrc } = settings;
+  const { layers, exchanges, resolveImgSrc, getExchangeAsset } = settings;
   const [isLastPage, setIsLastPage] = useState(false);
   const [swaps, setSwaps] = useState<SwapItem[]>();
   const [loading, setLoading] = useState(false);
@@ -234,7 +224,6 @@ function TransactionsHistory() {
                         const output_transaction = swap.transactions.find((t) => t.type === TransactionType.Output);
 
                         // const sourceLayer = layers.find((e) => e.internal_name === source_network_internal_name);
-                        // const source
                         // const source_currency = source?.assets?.find((c) => c.asset === source_asset);
                         // const destination = layers.find((n) => n.internal_name === destination_network_internal_name);
 
