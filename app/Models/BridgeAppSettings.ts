@@ -45,6 +45,16 @@ export class BridgeAppSettings {
         return basePath.href;
     }
 
+    getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string): NetworkCurrency | undefined => {
+        if (!exchange || !asset) {
+            return undefined;
+        } else {
+            const currency = exchange?.currencies?.find(c => c.asset === asset);
+            const layer = layers.find(n => n.internal_name === currency?.network);
+            return layer?.assets?.find(a => a?.asset === asset)
+        }
+    }
+
     static ResolveLayers(networks: CryptoNetwork[], sourceRoutes: Route[], destinationRoutes: Route[]): Layer[] {
         const resource_storage_url = process.env.NEXT_PUBLIC_RESOURCE_STORAGE_URL
         if (!resource_storage_url)
