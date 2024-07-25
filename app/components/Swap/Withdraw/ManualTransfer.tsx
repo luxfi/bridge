@@ -134,19 +134,21 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         destinationAsset,
     })
 
-    // useEffect(() => {
-    //     if (swap) {
-    //         valuesChanger({
-    //             amount: swap.requested_amount.toString(),
-    //             destination_address: swap.destination_address,
-    //             from: source,
-    //             fromCurrency: sourceAsset,
-    //             to: destination,
-    //             toCurrency: destinationAsset,
-    //             refuel: swap.refuel,
-    //         })
-    //     }
-    // }, [swap])
+    useEffect(() => {
+        if (swap) {
+            valuesChanger({
+                amount: swap.requested_amount.toString(),
+                destination_address: swap.destination_address,
+                from: sourceLayer,
+                fromExchange: sourceExchange,
+                fromCurrency: sourceAsset,
+                to: destinationLayer,
+                toExchange: destinationExchange,
+                toCurrency: destinationAsset,
+                refuel: swap.refuel,
+            });
+        }
+    }, [swap])
 
     const client = new BridgeApiClient()
     const generateDepositParams = shouldGenerateAddress ? [source_network_internal_name] : null
