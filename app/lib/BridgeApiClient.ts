@@ -97,9 +97,11 @@ export default class BridgeApiClient {
 
   async CreateSwapAsync(
     params: CreateSwapParams
-  ): Promise<ApiResponse<CreateSwapData>> {
+  ): Promise<ApiResponse<any>> {
+  // ): Promise<ApiResponse<CreateSwapData>> {
     const correlationId = uuidv4();
-    return await this.AuthenticatedRequest<ApiResponse<CreateSwapData>>(
+    return await this.AuthenticatedRequest<ApiResponse<any>>(
+    // return await this.AuthenticatedRequest<ApiResponse<CreateSwapData>>(
       "POST",
       `/swaps?version=${BridgeApiClient.apiVersion}`,
       params,
