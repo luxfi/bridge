@@ -8,19 +8,9 @@ import { Layer } from "../Models/Layer";
 import { Exchange } from "../Models/Exchange";
 import { NetworkCurrency } from "../Models/CryptoNetwork";
 
-const getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string) : NetworkCurrency | undefined => {
-    if (!exchange || !asset) {
-        return undefined;
-    } else {
-        const currency = exchange?.currencies?.find(c => c.asset === asset);
-        const layer = layers.find(n => n.internal_name === currency?.network);
-        return layer?.assets?.find(a => a?.asset === asset)
-    }
-}
-
 export function generateSwapInitialValues(settings: BridgeAppSettings, queryParams: QueryParams): SwapFormValues {
     const { destAddress, amount, asset, from, to, lockAsset } = queryParams
-    const { layers } = settings || {}
+    const { layers, getExchangeAsset } = settings || {}
 
     const lockedCurrency = lockAsset ? layers.find(l => l.internal_name === to)?.assets?.find(c => c?.asset?.toUpperCase() === asset?.toUpperCase()) : undefined
     const sourceLayer = layers.find(l => l.internal_name.toUpperCase() === from?.toUpperCase())
@@ -66,7 +56,7 @@ export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: Brid
         refuel
     } = swap
 
-    const { layers, exchanges } = settings || {}
+    const { layers, exchanges, getExchangeAsset } = settings || {}
 
     const from = layers.find(n => n.internal_name === source_network);
     const fromExchange = exchanges.find(e => e.internal_name === source_exchange);
@@ -74,7 +64,8 @@ export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: Brid
     const to = layers?.find(l => l.internal_name === destination_network);
     const toExchange = exchanges?.find(l => l.internal_name === destination_exchange);
     const toCurrency = to ? to?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, fromExchange, destination_asset)
-
+    
+    
     const result: SwapFormValues = {
         from,
         fromExchange,
