@@ -3,7 +3,7 @@ import { number } from "joi";
 
 import prisma from "../../lib/db";
 import { isValidAddress } from "../../lib/addressValidator";
-import { SwapStatus } from "../../Models/SwapStatus";
+import { statusMapping, SwapStatus } from "../../Models/SwapStatus";
 import { TransactionType } from "../../Models/TransactionTypes";
 
 export interface SwapData {
@@ -388,9 +388,7 @@ export async function handlerGetSwap(id: string) {
       },
     });
 
-    return {
-      ...swap,
-    };
+    return swap;
   } catch (error) {
     catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
@@ -439,17 +437,67 @@ export async function handlerGetHasBySwaps(address: string) {
     if (isadd) {
       return await handlerGetSwaps(address, false);
     } else {
+      console.time();
       const transaction = await prisma.transaction.findFirstOrThrow({
         where: { transaction_hash: address },
         select: {
-          swap_id: true,
+          swap: {
+            include: {
+              transactions: {
+                include: {
+                  token: true,
+                  network: {
+                    include: {
+                      token: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       });
-      transaction?.swap_id;
-      const swap = await handlerGetSwap(transaction?.swap_id as string);
-      console.log("🚀 ~ handlerGetHasBySwaps ~ transaction:", swap);
-      return [swap];
+      console.timeEnd();
+      console.log(transaction);
+
+      return [{ ...transaction.swap }];
     }
+  } catch (error) {
+    catchPrismaKnowError(error);
+    throw new Error(`Error getting swap: ${error.message}`);
+  }
+}
+
+export async function handlerGetExplorer(status: string[]) {
+  console.log("🚀 ~ handlerGetExplorer ~ status:", status);
+  console.time();
+  const statuses = status.map((number) => statusMapping[number]);
+  console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses);
+
+  try {
+    const swaps = await prisma.swap.findMany({
+      where: {
+        status: {
+          in: statuses,
+        },
+      },
+      include: {
+        deposit_actions: true,
+        quotes: true,
+        contract_address: true,
+        transactions: {
+          include: {
+            token: true,
+            network: {
+              include: { token: true },
+            },
+          },
+        },
+      },
+    });
+
+    console.timeEnd();
+    return swaps;
   } catch (error) {
     catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
