@@ -32,11 +32,14 @@ import HeaderWithMenu from "../HeaderWithMenu";
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
 import { truncateDecimals } from "../utils/RoundDecimals";
+import { Layer } from "../../Models/Layer";
+import { Exchange } from "../../Models/Exchange";
+import { NetworkCurrency } from "../../Models/CryptoNetwork";
 
 function TransactionsHistory() {
   const [page, setPage] = useState(0);
   const settings = useSettingsState();
-  const { layers, resolveImgSrc } = settings;
+  const { layers, exchanges, resolveImgSrc, getExchangeAsset } = settings;
   const [isLastPage, setIsLastPage] = useState(false);
   const [swaps, setSwaps] = useState<SwapItem[]>();
   const [loading, setLoading] = useState(false);
@@ -52,9 +55,9 @@ function TransactionsHistory() {
     window?.["navigation"]?.["canGoBack"]
       ? router.back()
       : router.push({
-          pathname: "/",
-          query: resolvePersistantQueryParams(router.query),
-        });
+        pathname: "/",
+        query: resolvePersistantQueryParams(router.query),
+      });
   }, [router]);
 
   useEffect(() => {
@@ -204,29 +207,26 @@ function TransactionsHistory() {
                       {swaps?.map((swap, index) => {
                         const {
                           source_exchange: source_exchange_internal_name,
-                          destination_network:
-                            destination_network_internal_name,
+                          destination_network: destination_network_internal_name,
                           source_network: source_network_internal_name,
-                          destination_exchange:
-                            destination_exchange_internal_name,
+                          destination_exchange: destination_exchange_internal_name,
                           source_asset,
+                          destination_asset
                         } = swap;
 
-                        const source = layers.find(
-                          (e) =>
-                            e.internal_name === source_network_internal_name
-                        );
-                        const source_currency = source?.assets?.find(
-                          (c) => c.asset === source_asset
-                        );
-                        const destination = layers.find(
-                          (n) =>
-                            n.internal_name ===
-                            destination_network_internal_name
-                        );
-                        const output_transaction = swap.transactions.find(
-                          (t) => t.type === TransactionType.Output
-                        );
+                        const sourceLayer = layers.find(n => n.internal_name === source_network_internal_name)
+                        const sourceExchange = exchanges.find(e => e.internal_name === source_exchange_internal_name)
+                        const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset (layers, sourceExchange, source_asset)
+
+                        const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
+                        const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
+                        const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, destinationExchange, destination_asset)
+                        const output_transaction = swap.transactions.find((t) => t.type === TransactionType.Output);
+
+                        // const sourceLayer = layers.find((e) => e.internal_name === source_network_internal_name);
+                        // const source_currency = source?.assets?.find((c) => c.asset === source_asset);
+                        // const destination = layers.find((n) => n.internal_name === destination_network_internal_name);
+
                         return (
                           <tr
                             onClick={() => handleopenSwapDetails(swap)}
@@ -240,9 +240,9 @@ function TransactionsHistory() {
                             >
                               <div className=" flex items-center">
                                 <div className="flex-shrink-0 h-5 w-5 relative">
-                                  {source && (
+                                  {(sourceLayer || sourceExchange) && (
                                     <Image
-                                      src={resolveImgSrc(source)}
+                                      src={resolveImgSrc(sourceLayer ?? sourceExchange)}
                                       alt="From Logo"
                                       height="60"
                                       width="60"
@@ -252,9 +252,9 @@ function TransactionsHistory() {
                                 </div>
                                 <ArrowRight className="h-4 w-4 mx-2" />
                                 <div className="flex-shrink-0 h-5 w-5 relative block">
-                                  {destination && (
+                                  {(destinationLayer || destinationExchange) && (
                                     <Image
-                                      src={resolveImgSrc(destination)}
+                                      src={resolveImgSrc(destinationLayer ?? destinationExchange)}
                                       alt="To Logo"
                                       height="60"
                                       width="60"
@@ -295,16 +295,16 @@ function TransactionsHistory() {
                                     <span className="ml-1 md:ml-0">
                                       {output_transaction
                                         ? truncateDecimals(
-                                            output_transaction?.amount,
-                                            source_currency?.precision
-                                          )
+                                          output_transaction?.amount,
+                                          sourceAsset?.precision
+                                        )
                                         : "-"}
                                     </span>
                                   ) : (
                                     <span>
                                       {truncateDecimals(
                                         swap.requested_amount,
-                                        source_currency?.precision
+                                        sourceAsset?.precision
                                       )}
                                     </span>
                                   )}
