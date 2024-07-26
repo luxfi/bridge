@@ -22,7 +22,20 @@ export interface SwapData {
     contract_name: string;
     contract_address: string;
   };
+  [property: string]: any;
 }
+
+export type UpdateSwapData = {
+  confirmations: number;
+  max_confirmations: number;
+  amount: string | number;
+  form: string;
+  to: string;
+  id: string;
+  add_output_tx: string;
+  add_input_tx: string;
+  // [property: string]: any;
+};
 
 function generateRandomString(): string {
   const characters =
@@ -508,6 +521,68 @@ export async function handlerUpdateSwaps(swapData: { id: string }) {
       data: { ...swapData },
     });
     return "success";
+  } catch (error) {
+    catchPrismaKnowError(error);
+    throw new Error(`Error deleting swaps: ${error.message}`);
+  }
+}
+
+export async function handlerUpdateSwap(swapData: UpdateSwapData) {
+  try {
+    if (swapData.add_input_tx) {
+      await prisma.transaction.create({
+        data: {
+          status: "completed",
+          type: TransactionType.Input,
+          from: swapData.form,
+          to: swapData.to,
+          transaction_hash: swapData.add_input_tx,
+          confirmations: 2,
+          max_confirmations: 2,
+          amount: Number(swapData.amount),
+          swap: {
+            connect: {
+              id: swapData.id,
+            },
+          },
+        },
+      });
+
+      await prisma.swap.update({
+        where: { id: swapData.id },
+        data: {
+          status: SwapStatus.LsTransferPending,
+        },
+      });
+      return "success";
+    } else if (swapData.add_output_tx) {
+      await prisma.transaction.create({
+        data: {
+          status: "completed",
+          type: TransactionType.Output,
+          from: swapData.form,
+          to: swapData.to,
+          transaction_hash: swapData.add_output_tx,
+          confirmations: 2,
+          max_confirmations: 2,
+          amount: Number(swapData.amount),
+          swap: {
+            connect: {
+              id: swapData.id,
+            },
+          },
+        },
+      });
+      await prisma.swap.update({
+        where: { id: swapData.id },
+        data: {
+          status: SwapStatus.Completed,
+        },
+      });
+      return "success";
+    } else {
+      return "failed";
+    }
   } catch (error) {
     catchPrismaKnowError(error);
     throw new Error(`Error deleting swaps: ${error.message}`);
