@@ -400,8 +400,6 @@ export async function handlerGetSwaps(
   isDe: boolean | undefined
 ) {
   try {
-    // console.log("isDe=====?>>", address);
-
     const swap = await prisma.swap.findMany({
       orderBy: {
         created_date: "desc",
@@ -469,7 +467,6 @@ export async function handlerGetHasBySwaps(address: string) {
 }
 
 export async function handlerGetExplorer(status: string[]) {
-  console.log("🚀 ~ handlerGetExplorer ~ status:", status);
   console.time();
   const statuses = status.map((number) => statusMapping[number]);
   console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses);
@@ -504,11 +501,24 @@ export async function handlerGetExplorer(status: string[]) {
   }
 }
 
-export async function handlerUpdateSwaps(swapdata: { id: string }) {
+export async function handlerUpdateSwaps(swapData: { id: string }) {
   try {
     await prisma.swap.updateMany({
-      where: { id: swapdata.id },
-      data: { ...swapdata },
+      where: { id: swapData.id },
+      data: { ...swapData },
+    });
+    return "success";
+  } catch (error) {
+    catchPrismaKnowError(error);
+    throw new Error(`Error deleting swaps: ${error.message}`);
+  }
+}
+
+export async function handlerDelSwap(swapData: { id: string }) {
+  try {
+    await prisma.swap.update({
+      where: { id: swapData.id, is_deleted: true },
+      data: { ...swapData },
     });
     return "success";
   } catch (error) {
