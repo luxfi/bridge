@@ -37,12 +37,12 @@ export default function MainStepValidation({ maxAllowedAmount, minAllowedAmount 
         if (minAllowedAmount != undefined && amount < minAllowedAmount) {
             errors.amount = `Min amount is ${minAllowedAmount}`;
         }
-        if (values.to) {
+        if (values.to || values.toExchange) {
             if (!values.destination_address) {
-                errors.destination_address = `Enter ${values.to?.display_name} address`;
+                errors.destination_address = `Enter ${values.to?.display_name ?? values?.toExchange?.display_name} address`;
             }
             else if (!isValidAddress(values.destination_address, values.to)) {
-                errors.destination_address = `Enter a valid ${values.to?.display_name} address`;
+                errors.destination_address = `Enter a valid ${values.to?.display_name ?? values?.toExchange?.display_name} address`;
             }
         }
 

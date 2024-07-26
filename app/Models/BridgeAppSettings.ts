@@ -17,7 +17,7 @@ export class BridgeAppSettings {
     sourceRoutes: Route[]
     destinationRoutes: Route[]
 
-    resolveImgSrc = (item: Layer | NetworkCurrency | Pick<Layer, 'internal_name'> | { asset: string } | Partner | undefined) => {
+    resolveImgSrc = (item: Layer | NetworkCurrency | Exchange | Pick<Layer, 'internal_name'> | { asset: string } | Partner | undefined) => {
 
         if (!item) {
             return "/assets/img/logo_placeholder.png";
@@ -43,6 +43,25 @@ export class BridgeAppSettings {
         }
 
         return basePath.href;
+    }
+
+    getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string): NetworkCurrency | undefined => {
+        if (!exchange || !asset) {
+            return undefined;
+        } else {
+            const currency = exchange?.currencies?.find(c => c.asset === asset);
+            const layer = layers.find(n => n.internal_name === currency?.network);
+            return layer?.assets?.find(a => a?.asset === asset)
+        }
+    }
+
+    getTransactionExplorerTemplate = (layers: Layer[], layer?: Layer, exchange?: Exchange, asset?: string): string | undefined => {
+        if (layer) {
+            return layer?.transaction_explorer_template;
+        } else {
+            const currency = exchange?.currencies?.find(c => c.asset === asset);
+            return layers.find(n => n.internal_name === currency?.network)?.transaction_explorer_template;
+        }
     }
 
     static ResolveLayers(networks: CryptoNetwork[], sourceRoutes: Route[], destinationRoutes: Route[]): Layer[] {
