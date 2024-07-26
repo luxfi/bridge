@@ -23,44 +23,17 @@ export default async function handler(
         quote: {
           receive_amount: 1,
           min_receive_amount: 0.975,
-          blockchain_fee: 0.145766,
-          service_fee: 0.1,
-          avg_completion_time: "00:00:47.4595530",
+          blockchain_fee: 0.145766, //we need to estimate blockchain fee.
+          service_fee: 0.01, //our bridge service fee is 1%. or We should make no fee for our bridge currently.
+
+          avg_completion_time: "00:00:47.4595530", // it should be about 20 min for btc, and 3 ~ 4 mins for evm chains.
           refuel_in_source: null,
           slippage: 0.025,
           total_fee: 0.245766,
           total_fee_in_usd: 0.245766,
         },
         refuel: null,
-        reward: {
-          token: {
-            symbol: "ETH",
-            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
-            contract: null,
-            decimals: 18,
-            price_in_usd: 3470.62,
-            precision: 6,
-            listing_date: "2023-05-18T13:41:38.555738+00:00",
-          },
-          network: {
-            name: "ARBITRUM_SEPOLIA",
-            display_name: "Arbitrum One Sepolia",
-            logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/arbitrum_sepolia.png",
-            chain_id: "421614",
-            node_url:
-              "https://arbitrum-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
-            type: "evm",
-            transaction_explorer_template: "https://sepolia.arbiscan.io/tx/{0}",
-            account_explorer_template:
-              "https://sepolia.arbiscan.io/address/{0}",
-            token: null,
-            metadata: {
-              listing_date: "2023-12-27T16:46:50.617075+00:00",
-            },
-          },
-          amount: 0.000029,
-          amount_in_usd: 0.10064798,
-        },
+        reward: {},
       },
     });
   } catch (error) {

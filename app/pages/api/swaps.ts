@@ -30,7 +30,10 @@ export default async function handler(
     }
 
     try {
-      const result = await handleSwapCreation({ ...req.body, contract_address });
+      const result = await handleSwapCreation({
+        ...req.body,
+        contract_address,
+      });
       res.status(200).json({ data: { ...result } });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -41,12 +44,14 @@ export default async function handler(
       undefined;
     console.log("isDeleted", isDeleted, req.query.isDeleted);
 
-    console.log(req.query)
+    console.log(req.query);
 
     const result = await handlerGetSwaps(
       req.query.address as string,
       isDeleted
     );
+    console.log("result", result);
+
     res.status(200).json({ data: result });
   } else {
     res.setHeader("Allow", ["POST"]);
