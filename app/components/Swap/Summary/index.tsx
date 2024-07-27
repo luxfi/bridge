@@ -16,7 +16,6 @@ const SwapSummary: FC = () => {
     const { layers, exchanges, getExchangeAsset } = useSettingsState()
     const { swap, withdrawType } = useSwapDataState()
     
-
     const {
         source_network: source_network_internal_name,
         source_exchange: source_exchange_internal_name,
