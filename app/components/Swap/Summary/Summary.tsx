@@ -37,8 +37,6 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
     //     return from && getProvider(from)
     // }, [from, getProvider])
 
-    console.log({from, to})
-
     // const wallet = provider?.getConnectedWallet()
 
     const {
@@ -88,16 +86,12 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
         sourceAccountAddress = shortenEmail(exchange_account_name, 10);
     } else if (from?.type === 'cex') {
         sourceAccountAddress = "Exchange"
-    }
-    else {
+    } else {
         sourceAccountAddress = "Network"
     }
-
     const destAddress = (hideAddress && hideTo && account) ? account : destinationAddress
     const sourceCurrencyName = currency?.asset
     const destCurrencyName = layers?.find(n => n.internal_name === to?.internal_name)?.assets?.find(c => c?.asset === currency?.asset)?.asset || currency?.asset
-
-    console.log({requestedAmount, currency, requestedAmountInUsd})
     return (
         <div>
             <div className="font-normal flex flex-col w-full relative z-10 space-y-4">

@@ -9,7 +9,5 @@ export default async function handler(
   request: NextApiRequest,
   response: NextApiResponse
 ) {
-  console.log(deposit_addresses);
-
   return response.json({ deposit_addresses });
 }
