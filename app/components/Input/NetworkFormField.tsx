@@ -206,17 +206,19 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { fee } = useFee();
 
-    console.log("fee ==========================>", fee)
+    console.log(toCurrency)
 
     const parsedReceiveAmount = parseFloat(
         // fee.walletReceiveAmount?.toFixed(toCurrency?.precision) || ""
-        fee.manualReceiveAmount?.toFixed(toCurrency?.precision) || ""
+        fee.manualReceiveAmount?.toFixed(toCurrency?.precision ?? 6) || ""
     );
     const destinationNetworkCurrency = to && toCurrency ? toCurrency : null;
 
     // React.useEffect(() => {
     //     console.log("current selected value =============>", value)
     // }, [value])
+
+    console.log({parsedReceiveAmount})
 
     return (
         <div className={`p-3 ${className}`}>
