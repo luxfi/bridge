@@ -9,8 +9,12 @@ export const getTokenPrice = async (token_id: string) => {
       'x-api-key': process.env.NEXT_PUBLIC_COINBASE_API_KEY,
       'accept': 'application/json'
     }
-    const { data: { data } } = await axios.get(`https://api.coinbase.com/v2/prices/${token_id}-USD/buy`, { headers });
-    return Number(data.amount);
+    if (token_id === 'LUX') {
+      return 0.0011;
+    } else {
+      const { data: { data } } = await axios.get(`https://api.coinbase.com/v2/prices/${token_id}-USD/buy`, { headers });
+      return Number(data.amount);
+    }
   } catch (err) {
     console.log(err)
     return 1;
