@@ -13,10 +13,10 @@ import { BridgeAppSettings } from '../../../../Models/BridgeAppSettings';
 import { SwapStatus } from '../../../../Models/SwapStatus';
 import { SwapFailReasons } from '../../../../Models/RangeError';
 import { Gauge } from '../../../gauge';
-import Failed from '../Failed';
 import { Progress, ProgressStates, ProgressStatus, StatusStep } from './types';
 import { useFee } from '../../../../context/feeContext';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
+import Failed from '../Failed';
 
 type Props = {
     settings: BridgeAppSettings;
@@ -41,7 +41,6 @@ const Processing: FC<Props> = ({ settings, swap }) => {
     const storedWalletTransaction = storedWalletTransactions.swapTransactions?.[swap?.id]
 
     const transactionHash = swapInputTransaction?.transaction_id || storedWalletTransaction?.hash
-
 
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
     const swapRefuelTransaction = swap?.transactions?.find(t => t.type === TransactionType.Refuel)
