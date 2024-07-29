@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { getTokenPrice } from '../tokenAction';
 // import { mainnetSettings, testnetSettings } from '../../settings'
 
 export default async function handler(
@@ -23,14 +24,21 @@ export default async function handler(
     const { amount, version, params } = req.query;
     const [source, source_asset, destination, destination_asset] = params as string[];
 
+
+    const [sourcePrice, destinationPrice] = await Promise.all([
+        getTokenPrice(source_asset),
+        getTokenPrice(destination_asset)
+    ]);
+
     console.log("rate", {
         amount,
         source,
         source_asset,
         destination,
-        destination_asset
+        destination_asset,
+        sourcePrice,
+        destinationPrice
     });
-
 
     res.status(200).json({
         data: {
@@ -39,7 +47,7 @@ export default async function handler(
             wallet_receive_amount: Number(amount),
             manual_fee_in_usd: 0,
             manual_fee: 0,
-            manual_receive_amount: Number(amount),
+            manual_receive_amount: Number(amount) * sourcePrice / destinationPrice,
             avg_completion_time: {
                 total_minutes: 2,
                 total_seconds: 0,
