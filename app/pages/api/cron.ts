@@ -10,8 +10,8 @@ import Web3 from "web3";
 import { createClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
-const infuraProjectId = "05d03f5fdd5547caa2afd8781e584aef";
-//sepolia.infura.io/v3/05d03f5fdd5547caa2afd8781e584aef
+const infuraProjectId = process.env.INFURA_API_KEY;
+
 const web3 = new Web3(`https://sepolia.infura.io/v3/${infuraProjectId}`);
 
 export default async function handler(
