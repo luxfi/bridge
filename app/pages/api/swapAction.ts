@@ -256,39 +256,6 @@ export async function handleSwapCreation(data: SwapData) {
     //   },
     // });
 
-    // await prisma.transaction.createMany({
-    //   data: [
-    //     {
-    //       status: "completed",
-    //       type: "input",
-    //       from: sourceNetwork,
-    //       to: "0x2fc617e933a52713247ce25730f6695920b3befe",
-    //       transaction_hash:
-    //         "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
-    //       confirmations: 2,
-    //       max_confirmations: 2,
-    //       amount: amount,
-    //       tokenId: token.id,
-    //       networkId: network.id,
-    //       swapId: swap.id,
-    //     },
-    //     {
-    //       status: "completed",
-    //       type: "output",
-    //       from: "0x2fc617e933a52713247ce25730f6695920b3befe",
-    //       to: sourceNetwork,
-    //       transaction_hash:
-    //         "0x8b5de89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe2419e",
-    //       confirmations: 2,
-    //       max_confirmations: 2,
-    //       amount: amount,
-    //       tokenId: token.id,
-    //       networkId: network.id,
-    //       swapId: swap.id,
-    //     },
-    //   ],
-    // });
-
     // const depositAction = await prisma.depositAction.findFirstOrThrow({
     //   where: {
     //     swap_id: swap.id,
@@ -342,7 +309,9 @@ export async function handleSwapCreation(data: SwapData) {
           network: {
             ...sourceNetworkRecord,
             token: { ...sourceTokenRecord },
-            metadata: { listingDate: sourceNetworkRecord.listing_date },
+            metadata: {
+              listingDate: sourceNetworkRecord.listing_date,
+            },
             depositMethods: ["deposit_address", "wallet"],
           },
           token: { ...sourceTokenRecord },
@@ -362,7 +331,9 @@ export async function handleSwapCreation(data: SwapData) {
         destinationNetwork: {
           ...destinationNetworkRecord,
           token: { ...destinationTokenRecord },
-          metadata: { listingDate: destinationNetworkRecord.listing_date },
+          metadata: {
+            listingDate: destinationNetworkRecord.listing_date,
+          },
         },
         destinationToken: { ...destinationTokenRecord },
         transactions: [],
