@@ -39,7 +39,7 @@ export default async function handler(
 
     //     while (currentBlockNumber >= 0) {
     //       const block = await web3.eth.getBlock(currentBlockNumber, true);
-    //       if (!block || !block.timestamp) break; // 如果区块不存在，退出循环
+    //       if (!block || !block.timestamp) break; // If the block does not exist, exit the loop
 
     //       if (block.transactions) {
     //         console.log(
@@ -57,9 +57,9 @@ export default async function handler(
     //         "🚀 ~ deposit_addresses.evm.map ~ recentIncomingTx:",
     //         recentIncomingTx
     //       );
-    //       if (recentIncomingTx === null) break; // 找到最近的接收交易后退出循环
+    //       if (recentIncomingTx === null) break; // Exit the loop after finding the most recent received transaction
 
-    //       if (recentIncomingTx || !recentIncomingTx) break; // 找到最近的接收交易后退出循环
+    //       if (recentIncomingTx || !recentIncomingTx) break; // Exit the loop after finding the most recent received transaction
 
     //       currentBlockNumber--;
     //     }
