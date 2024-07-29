@@ -17,7 +17,8 @@ import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 import { Exchange } from "../../../Models/Exchange";
 
 type SwapInfoProps = {
-    currency: NetworkCurrency,
+    sourceAsset: NetworkCurrency,
+    destinationAsset: NetworkCurrency,
     source: Layer | Exchange | undefined,
     destination: Layer | Exchange | undefined;
     requestedAmount?: number;
@@ -30,7 +31,20 @@ type SwapInfoProps = {
     exchange_account_name?: string;
 }
 
-const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, requestedAmount, receiveAmount, destinationAddress, hasRefuel, refuelAmount, fee, exchange_account_connected, exchange_account_name }) => {
+const Summary: FC<SwapInfoProps> = ({
+    sourceAsset,
+    destinationAsset,
+    source: from,
+    destination: to,
+    requestedAmount,
+    receiveAmount,
+    destinationAddress,
+    hasRefuel,
+    refuelAmount,
+    fee,
+    exchange_account_connected,
+    exchange_account_name
+}) => {
     const { resolveImgSrc, layers } = useSettingsState()
     const { getWithdrawalProvider: getProvider } = useWallet()
     // const provider = useMemo(() => {
@@ -55,10 +69,11 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
     const destination = hideTo ? partner : to
 
     const apiClient = new BridgeApiClient()
-    const { data: sourceAssetPriceData, isLoading } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${currency?.asset}`, apiClient.fetcher);
+    const { data: sourceAssetPriceData, isLoading: isLoadingSourcePriceData } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${sourceAsset?.asset}`, apiClient.fetcher);
+    const { data: destinationAssetPriceData, isLoading: isLoadingDestinationPriceData } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${destinationAsset?.asset}`, apiClient.fetcher);
 
     const requestedAmountInUsd = (Number(sourceAssetPriceData?.data?.price) * Number(requestedAmount)).toFixed(2)
-    const receiveAmountInUsd = receiveAmount ? (Number(sourceAssetPriceData?.data?.price) * receiveAmount).toFixed(2) : undefined
+    const receiveAmountInUsd = (Number(destinationAssetPriceData?.data?.price) * Number(receiveAmount)).toFixed(2)
     // const nativeCurrency = refuelAmount && from.assets.find(c => c.is_native)
 
     // const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?
@@ -90,8 +105,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
         sourceAccountAddress = "Network"
     }
     const destAddress = (hideAddress && hideTo && account) ? account : destinationAddress
-    const sourceCurrencyName = currency?.asset
-    const destCurrencyName = layers?.find(n => n.internal_name === to?.internal_name)?.assets?.find(c => c?.asset === currency?.asset)?.asset || currency?.asset
+
     return (
         <div>
             <div className="font-normal flex flex-col w-full relative z-10 space-y-4">
@@ -107,7 +121,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                         </div>
                     </div>
                     <div className="flex flex-col">
-                        <p className=" text-sm">{truncateDecimals(Number(requestedAmount), currency?.precision ?? 4)} {sourceCurrencyName}</p>
+                        <p className=" text-sm">{truncateDecimals(Number(requestedAmount), sourceAsset?.precision ?? 4)} {sourceAsset?.asset}</p>
                         <p className=" text-sm flex justify-end">${requestedAmountInUsd}</p>
                     </div>
                 </div>
@@ -134,7 +148,7 @@ const Summary: FC<SwapInfoProps> = ({ currency, source: from, destination: to, r
                     {
                         receiveAmount != undefined ?
                             <div className="flex flex-col justify-end">
-                                <p className=" text-sm">{truncateDecimals(receiveAmount, currency?.precision ?? 4)} {destCurrencyName}</p>
+                                <p className=" text-sm">{truncateDecimals(receiveAmount, destinationAsset?.precision ?? 4)} {destinationAsset.asset}</p>
                                 <p className=" text-sm flex justify-end">${receiveAmountInUsd}</p>
                             </div>
                             :
