@@ -1,12 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { mainnetSettings, testnetSettings } from "../../../settings";
 
+/**
+ * get quote swap information
+ * api/quote?source_network=&source_token=&destination_network=&destination_token=&amount=&refuel=&use_deposit_address=
+ * @param req 
+ * @param res 
+ * @returns 
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<{}>
 ) {
   // source_network=ETHEREUM_SEPOLIA&source_token=USDC&destination_network=ARBITRUM_SEPOLIA&destination_token=USDC&amount=1.245766&refuel=false&use_deposit_address=false
-
   try {
     const {
       source_network,
