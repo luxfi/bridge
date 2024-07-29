@@ -11,6 +11,13 @@ function getRandomInt(a: number, b: number) {
   return Math.floor(Math.random() * (b - a + 1) + a);
 }
 
+/**
+ * return deposit address according to network
+ * /deposit_addresses/[network_name]
+ * 
+ * @param req { network }
+ * @param res { type: string, address: string }
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -23,15 +30,13 @@ export default async function handler(
     version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
   // settings
   const settings = isMainnet ? mainnetSettings : testnetSettings;
-  const { exchanges, networks } = settings.data;
+  const { networks } = settings.data;
 
   const _network = networks.find((n) => n.internal_name === network);
   const networkType = _network?.type ?? NetworkType.EVM;
-  const addresses: string[] =
-    deposit_addresses[networkType] ?? deposit_addresses[NetworkType.EVM];
+  const addresses: string[] = deposit_addresses[networkType] ?? deposit_addresses[NetworkType.EVM];
   const address = addresses[getRandomInt(0, addresses.length - 1)];
  
-
   res.status(200).json({
     data: {
       type: networkType,
