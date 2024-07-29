@@ -77,8 +77,8 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { resolveImgSrc, layers, exchanges } = useSettingsState();
 
-    
-    console.log("values =======================>", 
+
+    console.log("values =======================>",
         {
             from,
             to,
@@ -214,11 +214,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     );
     const destinationNetworkCurrency = to && toCurrency ? toCurrency : null;
 
-    // React.useEffect(() => {
-    //     console.log("current selected value =============>", value)
-    // }, [value])
-
-    console.log({parsedReceiveAmount})
+    console.log({ parsedReceiveAmount })
 
     return (
         <div className={`p-3 ${className}`}>
