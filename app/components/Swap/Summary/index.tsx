@@ -16,14 +16,13 @@ const SwapSummary: FC = () => {
     const { layers, exchanges, getExchangeAsset } = useSettingsState()
     const { swap, withdrawType } = useSwapDataState()
     
-
     const {
         source_network: source_network_internal_name,
         source_exchange: source_exchange_internal_name,
         destination_exchange: destination_exchange_internal_name,
         destination_network: destination_network_internal_name,
         source_asset,
-        destination_asset
+        destination_asset,
     } = swap || {}
 
     // const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
@@ -39,6 +38,7 @@ const SwapSummary: FC = () => {
 
     const apiClient = new BridgeApiClient()
     const { data: sourceAssetPriceData, isLoading } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${sourceAsset?.asset}`, apiClient.fetcher);
+
 
     useEffect(() => {
         valuesChanger({
@@ -81,7 +81,6 @@ const SwapSummary: FC = () => {
     if (swap?.fee && swapOutputTransaction) {
         fee = swap?.fee
     }
-
     const requested_amount = (swapInputTransaction?.amount ?? swap.requested_amount) || undefined
 
     const destinationNetworkNativeAsset = layers.find(n => n.internal_name === destinationLayer?.internal_name)?.assets.find(a => a.is_native);
@@ -97,14 +96,31 @@ const SwapSummary: FC = () => {
         (refuel_amount_in_usd / currency_usd_price);
 
     // const receive_amount = fee !== undefined ? (swapOutputTransaction?.amount ?? (Number(requested_amount) - fee ?? 0 - Number(refuelAmountInSelectedCurrency))) : undefined
-    const receive_amount = Number(requested_amount) * 0.99 - Number(refuelAmountInSelectedCurrency)
+    // const receive_amount = Number(requested_amount) * 0.99 - Number(refuelAmountInSelectedCurrency)
+
+    const { data: lsFee, mutate: mutateFee, isLoading: isFeeLoading } = useSWR<ApiResponse<{
+        wallet_fee_in_usd: number,
+        wallet_fee: number,
+        wallet_receive_amount: number,
+        manual_fee_in_usd: number,
+        manual_fee: number,
+        manual_receive_amount: number,
+        avg_completion_time: {
+            total_minutes: number,
+            total_seconds: number,
+            total_hours: number
+        },
+        fee_usd_price: number
+    }>>(((sourceLayer || sourceExchange) && sourceAsset && (destinationLayer || destinationExchange) && destinationAsset && requested_amount) ?
+        `/rate/${sourceLayer?.internal_name ?? sourceExchange?.internal_name}/${sourceAsset?.asset}/${destinationLayer?.internal_name ?? destinationExchange?.internal_name}/${destinationAsset?.asset}?amount=${requested_amount}&version=` : null, apiClient.fetcher, { refreshInterval: 10000 })
 
     return <Summary
-        currency={sourceAsset}
+        sourceAsset={sourceAsset}
+        destinationAsset={destinationAsset}
         source={sourceLayer ?? sourceExchange}
         destination={destinationLayer ?? destinationExchange}
         requestedAmount={requested_amount}
-        receiveAmount={receive_amount}
+        receiveAmount={lsFee?.data?.manual_receive_amount}
         destinationAddress={swap.destination_address}
         hasRefuel={swap?.refuel}
         refuelAmount={refuelAmountInNativeCurrency}

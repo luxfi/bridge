@@ -127,7 +127,6 @@ export const OnrampElement: FC<OnrampElementProps> = ({
     </div>;
 };
 
-
 const Skeleton: FC = () => {
     return <div className="absolute pt-10 top-0 left-0 right-0 bottom-0 w-full overflow-hidden flex flex-col items-center justify-between">
         <div className="animate-pulse flex flex-col items-center justify-between w-full">
