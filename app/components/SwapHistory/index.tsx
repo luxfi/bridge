@@ -309,7 +309,7 @@ function TransactionsHistory() {
                                     </span>
                                   )}
                                   <span className="ml-1">
-                                    {swap.destination_asset}
+                                    {swap.source_asset}
                                   </span>
                                 </div>
                                 <ChevronRight className="h-5 w-5" />
