@@ -90,6 +90,7 @@ export function SwapDataProvider({
   const client = new BridgeApiClient();
   const apiVersion = BridgeApiClient.apiVersion;
   const swap_details_endpoint = `/swaps/${swapId}?version=${apiVersion}`;
+  console.log({ swap_details_endpoint })
   const [interval, setInterval] = useState(0);
   const {
     data: swapResponse,
@@ -100,7 +101,7 @@ export function SwapDataProvider({
     client.fetcher,
     { refreshInterval: interval }
   );
-  console.log(swapResponse, "swapResponse");
+  console.log("swapResponse ============>", swapResponse, swap_details_endpoint);
 
   const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>();
   const source_exchange = layers.find(
@@ -110,7 +111,7 @@ export function SwapDataProvider({
   );
 
   const exchangeAssets = source_exchange?.assets?.filter(
-    (a) => a?.asset === swapResponse?.data?.source_network_asset
+    (a) => a?.asset === swapResponse?.data?.source_asset
   );
   const source_network = layers.find(
     (n) =>
@@ -163,37 +164,38 @@ export function SwapDataProvider({
       } = values;
 
       if (
-        !to ||
-        (!fromCurrency && !currencyGroup) ||
-        !toCurrency ||
-        (!from && !fromExchange) ||
+        (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+        (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup) ||
         !values.amount ||
         !values.destination_address
-      )
+      ) {
         throw new Error("Form data is missing");
+      }
 
       const data: CreateSwapParams = {
         amount: Number(values.amount),
-        sourceNetwork:
-          from?.internal_name ?? (fromExchange?.internal_name as string),
-        destinationNetwork: to?.internal_name,
-        sourceToken: fromCurrency?.asset ?? (currencyGroup?.name as string),
-        destinationToken: toCurrency.asset,
-        source_exchange: fromExchange?.internal_name,
-        destinationAddress: values.destination_address,
-        refuel: !!refuel,
-        useDepositAddress: false,
-        sourceAddress: values.destination_address,
 
+        source_network: from?.internal_name ?? (fromExchange?.internal_name as string),
+        source_exchange: fromExchange?.internal_name,
+        source_asset: fromCurrency?.asset ?? (currencyGroup?.name as string),
+        source_address: values.destination_address,
+
+        destination_network: to?.internal_name ?? (toExchange?.internal_name as string),
         destination_exchange: toExchange?.internal_name,
+        destination_asset: toCurrency?.asset ?? (currencyGroup?.name as string),
+        destination_address: values.destination_address,
+        refuel: !!refuel,
+        use_deposit_address: true,
 
         app_name: partner
           ? query?.appName
           : apiVersion === "sandbox"
-          ? "BridgeSandbox"
-          : "Bridge",
+            ? "BridgeSandbox"
+            : "Bridge",
         reference_id: query.externalId,
       };
+
+      console.log("swap data ===========", data);
 
       const swapResponse = await client.CreateSwapAsync(data);
       if (swapResponse?.error) {

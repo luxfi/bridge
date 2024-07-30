@@ -25,7 +25,7 @@ const Wizard: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   return (
-    <div className={noToolBar ? '' : 'border border-muted-4 rounded-lg w-full sm:overflow-hidden'}>
+    <div className={noToolBar ? '' : 'border border-[#404040] rounded-lg w-full sm:overflow-hidden'}>
       {!hideMenu && <HeaderWithMenu goBack={goBack} />}
       <div className={noToolBar ? '' : 'px-6'}>
         <div className="flex items-start" ref={wrapper}>

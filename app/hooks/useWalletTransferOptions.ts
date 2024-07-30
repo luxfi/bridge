@@ -20,11 +20,15 @@ export default function useWalletTransferOptions() {
     const wallet = provider?.getConnectedWallet()
 
     useEffect(() => {
+        console.log("contractWallets ==========>", contractWallets);
+        console.log("wallet===============>", wallet);
+        console.log("source_layer===========>", source_layer);
+        console.log("swap================>", swap);
         setIsContractWallet(contractWallets.find(w => w.address === wallet?.address && w.network === source_layer?.internal_name) ?? checkContractWallet(wallet?.address, source_layer))
     }, [])
 
     const canDoSweepless = ((source_layer?.type == NetworkType.EVM && !(isContractWallet?.network === source_layer.internal_name && isContractWallet?.isContract)) || source_layer?.type == NetworkType.Starknet)
-        || wallet?.address?.toLowerCase() === swap?.destination_address.toLowerCase()
+        || wallet?.address?.toLowerCase() === swap?.destination_address?.toLowerCase()
 
     return { canDoSweepless, isContractWallet }
 }

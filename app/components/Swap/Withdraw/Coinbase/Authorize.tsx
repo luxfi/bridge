@@ -41,7 +41,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
 
     const carouselRef = useRef<CarouselRef | null>(null)
     const exchange_internal_name = swap?.source_exchange
-    const asset_name = swap?.source_network_asset
+    const asset_name = swap?.source_asset;
 
     const exchange = layers.find(e => e.internal_name?.toLowerCase() === exchange_internal_name?.toLowerCase()) as Layer
     const currency = exchange?.assets.find(c => asset_name?.toLocaleUpperCase() === c.asset?.toLocaleUpperCase())
@@ -155,7 +155,7 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
                                 name="alreadyFamiliar"
                                 id='alreadyFamiliar'
                                 type="checkbox"
-                                className="h-4 w-4 bg-level-1 cursor-pointer rounded border-muted-2 text-priamry"
+                                className="h-4 w-4 bg-level-1 cursor-pointer rounded border-[#404040] text-priamry"
                                 onChange={handleToggleChange}
                                 checked={alreadyFamiliar}
                             />

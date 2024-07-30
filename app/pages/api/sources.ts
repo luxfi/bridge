@@ -2,29 +2,51 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { mainnetSettings, testnetSettings } from '../../settings'
 
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<{
-    data: {
-      network: string;
-      asset: string;
-    }[]
-  }>
+    req: NextApiRequest,
+    res: NextApiResponse<{
+        data: {
+            network: string;
+            asset: string;
+        }[]
+    }>
 ) {
-  const versionFromQuery = req.query.version as string;
-  const source_network = req.query.source_network as string;
-  const isMainnet = versionFromQuery === 'mainnet' || process.env.NEXT_PUBLIC_API_VERSION === 'mainnet';
-  const settings = isMainnet ? mainnetSettings : testnetSettings;
+    try {
+        const {
+            destination_asset_group,
+            destination_network,
+            destination_asset,
+            version
+        } = req.query;
+        const isMainnet = version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+        // settings
+        const settings = isMainnet ? mainnetSettings : testnetSettings;
+        const { networks, exchanges } = settings.data;
 
-  const { exchanges, networks } = settings.data;
-  
-  const exchange = exchanges.find (e => e.internal_name === source_network);
-  const network = networks.find (e => e.internal_name === source_network);
-  
-  if (exchange) {
-    res.status(200).json({ data: exchange.currencies.map ((c: any) => ({ network: c.network, asset: c.asset })) });
-  } else if (network) {
-    res.status(200).json({ data: network.currencies.map ((c: any) => ({ network: network.internal_name, asset: c.asset })) });
-  } else {
-    res.status(200).json({ data: [] });
-  }
+        if (destination_asset_group) {
+            return res.status(200).json({
+                data: [
+                    {
+                        network: 'LUX_MAINNET',
+                        asset: 'LUX'
+                    }
+                ]
+            });
+        } else {
+            return res.status(200).json({
+                data: [
+                    ...networks.map((n: any) => ({
+                        network: n?.internal_name,
+                        asset: n?.native_currency
+                    })),
+                    ...exchanges.map((e: any) => ({
+                        network: e?.internal_name,
+                        asset: e?.display_name
+                    })),
+                ],
+            });
+        }
+    } catch (error) {
+        console.error("Error in fetching destinations", error);
+        res.status(500).json({ data: error.message });
+    }
 }

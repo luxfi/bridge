@@ -5,13 +5,15 @@ import Joi from "joi";
 
 export interface SwapTransactionRequest {
   amount: number;
-  destination_address: string;
-  destination_network: string;
-  destination_token: string;
-  refuel: boolean;
-  source_address: string;
   source_network: string;
-  source_token: string;
+  source_exchange?: string;
+  source_asset: string;
+  source_address: string;
+  destination_network: string;
+  destination_exchange?: string;
+  destination_asset: string;
+  destination_address: string;
+  refuel: boolean;
   use_deposit_address: boolean;
 }
 
@@ -19,14 +21,14 @@ const prisma = new PrismaClient();
 
 const swapTransactionSchema = Joi.object({
   amount: Joi.number().required(),
-  destination_address: Joi.string().required(),
+  source_network: Joi.string().required(),
+  source_asset: Joi.string().required(),
+  source_address: Joi.string().required(),
   destination_network: Joi.string().required(),
-  destination_token: Joi.string().required(),
+  destination_asset: Joi.string().required(),
+  destination_address: Joi.string().required(),
   refuel: Joi.boolean(),
   use_deposit_address: Joi.boolean(),
-  source_address: Joi.string().required(),
-  source_network: Joi.string().required(),
-  source_token: Joi.string().required(),
 });
 
 export default async function handler(
@@ -43,13 +45,15 @@ export default async function handler(
     }
     const {
       amount,
-      destination_address,
-      destination_network,
-      destination_token,
-      refuel,
-      source_address,
       source_network,
-      source_token,
+      source_exchange,
+      source_asset,
+      source_address,
+      destination_network,
+      destination_exchange,
+      destination_asset,
+      destination_address,
+      refuel,
       use_deposit_address,
     }: SwapTransactionRequest = value;
 
@@ -57,17 +61,18 @@ export default async function handler(
       const newSwapTransaction = await prisma.swapUserInfo.create({
         data: {
           amount,
-          destinationAddress: destination_address,
-          destinationNetwork: destination_network,
-          destinationToken: destination_token,
+          source_network,
+          source_exchange,
+          source_asset,
+          source_address,
+          destination_network,
+          destination_exchange,
+          destination_asset,
+          destination_address,
+          use_deposit_address,
           refuel,
-          sourceAddress: source_address,
-          sourceNetwork: source_network,
-          sourceToken: source_token,
-          useDepositAddress: use_deposit_address,
         },
       });
-
       res.status(200).json({ id: newSwapTransaction.id, message: "Success" });
     } catch (error) {
       console.error(error);

@@ -14,21 +14,6 @@
     "account_explorer_template": "https://explore.lux.network/address/{0}",
     "currencies": [
       {
-        "name": "USDT",
-        "asset": "USDT",
-        "contract_address": null,
-        "decimals": 6,
-        "status": "active",
-        "is_deposit_enabled": true,
-        "is_withdrawal_enabled": false,
-        "is_refuel_enabled": false,
-        "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1
-      },
-      {
         "name": "LUX",
         "asset": "LUX",
         "contract_address": null,
@@ -38,10 +23,27 @@
         "is_withdrawal_enabled": true,
         "is_refuel_enabled": true,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 100.0,
-        "withdrawal_fee": 100.0,
-        "source_base_fee": 100.0,
-        "destination_base_fee": 100.0
+        "deposit_fee": 100,
+        "withdrawal_fee": 100,
+        "source_base_fee": 100,
+        "destination_base_fee": 100,
+        "is_native": true
+      },
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -56,7 +58,40 @@
         "deposit_fee": 0.000108,
         "withdrawal_fee": 0.000108,
         "source_base_fee": 0.000545,
-        "destination_base_fee": 0.000545
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -75,7 +110,7 @@
   {
     "display_name": "ZKSpace",
     "internal_name": "ZKSPACE_MAINNET",
-    "native_currency": null,
+    "native_currency": "ZKS",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:02:17.7725040",
@@ -99,7 +134,8 @@
         "deposit_fee": 0.2,
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
-        "destination_base_fee": 1
+        "destination_base_fee": 1,
+        "is_native": false
       },
       {
         "name": "ZKS",
@@ -114,7 +150,8 @@
         "deposit_fee": 4.648858,
         "withdrawal_fee": 4.648858,
         "source_base_fee": 23.161471,
-        "destination_base_fee": 23.161471
+        "destination_base_fee": 23.161471,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -129,7 +166,8 @@
         "deposit_fee": 0.000108,
         "withdrawal_fee": 0.000108,
         "source_base_fee": 0.000545,
-        "destination_base_fee": 0.000545
+        "destination_base_fee": 0.000545,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -148,7 +186,7 @@
   {
     "display_name": "ImmutableX",
     "internal_name": "IMMUTABLEX_MAINNET",
-    "native_currency": null,
+    "native_currency": "IMX",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:01:55.0552590",
@@ -172,7 +210,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -187,7 +226,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "IMX",
@@ -202,7 +242,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0.000555,
         "source_base_fee": 0.555555,
-        "destination_base_fee": 0.555555
+        "destination_base_fee": 0.555555,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -248,7 +289,8 @@
         "deposit_fee": 0.05,
         "withdrawal_fee": 0.02,
         "source_base_fee": 1,
-        "destination_base_fee": 1
+        "destination_base_fee": 1,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -263,7 +305,8 @@
         "deposit_fee": 0.000075,
         "withdrawal_fee": 0.000031,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "SNX",
@@ -278,7 +321,8 @@
         "deposit_fee": 0.057682,
         "withdrawal_fee": 0.027129,
         "source_base_fee": 0.316455,
-        "destination_base_fee": 0.316455
+        "destination_base_fee": 0.316455,
+        "is_native": false
       },
       {
         "name": "LRC",
@@ -293,7 +337,8 @@
         "deposit_fee": 0.808405,
         "withdrawal_fee": 0.380216,
         "source_base_fee": 4.435022,
-        "destination_base_fee": 4.435022
+        "destination_base_fee": 4.435022,
+        "is_native": false
       },
       {
         "name": "BNB",
@@ -308,7 +353,8 @@
         "deposit_fee": 0.000163,
         "withdrawal_fee": 0.000163,
         "source_base_fee": 0.003393,
-        "destination_base_fee": 0.003393
+        "destination_base_fee": 0.003393,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -323,7 +369,8 @@
         "deposit_fee": 0.18,
         "withdrawal_fee": 0.08,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -347,7 +394,7 @@
   {
     "display_name": "Cronos",
     "internal_name": "CRONOS_MAINNET",
-    "native_currency": null,
+    "native_currency": "CRO",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:00:00",
@@ -359,10 +406,10 @@
     "account_explorer_template": "",
     "currencies": [
       {
-        "name": "ETH",
-        "asset": "ETH",
+        "name": "CRO",
+        "asset": "CRO",
         "contract_address": null,
-        "decimals": null,
+        "decimals": 18,
         "status": "inactive",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
@@ -371,7 +418,24 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -382,7 +446,7 @@
   {
     "display_name": "Loopring",
     "internal_name": "LOOPRING_MAINNET",
-    "native_currency": null,
+    "native_currency": "LRC",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:04:42.5069280",
@@ -406,7 +470,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -421,7 +486,8 @@
         "deposit_fee": 0.04,
         "withdrawal_fee": 0.04,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -436,7 +502,8 @@
         "deposit_fee": 0.000022,
         "withdrawal_fee": 0.000022,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "LRC",
@@ -451,7 +518,8 @@
         "deposit_fee": 0.208725,
         "withdrawal_fee": 0.208725,
         "source_base_fee": 4.435022,
-        "destination_base_fee": 4.435022
+        "destination_base_fee": 4.435022,
+        "is_native": false
       },
       {
         "name": "IMX",
@@ -466,7 +534,8 @@
         "deposit_fee": 0.082748,
         "withdrawal_fee": 0.027582,
         "source_base_fee": 0.555555,
-        "destination_base_fee": 0.555555
+        "destination_base_fee": 0.555555,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -511,7 +580,8 @@
         "deposit_fee": 0.2,
         "withdrawal_fee": 0.08,
         "source_base_fee": 1,
-        "destination_base_fee": 1
+        "destination_base_fee": 1,
+        "is_native": false
       },
       {
         "name": "USDC.e",
@@ -526,7 +596,8 @@
         "deposit_fee": 0.64,
         "withdrawal_fee": 0.27,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -541,7 +612,8 @@
         "deposit_fee": 0.000082,
         "withdrawal_fee": 0.000082,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -589,7 +661,8 @@
         "deposit_fee": 0.000144,
         "withdrawal_fee": 0.000144,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -613,7 +686,7 @@
   {
     "display_name": "rhino.fi",
     "internal_name": "RHINOFI_MAINNET",
-    "native_currency": null,
+    "native_currency": "DVF",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:02:59.5830740",
@@ -637,7 +710,24 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "DVF",
+        "asset": "DVF",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -652,7 +742,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "USDT",
@@ -667,7 +758,8 @@
         "deposit_fee": 1,
         "withdrawal_fee": 1,
         "source_base_fee": 1,
-        "destination_base_fee": 1
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -710,7 +802,8 @@
         "deposit_fee": 0.000446,
         "withdrawal_fee": 0.000446,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -725,7 +818,8 @@
         "deposit_fee": 2.93,
         "withdrawal_fee": 0.97,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -770,7 +864,8 @@
         "deposit_fee": 0.44,
         "withdrawal_fee": 0.17,
         "source_base_fee": 1,
-        "destination_base_fee": 1
+        "destination_base_fee": 1,
+        "is_native": false
       },
       {
         "name": "USDC.e",
@@ -785,7 +880,8 @@
         "deposit_fee": 0.85,
         "withdrawal_fee": 0.35,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -800,7 +896,8 @@
         "deposit_fee": 0.000113,
         "withdrawal_fee": 0.000113,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "OP",
@@ -815,7 +912,8 @@
         "deposit_fee": 0.293101,
         "withdrawal_fee": 0.120343,
         "source_base_fee": 0.332225,
-        "destination_base_fee": 0.332225
+        "destination_base_fee": 0.332225,
+        "is_native": false
       },
       {
         "name": "SNX",
@@ -830,7 +928,8 @@
         "deposit_fee": 0.387509,
         "withdrawal_fee": 0.230022,
         "source_base_fee": 0.316455,
-        "destination_base_fee": 0.316455
+        "destination_base_fee": 0.316455,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -879,7 +978,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "ASTR",
@@ -894,7 +994,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "ZKS",
@@ -909,7 +1010,8 @@
         "deposit_fee": 166.865654,
         "withdrawal_fee": 65.820981,
         "source_base_fee": 26.053974,
-        "destination_base_fee": 26.053974
+        "destination_base_fee": 26.053974,
+        "is_native": false
       },
       {
         "name": "USDT",
@@ -924,7 +1026,8 @@
         "deposit_fee": 4.68,
         "withdrawal_fee": 2.24,
         "source_base_fee": 1,
-        "destination_base_fee": 1
+        "destination_base_fee": 1,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -939,7 +1042,8 @@
         "deposit_fee": 12.79,
         "withdrawal_fee": 6.4,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -954,7 +1058,8 @@
         "deposit_fee": 0.001462,
         "withdrawal_fee": 0.001462,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "LRC",
@@ -969,7 +1074,8 @@
         "deposit_fee": 52.455252,
         "withdrawal_fee": 21.830179,
         "source_base_fee": 4.435022,
-        "destination_base_fee": 4.435022
+        "destination_base_fee": 4.435022,
+        "is_native": false
       },
       {
         "name": "IMX",
@@ -984,7 +1090,8 @@
         "deposit_fee": 6.377331,
         "withdrawal_fee": 2.65567,
         "source_base_fee": 0.555555,
-        "destination_base_fee": 0.555555
+        "destination_base_fee": 0.555555,
+        "is_native": false
       },
       {
         "name": "SNX",
@@ -999,7 +1106,8 @@
         "deposit_fee": 6.676014,
         "withdrawal_fee": 4.652934,
         "source_base_fee": 0.316455,
-        "destination_base_fee": 0.316455
+        "destination_base_fee": 0.316455,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -1022,7 +1130,7 @@
     ],
     "nodes": [
       {
-        "url": "https://eth-mainnet.public.blastapi.io"
+        "url": "https://json-rpc.6whkpou4agc13c9ux9e8il045.blockchainnodeengine.com"
       }
     ],
     "created_date": "2022-05-29T17:30:19.14963+00:00"
@@ -1030,7 +1138,7 @@
   {
     "display_name": "zkSync Lite",
     "internal_name": "ZKSYNC_MAINNET",
-    "native_currency": null,
+    "native_currency": "ETH",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:01:30.1957780",
@@ -1054,7 +1162,8 @@
         "deposit_fee": 0.001001,
         "withdrawal_fee": 0.000036,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -1069,7 +1178,8 @@
         "deposit_fee": 2.24,
         "withdrawal_fee": 0.08,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -1105,7 +1215,7 @@
         "name": "ETH",
         "asset": "ETH",
         "contract_address": null,
-        "decimals": null,
+        "decimals": 18,
         "status": "inactive",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
@@ -1114,7 +1224,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       }
     ],
     "metadata": null,
@@ -1149,7 +1260,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "OSMO",
@@ -1164,7 +1276,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0.000584,
         "source_base_fee": 0.584795,
-        "destination_base_fee": 0.584795
+        "destination_base_fee": 0.584795,
+        "is_native": true
       }
     ],
     "metadata": null,
@@ -1183,7 +1296,7 @@
   {
     "display_name": "dYdX",
     "internal_name": "DYDX_MAINNET",
-    "native_currency": null,
+    "native_currency": "DYDX",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:00:00",
@@ -1195,10 +1308,10 @@
     "account_explorer_template": "",
     "currencies": [
       {
-        "name": "USDC",
-        "asset": "USDC",
+        "name": "DYDX",
+        "asset": "DYDX",
         "contract_address": null,
-        "decimals": null,
+        "decimals": 18,
         "status": "inactive",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
@@ -1207,7 +1320,24 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -1242,7 +1372,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.00063,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "SOL",
@@ -1257,7 +1388,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -1272,7 +1404,8 @@
         "deposit_fee": 2.63,
         "withdrawal_fee": 0.87,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -1315,7 +1448,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       },
       {
         "name": "USDT",
@@ -1330,7 +1464,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 2,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -1345,7 +1480,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.001032,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -1360,7 +1496,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 2,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -1403,7 +1540,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       },
       {
         "name": "ETH",
@@ -1418,7 +1556,8 @@
         "deposit_fee": 0.000001,
         "withdrawal_fee": 0,
         "source_base_fee": 0.000585,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -1433,7 +1572,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 1,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "USDT",
@@ -1448,7 +1588,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       },
       {
         "name": "LRC",
@@ -1463,7 +1604,8 @@
         "deposit_fee": 0.00521,
         "withdrawal_fee": 0.00407,
         "source_base_fee": 2.84444,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -1506,7 +1648,8 @@
         "deposit_fee": 0.00167,
         "withdrawal_fee": 0.001229,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -1521,7 +1664,8 @@
         "deposit_fee": 3.65,
         "withdrawal_fee": 2.69,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "OKT",
@@ -1536,7 +1680,8 @@
         "deposit_fee": 0.0273,
         "withdrawal_fee": 0.0273,
         "source_base_fee": 0.056529,
-        "destination_base_fee": 0.056529
+        "destination_base_fee": 0.056529,
+        "is_native": true
       },
       {
         "name": "USDT",
@@ -1551,7 +1696,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 2,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
       }
     ],
     "metadata": null,
@@ -1594,7 +1740,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "FUSE",
@@ -1609,7 +1756,8 @@
         "deposit_fee": 0.0003,
         "withdrawal_fee": 0.0003,
         "source_base_fee": 13.599521,
-        "destination_base_fee": 13.599521
+        "destination_base_fee": 13.599521,
+        "is_native": true
       }
     ],
     "metadata": null,
@@ -1652,7 +1800,8 @@
         "deposit_fee": 0.000069,
         "withdrawal_fee": 0.000069,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -1667,7 +1816,8 @@
         "deposit_fee": 0.46,
         "withdrawal_fee": 0.16,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -1714,7 +1864,8 @@
         "deposit_fee": 0.000022,
         "withdrawal_fee": 0.000009,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "USDC.E",
@@ -1729,7 +1880,8 @@
         "deposit_fee": 0.06,
         "withdrawal_fee": 0.03,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "MATIC",
@@ -1744,7 +1896,8 @@
         "deposit_fee": 0.015099,
         "withdrawal_fee": 0.015099,
         "source_base_fee": 1.307575,
-        "destination_base_fee": 1.307575
+        "destination_base_fee": 1.307575,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -1792,7 +1945,8 @@
         "deposit_fee": 0.000114,
         "withdrawal_fee": 0.000114,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -1807,7 +1961,8 @@
         "deposit_fee": 0.89,
         "withdrawal_fee": 0.37,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -1855,7 +2010,8 @@
         "deposit_fee": 0.08,
         "withdrawal_fee": 0.04,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "AVAX",
@@ -1870,7 +2026,8 @@
         "deposit_fee": 0.000682,
         "withdrawal_fee": 0.000682,
         "source_base_fee": 0.031279,
-        "destination_base_fee": 0.031279
+        "destination_base_fee": 0.031279,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -1918,7 +2075,8 @@
         "deposit_fee": 0.000079,
         "withdrawal_fee": 0.000079,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -1933,7 +2091,8 @@
         "deposit_fee": 0.69,
         "withdrawal_fee": 0.34,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -1981,7 +2140,8 @@
         "deposit_fee": 0.8,
         "withdrawal_fee": 0.33,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "ETH",
@@ -1996,7 +2156,8 @@
         "deposit_fee": 0.000112,
         "withdrawal_fee": 0.000112,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -2045,7 +2206,8 @@
         "deposit_fee": 0.000062,
         "withdrawal_fee": 0.000059,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -2090,7 +2252,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       },
       {
         "name": "axlUSDC",
@@ -2105,7 +2268,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -2153,7 +2317,8 @@
         "deposit_fee": 0.000448,
         "withdrawal_fee": 0.000161,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "MNT",
@@ -2168,7 +2333,8 @@
         "deposit_fee": 0.539739,
         "withdrawal_fee": 0.539739,
         "source_base_fee": 1.715539,
-        "destination_base_fee": 1.715539
+        "destination_base_fee": 1.715539,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -2217,7 +2383,8 @@
         "deposit_fee": 0.000057,
         "withdrawal_fee": 0.000057,
         "source_base_fee": 0.000454,
-        "destination_base_fee": 0.000454
+        "destination_base_fee": 0.000454,
+        "is_native": true
       }
     ],
     "metadata": {
@@ -2266,7 +2433,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       },
       {
         "name": "ETH",
@@ -2281,7 +2449,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       },
       {
         "name": "USDC",
@@ -2296,7 +2465,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -2345,7 +2515,8 @@
         "deposit_fee": 0.000093,
         "withdrawal_fee": 0.000093,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -2360,7 +2531,8 @@
         "deposit_fee": 0.67,
         "withdrawal_fee": 0.26,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -2405,7 +2577,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       },
       {
         "name": "ETH",
@@ -2420,7 +2593,8 @@
         "deposit_fee": 0.000002,
         "withdrawal_fee": 0,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -2441,7 +2615,7 @@
   {
     "display_name": "tanX",
     "internal_name": "BRINE_MAINNET",
-    "native_currency": null,
+    "native_currency": "SALT",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:02:35.7192870",
@@ -2465,7 +2639,24 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "SALT",
+        "asset": "SALT",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -2506,7 +2697,8 @@
         "deposit_fee": 0.000159,
         "withdrawal_fee": 0.000159,
         "source_base_fee": 0.000456,
-        "destination_base_fee": 0.000456
+        "destination_base_fee": 0.000456,
+        "is_native": true
       },
       {
         "name": "USDC",
@@ -2521,7 +2713,8 @@
         "deposit_fee": 1.17,
         "withdrawal_fee": 0.41,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       }
     ],
     "metadata": {
@@ -2570,7 +2763,8 @@
         "deposit_fee": 0.05,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": false
       },
       {
         "name": "TON",
@@ -2585,7 +2779,8 @@
         "deposit_fee": 0,
         "withdrawal_fee": 0,
         "source_base_fee": 0,
-        "destination_base_fee": 0
+        "destination_base_fee": 0,
+        "is_native": true
       }
     ],
     "metadata": null,
@@ -2624,7 +2819,8 @@
         "deposit_fee": 0.05,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0.99,
-        "destination_base_fee": 0.99
+        "destination_base_fee": 0.99,
+        "is_native": true
       }
     ],
     "metadata": null,
