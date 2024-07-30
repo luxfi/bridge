@@ -13,7 +13,8 @@
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "analyze": "cross-env ANALYZE=true next build",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
@@ -86,6 +87,7 @@
     "uuid": "^9.0.0",
     "viem": "^1.13.1",
     "wagmi": "^1.4.12",
+    "web3": "^4.11.1",
     "zksync": "^0.13.1",
     "zustand": "^4.4.1"
   },
@@ -107,6 +109,7 @@
     "@types/mdx": "^2.0.9",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
+    "@types/web3": "^1.2.2",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "@web3-react/types": "^6.0.7",

@@ -22,7 +22,7 @@ const WalletTransfer: FC = () => {
 
     const { source_network: source_network_internal_name } = swap || {}
     const source_layer = layers.find(n => n.internal_name === source_network_internal_name)
-    const sourceAsset = source_layer?.assets?.find(c => c.asset.toLowerCase() === swap?.source_network_asset.toLowerCase())
+    const sourceAsset = source_layer?.assets?.find(c => c?.asset?.toLowerCase() === swap?.source_asset?.toLowerCase())
 
     const sourceIsImmutableX = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ImmutableXMainnet?.toUpperCase() || source_network_internal_name === KnownInternalNames.Networks.ImmutableXGoerli?.toUpperCase()
     const sourceIsZkSync = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ZksyncMainnet?.toUpperCase()
@@ -77,7 +77,7 @@ const WalletTransfer: FC = () => {
 }
 
 const Wrapper: FC<{ children?: React.ReactNode }> = ({ children }) => {
-    return <div className='border-muted-2 rounded-md border bg-level-1 p-3'>
+    return <div className='border-[#404040] rounded-md border bg-level-1 p-3'>
         {children}
     </div>
 }

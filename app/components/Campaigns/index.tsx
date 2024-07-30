@@ -31,7 +31,7 @@ const Rewards = () => {
                     <div className="space-y-5 h-full text-muted">
                         <div className="space-y-2">
                             <p className="font-bold text-left leading-5">Campaigns</p>
-                            <div className="border border-muted-4 transition duration-200 rounded-lg shadow-lg">
+                            <div className="border border-[#404040] transition duration-200 rounded-lg shadow-lg">
                                 <div className="p-3 space-y-4">
                                     {
                                         activeCampaigns.length > 0 ?
@@ -55,7 +55,7 @@ const Rewards = () => {
                             inactiveCampaigns.length > 0 &&
                             <div className="space-y-2">
                                 <p className="font-bold text-left leading-5">Old campaigns</p>
-                                <div className='border border-muted-4 transition duration-200 rounded-lg shadow-lg'>
+                                <div className='border border-[#404040] transition duration-200 rounded-lg shadow-lg'>
                                     <div className="p-3 dpsv flex flex-col space-y-4">
                                         {inactiveCampaigns.map(c =>
                                             <CampaignItem

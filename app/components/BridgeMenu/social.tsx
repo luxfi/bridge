@@ -11,7 +11,7 @@ import { LinkDef } from '@luxdefi/ui/types'
 export default [
   {
       title: 'Twitter',
-      href: 'https://twitter.com/luxdefi',
+      href: 'https://twitter.com/luxfi',
       icon: <TwitterLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Twitter'
   },
@@ -29,7 +29,7 @@ export default [
   },
   {
       title: 'YouTube',
-      href: 'https://www.youtube.com/@luxdefi',
+      href: 'https://www.youtube.com/@luxfi',
       icon: <YoutubeLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Youtube'
   },
