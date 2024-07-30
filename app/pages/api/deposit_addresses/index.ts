@@ -17,14 +17,6 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    // Get dynamic id from URL
-    const { network } = req.query;
-    // Get version from query parameter
-    const { version } = req.query;
-    const isMainnet =
-        version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-    // settings
-
     const data = {};
     const types = await prisma.depositAddress.groupBy({
         by: ['type']
