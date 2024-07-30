@@ -207,7 +207,7 @@ export async function handlerGetSwaps(
             orderBy: {
                 created_date: "desc",
             },
-            where: { source_address: address, is_deleted: isDe },
+            where: { source_address: address },
 
             include: {
                 deposit_actions: true,
@@ -382,7 +382,7 @@ export async function handlerUpdateSwap(swapData: UpdateSwapData) {
 export async function handlerDelSwap(swapData: { id: string }) {
     try {
         await prisma.swap.update({
-            where: { id: swapData.id, is_deleted: true },
+            where: { id: swapData.id },
             data: { ...swapData },
         });
         return "success";
