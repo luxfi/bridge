@@ -46,43 +46,6 @@ function generateRandomString(): string {
     return result;
 }
 
-export async function handleUpdateSwapTransactionByID(
-    swapId: string,
-    tokenId: number,
-    networkId: number,
-    type: TransactionType
-) {
-    // Transaction
-    await prisma.transaction.create({
-        data: {
-            status: "completed",
-            type: type,
-            from: "",
-            to: "",
-            transaction_hash: "",
-
-            confirmations: 2,
-            max_confirmations: 2,
-            amount: 2,
-            swap: {
-                connect: {
-                    id: swapId,
-                },
-            },
-            currency: {
-                connect: {
-                    id: tokenId,
-                },
-            },
-            network: {
-                connect: {
-                    id: networkId,
-                },
-            },
-        },
-    });
-}
-
 /**
  * Create swap according to users' input
  * @param data SwapData
@@ -167,6 +130,46 @@ export async function handleSwapCreation(data: SwapData) {
         );
     }
 }
+
+
+export async function handleUpdateSwapTransactionByID(
+    swapId: string,
+    tokenId: number,
+    networkId: number,
+    type: TransactionType
+) {
+    // Transaction
+    await prisma.transaction.create({
+        data: {
+            status: "completed",
+            type: type,
+            from: "",
+            to: "",
+            transaction_hash: "",
+
+            confirmations: 2,
+            max_confirmations: 2,
+            amount: 2,
+            swap: {
+                connect: {
+                    id: swapId,
+                },
+            },
+            currency: {
+                connect: {
+                    id: tokenId,
+                },
+            },
+            network: {
+                connect: {
+                    id: networkId,
+                },
+            },
+        },
+    });
+}
+
+
 
 export async function handlerGetSwap(id: string) {
     try {
