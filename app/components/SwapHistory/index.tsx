@@ -304,7 +304,7 @@ function TransactionsHistory() {
                                     <span>
                                       {truncateDecimals(
                                         swap.requested_amount,
-                                        sourceAsset?.precision
+                                        sourceAsset?.precision ?? 5
                                       )}
                                     </span>
                                   )}
