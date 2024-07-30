@@ -15,24 +15,16 @@ export default async function handler(
   res.setHeader("Access-Control-Allow-Credentials", "true");
   if (req.method === "POST") {
     const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-    const settings = isMainnet ? mainnetSettings : testnetSettings;
-
-    let contract_address =
-      req.body.source_network?.includes("STARKNET") &&
-      settings.contractAddress.data.find((res) => {
-        return res.contract_name === "STARKNET";
-      });
-
-    if (!contract_address) {
-      contract_address = getRandomObjectExceptSTARKNET(
-        settings.contractAddress.data
-      );
-    }
+    
+    // TODO: calculate deposit_address & current block_number
+    const deposit_address_id = 1;
+    const block_number = 1;
 
     try {
       const result = await handleSwapCreation({
         ...req.body,
-        contract_address,
+        deposit_address_id,
+        block_number
       });
       res.status(200).json({ data: { ...result } });
     } catch (error) {

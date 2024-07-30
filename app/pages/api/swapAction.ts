@@ -19,10 +19,8 @@ export interface SwapData {
     destination_address: string;
     refuel: boolean;
     use_deposit_address: boolean;
-    contract_address: {
-        contract_name: string;
-        contract_address: string;
-    };
+    block_number: number,
+    deposit_address_id: number;
     [property: string]: any;
 }
 
@@ -85,7 +83,13 @@ export async function handleUpdateSwapTransactionByID(
     });
 }
 
+/**
+ * Create swap according to users' input
+ * @param data SwapData
+ * @returns swap result
+ */
 export async function handleSwapCreation(data: SwapData) {
+
     const {
         amount,
         source_network,
@@ -98,10 +102,10 @@ export async function handleSwapCreation(data: SwapData) {
         destination_address,
         refuel,
         use_deposit_address,
-        contract_address: cAddress,
+        block_number,
+        deposit_address_id
     } = data;
 
-    // const deposit_address = {}
 
     try {
         const swap = await prisma.swap.create({
@@ -117,119 +121,21 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_address,
                 refuel,
                 use_deposit_address,
-                deposit_address_id: 1,
+                block_number,
+                deposit_address_id,
                 status: SwapStatus.UserTransferPending,
                 quotes: {},
             },
         });
 
-        // Transaction
-        // await prisma.transaction.create({
-        //   data: {
-        //     status: "completed",
-        //     type: "input",
-        //     from: source_address,
-        //     to: cAddress?.contract_address,
-        //     transaction_hash: `0x${
-        //       generateRandomString() +
-        //       "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
-        //       generateRandomString()
-        //     }`,
-
-        //     confirmations: 2,
-        //     max_confirmations: 2,
-        //     amount: amount,
-        //     swap: {
-        //       connect: {
-        //         id: swap.id,
-        //       },
-        //     },
-        //     token: {
-        //       connect: {
-        //         id: token.id,
-        //       },
-        //     },
-        //     network: {
-        //       connect: {
-        //         id: network.id,
-        //       },
-        //     },
-        //   },
-        // });
-
-        // await prisma.transaction.create({
-        //   data: {
-        //     status: "completed",
-        //     type: "output",
-        //     from: cAddress?.contract_address,
-        //     to: source_address,
-        //     transaction_hash: `0x${
-        //       generateRandomString() +
-        //       "89197d533f13af33cd8dcd799cc0a254911f7aa7d3481daa1550fe" +
-        //       generateRandomString()
-        //     }`,
-        //     confirmations: 2,
-        //     max_confirmations: 2,
-        //     amount: amount,
-        //     swap: {
-        //       connect: {
-        //         id: swap.id,
-        //       },
-        //     },
-        //     token: {
-        //       connect: {
-        //         id: token.id,
-        //       },
-        //     },
-        //     network: {
-        //       connect: {
-        //         id: network.id,
-        //       },
-        //     },
-        //   },
-        // });
-
-        // const depositAction = await prisma.depositAction.findFirstOrThrow({
-        //   where: {
-        //     swap_id: swap.id,
-        //   },
-        // });
-
-        // const nAddress =
-        //   (cAddress?.contract_address &&
-        //     (await prisma.contractAddress.create({
-        //       data: {
-        //         swap_id: swap.id,
-        //         name: cAddress?.contract_name,
-        //         address: cAddress?.contract_address,
-        //       },
-        //     }))) ||
-        //   {};
-
-        // const depositAction = await prisma.depositAction.create({
-        //   data: {
-        //     type: "transfer",
-        //     toAddress: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
-        //     amount,
-        //     orderNumber: 0,
-        //     amountInBaseUnits: "331000000000000",
-        //     networkId: sourceNetworkRecord.id,
-        //     tokenId: sourceTokenRecord.id,
-        //     feeTokenId: destinationTokenRecord.id,
-        //     callData: "0x168b",
-        //     swapId: swap.id,
-        //   },
-        // });
-
-        // const requested_amount;
+        // estimate swap rate 
         const [sourcePrice, destinationPrice] = await Promise.all([
             getTokenPrice(source_asset),
             getTokenPrice(destination_asset)
         ]);
         const receive_amount = Number(amount) * sourcePrice / destinationPrice;
 
-        console.log({ receive_amount })
-
+        // save quote
         const quote = await prisma.quote.create({
             data: {
                 swap_id: swap.id,

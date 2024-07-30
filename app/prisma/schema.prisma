@@ -117,6 +117,9 @@ model Swap {
     status                   String
     fail_reason              String?
     metadata_sequence_number Int?
+    
+    // current block_number from the chain
+    block_number             Int
 
     deposit_address_id       Int
     deposit_address          DepositAddress @relation(fields: [deposit_address_id], references: [id])
