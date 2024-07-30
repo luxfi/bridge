@@ -15,7 +15,7 @@ generator client {
 // }
 
 datasource db {
-  provider = "sqlite"
+  provider  = "sqlite"
   url       = "file:dev.sqlite" // uses connection pooling
   directUrl = "file:dev.sqlite" // uses a direct connection
 }
@@ -117,9 +117,11 @@ model Swap {
   status                   String
   fail_reason              String?
   metadata_sequence_number Int?
-  deposit_actions          DepositAction[]
+  deposit_address          DepositAddress   @relation(fields: [deposit_address_id], references: [id])
+  deposit_address_id       Int
+  
   quotes                   Quote?
-  contract_address         ContractAddress?
+  deposit_actions          DepositAction[]
   transactions             Transaction[]
 
   @@index([id])
@@ -173,10 +175,12 @@ model Quote {
   swap                Swap   @relation(fields: [swap_id], references: [id])
 }
 
-
-
 model DepositAddress {
-  id         Int    @id @default(autoincrement())
-  type       String
-  address    String
+  id      Int    @id @default(autoincrement())
+  type    String
+  address String
+  Swap    Swap[]
+
+  @@index([type])
+  @@index([address])
 }
