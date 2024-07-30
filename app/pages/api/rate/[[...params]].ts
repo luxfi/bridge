@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getTokenPrice } from '../tokenAction';
-// import { mainnetSettings, testnetSettings } from '../../settings'
 
+/**
+ * get rate information for the swap
+ * /rate/source_network/source_asset/destination_network/destination_asset?amount=&version=
+ * @param req
+ * @param res
+ */
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<{
@@ -23,7 +28,6 @@ export default async function handler(
 ) {
     const { amount, version, params } = req.query;
     const [source, source_asset, destination, destination_asset] = params as string[];
-
 
     const [sourcePrice, destinationPrice] = await Promise.all([
         getTokenPrice(source_asset),
