@@ -8,17 +8,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-}
-
 // datasource db {
-//   provider = "sqlite"
-//   url      = "file:./dev.sqlite"
-//   // directUrl = "file:./dev.sqlite" // 
+//   provider  = "postgresql"
+//   url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+//   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 // }
+
+datasource db {
+  provider = "sqlite"
+  url       = "file:dev.sqlite" // uses connection pooling
+  directUrl = "file:dev.sqlite" // uses a direct connection
+}
 
 // pnpx prisma generate    
 // npx prisma db push   
@@ -171,4 +171,12 @@ model Quote {
   total_fee           Float
   total_fee_in_usd    Float
   swap                Swap   @relation(fields: [swap_id], references: [id])
+}
+
+
+
+model DepositAddress {
+  id         Int    @id @default(autoincrement())
+  type       String
+  address    String
 }
