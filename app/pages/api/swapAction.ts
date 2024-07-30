@@ -19,10 +19,8 @@ export interface SwapData {
     destination_address: string;
     refuel: boolean;
     use_deposit_address: boolean;
-    contract_address: {
-        contract_name: string;
-        contract_address: string;
-    };
+    block_number: number,
+    deposit_address_id: number;
     [property: string]: any;
 }
 
@@ -98,10 +96,10 @@ export async function handleSwapCreation(data: SwapData) {
         destination_address,
         refuel,
         use_deposit_address,
-        contract_address: cAddress,
+        block_number,
+        deposit_address_id
     } = data;
 
-    // const deposit_address = {}
 
     try {
         const swap = await prisma.swap.create({
@@ -117,7 +115,8 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_address,
                 refuel,
                 use_deposit_address,
-                deposit_address_id: 1,
+                block_number,
+                deposit_address_id,
                 status: SwapStatus.UserTransferPending,
                 quotes: {},
             },
@@ -221,15 +220,13 @@ export async function handleSwapCreation(data: SwapData) {
         //   },
         // });
 
-        // const requested_amount;
+        // estimate swap rate 
         const [sourcePrice, destinationPrice] = await Promise.all([
             getTokenPrice(source_asset),
             getTokenPrice(destination_asset)
         ]);
         const receive_amount = Number(amount) * sourcePrice / destinationPrice;
-
-        console.log({ receive_amount })
-
+        // save quote
         const quote = await prisma.quote.create({
             data: {
                 swap_id: swap.id,
