@@ -118,13 +118,13 @@ model Swap {
     fail_reason              String?
     metadata_sequence_number Int?
 
-    deposit_address_id Int
-    deposit_address    DepositAddress @relation(fields: [deposit_address_id], references: [id])
+    deposit_address_id       Int
+    deposit_address          DepositAddress @relation(fields: [deposit_address_id], references: [id])
 
-    quotes          Quote?
-    deposit_actions DepositAction[]
-    transactions    Transaction[]
-    ContractAddress ContractAddress?
+    quotes                   Quote?
+    deposit_actions          DepositAction[]
+    transactions             Transaction[]
+    ContractAddress          ContractAddress?
 
     @@index([id])
 }
