@@ -545,7 +545,7 @@ async function main(): Promise<void> {
   let lastNumber =
     lastBlock === "latest"
       ? await web3.eth.getBlockNumber()
-      : Number(web3.utils.toNumber(lastBlock)) - 1;
+      : Number(web3.utils.toNumber(lastBlock));
 
   let currentNumber = lastNumber;
   let blockNumber = lastNumber;
@@ -696,19 +696,19 @@ async function main(): Promise<void> {
     // });
   };
 
-  // await run();
+  await run();
 
-  setInterval(run, 1);
+  // setInterval(run, 1);
 
-  function check() {
-    web3.eth.getBlockNumber((error: any, n: number) => {
-      if (error) {
-        console.log(`Error getting blockNumber\n`, error);
-        return;
-      }
-      blockNumber = n;
-    });
-  }
+  // function check() {
+  //   web3.eth.getBlockNumber((error: any, n: number) => {
+  //     if (error) {
+  //       console.log(`Error getting blockNumber\n`, error);
+  //       return;
+  //     }
+  //     blockNumber = n;
+  //   });
+  // }
 
   // setInterval(check, 1000);
 }
