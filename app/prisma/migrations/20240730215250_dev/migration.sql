@@ -29,14 +29,13 @@ CREATE TABLE "Network" (
     "transaction_explorer_template" TEXT,
     "account_explorer_template" TEXT,
     "listing_date" TIMESTAMP(3),
-    "token_id" INTEGER,
     "transaction_id" INTEGER,
 
     CONSTRAINT "Network_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Token" (
+CREATE TABLE "Currency" (
     "id" SERIAL NOT NULL,
     "symbol" TEXT NOT NULL,
     "logo" TEXT NOT NULL,
@@ -46,8 +45,9 @@ CREATE TABLE "Token" (
     "precision" INTEGER NOT NULL,
     "listing_date" TIMESTAMP(3),
     "transaction_id" INTEGER,
+    "network_id" INTEGER NOT NULL,
 
-    CONSTRAINT "Token_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Currency_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -59,8 +59,8 @@ CREATE TABLE "DepositAction" (
     "order_number" INTEGER,
     "amount_in_base_units" TEXT,
     "network_id" INTEGER NOT NULL,
-    "token_id" INTEGER NOT NULL,
-    "fee_token_id" INTEGER NOT NULL,
+    "currency_id" INTEGER NOT NULL,
+    "fee_currency_id" INTEGER NOT NULL,
     "call_data" TEXT,
     "swap_id" TEXT NOT NULL,
 
@@ -86,6 +86,7 @@ CREATE TABLE "Swap" (
     "status" TEXT NOT NULL,
     "fail_reason" TEXT,
     "metadata_sequence_number" INTEGER,
+    "deposit_address_id" INTEGER NOT NULL,
 
     CONSTRAINT "Swap_pkey" PRIMARY KEY ("id")
 );
@@ -103,8 +104,8 @@ CREATE TABLE "Transaction" (
     "amount" DOUBLE PRECISION NOT NULL,
     "type" TEXT NOT NULL,
     "status" TEXT NOT NULL,
-    "token_id" INTEGER,
     "network_id" INTEGER,
+    "currency_id" INTEGER,
     "swap_id" TEXT,
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
@@ -136,23 +137,35 @@ CREATE TABLE "Quote" (
     CONSTRAINT "Quote_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "SwapUserInfo__id_key" ON "SwapUserInfo"("_id");
+-- CreateTable
+CREATE TABLE "DepositAddress" (
+    "id" SERIAL NOT NULL,
+    "type" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+
+    CONSTRAINT "DepositAddress_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Network_token_id_key" ON "Network"("token_id");
+CREATE UNIQUE INDEX "SwapUserInfo__id_key" ON "SwapUserInfo"("_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Network_transaction_id_key" ON "Network"("transaction_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Token_transaction_id_key" ON "Token"("transaction_id");
+CREATE INDEX "Network_transaction_id_idx" ON "Network"("transaction_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DepositAction_token_id_key" ON "DepositAction"("token_id");
+CREATE UNIQUE INDEX "Currency_transaction_id_key" ON "Currency"("transaction_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DepositAction_fee_token_id_key" ON "DepositAction"("fee_token_id");
+CREATE INDEX "Currency_transaction_id_idx" ON "Currency"("transaction_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DepositAction_currency_id_key" ON "DepositAction"("currency_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DepositAction_fee_currency_id_key" ON "DepositAction"("fee_currency_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DepositAction_swap_id_key" ON "DepositAction"("swap_id");
@@ -161,31 +174,58 @@ CREATE UNIQUE INDEX "DepositAction_swap_id_key" ON "DepositAction"("swap_id");
 CREATE INDEX "DepositAction_swap_id_idx" ON "DepositAction"("swap_id");
 
 -- CreateIndex
+CREATE INDEX "Swap_id_idx" ON "Swap"("id");
+
+-- CreateIndex
+CREATE INDEX "Transaction_swap_id_idx" ON "Transaction"("swap_id");
+
+-- CreateIndex
+CREATE INDEX "Transaction_status_idx" ON "Transaction"("status");
+
+-- CreateIndex
+CREATE INDEX "Transaction_transaction_hash_idx" ON "Transaction"("transaction_hash");
+
+-- CreateIndex
+CREATE INDEX "Transaction_currency_id_idx" ON "Transaction"("currency_id");
+
+-- CreateIndex
+CREATE INDEX "Transaction_network_id_idx" ON "Transaction"("network_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ContractAddress_swap_id_key" ON "ContractAddress"("swap_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Quote_swap_id_key" ON "Quote"("swap_id");
 
+-- CreateIndex
+CREATE INDEX "DepositAddress_type_idx" ON "DepositAddress"("type");
+
+-- CreateIndex
+CREATE INDEX "DepositAddress_address_idx" ON "DepositAddress"("address");
+
 -- AddForeignKey
-ALTER TABLE "Network" ADD CONSTRAINT "Network_token_id_fkey" FOREIGN KEY ("token_id") REFERENCES "Token"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Currency" ADD CONSTRAINT "Currency_network_id_fkey" FOREIGN KEY ("network_id") REFERENCES "Network"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "DepositAction" ADD CONSTRAINT "DepositAction_network_id_fkey" FOREIGN KEY ("network_id") REFERENCES "Network"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DepositAction" ADD CONSTRAINT "DepositAction_token_id_fkey" FOREIGN KEY ("token_id") REFERENCES "Token"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "DepositAction" ADD CONSTRAINT "DepositAction_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "Currency"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DepositAction" ADD CONSTRAINT "DepositAction_fee_token_id_fkey" FOREIGN KEY ("fee_token_id") REFERENCES "Token"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "DepositAction" ADD CONSTRAINT "DepositAction_fee_currency_id_fkey" FOREIGN KEY ("fee_currency_id") REFERENCES "Currency"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "DepositAction" ADD CONSTRAINT "DepositAction_swap_id_fkey" FOREIGN KEY ("swap_id") REFERENCES "Swap"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_token_id_fkey" FOREIGN KEY ("token_id") REFERENCES "Token"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Swap" ADD CONSTRAINT "Swap_deposit_address_id_fkey" FOREIGN KEY ("deposit_address_id") REFERENCES "DepositAddress"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_network_id_fkey" FOREIGN KEY ("network_id") REFERENCES "Network"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "Currency"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_swap_id_fkey" FOREIGN KEY ("swap_id") REFERENCES "Swap"("id") ON DELETE SET NULL ON UPDATE CASCADE;
