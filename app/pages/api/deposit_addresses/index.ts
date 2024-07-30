@@ -1,11 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../lib/db";
-import { NetworkType } from "../../../Models/CryptoNetwork";
-
-function getRandomInt(a: number, b: number) {
-    return Math.floor(Math.random() * (b - a + 1) + a);
-}
-
 /**
  * return deposit addresses across all chains
  * api/deposit_addresses

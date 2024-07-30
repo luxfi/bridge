@@ -112,7 +112,6 @@ model Swap {
     destination_address      String
     refuel                   Boolean
     use_deposit_address      Boolean
-    is_deleted               Boolean  @default(false)
     requested_amount         Float
     status                   String
     fail_reason              String?
