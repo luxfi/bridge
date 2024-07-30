@@ -176,7 +176,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">Requested amount</span>
                             <span className=' font-normal flex'>
-                                {swap?.requested_amount} {swap?.destination_asset}
+                                {swap?.requested_amount} {swap?.source_asset}
                             </span>
                         </div>
                         {
