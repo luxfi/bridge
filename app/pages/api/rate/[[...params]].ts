@@ -34,16 +34,6 @@ export default async function handler(
         getTokenPrice(destination_asset)
     ]);
 
-    console.log("rate", {
-        amount,
-        source,
-        source_asset,
-        destination,
-        destination_asset,
-        sourcePrice,
-        destinationPrice
-    });
-
     res.status(200).json({
         data: {
             wallet_fee_in_usd: 10,

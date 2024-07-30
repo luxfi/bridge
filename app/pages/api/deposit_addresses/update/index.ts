@@ -6,7 +6,6 @@ import {
 
 /**
  * update deposit addresses of DB from setting file
- * 
  * @param req 
  * @param res 
  */
