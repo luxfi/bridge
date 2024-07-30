@@ -71,7 +71,7 @@ export async function handleUpdateSwapTransactionByID(
                     id: swapId,
                 },
             },
-            token: {
+            currency: {
                 connect: {
                     id: tokenId,
                 },
@@ -101,6 +101,8 @@ export async function handleSwapCreation(data: SwapData) {
         contract_address: cAddress,
     } = data;
 
+    // const deposit_address = {}
+
     try {
         const swap = await prisma.swap.create({
             data: {
@@ -115,6 +117,7 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_address,
                 refuel,
                 use_deposit_address,
+                deposit_address_id: 1,
                 status: SwapStatus.UserTransferPending,
                 quotes: {},
             },
@@ -225,7 +228,7 @@ export async function handleSwapCreation(data: SwapData) {
         ]);
         const receive_amount = Number(amount) * sourcePrice / destinationPrice;
 
-        console.log({receive_amount})
+        console.log({ receive_amount })
 
         const quote = await prisma.quote.create({
             data: {
@@ -267,12 +270,12 @@ export async function handlerGetSwap(id: string) {
             include: {
                 deposit_actions: true,
                 quotes: true,
-                contract_address: true,
+                deposit_address: true,
                 transactions: {
                     include: {
-                        token: true,
+                        currency: true,
                         network: {
-                            include: { token: true },
+                            include: { currencies: false },
                         },
                     },
                 },
@@ -302,9 +305,9 @@ export async function handlerGetSwaps(
                 quotes: true,
                 transactions: {
                     include: {
-                        token: true,
+                        currency: true,
                         network: {
-                            include: { token: true },
+                            include: { currencies: false },
                         },
                     },
                 },
@@ -334,10 +337,10 @@ export async function handlerGetHasBySwaps(address: string) {
                         include: {
                             transactions: {
                                 include: {
-                                    token: true,
+                                    currency: true,
                                     network: {
                                         include: {
-                                            token: true,
+                                            currencies: true,
                                         },
                                     },
                                 },
@@ -372,12 +375,12 @@ export async function handlerGetExplorer(status: string[]) {
             include: {
                 deposit_actions: true,
                 quotes: true,
-                contract_address: true,
+                deposit_address: true,
                 transactions: {
                     include: {
-                        token: true,
+                        currency: true,
                         network: {
-                            include: { token: true },
+                            include: { currencies: true },
                         },
                     },
                 },
