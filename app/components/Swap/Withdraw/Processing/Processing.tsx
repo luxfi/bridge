@@ -13,10 +13,10 @@ import { BridgeAppSettings } from '../../../../Models/BridgeAppSettings';
 import { SwapStatus } from '../../../../Models/SwapStatus';
 import { SwapFailReasons } from '../../../../Models/RangeError';
 import { Gauge } from '../../../gauge';
-import Failed from '../Failed';
 import { Progress, ProgressStates, ProgressStatus, StatusStep } from './types';
 import { useFee } from '../../../../context/feeContext';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
+import Failed from '../Failed';
 
 type Props = {
     settings: BridgeAppSettings;
@@ -35,13 +35,12 @@ const Processing: FC<Props> = ({ settings, swap }) => {
     const input_tx_explorer = source_network?.transaction_explorer_template
     const output_tx_explorer = destination_layer?.transaction_explorer_template
 
-    const destinationNetworkCurrency = destination_layer ? GetDefaultAsset(destination_layer, swap?.destination_network_asset) : null
+    const destinationNetworkCurrency = destination_layer ? GetDefaultAsset(destination_layer, swap?.destination_asset) : null
 
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const storedWalletTransaction = storedWalletTransactions.swapTransactions?.[swap?.id]
 
     const transactionHash = swapInputTransaction?.transaction_id || storedWalletTransaction?.hash
-
 
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
     const swapRefuelTransaction = swap?.transactions?.find(t => t.type === TransactionType.Refuel)
@@ -122,7 +121,7 @@ const Processing: FC<Props> = ({ settings, swap }) => {
                 description: null
             },
             complete: {
-                name: `${swapOutputTransaction?.amount} ${swap?.destination_network_asset} was sent to your address`,
+                name: `${swapOutputTransaction?.amount} ${swap?.destination_asset} was sent to your address`,
                 description: swapOutputTransaction ? <div className="flex flex-col">
                     <div className='flex items-center space-x-1'>
                         <span>Transaction: </span>
@@ -211,11 +210,11 @@ const Processing: FC<Props> = ({ settings, swap }) => {
             <div className={`w-full min-h-[422px] space-y-5 flex flex-col justify-between `}>
                 <div className='space-y-5'>
                     <div className="w-full flex flex-col h-full space-y-5">
-                        <div className="bg-level-1 font-normal px-3 py-4 rounded-lg flex flex-col border border-muted-2 w-full relative z-10">
+                        <div className="bg-level-1 font-normal px-3 py-4 rounded-lg flex flex-col border border-[#404040] w-full relative z-10">
                             <SwapSummary></SwapSummary>
                         </div>
                     </div>
-                    <div className="bg-level-1 font-normal px-3 py-6 rounded-lg flex flex-col border border-muted-2 w-full relative z-10 divide-y-2 divide-level-2 divide-dashed">
+                    <div className="bg-level-1 font-normal px-3 py-6 rounded-lg flex flex-col border border-[#404040] w-full relative z-10 divide-y-2 divide-level-2 divide-dashed">
                         <div className='pb-4'>
                             <div className='flex flex-col gap-2 items-center'>
                                 <div className='flex items-center'>
@@ -273,7 +272,7 @@ const getProgressStatuses = (swap: SwapItem, swapStatus: SwapStatus): { stepStat
                 : ProgressStatus.Upcoming;
 
     let refuel_transfer =
-        (swap.has_refuel && !swapRefuelTransaction) ? ProgressStatus.Upcoming
+        (swap.refuel && !swapRefuelTransaction) ? ProgressStatus.Upcoming
             : swapRefuelTransaction?.status == TransactionStatus.Pending ? ProgressStatus.Current
                 : swapRefuelTransaction?.status == TransactionStatus.Initiated || swapRefuelTransaction?.status == TransactionStatus.Completed ? ProgressStatus.Complete
                     : ProgressStatus.Removed;

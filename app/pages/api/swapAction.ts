@@ -1,184 +1,401 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { number } from "joi";
 
-const prisma = new PrismaClient();
+import prisma from "../../lib/db";
+import { isValidAddress } from "../../lib/addressValidator";
+import { statusMapping, SwapStatus } from "../../Models/SwapStatus";
+import { TransactionType } from "../../Models/TransactionTypes";
+import { getTokenPrice } from "./tokenAction";
 
 export interface SwapData {
-  amount: number;
-  sourceNetwork: string;
-  destinationNetwork: string;
-  sourceToken: string;
-  destinationToken: string;
-  destinationAddress: string;
-  refuel: boolean;
-  useDepositAddress: boolean;
-  sourceAddress: string;
+    amount: number;
+    source_network: string;
+    source_exchange?: string;
+    source_asset: string;
+    source_address: string;
+    destination_network: string;
+    destination_exchange?: string;
+    destination_asset: string;
+    destination_address: string;
+    refuel: boolean;
+    use_deposit_address: boolean;
+    block_number: number,
+    deposit_address_id: number;
+    [property: string]: any;
 }
 
-export async function handleSwapCreation(data: SwapData) {
-  const {
-    amount,
-    sourceNetwork,
-    destinationNetwork,
-    sourceToken,
-    destinationToken,
-    destinationAddress,
-    refuel,
-    useDepositAddress,
-    sourceAddress,
-  } = data;
+export type UpdateSwapData = {
+    confirmations: number;
+    max_confirmations: number;
+    amount: string | number;
+    form: string;
+    to: string;
+    id: string;
+    add_output_tx: string;
+    add_input_tx: string;
+    // [property: string]: any;
+};
 
-  try {
-    const swap = await prisma.swap.create({
-      data: {
-        requestedAmount: amount,
-        sourceNetworkName: sourceNetwork,
-        destinationNetworkName: destinationNetwork,
-        sourceTokenSymbol: sourceToken,
-        destinationTokenSymbol: destinationToken,
-        destinationAddress,
-        refuel,
-        useDepositAddress,
-        sourceAddress,
-        status: "user_transfer_pending",
-      },
-    });
-
-    const sourceNetworkRecord = await prisma.network.create({
-      data: {
-        name: sourceNetwork,
-        displayName: "Ethereum Sepolia",
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/ethereum_sepolia.png",
-        chainId: "11155111",
-        nodeUrl:
-          "https://eth-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
-        type: "evm",
-        transactionExplorerTemplate: "https://sepolia.etherscan.io/tx/{0}",
-        accountExplorerTemplate: "https://sepolia.etherscan.io/address/{0}",
-        listingDate: new Date(),
-      },
-    });
-
-    const destinationNetworkRecord = await prisma.network.create({
-      data: {
-        name: destinationNetwork,
-        displayName: "Arbitrum One Sepolia",
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/networks/arbitrum_sepolia.png",
-        chainId: "421614",
-        nodeUrl:
-          "https://arbitrum-sepolia.blastapi.io/84acb0b4-99f6-4a3d-9f63-15d71d9875ef",
-        type: "evm",
-        transactionExplorerTemplate: "https://sepolia.arbiscan.io/tx/{0}",
-        accountExplorerTemplate: "https://sepolia.arbiscan.io/address/{0}",
-        listingDate: new Date(),
-      },
-    });
-
-    const sourceTokenRecord = await prisma.token.create({
-      data: {
-        symbol: sourceToken,
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
-        contract: null,
-        decimals: 18,
-        priceInUsd: 3413.69,
-        precision: 6,
-        listingDate: new Date(),
-      },
-    });
-
-    const destinationTokenRecord = await prisma.token.create({
-      data: {
-        symbol: destinationToken,
-        logo: "https://devlslayerswapbridgesa.blob.core.windows.net/layerswap/currencies/eth.png",
-        contract: null,
-        decimals: 18,
-        priceInUsd: 3413.69,
-        precision: 6,
-        listingDate: new Date(),
-      },
-    });
-
-    const depositAction = await prisma.depositAction.create({
-      data: {
-        type: "transfer",
-        toAddress: "0x5da5c2a98e26fd28914b91212b1232d58eb9bbab",
-        amount,
-        orderNumber: 0,
-        amountInBaseUnits: "331000000000000",
-        networkId: sourceNetworkRecord.id,
-        tokenId: sourceTokenRecord.id,
-        feeTokenId: destinationTokenRecord.id,
-        callData: "0x168b",
-        swapId: swap.id,
-      },
-    });
-
-    const quote = await prisma.quote.create({
-      data: {
-        swapId: swap.id,
-        receiveAmount: 0.000293,
-        minReceiveAmount: 0.000285,
-        blockchainFee: 0.000009,
-        serviceFee: 0.000029,
-        avgCompletionTime: "00:01:04.2764650",
-        slippage: 0.025,
-        totalFee: 0.000038,
-        totalFeeInUsd: 0.12972,
-      },
-    });
-
-    const result = {
-      depositActions: [
-        {
-          ...depositAction,
-          network: {
-            ...sourceNetworkRecord,
-            token: { ...sourceTokenRecord },
-            metadata: { listingDate: sourceNetworkRecord.listingDate },
-            depositMethods: ["deposit_address", "wallet"],
-          },
-          token: { ...sourceTokenRecord },
-          feeToken: { ...destinationTokenRecord },
-        },
-      ],
-      swap_id: swap.id,
-      swap: {
-        ...swap,
-        sourceNetwork: {
-          ...sourceNetworkRecord,
-          token: { ...sourceTokenRecord },
-          metadata: { listingDate: sourceNetworkRecord.listingDate },
-        },
-        sourceToken: { ...sourceTokenRecord },
-        destinationNetwork: {
-          ...destinationNetworkRecord,
-          token: { ...destinationTokenRecord },
-          metadata: { listingDate: destinationNetworkRecord.listingDate },
-        },
-        destinationToken: { ...destinationTokenRecord },
-        transactions: [],
-      },
-      quote: { ...quote },
-      refuel: null,
-      reward: null,
-    };
-
+function generateRandomString(): string {
+    const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < 5; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
     return result;
-  } catch (error) {
-    throw new Error(
-      `Error creating swap and related entities: ${error.message}`
-    );
-  }
 }
+
+/**
+ * Create swap according to users' input
+ * @param data SwapData
+ * @returns swap result
+ */
+export async function handleSwapCreation(data: SwapData) {
+
+    const {
+        amount,
+        source_network,
+        source_exchange,
+        source_asset,
+        source_address,
+        destination_network,
+        destination_exchange,
+        destination_asset,
+        destination_address,
+        refuel,
+        use_deposit_address,
+        block_number,
+        deposit_address_id
+    } = data;
+
+
+    try {
+        const swap = await prisma.swap.create({
+            data: {
+                requested_amount: amount,
+                source_network,
+                source_exchange,
+                source_asset,
+                source_address,
+                destination_network,
+                destination_exchange,
+                destination_asset,
+                destination_address,
+                refuel,
+                use_deposit_address,
+                block_number,
+                deposit_address_id,
+                status: SwapStatus.UserTransferPending,
+                quotes: {},
+            },
+        });
+
+        // estimate swap rate 
+        const [sourcePrice, destinationPrice] = await Promise.all([
+            getTokenPrice(source_asset),
+            getTokenPrice(destination_asset)
+        ]);
+        const receive_amount = Number(amount) * sourcePrice / destinationPrice;
+
+        // save quote
+        const quote = await prisma.quote.create({
+            data: {
+                swap_id: swap.id,
+                receive_amount,
+                min_receive_amount: 0,
+                blockchain_fee: 0,
+                service_fee: 0,
+                avg_completion_time: "00:03:00",
+                slippage: 0.025,
+                total_fee: 0,
+                total_fee_in_usd: 0,
+            },
+        });
+
+        const result = {
+            depositActions: null,
+            swap_id: swap.id,
+            swap,
+            quote: { ...quote },
+            refuel: null,
+            reward: null,
+        };
+
+        return result;
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(
+            `Error creating swap and related entities: ${error.message}`
+        );
+    }
+}
+
+
+export async function handleUpdateSwapTransactionByID(
+    swapId: string,
+    tokenId: number,
+    networkId: number,
+    type: TransactionType
+) {
+    // Transaction
+    await prisma.transaction.create({
+        data: {
+            status: "completed",
+            type: type,
+            from: "",
+            to: "",
+            transaction_hash: "",
+
+            confirmations: 2,
+            max_confirmations: 2,
+            amount: 2,
+            swap: {
+                connect: {
+                    id: swapId,
+                },
+            },
+            currency: {
+                connect: {
+                    id: tokenId,
+                },
+            },
+            network: {
+                connect: {
+                    id: networkId,
+                },
+            },
+        },
+    });
+}
+
+
 
 export async function handlerGetSwap(id: string) {
-  try {
-    const swap = await prisma.swap.findUnique({
-      where: { id },
-    });
+    try {
+        const swap = await prisma.swap.findUnique({
+            where: { id },
 
-    return swap;
-  } catch (error) {
-    throw new Error(`Error getting swap: ${error.message}`);
-  }
+            include: {
+                deposit_actions: true,
+                quotes: true,
+                deposit_address: true,
+                transactions: {
+                    include: {
+                        currency: true,
+                        network: {
+                            include: { currencies: false },
+                        },
+                    },
+                },
+            },
+        });
+
+        return swap;
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error getting swap: ${error.message}`);
+    }
+}
+
+export async function handlerGetSwaps(
+    address: string,
+    isDe: boolean | undefined
+) {
+    try {
+        const swap = await prisma.swap.findMany({
+            orderBy: {
+                created_date: "desc",
+            },
+            where: { source_address: address, is_deleted: isDe },
+
+            include: {
+                deposit_actions: true,
+                quotes: true,
+                transactions: {
+                    include: {
+                        currency: true,
+                        network: {
+                            include: { currencies: false },
+                        },
+                    },
+                },
+            },
+        });
+
+        return swap;
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error getting swap: ${error.message}`);
+    }
+}
+
+export async function handlerGetHasBySwaps(address: string) {
+    try {
+        const isadd = isValidAddress(address);
+        console.log("🚀 ~ handlerGetHasBySwaps ~ isadd:", isadd);
+
+        if (isadd) {
+            return await handlerGetSwaps(address, false);
+        } else {
+            console.time();
+            const transaction = await prisma.transaction.findFirstOrThrow({
+                where: { transaction_hash: address },
+                select: {
+                    swap: {
+                        include: {
+                            transactions: {
+                                include: {
+                                    currency: true,
+                                    network: {
+                                        include: {
+                                            currencies: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+            console.timeEnd();
+            console.log(transaction);
+
+            return [{ ...transaction.swap }];
+        }
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error getting swap: ${error.message}`);
+    }
+}
+
+export async function handlerGetExplorer(status: string[]) {
+    console.time();
+    const statuses = status.map((number) => statusMapping[number]);
+    console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses);
+
+    try {
+        const swaps = await prisma.swap.findMany({
+            where: {
+                status: {
+                    in: statuses,
+                },
+            },
+            include: {
+                deposit_actions: true,
+                quotes: true,
+                deposit_address: true,
+                transactions: {
+                    include: {
+                        currency: true,
+                        network: {
+                            include: { currencies: true },
+                        },
+                    },
+                },
+            },
+        });
+
+        console.timeEnd();
+        return swaps;
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error getting swap: ${error.message}`);
+    }
+}
+
+export async function handlerUpdateSwaps(swapData: { id: string }) {
+    try {
+        await prisma.swap.updateMany({
+            where: { id: swapData.id },
+            data: { ...swapData },
+        });
+        return "success";
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error deleting swaps: ${error.message}`);
+    }
+}
+
+export async function handlerUpdateSwap(swapData: UpdateSwapData) {
+    try {
+        if (swapData.add_input_tx) {
+            await prisma.transaction.create({
+                data: {
+                    status: "completed",
+                    type: TransactionType.Input,
+                    from: swapData.form,
+                    to: swapData.to,
+                    transaction_hash: swapData.add_input_tx,
+                    confirmations: 2,
+                    max_confirmations: 2,
+                    amount: Number(swapData.amount),
+                    swap: {
+                        connect: {
+                            id: swapData.id,
+                        },
+                    },
+                },
+            });
+
+            await prisma.swap.update({
+                where: { id: swapData.id },
+                data: {
+                    status: SwapStatus.LsTransferPending,
+                },
+            });
+            return "success";
+        } else if (swapData.add_output_tx) {
+            await prisma.transaction.create({
+                data: {
+                    status: "completed",
+                    type: TransactionType.Output,
+                    from: swapData.form,
+                    to: swapData.to,
+                    transaction_hash: swapData.add_output_tx,
+                    confirmations: 2,
+                    max_confirmations: 2,
+                    amount: Number(swapData.amount),
+                    swap: {
+                        connect: {
+                            id: swapData.id,
+                        },
+                    },
+                },
+            });
+            await prisma.swap.update({
+                where: { id: swapData.id },
+                data: {
+                    status: SwapStatus.Completed,
+                },
+            });
+            return "success";
+        } else {
+            return "failed";
+        }
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error deleting swaps: ${error.message}`);
+    }
+}
+
+export async function handlerDelSwap(swapData: { id: string }) {
+    try {
+        await prisma.swap.update({
+            where: { id: swapData.id, is_deleted: true },
+            data: { ...swapData },
+        });
+        return "success";
+    } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error deleting swaps: ${error.message}`);
+    }
+}
+
+function catchPrismaKnowError(error: Error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new Error(
+            `Error getting Prisma code: ${error.name} msg:${error.message}`
+        );
+    }
 }

@@ -261,7 +261,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
           }`}
         >
           <Widget.Content>
-            <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-muted-4 rounded-t-xl overflow-hidden">
+            <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
               {!(query?.hideFrom && values?.from) && (
                 <div className="flex flex-col w-full">
                   <NetworkFormField direction="from" label="From" />
@@ -291,8 +291,8 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                 </label>
                 <AddressButton
                   disabled={
-                    !values.to || !values.toCurrency || 
-                    (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup)
+                    (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+                    (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
                   }
                   isPartnerWallet={!!isPartnerWallet}
                   openAddressModal={() => setShowAddressModal(true)}
@@ -308,7 +308,10 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
                 >
                   <Address
                     close={() => setShowAddressModal(false)}
-                    disabled={lockAddress || !values.to || (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) || !values.toCurrency}
+                    disabled={
+                      lockAddress || (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+                      (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+                    }
                     name={"destination_address"}
                     partnerImage={partnerImage}
                     isPartnerWallet={!!isPartnerWallet}
@@ -423,7 +426,7 @@ const AddressButton: FC<{
     type="button"
     disabled={disabled}
     onClick={openAddressModal}
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-muted-4 border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
   >
     {isPartnerWallet && (
       <div className="shrink-0 flex items-center pointer-events-none">

@@ -90,7 +90,10 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
         <div className="flex w-full justify-between items-center">
             <div className="relative w-full">
                 <NumericInput
-                    disabled={(!fromCurrency && !currencyGroup) || !toCurrency}
+                    disabled={
+                        (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+                        (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+                    }
                     placeholder={placeholder}
                     min={minAllowedAmount}
                     max={maxAllowedAmount}

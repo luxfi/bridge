@@ -111,7 +111,7 @@ const TransferElements: FC = () => {
             </Modal>
             <div className="w-full space-y-5 flex flex-col justify-between h-full ">
                 <div className='space-y-4'>
-                    <div className='border-muted-2 rounded-md border bg-level-1 p-3'>
+                    <div className='border-[#404040] rounded-md border bg-level-1 p-3'>
                         {
                             swap?.exchange_account_connected ?
                                 <SubmitButton
