@@ -398,7 +398,7 @@
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:00:00",
-    "chain_id": null,
+    "chain_id": 25,
     "status": "inactive",
     "type": "evm",
     "refuel_amount_in_usd": 0.5,
@@ -440,7 +440,11 @@
     ],
     "metadata": null,
     "managed_accounts": [],
-    "nodes": [],
+    "nodes": [
+      {
+        "url": "https://cronos.drpc.org"
+      }
+    ],
     "created_date": "2022-08-03T14:48:46.171694+00:00"
   },
   {
@@ -1204,7 +1208,7 @@
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:00:00",
-    "chain_id": null,
+    "chain_id": 288,
     "status": "inactive",
     "type": "evm",
     "refuel_amount_in_usd": 0.5,
@@ -1230,7 +1234,11 @@
     ],
     "metadata": null,
     "managed_accounts": [],
-    "nodes": [],
+    "nodes": [
+      {
+        "url": "https://mainnet.boba.network"
+      }
+    ],
     "created_date": "2021-11-25T14:14:31.606285+00:00"
   },
   {

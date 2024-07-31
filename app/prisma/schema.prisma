@@ -28,7 +28,7 @@ datasource db {
 model Network {
   id                            Int             @id @default(autoincrement())
   display_name                  String?
-  internal_name                 String?
+  internal_name                 String?         @unique
   native_currency               String?
   is_testnet                    Boolean?
   is_featured                   Boolean?
