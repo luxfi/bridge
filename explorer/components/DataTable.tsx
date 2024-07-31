@@ -51,7 +51,7 @@ const DataTable: React.FC = () => {
   const settings = useSettingsState();
 
   const { data, error, isLoading } = useSWR<ApiResponse<Swap[]>>(
-    `${AppSettings.BridgeApiUri}/api/explorer?statuses=3&statuses=4&version=${version}`,
+    `${AppSettings.BridgeApiUri}/api/explorer?statuses=1&statuses=3&statuses=4&version=${version}`,
     fetcher,
     { dedupingInterval: 60000 }
   );
@@ -62,29 +62,38 @@ const DataTable: React.FC = () => {
 
   if (error) return <Error500 />;
   if (isLoading) return <LoadingBlocks />;
+// console.log('settings?.layers======',settings?.layers);
 
   const Row: React.FC<{
     swap: Swap;
     index: number;
   }> = ({ swap, index }) => {
+    console.log("🚀 ~ swap:", swap)
+    // console.log(' swap.source_network?', swap.source_network);
+
     const sourceLayer = settings?.layers?.find(
       (l) =>
         l.internal_name?.toLowerCase() === swap.source_network?.toLowerCase()
     );
-    // console.log("🚀 ~ settings?.layers:", swap?.source_asset, swap);
+    // console.log("🚀 ~ settings?.layers:", sourceLayer, index);
     const sourceToken = sourceLayer?.assets?.find(
       (a) => a?.asset == swap?.source_asset
     );
+    // console.log("sourceToken----->", sourceToken, index);
 
     const sourceExchange = settings?.exchanges?.find(
       (l) =>
         l.internal_name?.toLowerCase() === swap.source_exchange?.toLowerCase()
     );
+    // console.log("sourceExchange----->", sourceExchange, index);
+
     const destination_exchange = settings?.exchanges?.find(
       (l) =>
         l.internal_name?.toLowerCase() ===
         swap.destination_exchange?.toLowerCase()
     );
+
+    // console.log("destination_exchange----->", destination_exchange, index);
 
     const destinationLayer = settings?.layers?.find(
       (l) =>
@@ -312,13 +321,9 @@ const DataTable: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {swapsData
-              ?.filter((s) =>
-                s.transactions?.some((t) => t?.type == TransactionType.Input)
-              )
-              ?.map((swap, index) => (
-                <Row swap={swap} index={index} />
-              ))}
+            {swapsData?.map((swap, index) => (
+              <Row swap={swap} index={index} />
+            ))}
           </tbody>
         </table>
       </div>
@@ -333,7 +338,13 @@ const StatusPill: React.FC<{
   const input_transaction = swap?.transactions?.find(
     (t) => t?.type == TransactionType.Input
   );
-  if (swapStatus == SwapStatus.LsTransferPending) {
+  if (swapStatus == SwapStatus.UserTransferPending) {
+    return (
+      <span className="font-medium md:text-sm text-xs border p-1 rounded-md text-yellow-200 !border-yellow-200/50">
+        Pending
+      </span>
+    );
+  } else if (swapStatus == SwapStatus.LsTransferPending) {
     return (
       <span className="font-medium md:text-sm text-xs border p-1 rounded-md text-yellow-200 !border-yellow-200/50">
         Pending
