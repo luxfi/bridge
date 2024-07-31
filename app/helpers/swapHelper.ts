@@ -19,8 +19,6 @@ export interface SwapData {
     destination_address: string;
     refuel: boolean;
     use_deposit_address: boolean;
-    block_number: number;
-    deposit_address_id: number;
     [property: string]: any;
 }
 
@@ -53,10 +51,12 @@ export async function handleSwapCreation(data: SwapData) {
         destination_asset,
         destination_address,
         refuel,
-        use_deposit_address,
-        block_number,
-        deposit_address_id,
+        use_deposit_address
     } = data;
+
+    // todo
+    const deposit_address_id = 1;
+    const block_number = 1;
 
     try {
         const swap = await prisma.swap.create({
