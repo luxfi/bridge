@@ -61,6 +61,9 @@ model Currency {
   transaction                 Transaction[]
   network_id                  Int
   network                     Network         @relation(fields: [network_id], references: [id])
+
+  @@index([network_id])
+  @@index([asset])
 }
 
 model DepositAction {

@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../lib/db";
-import Web3 from 'web3';
 import { isValidAddress } from "../lib/addressValidator";
 import { statusMapping, SwapStatus } from "../Models/SwapStatus";
 import { TransactionType } from "../Models/TransactionTypes";
 import { getTokenPrice } from "./tokenHelper";
 import { getCurrentBlockNumber } from "@/lib/utils";
+import { Network } from "lucide-react";
 
 
 export interface SwapData {
@@ -84,6 +84,41 @@ export async function handleSwapCreation(data: SwapData) {
                 quotes: {},
             },
         });
+        // source network
+        const sourceNetwork = await prisma.network.findUnique({
+            where: {
+                internal_name: source_network
+            }
+        });
+        // source currency
+        const sourceCurrency = await prisma.currency.findFirst({
+            where: {
+                network_id: sourceNetwork?.id,
+                asset: source_asset
+            }
+        });
+        // native currency for fee pay
+        const nativeCurrency = await prisma.currency.findFirst({
+            where: {
+                network_id: sourceNetwork?.id,
+                is_native: true
+            }
+        });
+        // deposit actions
+        const depositAction = await prisma.depositAction.create({
+            data: {
+                type: "userDeposit",
+                to_address: destination_address,
+                amount,
+                order_number: 0,
+                amount_in_base_units: "331000000000000",
+                network_id: sourceNetwork?.id ?? 0,
+                currency_id: sourceCurrency?.id ?? 0,
+                fee_currency_id: 1,
+                call_data: "0x168b",
+                swap_id: swap.id,
+            },
+        });
 
         // estimate swap rate
         const [sourcePrice, destinationPrice] = await Promise.all([
@@ -109,7 +144,14 @@ export async function handleSwapCreation(data: SwapData) {
         });
 
         const result = {
-            depositActions: null,
+            depositActions: [
+                {
+                    ...depositAction,
+                    network: sourceNetwork,
+                    currency: sourceCurrency,
+                    feeCurrency: nativeCurrency
+                }
+            ],
             swap_id: swap.id,
             swap,
             quote: { ...quote },
@@ -336,7 +378,7 @@ export async function handlerUpdateSwap(swapData: UpdateSwapData) {
             await prisma.swap.update({
                 where: { id: swapData.id },
                 data: {
-                    status: SwapStatus.LsTransferPending,
+                    status: SwapStatus.BridgeTransferPending,
                 },
             });
             return "success";

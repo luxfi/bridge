@@ -78,7 +78,7 @@ export default function StatusIcon({
           </>
         );
       }
-    case SwapStatus.LsTransferPending:
+    case SwapStatus.BridgeTransferPending:
       return (
         <>
           <div className="inline-flex items-center space-x-1">
