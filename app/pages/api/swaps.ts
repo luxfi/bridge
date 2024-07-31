@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
 import { handleSwapCreation, handlerGetSwaps } from "../../helpers/swapHelper";
 
 export default async function handler(
@@ -11,16 +10,9 @@ export default async function handler(
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
   if (req.method === "POST") {
-    
-    // TODO: calculate deposit_address & current block_number
-    const deposit_address_id = 1;
-    const block_number = 1;
-
     try {
       const result = await handleSwapCreation({
-        ...req.body,
-        deposit_address_id,
-        block_number
+        ...req.body
       });
       res.status(200).json({ data: { ...result } });
     } catch (error) {
