@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { handlerGetSwap } from "../swapAction";
+import { handlerGetSwap } from "../../../helpers/swapHelper";
 
 /**
  * get swap data

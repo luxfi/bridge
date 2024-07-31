@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { handlerGetExplorer, handlerGetSwap } from "../swapAction";
+import { handlerGetExplorer, handlerGetSwap } from "../../../helpers/swapHelper";
 
 export default async function handler(
   req: NextApiRequest,
