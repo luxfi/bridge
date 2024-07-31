@@ -85,7 +85,7 @@ const SwapSummary: FC = () => {
 
     const destinationNetworkNativeAsset = layers.find(n => n.internal_name === destinationLayer?.internal_name)?.assets.find(a => a.is_native);
     const refuel_amount_in_usd = Number(destinationLayer?.refuel_amount_in_usd)
-    const native_usd_price = Number(destinationNetworkNativeAsset?.usd_price)
+    const native_usd_price = Number(destinationNetworkNativeAsset?.price_in_usd)
     const currency_usd_price = Number(sourceAssetPriceData?.data?.price)
 
     const refuelAmountInNativeCurrency = swap?.refuel
