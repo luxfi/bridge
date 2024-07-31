@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { getTokenPrice } from '../tokenAction';
+import { getTokenPrice } from "../../../helpers/tokenHelper";
 
 /**
  * get rate information for the swap
