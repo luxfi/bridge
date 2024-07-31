@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { mainnetSettings, testnetSettings } from "../../settings";
-import { CryptoNetwork } from "../../Models/CryptoNetwork";
+import { mainnetSettings, testnetSettings } from "../../../settings";
+import { CryptoNetwork } from "../../../Models/CryptoNetwork";
 
 export default async function handler(
     req: NextApiRequest,
