@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from "next";
-// import { handlerGetSwap } from "../swapAction";
 
 export default async function handler(
   req: NextApiRequest,
