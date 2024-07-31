@@ -5,6 +5,7 @@ import { isValidAddress } from "../lib/addressValidator";
 import { statusMapping, SwapStatus } from "../Models/SwapStatus";
 import { TransactionType } from "../Models/TransactionTypes";
 import { getTokenPrice } from "./tokenHelper";
+import { getCurrentBlockNumber } from "@/lib/utils";
 
 
 export interface SwapData {
@@ -57,13 +58,11 @@ export async function handleSwapCreation(data: SwapData) {
     // todo
     const deposit_address_id = 1;
     // current block number
-    const network = await prisma.network.findUnique({
-        where: {
-            internal_name: source_network
-        }
+    const block_number = await getCurrentBlockNumber(source_network).catch(err => {
+        throw new Error(
+            `Error fetcjomg block number for chain ${source_network}`
+        );
     });
-    const web3 = new Web3(new Web3.providers.HttpProvider(String(network?.node_url)));
-    const block_number = 1;
 
     try {
         const swap = await prisma.swap.create({

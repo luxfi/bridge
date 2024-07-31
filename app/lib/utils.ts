@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../lib/db";
 import Web3 from 'web3';
+import { rpc } from "viem/utils";
 
 /**
  * generate random string
@@ -28,9 +29,16 @@ export const getCurrentBlockNumber = async (network_name: string) => {
             }
         });
         if (_network?.type === 'evm') {
-            
+            const rpcUrl = _network.node_url;
+            const web3 = new Web3(new Web3.providers.HttpProvider(String(rpcUrl)));
+            await web3.eth.net.isListening ().catch (err => {
+                throw "cannot connect to rpc..."
+            });
+            const blockNumber = await web3.eth.getBlockNumber();
+            return Promise.resolve(Number(blockNumber));   
         }
+        throw "not evm"
     } catch (err) {
-        return Promise.reject("err to fetch block number")
+        return Promise.reject(0)
     }
 }
