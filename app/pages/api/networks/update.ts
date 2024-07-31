@@ -21,9 +21,11 @@ export default async function handler(
         // settings
         const settings = isMainnet ? mainnetSettings : testnetSettings;
         const { networks } = settings.data;
-        await Promise.all(networks.map(async(n) => {
-            await prisma.network.deleteMany();
-            await prisma.network.create({
+        await prisma.currency.deleteMany();
+        await prisma.network.deleteMany();
+        for (let index = 0; index < networks.length; index++) {
+            const n = networks[index];
+            const _network = await prisma.network.create({
                 data: {
                     display_name: n.display_name,
                     internal_name: n.internal_name,
@@ -36,10 +38,21 @@ export default async function handler(
                     average_completion_time: n.average_completion_time,
                     transaction_explorer_template: n.transaction_explorer_template,
                     account_explorer_template: n.account_explorer_template,
-                    listing_date: n.listing_date,
                 }
+            });
+            await prisma.currency.createMany({
+                data: n.currencies.map((c: any) => ({
+                    network_id: _network.id,
+                    name: c.asset,
+                    asset: c.asset,
+                    contract_address: c.contract_address,
+                    decimals: c.decimals,
+                    price_in_usd: c.price_in_usd,
+                    precision: c.precision,
+                    is_native: c.is_native,
+                }))
             })
-        }));
+        }
         return res.status(200).json(
             {
                 status: "success"
