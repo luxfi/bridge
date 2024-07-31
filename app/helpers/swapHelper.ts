@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { number } from "joi";
 
-import prisma from "../../lib/db";
-import { isValidAddress } from "../../lib/addressValidator";
-import { statusMapping, SwapStatus } from "../../Models/SwapStatus";
-import { TransactionType } from "../../Models/TransactionTypes";
-import { getTokenPrice } from "./tokenAction";
+import prisma from "../lib/db";
+import { isValidAddress } from "../lib/addressValidator";
+import { statusMapping, SwapStatus } from "../Models/SwapStatus";
+import { TransactionType } from "../Models/TransactionTypes";
+import { getTokenPrice } from "./tokenHelper";
 
 export interface SwapData {
     amount: number;
@@ -35,16 +35,6 @@ export type UpdateSwapData = {
     add_input_tx: string;
     // [property: string]: any;
 };
-
-function generateRandomString(): string {
-    const characters =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < 5; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
 
 /**
  * Create swap according to users' input

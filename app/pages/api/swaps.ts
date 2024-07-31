@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { handleSwapCreation, handlerGetSwaps } from "./swapAction";
-import { mainnetSettings, testnetSettings } from "../../settings";
-import { boolean } from "joi";
+import { handleSwapCreation, handlerGetSwaps } from "../../helpers/swapHelper";
 
 export default async function handler(
   req: NextApiRequest,
