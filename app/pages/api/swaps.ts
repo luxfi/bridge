@@ -7,12 +7,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-
   // res.setHeader('Access-Control-Allow-Origin', 'https://example.com');
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
   if (req.method === "POST") {
-    const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     
     // TODO: calculate deposit_address & current block_number
     const deposit_address_id = 1;
@@ -47,12 +45,4 @@ export default async function handler(
     res.setHeader("Allow", ["POST"]);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-}
-
-function getRandomObjectExceptSTARKNET(arr: any[]) {
-  const filteredArr = arr.filter(
-    (item: { contract_name: string }) => item.contract_name !== "STARKNET"
-  );
-  const randomIndex = Math.floor(Math.random() * filteredArr.length);
-  return filteredArr[randomIndex];
 }
