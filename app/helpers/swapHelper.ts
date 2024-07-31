@@ -1,12 +1,10 @@
-import { Prisma } from "@prisma/client";
 import prisma from "../lib/db";
+import { Prisma } from "@prisma/client";
 import { isValidAddress } from "../lib/addressValidator";
 import { statusMapping, SwapStatus } from "../Models/SwapStatus";
 import { TransactionType } from "../Models/TransactionTypes";
 import { getTokenPrice } from "./tokenHelper";
 import { getCurrentBlockNumber } from "@/lib/utils";
-import { Network } from "lucide-react";
-
 
 export interface SwapData {
     amount: number;
@@ -55,19 +53,21 @@ export async function handleSwapCreation(data: SwapData) {
         use_deposit_address
     } = data;
 
-    // todo
+    // // todo
+    // const deposit_address_id = 1;
+    // // current block number
+    // const block_number = await getCurrentBlockNumber(source_network).catch(err => {
+    //     throw new Error(
+    //         `Error fetcjomg block number for chain ${source_network}`
+    //     );
+    // });
+    const block_number = 1200;
     const deposit_address_id = 1;
-    // current block number
-    const block_number = await getCurrentBlockNumber(source_network).catch(err => {
-        throw new Error(
-            `Error fetcjomg block number for chain ${source_network}`
-        );
-    });
 
     try {
         const swap = await prisma.swap.create({
             data: {
-                requested_amount: amount,
+                requested_amount: 12,
                 source_network,
                 source_exchange,
                 source_asset,
@@ -76,16 +76,31 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_exchange,
                 destination_asset,
                 destination_address,
-                refuel,
-                use_deposit_address,
+                refuel: false,
+                use_deposit_address: false,
                 block_number,
                 deposit_address_id,
                 status: SwapStatus.UserTransferPending,
                 quotes: {},
+                // requested_amount: amount,
+                // source_network,
+                // source_exchange,
+                // source_asset,
+                // source_address,
+                // destination_network,
+                // destination_exchange,
+                // destination_asset,
+                // destination_address,
+                // refuel,
+                // use_deposit_address,
+                // block_number,
+                // deposit_address_id,
+                // status: SwapStatus.UserTransferPending,
+                // quotes: {},
             },
         });
         // source network
-        const sourceNetwork = await prisma.network.findUnique({
+        const sourceNetwork = await prisma.network.findFirst({
             where: {
                 internal_name: source_network
             }
@@ -104,17 +119,20 @@ export async function handleSwapCreation(data: SwapData) {
                 is_native: true
             }
         });
+
+        console.log({sourceNetwork, sourceCurrency, nativeCurrency})
         // deposit actions
         const depositAction = await prisma.depositAction.create({
             data: {
                 type: "userDeposit",
                 to_address: destination_address,
-                amount,
+                amount: 12,
+                // amount,
                 order_number: 0,
                 amount_in_base_units: "331000000000000",
-                network_id: sourceNetwork?.id ?? 0,
-                currency_id: sourceCurrency?.id ?? 0,
-                fee_currency_id: 1,
+                network_id: Number(sourceNetwork?.id),
+                currency_id: Number(sourceCurrency?.id),
+                fee_currency_id: Number(nativeCurrency?.id),
                 call_data: "0x168b",
                 swap_id: swap.id,
             },

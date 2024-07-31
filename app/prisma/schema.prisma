@@ -75,9 +75,9 @@ model DepositAction {
   amount_in_base_units String?
   network_id           Int
   network              Network  @relation(fields: [network_id], references: [id])
-  currency_id          Int      @unique
+  currency_id          Int
   currency             Currency @relation("DepositActionCurrency", fields: [currency_id], references: [id])
-  fee_currency_id      Int      @unique
+  fee_currency_id      Int
   fee_currency         Currency @relation("DepositActionFeeCurrency", fields: [fee_currency_id], references: [id])
   call_data            String?
   swap_id              String   @unique @map("swap_id")
