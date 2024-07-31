@@ -9,6 +9,7 @@ export default async function handler(
   // res.setHeader('Access-Control-Allow-Origin', 'https://example.com');
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
+
   if (req.method === "POST") {
     try {
       const result = await handleSwapCreation({
@@ -18,7 +19,9 @@ export default async function handler(
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+
   } else if (req.method === "GET") {
+
     const isDeleted =
       (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) ||
       undefined;
@@ -31,7 +34,6 @@ export default async function handler(
       isDeleted
     );
     console.log("result", result);
-
     res.status(200).json({ data: result });
   } else {
     res.setHeader("Allow", ["POST"]);
