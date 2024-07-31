@@ -16,8 +16,8 @@ generator client {
 
 datasource db {
     provider  = "sqlite"
-    url       = "file:dev.sqlite" // uses connection pooling
-    directUrl = "file:dev.sqlite" // uses a direct connection
+    url       = "file:dev.sqlite?socket_timeout=50000"// uses connection pooling
+    directUrl = "file:dev.sqlite?socket_timeout=50000" // uses a direct connection
 }
 
 // pnpx prisma generate    
@@ -43,30 +43,24 @@ model Network {
     currencies                    Currency[]
     deposit_actions               DepositAction[]
     transaction                   Transaction[]
-    transaction_id                Int?            @unique
-
-    @@index([transaction_id])
 }
 
 model Currency {
-    id                          Int            @id @default(autoincrement())
+    id                          Int             @id @default(autoincrement())
     name                        String
     asset                       String
     logo                        String?
     contract_address            String?
-    decimals                    Int
-    price_in_usd                Float
-    precision                   Int
+    decimals                    Int?
+    price_in_usd                Float?
+    precision                   Int?
     is_native                   Boolean?
-    listing_date                DateTime?
-    deposit_action_currency     DepositAction? @relation("DepositActionCurrency")
-    deposit_action_fee_currency DepositAction? @relation("DepositActionFeeCurrency")
-    transaction_id              Int?           @unique
+    listing_date                DateTime        @default(now())
+    deposit_action_currency     DepositAction[] @relation("DepositActionCurrency")
+    deposit_action_fee_currency DepositAction[] @relation("DepositActionFeeCurrency")
     transaction                 Transaction[]
     network_id                  Int
-    network                     Network        @relation(fields: [network_id], references: [id])
-
-    @@index([transaction_id])
+    network                     Network         @relation(fields: [network_id], references: [id])
 }
 
 model DepositAction {
