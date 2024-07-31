@@ -4,7 +4,7 @@ import {
   handleSwapCreation,
   handlerGetSwaps,
   handlerUpdateSwaps,
-} from "./swapAction";
+} from "../../helpers/swapHelper";
 import { mainnetSettings, testnetSettings } from "../../settings";
 import Joi from "joi";
 
