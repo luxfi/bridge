@@ -42,3 +42,15 @@ export const getCurrentBlockNumber = async (network_name: string) => {
         return Promise.reject(0)
     }
 }
+
+export const getAvailableDepositAddress = async (network: string, asset: string) => {
+    const data = await prisma.swap.findMany({
+        where: {
+            source_network: network,
+            source_asset: asset
+        },
+        select: {
+            
+        }
+    });
+}

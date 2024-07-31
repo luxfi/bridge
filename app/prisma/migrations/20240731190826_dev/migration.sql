@@ -118,6 +118,15 @@ CREATE TABLE "DepositAddress" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Network_internal_name_key" ON "Network"("internal_name");
+
+-- CreateIndex
+CREATE INDEX "Currency_network_id_idx" ON "Currency"("network_id");
+
+-- CreateIndex
+CREATE INDEX "Currency_asset_idx" ON "Currency"("asset");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "DepositAction_currency_id_key" ON "DepositAction"("currency_id");
 
 -- CreateIndex
