@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { number } from "joi";
-
 import prisma from "../lib/db";
+import Web3 from 'web3';
 import { isValidAddress } from "../lib/addressValidator";
 import { statusMapping, SwapStatus } from "../Models/SwapStatus";
 import { TransactionType } from "../Models/TransactionTypes";
 import { getTokenPrice } from "./tokenHelper";
+
 
 export interface SwapData {
     amount: number;
@@ -56,6 +56,13 @@ export async function handleSwapCreation(data: SwapData) {
 
     // todo
     const deposit_address_id = 1;
+    // current block number
+    const network = await prisma.network.findUnique({
+        where: {
+            internal_name: source_network
+        }
+    });
+    const web3 = new Web3(new Web3.providers.HttpProvider(String(network?.node_url)));
     const block_number = 1;
 
     try {
