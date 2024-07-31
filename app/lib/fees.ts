@@ -24,8 +24,8 @@ export function CaluclateRefuelAmount(args: CaluclateRefuelArgs): RefuelCalcResu
     if (!nativeAsset || !args.currency)
         return res
     const refuel_amount_in_usd = Number(refuelNetwork.refuel_amount_in_usd)
-    res.refuelAmountInSelectedCurrency = refuel_amount_in_usd / args?.currency.usd_price || 0;
-    res.refuelAmountInNativeCurrency = (refuel_amount_in_usd / nativeAsset.usd_price) || 0
+    res.refuelAmountInSelectedCurrency = refuel_amount_in_usd / args?.currency.price_in_usd || 0;
+    res.refuelAmountInNativeCurrency = (refuel_amount_in_usd / nativeAsset.price_in_usd) || 0
     return res;
 }
 
@@ -42,7 +42,7 @@ function ResolveRefuelNetwork(args: CaluclateRefuelArgs): Layer | undefined |nul
     if (!destinationNetworkCurrency || !destinationNetworkNativeAsset)
         return
 
-    if (destinationNetworkCurrency.is_refuel_enabled && Number(destinationNetwork?.refuel_amount_in_usd) > 0 && currency.usd_price > 0 && destinationNetworkNativeAsset.usd_price > 0) {
+    if (destinationNetworkCurrency.is_refuel_enabled && Number(destinationNetwork?.refuel_amount_in_usd) > 0 && currency.price_in_usd > 0 && destinationNetworkNativeAsset.price_in_usd > 0) {
         return destinationNetwork
     }
 }

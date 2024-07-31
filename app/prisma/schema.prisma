@@ -8,47 +8,35 @@ generator client {
     provider = "prisma-client-js"
 }
 
-datasource db {
-    provider  = "postgresql"
-    url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-    directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-}
-
 // datasource db {
-//     provider  = "sqlite"
-//     url       = "file:dev.sqlite" // uses connection pooling
-//     directUrl = "file:dev.sqlite" // uses a direct connection
+//     provider  = "postgresql"
+//     url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+//     directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 // }
+
+datasource db {
+    provider  = "sqlite"
+    url       = "file:dev.sqlite" // uses connection pooling
+    directUrl = "file:dev.sqlite" // uses a direct connection
+}
 
 // pnpx prisma generate    
 // npx prisma db push   
 // npx prisma studio  
 // prisma migrate dev     
 
-model SwapUserInfo {
-    id                   String   @id @unique @default(uuid()) @map("_id")
-    amount               Float?
-    source_network       String?
-    source_exchange      String?
-    source_asset         String?
-    source_address       String?
-    destination_network  String?
-    destination_exchange String?
-    destination_asset    String?
-    destination_address  String?
-    refuel               Boolean  @default(false)
-    use_deposit_address  Boolean  @default(false)
-    createdAt            DateTime @default(now())
-}
-
 model Network {
     id                            Int             @id @default(autoincrement())
-    name                          String?
     display_name                  String?
+    internal_name                 String?
+    native_currency               String?
+    is_testnet                    Boolean?
+    is_featured                   Boolean?
     logo                          String?
     chain_id                      String?
     node_url                      String?
     type                          String?
+    average_completion_time       String?
     transaction_explorer_template String?
     account_explorer_template     String?
     listing_date                  DateTime?
@@ -62,12 +50,14 @@ model Network {
 
 model Currency {
     id                          Int            @id @default(autoincrement())
-    symbol                      String
-    logo                        String
-    contract                    String?
+    name                        String
+    asset                       String
+    logo                        String?
+    contract_address            String?
     decimals                    Int
     price_in_usd                Float
     precision                   Int
+    is_native                   Boolean?
     listing_date                DateTime?
     deposit_action_currency     DepositAction? @relation("DepositActionCurrency")
     deposit_action_fee_currency DepositAction? @relation("DepositActionFeeCurrency")
@@ -116,17 +106,16 @@ model Swap {
     status                   String
     fail_reason              String?
     metadata_sequence_number Int?
-    
+
     // current block_number from the chain
-    block_number             Int
+    block_number Int
 
-    deposit_address_id       Int
-    deposit_address          DepositAddress @relation(fields: [deposit_address_id], references: [id])
+    deposit_address_id Int
+    deposit_address    DepositAddress @relation(fields: [deposit_address_id], references: [id])
 
-    quotes                   Quote?
-    deposit_actions          DepositAction[]
-    transactions             Transaction[]
-    ContractAddress          ContractAddress?
+    quotes          Quote?
+    deposit_actions DepositAction[]
+    transactions    Transaction[]
 
     @@index([id])
 }
@@ -155,14 +144,6 @@ model Transaction {
     @@index([transaction_hash])
     @@index([currency_id])
     @@index([network_id])
-}
-
-model ContractAddress {
-    swap_id String? @unique @map("swap_id")
-    swap    Swap?   @relation(fields: [swap_id], references: [id])
-    id      Int     @id @default(autoincrement())
-    address String?
-    name    String?
 }
 
 model Quote {

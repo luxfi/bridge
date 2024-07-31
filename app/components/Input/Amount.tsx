@@ -46,8 +46,8 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
     const amountRef = useRef(ref)
 
     const updateRequestedAmountInUsd = useCallback((requestedAmount: number) => {
-        if (fromCurrency?.usd_price && !isNaN(requestedAmount)) {
-            setRequestedAmountInUsd((fromCurrency?.usd_price * requestedAmount).toFixed(2));
+        if (fromCurrency?.price_in_usd && !isNaN(requestedAmount)) {
+            setRequestedAmountInUsd((fromCurrency?.price_in_usd * requestedAmount).toFixed(2));
         } else {
             setRequestedAmountInUsd(undefined);
         }

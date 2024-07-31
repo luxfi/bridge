@@ -78,7 +78,7 @@ const Summary: FC<SwapInfoProps> = ({
 
     // const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?
     //     truncateDecimals(refuelAmount, nativeCurrency?.precision) : null
-    // const refuelAmountInUsd = nativeCurrency && ((nativeCurrency?.usd_price || 1) * (truncatedRefuelAmount || 0)).toFixed(2)
+    // const refuelAmountInUsd = nativeCurrency && ((nativeCurrency?.price_in_usd || 1) * (truncatedRefuelAmount || 0)).toFixed(2)
 
     let sourceAccountAddress = ""
     // if (hideFrom && account) {

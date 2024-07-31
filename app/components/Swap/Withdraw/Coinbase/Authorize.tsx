@@ -50,8 +50,8 @@ const Authorize: FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hide
     const coinbaseOauthProvider = oauthProviders?.find(p => p.provider === KnownInternalNames.Exchanges.Coinbase)
     const { oauth_authorize_url } = coinbaseOauthProvider || {}
 
-    const minimalAuthorizeAmount = currency?.usd_price ?
-        CalculateMinimalAuthorizeAmount(currency?.usd_price, Number(swap?.requested_amount)) : null
+    const minimalAuthorizeAmount = currency?.price_in_usd ?
+        CalculateMinimalAuthorizeAmount(currency?.price_in_usd, Number(swap?.requested_amount)) : null
 
     const checkShouldStartPolling = useCallback(() => {
         let authWindowHref: string | undefined = ""
