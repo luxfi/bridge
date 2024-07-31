@@ -58,22 +58,22 @@ export default async function handler(
     }: SwapTransactionRequest = value;
 
     try {
-      const newSwapTransaction = await prisma.swapUserInfo.create({
-        data: {
-          amount,
-          source_network,
-          source_exchange,
-          source_asset,
-          source_address,
-          destination_network,
-          destination_exchange,
-          destination_asset,
-          destination_address,
-          use_deposit_address,
-          refuel,
-        },
-      });
-      res.status(200).json({ id: newSwapTransaction.id, message: "Success" });
+      // const newSwapTransaction = await prisma.swapUserInfo.create({
+      //   data: {
+      //     amount,
+      //     source_network,
+      //     source_exchange,
+      //     source_asset,
+      //     source_address,
+      //     destination_network,
+      //     destination_exchange,
+      //     destination_asset,
+      //     destination_address,
+      //     use_deposit_address,
+      //     refuel,
+      //   },
+      // });
+      res.status(200).json({ id: 'newSwapTransaction.id', message: "Success" });
     } catch (error) {
       console.error(error);
       res
