@@ -19,7 +19,7 @@ export interface SwapData {
     destination_address: string;
     refuel: boolean;
     use_deposit_address: boolean;
-    block_number: number,
+    block_number: number;
     deposit_address_id: number;
     [property: string]: any;
 }
@@ -42,7 +42,6 @@ export type UpdateSwapData = {
  * @returns swap result
  */
 export async function handleSwapCreation(data: SwapData) {
-
     const {
         amount,
         source_network,
@@ -56,9 +55,8 @@ export async function handleSwapCreation(data: SwapData) {
         refuel,
         use_deposit_address,
         block_number,
-        deposit_address_id
+        deposit_address_id,
     } = data;
-
 
     try {
         const swap = await prisma.swap.create({
@@ -81,12 +79,13 @@ export async function handleSwapCreation(data: SwapData) {
             },
         });
 
-        // estimate swap rate 
+        // estimate swap rate
         const [sourcePrice, destinationPrice] = await Promise.all([
             getTokenPrice(source_asset),
-            getTokenPrice(destination_asset)
+            getTokenPrice(destination_asset),
         ]);
-        const receive_amount = Number(amount) * sourcePrice / destinationPrice;
+        const receive_amount =
+            (Number(amount) * sourcePrice) / destinationPrice;
 
         // save quote
         const quote = await prisma.quote.create({
@@ -120,7 +119,6 @@ export async function handleSwapCreation(data: SwapData) {
         );
     }
 }
-
 
 export async function handleUpdateSwapTransactionByID(
     swapId: string,
@@ -158,8 +156,6 @@ export async function handleUpdateSwapTransactionByID(
         },
     });
 }
-
-
 
 export async function handlerGetSwap(id: string) {
     try {
@@ -266,6 +262,9 @@ export async function handlerGetExplorer(status: string[]) {
 
     try {
         const swaps = await prisma.swap.findMany({
+            orderBy: {
+                created_date: "desc",
+            },
             where: {
                 status: {
                     in: statuses,
