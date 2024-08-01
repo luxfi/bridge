@@ -83,6 +83,7 @@ export const getAvailableDepositAddress = async (network: string, asset: string)
             throw "no free deposit address";
         }
     } catch (err) {
+        console.log(err)
         return Promise.reject("No free deposit address for this asset")
     }
 }
