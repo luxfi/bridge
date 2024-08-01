@@ -344,7 +344,7 @@ const StatusPill: React.FC<{
         Pending
       </span>
     );
-  } else if (swapStatus == SwapStatus.LsTransferPending) {
+  } else if (swapStatus == SwapStatus.BridgeTransferPending) {
     return (
       <span className="font-medium md:text-sm text-xs border p-1 rounded-md text-yellow-200 !border-yellow-200/50">
         Pending

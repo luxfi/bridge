@@ -74,7 +74,7 @@ export class BridgeAppSettings {
       contract_address: c.contract_address,
       decimals: c.decimals,
       precision: c.precision,
-      usd_price: c.usd_price,
+      price_in_usd: c.price_in_usd,
       is_native: c.is_native,
       is_refuel_enabled: c.is_refuel_enabled,
     }));

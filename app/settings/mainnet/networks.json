@@ -190,7 +190,7 @@
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:01:55.0552590",
-    "chain_id": "1",
+    "chain_id": "13371",
     "status": "active",
     "type": "stark_ex",
     "refuel_amount_in_usd": 0.5,
@@ -258,6 +258,15 @@
     "nodes": [
       {
         "url": "https://api.x.immutable.com"
+      },
+      {
+        "url": "wss://immutable-zkevm.drpc.org"
+      },
+      {
+        "url": "https://rpc.immutable.com"
+      },
+      {
+        "url": "https://immutable-zkevm.drpc.org"
       }
     ],
     "created_date": "2022-04-05T15:29:29.81225+00:00"
@@ -387,6 +396,21 @@
     "nodes": [
       {
         "url": "https://lb.drpc.org/ogrpc?network=bsc&dkey=ArPkRplEc0Blq_2CpG9Z__4Tj6aBjcER7qzvYkscDoZX"
+      },
+      {
+        "url": "https://bsc-mainnet.public.blastapi.io"
+      },
+      {
+        "url": "https://bsc-dataseed1.bnbchain.org"
+      },
+      {
+        "url": "https://public.stackup.sh/api/v1/node/bsc-mainnet"
+      },
+      {
+        "url": "https://bsc-dataseed1.bnbchain.org"
+      },
+      {
+        "url": "https://bsc-dataseed1.bnbchain.org"
       }
     ],
     "created_date": "2022-11-10T13:52:39.422241+00:00"
@@ -398,7 +422,7 @@
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:00:00",
-    "chain_id": null,
+    "chain_id": "25",
     "status": "inactive",
     "type": "evm",
     "refuel_amount_in_usd": 0.5,
@@ -440,7 +464,11 @@
     ],
     "metadata": null,
     "managed_accounts": [],
-    "nodes": [],
+    "nodes": [
+      {
+        "url": "https://cronos.drpc.org"
+      }
+    ],
     "created_date": "2022-08-03T14:48:46.171694+00:00"
   },
   {
@@ -628,6 +656,9 @@
       }
     ],
     "nodes": [
+      {
+        "url": "https://arb-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7"
+      },
       {
         "url": "https://arbitrum-one.public.blastapi.io"
       }
@@ -1130,7 +1161,52 @@
     ],
     "nodes": [
       {
+        "url": "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7"
+      },
+      {
         "url": "https://json-rpc.6whkpou4agc13c9ux9e8il045.blockchainnodeengine.com"
+      },
+      {
+        "url": "https://ethereum.rpc.subquery.network/public"
+      },
+      {
+        "url": "https://rpc.ankr.com/eth"
+      },
+      {
+        "url": "https://ethereum.blockpi.network/v1/rpc/public"
+      },
+      {
+        "url": "https://endpoints.omniatech.io/v1/eth/mainnet/public"
+      },
+      {
+        "url": "https://endpoints.omniatech.io/v1/eth/mainnet/public"
+      },
+      {
+        "url": "https://eth-mainnet.diamondswap.org/rpc"
+      },
+      {
+        "url": "https://ethereumnodelight.app.runonflux.io"
+      },
+      {
+        "url": "https://api.zmok.io/mainnet/oaen6dy8ff6hju9k"
+      },
+      {
+        "url": "https://eth-mainnet-public.unifra.io"
+      },
+      {
+        "url": "https://rpc.builder0x69.io"
+      },
+      {
+        "url": "https://eth-mainnet.diamondswap.org/rpc"
+      },
+      {
+        "url": "https://eth.nownodes.io"
+      },
+      {
+        "url": "https://rpc.builder0x69.io"
+      },
+      {
+        "url": "https://eth.merkle.io"
       }
     ],
     "created_date": "2022-05-29T17:30:19.14963+00:00"
@@ -1204,7 +1280,7 @@
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:00:00",
-    "chain_id": null,
+    "chain_id": "288",
     "status": "inactive",
     "type": "evm",
     "refuel_amount_in_usd": 0.5,
@@ -1230,7 +1306,11 @@
     ],
     "metadata": null,
     "managed_accounts": [],
-    "nodes": [],
+    "nodes": [
+      {
+        "url": "https://mainnet.boba.network"
+      }
+    ],
     "created_date": "2021-11-25T14:14:31.606285+00:00"
   },
   {
