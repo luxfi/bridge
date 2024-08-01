@@ -44,7 +44,13 @@ export class BridgeAppSettings {
 
         return basePath.href;
     }
-
+    /**
+     * get NetworkCurrency asset from exchange asset data
+     * @param layers 
+     * @param exchange 
+     * @param asset 
+     * @returns 
+     */
     getExchangeAsset = (layers: Layer[], exchange?: Exchange, asset?: string): NetworkCurrency | undefined => {
         if (!exchange || !asset) {
             return undefined;
@@ -52,6 +58,22 @@ export class BridgeAppSettings {
             const currency = exchange?.currencies?.find(c => c.asset === asset);
             const layer = layers.find(n => n.internal_name === currency?.network);
             return layer?.assets?.find(a => a?.asset === asset)
+        }
+    }
+    /**
+     * get Network from Exchange and Asset
+     * @param layers 
+     * @param exchange 
+     * @param asset 
+     * @returns 
+     */
+    getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string): Layer | undefined => {
+        if (!exchange || !asset) {
+            return undefined;
+        } else {
+            const currency = exchange?.currencies?.find(c => c.asset === asset);
+            const layer = layers.find(n => n.internal_name === currency?.network);
+            return layer;
         }
     }
 
