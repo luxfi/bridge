@@ -85,7 +85,7 @@ export function SwapDataProvider({
   const [swapId, setSwapId] = useState<string | undefined>(
     id || router.query.swapId?.toString()
   );
-  const { layers } = useSettingsState();
+  const { layers, getExchangeNetwork } = useSettingsState();
 
   const client = new BridgeApiClient();
   const apiVersion = BridgeApiClient.apiVersion;
@@ -174,12 +174,10 @@ export function SwapDataProvider({
 
       const data: CreateSwapParams = {
         amount: Number(values.amount),
-
-        source_network: from?.internal_name ?? (fromExchange?.internal_name as string),
+        source_network: from?.internal_name ?? getExchangeNetwork(layers, fromExchange, fromCurrency?.asset ?? (currencyGroup?.name as string))?.internal_name,
         source_exchange: fromExchange?.internal_name,
         source_asset: fromCurrency?.asset ?? (currencyGroup?.name as string),
         source_address: values.destination_address,
-
         destination_network: to?.internal_name ?? (toExchange?.internal_name as string),
         destination_exchange: toExchange?.internal_name,
         destination_asset: toCurrency?.asset ?? (currencyGroup?.name as string),

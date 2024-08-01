@@ -37,7 +37,7 @@ export function StatusIcon({ swap, className}: { swap: string | undefined , clas
           <p>Delayed</p>
         </div>
       )
-    case SwapStatus.LsTransferPending:
+    case SwapStatus.BridgeTransferPending:
       return (
         <div className={"inline-flex items-center " + className ?? ''} >
           <YellowIcon />

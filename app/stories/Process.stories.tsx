@@ -168,11 +168,11 @@ export const UserTransferPendingInputCompleted: Story = {
     }
 };
 
-export const LsTransferPending: Story = {
+export const BridgeTransferPending: Story = {
     args: {
         swap: {
             ...failedSwap,
-            status: SwapStatus.LsTransferPending,
+            status: SwapStatus.BridgeTransferPending,
             transactions: [
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Completed, type: TransactionType.Input },
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Pending, type: TransactionType.Output },
@@ -181,11 +181,11 @@ export const LsTransferPending: Story = {
     }
 };
 
-export const LsTransferPendingWithRefuel: Story = {
+export const BridgeTransferPendingWithRefuel: Story = {
     args: {
         swap: {
             ...swap,
-            status: SwapStatus.LsTransferPending,
+            status: SwapStatus.BridgeTransferPending,
             transactions: [
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Completed, type: TransactionType.Input },
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Pending, type: TransactionType.Output },
@@ -199,7 +199,7 @@ export const LsTransferInitiated: Story = {
     args: {
         swap: {
             ...swap,
-            status: SwapStatus.LsTransferPending,
+            status: SwapStatus.BridgeTransferPending,
             transactions: [
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Completed, type: TransactionType.Input },
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Initiated, type: TransactionType.Output, confirmations: 2, max_confirmations: 5 },
@@ -227,7 +227,7 @@ export const OnlyRefuelCompleted: Story = {
     args: {
         swap: {
             ...swap,
-            status: SwapStatus.LsTransferPending,
+            status: SwapStatus.BridgeTransferPending,
             transactions: [
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Completed, type: TransactionType.Input },
                 { ...DUMMY_TRANSACTION, status: TransactionStatus.Pending, type: TransactionType.Output },
