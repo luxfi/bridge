@@ -61,6 +61,7 @@ export async function handleSwapCreation(data: SwapData) {
     });
     // get available deposit address
     const deposit_address_id = await getAvailableDepositAddress (source_network, source_asset);
+
     try {
         const swap = await prisma.swap.create({
             data: {
