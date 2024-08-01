@@ -84,11 +84,11 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         <div className="flex justify-between items-baseline">
                             <span className="text-left">From  </span>
                             {
-                                (sourceLayer || sourceExchange) && <div className="flex items-center">
+                                (sourceExchange || sourceLayer) && <div className="flex items-center">
                                     <div className="flex-shrink-0 h-5 w-5 relative">
                                         {
                                             <Image
-                                                src={resolveImgSrc(sourceLayer ?? sourceExchange)}
+                                                src={resolveImgSrc(sourceExchange ?? sourceLayer)}
                                                 alt="Exchange Logo"
                                                 height="60"
                                                 width="60"
@@ -98,7 +98,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                         }
 
                                     </div>
-                                    <div className="mx-1 ">{sourceLayer?.display_name ?? sourceExchange?.display_name}</div>
+                                    <div className="mx-1 ">{sourceExchange?.display_name ?? sourceLayer?.display_name}</div>
                                 </div>
                             }
                         </div>
