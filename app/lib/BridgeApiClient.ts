@@ -310,6 +310,11 @@ export type SwapItem = {
   has_pending_deposit: boolean;
   sequence_number: number;
   fail_reason?: string;
+  deposit_address?: {
+    id: number,
+    type: string,
+    address: string
+  }
 };
 
 export type AddressBookItem = {
