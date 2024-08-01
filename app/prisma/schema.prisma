@@ -15,9 +15,9 @@ generator client {
 // }
 
 datasource db {
-    provider  = "sqlite"
-    url       = "file:dev.sqlite?socket_timeout=50000"// uses connection pooling
-    directUrl = "file:dev.sqlite?socket_timeout=50000" // uses a direct connection
+  provider  = "sqlite"
+  url       = "file:dev.sqlite?socket_timeout=50000" // uses connection pooling
+  directUrl = "file:dev.sqlite?socket_timeout=50000" // uses a direct connection
 }
 
 // pnpx prisma generate
@@ -34,7 +34,6 @@ model Network {
   is_featured                   Boolean?
   logo                          String?
   chain_id                      String?
-  node_url                      String?
   type                          String?
   average_completion_time       String?
   transaction_explorer_template String?
@@ -43,6 +42,7 @@ model Network {
   currencies                    Currency[]
   deposit_actions               DepositAction[]
   transaction                   Transaction[]
+  nodes                         RpcNode[]
 }
 
 model Currency {
@@ -165,4 +165,11 @@ model DepositAddress {
 
   @@index([type])
   @@index([address])
+}
+
+model RpcNode {
+  id         Int     @id @default(autoincrement())
+  url        String
+  network_id Int
+  network    Network @relation(fields: [network_id], references: [id])
 }

@@ -8,7 +8,6 @@ CREATE TABLE "Network" (
     "is_featured" BOOLEAN,
     "logo" TEXT,
     "chain_id" TEXT,
-    "node_url" TEXT,
     "type" TEXT,
     "average_completion_time" TEXT,
     "transaction_explorer_template" TEXT,
@@ -117,6 +116,14 @@ CREATE TABLE "DepositAddress" (
     "address" TEXT NOT NULL
 );
 
+-- CreateTable
+CREATE TABLE "RpcNode" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "url" TEXT NOT NULL,
+    "network_id" INTEGER NOT NULL,
+    CONSTRAINT "RpcNode_network_id_fkey" FOREIGN KEY ("network_id") REFERENCES "Network" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Network_internal_name_key" ON "Network"("internal_name");
 
@@ -125,12 +132,6 @@ CREATE INDEX "Currency_network_id_idx" ON "Currency"("network_id");
 
 -- CreateIndex
 CREATE INDEX "Currency_asset_idx" ON "Currency"("asset");
-
--- CreateIndex
-CREATE UNIQUE INDEX "DepositAction_currency_id_key" ON "DepositAction"("currency_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "DepositAction_fee_currency_id_key" ON "DepositAction"("fee_currency_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DepositAction_swap_id_key" ON "DepositAction"("swap_id");

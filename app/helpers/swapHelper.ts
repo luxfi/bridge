@@ -55,13 +55,14 @@ export async function handleSwapCreation(data: SwapData) {
     // // todo
     // const deposit_address_id = 1;
     // // current block number
-    // const block_number = await getCurrentBlockNumber(source_network).catch(err => {
-    //     throw new Error(
-    //         `Error fetcjomg block number for chain ${source_network}`
-    //     );
-    // });
-    const block_number = 1200;
+    const block_number = await getCurrentBlockNumber(source_network).catch(err => {
+        throw new Error(
+            `Error fetching block number for chain ${source_network}`
+        );
+    });
     const deposit_address_id = 1;
+
+    console.log(block_number)
 
     try {
         const swap = await prisma.swap.create({
