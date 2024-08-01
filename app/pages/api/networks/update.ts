@@ -21,6 +21,7 @@ export default async function handler(
         const settings = isMainnet ? mainnetSettings : testnetSettings;
         const { networks } = settings.data;
         await prisma.currency.deleteMany();
+        await prisma.rpcNode.deleteMany();
         await prisma.network.deleteMany();
         for (let index = 0; index < networks.length; index++) {
             const n = networks[index];
@@ -32,13 +33,18 @@ export default async function handler(
                     is_testnet: n.is_testnet,
                     is_featured: n.is_featured,
                     chain_id: n.chain_id,
-                    node_url: n.nodes[0]?.url ?? '',
                     type: n.type,
                     average_completion_time: n.average_completion_time,
                     transaction_explorer_template: n.transaction_explorer_template,
                     account_explorer_template: n.account_explorer_template,
                 }
             });
+            await prisma.rpcNode.createMany({
+                data: n.nodes.map((n: any) => ({
+                    network_id: _network.id,
+                    url: n.url
+                }))
+            })
             await prisma.currency.createMany({
                 data: n.currencies.map((c: any) => ({
                     network_id: _network.id,
