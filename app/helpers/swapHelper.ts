@@ -4,7 +4,7 @@ import { isValidAddress } from "../lib/addressValidator";
 import { statusMapping, SwapStatus } from "../Models/SwapStatus";
 import { TransactionType } from "../Models/TransactionTypes";
 import { getTokenPrice } from "./tokenHelper";
-import { getCurrentBlockNumber } from "@/lib/utils";
+import { getAvailableDepositAddress, getCurrentBlockNumber } from "@/lib/utils";
 
 export interface SwapData {
     amount: number;
@@ -52,18 +52,15 @@ export async function handleSwapCreation(data: SwapData) {
         use_deposit_address
     } = data;
 
-    // // todo
-    // const deposit_address_id = 1;
-    // // current block number
+
+    // current block number
     const block_number = await getCurrentBlockNumber(source_network).catch(err => {
         throw new Error(
             `Error fetching block number for chain ${source_network}`
         );
     });
-    const deposit_address_id = 1;
-
-    console.log(block_number)
-
+    // get available deposit address
+    const deposit_address_id = await getAvailableDepositAddress (source_network, source_asset);
     try {
         const swap = await prisma.swap.create({
             data: {
