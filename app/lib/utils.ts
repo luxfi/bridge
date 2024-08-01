@@ -72,11 +72,12 @@ export const getAvailableDepositAddress = async (network: string, asset: string)
             }
         });
         const data: any = await prisma.$queryRaw`
-            SELECT id FROM DepositAddress WHERE type=${_network?.type} and id NOT IN (
+            SELECT id FROM "DepositAddress" WHERE type=${_network?.type} and id NOT IN (
                 SELECT deposit_address_id as id FROM "Swap"
                 WHERE source_network=${network} AND source_asset=${asset} AND status='user_transfer_pending'
             )
         `
+        console.log(data)
         if (data[0]) {
             return Promise.resolve(data[0].id);
         } else {
