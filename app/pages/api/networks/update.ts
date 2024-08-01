@@ -20,6 +20,8 @@ export default async function handler(
         // settings
         const settings = isMainnet ? mainnetSettings : testnetSettings;
         const { networks } = settings.data;
+        await prisma.quote.deleteMany();
+        await prisma.depositAction.deleteMany();
         await prisma.currency.deleteMany();
         await prisma.rpcNode.deleteMany();
         await prisma.network.deleteMany();
