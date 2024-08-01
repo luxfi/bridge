@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../lib/db";
-import Web3 from 'web3';
+import { Web3, HttpProvider } from 'web3';
 import { rpc } from "viem/utils";
 
 /**
@@ -17,6 +17,18 @@ export const generateRandomString = (): string => {
     return result;
 }
 
+const _getWeb3 = async (rpcList: string[]) => {
+    for (let i = 0; i < rpcList.length; i++) {
+        const rpcUrl = rpcList[i];
+        const web3 = new Web3(new HttpProvider(String(rpcUrl)));
+        try {
+            await web3.eth.net.isListening();
+            return Promise.resolve(web3);
+        } catch (err) {}
+    }
+    return Promise.reject("cannot connect");
+};
+
 /**
  * get current block number
  * @param network 
@@ -26,16 +38,17 @@ export const getCurrentBlockNumber = async (network_name: string) => {
         const _network = await prisma.network.findUnique({
             where: {
                 internal_name: network_name
+            },
+            include: {
+                nodes: true
             }
         });
         if (_network?.type === 'evm') {
-            const rpcUrl = _network.node_url;
-            const web3 = new Web3(new Web3.providers.HttpProvider(String(rpcUrl)));
-            await web3.eth.net.isListening ().catch (err => {
+            const web3 = await _getWeb3 (_network.nodes.map(n => n.url)).catch (err => {
                 throw "cannot connect to rpc..."
             });
             const blockNumber = await web3.eth.getBlockNumber();
-            return Promise.resolve(Number(blockNumber));   
+            return Promise.resolve(Number(blockNumber));
         }
         throw "not evm"
     } catch (err) {
@@ -50,7 +63,7 @@ export const getAvailableDepositAddress = async (network: string, asset: string)
             source_asset: asset
         },
         select: {
-            
+
         }
     });
 }
