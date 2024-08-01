@@ -32,7 +32,6 @@ export type UpdateSwapData = {
     add_input_tx: string;
     // [property: string]: any;
 };
-
 /**
  * Create swap according to users' input
  * @param data SwapData
@@ -67,7 +66,7 @@ export async function handleSwapCreation(data: SwapData) {
     try {
         const swap = await prisma.swap.create({
             data: {
-                requested_amount: 12,
+                requested_amount: amount,
                 source_network,
                 source_exchange,
                 source_asset,
@@ -76,27 +75,12 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_exchange,
                 destination_asset,
                 destination_address,
-                refuel: false,
-                use_deposit_address: false,
+                refuel,
+                use_deposit_address,
                 block_number,
                 deposit_address_id,
                 status: SwapStatus.UserTransferPending,
                 quotes: {},
-                // requested_amount: amount,
-                // source_network,
-                // source_exchange,
-                // source_asset,
-                // source_address,
-                // destination_network,
-                // destination_exchange,
-                // destination_asset,
-                // destination_address,
-                // refuel,
-                // use_deposit_address,
-                // block_number,
-                // deposit_address_id,
-                // status: SwapStatus.UserTransferPending,
-                // quotes: {},
             },
         });
         // source network
@@ -119,15 +103,12 @@ export async function handleSwapCreation(data: SwapData) {
                 is_native: true
             }
         });
-
-        console.log({sourceNetwork, sourceCurrency, nativeCurrency})
         // deposit actions
         const depositAction = await prisma.depositAction.create({
             data: {
                 type: "userDeposit",
                 to_address: destination_address,
-                amount: 12,
-                // amount,
+                amount,
                 order_number: 0,
                 amount_in_base_units: "331000000000000",
                 network_id: Number(sourceNetwork?.id),
@@ -176,7 +157,6 @@ export async function handleSwapCreation(data: SwapData) {
             refuel: null,
             reward: null,
         };
-
         return result;
     } catch (error) {
         catchPrismaKnowError(error);
@@ -227,7 +207,6 @@ export async function handlerGetSwap(id: string) {
     try {
         const swap = await prisma.swap.findUnique({
             where: { id },
-
             include: {
                 deposit_actions: true,
                 quotes: true,
@@ -260,9 +239,16 @@ export async function handlerGetSwaps(
                 created_date: "desc",
             },
             where: { source_address: address },
-
             include: {
+                // deposit_actions: {
+                //     include: {
+                //         network: true,
+                //         currency: true,
+                //         fee_currency: true
+                //     }
+                // },
                 deposit_actions: true,
+                deposit_address: true,
                 quotes: true,
                 transactions: {
                     include: {
