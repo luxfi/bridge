@@ -8,17 +8,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// datasource db {
-//   provider  = "postgresql"
-//   url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-//   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-// }
-
 datasource db {
-  provider  = "sqlite"
-  url       = "file:dev.sqlite?socket_timeout=50000" // uses connection pooling
-  directUrl = "file:dev.sqlite?socket_timeout=50000" // uses a direct connection
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
+
+// datasource db {
+//   provider  = "sqlite"
+//   url       = "file:dev.sqlite?socket_timeout=50000" // uses connection pooling
+//   directUrl = "file:dev.sqlite?socket_timeout=50000" // uses a direct connection
+// }
 
 // pnpx prisma generate
 // npx prisma db push 
