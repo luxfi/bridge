@@ -66,15 +66,23 @@ export const getCurrentBlockNumber = async (network_name: string) => {
  */
 export const getAvailableDepositAddress = async (network: string, asset: string) => {
     try {
+        // source network
         const _network = await prisma.network.findUnique ({
             where: {
                 internal_name: network
             }
         });
+        // source asset
+        const _asset = await prisma.currency.findFirst({
+            where: {
+                network_id: _network?.id,
+                asset: asset
+            }
+        });
         const data: any = await prisma.$queryRaw`
             SELECT id FROM "DepositAddress" WHERE type=${_network?.type} and id NOT IN (
                 SELECT deposit_address_id as id FROM "Swap"
-                WHERE source_network=${network} AND source_asset=${asset} AND status='user_transfer_pending'
+                WHERE source_network_id=${_network?.id} AND source_asset_id=${_asset?.id} AND status='user_transfer_pending'
             )
         `
         console.log(data)
