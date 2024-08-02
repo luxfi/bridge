@@ -26,8 +26,7 @@ export default async function handler(
     const { network } = req.query;
     // Get version from query parameter
     const { version } = req.query;
-    const isMainnet =
-        version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet = version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     // settings
     const settings = isMainnet ? mainnetSettings : testnetSettings;
     const { networks } = settings.data;
@@ -43,8 +42,6 @@ export default async function handler(
             address: true
         }
     });
-
-    console.log(data)
 
     res.status(200).json({
         data: {
