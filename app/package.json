@@ -14,7 +14,7 @@
     "build:storybook": "storybook build",
     "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint",
-    "migrate": "prisma generate && prisma migrate deploy"
+    "postinstall": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
