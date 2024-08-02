@@ -42,7 +42,6 @@ const SwapDetails: FC<Props> = ({ type }) => {
             </div>
         )
     } else {
-        console.log(swapStatus)
         return (
             <>
                 <Container type={type}>

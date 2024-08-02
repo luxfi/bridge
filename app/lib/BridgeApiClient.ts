@@ -269,10 +269,6 @@ export type NetworkAccount = {
 
 export type CreateSwapParams = {
   amount: number;
-  // source: string;
-  // destination: string;
-  // source_asset: string;
-  // destination_asset: string;
   app_name?: string;
   reference_id?: string;
   refuel?: boolean;
@@ -280,7 +276,6 @@ export type CreateSwapParams = {
   source_exchange?: string;
   source_asset: string;
   source_address?: string;
-  // destination_address: string;
   destination_network?: string;
   destination_exchange?: string;
   destination_asset: string;
@@ -315,6 +310,11 @@ export type SwapItem = {
   has_pending_deposit: boolean;
   sequence_number: number;
   fail_reason?: string;
+  deposit_address?: {
+    id: number,
+    type: string,
+    address: string
+  }
 };
 
 export type AddressBookItem = {
