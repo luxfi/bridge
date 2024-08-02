@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { getTokenPrice } from '../tokenAction';
+import { getTokenPrice } from "../../../helpers/tokenHelper";
 
 /**
  * get rate information for the swap
@@ -33,16 +33,6 @@ export default async function handler(
         getTokenPrice(source_asset),
         getTokenPrice(destination_asset)
     ]);
-
-    console.log("rate", {
-        amount,
-        source,
-        source_asset,
-        destination,
-        destination_asset,
-        sourcePrice,
-        destinationPrice
-    });
 
     res.status(200).json({
         data: {

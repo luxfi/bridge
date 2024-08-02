@@ -51,8 +51,8 @@ const CampaignDisplay: FC<CampaignDisplayProps> = ({ campaign, fee, selected_cur
     const { resolveImgSrc, layers } = useSettingsState()
     const layer = layers.find(l => l.internal_name === campaign.network)
     const campaignAsset = layer?.assets.find(c => c?.asset === campaign?.asset)
-    const feeinUsd = fee * selected_currency.usd_price
-    const reward = truncateDecimals(((feeinUsd * (campaign?.percentage || 0) / 100) / (campaignAsset?.usd_price || 1)), (campaignAsset?.precision || 0))
+    const feeinUsd = fee * selected_currency.price_in_usd
+    const reward = truncateDecimals(((feeinUsd * (campaign?.percentage || 0) / 100) / (campaignAsset?.price_in_usd || 1)), (campaignAsset?.precision || 0))
 
     return <motion.div
         initial={{ y: "-100%" }}

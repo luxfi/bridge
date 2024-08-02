@@ -18,7 +18,6 @@ import { useSwapDepositHintClicked } from "../../../stores/swapTransactionStore"
 import { useFee } from "../../../context/feeContext";
 import { Layer } from "../../../Models/Layer";
 import { Exchange } from "../../../Models/Exchange";
-import { NetworkCurrency } from "../../../Models/CryptoNetwork";
 
 const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string): string | undefined => {
     if (!exchange || !asset) {
@@ -44,22 +43,7 @@ const ManualTransfer: FC = () => {
     const sourceLayer = layers.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
     const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
-
-    const client = new BridgeApiClient()
-    const {
-        data: generatedDeposit,
-        isLoading
-    } = useSWR<ApiResponse<DepositAddress>>(`/deposit_addresses/${source_network_internal_name}`,
-        client.fetcher,
-        {
-            dedupingInterval: 60000,
-            shouldRetryOnError: false
-        }
-    )
-
-    let generatedDepositAddress = generatedDeposit?.data?.address
-    let shouldGenerateAddress = !generatedDepositAddress && hintClicked
-
+   
     const handleCloseNote = useCallback(async () => {
         if (swap)
             hintsStore.setSwapDepositHintClicked(swap?.id)
@@ -83,14 +67,14 @@ const ManualTransfer: FC = () => {
                 </SubmitButton>
             </div>
             <div className={hintClicked ? "flex" : "invisible"}>
-                <TransferInvoice address={generatedDepositAddress} shouldGenerateAddress={shouldGenerateAddress} />
+                <TransferInvoice/>
             </div>
         </div>
     )
 
 }
 
-const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> = ({ address: existingDepositAddress, shouldGenerateAddress }) => {
+const TransferInvoice = () => {
 
     const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettingsState()
     const { swap } = useSwapDataState()
@@ -102,7 +86,8 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         source_asset,
         destination_network,
         destination_exchange,
-        destination_asset
+        destination_asset,
+        deposit_address
     } = swap || {}
 
     const sourceLayer = layers.find(n => n.internal_name === source_network)
@@ -113,7 +98,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     const destinationLayer = layers?.find(l => l.internal_name === destination_network)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange)
     const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
-
+    const depositAddress = deposit_address?.address;
 
     console.log("TransferInvoice => ", {
         sourceLayer,
@@ -122,6 +107,7 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
         destinationLayer,
         destinationExchange,
         destinationAsset,
+        deposit_address
     })
 
     useEffect(() => {
@@ -141,20 +127,9 @@ const TransferInvoice: FC<{ address?: string, shouldGenerateAddress: boolean }> 
     }, [swap])
 
     const client = new BridgeApiClient()
-    const generateDepositParams = shouldGenerateAddress ? [source_network_internal_name] : null
-
-    const {
-        data: generatedDeposit
-    } = useSWR<ApiResponse<DepositAddress>>(generateDepositParams, ([network]) => client.GenerateDepositAddress(network), { dedupingInterval: 60000 })
-
-    console.log({ shouldGenerateAddress, generateDepositParams })
 
     //TODO pick manual transfer minAllowedAmount when its available
     const requested_amount = Number(minAllowedAmount) > Number(swap?.requested_amount) ? minAllowedAmount : swap?.requested_amount
-    const depositAddress = existingDepositAddress || generatedDeposit?.data?.address
-
-    console.log({ existingDepositAddress })
-    // console.log({depositAddress, generateDepositParams, generatedDeposit, shouldGenerateAddress, source})
 
     // const handleChangeSelectedNetwork = useCallback((n: NetworkCurrency) => {
     //     setSelectedAssetNetwork(n)

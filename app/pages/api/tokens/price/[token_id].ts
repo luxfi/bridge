@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getTokenPrice } from "../../tokenAction";
+import { getTokenPrice } from "../../../../helpers/tokenHelper";
 
 /**
  * get token price

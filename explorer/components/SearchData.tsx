@@ -701,7 +701,7 @@ export default function SearchData({ searchParam }: { searchParam: string }) {
                 <ArrowRight className=" w-8 h-auto" />
               </div>
               <div className="w-full p-6 grid gap-y-3 border border-muted-3 border-1 rounded-lg shadow-lg relative">
-                {swap.status == SwapStatus.LsTransferPending ||
+                {swap.status == SwapStatus.BridgeTransferPending ||
                 swap.status == SwapStatus.UserTransferPending ? (
                   <span className="pendingAnim"></span>
                 ) : null}

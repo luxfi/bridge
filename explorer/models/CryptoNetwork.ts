@@ -35,7 +35,7 @@ export class NetworkCurrency {
     contract_address?: `0x${string}` | null | undefined;
     decimals?: number;
     precision?: number;
-    usd_price?: number;
+    price_in_usd?: number;
 }
 export class NetworkNode {
     url?: string;
