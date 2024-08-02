@@ -52,7 +52,6 @@ export async function handleSwapCreation(data: SwapData) {
         use_deposit_address
     } = data;
 
-
     // current block number
     const block_number = await getCurrentBlockNumber(source_network).catch(err => {
         throw new Error(
