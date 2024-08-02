@@ -77,19 +77,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
     const { resolveImgSrc, layers, exchanges } = useSettingsState();
 
-
-    console.log("values =======================>",
-        {
-            from,
-            to,
-            fromCurrency,
-            toCurrency,
-            fromExchange,
-            toExchange,
-            currencyGroup
-        }
-    )
-
     let placeholder = "";
     let searchHint = "";
     let filteredLayers: Layer[];
