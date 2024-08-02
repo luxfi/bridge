@@ -39,6 +39,8 @@ model Network {
   transaction_explorer_template String?
   account_explorer_template     String?
   listing_date                  DateTime?
+  source_network                Swap[]          @relation("sourceNetwork")
+  destination_network           Swap[]          @relation("destinationNetwork")
   currencies                    Currency[]
   deposit_actions               DepositAction[]
   transaction                   Transaction[]
@@ -61,6 +63,8 @@ model Currency {
   transaction                 Transaction[]
   network_id                  Int
   network                     Network         @relation(fields: [network_id], references: [id])
+  source_currency             Swap[]          @relation("sourceAsset")
+  destination_currency        Swap[]          @relation("destinationAsset")
 
   @@index([network_id])
   @@index([asset])
@@ -89,13 +93,17 @@ model DepositAction {
 model Swap {
   id                       String   @id @default(uuid())
   created_date             DateTime @default(now())
-  source_network           String
+  source_network_id        Int
+  source_network           Network  @relation("sourceNetwork", fields: [source_network_id], references: [id])
   source_exchange          String?
-  source_asset             String
+  source_asset_id          Int
+  source_asset             Currency @relation("sourceAsset", fields: [source_asset_id], references: [id])
   source_address           String
-  destination_network      String
+  destination_network_id   Int
+  destination_network      Network  @relation("destinationNetwork", fields: [destination_network_id], references: [id])
   destination_exchange     String?
-  destination_asset        String
+  destination_asset_id     Int
+  destination_asset        Currency @relation("destinationAsset", fields: [destination_asset_id], references: [id])
   destination_address      String
   refuel                   Boolean
   use_deposit_address      Boolean
