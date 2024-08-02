@@ -54,13 +54,13 @@ CREATE TABLE "DepositAction" (
 CREATE TABLE "Swap" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "created_date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "source_network" TEXT NOT NULL,
+    "source_network_id" INTEGER NOT NULL,
     "source_exchange" TEXT,
-    "source_asset" TEXT NOT NULL,
+    "source_asset_id" INTEGER NOT NULL,
     "source_address" TEXT NOT NULL,
-    "destination_network" TEXT NOT NULL,
+    "destination_network_id" INTEGER NOT NULL,
     "destination_exchange" TEXT,
-    "destination_asset" TEXT NOT NULL,
+    "destination_asset_id" INTEGER NOT NULL,
     "destination_address" TEXT NOT NULL,
     "refuel" BOOLEAN NOT NULL,
     "use_deposit_address" BOOLEAN NOT NULL,
@@ -70,6 +70,10 @@ CREATE TABLE "Swap" (
     "metadata_sequence_number" INTEGER,
     "block_number" INTEGER NOT NULL,
     "deposit_address_id" INTEGER NOT NULL,
+    CONSTRAINT "Swap_source_network_id_fkey" FOREIGN KEY ("source_network_id") REFERENCES "Network" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Swap_source_asset_id_fkey" FOREIGN KEY ("source_asset_id") REFERENCES "Currency" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Swap_destination_network_id_fkey" FOREIGN KEY ("destination_network_id") REFERENCES "Network" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Swap_destination_asset_id_fkey" FOREIGN KEY ("destination_asset_id") REFERENCES "Currency" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Swap_deposit_address_id_fkey" FOREIGN KEY ("deposit_address_id") REFERENCES "DepositAddress" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
