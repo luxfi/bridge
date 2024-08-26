@@ -1,0 +1,48 @@
+{
+  "name": "@luxfi/mpc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/node.ts",
+  "_moduleAliases": {
+    "@": "dist"
+  },
+  "scripts": {
+    "dev": "nodemon",
+    "start": "ts-node-dev src/node.ts",
+    "build": "tsc && tsc-alias",
+    "server": "node dist/node.js",
+    "keygen": "cd dist/multiparty && ./target/release/examples/gg18_keygen_client http://sm-manager:8000 keys.store",
+    "production": "set PORT=80&&set ENVIRONMENT=PRODUCTION&&ts-node src/node.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "eslint src/**/*.ts --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.4.1",
+    "@typescript-eslint/eslint-plugin": "^8.2.0",
+    "@typescript-eslint/parser": "^8.2.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.2.1",
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "axios": "^1.7.4",
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "express": "^4.19.2",
+    "find-process": "^1.4.7",
+    "web3": "^4.11.1"
+  }
+}
