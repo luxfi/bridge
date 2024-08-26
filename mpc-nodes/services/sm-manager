@@ -1,0 +1,14 @@
+# Use Rust as the base image
+FROM rust:latest
+
+# Install the necessary dependencies  
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/* 
+
+WORKDIR /app
+COPY ./common/multiparty_ecdsa .
+
+RUN cargo build --release --examples
+
+EXPOSE 8000
+
+CMD ["./target/release/examples/gg18_sm_manager"]
