@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -f compose.yaml -o k8s/
+    kompose.version: 1.34.0 (cbf2835db)
+  labels:
+    io.kompose.service: sm-manager
+  name: sm-manager
+spec:
+  containers:
+    - image: mpc_nodes_docker-sm-manager:latest
+      name: sm-manager
+      ports:
+        - containerPort: 8000
+          protocol: TCP
+      imagePullPolicy: Never
+  restartPolicy: OnFailure
