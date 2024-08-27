@@ -1,5 +1,5 @@
 # teleport
-Docker project for MPC nodes for Teleport bridge network.
+Docker & K8 project for MPC nodes for Teleport bridge network.
 
 ## Features
 Lux Teleport has the following features:

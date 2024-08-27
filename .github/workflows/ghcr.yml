@@ -3,17 +3,15 @@ on:
   push:
     branches:
       - main
+    paths:  
+      - 'mpc-nodes/**'  # Only trigger the workflow for changes in the mpc-node subfolder
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:  
-          node-version: '20'  # Ensure checkout action runs on Node.js 20 
       - name: Set up Docker Buildx  
         uses: docker/setup-buildx-action@v2
-        with:  
-          node-version: '20'  # Ensure Buildx action runs on Node.js 20  
       - name: Log in to GitHub Container Registry
         run : |  
           docker login --username venuswhispers --password ${{ secrets.GH_PAT }} ghcr.io
