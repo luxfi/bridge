@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:  
-      - 'mpc-nodes/**'  # Only trigger the workflow for changes in the mpc-node subfolder
+      - 'mpc-nodes/docker/**'  # Only trigger the workflow for changes in the mpc-node subfolder
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest

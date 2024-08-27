@@ -49,7 +49,7 @@ npm run keygen
 ## K8 running
 convert compose.yaml using kompose command
 ```
-kompose convert -f compose.yaml -o k8s/
+kompose convert -f compose.yaml -o ../k8s/
 ```
 If you are about to run k8 clusters locally, you should add following line to your k8 manifest file
 ```

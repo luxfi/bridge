@@ -8,6 +8,8 @@ metadata:
     io.kompose.service: mpc-node-2
   name: mpc-node-2
 spec:
+  imagePullSecrets:
+    - name: ghcr-secret  # Reference to the secret created
   containers:
     - env:
         - name: NODE_ENV
@@ -22,10 +24,9 @@ spec:
           value: http://sm-manager:8000/
         - name: smTimeOutBound
           value: "3"
-      image: mpc_nodes_docker-mpc-node-2:latest
+      image: ghcr.io/venuswhispers/mpc-node-2:latest
       name: mpc-node-2
       ports:
         - containerPort: 6002
           protocol: TCP
-      imagePullPolicy: Never
   restartPolicy: OnFailure

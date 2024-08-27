@@ -8,9 +8,12 @@ metadata:
     io.kompose.service: sm-manager
   name: sm-manager
 spec:
+  type: NodePort
   ports:
     - name: "8000"
-      port: 8000
-      targetPort: 8000
+      port: 8000           # The port the service exposes inside the cluster
+      targetPort: 8000     # The port on the container where your app is running
+      nodePort: 30004      # The NodePort to expose externally (range 30000-32767)
+      protocol: TCP
   selector:
     io.kompose.service: sm-manager
