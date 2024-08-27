@@ -1,0 +1,33 @@
+apiVersion: v1  
+kind: ConfigMap  
+metadata:  
+  name: caddyfile  
+data:  
+  Caddyfile: |  
+    {  
+      email jackson@lux.network
+    }
+
+    node0.teleport.lux.network {  
+      reverse_proxy mpc-node-0:6000
+
+      # Active health checks
+      health_interval 10s  # Perform health checks every 10 seconds
+      health_timeout 2s    # Consider backend unhealthy if it takes longer than 2 seconds to respond
+    }  
+
+    node1.teleport.lux.network {  
+      reverse_proxy mpc-node-1:6000
+
+      # Active health checks
+      health_interval 10s  # Perform health checks every 10 seconds
+      health_timeout 2s    # Consider backend unhealthy if it takes longer than 2 seconds to respond
+    }  
+
+    node2.teleport.lux.network {  
+      reverse_proxy mpc-node-2:6000
+
+      # Active health checks
+      health_interval 10s  # Perform health checks every 10 seconds
+      health_timeout 2s    # Consider backend unhealthy if it takes longer than 2 seconds to respond
+    }

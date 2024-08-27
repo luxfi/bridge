@@ -8,12 +8,11 @@ metadata:
     io.kompose.service: mpc-node-1
   name: mpc-node-1
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
-    - name: "6001"
-      port: 6001           # The port the service exposes inside the cluster
-      targetPort: 6001     # The port on the container where your app is running
-      nodePort: 30001      # The NodePort to expose externally (range 30000-32767)
+    - name: "6000"
+      port: 6000
+      targetPort: 6000
       protocol: TCP
   selector:
     io.kompose.service: mpc-node-1
