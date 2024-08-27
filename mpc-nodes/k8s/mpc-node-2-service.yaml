@@ -8,9 +8,12 @@ metadata:
     io.kompose.service: mpc-node-2
   name: mpc-node-2
 spec:
+  type: NodePort
   ports:
     - name: "6002"
-      port: 6002
-      targetPort: 6002
+      port: 6002           # The port the service exposes inside the cluster
+      targetPort: 6002     # The port on the container where your app is running
+      nodePort: 30002      # The NodePort to expose externally (range 30000-32767)
+      protocol: TCP
   selector:
     io.kompose.service: mpc-node-2
