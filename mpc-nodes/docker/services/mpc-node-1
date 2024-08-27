@@ -1,0 +1,36 @@
+# Use Rust as the base image
+FROM rust:latest AS rust_builder
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the Rust source code
+COPY ./common/multiparty_ecdsa .
+
+# Install the necessary dependencies  
+RUN apt-get update && apt-get install -y pkg-config libssl-dev build-essential && rm -rf /var/lib/apt/lists/* 
+
+# Build your Rust application
+RUN cargo build --release --examples
+
+# Use Node.js for the final image
+FROM node:20
+
+# Set working directory in Node container  
+WORKDIR /app
+
+COPY ./common/node .
+
+# Install Node.js dependencies
+RUN npm install
+
+# Build node app
+RUN npm run build
+
+# Copy the built Rust binary from the builder stage  
+COPY --from=rust_builder /app/. ./dist/multiparty
+
+EXPOSE 6001
+
+# Command to run the application (adjust as necessary)  
+CMD ["node", "dist/node.js"]
