@@ -15,7 +15,7 @@ spec:
         - name: NODE_ENV
           value: production
         - name: PORT
-          value: "6002"
+          value: "6000"
         - name: node_number
           value: "2"
         - name: sign_client_name
@@ -27,6 +27,6 @@ spec:
       image: ghcr.io/venuswhispers/mpc-node-2:latest
       name: mpc-node-2
       ports:
-        - containerPort: 6002
+        - containerPort: 6000
           protocol: TCP
   restartPolicy: OnFailure
