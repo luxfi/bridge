@@ -8,7 +8,7 @@ spec:
     matchLabels:  
       app: caddy  
   template:  
-    metadata:
+    metadata:  
       labels:  
         app: caddy  
     spec:  
@@ -17,6 +17,7 @@ spec:
         image: caddy:latest  
         ports:  
         - containerPort: 80  
+        - containerPort: 443  
         volumeMounts:  
         - name: caddyfile  
           mountPath: /etc/caddy/Caddyfile  
