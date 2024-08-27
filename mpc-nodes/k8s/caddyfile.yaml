@@ -1,3 +1,23 @@
+# apiVersion: v1  
+# kind: ConfigMap  
+# metadata:  
+#   name: caddyfile  
+# data:  
+#   Caddyfile: |
+#     {  
+#       email jackson@lux.network
+#     }
+
+#     # Redirect HTTP to HTTPS  
+#     http:// {
+#         redir https://{host}{uri}  # Redirect all HTTP traffic to HTTPS  
+#     }
+
+#     teleport.lux.network {  
+#       reverse_proxy /node0/* mpc-node-0:6000  
+#       reverse_proxy /node1/* mpc-node-1:6000  
+#       reverse_proxy /node2/* mpc-node-2:6000
+#     }
 apiVersion: v1  
 kind: ConfigMap  
 metadata:  
@@ -5,29 +25,48 @@ metadata:
 data:  
   Caddyfile: |  
     {  
-      email jackson@lux.network
-    }
-
-    node0.teleport.lux.network {  
-      reverse_proxy mpc-node-0:6000
-
-      # Active health checks
-      health_interval 10s  # Perform health checks every 10 seconds
-      health_timeout 2s    # Consider backend unhealthy if it takes longer than 2 seconds to respond
+      email jackson@lux.network  
+      # Uncomment the next line if you want to use the staging environment for testing  
+      # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory  
     }  
 
-    node1.teleport.lux.network {  
-      reverse_proxy mpc-node-1:6000
-
-      # Active health checks
-      health_interval 10s  # Perform health checks every 10 seconds
-      health_timeout 2s    # Consider backend unhealthy if it takes longer than 2 seconds to respond
+    # Redirect HTTP to HTTPS  
+    http:// {  
+      redir https://{host}{uri} 301  
     }  
 
-    node2.teleport.lux.network {  
-      reverse_proxy mpc-node-2:6000
+    teleport.lux.network {  
+      # Global options  
+      tls {  
+        protocols tls1.2 tls1.3  
+      }  
+      
+      # Logging (optional)  
+      log {  
+        output file /var/log/caddy/access.log  
+        format json  
+      }  
 
-      # Active health checks
-      health_interval 10s  # Perform health checks every 10 seconds
-      health_timeout 2s    # Consider backend unhealthy if it takes longer than 2 seconds to respond
+      # CORS headers (if needed)  
+      header {  
+        Access-Control-Allow-Origin *  
+        Access-Control-Allow-Methods "GET, POST, OPTIONS"  
+        Access-Control-Allow-Headers "Origin, Content-Type, Accept"  
+      }  
+
+      # Reverse proxy rules  
+      handle /node0/* {  
+        reverse_proxy mpc-node-0:6000  
+      }  
+      handle /node1/* {  
+        reverse_proxy mpc-node-1:6000  
+      }  
+      handle /node2/* {  
+        reverse_proxy mpc-node-2:6000  
+      }  
+
+      # Health check endpoint (optional)  
+      handle /healthz {  
+        respond "OK" 200  
+      }  
     }
