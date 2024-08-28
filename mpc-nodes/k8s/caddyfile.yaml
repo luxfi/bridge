@@ -1,36 +1,28 @@
-apiVersion: v1  
-kind: ConfigMap  
-metadata:  
-  name: caddyfile  
-data:  
-  Caddyfile: |  
-    {  
-      email jackson@lux.network  
-    }  
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddyfile
+data:
+  Caddyfile: |
+    :80 {
+      # Handle requests to /node0 and its subpaths
+      handle_path /node0* {
+        reverse_proxy mpc-node-0:6000
+      }
 
-    # Redirect HTTP to HTTPS  
-    http:// {  
-        redir https://{host}{uri}  # Redirect all HTTP traffic to HTTPS  
-    }  
+      # Handle requests to /node1 and its subpaths
+      handle_path /node1* {
+        reverse_proxy mpc-node-1:6000
+      }
 
-    teleport.lux.network {  
-      # Redirect HTTP to HTTPS (optional)  
-      redir http://{host}{uri} 301
+      # Handle requests to /node2 and its subpaths
+      handle_path /node2* {
+        reverse_proxy mpc-node-2:6000
+      }
 
-      handle /node0/* {
-        reverse_proxy mpc-node-0:6000  
-      }  
-
-      handle /node1/* {  
-        reverse_proxy mpc-node-1:6000  
-      }  
-
-      handle /node2/* {  
-        reverse_proxy mpc-node-2:6000  
-      }  
-
-      # Optional: Health check endpoint  
-      handle /healthz {  
-        respond "OK" 200  
-      }  
+      # Catch-all for other requests, return 404 Not Found
+      handle {
+        respond "Not Found" 404
+      }
     }
+
