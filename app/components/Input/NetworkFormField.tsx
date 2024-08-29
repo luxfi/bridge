@@ -234,7 +234,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
                   )}
                 </div> : <>-</>
           }
-          {/* {value?.type} */}
           {value?.type === "cex" ? (
             <CurrencyGroupFormField direction={name} />
           ) : (

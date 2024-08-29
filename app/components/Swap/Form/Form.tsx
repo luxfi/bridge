@@ -133,7 +133,7 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
     if (
       ((previouslySelectedDestination.current &&
         destination?.internal_name !=
-          previouslySelectedDestination.current?.internal_name) ||
+        previouslySelectedDestination.current?.internal_name) ||
         (destination &&
           !isValidAddress(values.destination_address, destination))) &&
       !lockAddress
@@ -173,20 +173,16 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
   //TODO always map to toAsset from query
   const lockedCurrency = query?.lockAsset
     ? values.to?.assets?.find(
-        (c) => c?.asset?.toUpperCase() === toAsset?.toUpperCase()
-      )
+      (c) => c?.asset?.toUpperCase() === toAsset?.toUpperCase()
+    )
     : null;
   const apiVersion = BridgeApiClient.apiVersion;
-  const sourceRoutesEndpoint = `/sources?destination_network=${
-    source?.internal_name
-  }&destination_asset=${fromCurrency?.asset}${
-    apiVersion ? "&version=" : ""
-  }${apiVersion}`;
-  const destinationRoutesEndpoint = `/destinations?source_network=${
-    destination?.internal_name
-  }&source_asset=${toCurrency?.asset}${
-    apiVersion ? "&version=" : ""
-  }${apiVersion}`;
+  const sourceRoutesEndpoint = `/sources?destination_network=${source?.internal_name
+    }&destination_asset=${fromCurrency?.asset}${apiVersion ? "&version=" : ""
+    }${apiVersion}`;
+  const destinationRoutesEndpoint = `/destinations?source_network=${destination?.internal_name
+    }&source_asset=${toCurrency?.asset}${apiVersion ? "&version=" : ""
+    }${apiVersion}`;
   const { data: sourceRoutes, isLoading: sourceLoading } = useSWR<
     ApiResponse<
       {
@@ -256,9 +252,8 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
     <>
       <Widget className="sm:min-h-[504px]">
         <Form
-          className={`h-full ${
-            isSubmitting ? "pointer-events-none" : "pointer-events-auto"
-          }`}
+          className={`h-full ${isSubmitting ? "pointer-events-none" : "pointer-events-auto"
+            }`}
         >
           <Widget.Content>
             <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
@@ -346,20 +341,20 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
               {
                 //TODO refactor
                 destination &&
-                  toAsset &&
-                  destination?.internal_name ===
-                    KnownInternalNames.Networks.StarkNetMainnet &&
-                  averageTimeInMinutes > 30 && (
-                    <WarningMessage messageType="warning" className="mt-4">
-                      <span className="font-normal">
-                        <span>{destination?.display_name}</span>{" "}
-                        <span>
-                          network congestion. Transactions can take up to 1
-                          hour.
-                        </span>
+                toAsset &&
+                destination?.internal_name ===
+                KnownInternalNames.Networks.StarkNetMainnet &&
+                averageTimeInMinutes > 30 && (
+                  <WarningMessage messageType="warning" className="mt-4">
+                    <span className="font-normal">
+                      <span>{destination?.display_name}</span>{" "}
+                      <span>
+                        network congestion. Transactions can take up to 1
+                        hour.
                       </span>
-                    </WarningMessage>
-                  )
+                    </span>
+                  </WarningMessage>
+                )
               }
               <ReserveGasNote
                 onSubmit={(walletBalance, networkGas) =>
@@ -395,9 +390,9 @@ function ActionText(
 ): string {
   return (
     errors.from?.toString() ||
-    errors.fromCurrency?.toString () ||
+    errors.fromCurrency?.toString() ||
     errors.to?.toString() ||
-    errors.toCurrency?.toString () ||
+    errors.toCurrency?.toString() ||
     errors.amount ||
     errors.destination_address ||
     actionDisplayName
@@ -422,33 +417,33 @@ const AddressButton: FC<{
   partnerImage,
   disabled,
 }) => (
-  <button
-    type="button"
-    disabled={disabled}
-    onClick={openAddressModal}
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
-  >
-    {isPartnerWallet && (
-      <div className="shrink-0 flex items-center pointer-events-none">
-        {partnerImage && (
-          <Image
-            alt="Partner logo"
-            className="rounded-md object-contain"
-            src={partnerImage}
-            width="24"
-            height="24"
-          />
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={openAddressModal}
+      className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+    >
+      {isPartnerWallet && (
+        <div className="shrink-0 flex items-center pointer-events-none">
+          {partnerImage && (
+            <Image
+              alt="Partner logo"
+              className="rounded-md object-contain"
+              src={partnerImage}
+              width="24"
+              height="24"
+            />
+          )}
+        </div>
+      )}
+      <div className="truncate text-muted">
+        {values.destination_address ? (
+          <TruncatedAdrress address={values.destination_address} />
+        ) : (
+          <span>Enter your address here</span>
         )}
       </div>
-    )}
-    <div className="truncate text-muted">
-      {values.destination_address ? (
-        <TruncatedAdrress address={values.destination_address} />
-      ) : (
-        <span>Enter your address here</span>
-      )}
-    </div>
-  </button>
-);
+    </button>
+  );
 
 export default SwapForm;

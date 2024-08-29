@@ -1,5 +1,5 @@
-import { create } from 'zustand'
 import resolveChain from '../lib/resolveChain';
+import { create } from 'zustand'
 import { createPublicClient, http } from 'viem';
 import { NetworkType } from '../Models/CryptoNetwork';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -58,7 +58,7 @@ export const useContractWalletsStore = create<WalletState>()(persist((set) => ({
                 return { address: address, ready: true, value: isContractWallet, network: network.internal_name }
             }
         })()
-        
+
         return { ready: true, isContract: false, network: network.internal_name }
 
     },
