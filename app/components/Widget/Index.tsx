@@ -8,9 +8,9 @@ import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import BridgeApiClient from "../../lib/BridgeApiClient";
 
 type Props = {
-   children: JSX.Element | JSX.Element[];
-   className?: string;
-   hideMenu?: boolean;
+  children: JSX.Element | JSX.Element[];
+  className?: string;
+  hideMenu?: boolean;
 }
 
 const Widget = ({ children, className, hideMenu }: Props) => {
@@ -20,11 +20,11 @@ const Widget = ({ children, className, hideMenu }: Props) => {
 
   const goBack = useCallback(() => {
     window?.['navigation']?.['canGoBack'] ?
-        router.back()
-        : router.push({
-          pathname: "/",
-          query: resolvePersistantQueryParams(router.query)
-        })
+      router.back()
+      : router.push({
+        pathname: "/",
+        query: resolvePersistantQueryParams(router.query)
+      })
   }, [])
 
 
@@ -34,17 +34,17 @@ const Widget = ({ children, className, hideMenu }: Props) => {
 
   return <>
     <div className='rounded-lg w-full sm:overflow-hidden relative border border-[#404040]'>
-    {sandbox && (
-      <div className="relative z-20 pb-2">
-        <div className="h-1 bg-secondary" />
-        <div className="absolute cursor-default -top-0.5 right-[calc(50%-68px)] bg-secondary  py-0.5 px-10 rounded-b-md text-xs scale-75">
-          TESTNET
+      {sandbox && (
+        <div className="relative z-20 pb-2">
+          <div className="h-1 bg-secondary" />
+          <div className="absolute cursor-default -top-0.5 right-[calc(50%-68px)] bg-secondary  py-0.5 px-10 rounded-b-md text-xs scale-75">
+            TESTNET
+          </div>
         </div>
-      </div>
-    )}
-    {!hideMenu && (
-      <HeaderWithMenu goBack={handleBack} />
-    )}
+      )}
+      {!hideMenu && (
+        <HeaderWithMenu goBack={handleBack} />
+      )}
       <div className="relative px-6">
         <div className="flex items-start" ref={wrapper}>
           <div className='flex flex-nowrap grow'>
