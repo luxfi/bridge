@@ -9,16 +9,18 @@ import SwapWithdrawal from '../../components/SwapWithdrawal'
 
 const SwapDetails = ({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
 
-  return (<>
-    <Layout settings={settings} themeData={themeData}>
-      <SwapDataProvider >
-        <TimerProvider>
-          <SwapWithdrawal />
-        </TimerProvider>
-      </SwapDataProvider >
-    </Layout>
-    <div>swap</div>
-  </>)
+  return (
+    <>
+      <Layout settings={settings} themeData={themeData}>
+        <SwapDataProvider >
+          <TimerProvider>
+            <SwapWithdrawal />
+          </TimerProvider>
+        </SwapDataProvider >
+      </Layout>
+      <div>swap</div>
+    </>
+  )
 }
 
 export const getServerSideProps = async (ctx) => {
