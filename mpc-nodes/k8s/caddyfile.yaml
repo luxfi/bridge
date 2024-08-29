@@ -4,7 +4,7 @@ metadata:
   name: caddyfile
 data:
   Caddyfile: |
-    :80 {
+    teleport.lux.network {
       # Handle requests to /node0 and its subpaths
       handle_path /node0* {
         reverse_proxy mpc-node-0:6000
