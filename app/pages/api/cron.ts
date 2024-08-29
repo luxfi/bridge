@@ -17,8 +17,6 @@ const checkSwap = async (swap: Swap) => {
         status: SwapStatus.Expired
       }
     })
-  } else {
-
   }
 }
 
