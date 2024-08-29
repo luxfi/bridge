@@ -90,9 +90,9 @@ export default function Form() {
             //         return;
             //     }
             // }
-            console.log({values, query, partner})
+            console.log({ values, query, partner })
             const swapId = await createSwap(values, query, partner);
-            console.log({swapId})
+            console.log({ swapId })
 
             if (swapId) {
                 setSwapId(swapId)
@@ -156,26 +156,26 @@ export default function Form() {
     }
 
     return <>
-      <Modal 
-        height="fit" 
-        show={showConnectNetworkModal} 
-        setShow={setShowConnectNetworkModal} 
-        header={`${networkToConnect?.DisplayName} connect`}
-      >
-      {networkToConnect && (
-        <ConnectNetwork NetworkDisplayName={networkToConnect?.DisplayName} AppURL={networkToConnect?.AppURL} />
-      )}
-      </Modal>
-      <Modal height='fit'
-        show={showSwapModal}
-        setShow={setShowSwapModal}
-        header={`Complete the swap`}
-        onClose={handleClosesSwapModal}
-      >
-        <ResizablePanel>
-          <SwapDetails type="contained" />
-        </ResizablePanel>
-        {/* <div className="w-full py-2">
+        <Modal
+            height="fit"
+            show={showConnectNetworkModal}
+            setShow={setShowConnectNetworkModal}
+            header={`${networkToConnect?.DisplayName} connect`}
+        >
+            {networkToConnect && (
+                <ConnectNetwork NetworkDisplayName={networkToConnect?.DisplayName} AppURL={networkToConnect?.AppURL} />
+            )}
+        </Modal>
+        <Modal height='fit'
+            show={showSwapModal}
+            setShow={setShowSwapModal}
+            header={`Complete the swap`}
+            onClose={handleClosesSwapModal}
+        >
+            <ResizablePanel>
+                <SwapDetails type="contained" />
+            </ResizablePanel>
+            {/* <div className="w-full py-2">
             <div className="my-5 px-2 py-3 rounded-lg border-[#9e88882c] bg-[black]/20">
                 <div className="">Deposit Address</div>
                 <div className="flex gap-1 items-center">
@@ -184,16 +184,16 @@ export default function Form() {
                 </div>
             </div>
         </div> */}
-      </Modal>
-      <Formik
-          innerRef={formikRef}
-          initialValues={initialValues}
-          validateOnMount={true}
-          validate={MainStepValidation({ minAllowedAmount, maxAllowedAmount })}
-          onSubmit={handleSubmit}
-          isInitialValid={!initiallyIsValid}
-      >
-          <SwapForm isPartnerWallet={!!isPartnerWallet} partner={partner} />
-      </Formik>
+        </Modal>
+        <Formik
+            innerRef={formikRef}
+            initialValues={initialValues}
+            validateOnMount={true}
+            validate={MainStepValidation({ minAllowedAmount, maxAllowedAmount })}
+            onSubmit={handleSubmit}
+            isInitialValid={!initiallyIsValid}
+        >
+            <SwapForm isPartnerWallet={!!isPartnerWallet} partner={partner} />
+        </Formik>
     </>
 }

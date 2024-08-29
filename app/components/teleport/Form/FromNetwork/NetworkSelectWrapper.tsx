@@ -1,52 +1,46 @@
 'use client'
-import { useCallback, useState, useEffect } from 'react'
+import React, { useCallback, useState } from 'react'
 import Image from 'next/image'
+import NetworkSelect from './NetworkSelect'
+import { Network } from '../../types'
 import { ChevronDown } from 'lucide-react'
-import { ISelectMenuItem, SelectMenuItem } from '../Shared/Props/selectMenuItem'
-import CommandSelect, { SelectMenuItemGroup } from './commandSelect'
 
-type CommandSelectWrapperProps = {
-    setValue: (value: ISelectMenuItem) => void;
-    values: ISelectMenuItem[];
-    value?: ISelectMenuItem;
+type NetworkSelectWrapperProps = {
+    network?: Network;
+    networks: Network[];
+    setNetwork: (network: Network) => void;
     placeholder: string;
     searchHint: string;
     disabled: boolean;
-    valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
     className?: string
 }
 
-export default function CommandSelectWrapper<T>({
-    setValue,
-    value,
+export default function NetworkSelectWrapper<T>({
+    network,
+    setNetwork,
+    networks,
     disabled,
     placeholder,
     searchHint,
-    values,
-    valueGrouper,
     className
-}: CommandSelectWrapperProps) {
+}: NetworkSelectWrapperProps) {
     const [showModal, setShowModal] = useState(false)
 
     function openModal() {
         setShowModal(true)
     }
 
-    const handleSelect = useCallback((item: SelectMenuItem<T>) => {
-        setValue(item)
-        setShowModal(false)
+    const handleSelect = useCallback((item: Network) => {
+        if (item.status === 'active') {
+            setNetwork(item)
+            setShowModal(false)
+        }
     }, [])
-
-    // useEffect(() => {
-    //     console.log({value, values})
-    // }, [value, values])
-
-
 
     return (
         <>
             <div className="flex items-center relative">
-                {/* <button
+                <button
                     type="button"
                     onClick={openModal}
                     disabled={disabled}
@@ -54,27 +48,24 @@ export default function CommandSelectWrapper<T>({
                 >
                     <span className='flex grow text-left items-center text-xs md:text-base'>
                         {
-                            value && <div className="flex items-center">
+                            network && <div className="flex items-center">
                                 <div className="flex-shrink-0 h-6 w-6 relative">
-                                    {
-                                        value.imgSrc && <Image
-                                            src={value.imgSrc}
-                                            alt="Project Logo"
-                                            height="40"
-                                            width="40"
-                                            loading="eager"
-                                            priority
-                                            className="rounded-md object-contain"
-                                        />
-                                    }
-
+                                    <Image
+                                        src={network.logo}
+                                        alt="Project Logo"
+                                        height="40"
+                                        width="40"
+                                        loading="eager"
+                                        priority
+                                        className="rounded-md object-contain"
+                                    />
                                 </div>
                             </div>
                         }
-                        {value
+                        {network
                             ?
                             <span className="ml-3 block font-medium text-muted flex-auto items-center">
-                                {value?.name}
+                                {network.display_name}
                             </span>
                             :
                             <span className="block font-medium text-muted-2 flex-auto items-center">
@@ -84,17 +75,15 @@ export default function CommandSelectWrapper<T>({
                     <span className="ml-3 right-0 flex items-center pointer-events-none">
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                     </span>
-                </button> */}
-                asdf
+                </button>
             </div>
-            <CommandSelect
+            <NetworkSelect
                 setShow={setShowModal}
-                setValue={handleSelect}
+                setNetwork={handleSelect}
                 show={showModal}
-                value={value}
-                searchHint={searchHint}
-                valueGrouper={valueGrouper}
-                values={values}
+                network={network}
+                searchHint=''
+                networks={networks}
             />
         </>
     )
