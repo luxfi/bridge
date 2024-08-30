@@ -5,8 +5,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import AmountField from "../AmountField";
 import NetworkSelectWrapper from "./NetworkSelectWrapper";
 
-import { networks } from "../../settings";
-import { Network, Token } from "../../types";
+import { Network, Token } from "@/types/teleport";
 import TokenSelectWrapper from "./TokenSelectWrapper";
 
 type SwapDirection = "from" | "to";

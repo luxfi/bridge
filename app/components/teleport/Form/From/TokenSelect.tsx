@@ -1,6 +1,5 @@
 import { CommandItem, CommandList, CommandWrapper } from '../../../shadcn/command';
-import SelectItem from '@/components/Select/Shared/SelectItem';
-import { Token } from '../../types';
+import { Token } from '@/types/teleport';
 import React from 'react';
 import Image from 'next/image';
 
