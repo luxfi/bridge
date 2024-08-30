@@ -7,8 +7,8 @@ import NetworkSelectWrapper from "./NetworkSelectWrapper";
 import TokenSelectWrapper from "./TokenSelectWrapper";
 
 import { Network, Token } from "@/types/teleport";
-
-type SwapDirection = "from" | "to";
+import { useAtom } from "jotai";
+import { sourceAmountAtom } from "@/store/teleport";
 
 interface IProps {
     networks: Network[],
@@ -20,6 +20,9 @@ interface IProps {
 }
 
 const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAsset, setNetwork, setAsset }) => {
+
+    const [amount] = useAtom(sourceAmountAtom);
+
     return (
         <div className={`p-3`}>
             <label htmlFor={'name'} className="block font-semibold text-xs">
@@ -41,6 +44,7 @@ const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAs
                 </div>
                 <div className="flex justify-between items-center mt-2 pl-3 pr-4">
                     <AmountField
+                        value={amount}
                         disabled={true}
                     />
                     <TokenSelectWrapper

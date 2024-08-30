@@ -20,7 +20,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "ETH",
                 asset: "ETH",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/eth.png",
                 contract_address: null,
                 decimals: 18,
                 status: "active",
@@ -37,7 +37,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "BKT",
                 asset: "BKT",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/bkt.png",
                 contract_address: "0x9d62526f5Ce701950c30F2cACa70Edf70f9fbf0F",
                 decimals: 18,
                 status: "inactive",
@@ -54,7 +54,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "ASTR",
                 asset: "ASTR",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/astr.png",
                 contract_address: "0x9bBAf650DcD8D3583195715Fc46b1118c3CfDdfd",
                 decimals: 18,
                 status: "inactive",
@@ -71,7 +71,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "ZKS",
                 asset: "ZKS",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/zks.png",
                 contract_address: "0xe4815AE53B124e7263F08dcDBBB757d41Ed658c6",
                 decimals: 18,
                 status: "inactive",
@@ -88,7 +88,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "USDT",
                 asset: "USDT",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/usdt.png",
                 contract_address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
                 decimals: 6,
                 status: "active",
@@ -105,7 +105,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "USDC",
                 asset: "USDC",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/usdc.png",
                 contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
                 decimals: 6,
                 status: "active",
@@ -123,7 +123,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "LRC",
                 asset: "LRC",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/lrc.png",
                 contract_address: "0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",
                 decimals: 18,
                 status: "inactive",
@@ -140,7 +140,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "IMX",
                 asset: "IMX",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/imx.png",
                 contract_address: "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF",
                 decimals: 18,
                 status: "inactive",
@@ -157,7 +157,7 @@ export const sourceNetworks: Network[] = [
             {
                 name: "SNX",
                 asset: "SNX",
-                logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/snx.png",
                 contract_address: "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
                 decimals: 18,
                 status: "inactive",

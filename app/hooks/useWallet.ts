@@ -40,6 +40,8 @@ export default function useWallet() {
 
     const handleDisconnect = async (providerName: string, swap?: SwapItem) => {
         const provider = WalletProviders.find(provider => provider.name === providerName)
+
+        console.log(provider)
         try {
             if (swap?.source_exchange) {
                 const apiClient = new BridgeApiClient()
@@ -75,11 +77,17 @@ export default function useWallet() {
         return provider
     }
 
+    const getAutofillProviderWithNetworkName = (network: string) => {
+        const provider = WalletProviders.find(provider => provider?.autofillSupportedNetworks?.includes(network))
+        return provider
+    }
+
     return {
         wallets: getConnectedWallets(),
         connectWallet: handleConnect,
         disconnectWallet: handleDisconnect,
         getWithdrawalProvider,
-        getAutofillProvider
+        getAutofillProvider,
+        getAutofillProviderWithNetworkName
     }
 }

@@ -37,16 +37,14 @@ export default function CommandSelectWrapper<T>({
         setShowModal(false)
     }, [])
 
-    // useEffect(() => {
-    //     console.log({value, values})
-    // }, [value, values])
+
 
 
 
     return (
         <>
             <div className="flex items-center relative">
-                {/* <button
+                <button
                     type="button"
                     onClick={openModal}
                     disabled={disabled}
@@ -84,8 +82,7 @@ export default function CommandSelectWrapper<T>({
                     <span className="ml-3 right-0 flex items-center pointer-events-none">
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                     </span>
-                </button> */}
-                asdf
+                </button>
             </div>
             <CommandSelect
                 setShow={setShowModal}
