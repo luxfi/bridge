@@ -37,7 +37,6 @@ const NumericInput: FC<Input> = forwardRef<HTMLInputElement, Input>(
             }
             <div className="flex relative w-full">
                 <input
-                    // {...field}
                     pattern={pattern ? pattern : "^[0-9]*[.,]?[0-9]*$"}
                     inputMode="decimal"
                     autoComplete="off"

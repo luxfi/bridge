@@ -30,7 +30,9 @@ import {
   sourceNetworkAtom,
   sourceAssetAtom,
   destinationNetworkAtom,
-  destinationAssetAtom
+  destinationAssetAtom,
+  destinationAddressAtom,
+  sourceAmountAtom
 } from '@/store/teleport'
 
 type Props = {
@@ -38,37 +40,20 @@ type Props = {
   partner?: Partner;
 };
 
-const Address = dynamic(() => import("../../Input/Address"), {
+const Address = dynamic(() => import("../share/Address"), {
   loading: () => <></>,
 });
 
 const SwapForm: FC = () => {
 
   const isSubmitting = false
-  const hideAddress = 'asdfasdf'
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false);
-
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
-
   const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom);
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
-
-  const handleSourceAssetChange = (asset: Token) => {
-    setSourceAsset(asset);
-  }
-
-  const handleSourceNetworkChange = (network: Network) => {
-    setSourceNetwork(network);
-  }
-
-  const handleDestinationAssetChange = (asset: Token) => {
-    setDestinationAsset(asset);
-  }
-
-  const handleDestinationNetworkChange = (network: Network) => {
-    setDestinationNetwork(network);
-  }
+  const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
+  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
 
   React.useEffect(() => {
     if (sourceNetwork) {
@@ -91,85 +76,109 @@ const SwapForm: FC = () => {
     }
   }, [destinationNetwork, sourceAsset]);
 
+  const warnningMessage = React.useMemo(() => {
+    if (!sourceNetwork) {
+      return "Select Source Network";
+    } else if (!sourceAsset) {
+      return "Select Source Asset"
+    } else if (!destinationNetwork) {
+      return "Select Destination Network";
+    } else if (!destinationAsset) {
+      return "Select Destination Asset";
+    } else if (!destinationAddress) {
+      return "Input Address";
+    } else if (sourceAmount === "") {
+      return "Enter Token Amount";
+    } else if (Number(sourceAmount) <= 0) {
+      return "Invalid Token Amount";
+    } else {
+      return "Swap"
+    }
+  }, [sourceNetwork, sourceAsset, destinationNetwork, destinationAsset, destinationAddress])
+
+  const handleSwap = () => {
+    if (sourceNetwork && sourceAsset && destinationNetwork && destinationNetwork && destinationAddress && Number(sourceAmount) > 0) {
+      console.log({
+        sourceNetwork,
+        sourceAsset,
+        destinationNetwork,
+        destinationAsset,
+        destinationAddress,
+        sourceAmount
+      })
+    }
+  }
+
   return (
     <>
       <Widget className="sm:min-h-[504px]">
-
         <Widget.Content>
           <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
             <div className="flex flex-col w-full">
               <FromNetworkForm
                 network={sourceNetwork}
                 asset={sourceAsset}
-                setNetwork={handleSourceNetworkChange}
-                setAsset={handleSourceAssetChange}
+                setNetwork={(network: Network) => setSourceNetwork(network)}
+                setAsset={(token: Token) => setSourceAsset(token)}
                 networks={sourceNetworks}
               />
             </div>
+
+            <div className="py-3 px-4">
+              Fee: {0}
+            </div>
+
             <div className="flex flex-col w-full">
               <ToNetworkForm
                 network={destinationNetwork}
                 asset={destinationAsset}
                 sourceAsset={sourceAsset}
-                setNetwork={handleDestinationNetworkChange}
-                setAsset={handleDestinationAssetChange}
+                setNetwork={(network: Network) => setDestinationNetwork(network)}
+                setAsset={(token: Token) => setDestinationAsset(token)}
                 networks={destinationNetworks}
               />
             </div>
-            {/* <div className="flex flex-col w-full">
-              <FromNetworkForm />
-            </div> */}
 
-            {/* <div className="gap-4 flex relative items-center outline-none w-full px-4 py-3  text-xs md:text-base">
-                <DetailedEstimates
-                  networks={layers}
-                  selected_currency={toCurrency}
-                  source={source}
-                  destination={destination}
-                />
-              </div>
-              {!(query?.hideTo && values?.to) && (
-                <div className="flex flex-col w-full">
-                  <NetworkFormField direction="to" label="To" />
-                </div>
-              )} */}
           </div>
-          {!hideAddress ? (
-            <div className="w-full mb-3.5 leading-4">
-              <label
-                htmlFor="destination_address"
-                className="block font-semibold text-xs"
-              >
-                {`To eth address`}
-              </label>
-              {/* <AddressButton
-                  disabled={false}
-                  isPartnerWallet={false}
-                  openAddressModal={() => setShowAddressModal(true)}
-                  partnerImage={'partnerImage'}
-                  values={values}
-                /> */}
-              <Modal
-                header={`To ETH address`}
-                height="fit"
-                show={showAddressModal}
-                setShow={setShowAddressModal}
-                className="min-h-[70%]"
-              >
-                <Address
-                  close={() => setShowAddressModal(false)}
-                  disabled={false}
-                  name={"destination_address"}
-                  partnerImage={'partnerImage'}
-                  isPartnerWallet={false}
-                  // partner={partner}
-                  address_book={[]}
-                />
-              </Modal>
-            </div>
-          ) : (
-            <></>
-          )}
+
+          <div className="w-full !-mb-3 leading-4">
+            <label
+              htmlFor="destination_address"
+              className="block font-semibold text-xs"
+            >
+              {`To ${destinationNetwork?.display_name ?? ""} address`}
+            </label>
+            <AddressButton
+              disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
+              isPartnerWallet={false}
+              openAddressModal={() => setShowAddressModal(true)}
+              partnerImage={'partnerImage'}
+              address={destinationAddress}
+            />
+            <Modal
+              header={`To ${destinationNetwork?.display_name ?? ""} address`}
+              height="fit"
+              show={showAddressModal}
+              setShow={setShowAddressModal}
+              className="min-h-[70%]"
+            >
+              <Address
+                close={() => setShowAddressModal(false)}
+                disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
+                address={destinationAddress}
+                name={"destination_address"}
+                partnerImage={'partnerImage'}
+                isPartnerWallet={false}
+                address_book={[]}
+                setAddress={setDestinationAddress}
+              />
+            </Modal>
+          </div>
+
+          <button onClick={handleSwap} disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress} className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated">
+            {warnningMessage}
+          </button>
+
           <>
             {
               //TODO refactor
@@ -244,15 +253,15 @@ const TruncatedAdrress = ({ address }: { address: string }) => {
 const AddressButton: FC<{
   openAddressModal: () => void;
   isPartnerWallet: boolean;
-  values: SwapFormValues;
   partnerImage?: string;
   disabled: boolean;
+  address: string
 }> = ({
   openAddressModal,
   isPartnerWallet,
-  values,
   partnerImage,
   disabled,
+  address
 }) => (
     <button
       type="button"
@@ -274,8 +283,8 @@ const AddressButton: FC<{
         </div>
       )}
       <div className="truncate text-muted">
-        {values.destination_address ? (
-          <TruncatedAdrress address={values.destination_address} />
+        {address ? (
+          <TruncatedAdrress address={address} />
         ) : (
           <span>Enter your address here</span>
         )}
