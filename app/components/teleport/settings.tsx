@@ -1,6 +1,6 @@
-import { Network } from "./types";
+import { Network } from "@/types/teleport";
 
-export const networks: Network[] = [
+export const sourceNetworks: Network[] = [
     {
         display_name: "Ethereum",
         internal_name: "ETHEREUM_MAINNET",
@@ -380,4 +380,59 @@ export const networks: Network[] = [
         currencies: []
     },
 
+]
+
+export const destinationNetworks: Network[] = [
+    {
+        display_name: "Lux",
+        internal_name: "LUX_MAINNET",
+        native_currency: "LUX",
+        logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
+        is_testnet: false,
+        is_featured: true,
+        average_completion_time: "00:00:07.7777777",
+        chain_id: 7777,
+        status: "active",
+        type: "evm",
+        refuel_amount_in_usd: 1,
+        transaction_explorer_template: "https://explore.lux.network/tx/{0}",
+        account_explorer_template: "https://explore.lux.network/address/{0}",
+        node: "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7",
+        currencies: [
+            {
+                name: "LETH",
+                asset: "LETH",
+                logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
+                contract_address: null,
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: false,
+                max_withdrawal_amount: 1,
+                deposit_fee: 0.001462,
+                withdrawal_fee: 0.001462,
+                source_base_fee: 0.000456,
+                destination_base_fee: 0.000456,
+                is_native: true
+            },
+            {
+                name: "LUSD",
+                asset: "LUSD",
+                logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
+                contract_address: null,
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: false,
+                max_withdrawal_amount: 1,
+                deposit_fee: 0.001462,
+                withdrawal_fee: 0.001462,
+                source_base_fee: 0.000456,
+                destination_base_fee: 0.000456,
+                is_native: true
+            },
+        ]
+    }
 ]

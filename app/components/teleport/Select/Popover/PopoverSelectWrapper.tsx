@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import Image from 'next/image'
-import PopoverSelect from '@/components/teleport/Select/Popover/PopoverSelect'
+import PopoverSelect from '@/components/Teleport/Select/Popover/PopoverSelect'
 import { ChevronDown } from 'lucide-react'
 import { ISelectMenuItem, SelectMenuItem } from '../Shared/Props/selectMenuItem'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover'
