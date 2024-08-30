@@ -1,5 +1,5 @@
 import React from 'react';
-import { Network } from '../../types';
+import { Network } from '@/types/teleport';
 import Image from 'next/image'
 
 interface IProps {

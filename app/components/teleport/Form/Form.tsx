@@ -1,46 +1,42 @@
 "use client";
-import { Form, FormikErrors, useFormikContext } from "formik";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import React from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import SwapButton from "../../buttons/swapButton";
-import React from "react";
 import BridgeApiClient, { AddressBookItem } from "../../../lib/BridgeApiClient";
-import { SwapFormValues } from "../../DTOs/SwapFormValues";
-import { Partner } from "../../../Models/Partner";
 import Modal from "../../modal/modal";
-import { useSwapDataState, useSwapDataUpdate } from "../../../context/swap";
-import { isValidAddress } from "../../../lib/addressValidator";
 import shortenAddress from "../../utils/ShortenAddress";
 import useSWR from "swr";
+import { Form, FormikErrors, useFormikContext } from "formik";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { SwapFormValues } from "../../DTOs/SwapFormValues";
+import { Partner } from "../../../Models/Partner";
+import { useSwapDataState, useSwapDataUpdate } from "../../../context/swap";
+import { isValidAddress } from "../../../lib/addressValidator";
 import { ApiResponse } from "../../../Models/ApiResponse";
 import { motion, useCycle } from "framer-motion";
 import { ArrowUpDown, Loader2 } from "lucide-react";
 import { useAuthState } from "../../../context/authContext";
-import WarningMessage from "../../WarningMessage";
 import { GetDefaultAsset } from "../../../helpers/settingsHelper";
-import KnownInternalNames from "../../../lib/knownIds";
 import { Widget } from "../../Widget/Index";
-import GasDetails from "../../gasDetails";
-import { useQueryState } from "../../../context/query";
-import { useFee } from "../../../context/feeContext";
-import AmountField from "../../Input/Amount";
-import dynamic from "next/dynamic";
-import { Balance, Gas } from "../../../Models/Balance";
-import DetailedEstimates from "../../DisclosureComponents/FeeDetails/DetailedEstimates";
-import { useSettingsState } from "../../../context/settings";
 
-import FromNetworkForm from './FromNetwork';
-import { Token, Network } from "../types";
-import { networks } from "../settings";
+import FromNetworkForm from './From';
+import ToNetworkForm from './To';
+import { Token, Network } from "@/types/teleport";
+import { sourceNetworks, destinationNetworks } from "../settings";
+import { useAtom } from "jotai";
+
+import {
+  sourceNetworkAtom,
+  sourceAssetAtom,
+  destinationNetworkAtom,
+  destinationAssetAtom
+} from '@/store/teleport'
 
 type Props = {
   isPartnerWallet?: boolean;
   partner?: Partner;
 };
-
-const ReserveGasNote = dynamic(() => import("../../ReserveGasNote"), {
-  loading: () => <></>,
-});
 
 const Address = dynamic(() => import("../../Input/Address"), {
   loading: () => <></>,
@@ -52,22 +48,48 @@ const SwapForm: FC = () => {
   const hideAddress = 'asdfasdf'
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false);
 
-  const [sourceNetwork, setSourceNetwork] = React.useState<Network | undefined>(undefined);
-  const [sourceAsset, setSourceAsset] = React.useState<Token | undefined>(undefined)
+  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
+  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
+
+  const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom);
+  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
 
   const handleSourceAssetChange = (asset: Token) => {
-    setSourceAsset(asset)
+    setSourceAsset(asset);
   }
 
   const handleSourceNetworkChange = (network: Network) => {
-    setSourceNetwork(network)
+    setSourceNetwork(network);
+  }
+
+  const handleDestinationAssetChange = (asset: Token) => {
+    setDestinationAsset(asset);
+  }
+
+  const handleDestinationNetworkChange = (network: Network) => {
+    setDestinationNetwork(network);
   }
 
   React.useEffect(() => {
     if (sourceNetwork) {
-      setSourceAsset(sourceNetwork.currencies[0])
+      setSourceAsset(sourceNetwork.currencies[0]);
+      setDestinationNetwork(destinationNetworks[0]);
     }
   }, [sourceNetwork]);
+
+  React.useEffect(() => {
+    if (destinationNetwork) {
+      setSourceNetwork(sourceNetworks[0])
+    }
+
+    if (destinationNetwork && sourceAsset) {
+      if (sourceAsset.asset === "ETH") {
+        setDestinationAsset(destinationNetwork.currencies[0])
+      } else {
+        setDestinationAsset(destinationNetwork.currencies[1])
+      }
+    }
+  }, [destinationNetwork, sourceAsset]);
 
   return (
     <>
@@ -81,16 +103,17 @@ const SwapForm: FC = () => {
                 asset={sourceAsset}
                 setNetwork={handleSourceNetworkChange}
                 setAsset={handleSourceAssetChange}
-                networks={networks}
+                networks={sourceNetworks}
               />
             </div>
             <div className="flex flex-col w-full">
-              <FromNetworkForm
-                network={sourceNetwork}
-                asset={sourceAsset}
-                setNetwork={handleSourceNetworkChange}
-                setAsset={handleSourceAssetChange}
-                networks={networks}
+              <ToNetworkForm
+                network={destinationNetwork}
+                asset={destinationAsset}
+                sourceAsset={sourceAsset}
+                setNetwork={handleDestinationNetworkChange}
+                setAsset={handleDestinationAssetChange}
+                networks={destinationNetworks}
               />
             </div>
             {/* <div className="flex flex-col w-full">
