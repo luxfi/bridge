@@ -8,8 +8,8 @@ import { getServerSideProps } from '../helpers/getSettings'
 export default function Home({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <Layout settings={settings} themeData={themeData}>
-      {/* <Swap /> */}
       <Teleporter />
+      {/* <Swap /> */}
     </Layout>
   )
 }

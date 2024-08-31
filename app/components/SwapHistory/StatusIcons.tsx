@@ -54,7 +54,6 @@ export default function StatusIcon({
       const data: PublishedSwapTransactions = JSON.parse(
         localStorage.getItem("swapTransactions") || "{}"
       );
-      console.log("data.state====>", data.state);
       const txForSwap = data.state?.swapTransactions?.[swap.id];
       if (
         txForSwap ||

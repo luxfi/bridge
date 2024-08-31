@@ -20,8 +20,6 @@ const SwapDetails: FC<Props> = ({ type }) => {
     const swapStatus = swap?.status;
     const storedWalletTransactions = useSwapTransactionStore()
 
-    console.log("swap ===>", {swap})
-
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const storedWalletTransaction = storedWalletTransactions.swapTransactions?.[swap?.id || '']
 
