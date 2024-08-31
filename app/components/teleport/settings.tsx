@@ -419,7 +419,7 @@ export const destinationNetworks: Network[] = [
             {
                 name: "LUSD",
                 asset: "LUSD",
-                logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
+                logo: "https://cdn.lux.network/bridge/currencies/lusd.png",
                 contract_address: null,
                 decimals: 18,
                 status: "active",

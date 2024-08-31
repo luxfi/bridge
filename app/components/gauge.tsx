@@ -27,8 +27,8 @@ export const Gauge = ({
             textSize: "text-xs",
         },
         medium: {
-            width: "72",
-            height: "72",
+            width: "55",
+            height: "55",
             textSize: "text-lg",
         },
         large: {
@@ -66,7 +66,7 @@ export const Gauge = ({
                     strokeDashoffset={initialOffset}
                     shapeRendering="geometricPrecision"
                     strokeLinecap="round"
-                    stroke="currentColor"
+                    stroke="#00000090"
                     fill="transparent"
                     r="53"
                     cx="60"
@@ -79,7 +79,7 @@ export const Gauge = ({
             </svg>
             {showCheckmark && value == 100 ? (
                 <div className="absolute flex opacity-0 animate-gauge_fadeIn">
-                   <Check className="h-5 w-5 text-foreground" strokeWidth={4} aria-hidden="true" />
+                    <Check className="h-5 w-5 text-foreground" strokeWidth={4} aria-hidden="true" />
                 </div>
             ) : null}
         </div>

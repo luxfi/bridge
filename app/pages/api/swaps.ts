@@ -6,8 +6,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  // res.setHeader('Access-Control-Allow-Origin', 'https://example.com');
-
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "POST") {
@@ -17,6 +15,7 @@ export default async function handler(
       });
       res.status(200).json({ data: { ...result } });
     } catch (error) {
+      console.log(error)
       res.status(500).json({ error: error.message });
     }
 
@@ -25,10 +24,6 @@ export default async function handler(
     const isDeleted =
       (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) ||
       undefined;
-    console.log("isDeleted", isDeleted, req.query.isDeleted);
-
-    console.log(req.query);
-
     const result = await handlerGetSwaps(
       req.query.address as string,
       isDeleted
