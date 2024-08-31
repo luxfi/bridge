@@ -2,9 +2,11 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import axios from "axios";
 import SwapButton from "../../buttons/swapButton";
 import BridgeApiClient, { AddressBookItem } from "../../../lib/BridgeApiClient";
-import Modal from "../../modal/modal";
+import Modal from "@/components/modal/modal";
+import ResizablePanel from "@/components/ResizablePanel";
 import shortenAddress from "../../utils/ShortenAddress";
 import useSWR from "swr";
 import { Form, FormikErrors, useFormikContext } from "formik";
@@ -15,13 +17,16 @@ import { useSwapDataState, useSwapDataUpdate } from "../../../context/swap";
 import { isValidAddress } from "../../../lib/addressValidator";
 import { ApiResponse } from "../../../Models/ApiResponse";
 import { motion, useCycle } from "framer-motion";
-import { ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowLeftRight, ArrowUpDown, Loader2 } from "lucide-react";
 import { useAuthState } from "../../../context/authContext";
 import { GetDefaultAsset } from "../../../helpers/settingsHelper";
 import { Widget } from "../../Widget/Index";
 
 import FromNetworkForm from './From';
 import ToNetworkForm from './To';
+import SwapDetails from "./SwapDetails";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from 'next/router';
 import { Token, Network } from "@/types/teleport";
 import { sourceNetworks, destinationNetworks } from "../settings";
 import { useAtom } from "jotai";
@@ -34,6 +39,7 @@ import {
   destinationAddressAtom,
   sourceAmountAtom
 } from '@/store/teleport'
+import SpinIcon from "@/components/icons/spinIcon";
 
 type Props = {
   isPartnerWallet?: boolean;
@@ -46,7 +52,13 @@ const Address = dynamic(() => import("../share/Address"), {
 
 const SwapForm: FC = () => {
 
-  const isSubmitting = false
+  // params
+  const searchParams = useSearchParams();
+  const swapId = String(searchParams.get("swapId"));
+  // router
+  const router = useRouter();
+
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false);
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
@@ -54,6 +66,8 @@ const SwapForm: FC = () => {
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
+
+  const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (sourceNetwork) {
@@ -92,9 +106,34 @@ const SwapForm: FC = () => {
     } else if (Number(sourceAmount) <= 0) {
       return "Invalid Token Amount";
     } else {
-      return "Swap"
+      return "Swap Now"
     }
-  }, [sourceNetwork, sourceAsset, destinationNetwork, destinationAsset, destinationAddress])
+  }, [sourceNetwork, sourceAsset, destinationNetwork, destinationAsset, destinationAddress, sourceAmount]);
+
+  const createSwap = async () => {
+    try {
+      const data = {
+        amount: Number(sourceAmount),
+        source_network: sourceNetwork?.internal_name,
+        source_asset: sourceAsset?.asset,
+        source_address: "",
+        destination_network: destinationNetwork?.internal_name,
+        destination_asset: destinationAsset?.asset,
+        destination_address: destinationAddress,
+        refuel: false,
+        use_deposit_address: false,
+        use_teleporter: true,
+        app_name: "Bridge"
+      }
+      const response = await axios.post(`/api/swaps?version=mainnet`, data);
+      window.history.pushState({}, '', `/swap/teleporter/${response.data?.data?.swap_id}`);
+      setShowSwapModal(true)
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const handleSwap = () => {
     if (sourceNetwork && sourceAsset && destinationNetwork && destinationNetwork && destinationAddress && Number(sourceAmount) > 0) {
@@ -105,7 +144,10 @@ const SwapForm: FC = () => {
         destinationAsset,
         destinationAddress,
         sourceAmount
-      })
+      });
+      // setShowSwapModal(true);
+      createSwap()
+      setIsSubmitting(true);
     }
   }
 
@@ -175,53 +217,28 @@ const SwapForm: FC = () => {
             </Modal>
           </div>
 
-          <button onClick={handleSwap} disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress} className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated">
-            {warnningMessage}
+          <button
+            onClick={handleSwap} disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress || !sourceAmount || Number(sourceAmount) <= 0 || isSubmitting}
+            className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          >
+            {
+              isSubmitting ?
+                <SpinIcon className="animate-spin h-5 w-5" /> :
+                warnningMessage === 'Swap Now' && <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
+            }
+            <span className="grow">{warnningMessage}</span>
           </button>
 
-          <>
-            {
-              //TODO refactor
-              // destination && toAsset && (
-              //   <WarningMessage messageType="warning" className="mt-4">
-              //     <span className="font-normal">
-              //       <span>
-              //         We&apos;re experiencing delays for transfers of
-              //       </span>{" "}
-              //       <span>{values?.toCurrency?.asset}</span> <span>to</span>{" "}
-              //       <span>{values?.to?.display_name}</span>
-              //       <span>
-              //         . Estimated arrival time can take up to 2 hours.
-              //       </span>
-              //     </span>
-              //   </WarningMessage>
-              // )
-            }
-
-            {
-              // //TODO refactor
-              // destination &&
-              // toAsset &&
-              // destination?.internal_name ===
-              // KnownInternalNames.Networks.StarkNetMainnet &&
-              // averageTimeInMinutes > 30 && (
-              //   <WarningMessage messageType="warning" className="mt-4">
-              //     <span className="font-normal">
-              //       <span>{destination?.display_name}</span>{" "}
-              //       <span>
-              //         network congestion. Transactions can take up to 1
-              //         hour.
-              //       </span>
-              //     </span>
-              //   </WarningMessage>
-              // )
-            }
-            {/* <ReserveGasNote
-                onSubmit={(walletBalance, networkGas) =>
-                  handleReserveGas(walletBalance, networkGas)
-                }
-              /> */}
-          </>
+          <Modal height='fit'
+            show={showSwapModal}
+            setShow={setShowSwapModal}
+            header={`Complete the swap`}
+            onClose={() => setShowSwapModal(false)}
+          >
+            <ResizablePanel>
+              <SwapDetails />
+            </ResizablePanel>
+          </Modal>
         </Widget.Content>
 
       </Widget>

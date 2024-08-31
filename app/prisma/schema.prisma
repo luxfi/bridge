@@ -106,6 +106,7 @@ model Swap {
   destination_address      String
   refuel                   Boolean
   use_deposit_address      Boolean
+  use_teleporter           Boolean? @default(false)
   requested_amount         Float
   status                   String
   fail_reason              String?
@@ -114,8 +115,8 @@ model Swap {
   // current block_number from the chain
   block_number Int
 
-  deposit_address_id Int
-  deposit_address    DepositAddress @relation(fields: [deposit_address_id], references: [id])
+  deposit_address_id Int?
+  deposit_address    DepositAddress? @relation(fields: [deposit_address_id], references: [id])
 
   quotes          Quote?
   deposit_actions DepositAction[]

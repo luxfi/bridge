@@ -49,7 +49,8 @@ export async function handleSwapCreation(data: SwapData) {
         destination_asset,
         destination_address,
         refuel,
-        use_deposit_address
+        use_deposit_address,
+        use_teleporter
     } = data;
 
     // current block number
@@ -59,7 +60,7 @@ export async function handleSwapCreation(data: SwapData) {
         );
     });
     // get available deposit address
-    const deposit_address_id = await getAvailableDepositAddress(source_network, source_asset);
+    const deposit_address_id = !use_teleporter ? await getAvailableDepositAddress(source_network, source_asset) : undefined;
 
     try {
         // source network
@@ -101,6 +102,7 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_address,
                 refuel,
                 use_deposit_address,
+                use_teleporter,
                 block_number,
                 deposit_address_id,
                 status: SwapStatus.UserTransferPending,
