@@ -6,7 +6,7 @@ import axios from "axios";
 import SwapDetails from "./Swap/SwapDetails";
 import ConnectNetwork from '@/components/ConnectNetwork';
 import { Widget } from "@/components/Widget/Index";
-import { sourceNetworks, destinationNetworks } from "./settings";
+import { sourceNetworks, destinationNetworks } from "./constants/settings";
 
 import {
     sourceNetworkAtom,
@@ -14,7 +14,11 @@ import {
     destinationNetworkAtom,
     destinationAssetAtom,
     destinationAddressAtom,
-    sourceAmountAtom
+    sourceAmountAtom,
+    ethPriceAtom,
+    swapStatusAtom,
+    swapIdAtom,
+    bridgeTransferTransactionAtom
 } from '@/store/teleport'
 import { useAtom } from "jotai";
 import { Network, Token } from "@/types/teleport";
@@ -30,17 +34,26 @@ interface IProps {
 
 const Form: React.FC<IProps> = ({ swapId }) => {
 
-    const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
-    const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
-    const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom);
-    const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
-    const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
-    const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
+    const [, setSourceNetwork] = useAtom(sourceNetworkAtom);
+    const [, setSourceAsset] = useAtom(sourceAssetAtom);
+    const [, setDestinationNetwork] = useAtom(destinationNetworkAtom);
+    const [, setDestinationAsset] = useAtom(destinationAssetAtom);
+    const [, setDestinationAddress] = useAtom(destinationAddressAtom);
+    const [, setSourceAmount] = useAtom(sourceAmountAtom);
+    const [, setSwapStatus] = useAtom(swapStatusAtom);
+    const [, setEthPrice] = useAtom(ethPriceAtom);
+    const [, setSwapId] = useAtom(swapIdAtom);
+    const [, setBridgeTransferTransactionHash] = useAtom(bridgeTransferTransactionAtom);
+
+    React.useEffect(() => {
+        axios.get('/api/tokens/price/ETH').then(data => {
+            setEthPrice(Number(data?.data?.data?.price))
+        });
+    }, []);
 
     const getSwapById = async (swapId: string) => {
         try {
-            const { data: { data } } = await axios.get(`/api/swaps/${swapId}?version=mainnet`)
-            console.log(data)
+            const { data: { data } } = await axios.get(`/api/swaps/${swapId}?version=mainnet`);
             const _sourceNetwork = sourceNetworks.find((_n: Network) => _n.internal_name === data.source_network) as Network;
             const _sourceAsset = _sourceNetwork?.currencies?.find((c: Token) => c.asset === data.source_asset)
             const _destinationNetwork = destinationNetworks.find((_n: Network) => _n.internal_name === data.destination_network) as Network;
@@ -49,9 +62,14 @@ const Form: React.FC<IProps> = ({ swapId }) => {
             setSourceAsset(_sourceAsset);
             setDestinationNetwork(_destinationNetwork);
             setDestinationAsset(_destinationAsset);
-            setSourceAmount(data.requested_amount)
+            setSourceAmount(data.requested_amount);
+            setSwapStatus(data.status);
+            setSwapId(data.id);
+
+            const userTransferTransaction = data?.transactions?.find((t: any) => t.status === "user_transfer")?.transaction_hash;
+            setBridgeTransferTransactionHash(userTransferTransaction);
         } catch (err) {
-            console.log(err)
+            console.log(err);
         }
     }
 

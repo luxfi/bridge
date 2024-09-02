@@ -3,10 +3,10 @@ import { ethers } from "hardhat";
 async function main() {
     const [deployer] = await ethers.getSigners();
 
-    /////Bridge
-    const _signer = await ethers.getContractFactory("Bridge");
+    /////LETH
+    const _signer = await ethers.getContractFactory("DAI");
     const token = await _signer.deploy();
-    console.log("Bridge address:", await token.getAddress());
+    console.log("DAI address:", await token.getAddress());
 }
 
 main()
