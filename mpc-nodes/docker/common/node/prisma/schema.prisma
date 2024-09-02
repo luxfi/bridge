@@ -27,9 +27,9 @@ datasource db {
 
 model Teleporter {
   id         Int    @id @default(autoincrement())
-  txId       String @unique
+  txId       String
   chainType  String
   amount     String
-  signature  String @unique
+  signature  String
   hashedTxId String @unique
 }

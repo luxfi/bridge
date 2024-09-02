@@ -2,10 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { NextApiRequest, NextApiResponse } from "next";
 const mpc_nodes = [
-    'http://127.0.0.1:6000',
-    'http://127.0.0.1:6000',
-    // 'https://teleport.lux.network/node0',
-    // 'https://teleport.lux.network/node1',
+    // 'http://127.0.0.1:6000',
+    // 'http://127.0.0.1:6000',
+    'https://teleport.lux.network/node0',
+    'https://teleport.lux.network/node1',
     // 'https://teleport.lux.network/node2',
 ]
 
