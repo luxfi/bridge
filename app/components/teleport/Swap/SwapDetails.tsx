@@ -25,8 +25,8 @@ import { ArrowRight, Router } from 'lucide-react';
 import { Contract } from 'ethers';
 import { CONTRACTS } from '../constants/settings';
 
-import teleporterABI from '@/components/Teleport/constants/abi/bridge.json'
-import erc20ABI from '@/components/Teleport/constants/abi/erc20.json'
+import teleporterABI from '../constants/abi/bridge.json'
+import erc20ABI from '../constants/abi/erc20.json'
 //hooks
 import { useSwitchNetwork } from 'wagmi';
 import { useRouter } from 'next/navigation';
