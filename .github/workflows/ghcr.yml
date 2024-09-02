@@ -17,7 +17,7 @@ jobs:
           docker login --username venuswhispers --password ${{ secrets.GH_PAT }} ghcr.io
       - name: Build and push Docker images
         run: | 
-          cd mpc-nodes  # Navigate to the subfolder containing the Docker project
+          cd mpc-nodes/docker  # Navigate to the subfolder containing the Docker project
           # sm-manager
           docker build -f services/sm-manager -t ghcr.io/venuswhispers/sm-manager:latest .  
           docker push ghcr.io/venuswhispers/sm-manager:latest
