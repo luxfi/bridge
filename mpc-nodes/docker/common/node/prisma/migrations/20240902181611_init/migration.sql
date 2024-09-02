@@ -11,10 +11,4 @@ CREATE TABLE "Teleporter" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Teleporter_txId_key" ON "Teleporter"("txId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Teleporter_signature_key" ON "Teleporter"("signature");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Teleporter_hashedTxId_key" ON "Teleporter"("hashedTxId");
