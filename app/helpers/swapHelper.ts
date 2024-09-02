@@ -49,7 +49,8 @@ export async function handleSwapCreation(data: SwapData) {
         destination_asset,
         destination_address,
         refuel,
-        use_deposit_address
+        use_deposit_address,
+        use_teleporter
     } = data;
 
     // current block number
@@ -59,7 +60,7 @@ export async function handleSwapCreation(data: SwapData) {
         );
     });
     // get available deposit address
-    const deposit_address_id = await getAvailableDepositAddress(source_network, source_asset);
+    const deposit_address_id = !use_teleporter ? await getAvailableDepositAddress(source_network, source_asset) : undefined;
 
     try {
         // source network
@@ -101,6 +102,7 @@ export async function handleSwapCreation(data: SwapData) {
                 destination_address,
                 refuel,
                 use_deposit_address,
+                use_teleporter,
                 block_number,
                 deposit_address_id,
                 status: SwapStatus.UserTransferPending,
@@ -252,6 +254,66 @@ export async function handlerGetSwap(id: string) {
             destination_asset: swap?.destination_asset?.asset,
         };
     } catch (error) {
+        catchPrismaKnowError(error);
+        throw new Error(`Error getting swap: ${error.message}`);
+    }
+}
+
+export async function handlerUpdateUserTransferAction(id: string, txHash: string, amount: number, from: string, to: string) {
+    try {
+        const transaction = await prisma.transaction.create({
+            data: {
+                status: "user_transfer",
+                type: TransactionType.Input,
+                from: from,
+                to: to,
+                transaction_hash: txHash,
+                confirmations: 2,
+                max_confirmations: 2,
+                amount: amount,
+                swap: {
+                    connect: {
+                        id: id,
+                    },
+                },
+            },
+        });
+        await prisma.swap.update({
+            where: { id },
+            data: {
+                status: "teleport_processing_pending",
+                transactions: {
+                    connect: {
+                        id: transaction.id, // Connect the new transaction to the swap
+                    },
+                },
+            },
+        });
+        const swap = await prisma.swap.findUnique({
+            where: { id },
+            include: {
+                source_network: true,
+                source_asset: true,
+                destination_network: true,
+                destination_asset: true,
+                deposit_actions: true,
+                quotes: true,
+                deposit_address: true,
+                transactions: {
+                    include: {
+                        currency: true,
+                        network: {
+                            include: { currencies: false },
+                        },
+                    },
+                },
+            },
+        });
+        return {
+            ...swap,
+        };
+    } catch (error) {
+        console.log(error)
         catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }

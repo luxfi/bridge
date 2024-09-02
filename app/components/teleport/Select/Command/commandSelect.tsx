@@ -1,6 +1,6 @@
 'use client'
 import React from "react";
-import { ISelectMenuItem } from '@/components/teleport/Select/Shared/Props/selectMenuItem'
+import { ISelectMenuItem } from '@/components/Teleport/Select/Shared/Props/selectMenuItem'
 import {
     CommandEmpty,
     CommandGroup,
@@ -11,11 +11,11 @@ import {
 } from '@/components/shadcn/command'
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import SpinIcon from "@/components/icons/spinIcon";
-import SelectItem from '@/components/teleport/Select/Shared/SelectItem';
+import SelectItem from '@/components/Teleport/Select/Shared/SelectItem';
 import Modal from '@/components/modal/modal';
-import { SelectProps } from '@/components/teleport/Select/Shared/Props/SelectProps'
+import { SelectProps } from '@/components/Teleport/Select/Shared/Props/SelectProps'
 import { Info } from 'lucide-react';
-import { LayerDisabledReason } from '@/components/teleport/Select/Popover/PopoverSelect';
+import { LayerDisabledReason } from '@/components/Teleport/Select/Popover/PopoverSelect';
 
 export interface CommandSelectProps extends SelectProps {
     show: boolean;

@@ -1,10 +1,9 @@
 'use client'
-
-import { createContext, useState, useContext, useEffect } from 'react'
-import { SwapFormValues } from '../components/DTOs/SwapFormValues';
 import BridgeApiClient from '../lib/BridgeApiClient';
 import useSWR from 'swr';
 import { ApiResponse } from '../Models/ApiResponse';
+import { createContext, useState, useContext, useEffect } from 'react'
+import { SwapFormValues } from '../components/DTOs/SwapFormValues';
 
 const FeeStateContext = createContext<ContextType | null>(null);
 
@@ -65,8 +64,6 @@ export function FeeProvider({ children }) {
         `/limits/${from?.internal_name ?? fromExchange?.internal_name}/${fromCurrency?.asset ?? currencyGroup?.name}/${to?.internal_name ?? toExchange?.internal_name}/${toCurrency?.asset ?? currencyGroup?.name}?version=${version}` : null, apiClient.fetcher, {
         refreshInterval: 10000,
     })
-
-    console.log("fee calc =================>", {fromCurrency, toCurrency, from, to, toExchange, amount, fromExchange, currencyGroup})
 
     const { data: lsFee, mutate: mutateFee, isLoading: isFeeLoading } = useSWR<ApiResponse<{
         wallet_fee_in_usd: number,
