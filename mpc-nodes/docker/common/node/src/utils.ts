@@ -146,30 +146,29 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
  */
 export const signMsg = async (message: string, web3: Web3<RegisteredSubscription>, txInfo: string[]) => {
   try {
-    const sig = web3.eth.accounts.sign(message, "0xb0bffa4504c56ae708e1fed516aa433f8926fd1dfd667ebd33667611ab02ac0f")
-    const { signature, messageHash, r, s, v } = sig
-    const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
-    const signer = recoverAddress(myMsgHashAndPrefix, signature)
-    console.log("MPC Address:", signer)
-    return Promise.resolve({ signature, signer })
-
+    // const sig = web3.eth.accounts.sign(message, "")
+    // const { signature, messageHash, r, s, v } = sig
     // const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
-    // const netSigningMsg = myMsgHashAndPrefix.substr(2)
-    // const i = 0
-    // try {
-    //   const { signature, r, s, v } = (await signClient(i, netSigningMsg, txInfo)) as any
-    //   let signer = ""
-    //   try {
-    //     signer = recoverAddress(myMsgHashAndPrefix, signature)
-    //     console.log("MPC Address:", signer)
-    //   } catch (err) {
-    //     console.log("err: ", err)
-    //   }
-    //   return Promise.resolve({ signature, signer })
-    // } catch (err) {
-    //   console.log("Error:", err)
-    //   return Promise.reject("signClientError:")
-    // }
+    // const signer = recoverAddress(myMsgHashAndPrefix, signature)
+    // console.log("MPC Address:", signer)
+    // return Promise.resolve({ signature, signer })
+    const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
+    const netSigningMsg = myMsgHashAndPrefix.substr(2)
+    const i = 0
+    try {
+      const { signature, r, s, v } = (await signClient(i, netSigningMsg, txInfo)) as any
+      let signer = ""
+      try {
+        signer = recoverAddress(myMsgHashAndPrefix, signature)
+        console.log("MPC Address:", signer)
+      } catch (err) {
+        console.log("err: ", err)
+      }
+      return Promise.resolve({ signature, signer })
+    } catch (err) {
+      console.log("Error:", err)
+      return Promise.reject("signClientError:")
+    }
   } catch (err) {
     console.log("Error:", err)
     return Promise.reject(err)
