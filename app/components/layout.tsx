@@ -5,26 +5,27 @@ import { useRouter } from "next/router";
 
 import * as Sentry from "@sentry/nextjs";
 
-import { ThemeProvider as LuxThemeProvider} from '@luxdefi/ui/context-providers'
+import { ThemeProvider as LuxThemeProvider } from '@luxdefi/ui/context-providers'
 import { HeadMetadata } from '@luxdefi/ui/common'
 
 import ThemeWrapper from "./themeWrapper";
 import MaintananceContent from "./maintanance/maintanance";
-import { AuthProvider } from "../context/authContext";
-import { SettingsProvider } from "../context/settings";
-import { BridgeAppSettings } from "../Models/BridgeAppSettings";
-import { BridgeSettings } from "../Models/BridgeSettings";
 import ErrorFallback from "./ErrorFallback";
-import { SendErrorMessage } from "../lib/telegram";
-import { QueryParams } from "../Models/QueryParams";
-import QueryProvider from "../context/query";
-import { THEME_COLORS, ThemeData } from "../Models/Theme";
-import { TooltipProvider } from "./shadcn/tooltip";
 import ColorSchema from "./ColorSchema";
 import TonConnectProvider from "./TonConnectProvider";
-import { FeeProvider } from "../context/feeContext";
+import QueryProvider from "../context/query";
 import RainbowKit from "./RainbowKit";
 import Solana from "./SolanaProvider";
+import { BridgeAppSettings } from "../Models/BridgeAppSettings";
+import { BridgeSettings } from "../Models/BridgeSettings";
+import { SendErrorMessage } from "../lib/telegram";
+import { QueryParams } from "../Models/QueryParams";
+import { THEME_COLORS, ThemeData } from "../Models/Theme";
+import { TooltipProvider } from "./shadcn/tooltip";
+import { AuthProvider } from "@/context/authContext";
+import { SettingsProvider } from "@/context/settings";
+import { FeeProvider } from "@/context/feeContext";
+import { JotaiProvider } from "@/context/jotaiContext";
 
 import metadata from "../metadata"
 
@@ -125,19 +126,21 @@ export default function Layout({ children, settings, themeData }: Props) {
             <ErrorBoundary FallbackComponent={ErrorFallback} onError={logErrorToService}>
               <LuxThemeProvider>
                 <ThemeWrapper>
-                  <TonConnectProvider basePath={basePath} themeData={themeData}>
-                    <RainbowKit>
-                      <Solana>
-                        <FeeProvider>
-                        {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
-                          <MaintananceContent />
-                        ) : (
-                          children
-                        )}
-                        </FeeProvider>
-                      </Solana>
-                    </RainbowKit>
-                  </TonConnectProvider>
+                  <JotaiProvider>
+                    <TonConnectProvider basePath={basePath} themeData={themeData}>
+                      <RainbowKit>
+                        <Solana>
+                          <FeeProvider>
+                            {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
+                              <MaintananceContent />
+                            ) : (
+                              children
+                            )}
+                          </FeeProvider>
+                        </Solana>
+                      </RainbowKit>
+                    </TonConnectProvider>
+                  </JotaiProvider>
                 </ThemeWrapper>
               </LuxThemeProvider>
             </ErrorBoundary>

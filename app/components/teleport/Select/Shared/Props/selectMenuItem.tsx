@@ -1,5 +1,5 @@
 import { CurrencyDisabledReason } from "../../../../Input/CurrencyFormField";
-import { LayerDisabledReason } from "../../Popover/PopoverSelect";
+import { LayerDisabledReason } from "@/components/Teleport/Select/Popover/PopoverSelect";
 
 export class SelectMenuItem<T> implements ISelectMenuItem {
     id: string;

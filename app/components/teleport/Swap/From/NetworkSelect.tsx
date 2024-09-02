@@ -10,9 +10,9 @@ import {
 import React from "react";
 import Modal from '@/components/modal/modal';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
-import SelectItem from "./SelectItem";
 import SpinIcon from '@/components/icons/spinIcon';
-import { Network } from '../../types';
+import { Network, Token } from '@/types/teleport';
+import SelectItem from './SelectItem';
 
 interface IProps {
     show: boolean;

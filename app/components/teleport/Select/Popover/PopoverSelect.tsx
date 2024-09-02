@@ -1,6 +1,6 @@
-import { SelectProps } from '../Shared/Props/SelectProps'
+import { SelectProps } from '@/components/Teleport/Select/Shared/Props/SelectProps'
 import { CommandItem, CommandList, CommandWrapper } from '@/components/shadcn/command';
-import SelectItem from '@/components/teleport/Select/Shared/SelectItem';
+import SelectItem from '@/components/Teleport/Select/Shared/SelectItem';
 
 export default function PopoverSelect({ values, value, setValue }: SelectProps) {
     let upperValue = false;

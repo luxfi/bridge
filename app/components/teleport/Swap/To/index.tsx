@@ -4,33 +4,36 @@
 import React, { useCallback, useEffect, useState } from "react";
 import AmountField from "../AmountField";
 import NetworkSelectWrapper from "./NetworkSelectWrapper";
-
-import { networks } from "../../settings";
-import { Network, Token } from "../../types";
 import TokenSelectWrapper from "./TokenSelectWrapper";
 
-type SwapDirection = "from" | "to";
+import { Network, Token } from "@/types/teleport";
+import { useAtom } from "jotai";
+import { sourceAmountAtom } from "@/store/teleport";
 
 interface IProps {
     networks: Network[],
     network?: Network,
     asset?: Token,
+    sourceAsset?: Token,
     setNetwork: (network: Network) => void,
     setAsset: (asset: Token) => void,
 }
 
-const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, setNetwork, setAsset }) => {
+const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAsset, setNetwork, setAsset }) => {
+
+    const [amount] = useAtom(sourceAmountAtom);
+
     return (
         <div className={`p-3`}>
             <label htmlFor={'name'} className="block font-semibold text-xs">
-                From
+                To
             </label>
             <div className="border border-[#404040] bg-level-1 rounded-lg mt-1.5 pb-2">
                 <div>
                     <div className="w-full">
                         <NetworkSelectWrapper
                             disabled={false}
-                            placeholder={'From'}
+                            placeholder={'To'}
                             setNetwork={setNetwork}
                             network={network}
                             networks={networks}
@@ -41,12 +44,14 @@ const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, setNetwo
                 </div>
                 <div className="flex justify-between items-center mt-2 pl-3 pr-4">
                     <AmountField
-                        disabled={!network}
+                        value={amount}
+                        disabled={true}
                     />
                     <TokenSelectWrapper
                         placeholder="Asset"
                         values={network ? network.currencies : []}
                         value={asset}
+                        sourceAsset={sourceAsset}
                         setValue={setAsset}
                         disabled={true}
                     />

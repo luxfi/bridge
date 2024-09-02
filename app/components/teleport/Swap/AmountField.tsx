@@ -1,7 +1,6 @@
 'use client'
 import { useFormikContext } from "formik";
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
-// import { SwapFormValues } from "../DTOs/SwapFormValues";
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import NumericInput from "./NumericInput";
 import SecondaryButton from "../../buttons/secondaryButton";
 // import { useBalancesState, useBalancesUpdate } from "../../context/balances";
@@ -11,10 +10,12 @@ import SecondaryButton from "../../buttons/secondaryButton";
 // import useBalance from "../../hooks/useBalance";
 
 interface IProps {
-    disabled: boolean
+    disabled: boolean,
+    setValue?: (value: string) => void,
+    value: string
 }
 
-const AmountField: React.FC<IProps> = ({ disabled }) => {
+const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
 
     const [requestedAmountInUsd, setRequestedAmountInUsd] = useState<string>();
     // const { fromCurrency, from, to, destination_address, toCurrency, currencyGroup } = values || {};
@@ -27,27 +28,37 @@ const AmountField: React.FC<IProps> = ({ disabled }) => {
     const handleSetMaxAmount = () => {
     }
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (/^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && setValue) {
+            setValue(e.target.value);
+        }
+    }
+
     return (
         <>
             <div className="flex w-full justify-between items-center">
                 <div className="relative w-full">
-                    <NumericInput
-                        disabled={disabled}
-                        placeholder={"0.0"}
-                        min={12}
-                        max={12}
-                        step={isNaN(1) ? 0.01 : 1}
-                        name={'name'}
-                        precision={12}
-                        onFocus={() => { setIsAmountVisible(false) }}
-                        onBlur={() => { setIsAmountVisible(true) }}
-                        className="rounded-r-none w-full pl-0.5 p-0 focus:ring-0 h-fit"
-                        onChange={e => {
-                            // /^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && handleChange(e);
-                            // updateRequestedAmountInUsd(parseFloat(e.target.value));
-                        }}
-                    >
-                    </NumericInput>
+                    <div className="flex relative w-full">
+                        <input
+                            pattern={"^[0-9]*[.,]?[0-9]*$"}
+                            inputMode="decimal"
+                            autoComplete="off"
+                            disabled={disabled}
+                            placeholder={'0.0'}
+                            autoCorrect="off"
+                            min={0}
+                            max={10000}
+                            // onFocus={onFocus}
+                            // onBlur={onBlur}
+                            type="text"
+                            value={value}
+                            step={0.01}
+                            name={'name'}
+                            id={'name'}
+                            className='rounded-r-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0'
+                            onChange={handleChange}
+                        />
+                    </div>
                 </div>
                 {/* {
                     !disabled &&
