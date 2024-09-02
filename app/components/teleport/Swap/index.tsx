@@ -25,10 +25,8 @@ import { Widget } from "../../Widget/Index";
 import FromNetworkForm from './From';
 import ToNetworkForm from './To';
 import SwapDetails from "./SwapDetails";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useRouter } from 'next/router';
 import { Token, Network } from "@/types/teleport";
-import { sourceNetworks, destinationNetworks } from "../settings";
+import { sourceNetworks, destinationNetworks } from "../constants/settings";
 import { useAtom } from "jotai";
 
 import {
@@ -37,7 +35,10 @@ import {
   destinationNetworkAtom,
   destinationAssetAtom,
   destinationAddressAtom,
-  sourceAmountAtom
+  sourceAmountAtom,
+  ethPriceAtom,
+  swapStatusAtom,
+  swapIdAtom
 } from '@/store/teleport'
 import SpinIcon from "@/components/icons/spinIcon";
 
@@ -51,13 +52,6 @@ const Address = dynamic(() => import("../share/Address"), {
 });
 
 const SwapForm: FC = () => {
-
-  // params
-  const searchParams = useSearchParams();
-  const swapId = String(searchParams.get("swapId"));
-  // router
-  const router = useRouter();
-
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false);
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
@@ -66,8 +60,17 @@ const SwapForm: FC = () => {
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
+  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
+  const [swapId, setSwapId] = useAtom(swapIdAtom);
 
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
+  const [, setEthPrice] = useAtom(ethPriceAtom);
+
+  React.useEffect(() => {
+    axios.get('/api/tokens/price/ETH').then(data => {
+      setEthPrice(Number(data?.data?.data?.price))
+    });
+  }, []);
 
   React.useEffect(() => {
     if (sourceNetwork) {
@@ -83,9 +86,9 @@ const SwapForm: FC = () => {
 
     if (destinationNetwork && sourceAsset) {
       if (sourceAsset.asset === "ETH") {
-        setDestinationAsset(destinationNetwork.currencies[0])
-      } else {
         setDestinationAsset(destinationNetwork.currencies[1])
+      } else {
+        setDestinationAsset(destinationNetwork.currencies[2])
       }
     }
   }, [destinationNetwork, sourceAsset]);
@@ -126,8 +129,10 @@ const SwapForm: FC = () => {
         app_name: "Bridge"
       }
       const response = await axios.post(`/api/swaps?version=mainnet`, data);
+      setSwapId(response.data?.data?.swap_id)
       window.history.pushState({}, '', `/swap/teleporter/${response.data?.data?.swap_id}`);
-      setShowSwapModal(true)
+      setSwapStatus("user_transfer_pending");
+      setShowSwapModal(true);
     } catch (err) {
       console.log(err)
     } finally {
@@ -137,113 +142,100 @@ const SwapForm: FC = () => {
 
   const handleSwap = () => {
     if (sourceNetwork && sourceAsset && destinationNetwork && destinationNetwork && destinationAddress && Number(sourceAmount) > 0) {
-      console.log({
-        sourceNetwork,
-        sourceAsset,
-        destinationNetwork,
-        destinationAsset,
-        destinationAddress,
-        sourceAmount
-      });
-      // setShowSwapModal(true);
-      createSwap()
+      createSwap();
       setIsSubmitting(true);
     }
   }
 
   return (
-    <>
-      <Widget className="sm:min-h-[504px]">
-        <Widget.Content>
-          <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
-            <div className="flex flex-col w-full">
-              <FromNetworkForm
-                network={sourceNetwork}
-                asset={sourceAsset}
-                setNetwork={(network: Network) => setSourceNetwork(network)}
-                setAsset={(token: Token) => setSourceAsset(token)}
-                networks={sourceNetworks}
-              />
-            </div>
-
-            <div className="py-3 px-4">
-              Fee: {0}
-            </div>
-
-            <div className="flex flex-col w-full">
-              <ToNetworkForm
-                network={destinationNetwork}
-                asset={destinationAsset}
-                sourceAsset={sourceAsset}
-                setNetwork={(network: Network) => setDestinationNetwork(network)}
-                setAsset={(token: Token) => setDestinationAsset(token)}
-                networks={destinationNetworks}
-              />
-            </div>
-
-          </div>
-
-          <div className="w-full !-mb-3 leading-4">
-            <label
-              htmlFor="destination_address"
-              className="block font-semibold text-xs"
-            >
-              {`To ${destinationNetwork?.display_name ?? ""} address`}
-            </label>
-            <AddressButton
-              disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
-              isPartnerWallet={false}
-              openAddressModal={() => setShowAddressModal(true)}
-              partnerImage={'partnerImage'}
-              address={destinationAddress}
+    <Widget className="sm:min-h-[504px]">
+      <Widget.Content>
+        <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
+          <div className="flex flex-col w-full">
+            <FromNetworkForm
+              network={sourceNetwork}
+              asset={sourceAsset}
+              setNetwork={(network: Network) => setSourceNetwork(network)}
+              setAsset={(token: Token) => setSourceAsset(token)}
+              networks={sourceNetworks}
             />
-            <Modal
-              header={`To ${destinationNetwork?.display_name ?? ""} address`}
-              height="fit"
-              show={showAddressModal}
-              setShow={setShowAddressModal}
-              className="min-h-[70%]"
-            >
-              <Address
-                close={() => setShowAddressModal(false)}
-                disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
-                address={destinationAddress}
-                name={"destination_address"}
-                partnerImage={'partnerImage'}
-                isPartnerWallet={false}
-                address_book={[]}
-                setAddress={setDestinationAddress}
-              />
-            </Modal>
           </div>
 
-          <button
-            onClick={handleSwap} disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress || !sourceAmount || Number(sourceAmount) <= 0 || isSubmitting}
-            className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
-          >
-            {
-              isSubmitting ?
-                <SpinIcon className="animate-spin h-5 w-5" /> :
-                warnningMessage === 'Swap Now' && <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
-            }
-            <span className="grow">{warnningMessage}</span>
-          </button>
+          <div className="py-3 px-4">
+            Fee: {0}
+          </div>
 
-          <Modal height='fit'
-            show={showSwapModal}
-            setShow={setShowSwapModal}
-            header={`Complete the swap`}
-            onClose={() => setShowSwapModal(false)}
+          <div className="flex flex-col w-full">
+            <ToNetworkForm
+              network={destinationNetwork}
+              asset={destinationAsset}
+              sourceAsset={sourceAsset}
+              setNetwork={(network: Network) => setDestinationNetwork(network)}
+              setAsset={(token: Token) => setDestinationAsset(token)}
+              networks={destinationNetworks}
+            />
+          </div>
+
+        </div>
+
+        <div className="w-full !-mb-3 leading-4">
+          <label
+            htmlFor="destination_address"
+            className="block font-semibold text-xs"
           >
-            <ResizablePanel>
-              <SwapDetails />
-            </ResizablePanel>
+            {`To ${destinationNetwork?.display_name ?? ""} address`}
+          </label>
+          <AddressButton
+            disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
+            isPartnerWallet={false}
+            openAddressModal={() => setShowAddressModal(true)}
+            partnerImage={'partnerImage'}
+            address={destinationAddress}
+          />
+          <Modal
+            header={`To ${destinationNetwork?.display_name ?? ""} address`}
+            height="fit"
+            show={showAddressModal}
+            setShow={setShowAddressModal}
+            className="min-h-[70%]"
+          >
+            <Address
+              close={() => setShowAddressModal(false)}
+              disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
+              address={destinationAddress}
+              name={"destination_address"}
+              partnerImage={'partnerImage'}
+              isPartnerWallet={false}
+              address_book={[]}
+              setAddress={setDestinationAddress}
+            />
           </Modal>
-        </Widget.Content>
+        </div>
 
-      </Widget>
+        <button
+          onClick={handleSwap} disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress || !sourceAmount || Number(sourceAmount) <= 0 || isSubmitting}
+          className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+        >
+          {
+            isSubmitting ?
+              <SpinIcon className="animate-spin h-5 w-5" /> :
+              warnningMessage === 'Swap Now' && <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
+          }
+          <span className="grow">{warnningMessage}</span>
+        </button>
 
-    </>
+        <Modal height='fit'
+          show={showSwapModal}
+          setShow={setShowSwapModal}
+          header={`Complete the swap`}
+          onClose={() => setShowSwapModal(false)}
+        >
+          <ResizablePanel>
+            <SwapDetails />
+          </ResizablePanel>
+        </Modal>
+      </Widget.Content>
+    </Widget>
   );
 };
 

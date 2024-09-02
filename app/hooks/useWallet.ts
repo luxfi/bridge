@@ -77,6 +77,11 @@ export default function useWallet() {
         return provider
     }
 
+    const getWithdrawalProviderWithNetworkName = (network: string) => {
+        const provider = WalletProviders.find(provider => provider.withdrawalSupportedNetworks.includes(network))
+        return provider
+    }
+
     const getAutofillProviderWithNetworkName = (network: string) => {
         const provider = WalletProviders.find(provider => provider?.autofillSupportedNetworks?.includes(network))
         return provider
@@ -88,6 +93,7 @@ export default function useWallet() {
         disconnectWallet: handleDisconnect,
         getWithdrawalProvider,
         getAutofillProvider,
-        getAutofillProviderWithNetworkName
+        getAutofillProviderWithNetworkName,
+        getWithdrawalProviderWithNetworkName
     }
 }
