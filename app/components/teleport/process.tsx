@@ -18,8 +18,9 @@ import {
     ethPriceAtom,
     swapStatusAtom,
     swapIdAtom,
-    bridgeTransferTransactionAtom
-} from '@/store/teleport'
+    bridgeTransferTransactionAtom,
+    mpcSignatureAtom
+} from '@/store/teleport';
 import { useAtom } from "jotai";
 import { Network, Token } from "@/types/teleport";
 
@@ -44,6 +45,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     const [, setEthPrice] = useAtom(ethPriceAtom);
     const [, setSwapId] = useAtom(swapIdAtom);
     const [, setBridgeTransferTransactionHash] = useAtom(bridgeTransferTransactionAtom);
+    const [, setMpcSignature] = useAtom(mpcSignatureAtom);
 
     React.useEffect(() => {
         axios.get('/api/tokens/price/ETH').then(data => {
@@ -65,9 +67,12 @@ const Form: React.FC<IProps> = ({ swapId }) => {
             setSourceAmount(data.requested_amount);
             setSwapStatus(data.status);
             setSwapId(data.id);
+            setDestinationAddress(data.destination_address);
 
             const userTransferTransaction = data?.transactions?.find((t: any) => t.status === "user_transfer")?.transaction_hash;
-            setBridgeTransferTransactionHash(userTransferTransaction);
+            setBridgeTransferTransactionHash(userTransferTransaction ?? "");
+            const mpcSignTransaction = data?.transactions?.find((t: any) => t.status === "mpc_sign")?.transaction_hash;
+            setMpcSignature(mpcSignTransaction ?? "");
         } catch (err) {
             console.log(err);
         }
