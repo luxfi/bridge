@@ -38,7 +38,7 @@ export default async function handler(
     }
   });
 
-  await Promise.all(swaps.map(checkSwap))
+  // await Promise.all(swaps.map(checkSwap))
 
   return response.json({ 'status': "success" });
 

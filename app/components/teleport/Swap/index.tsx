@@ -3,23 +3,13 @@ import React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import axios from "axios";
-import SwapButton from "../../buttons/swapButton";
-import BridgeApiClient, { AddressBookItem } from "../../../lib/BridgeApiClient";
 import Modal from "@/components/modal/modal";
 import ResizablePanel from "@/components/ResizablePanel";
 import shortenAddress from "../../utils/ShortenAddress";
-import useSWR from "swr";
-import { Form, FormikErrors, useFormikContext } from "formik";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC } from "react";
 import { SwapFormValues } from "../../DTOs/SwapFormValues";
 import { Partner } from "../../../Models/Partner";
-import { useSwapDataState, useSwapDataUpdate } from "../../../context/swap";
-import { isValidAddress } from "../../../lib/addressValidator";
-import { ApiResponse } from "../../../Models/ApiResponse";
-import { motion, useCycle } from "framer-motion";
 import { ArrowLeftRight, ArrowUpDown, Loader2 } from "lucide-react";
-import { useAuthState } from "../../../context/authContext";
-import { GetDefaultAsset } from "../../../helpers/settingsHelper";
 import { Widget } from "../../Widget/Index";
 
 import FromNetworkForm from './From';
@@ -42,16 +32,11 @@ import {
 } from '@/store/teleport'
 import SpinIcon from "@/components/icons/spinIcon";
 
-type Props = {
-  isPartnerWallet?: boolean;
-  partner?: Partner;
-};
-
 const Address = dynamic(() => import("../share/Address"), {
   loading: () => <></>,
 });
 
-const SwapForm: FC = () => {
+const Swap: FC = () => {
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false);
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
@@ -301,4 +286,4 @@ const AddressButton: FC<{
     </button>
   );
 
-export default SwapForm;
+export default Swap;

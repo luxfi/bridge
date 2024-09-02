@@ -467,6 +467,40 @@ export const sourceNetworks_: Network[] = [
                 is_native: false
             },
             {
+                name: "LETH",
+                asset: "LETH",
+                logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
+                contract_address: "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be",
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: false,
+                max_withdrawal_amount: 1,
+                deposit_fee: 0.001462,
+                withdrawal_fee: 0.001462,
+                source_base_fee: 0.000456,
+                destination_base_fee: 0.000456,
+                is_native: false
+            },
+            {
+                name: "LUSD",
+                asset: "LUSD",
+                logo: "https://cdn.lux.network/bridge/currencies/lusd.png",
+                contract_address: "0xc16ECFE3cB80e142d7110b97a442d4caAA203ABf",
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: false,
+                max_withdrawal_amount: 1,
+                deposit_fee: 0.001462,
+                withdrawal_fee: 0.001462,
+                source_base_fee: 0.000456,
+                destination_base_fee: 0.000456,
+                is_native: false
+            },
+            {
                 name: "ZKS",
                 asset: "ZKS",
                 logo: "https://cdn.lux.network/bridge/currencies/zks.png",
@@ -834,7 +868,7 @@ export const destinationNetworks: Network[] = [
                 name: "LETH",
                 asset: "LETH",
                 logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
-                contract_address: "0xa684c5721e54B871111CE1F1E206d669a7e7F0a5",
+                contract_address: "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -851,7 +885,7 @@ export const destinationNetworks: Network[] = [
                 name: "LUSD",
                 asset: "LUSD",
                 logo: "https://cdn.lux.network/bridge/currencies/lusd.png",
-                contract_address: "0xa684c5721e54B871111CE1F1E206d669a7e7F0a6",
+                contract_address: "0xc16ECFE3cB80e142d7110b97a442d4caAA203ABf",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -871,5 +905,8 @@ export const destinationNetworks: Network[] = [
 export const CONTRACTS = {
     11155111: {
         teleporter: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
+    },
+    7777: {
+        teleporter: "0xB2237fb7DBB19Ff09BBD64029064eC05B3C369Ac"
     }
 }
