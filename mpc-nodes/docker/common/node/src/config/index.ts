@@ -1,36 +1,62 @@
 export const settings = {
+  Vault: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
   RPC: {
     11155111: "https://sepolia.infura.io/v3/2e58a899d3c64eccb6955c2f33fc8a88",
-    97: "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
+    1: "https://lb.drpc.org/ogrpc?network=ethereum&dkey=AqFR4xsp40v0ugTBeYcYdFLf2rXfQTYR76p2UgWAgP__",
+    7777: "https://api.lux.network"
   },
-  LuxETH: {
-    Ethereum: "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be",
-    Lux: "0x41e51eFcdA08fDFB84f4b1caa4b7f03c67FA431b"
-  },
-  LuxBTC: {
-    Ethereum: "0x526903Ee6118de6737D11b37f82fC7f69B13685D",
-    Lux: "0x8c07F93A76213c0BE738ded6110403b6d0ceE286"
-  },
-  // WSHM: {
-  //   "Ethereum": "0xc1Dd1e835F4cdFF9fc12Cb1750428E345A3d3d5f",
-  //   "Lux": "0x2d6Bce32Ea63F2e2CDfCAd49999e89a00389Df4C",
-  // },
-  Teleporter: {
-    Ethereum: "0x5519582dde6eb1f53F92298622c2ecb39A64369A",
+  LETH: {
+    Ethereum: "",
+    Sepolia: "",
     Lux: "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be"
   },
+  LUSD: {
+    Ethereum: "",
+    Sepolia: "",
+    Lux: "0xc16ECFE3cB80e142d7110b97a442d4caAA203ABf"
+  },
+  Teleporter: {
+    Ethereum: "",
+    Sepolia: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
+    Lux: "0xB2237fb7DBB19Ff09BBD64029064eC05B3C369Ac"
+  },
+  USDT: {
+    Ethereum: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    Sepolia: "0xa92e09451140d645a2fe262c9631dd808439dded"
+  },
+  USDC: {
+    Ethereum: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    Sepolia: "0xB587bAb3d507d720625D30544C2889D661446BF7"
+  },
+  DAI: {
+    Ethereum: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    Sepolia: "0x7390C3FA8576a0E9E7c788cc7955c3151c4c1612"
+  },
+  ETH: {
+    Ethereum: "0x0000000000000000000000000000000000000000",
+    Sepolia: "0x0000000000000000000000000000000000000000"
+  },
   NetNames: {
-    "11155111": "Ethereum",
-    "97": "Lux"
+    "11155111": "Sepolia",
+    "1": "Ethereum",
+    "7777": "Lux"
+  },
+  DECIMALS: {
+    ETH: "18",
+    USDT: "6",
+    USDC: "6",
+    DAI: "18"
   },
   Msg: "Sign to prove you are initiator of transaction.",
   DupeListLimit: "200",
   SMTimeout: "1",
   NewSigAllowed: false,
-  SigningManagers: ["http://127.0.0.1:8000", "http://127.0.0.1:8000"],
-  MPCPeers: {
-    0: "mnode.wpkt.cash, 139.162.85.205",
-    1: "mnode.odapp.io, 172.104.108.56"
-  },
   KeyStore: "keys.store"
+}
+
+export const swapMappings: Record<string, string[] | undefined> = {
+  // LETH swap available tokens (native ETH or wrapped ETH)
+  "0xa684c5721e54B871111CE1F1E206d669a7e7F0a5": ["ETH", "WETH"],
+  // LUSD swap available tokens (stable coins)
+  "0xa684c5721e54B871111CE1F1E206d669a7e7F0a6": ["USDT", "USDC", "DAI", "BUSD", "TUSD", "USDP", "HUSD", "SUSD", "USDN"]
 }
