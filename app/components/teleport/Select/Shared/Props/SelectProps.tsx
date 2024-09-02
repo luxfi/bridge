@@ -1,4 +1,4 @@
-import { ISelectMenuItem } from '../../Shared/Props/selectMenuItem'
+import { ISelectMenuItem } from './selectMenuItem'
 
 export interface SelectProps {
     values: ISelectMenuItem[],

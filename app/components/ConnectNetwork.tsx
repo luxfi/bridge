@@ -2,6 +2,7 @@ import SubmitButton from './buttons/submitButton';
 import { Link } from 'lucide-react';
 import { FC } from 'react';
 
+
 type Props = {
     NetworkDisplayName: string;
     AppURL: string;

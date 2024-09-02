@@ -103,10 +103,10 @@ const ConnectButton = ({
     ) : (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger
-              asChild={true}
-              aria-label="Connect wallet"
-              disabled={filteredConnectors.length == 0}
-              className={`${className} disabled:cursor-not-allowed `}
+                asChild={true}
+                aria-label="Connect wallet"
+                disabled={filteredConnectors.length == 0}
+                className={`${className} disabled:cursor-not-allowed `}
             >
                 {children}
             </PopoverTrigger>

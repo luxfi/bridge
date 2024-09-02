@@ -1,17 +1,15 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import TokenSelect from './TokenSelect'
-import PopoverSelect from '@/components/Select/Popover/PopoverSelect'
 import { ChevronDown } from 'lucide-react'
-import { ISelectMenuItem, SelectMenuItem } from '@/components/Select/Shared/Props/selectMenuItem'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover'
-import { CurrencyDisabledReason } from '@/components/Input/CurrencyFormField'
-import { Token } from '../../types'
+import { Token } from '@/types/teleport';
 
 interface IProps {
   setValue: (value: Token) => void;
   values: Token[];
   value?: Token;
+  sourceAsset?: Token;
   placeholder?: string;
   searchHint?: string;
   disabled?: boolean;
@@ -20,18 +18,12 @@ interface IProps {
 const TokenSelectWrapper: React.FC<IProps> = ({
   setValue,
   value,
+  sourceAsset,
   values,
   placeholder,
   disabled
 }) => {
   const [showModal, setShowModal] = React.useState(false)
-
-  const handleSelect = React.useCallback((item: Token) => {
-    if (item.status === 'active') {
-      setValue(item);
-      setShowModal(false);
-    }
-  }, [])
 
   if (values.length === 0) return <Placeholder placeholder={placeholder} />
 
@@ -78,7 +70,7 @@ const TokenSelectWrapper: React.FC<IProps> = ({
         }
       </PopoverTrigger>
       <PopoverContent className="w-fit bg-[black] border-[#404040]">
-        <TokenSelect setValue={handleSelect} value={value} values={values} />
+        <TokenSelect setValue={setValue} setShowModal={setShowModal} sourceAsset={sourceAsset} value={value} values={values} />
       </PopoverContent>
     </Popover>
   )

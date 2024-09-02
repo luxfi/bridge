@@ -36,9 +36,8 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
       const [txid, fromNetId, toNetIdHash, tokenName, tokenAddrHash, toTargetAddrHash, msgSig, nonce] = txInfo
       const txidNonce = txid + nonce
       const list = await find("name", `${signClientName} ${signSmManager}`)
-      console.log("list", list);
       if (list.length > 0) {
-        console.log("clientAlreadyRunning", list)
+        console.log("clientAlreadyRunning:::", list)
         try {
           const x = list.length === 1 ? 0 : 1
           const uptimeCmd = "ps -p " + list[x].pid + " -o etime"
@@ -59,7 +58,7 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
                   await killSigner(String(p.pid))
                 }
                 const cmd = `./target/release/examples/${signClientName} ${signSmManager} ${keyStore} ${msgHash}`
-                await exec(cmd, { cwd: __dirname + "/multiparty", shell: '/bin/bash' }) // Make sure it"s dead
+                await exec(cmd, { cwd: __dirname + "/multiparty", shell: "/bin/bash" }) // Make sure it"s dead
               } catch (err) {
                 console.log("Partial signature process may not have exited:", err)
                 resolve(signClient(i, msgHash, txInfo))
@@ -145,32 +144,32 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
  * @param txProcMap
  * @returns
  */
-//will become MPC
 export const signMsg = async (message: string, web3: Web3<RegisteredSubscription>, txInfo: string[]) => {
   try {
-    // const sig = web3.eth.accounts.sign(message, "0xb0bffa4504c56ae708e1fed516aa433f8926fd1dfd667ebd33667611ab02ac0f")
-    // const { signature, messageHash, r, s, v } = sig
-    // console.log("MPC Address:", web3.eth.accounts.recover(message, signature))
-    // console.log("MPC Address:", web3.eth.accounts.recover(message, v, r, s))
-    // const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
-    // const netSigningMsg = message
-    // return signature
+    const sig = web3.eth.accounts.sign(message, "0xb0bffa4504c56ae708e1fed516aa433f8926fd1dfd667ebd33667611ab02ac0f")
+    const { signature, messageHash, r, s, v } = sig
     const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
-    const netSigningMsg = myMsgHashAndPrefix.substr(2)
-    const i = 0
-    try {
-      const { signature, r, s, v } = (await signClient(i, netSigningMsg, txInfo)) as any
-      console.log("SIGNATURE =================> ", { netSigningMsg, signature, r, s, v })
-      try {
-        console.log("MPC Address:", recoverAddress(myMsgHashAndPrefix, signature))
-      } catch (err) {
-        console.log("err: ", err)
-      }
-      return Promise.resolve(signature)
-    } catch (err) {
-      console.log("Error:", err)
-      return Promise.reject("signClientError:")
-    }
+    const signer = recoverAddress(myMsgHashAndPrefix, signature)
+    console.log("MPC Address:", signer)
+    return Promise.resolve({ signature, signer })
+
+    // const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
+    // const netSigningMsg = myMsgHashAndPrefix.substr(2)
+    // const i = 0
+    // try {
+    //   const { signature, r, s, v } = (await signClient(i, netSigningMsg, txInfo)) as any
+    //   let signer = ""
+    //   try {
+    //     signer = recoverAddress(myMsgHashAndPrefix, signature)
+    //     console.log("MPC Address:", signer)
+    //   } catch (err) {
+    //     console.log("err: ", err)
+    //   }
+    //   return Promise.resolve({ signature, signer })
+    // } catch (err) {
+    //   console.log("Error:", err)
+    //   return Promise.reject("signClientError:")
+    // }
   } catch (err) {
     console.log("Error:", err)
     return Promise.reject(err)
@@ -187,8 +186,8 @@ export const signMsg = async (message: string, web3: Web3<RegisteredSubscription
  * @param vault
  * @returns string
  */
-export const concatMsg = (amt: string, targetAddressHash: string, txid: string, toContractAddress: string, toChainIdHash: string, vault: boolean) => {
-  return amt + targetAddressHash + txid + toContractAddress + toChainIdHash + vault
+export const concatMsg = (amount: string, targetAddressHash: string, txid: string, toContractAddress: string, toChainIdHash: string, decimals: string, vault: boolean) => {
+  return amount + targetAddressHash + txid + toContractAddress + toChainIdHash + decimals + vault
 }
 
 /**
@@ -196,23 +195,23 @@ export const concatMsg = (amt: string, targetAddressHash: string, txid: string, 
  * @param web3
  * @param vault
  * @param txInfo
- * @param txProcMap
+ * @param _decimals
  */
-export const hashAndSignTx = async (amt: string, web3: Web3<RegisteredSubscription>, vault: boolean, txInfo: string[]) => {
+export const hashAndSignTx = async (amount: string, web3: Web3<RegisteredSubscription>, vault: boolean, txInfo: string[], _decimals: string) => {
   try {
     const toTargetAddrHash = txInfo[5]
-    const txid = txInfo[0]
+    const txHash = txInfo[0]
     const toChainIdHash = txInfo[2]
     const toContractAddress = txInfo[4]
     const nonce = txInfo[7]
-    const message = concatMsg(amt, toTargetAddrHash, txid, toContractAddress, toChainIdHash, vault)
-    // console.log("Message:", message)
+    const message = concatMsg(amount, toTargetAddrHash, txHash, toContractAddress, toChainIdHash, _decimals, vault)
+
     const hash = web3.utils.soliditySha3(message)
-    const sig = await signMsg(hash, web3, txInfo)
-    return Promise.resolve(sig)
+    const { signature, signer } = await signMsg(hash, web3, txInfo)
+    return Promise.resolve({ signature, mpcSigner: signer })
   } catch (err) {
     if (err.toString().includes("invalid point")) {
-      hashAndSignTx(amt, web3, vault, txInfo)
+      hashAndSignTx(amount, web3, vault, txInfo, _decimals)
     } else {
       console.log(err)
       return Promise.reject(err)
