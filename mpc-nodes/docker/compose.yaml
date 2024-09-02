@@ -22,6 +22,8 @@ services:
             - node_number=0
             - sign_sm_manager=http://sm-manager:8000/
             - PORT=6000
+            - POSTGRES_PRISMA_URL=postgres://default:5j6AXbyCRpJN@ep-solitary-river-a4wjo1ro-pooler.us-east-1.aws.neon.tech/verceldb?pgbouncer=true&connect_timeout=15&sslmode=require
+            - POSTGRES_URL_NON_POOLING=postgres://default:5j6AXbyCRpJN@ep-solitary-river-a4wjo1ro.us-east-1.aws.neon.tech/verceldb?sslmode=require
         ports:
             - 6000:6000
         networks:
