@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2015",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -23,7 +23,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      // https://remarkablemark.org/blog/2023/06/30/react-types-reactnode-error/
       "react": ["./node_modules/@types/react"]
     }
   },
