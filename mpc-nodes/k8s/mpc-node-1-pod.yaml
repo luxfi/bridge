@@ -24,6 +24,10 @@ spec:
           value: http://sm-manager:8000/
         - name: smTimeOutBound
           value: "3"
+        - name: POSTGRES_PRISMA_URL
+          value: postgres://default:5j6AXbyCRpJN@ep-solitary-river-a4wjo1ro-pooler.us-east-1.aws.neon.tech/verceldb?pgbouncer=true&connect_timeout=15&sslmode=require
+        - name: POSTGRES_URL_NON_POOLING
+          value: postgres://default:5j6AXbyCRpJN@ep-solitary-river-a4wjo1ro.us-east-1.aws.neon.tech/verceldb?sslmode=require
       image: ghcr.io/venuswhispers/mpc-node-0:latest
       name: mpc-node-1
       ports:
