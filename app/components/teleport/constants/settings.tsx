@@ -871,5 +871,8 @@ export const destinationNetworks: Network[] = [
 export const CONTRACTS = {
     11155111: {
         teleporter: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
+    },
+    7777: {
+        teleporter: "0xB2237fb7DBB19Ff09BBD64029064eC05B3C369Ac"
     }
 }
