@@ -78,7 +78,7 @@ kubectl exec -it mpc-node-0 -- /bin/bash
 kubectl exec -it mpc-node-1 -- /bin/bash
 ```
 ```
-kubectl exec -it mpc-node-1 -- /bin/bash
+kubectl exec -it mpc-node-2 -- /bin/bash
 ```
 # Run key generation command in each clustuer
 ```
