@@ -119,7 +119,23 @@ export const sourceNetworks: Network[] = [
                 destination_base_fee: 0.99,
                 is_native: false
             },
-
+            {
+                name: "DAI",
+                asset: "DAI",
+                logo: "https://cdn.lux.network/bridge/currencies/dai.png",
+                contract_address: "0x7390C3FA8576a0E9E7c788cc7955c3151c4c1612",
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: true,
+                max_withdrawal_amount: 3000,
+                deposit_fee: 12.79,
+                withdrawal_fee: 6.4,
+                source_base_fee: 0.99,
+                destination_base_fee: 0.99,
+                is_native: false
+            },
             {
                 name: "LRC",
                 asset: "LRC",
@@ -379,7 +395,6 @@ export const sourceNetworks: Network[] = [
         node: "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7",
         currencies: []
     },
-
 ]
 
 export const sourceNetworks_: Network[] = [
@@ -502,7 +517,23 @@ export const sourceNetworks_: Network[] = [
                 destination_base_fee: 0.99,
                 is_native: false
             },
-
+            {
+                name: "DAI",
+                asset: "DAI",
+                logo: "https://cdn.lux.network/bridge/currencies/dai.png",
+                contract_address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: true,
+                max_withdrawal_amount: 3000,
+                deposit_fee: 12.79,
+                withdrawal_fee: 6.4,
+                source_base_fee: 0.99,
+                destination_base_fee: 0.99,
+                is_native: false
+            },
             {
                 name: "LRC",
                 asset: "LRC",
