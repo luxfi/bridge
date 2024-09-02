@@ -11,14 +11,14 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Get dynamic id from URL
-  const { swap_id } = req.query;
+  const { swapId } = req.query;
   // Get version from query parameter
   const version = req.query.version;
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   if (req.method === "GET") {
     try {
-      const result = await handlerGetSwap(swap_id as string);
+      const result = await handlerGetSwap(swapId as string);
       res.status(200).json({ data: result });
     } catch (error) {
       res.status(500).json({ error: error.message });
