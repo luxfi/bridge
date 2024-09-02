@@ -11,3 +11,5 @@ export const ethPriceAtom = atom<number>(0);
 export const swapStatusAtom = atom<string>("");
 export const swapIdAtom = atom<string>("");
 export const bridgeTransferTransactionAtom = atom<string>("");
+export const bridgeMintTransactionAtom = atom<string>("");
+export const mpcSignatureAtom = atom<string>("");
