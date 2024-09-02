@@ -180,26 +180,21 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
                     'Content-Type': 'application/json',
                 }
             });
-            const data = await response.json();
+            const res = await response.json();
 
-            console.log({
-                amt_: sourceAmount,
-                hashedId_: Web3.utils.keccak256(bridgeTransferTransactionHash),
-                toTargetAddrStr_: destinationAddress,
-                signedTXInfo_: data.data.signature,
-                tokenAddrStr_: destinationAsset?.contract_address,
-                chainId_: sourceNetwork?.chain_id,
-                fromTokenDecimal_: sourceAsset?.decimals,
-                vault_: true
-            });
+            console.log("data from mpc oracle network:::", { res })
 
-            await axios.post(`/api/swaps/mpcsign/${swapId}`, {
-                txHash: data.data.signature,
-                amount: sourceAmount,
-                from: signer?._address,
-                to: CONTRACTS[String(sourceNetwork?.chain_id)].teleporter
-            });
-            setSwapStatus("user_withdraw_pending");
+            if (res.status) {
+                await axios.post(`/api/swaps/mpcsign/${swapId}`, {
+                    txHash: res.data.signature,
+                    amount: sourceAmount,
+                    from: signer?._address,
+                    to: CONTRACTS[String(sourceNetwork?.chain_id)].teleporter
+                });
+                setSwapStatus("user_withdraw_pending");
+            } else {
+                toast.error(`Failed to get signature from MPC oracle network, Please try again`);
+            }
         } catch (err) {
             console.log("mpc sign request failed:::", err)
         } finally {
@@ -207,7 +202,7 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
         }
     }
 
-    const withdrawToken = async () => {
+    const mintDestinationToken = async () => {
         const data = {
             amt_: sourceAmount,
             hashedId_: Web3.utils.keccak256(bridgeTransferTransactionHash),
@@ -283,7 +278,7 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
         if (swapStatus === "teleport_processing_pending") {
             getMpcSignature();
         } else if (swapStatus === "user_withdraw_pending") {
-            withdrawToken();
+            mintDestinationToken();
         }
     }, [swapStatus]);
 
@@ -505,7 +500,7 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={withdrawToken} className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated">
+                            <button onClick={mintDestinationToken} className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated">
                                 Withdraw Your {destinationAsset?.asset}
                             </button>
                         </div>
