@@ -1,5 +1,8 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const withMDX = require("@next/mdx")();
 const { PHASE_PRODUCTION_SERVER } = require("next/constants");
+const path = require("path")
 
 const securityHeaders = [
   // { key: "Access-Control-Allow-Origin", value: "*" },
@@ -46,8 +49,11 @@ module.exports = (phase, { defaultConfig }) => {
       removeConsole: false,
     },
     reactStrictMode: false,
-    webpack: (config) => {
+    webpack: (config, { isServer }) => {
       config.resolve.fallback = { fs: false, net: false, tls: false };
+      if (!isServer) {
+        config.resolve.alias['@'] = path.resolve(__dirname);
+      }
       return config;
     },
     productionBrowserSourceMaps: true,
