@@ -1101,7 +1101,7 @@ export const destinationNetworks: Network[] = [
         refuel_amount_in_usd: 1,
         transaction_explorer_template: "https://explore.lux.network/tx/{0}",
         account_explorer_template: "https://explore.lux.network/address/{0}",
-        node: "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7",
+        node: "https://api.lux.network",
         currencies: [
             {
                 name: "LUX",
