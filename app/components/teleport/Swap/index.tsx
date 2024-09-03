@@ -10,11 +10,11 @@ import { FC } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { Widget } from "../../Widget/Index";
 
-import FromNetworkForm from './From';
-import ToNetworkForm from './To';
-import SwapDetails from "./SwapDetails";
+import FromNetworkForm from '@/components/teleport/swap/from/index';
+import ToNetworkForm from './to';
+import SwapDetails from "@/components/teleport/swap/SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import { sourceNetworks, destinationNetworks } from "../constants/settings";
+import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
 import { useAtom } from "jotai";
 
 import {
@@ -30,7 +30,7 @@ import {
 } from '@/store/teleport'
 import SpinIcon from "@/components/icons/spinIcon";
 
-const Address = dynamic(() => import("../share/Address"), {
+const Address = dynamic(() => import("@/components/teleport/share/Address"), {
   loading: () => <></>,
 });
 
