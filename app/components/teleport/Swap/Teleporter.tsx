@@ -43,11 +43,11 @@ const Swap: FC = () => {
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
-  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
-  const [swapId, setSwapId] = useAtom(swapIdAtom);
+  const [, setSwapStatus] = useAtom(swapStatusAtom);
+  const [swapI, setSwapId] = useAtom(swapIdAtom);
+  const [, setEthPrice] = useAtom(ethPriceAtom);
 
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
-  const [, setEthPrice] = useAtom(ethPriceAtom);
 
   React.useEffect(() => {
     axios.get('/api/tokens/price/ETH').then(data => {
