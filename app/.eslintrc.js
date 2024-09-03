@@ -31,22 +31,27 @@ module.exports = {
         "react"
     ],
     "rules": {
-      "prefer-const": "off",
-      "no-var": "off",
-      "no-extra-semi": "off",
-      "no-useless-escape": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/ban-types": "off",
-      "react/display-name": "off",
-      "react/react-in-jsx-scope": "off",
-      "react/prop-types": "off",
-      "react/no-unknown-property": "off",
-      "react/jsx-no-target-blank": "off",
-      "react/no-unescaped-entities": "off",
-      "no-extra-boolean-cast": "off",
-      "no-case-declarations": "off",
-      "no-constant-condition": "off",
+        "prefer-const": "off",
+        "no-var": "off",
+        "no-extra-semi": "off",
+        "no-useless-escape": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/ban-types": "off",
+        "react/display-name": "off",
+        "react/react-in-jsx-scope": "off",
+        "react/prop-types": "off",
+        "react/no-unknown-property": "off",
+        "react/jsx-no-target-blank": "off",
+        "react/no-unescaped-entities": "off",
+        "no-extra-boolean-cast": "off",
+        "no-case-declarations": "off",
+        "no-constant-condition": "off",
+    },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
     }
 }
