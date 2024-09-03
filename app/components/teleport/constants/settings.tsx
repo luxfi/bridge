@@ -1124,7 +1124,7 @@ export const destinationNetworks: Network[] = [
                 name: "LETH",
                 asset: "LETH",
                 logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
-                contract_address: "0xD4A215472332e8B6E26B0a5DC253DB78119904cA",
+                contract_address: "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
