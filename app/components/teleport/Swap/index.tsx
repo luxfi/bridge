@@ -10,9 +10,9 @@ import { FC } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { Widget } from "../../Widget/Index";
 
-import FromNetworkForm from '@/components/teleport/swap/from/index';
+import FromNetworkForm from './from';
 import ToNetworkForm from './to';
-import SwapDetails from "@/components/teleport/swap/SwapDetails";
+import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
 import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
 import { useAtom } from "jotai";
