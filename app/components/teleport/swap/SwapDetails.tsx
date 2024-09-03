@@ -64,8 +64,8 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
     //token price
     const tokenPrice = sourceAsset?.asset === 'ETH' ? ethPrice : 1.0;
     //hooks
-    const signer = useEthersSigner({ chainId: sourceNetwork?.chain_id ?? 1 });
     const network = useNetwork();
+    const signer = useEthersSigner({ chainId: network?.chain?.id ?? 1 });
     const { switchNetworkAsync } = useSwitchNetwork();
     const { connectWallet } = useWallet();
 
@@ -153,7 +153,6 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
      * @returns 
      */
     const getMpcSignature = async () => {
-
         setIsMpcSigning(true);
         if (!signer) {
             // toast.error(`No connected wallet. Please connect your wallet`);
@@ -207,14 +206,13 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
             amt_: sourceAmount,
             hashedId_: Web3.utils.keccak256(bridgeTransferTransactionHash),
             toTargetAddrStr_: destinationAddress,
-            signedTXInfo_: mpcSignature,
+            signedTXInfo_: "0x919546714c44d522a638d66b4f2cdab74f1dd460b9b2099e9acc347219f1c8ef269215698aa410a8f0be9244179bd00acf7489353104409e67e869023b532dbc1c",
+            // signedTXInfo_: mpcSignature,
             tokenAddrStr_: destinationAsset?.contract_address,
             chainId_: sourceNetwork?.chain_id,
             fromTokenDecimal_: sourceAsset?.decimals,
             vault_: true
         }
-
-        console.log(data)
 
         if (!signer) {
             // toast.error(`No connected wallet. Please connect your wallet`);
@@ -226,19 +224,16 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
         }
         try {
             setIsTokenTransferring(true);
-            // if (network?.chain?.id !== destinationNetwork.chain_id) {
-            if (network?.chain?.id !== 11155111) {
+            if (network?.chain?.id !== destinationNetwork.chain_id) {
                 setBridgeTranferNotice(`Switching to ${sourceNetwork.display_name}...`);
-                await switchNetworkAsync(11155111)
-                // await switchNetworkAsync(destinationNetwork.chain_id)
+                await switchNetworkAsync(destinationNetwork.chain_id)
             }
             const _amount = parseUnits(String(sourceAmount), sourceAsset.decimals);
 
-
             setBridgeTranferNotice(`Minting ${destinationAsset.asset}...`);
+
             const bridgeContract = new Contract(
-                CONTRACTS[11155111].teleporter,
-                // CONTRACTS[destinationNetwork.chain_id].teleporter,
+                CONTRACTS[destinationNetwork.chain_id].teleporter,
                 teleporterABI,
                 signer,
             )
@@ -258,10 +253,16 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
                 txHash: _bridgeMintTx.hash,
                 amount: sourceAmount,
                 from: signer?._address,
-                to: CONTRACTS[sourceNetwork.chain_id].teleporter
+                to: CONTRACTS[Number(sourceNetwork?.chain_id)].teleporter
             });
             setBridgeMintTransactionHash(_bridgeMintTx.hash);
-            setSwapStatus("success");
+            await axios.post(`/api/swaps/pay/${swapId}`, {
+                txHash: _bridgeMintTx.hash,
+                amount: sourceAmount,
+                from: CONTRACTS[String(sourceNetwork?.chain_id)].teleporter,
+                to: destinationAddress
+            });
+            setSwapStatus("payout_success");
         } catch (err) {
             console.log(err)
             if (String(err).includes("user rejected transaction")) {
@@ -275,12 +276,13 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
     }
 
     React.useEffect(() => {
+        if (!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress) return
         if (swapStatus === "teleport_processing_pending") {
-            getMpcSignature();
+            // getMpcSignature();
         } else if (swapStatus === "user_withdraw_pending") {
-            mintDestinationToken();
+            // mintDestinationToken();
         }
-    }, [swapStatus]);
+    }, [swapStatus, sourceNetwork, destinationNetwork, sourceAsset, destinationAsset, destinationAddress]);
 
 
     const _renderSwapItems = () => (
@@ -439,7 +441,7 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
                                                 <path d="M48 48L68 69" stroke="white" strokeWidth="3.15789" strokeLinecap="round" />
                                             </svg>
                                             <div className='flex items-center gap-3 text-sm'>
-                                                <span>Failed to Connect</span> <a onClick={getMpcSignature} className='underline font-bold cursor-pointer hover:font-extrabold text-[#77aa63]'>Try Again</a>
+                                                <span>Failed to Connect</span> <a onClick={mintDestinationToken} className='underline font-bold cursor-pointer hover:font-extrabold text-[#77aa63]'>Try Again</a>
                                             </div>
                                         </div>
                                 }
@@ -463,7 +465,7 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
                                 <span className="animate-spin">
                                     <Gauge value={60} size="medium" />
                                 </span>
-                                <div className='mt-2'>Withdraw Your LETH</div>
+                                <div className='mt-2'>Get Your LETH</div>
                             </div>
                             <div className='flex flex-col gap-2 py-5'>
                                 <div className='flex gap-3 items-center'>
@@ -508,7 +510,7 @@ const SwapDetails: React.FC<IProps> = ({ className }) => {
                 </div>
             </div>
         )
-    } else if (swapStatus === 'success') {
+    } else if (swapStatus === 'payout_success') {
         return (
             <div className={`w-full flex flex-col ${className}`}>
                 <div className='space-y-5'>

@@ -19,7 +19,8 @@ import {
     swapStatusAtom,
     swapIdAtom,
     bridgeTransferTransactionAtom,
-    mpcSignatureAtom
+    mpcSignatureAtom,
+    bridgeMintTransactionAtom
 } from '@/store/teleport';
 import { useAtom } from "jotai";
 import { Network, Token } from "@/types/teleport";
@@ -45,6 +46,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     const [, setEthPrice] = useAtom(ethPriceAtom);
     const [, setSwapId] = useAtom(swapIdAtom);
     const [, setBridgeTransferTransactionHash] = useAtom(bridgeTransferTransactionAtom);
+    const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom);
     const [, setMpcSignature] = useAtom(mpcSignatureAtom);
 
     React.useEffect(() => {
@@ -73,6 +75,8 @@ const Form: React.FC<IProps> = ({ swapId }) => {
             setBridgeTransferTransactionHash(userTransferTransaction ?? "");
             const mpcSignTransaction = data?.transactions?.find((t: any) => t.status === "mpc_sign")?.transaction_hash;
             setMpcSignature(mpcSignTransaction ?? "");
+            const payoutTransaction = data?.transactions?.find((t: any) => t.status === "payout")?.transaction_hash;
+            setBridgeMintTransactionHash(payoutTransaction ?? "");
         } catch (err) {
             console.log(err);
         }
