@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// datasource db {
+//   provider  = "postgresql"
+//   url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+//   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+// }
+
+datasource db {
+  provider  = "sqlite"
+  url       = "file:dev.sqlite?socket_timeout=50000" // uses connection pooling
+  directUrl = "file:dev.sqlite?socket_timeout=50000" // uses a direct connection
+}
+
+// pnpx prisma generate
+// npx prisma db push 
+// npx prisma studio 
+// prisma migrate dev
+
+model Network {
+  id                            Int             @id @default(autoincrement())
+  display_name                  String?
+  internal_name                 String?         @unique
+  native_currency               String?
+  is_testnet                    Boolean?
+  is_featured                   Boolean?
+  logo                          String?
+  chain_id                      String?
+  type                          String?
+  average_completion_time       String?
+  transaction_explorer_template String?
+  account_explorer_template     String?
+  listing_date                  DateTime?
+  source_network                Swap[]          @relation("sourceNetwork")
+  destination_network           Swap[]          @relation("destinationNetwork")
+  currencies                    Currency[]
+  deposit_actions               DepositAction[]
+  transaction                   Transaction[]
+  nodes                         RpcNode[]
+}
+
+model Currency {
+  id                          Int             @id @default(autoincrement())
+  name                        String
+  asset                       String
+  logo                        String?
+  contract_address            String?
+  decimals                    Int?
+  price_in_usd                Float?
+  precision                   Int?
+  is_native                   Boolean?
+  listing_date                DateTime        @default(now())
+  deposit_action_currency     DepositAction[] @relation("DepositActionCurrency")
+  deposit_action_fee_currency DepositAction[] @relation("DepositActionFeeCurrency")
+  transaction                 Transaction[]
+  network_id                  Int
+  network                     Network         @relation(fields: [network_id], references: [id])
+  source_currency             Swap[]          @relation("sourceAsset")
+  destination_currency        Swap[]          @relation("destinationAsset")
+
+  @@index([network_id])
+  @@index([asset])
+}
+
+model DepositAction {
+  id                   Int      @id @default(autoincrement())
+  type                 String?  @default("transfer")
+  to_address           String?
+  amount               Float?
+  order_number         Int?
+  amount_in_base_units String?
+  network_id           Int
+  network              Network  @relation(fields: [network_id], references: [id])
+  currency_id          Int
+  currency             Currency @relation("DepositActionCurrency", fields: [currency_id], references: [id])
+  fee_currency_id      Int
+  fee_currency         Currency @relation("DepositActionFeeCurrency", fields: [fee_currency_id], references: [id])
+  call_data            String?
+  swap_id              String   @unique @map("swap_id")
+  swap                 Swap     @relation(fields: [swap_id], references: [id])
+
+  @@index([swap_id])
+}
+
+model Swap {
+  id                       String   @id @default(uuid())
+  created_date             DateTime @default(now())
+  source_network_id        Int
+  source_network           Network  @relation("sourceNetwork", fields: [source_network_id], references: [id])
+  source_exchange          String?
+  source_asset_id          Int
+  source_asset             Currency @relation("sourceAsset", fields: [source_asset_id], references: [id])
+  source_address           String
+  destination_network_id   Int
+  destination_network      Network  @relation("destinationNetwork", fields: [destination_network_id], references: [id])
+  destination_exchange     String?
+  destination_asset_id     Int
+  destination_asset        Currency @relation("destinationAsset", fields: [destination_asset_id], references: [id])
+  destination_address      String
+  refuel                   Boolean
+  use_deposit_address      Boolean
+  use_teleporter           Boolean? @default(false)
+  requested_amount         Float
+  status                   String
+  fail_reason              String?
+  metadata_sequence_number Int?
+
+  // current block_number from the chain
+  block_number Int
+
+  deposit_address_id Int?
+  deposit_address    DepositAddress? @relation(fields: [deposit_address_id], references: [id])
+
+  quotes          Quote?
+  deposit_actions DepositAction[]
+  transactions    Transaction[]
+
+  @@index([id])
+}
+
+model Transaction {
+  id                Int       @id @default(autoincrement())
+  from              String
+  to                String
+  created_date      DateTime  @default(now())
+  timestamp         DateTime  @default(now())
+  transaction_hash  String
+  confirmations     Int
+  max_confirmations Int
+  amount            Float
+  type              String
+  status            String
+  network_id        Int?
+  network           Network?  @relation(fields: [network_id], references: [id])
+  currency_id       Int?
+  currency          Currency? @relation(fields: [currency_id], references: [id])
+  swap_id           String?
+  swap              Swap?     @relation(fields: [swap_id], references: [id])
+
+  @@index([swap_id])
+  @@index([status])
+  @@index([transaction_hash])
+  @@index([currency_id])
+  @@index([network_id])
+}
+
+model Quote {
+  id                  Int    @id @default(autoincrement())
+  swap_id             String @unique @map("swap_id")
+  receive_amount      Float
+  min_receive_amount  Float
+  blockchain_fee      Float
+  service_fee         Float
+  avg_completion_time String
+  slippage            Float
+  total_fee           Float
+  total_fee_in_usd    Float
+  swap                Swap   @relation(fields: [swap_id], references: [id])
+}
+
+model DepositAddress {
+  id      Int    @id @default(autoincrement())
+  type    String
+  address String
+  Swap    Swap[]
+
+  @@index([type])
+  @@index([address])
+}
+
+model RpcNode {
+  id         Int     @id @default(autoincrement())
+  url        String
+  network_id Int
+  network    Network @relation(fields: [network_id], references: [id])
+}
