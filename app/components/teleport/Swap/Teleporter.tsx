@@ -10,8 +10,8 @@ import { FC } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { Widget } from "../../Widget/Index";
 
-import FromNetworkForm from './from/NetworkFormField';
-import ToNetworkForm from './to/NetworkFormField';
+import FromNetworkForm from '@/components/teleport/swap/from/NetworkFormField';
+import ToNetworkForm from '@/components/teleport/swap/to/NetworkFormField';
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
 import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
