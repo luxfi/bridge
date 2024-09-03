@@ -7,7 +7,7 @@ import { TimerProvider } from '@/context/timerContext';
 import { getThemeData } from '@/helpers/settingsHelper';
 import SwapWithdrawal from '@/components/SwapWithdrawal';
 
-import SwapProcess from '@/components/Teleport/process'
+import SwapProcess from '@/components/teleport/process'
 
 const SwapDetails = ({ settings, themeData, swapId }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
 

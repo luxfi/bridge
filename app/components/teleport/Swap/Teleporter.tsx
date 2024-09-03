@@ -7,16 +7,14 @@ import Modal from "@/components/modal/modal";
 import ResizablePanel from "@/components/ResizablePanel";
 import shortenAddress from "../../utils/ShortenAddress";
 import { FC } from "react";
-import { SwapFormValues } from "../../DTOs/SwapFormValues";
-import { Partner } from "../../../Models/Partner";
-import { ArrowLeftRight, ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 import { Widget } from "../../Widget/Index";
 
-import FromNetworkForm from './From';
-import ToNetworkForm from './To';
+import FromNetworkForm from './from/NetworkFormField';
+import ToNetworkForm from './to/NetworkFormField';
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import { sourceNetworks, destinationNetworks } from "../constants/settings";
+import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
 import { useAtom } from "jotai";
 
 import {
@@ -32,7 +30,7 @@ import {
 } from '@/store/teleport'
 import SpinIcon from "@/components/icons/spinIcon";
 
-const Address = dynamic(() => import("../share/Address"), {
+const Address = dynamic(() => import("@/components/teleport/share/Address"), {
   loading: () => <></>,
 });
 
@@ -45,11 +43,11 @@ const Swap: FC = () => {
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
-  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
-  const [swapId, setSwapId] = useAtom(swapIdAtom);
+  const [, setSwapStatus] = useAtom(swapStatusAtom);
+  const [swapI, setSwapId] = useAtom(swapIdAtom);
+  const [, setEthPrice] = useAtom(ethPriceAtom);
 
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
-  const [, setEthPrice] = useAtom(ethPriceAtom);
 
   React.useEffect(() => {
     axios.get('/api/tokens/price/ETH').then(data => {
@@ -223,21 +221,6 @@ const Swap: FC = () => {
     </Widget>
   );
 };
-
-function ActionText(
-  errors: FormikErrors<SwapFormValues>,
-  actionDisplayName: string
-): string {
-  return (
-    errors.from?.toString() ||
-    errors.fromCurrency?.toString() ||
-    errors.to?.toString() ||
-    errors.toCurrency?.toString() ||
-    errors.amount ||
-    errors.destination_address ||
-    actionDisplayName
-  );
-}
 
 const TruncatedAdrress = ({ address }: { address: string }) => {
   const shortAddress = shortenAddress(address);
