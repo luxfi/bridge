@@ -8,8 +8,7 @@ import ResizablePanel from "@/components/ResizablePanel";
 import shortenAddress from "../../utils/ShortenAddress";
 import { FC } from "react";
 import { SwapFormValues } from "../../DTOs/SwapFormValues";
-import { Partner } from "../../../Models/Partner";
-import { ArrowLeftRight, ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 import { Widget } from "../../Widget/Index";
 
 import FromNetworkForm from './From';
@@ -223,21 +222,6 @@ const Swap: FC = () => {
     </Widget>
   );
 };
-
-function ActionText(
-  errors: FormikErrors<SwapFormValues>,
-  actionDisplayName: string
-): string {
-  return (
-    errors.from?.toString() ||
-    errors.fromCurrency?.toString() ||
-    errors.to?.toString() ||
-    errors.toCurrency?.toString() ||
-    errors.amount ||
-    errors.destination_address ||
-    actionDisplayName
-  );
-}
 
 const TruncatedAdrress = ({ address }: { address: string }) => {
   const shortAddress = shortenAddress(address);
