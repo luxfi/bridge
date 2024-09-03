@@ -56,7 +56,7 @@ export const settings = {
 
 export const swapMappings: Record<string, string[] | undefined> = {
   // LETH swap available tokens (native ETH or wrapped ETH)
-  "0xa684c5721e54B871111CE1F1E206d669a7e7F0a5": ["ETH", "WETH"],
+  "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be": ["ETH", "WETH"],
   // LUSD swap available tokens (stable coins)
-  "0xa684c5721e54B871111CE1F1E206d669a7e7F0a6": ["USDT", "USDC", "DAI", "BUSD", "TUSD", "USDP", "HUSD", "SUSD", "USDN"]
+  "0xc16ECFE3cB80e142d7110b97a442d4caAA203ABf": ["USDT", "USDC", "DAI", "BUSD", "TUSD", "USDP", "HUSD", "SUSD", "USDN"]
 }
