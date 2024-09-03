@@ -3,10 +3,10 @@ import React from "react";
 import Modal from "../modal/modal";
 import ResizablePanel from "../ResizablePanel";
 import axios from "axios";
-import SwapDetails from "./Swap/SwapDetails";
+import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from '@/components/ConnectNetwork';
 import { Widget } from "@/components/Widget/Index";
-import { sourceNetworks, destinationNetworks } from "./constants/settings";
+import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
 
 import {
     sourceNetworkAtom,

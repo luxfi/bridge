@@ -2,9 +2,9 @@
 
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import AmountField from "../AmountField";
-import NetworkSelectWrapper from "./NetworkSelectWrapper";
-import TokenSelectWrapper from "./TokenSelectWrapper";
+import AmountField from "@/components/teleport/swap/AmountField";
+import NetworkSelectWrapper from "@/components/teleport/swap/to/NetworkSelectWrapper";
+import TokenSelectWrapper from "@/components/teleport/swap/to/TokenSelectWrapper";
 
 import { Network, Token } from "@/types/teleport";
 import { useAtom } from "jotai";

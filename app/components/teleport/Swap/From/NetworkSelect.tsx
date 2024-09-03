@@ -12,7 +12,7 @@ import Modal from '@/components/modal/modal';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import SpinIcon from '@/components/icons/spinIcon';
 import { Network, Token } from '@/types/teleport';
-import SelectItem from './SelectItem';
+import SelectItem from '@/components/teleport/swap/from/SelectItem';
 
 interface IProps {
     show: boolean;

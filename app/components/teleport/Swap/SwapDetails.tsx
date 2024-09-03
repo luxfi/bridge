@@ -23,7 +23,7 @@ import {
 import { truncateDecimals } from '@/components/utils/RoundDecimals';
 import { ArrowRight, Router } from 'lucide-react';
 import { Contract } from 'ethers';
-import { CONTRACTS } from '../constants/settings';
+import { CONTRACTS } from '@/components/teleport/constants/settings';
 
 import teleporterABI from '../constants/abi/bridge.json'
 import erc20ABI from '../constants/abi/erc20.json'
