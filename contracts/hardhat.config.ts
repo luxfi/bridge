@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
         network: "lux",
         chainId: 7777,
         urls: {
-          apiURL: "https://api.lux.network",
+          apiURL: "https://api.explore.lux.network/api",
           browserURL: "https://explore.lux.network"
         }
       }

@@ -13,8 +13,7 @@
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "analyze": "cross-env ANALYZE=true next build",
-    "lint": "next lint",
-    "postinstall": "prisma generate && prisma migrate deploy"
+    "lint": "next lint"
   },
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
