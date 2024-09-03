@@ -33,7 +33,7 @@ const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAs
                     <div className="w-full">
                         <NetworkSelectWrapper
                             disabled={false}
-                            placeholder={'To'}
+                            placeholder={'Destination'}
                             setNetwork={setNetwork}
                             network={network}
                             networks={networks}
