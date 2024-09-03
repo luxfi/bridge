@@ -144,7 +144,7 @@ const Swap: FC = () => {
             />
           </div>
 
-          <div className="py-3 px-4">
+          <div className="py-4 px-4">
             Fee: {0}
           </div>
 
@@ -197,7 +197,7 @@ const Swap: FC = () => {
 
         <button
           onClick={handleSwap} disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset || !destinationAddress || !sourceAmount || Number(sourceAmount) <= 0 || isSubmitting}
-          className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
         >
           {
             isSubmitting ?
