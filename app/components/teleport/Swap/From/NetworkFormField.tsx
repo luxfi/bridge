@@ -1,7 +1,7 @@
 
 
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import AmountField from "../AmountField";
 import NetworkSelectWrapper from "./NetworkSelectWrapper";
 
@@ -59,7 +59,5 @@ const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, setNetwo
         </div>
     );
 };
-
-
 
 export default NetworkFormField;
