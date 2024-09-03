@@ -7,7 +7,7 @@ import Swap from '@/components/swapComponent'
 // import Teleporter from '../components/Teleport/Swap/index'
 import { getServerSideProps } from '@/helpers/getSettings'
 
-const Teleporter = dynamic(() => import('@/components/Teleport/Swap/index'));
+const Teleporter = dynamic(() => import('../components/Teleport/Swap'));
 
 export default function Home({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
