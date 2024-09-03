@@ -7,7 +7,6 @@ import Modal from "@/components/modal/modal";
 import ResizablePanel from "@/components/ResizablePanel";
 import shortenAddress from "../../utils/ShortenAddress";
 import { FC } from "react";
-import { SwapFormValues } from "../../DTOs/SwapFormValues";
 import { ArrowLeftRight } from "lucide-react";
 import { Widget } from "../../Widget/Index";
 
