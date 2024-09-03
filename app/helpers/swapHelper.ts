@@ -320,6 +320,66 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
     }
 }
 
+export async function handlerUpdatePayoutAction(id: string, txHash: string, amount: number, from: string, to: string) {
+    try {
+        const transaction = await prisma.transaction.create({
+            data: {
+                status: "payout",
+                type: TransactionType.Input,
+                from: from,
+                to: to,
+                transaction_hash: txHash,
+                confirmations: 2,
+                max_confirmations: 2,
+                amount: amount,
+                swap: {
+                    connect: {
+                        id: id,
+                    },
+                },
+            },
+        });
+        await prisma.swap.update({
+            where: { id },
+            data: {
+                status: "payout_success",
+                transactions: {
+                    connect: {
+                        id: transaction.id, // Connect the new transaction to the swap
+                    },
+                },
+            },
+        });
+        const swap = await prisma.swap.findUnique({
+            where: { id },
+            include: {
+                source_network: true,
+                source_asset: true,
+                destination_network: true,
+                destination_asset: true,
+                deposit_actions: true,
+                quotes: true,
+                deposit_address: true,
+                transactions: {
+                    include: {
+                        currency: true,
+                        network: {
+                            include: { currencies: false },
+                        },
+                    },
+                },
+            },
+        });
+        return {
+            ...swap,
+        };
+    } catch (error) {
+        console.log(error)
+        catchPrismaKnowError(error);
+        throw new Error(`Error getting swap: ${error.message}`);
+    }
+}
+
 export async function handlerUpdateMpcSignAction(id: string, txHash: string, amount: number, from: string, to: string) {
     try {
         const transaction = await prisma.transaction.create({
