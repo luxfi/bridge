@@ -54,11 +54,12 @@ export async function handleSwapCreation(data: SwapData) {
     } = data;
 
     // current block number
-    const block_number = await getCurrentBlockNumber(source_network).catch(err => {
-        throw new Error(
-            `Error fetching block number for chain ${source_network}`
-        );
-    });
+    // const block_number = await getCurrentBlockNumber(source_network).catch(err => {
+    //     throw new Error(
+    //         `Error fetching block number for chain ${source_network}`
+    //     );
+    // });
+    const block_number = 0;
     // get available deposit address
     const deposit_address_id = !use_teleporter ? await getAvailableDepositAddress(source_network, source_asset) : undefined;
 
