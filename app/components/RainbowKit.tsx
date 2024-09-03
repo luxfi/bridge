@@ -46,11 +46,53 @@ const RainbowKitComponent: React.FC<PropsWithChildren> = ({ children }) => {
       && net.nodes?.some(n => n.url?.length > 0))
     .map(resolveChain).filter(isChain)
 
+  const lux = {
+    "id": 7777,
+    "network": "homestead",
+    "name": "Lux",
+    "nativeCurrency": {
+      "name": "LUX",
+      "symbol": "LUX",
+      "decimals": 18
+    },
+    "rpcUrls": {
+      "default": {
+        "http": [
+          "https://api.lux.network"
+        ]
+      },
+      "public": {
+        "http": [
+          "https://api.lux.network"
+        ]
+      }
+    },
+    "blockExplorers": {
+      "etherscan": {
+        "name": "Lux Explorer",
+        "url": "https://explore.lux.network"
+      },
+      "default": {
+        "name": "Etherscan",
+        "url": "https://explore.lux.network"
+      }
+    },
+    "contracts": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 14353601
+      }
+    }
+  } as Chain
+
   const { chains, publicClient } = configureChains(
     // [mainnet],
-    settingsChains?.length > 0 ? [...settingsChains, sepolia] : [mainnet],
+    // settingsChains?.length > 0 ? [...settingsChains, sepolia] : [mainnet],
+    [mainnet, sepolia, lux],
     [publicProvider()]
   )
+
+  console.log({ mainnet })
 
   const connectors = connectorsForWallets([
     {
