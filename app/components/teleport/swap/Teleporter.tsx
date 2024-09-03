@@ -58,7 +58,7 @@ const Swap: FC = () => {
   React.useEffect(() => {
     if (sourceNetwork) {
       setSourceAsset(sourceNetwork.currencies[0]);
-      setDestinationNetwork(destinationNetworks[0]);
+      setDestinationNetwork(destinationNetworks[1]);
     }
   }, [sourceNetwork]);
 
