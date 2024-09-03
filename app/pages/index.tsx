@@ -9,7 +9,7 @@ import { classNames } from '@/components/utils/classNames';
 import ToggleButton from '@/components/buttons/toggleButton';
 
 export default function Home({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [checked, setChecked] = React.useState<boolean>(false);
+  const [checked, setChecked] = React.useState<boolean>(true);
   return (
     <Layout settings={settings} themeData={themeData}>
       <div className='flex items-center gap-2 pb-3'>
