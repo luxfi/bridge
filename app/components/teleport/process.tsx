@@ -36,12 +36,12 @@ interface IProps {
 
 const Form: React.FC<IProps> = ({ swapId }) => {
 
-    const [, setSourceNetwork] = useAtom(sourceNetworkAtom);
-    const [, setSourceAsset] = useAtom(sourceAssetAtom);
-    const [, setDestinationNetwork] = useAtom(destinationNetworkAtom);
-    const [, setDestinationAsset] = useAtom(destinationAssetAtom);
-    const [, setDestinationAddress] = useAtom(destinationAddressAtom);
-    const [, setSourceAmount] = useAtom(sourceAmountAtom);
+    const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
+    const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
+    const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom);
+    const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
+    const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
+    const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
     const [, setSwapStatus] = useAtom(swapStatusAtom);
     const [, setEthPrice] = useAtom(ethPriceAtom);
     const [, setSwapId] = useAtom(swapIdAtom);
@@ -87,8 +87,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     }, [swapId])
 
     const [showConnectNetworkModal, setShowConnectNetworkModal] = React.useState<boolean>(false);
-    const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
-    const [networkToConnect, setNetworkToConnect] = React.useState<NetworkToConnect>();
+    const [networkToConnect] = React.useState<NetworkToConnect>();
 
     return <>
         <Modal
@@ -103,7 +102,27 @@ const Form: React.FC<IProps> = ({ swapId }) => {
         <Widget className="sm:min-h-[504px]">
             <Widget.Content>
                 <ResizablePanel>
-                    <SwapDetails className="min-h-[450px] justify-center" />
+                    {
+                        sourceNetwork && sourceAsset && sourceAmount && destinationNetwork && destinationAsset && destinationAddress ?
+                            <SwapDetails
+                                className="min-h-[450px] justify-center"
+                                sourceNetwork={sourceNetwork}
+                                sourceAsset={sourceAsset}
+                                destinationNetwork={destinationNetwork}
+                                destinationAsset={destinationAsset}
+                                destinationAddress={destinationAddress}
+                                sourceAmount={sourceAmount}
+                            /> :
+                            <div className="w-full h-[430px]">
+                                <div className="animate-pulse flex space-x-4">
+                                    <div className="flex-1 space-y-6 py-1">
+                                        <div className="h-32 bg-level-1 rounded-lg"></div>
+                                        <div className="h-40 bg-level-1 rounded-lg"></div>
+                                        <div className="h-12 bg-level-1 rounded-lg"></div>
+                                    </div>
+                                </div>
+                            </div>
+                    }
                 </ResizablePanel>
             </Widget.Content>
         </Widget>
