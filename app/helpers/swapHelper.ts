@@ -325,7 +325,7 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
         const transaction = await prisma.transaction.create({
             data: {
                 status: "payout",
-                type: TransactionType.Input,
+                type: TransactionType.Output,
                 from: from,
                 to: to,
                 transaction_hash: txHash,
@@ -402,7 +402,7 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
         await prisma.swap.update({
             where: { id },
             data: {
-                status: "user_withdraw_pending",
+                status: "user_payout_pending",
                 transactions: {
                     connect: {
                         id: transaction.id, // Connect the new transaction to the swap
