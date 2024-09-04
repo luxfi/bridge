@@ -2,7 +2,6 @@ import React from 'react';
 import toast from "react-hot-toast"
 import Web3 from "web3";
 import {
-    ethPriceAtom,
     swapStatusAtom,
     bridgeTransferTransactionAtom,
     mpcSignatureAtom,
@@ -54,7 +53,7 @@ const PayoutProcessor: React.FC<IProps> = ({
     //state
     const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false);
     //atoms
-    const [bridgeMintTransactionHash, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
+    const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
     const [bridgeTransferTransactionHash, setBridgeTransferTransactionHash] = useAtom(bridgeTransferTransactionAtom);
     const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
     const [mpcSignature] = useAtom(mpcSignatureAtom);
@@ -212,6 +211,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                     </div>
                 </div>
             </div>
+
         </div>
     )
 

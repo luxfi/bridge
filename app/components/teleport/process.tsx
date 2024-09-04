@@ -104,15 +104,16 @@ const Form: React.FC<IProps> = ({ swapId }) => {
                 <ResizablePanel>
                     {
                         sourceNetwork && sourceAsset && sourceAmount && destinationNetwork && destinationAsset && destinationAddress ?
-                            <SwapDetails
-                                className="min-h-[450px] justify-center"
-                                sourceNetwork={sourceNetwork}
-                                sourceAsset={sourceAsset}
-                                destinationNetwork={destinationNetwork}
-                                destinationAsset={destinationAsset}
-                                destinationAddress={destinationAddress}
-                                sourceAmount={sourceAmount}
-                            /> :
+                            <div className="min-h-[450px] justify-center items-center flex">
+                                <SwapDetails
+                                    sourceNetwork={sourceNetwork}
+                                    sourceAsset={sourceAsset}
+                                    destinationNetwork={destinationNetwork}
+                                    destinationAsset={destinationAsset}
+                                    destinationAddress={destinationAddress}
+                                    sourceAmount={sourceAmount}
+                                />
+                            </div> :
                             <div className="w-full h-[430px]">
                                 <div className="animate-pulse flex space-x-4">
                                     <div className="flex-1 space-y-6 py-1">

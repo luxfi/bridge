@@ -2,11 +2,10 @@
 import Layout from '../components/layout'
 import React from 'react';
 import Swap from '@/components/swapComponent'
-import Teleporter from '@/components/teleport/swap/Teleporter'
+import Teleporter from '@/components/teleport/swap/Teleporter';
+import ToggleButton from '@/components/buttons/toggleButton';
 import { InferGetServerSidePropsType } from 'next'
 import { getServerSideProps } from '@/helpers/getSettings'
-import { classNames } from '@/components/utils/classNames';
-import ToggleButton from '@/components/buttons/toggleButton';
 
 export default function Home({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [checked, setChecked] = React.useState<boolean>(true);

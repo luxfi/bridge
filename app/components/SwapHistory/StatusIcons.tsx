@@ -32,6 +32,15 @@ export default function StatusIcon({
           </div>
         </>
       );
+    case SwapStatus.PayoutSuccess:
+      return (
+        <>
+          <div className="inline-flex items-center space-x-1">
+            <GreenIcon />
+            {!short && <p>Completed</p>}
+          </div>
+        </>
+      );
     case SwapStatus.Cancelled:
       return (
         <>
@@ -78,6 +87,24 @@ export default function StatusIcon({
         );
       }
     case SwapStatus.BridgeTransferPending:
+      return (
+        <>
+          <div className="inline-flex items-center space-x-1">
+            <PurpleIcon />
+            {!short && <p>Processing</p>}
+          </div>
+        </>
+      );
+    case SwapStatus.TeleportProcessPending:
+      return (
+        <>
+          <div className="inline-flex items-center space-x-1">
+            <PurpleIcon />
+            {!short && <p>Processing</p>}
+          </div>
+        </>
+      );
+    case SwapStatus.UserPayoutPending:
       return (
         <>
           <div className="inline-flex items-center space-x-1">
