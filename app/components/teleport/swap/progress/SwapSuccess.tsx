@@ -4,7 +4,6 @@ import {
     bridgeMintTransactionAtom
 } from '@/store/teleport'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
-
 //hooks
 import SwapItems from './SwapItems';
 import shortenAddress from '@/components/utils/ShortenAddress';
@@ -23,7 +22,7 @@ interface IProps {
     swapId: string
 }
 
-const PayoutProcessor: React.FC<IProps> = ({
+const SwapSuccess: React.FC<IProps> = ({
     sourceNetwork,
     sourceAsset,
     destinationNetwork,
@@ -54,7 +53,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                             <div className='mt-5'>
                                 <SuccessIcon />
                             </div>
-                            <div className='!-mt-2'><span className=' text-[#7e8350] font-bold text-lg'>ETH -&gt; USD</span> Swap Success</div>
+                            <div className='!-mt-2'><span className=' text-[#7e8350] font-bold text-lg'>{sourceAsset.asset} -&gt; {destinationAsset.asset}</span> Swap Success</div>
                         </div>
                         <div className='flex py-5'>
                             <div className='flex gap-3 items-center'>
@@ -102,4 +101,4 @@ const PayoutProcessor: React.FC<IProps> = ({
 
 }
 
-export default PayoutProcessor;
+export default SwapSuccess;

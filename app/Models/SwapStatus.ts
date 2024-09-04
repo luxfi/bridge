@@ -7,6 +7,9 @@ export enum SwapStatus {
   Failed = "failed",
   Expired = "expired",
   Cancelled = "cancelled",
+  TeleportProcessPending = "teleport_processing_pending",
+  UserPayoutPending = "user_payout_pending",
+  PayoutSuccess = "payout_success"
 }
 export const statusMapping: { [key: number]: SwapStatus } = {
   "0": SwapStatus.Created,
