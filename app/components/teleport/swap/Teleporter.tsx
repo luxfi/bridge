@@ -214,7 +214,27 @@ const Swap: FC = () => {
           onClose={() => setShowSwapModal(false)}
         >
           <ResizablePanel>
-            <SwapDetails />
+            {
+              sourceNetwork && sourceAsset && sourceAmount && destinationNetwork && destinationAsset && destinationAddress ?
+                <SwapDetails
+                  className="min-h-[450px] justify-center"
+                  sourceNetwork={sourceNetwork}
+                  sourceAsset={sourceAsset}
+                  destinationNetwork={destinationNetwork}
+                  destinationAsset={destinationAsset}
+                  destinationAddress={destinationAddress}
+                  sourceAmount={sourceAmount}
+                /> :
+                <div className="w-full h-[430px]">
+                  <div className="animate-pulse flex space-x-4">
+                    <div className="flex-1 space-y-6 py-1">
+                      <div className="h-32 bg-level-1 rounded-lg"></div>
+                      <div className="h-40 bg-level-1 rounded-lg"></div>
+                      <div className="h-12 bg-level-1 rounded-lg"></div>
+                    </div>
+                  </div>
+                </div>
+            }
           </ResizablePanel>
         </Modal>
       </Widget.Content>

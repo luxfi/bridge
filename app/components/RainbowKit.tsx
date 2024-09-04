@@ -87,8 +87,8 @@ const RainbowKitComponent: React.FC<PropsWithChildren> = ({ children }) => {
 
   const { chains, publicClient } = configureChains(
     // [mainnet],
-    // settingsChains?.length > 0 ? [...settingsChains, sepolia] : [mainnet],
-    [mainnet, sepolia, lux],
+    settingsChains?.length > 0 ? [...settingsChains, sepolia] : [mainnet],
+    // [mainnet, sepolia, lux],
     [publicProvider()]
   )
 
