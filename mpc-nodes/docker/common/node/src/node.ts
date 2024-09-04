@@ -144,7 +144,7 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
   if (!fromNetId) {
     const output = {
       status: false,
-      msg: "NullFromNetIDError: No from netId sent."
+      msg: "NullFromNetIDError: No fromNetId sent."
     }
     res.json(output)
     return
@@ -154,7 +154,7 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
   if (!toNetIdHash) {
     const output = {
       status: false,
-      msg: "NullToNetIDHashError: No to netId sent."
+      msg: "NullToNetIDHashError: No toNetIdHash sent."
     }
     res.json(output)
     return
@@ -164,7 +164,7 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
   if (!tokenName) {
     const output = {
       status: false,
-      msg: "NullTokenNameError: No token name sent."
+      msg: "NullTokenNameError: No tokenName sent."
     }
     res.json(output)
     return
@@ -307,7 +307,7 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
       console.log("*** Possible front run attempt, message signer not transaction sender ***")
       const output = {
         status: false,
-        msg: "NullToNetIDHashError: No to netId sent."
+        msg: "InvalidSenderError: Invalid Token Sender."
       }
       res.json(output)
       return
