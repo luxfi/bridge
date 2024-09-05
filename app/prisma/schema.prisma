@@ -12,6 +12,7 @@ datasource db {
   url       = "postgresql://lux:MNin08xAQ^.CT|<&@35.234.129.214:5432/bridge?sslmode=require&sslcert=/tmp/client-cert.pem&sslkey=/tmp/client-key.pem&sslrootcert=/tmp/server-ca.pem" // uses connection pooling
   directUrl = "postgresql://lux:MNin08xAQ^.CT|<&@35.234.129.214:5432/bridge?sslmode=require&sslcert=/tmp/client-cert.pem&sslkey=/tmp/client-key.pem&sslrootcert=/tmp/server-ca.pem" // uses a direct connection
 }
+
 //datasource db {
 //  provider  = "postgresql"
 //  url       = env("POSTGRESQL_URL") // uses connection pooling
