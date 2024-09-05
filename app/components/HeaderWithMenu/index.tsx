@@ -8,13 +8,16 @@ import ChatIcon from "../icons/ChatIcon"
 import dynamic from "next/dynamic"
 import BridgeMenu from "../BridgeMenu"
 import { Button } from "@luxdefi/ui/primitives"
+import ToggleButton from "../buttons/toggleButton"
+import { useAtom } from "jotai"
+import { useTelepoterAtom } from "@/store/teleport"
 
 const WalletsHeader = dynamic(() => import("../ConnectedWallets").then((comp) => (comp.WalletsHeader)), {
   loading: () => <></>
 })
 
 function HeaderWithMenu({ goBack }: { goBack: (() => void) | undefined | null }) {
-
+  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom);
   const { email, userId } = useAuthState()
   const { boot, show, update } = useIntercom()
   const updateWithProps = () => { update({ email: email, userId: userId }) }
@@ -36,21 +39,31 @@ function HeaderWithMenu({ goBack }: { goBack: (() => void) | undefined | null })
   )
 
   return (
-    <div className="w-full grid grid-cols-5 px-6 mt-3" >
-      {goBack && (
-        <IconButton
-          onClick={goBack}
-          aria-label="Go back"
-          icon={<ArrowLeft strokeWidth="3" />}
-        />
-      )}
+    <div className="w-full grid grid-cols-5 px-6 mt-3 items-center justify-center" >
+      {
+        goBack ?
+          <IconButton
+            onClick={goBack}
+            aria-label="Go back"
+            icon={<ArrowLeft strokeWidth="3" />}
+          />
+          : <div className='flex items-center gap-2'>
+            <ToggleButton
+              value={useTeleporter}
+              onChange={(value: boolean) => setUseTeleporter(value)}
+              name="Teleport"
+            />
+            Teleport
+          </div>
+      }
+
       <div className='justify-self-center self-center col-start-2 col-span-3 mx-auto overflow-hidden md:hidden'>
         <GoHomeButton />
       </div>
 
       <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
         <WalletsHeader />
-        <ChatButton />
+        {/* <ChatButton /> */}
         <BridgeMenu />
       </div>
     </div>
