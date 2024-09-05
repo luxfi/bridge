@@ -4,9 +4,8 @@ import Web3 from "web3";
 import {
     ethPriceAtom,
     swapStatusAtom,
-    bridgeTransferTransactionAtom,
-    mpcSignatureAtom,
-    bridgeMintTransactionAtom
+    userTransferTransactionAtom,
+    mpcSignatureAtom
 } from '@/store/teleport'
 import { CONTRACTS } from '@/components/teleport/constants/settings';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
@@ -49,7 +48,7 @@ const TeleportProcessor: React.FC<IProps> = ({
     //state
     const [isMpcSigning, setIsMpcSigning] = React.useState<boolean>(false);
     //atoms
-    const [bridgeTransferTransactionHash, setBridgeTransferTransactionHash] = useAtom(bridgeTransferTransactionAtom);
+    const [userTransferTransaction] = useAtom(userTransferTransactionAtom);
     const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
     const [, setMpcSignature] = useAtom(mpcSignatureAtom);
     //hooks
@@ -85,7 +84,7 @@ const TeleportProcessor: React.FC<IProps> = ({
 
             const url =
                 `/api/teleport/getsig?` +
-                `txid=${bridgeTransferTransactionHash}&` +
+                `txid=${userTransferTransaction}&` +
                 `fromNetId=${sourceNetwork?.chain_id}&` +
                 `toNetIdHash=${toNetIdHash}&` +
                 `tokenName=${sourceAsset?.asset}&` +
@@ -166,12 +165,12 @@ const TeleportProcessor: React.FC<IProps> = ({
                                 <div className='flex flex-col items-center text-sm'>
                                     <span>{sourceAsset?.asset} transferred</span>
                                     <div className='underline flex gap-2 items-center'>
-                                        {shortenAddress(bridgeTransferTransactionHash)}
+                                        {shortenAddress(userTransferTransaction)}
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <a
                                                     target={"_blank"}
-                                                    href={sourceNetwork?.transaction_explorer_template?.replace("{0}", bridgeTransferTransactionHash)}
+                                                    href={sourceNetwork?.transaction_explorer_template?.replace("{0}", userTransferTransaction)}
                                                     className='cursor-pointer'
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-square-arrow-out-up-right"><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" /><path d="m21 3-9 9" /><path d="M15 3h6v6" /></svg>

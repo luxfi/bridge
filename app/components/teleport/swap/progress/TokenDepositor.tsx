@@ -1,7 +1,8 @@
 import React from 'react';
 import toast from "react-hot-toast"
 import {
-    swapStatusAtom
+    swapStatusAtom,
+    userTransferTransactionAtom
 } from '@/store/teleport'
 import { ArrowRight, Router } from 'lucide-react';
 import { Contract } from 'ethers';
@@ -49,6 +50,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
     const [userDepositNotice, setUserDepositNotice] = React.useState<string>("");
     //atoms
     const [, setSwapStatus] = useAtom(swapStatusAtom);
+    const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom);
     //hooks
     const { chain } = useNetwork();
     const signer = useEthersSigner();
@@ -125,7 +127,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
                 from: signer?._address,
                 to: CONTRACTS[sourceNetwork.chain_id].teleporter
             });
-            setUserDepositNotice(_bridgeTransferTx.hash);
+            setUserTransferTransaction(_bridgeTransferTx.hash);
             setSwapStatus("teleport_processing_pending");
         } catch (err) {
             console.log(err)
