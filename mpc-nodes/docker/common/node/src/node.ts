@@ -35,8 +35,6 @@ const rpcList = settings.RPC
 const networkName = settings.NetNames
 /* DECIMAL LIST */
 const DECIMALS = settings.DECIMALS
-/* Signature Re-signing flag */
-const newSigAllowed = settings.NewSigAllowed
 /* Signing MSG */
 const msg = settings.Msg //signing msg used in front running prevention
 /* Dupelist - a graylist for slowing flood attack */
