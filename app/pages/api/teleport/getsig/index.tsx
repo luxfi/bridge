@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { NextApiRequest, NextApiResponse } from "next";
 const mpc_nodes = [

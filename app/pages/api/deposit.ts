@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 
 import Joi from "joi";
@@ -16,8 +15,6 @@ export interface SwapTransactionRequest {
   refuel: boolean;
   use_deposit_address: boolean;
 }
-
-const prisma = new PrismaClient();
 
 const swapTransactionSchema = Joi.object({
   amount: Joi.number().required(),
