@@ -96,6 +96,16 @@ app.get("/", async (req: express.Request, res: express.Response) => {
   res.send(`>>> node_${process.env.node_number} is running at: ${port}`)
 })
 
+app.get("/dbcheck", async (req: express.Request, res: express.Response) => {
+  try {
+    const transactions = await prisma.teleporter.findMany()
+    res.status(200).json(transactions)
+  } catch (err) {
+    console.log("Failed to save tx to db")
+    res.status(500).json(err)
+  }
+})
+
 /*
  * Given parameters associated with the token burn, we validate and produce a signature entitling user to payout.
  * Parameters specific to where funds are being moved / minted to, are hashed, such that only the user has knowledge of
