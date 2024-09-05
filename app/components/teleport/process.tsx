@@ -18,9 +18,9 @@ import {
     ethPriceAtom,
     swapStatusAtom,
     swapIdAtom,
-    bridgeTransferTransactionAtom,
     mpcSignatureAtom,
-    bridgeMintTransactionAtom
+    bridgeMintTransactionAtom,
+    userTransferTransactionAtom
 } from '@/store/teleport';
 import { useAtom } from "jotai";
 import { Network, Token } from "@/types/teleport";
@@ -45,7 +45,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     const [, setSwapStatus] = useAtom(swapStatusAtom);
     const [, setEthPrice] = useAtom(ethPriceAtom);
     const [, setSwapId] = useAtom(swapIdAtom);
-    const [, setBridgeTransferTransactionHash] = useAtom(bridgeTransferTransactionAtom);
+    const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom);
     const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom);
     const [, setMpcSignature] = useAtom(mpcSignatureAtom);
 
@@ -72,7 +72,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
             setDestinationAddress(data.destination_address);
 
             const userTransferTransaction = data?.transactions?.find((t: any) => t.status === "user_transfer")?.transaction_hash;
-            setBridgeTransferTransactionHash(userTransferTransaction ?? "");
+            setUserTransferTransaction(userTransferTransaction ?? "");
             const mpcSignTransaction = data?.transactions?.find((t: any) => t.status === "mpc_sign")?.transaction_hash;
             setMpcSignature(mpcSignTransaction ?? "");
             const payoutTransaction = data?.transactions?.find((t: any) => t.status === "payout")?.transaction_hash;
@@ -104,15 +104,16 @@ const Form: React.FC<IProps> = ({ swapId }) => {
                 <ResizablePanel>
                     {
                         sourceNetwork && sourceAsset && sourceAmount && destinationNetwork && destinationAsset && destinationAddress ?
-                            <SwapDetails
-                                className="min-h-[450px] justify-center"
-                                sourceNetwork={sourceNetwork}
-                                sourceAsset={sourceAsset}
-                                destinationNetwork={destinationNetwork}
-                                destinationAsset={destinationAsset}
-                                destinationAddress={destinationAddress}
-                                sourceAmount={sourceAmount}
-                            /> :
+                            <div className="min-h-[450px] justify-center items-center flex">
+                                <SwapDetails
+                                    sourceNetwork={sourceNetwork}
+                                    sourceAsset={sourceAsset}
+                                    destinationNetwork={destinationNetwork}
+                                    destinationAsset={destinationAsset}
+                                    destinationAddress={destinationAddress}
+                                    sourceAmount={sourceAmount}
+                                />
+                            </div> :
                             <div className="w-full h-[430px]">
                                 <div className="animate-pulse flex space-x-4">
                                     <div className="flex-1 space-y-6 py-1">
