@@ -44,7 +44,6 @@ if (process.env.NEXT_PUBLIC_NODE_ENV === "production") {
   } else {
     console.log(`${process.env.SERVER_CA_BASE64} environment variable is not set.`);
   }
-
   globalThis.prismaGlobal = prisma;
 } else {
   globalThis.prismaGlobal = prisma;
