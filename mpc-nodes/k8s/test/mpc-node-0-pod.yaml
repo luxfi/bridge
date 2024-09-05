@@ -24,19 +24,13 @@ spec:
           value: http://sm-manager:8000/
         - name: smTimeOutBound
           value: "3"
-        - name: POSTGRESQL_URL
-          value: postgresql://lux:MNin08xAQ^.CT|<&@35.234.129.214:5432/bridge?sslmode=require&sslcert=/secrets/cloudsql/client-cert.pem&sslkey=/secrets/cloudsql/client-key.pem&sslrootcert=/secrets/cloudsql/server-ca.pem
+        - name: POSTGRES_PRISMA_URL
+          value: postgres://default:5j6AXbyCRpJN@ep-solitary-river-a4wjo1ro-pooler.us-east-1.aws.neon.tech/verceldb?pgbouncer=true&connect_timeout=15&sslmode=require
+        - name: POSTGRES_URL_NON_POOLING
+          value: postgres://default:5j6AXbyCRpJN@ep-solitary-river-a4wjo1ro.us-east-1.aws.neon.tech/verceldb?sslmode=require
       image: ghcr.io/venuswhispers/mpc-node-0:latest
       name: mpc-node-0
       ports:
         - containerPort: 6000
           protocol: TCP
-      volumeMounts:
-        - name: cloudsql-ssl-certs
-          mountPath: /secrets/cloudsql
-          readOnly: true
   restartPolicy: OnFailure
-  volumes:
-    - name: cloudsql-ssl-certs
-      secret:
-        secretName: cloudsql-ssl-certs
