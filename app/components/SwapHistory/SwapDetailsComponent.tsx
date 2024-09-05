@@ -41,8 +41,8 @@ const SwapDetails: FC<Props> = ({ swap }) => {
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
 
-    const sourceTransactionExplorerTemplate = getTransactionExplorerTemplate (layers, sourceLayer, sourceExchange, source_asset);
-    const destinationTransactionExplorerTemplate = getTransactionExplorerTemplate (layers, destinationLayer, destinationExchange, destination_asset);
+    const sourceTransactionExplorerTemplate = getTransactionExplorerTemplate(layers, sourceLayer, sourceExchange, source_asset);
+    const destinationTransactionExplorerTemplate = getTransactionExplorerTemplate(layers, destinationLayer, destinationExchange, destination_asset);
 
     if (!swap)
         return <SwapDetailsComponentSceleton />
@@ -186,7 +186,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-left">Transfered amount</span>
                                     <span className=' font-normal flex'>
-                                        {swapInputTransaction?.amount} {swap?.destination_asset}
+                                        {swapInputTransaction?.amount} {swap?.source_asset}
                                     </span>
                                 </div>
                             </>

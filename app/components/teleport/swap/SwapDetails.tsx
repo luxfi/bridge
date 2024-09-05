@@ -10,6 +10,7 @@ import { Network, Token } from '@/types/teleport';
 import UserTokenDepositor from './progress/TokenDepositor';
 import TeleportProcessor from './progress/TeleportProcessor';
 import PayoutProcessor from './progress/PayoutProcessor';
+import SwapSuccess from './progress/SwapSuccess';
 
 interface IProps {
     className?: string,
@@ -28,6 +29,7 @@ const SwapDetails: React.FC<IProps> = ({
     destinationAsset,
     destinationAddress,
     sourceAmount,
+    className
 }) => {
     //atoms
     const [swapStatus] = useAtom(swapStatusAtom);
@@ -44,6 +46,7 @@ const SwapDetails: React.FC<IProps> = ({
                 destinationAddress={destinationAddress}
                 sourceAmount={sourceAmount}
                 swapId={swapId}
+                className={className}
             />
         )
     } else if (swapStatus === "teleport_processing_pending") {
@@ -56,6 +59,7 @@ const SwapDetails: React.FC<IProps> = ({
                 destinationAddress={destinationAddress}
                 sourceAmount={sourceAmount}
                 swapId={swapId}
+                className={className}
             />
         )
     } else if (swapStatus === 'user_payout_pending') {
@@ -68,11 +72,12 @@ const SwapDetails: React.FC<IProps> = ({
                 destinationAddress={destinationAddress}
                 sourceAmount={sourceAmount}
                 swapId={swapId}
+                className={className}
             />
         )
     } else if (swapStatus === 'payout_success') {
         return (
-            <PayoutProcessor
+            <SwapSuccess
                 sourceNetwork={sourceNetwork}
                 sourceAsset={sourceAsset}
                 destinationNetwork={destinationNetwork}
@@ -80,6 +85,7 @@ const SwapDetails: React.FC<IProps> = ({
                 destinationAddress={destinationAddress}
                 sourceAmount={sourceAmount}
                 swapId={swapId}
+                className={className}
             />
         )
     }
