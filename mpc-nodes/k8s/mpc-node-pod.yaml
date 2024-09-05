@@ -30,15 +30,11 @@ spec:
         - name: smTimeOutBound
           value: "3"
         # Update the database connection strings to use Cloud SQL Proxy
-        - name: POSTGRES_PRISMA_URL
-          value: postgres://lux:MNin08xAQ^.CT|<&@127.0.0.1:5432/mpc?pgbouncer=true&connect_timeout=15&sslmode=require
-        - name: POSTGRES_URL_NON_POOLING
+        - name: POSTGRESQL_URL
           value: postgres://lux:MNin08xAQ^.CT|<&@127.0.0.1:5432/mpc?sslmode=require
     - name: cloudsql-proxy
       image: gcr.io/cloudsql-docker/gce-proxy:1.17
-      command: ["/cloud_sql_proxy",
-                "-instances=lux-fi:europe-west2:luxdb=tcp:5432",
-                "-credential_file=/secrets/cloudsql/key.json"]
+      command: ["/cloud_sql_proxy", "-instances=lux-fi:europe-west2:luxdb=tcp:5432", "-credential_file=/secrets/cloudsql/key.json"]
       volumeMounts:
         - name: cloudsql-instance-credentials
           mountPath: /secrets/cloudsql
