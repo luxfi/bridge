@@ -86,7 +86,6 @@ app.use(cors())
 
 const port = process.env.PORT || 6000 //6000
 const server = app.listen(Number(port), "0.0.0.0", function () {
-  const host = server.address()
   console.log(`>> Teleporter_${process.env.node_number} Running At: ${port}`)
 })
 
@@ -99,7 +98,7 @@ app.get("/dbcheck", async (req: express.Request, res: express.Response) => {
     const transactions = await prisma.teleporter.findMany()
     res.status(200).json(transactions)
   } catch (err) {
-    console.log("Failed to save tx to db")
+    console.log("Failed to save tx to db", err)
     res.status(500).json(err)
   }
 })
