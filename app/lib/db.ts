@@ -25,25 +25,24 @@ declare const globalThis: {
 } & typeof global;
 
 const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
-
 if (process.env.NEXT_PUBLIC_NODE_ENV === "production") {
   // Decode and write client-cert.pem
   if (process.env.CLIENT_CERT_BASE64) {
     writeDecodedFile('client-cert.pem', process.env.CLIENT_CERT_BASE64);
   } else {
-    console.log('CLIENT_CERT_BASE64 environment variable is not set.');
+    console.log(`${process.env.CLIENT_CERT_BASE64} environment variable is not set.`);
   }
   // Decode and write client-key.pem
   if (process.env.CLIENT_KEY_BASE64) {
     writeDecodedFile('client-key.pem', process.env.CLIENT_KEY_BASE64);
   } else {
-    console.log('CLIENT_KEY_BASE64 environment variable is not set.');
+    console.log(`${process.env.CLIENT_KEY_BASE64} environment variable is not set.`);
   }
   // Decode and write server-ca.pem
   if (process.env.SERVER_CA_BASE64) {
     writeDecodedFile('server-ca.pem', process.env.SERVER_CA_BASE64);
   } else {
-    console.log('SERVER_CA_BASE64 environment variable is not set.');
+    console.log(`${process.env.SERVER_CA_BASE64} environment variable is not set.`);
   }
   globalThis.prismaGlobal = prisma;
 } else {
