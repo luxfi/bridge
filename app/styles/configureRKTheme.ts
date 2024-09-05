@@ -3,8 +3,8 @@ import { darkTheme, type Theme } from '@rainbow-me/rainbowkit'
 import resolveConfig from 'tailwindcss/resolveConfig'
 import tailwindConfig from '../tailwind.config'
 
-  // @ts-ignore
-const {theme: twTheme} = resolveConfig(tailwindConfig) as any
+// @ts-ignore
+const { theme: twTheme } = resolveConfig(tailwindConfig) as any
 
 
 export default (): Theme => {

@@ -26,8 +26,7 @@ declare const globalThis: {
 
 const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
-
-if (process.env.NODE_ENV === "production") {
+if (process.env.NEXT_PUBLIC_NODE_ENV === "production") {
   // Decode and write client-cert.pem
   if (process.env.CLIENT_CERT_BASE64) {
     writeDecodedFile('client-cert.pem', process.env.CLIENT_CERT_BASE64);
@@ -46,6 +45,7 @@ if (process.env.NODE_ENV === "production") {
   } else {
     console.log('SERVER_CA_BASE64 environment variable is not set.');
   }
+  globalThis.prismaGlobal = prisma;
 } else {
   globalThis.prismaGlobal = prisma;
 }
