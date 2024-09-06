@@ -1,0 +1,11 @@
+{
+  "identity_url": "https://identity-api.bridge.lux.network",
+  "resource_storage_url": "https://prodlslayerswapbridgesa.blob.core.windows.net/",
+  "o_auth_providers": [
+    {
+      "provider": "COINBASE",
+      "oauth_connect_url": "https://www.coinbase.com/oauth/authorize?client_id=b43d0fb2e023a66cf7be30ef983f9ee78efedd3567269fcd7c9bd9dd0bb7a776&redirect_uri=https%3A%2F%2Fbridge-api.bridge.lux.network%2Fapi%2Fcallback%2Fcoinbase&response_type=code&account=all&scope=wallet%3Auser%3Aemail%2Cwallet%3Aaddresses%3Aread%2Cwallet%3Aaddresses%3Acreate&state=",
+      "oauth_authorize_url": "https://www.coinbase.com/oauth/authorize?client_id=b43d0fb2e023a66cf7be30ef983f9ee78efedd3567269fcd7c9bd9dd0bb7a776&redirect_uri=https%3A%2F%2Fbridge-api.bridge.lux.network%2Fapi%2Fcallback%2Fcoinbase&response_type=code&account=all&scope=wallet%3Atransactions%3Aread%2Cwallet%3Auser%3Aread%2Cwallet%3Aaccounts%3Aread%2Cwallet%3Atransactions%3Asend%2Cwallet%3Auser%3Aemail&meta[send_limit_amount]=1&meta[send_limit_currency]=USD&meta[send_limit_period]=month&state="
+    }
+  ]
+}

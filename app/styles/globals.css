@@ -1,0 +1,133 @@
+@import "tailwindcss/base";
+/* see https://stackoverflow.com/questions/69746121/using-nextjs-how-can-you-import-in-css-using-tailwind-css */
+@import "@luxdefi/ui/style/lux-tw-base-layer";
+
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer utilities {
+
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  .styled-scroll {
+    @apply scrollbar:!w-1.5 scrollbar:!h-1.5 scrollbar:bg-level-2  scrollbar-thumb:!rounded scrollbar-thumb:!bg-level-3;
+  }
+  
+}
+
+*::-webkit-scrollbar {
+  height: 0.375rem !important;
+  width: 0.375rem !important;
+  --tw-bg-opacity: 1;
+  background-color: theme('colors.level.2');
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: theme('colors.level.3') !important;
+  --tw-bg-opacity: 1 !important;
+  border-radius: 0.25rem !important;
+}
+
+
+
+iframe body {
+  display: none;
+}
+
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  transition: all 5000s ease-in-out 0s;
+  transition-property: background-color, color;
+}
+
+.shadowed-button {
+  transform: translate3d(0, 0, 0);
+}
+
+hr.horizontal-gradient {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(to right, theme('colors.muted.4'), theme('colors.muted.3'), theme('colors.muted.4'));
+}
+
+
+.carousel {
+  overflow: hidden;
+}
+
+.inner {
+  white-space: nowrap;
+  transition: transform 0.3s;
+}
+
+.carousel-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background-color: green;
+  color: #fff;
+}
+
+.indicators {
+  display: flex;
+  justify-content: center;
+}
+
+.indicators>button {
+  margin: 5px;
+}
+
+.indicators>button.active {
+  background-color: green;
+  color: #fff;
+}
+
+.carousel {
+  display: inline-flex;
+  overflow-x: hidden;
+  /*  scroll snap is a great feature which will center the image on snap on touch screen devices  */
+  scroll-snap-type: x mandatory;
+  /* all below will hide the scrollbar on all browsers.    */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* For Firefox */
+  -ms-overflow-style: none;
+  /* For Internet Explorer and Edge */
+}
+
+input::-webkit-input-placeholder {
+  line-height: normal !important;
+}
+
+body {
+  overflow: overlay;
+}
+
+
+input:disabled,
+textarea:disabled,
+input:disabled::placeholder,
+textarea:disabled::placeholder {
+  opacity: 1;
+  /* 2. correct opacity on iOS */
+}
+

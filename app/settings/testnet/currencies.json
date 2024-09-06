@@ -1,0 +1,127 @@
+[
+  {
+    "asset": "BKT",
+    "precision": 6,
+    "usd_price": 0.00018693
+  },
+  {
+    "asset": "IMX",
+    "precision": 6,
+    "usd_price": 1.83
+  },
+  {
+    "asset": "BTC",
+    "precision": 6,
+    "usd_price": 43617
+  },
+  {
+    "asset": "USDC",
+    "precision": 2,
+    "usd_price": 0.999836
+  },
+  {
+    "asset": "ETH",
+    "precision": 6,
+    "usd_price": 2196.62
+  },
+  {
+    "asset": "LUX",
+    "precision": 7,
+    "usd_price": 0.0021
+  },
+  {
+    "asset": "LRC",
+    "precision": 6,
+    "usd_price": 0.22762
+  },
+  {
+    "asset": "BNB",
+    "precision": 6,
+    "usd_price": 295.57
+  },
+  {
+    "asset": "OKT",
+    "precision": 6,
+    "usd_price": 17.67
+  },
+  {
+    "asset": "FUSE",
+    "precision": 6,
+    "usd_price": 0.074021
+  },
+  {
+    "asset": "MATIC",
+    "precision": 6,
+    "usd_price": 0.772845
+  },
+  {
+    "asset": "AVAX",
+    "precision": 6,
+    "usd_price": 32.15
+  },
+  {
+    "asset": "MNT",
+    "precision": 6,
+    "usd_price": 0.584164
+  },
+  {
+    "asset": "TON",
+    "precision": 7,
+    "usd_price": 2.17
+  },
+  {
+    "asset": "HT",
+    "precision": 6,
+    "usd_price": 2.42
+  },
+  {
+    "asset": "OSMO",
+    "precision": 6,
+    "usd_price": 1.71
+  },
+  {
+    "asset": "OP",
+    "precision": 6,
+    "usd_price": 3.04
+  },
+  {
+    "asset": "SNX",
+    "precision": 6,
+    "usd_price": 3.2
+  },
+  {
+    "asset": "USDT",
+    "precision": 2,
+    "usd_price": 1
+  },
+  {
+    "asset": "ASTR",
+    "precision": 6,
+    "usd_price": 0.120619
+  },
+  {
+    "asset": "SOL",
+    "precision": 6,
+    "usd_price": 89.04
+  },
+  {
+    "asset": "EVMOS",
+    "precision": 6,
+    "usd_price": 0.121623
+  },
+  {
+    "asset": "SYS",
+    "precision": 6,
+    "usd_price": 0.120383
+  },
+  {
+    "asset": "KCS",
+    "precision": 6,
+    "usd_price": 9.84
+  },
+  {
+    "asset": "ZKS",
+    "precision": 6,
+    "usd_price": 0.072962
+  }
+]

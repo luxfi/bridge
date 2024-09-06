@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "contract_name": "",
+      "contract_address": "0x9011E888251AB053B7bD1cdB598Db4f9DEd94714"
+    },
+    {
+      "contract_name": "",
+      "contract_address": "0xEAbCC110fAcBfebabC66Ad6f9E7B67288e720B59"
+    },
+    {
+      "contract_name": "",
+      "contract_address": "0x8d5081153aE1cfb41f5c932fe0b6Beb7E159cF84"
+    },
+    {
+      "contract_name": "",
+      "contract_address": "0xf8f12D0592e6d1bFe92ee16CaBCC4a6F26dAAe23"
+    },
+    {
+      "contract_name": "",
+      "contract_address": "0xFb66808f708e1d4D7D43a8c75596e84f94e06806"
+    },
+    {
+      "contract_name": "",
+      "contract_address": "0x313CF291c069C58D6bd61B0D672673462B8951bD"
+    },
+    {
+      "contract_name": "",
+      "contract_address": "0xf7f52257a6143cE6BbD12A98eF2B0a3d0C648079"
+    },
+    {
+      "contract_name": "STARKNET",
+      "contract_address": "0x012087325194323197379425C8f9d8c642ab7990ea0F58AEd184E607a300C303"
+    }
+  ]
+}

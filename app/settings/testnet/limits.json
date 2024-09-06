@@ -1,0 +1,11 @@
+{
+  "data": {
+    "manual_min_amount_in_usd": 5.003487,
+    "manual_min_amount": 0.001967,
+    "wallet_min_amount_in_usd": 5.003487,
+    "wallet_min_amount": 0.001967,
+    "max_amount_in_usd": 25.4281,
+    "max_amount": 0.01
+  },
+  "error": null
+}
