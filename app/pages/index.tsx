@@ -6,22 +6,15 @@ import Teleporter from '@/components/teleport/swap/Teleporter';
 import ToggleButton from '@/components/buttons/toggleButton';
 import { InferGetServerSidePropsType } from 'next'
 import { getServerSideProps } from '@/helpers/getSettings'
+import { useAtom } from 'jotai';
+import { useTelepoterAtom } from '@/store/teleport';
+import Swapper from '@/components/Swapper';
 
 export default function Home({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [checked, setChecked] = React.useState<boolean>(true);
+  const [useTeleporter] = useAtom(useTelepoterAtom);
   return (
     <Layout settings={settings} themeData={themeData}>
-      <div className='flex items-center gap-2 pb-3'>
-        <ToggleButton
-          value={checked}
-          onChange={(value: boolean) => setChecked(value)}
-          name="Teleport"
-        />
-        Teleport
-      </div>
-      {
-        checked ? <Teleporter /> : <Swap />
-      }
+      <Swapper />
     </Layout>
   )
 }
