@@ -1,0 +1,2963 @@
+[
+  {
+    "display_name": "Lux",
+    "internal_name": "LUX_MAINNET",
+    "native_currency": "LUX",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:00:07.7777777",
+    "chain_id": "7777",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explore.lux.network/tx/{0}",
+    "account_explorer_template": "https://explore.lux.network/address/{0}",
+    "currencies": [
+      {
+        "name": "LUX",
+        "asset": "LUX",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 100,
+        "withdrawal_fee": 100,
+        "source_base_fee": 100,
+        "destination_base_fee": 100,
+        "is_native": true
+      },
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "LETH",
+        "asset": "LETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "LUSD",
+        "asset": "LUSD",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.lux.network"
+      }
+    ],
+    "created_date": "2024-01-01T00:00:00.000000+00:00"
+  },
+  {
+    "display_name": "ZKSpace",
+    "internal_name": "ZKSPACE_MAINNET",
+    "native_currency": "ZKS",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:02:17.7725040",
+    "chain_id": "13",
+    "status": "inactive",
+    "type": "zk_sync_lite",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://zkspace.info/transaction/{0}",
+    "account_explorer_template": "https://zkspace.info/account/{0}",
+    "currencies": [
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "ZKS",
+        "asset": "ZKS",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 4.648858,
+        "withdrawal_fee": 4.648858,
+        "source_base_fee": 23.161471,
+        "destination_base_fee": 23.161471,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.zks.app/v3/1"
+      }
+    ],
+    "created_date": "2022-08-03T14:48:47.031097+00:00"
+  },
+  {
+    "display_name": "ImmutableX",
+    "internal_name": "IMMUTABLEX_MAINNET",
+    "native_currency": "IMX",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:55.0552590",
+    "chain_id": "13371",
+    "status": "active",
+    "type": "stark_ex",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://immutascan.io/tx/{0}",
+    "account_explorer_template": "https://immutascan.io/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "IMX",
+        "asset": "IMX",
+        "contract_address": "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 450,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0.000555,
+        "source_base_fee": 0.555555,
+        "destination_base_fee": 0.555555,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "ActivationUrl": "https://market.immutable.com",
+      "L1Network": "ETHEREUM_MAINNET"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.x.immutable.com"
+      },
+      {
+        "url": "wss://immutable-zkevm.drpc.org"
+      },
+      {
+        "url": "https://rpc.immutable.com"
+      },
+      {
+        "url": "https://immutable-zkevm.drpc.org"
+      }
+    ],
+    "created_date": "2022-04-05T15:29:29.81225+00:00"
+  },
+  {
+    "display_name": "BSC",
+    "internal_name": "BSC_MAINNET",
+    "native_currency": "BNB",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:26.4349620",
+    "chain_id": "56",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://bscscan.com/tx/{0}",
+    "account_explorer_template": "https://bscscan.com/address/{0}",
+    "currencies": [
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x55d398326f99059fF775485246999027B3197955",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.05,
+        "withdrawal_fee": 0.02,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000075,
+        "withdrawal_fee": 0.000031,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "SNX",
+        "asset": "SNX",
+        "contract_address": "0x9Ac983826058b8a9C7Aa1C9171441191232E8404",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.057682,
+        "withdrawal_fee": 0.027129,
+        "source_base_fee": 0.316455,
+        "destination_base_fee": 0.316455,
+        "is_native": false
+      },
+      {
+        "name": "LRC",
+        "asset": "LRC",
+        "contract_address": "0x66e4d38b20173F509A1fF5d82866949e4fE898da",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 10000,
+        "deposit_fee": 0.808405,
+        "withdrawal_fee": 0.380216,
+        "source_base_fee": 4.435022,
+        "destination_base_fee": 4.435022,
+        "is_native": false
+      },
+      {
+        "name": "BNB",
+        "asset": "BNB",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000163,
+        "withdrawal_fee": 0.000163,
+        "source_base_fee": 0.003393,
+        "destination_base_fee": 0.003393,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.18,
+        "withdrawal_fee": 0.08,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 15921452
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://lb.drpc.org/ogrpc?network=bsc&dkey=ArPkRplEc0Blq_2CpG9Z__4Tj6aBjcER7qzvYkscDoZX"
+      },
+      {
+        "url": "https://bsc-mainnet.public.blastapi.io"
+      },
+      {
+        "url": "https://bsc-dataseed1.bnbchain.org"
+      },
+      {
+        "url": "https://public.stackup.sh/api/v1/node/bsc-mainnet"
+      },
+      {
+        "url": "https://bsc-dataseed1.bnbchain.org"
+      },
+      {
+        "url": "https://bsc-dataseed1.bnbchain.org"
+      }
+    ],
+    "created_date": "2022-11-10T13:52:39.422241+00:00"
+  },
+  {
+    "display_name": "Cronos",
+    "internal_name": "CRONOS_MAINNET",
+    "native_currency": "CRO",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:00:00",
+    "chain_id": "25",
+    "status": "inactive",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://cronoscan.com/tx/{0}",
+    "account_explorer_template": "",
+    "currencies": [
+      {
+        "name": "CRO",
+        "asset": "CRO",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [],
+    "nodes": [
+      {
+        "url": "https://cronos.drpc.org"
+      }
+    ],
+    "created_date": "2022-08-03T14:48:46.171694+00:00"
+  },
+  {
+    "display_name": "Loopring",
+    "internal_name": "LOOPRING_MAINNET",
+    "native_currency": "LRC",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:04:42.5069280",
+    "chain_id": "1",
+    "status": "active",
+    "type": "zk_sync_lite",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://explorer.loopring.io/tx/{0}-transfer",
+    "account_explorer_template": "https://explorer.loopring.io/account/{0}",
+    "currencies": [
+      {
+        "name": "BKT",
+        "asset": "BKT",
+        "contract_address": "240",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "6",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.04,
+        "withdrawal_fee": 0.04,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000022,
+        "withdrawal_fee": 0.000022,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "LRC",
+        "asset": "LRC",
+        "contract_address": "1",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 10000,
+        "deposit_fee": 0.208725,
+        "withdrawal_fee": 0.208725,
+        "source_base_fee": 4.435022,
+        "destination_base_fee": 4.435022,
+        "is_native": false
+      },
+      {
+        "name": "IMX",
+        "asset": "IMX",
+        "contract_address": "255",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.082748,
+        "withdrawal_fee": 0.027582,
+        "source_base_fee": 0.555555,
+        "destination_base_fee": 0.555555,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "L1Network": "ETHEREUM_MAINNET"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api3.loopring.io/api/v3"
+      }
+    ],
+    "created_date": "2022-01-07T13:59:52.164015+00:00"
+  },
+  {
+    "display_name": "Arbitrum One",
+    "internal_name": "ARBITRUM_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:01:03.9556060",
+    "chain_id": "42161",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://arbiscan.io/tx/{0}",
+    "account_explorer_template": "https://arbiscan.io/address/{0}",
+    "currencies": [
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.08,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC.e",
+        "asset": "USDC",
+        "contract_address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 4000,
+        "deposit_fee": 0.64,
+        "withdrawal_fee": 0.27,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000082,
+        "withdrawal_fee": 0.000082,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 7654707
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://arb-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7"
+      },
+      {
+        "url": "https://arbitrum-one.public.blastapi.io"
+      }
+    ],
+    "created_date": "2021-09-21T00:25:30.790797+00:00"
+  },
+  {
+    "display_name": "Arbitrum Nova",
+    "internal_name": "ARBITRUMNOVA_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:19.2644890",
+    "chain_id": "42170",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://nova.arbiscan.io/tx/{0}",
+    "account_explorer_template": "https://nova.arbiscan.io/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000144,
+        "withdrawal_fee": 0.000144,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 1746963
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://arbitrum-nova.public.blastapi.io"
+      }
+    ],
+    "created_date": "2022-08-11T12:33:49.777882+00:00"
+  },
+  {
+    "display_name": "rhino.fi",
+    "internal_name": "RHINOFI_MAINNET",
+    "native_currency": "DVF",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:02:59.5830740",
+    "chain_id": null,
+    "status": "inactive",
+    "type": "stark_ex",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://app.rhino.fi/account/transfers/{0}",
+    "account_explorer_template": "https://app.rhino.fi/account",
+    "currencies": [
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "DVF",
+        "asset": "DVF",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 1,
+        "withdrawal_fee": 1,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.rhino.fi"
+      }
+    ],
+    "created_date": "2022-06-24T17:31:22.76789+00:00"
+  },
+  {
+    "display_name": "Starknet",
+    "internal_name": "STARKNET_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:02:17.2966980",
+    "chain_id": "0x534e5f4d41494e",
+    "status": "active",
+    "type": "starknet",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://starkscan.co/tx/{0}",
+    "account_explorer_template": "https://starkscan.co/contract/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 3,
+        "deposit_fee": 0.000446,
+        "withdrawal_fee": 0.000446,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 3100,
+        "deposit_fee": 2.93,
+        "withdrawal_fee": 0.97,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "WatchdogContractAddress": "0x05f5b269a57ec59a5fedf10f0f81cbbb7fbe005d3c9f0e0273601a122338f08a"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x19252B1dEef483477C4D30cFcc3e5Ed9C82FAFEA44669c182A45A01b4FdB97a"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://starknet-mainnet.blastapi.io/0087e28f-aeff-41d3-8f42-0d46f40509c9/rpc/v0.5"
+      }
+    ],
+    "created_date": "2022-05-29T17:30:19.633972+00:00"
+  },
+  {
+    "display_name": "Optimism",
+    "internal_name": "OPTIMISM_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:01:08.3342790",
+    "chain_id": "10",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://optimistic.etherscan.io/tx/{0}",
+    "account_explorer_template": "https://optimistic.etherscan.io/address/{0}",
+    "currencies": [
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.44,
+        "withdrawal_fee": 0.17,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC.e",
+        "asset": "USDC",
+        "contract_address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.85,
+        "withdrawal_fee": 0.35,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000113,
+        "withdrawal_fee": 0.000113,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "OP",
+        "asset": "OP",
+        "contract_address": "0x4200000000000000000000000000000000000042",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 100,
+        "deposit_fee": 0.293101,
+        "withdrawal_fee": 0.120343,
+        "source_base_fee": 0.332225,
+        "destination_base_fee": 0.332225,
+        "is_native": false
+      },
+      {
+        "name": "SNX",
+        "asset": "SNX",
+        "contract_address": "0x8700dAec35aF8Ff88c16BdF0418774CB3D7599B4",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 2000,
+        "deposit_fee": 0.387509,
+        "withdrawal_fee": 0.230022,
+        "source_base_fee": 0.316455,
+        "destination_base_fee": 0.316455,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 4286263
+      },
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://optimism-mainnet.public.blastapi.io"
+      }
+    ],
+    "created_date": "2021-10-06T15:57:09.429819+00:00"
+  },
+  {
+    "display_name": "Ethereum",
+    "internal_name": "ETHEREUM_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:01:04.0494430",
+    "chain_id": "1",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://etherscan.io/tx/{0}",
+    "account_explorer_template": "https://etherscan.io/address/{0}",
+    "currencies": [
+      {
+        "name": "BKT",
+        "asset": "BKT",
+        "contract_address": "0x9d62526f5Ce701950c30F2cACa70Edf70f9fbf0F",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "ASTR",
+        "asset": "ASTR",
+        "contract_address": "0x9bBAf650DcD8D3583195715Fc46b1118c3CfDdfd",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "ZKS",
+        "asset": "ZKS",
+        "contract_address": "0xe4815AE53B124e7263F08dcDBBB757d41Ed658c6",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 10000,
+        "deposit_fee": 166.865654,
+        "withdrawal_fee": 65.820981,
+        "source_base_fee": 26.053974,
+        "destination_base_fee": 26.053974,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 4.68,
+        "withdrawal_fee": 2.24,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 3000,
+        "deposit_fee": 12.79,
+        "withdrawal_fee": 6.4,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 3000,
+        "deposit_fee": 12.79,
+        "withdrawal_fee": 6.4,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.001462,
+        "withdrawal_fee": 0.001462,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "LRC",
+        "asset": "LRC",
+        "contract_address": "0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 10000,
+        "deposit_fee": 52.455252,
+        "withdrawal_fee": 21.830179,
+        "source_base_fee": 4.435022,
+        "destination_base_fee": 4.435022,
+        "is_native": false
+      },
+      {
+        "name": "IMX",
+        "asset": "IMX",
+        "contract_address": "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 6.377331,
+        "withdrawal_fee": 2.65567,
+        "source_base_fee": 0.555555,
+        "destination_base_fee": 0.555555,
+        "is_native": false
+      },
+      {
+        "name": "SNX",
+        "asset": "SNX",
+        "contract_address": "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 6.676014,
+        "withdrawal_fee": 4.652934,
+        "source_base_fee": 0.316455,
+        "destination_base_fee": 0.316455,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 14353601
+      },
+      "ensRegistry": {
+        "address": "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+      },
+      "ensUniversalResolver": {
+        "address": "0xc0497E381f536Be9ce14B0dD3817cBcAe57d2F62",
+        "blockCreated": 16966585
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7"
+      },
+      {
+        "url": "https://json-rpc.6whkpou4agc13c9ux9e8il045.blockchainnodeengine.com"
+      },
+      {
+        "url": "https://ethereum.rpc.subquery.network/public"
+      },
+      {
+        "url": "https://rpc.ankr.com/eth"
+      },
+      {
+        "url": "https://ethereum.blockpi.network/v1/rpc/public"
+      },
+      {
+        "url": "https://endpoints.omniatech.io/v1/eth/mainnet/public"
+      },
+      {
+        "url": "https://endpoints.omniatech.io/v1/eth/mainnet/public"
+      },
+      {
+        "url": "https://eth-mainnet.diamondswap.org/rpc"
+      },
+      {
+        "url": "https://ethereumnodelight.app.runonflux.io"
+      },
+      {
+        "url": "https://api.zmok.io/mainnet/oaen6dy8ff6hju9k"
+      },
+      {
+        "url": "https://eth-mainnet-public.unifra.io"
+      },
+      {
+        "url": "https://rpc.builder0x69.io"
+      },
+      {
+        "url": "https://eth-mainnet.diamondswap.org/rpc"
+      },
+      {
+        "url": "https://eth.nownodes.io"
+      },
+      {
+        "url": "https://rpc.builder0x69.io"
+      },
+      {
+        "url": "https://eth.merkle.io"
+      }
+    ],
+    "created_date": "2022-05-29T17:30:19.14963+00:00"
+  },
+  {
+    "display_name": "zkSync Lite",
+    "internal_name": "ZKSYNC_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:30.1957780",
+    "chain_id": "mainnet",
+    "status": "active",
+    "type": "zk_sync_lite",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://zkscan.io/explorer/transactions/{0}",
+    "account_explorer_template": "https://zkscan.io/explorer/accounts/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.001001,
+        "withdrawal_fee": 0.000036,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "2",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 2.24,
+        "withdrawal_fee": 0.08,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "L1Network": "ETHEREUM_MAINNET"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.zksync.io/"
+      }
+    ],
+    "created_date": "2021-12-21T16:59:11.139097+00:00"
+  },
+  {
+    "display_name": "Boba",
+    "internal_name": "BOBA_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:00:00",
+    "chain_id": "288",
+    "status": "inactive",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://blockexplorer.boba.network/tx/{0}",
+    "account_explorer_template": "https://bobascan.com/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [],
+    "nodes": [
+      {
+        "url": "https://mainnet.boba.network"
+      }
+    ],
+    "created_date": "2021-11-25T14:14:31.606285+00:00"
+  },
+  {
+    "display_name": "Osmosis",
+    "internal_name": "OSMOSIS_MAINNET",
+    "native_currency": "OSMO",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:29:54.6591840",
+    "chain_id": "osmosis-1",
+    "status": "active",
+    "type": "cosmos",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://mintscan.io/osmosis/txs/{0}",
+    "account_explorer_template": "https://www.mintscan.io/osmosis/account/{0}",
+    "currencies": [
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "OSMO",
+        "asset": "OSMO",
+        "contract_address": "uosmo",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0.000584,
+        "source_base_fee": 0.584795,
+        "destination_base_fee": 0.584795,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "osmo176f7c7efn2h3fpa366sw4sq8hfl7yh4w2zp0xv"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://osmosis-rpc.publicnode.com:443"
+      }
+    ],
+    "created_date": "2023-01-16T14:37:05.64039+00:00"
+  },
+  {
+    "display_name": "dYdX",
+    "internal_name": "DYDX_MAINNET",
+    "native_currency": "DYDX",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:00:00",
+    "chain_id": null,
+    "status": "inactive",
+    "type": "stark_ex",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://trade.dydx.exchange/portfolio/history/transfers",
+    "account_explorer_template": "",
+    "currencies": [
+      {
+        "name": "DYDX",
+        "asset": "DYDX",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [],
+    "nodes": [],
+    "created_date": "2023-01-20T14:34:29.137608+00:00"
+  },
+  {
+    "display_name": "Solana",
+    "internal_name": "SOLANA_MAINNET",
+    "native_currency": "SOL",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:03:07.9874770",
+    "chain_id": null,
+    "status": "active",
+    "type": "solana",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.solana.com/tx/{0}",
+    "account_explorer_template": "https://explorer.solana.com/address/{0}",
+    "currencies": [
+      {
+        "name": "WETH",
+        "asset": "ETH",
+        "contract_address": "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.00063,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "SOL",
+        "asset": "SOL",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 2.63,
+        "withdrawal_fee": 0.87,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "2ZUoHEPcN7bsSXw6YTj85CMrU8xNtcYNGiSMXPLomaa2"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://odella-kzfk20-fast-mainnet.helius-rpc.com/"
+      }
+    ],
+    "created_date": "2023-02-21T13:04:25.293958+00:00"
+  },
+  {
+    "display_name": "KCC",
+    "internal_name": "KCC_MAINNET",
+    "native_currency": "KCS",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:10:00",
+    "chain_id": "321",
+    "status": "inactive",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://explorer.kcc.io/en/tx/{0}",
+    "account_explorer_template": "https://explorer.kcc.io/en/address/{0}",
+    "currencies": [
+      {
+        "name": "KCS",
+        "asset": "KCS",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x0039f574ee5cc39bdd162e9a88e3eb1f111baf48",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 2,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0xf55af137a98607f7ed2efefa4cd2dfe70e4253b1",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.001032,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x980a5afef3d17ad98635f6c5aebcbaeded3c3430",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 2,
+        "destination_base_fee": 0,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc-mainnet.kcc.network"
+      }
+    ],
+    "created_date": "2023-02-21T17:24:44.715308+00:00"
+  },
+  {
+    "display_name": "Huobi Eco Chain",
+    "internal_name": "HECO_MAINNET",
+    "native_currency": "HT",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:00:00",
+    "chain_id": "128",
+    "status": "inactive",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://www.hecoinfo.com/en-us/tx/{0}",
+    "account_explorer_template": "https://www.hecoinfo.com/en-us/address/{0}",
+    "currencies": [
+      {
+        "name": "HT",
+        "asset": "HT",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0x64ff637fb478863b7468bc97d30a5bf3a428a1fd",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000001,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.000585,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x9362bbef4b8313a8aa9f0c9808b80577aa26b73b",
+        "decimals": 6,
+        "status": "inactive",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 1,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xa71edc38d189767582c38a3145b5873052c3e47a",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "LRC",
+        "asset": "LRC",
+        "contract_address": "0xbf22f76657601a522cf9ac832718a3404302d6bc",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.00521,
+        "withdrawal_fee": 0.00407,
+        "source_base_fee": 2.84444,
+        "destination_base_fee": 0,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://http-mainnet.hecochain.com"
+      }
+    ],
+    "created_date": "2023-02-23T10:19:14.000023+00:00"
+  },
+  {
+    "display_name": "OKX Chain",
+    "internal_name": "OKC_MAINNET",
+    "native_currency": "OKT",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:07:09.9481160",
+    "chain_id": "66",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://www.oklink.com/en/okc/tx/{0}",
+    "account_explorer_template": "https://www.oklink.com/oktc/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0xEF71CA2EE68F45B9Ad6F72fbdb33d707b872315C",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.00167,
+        "withdrawal_fee": 0.001229,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xc946daf81b08146b1c7a8da2a851ddf2b3eaaf85",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 3.65,
+        "withdrawal_fee": 2.69,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "OKT",
+        "asset": "OKT",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.0273,
+        "withdrawal_fee": 0.0273,
+        "source_base_fee": 0.056529,
+        "destination_base_fee": 0.056529,
+        "is_native": true
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x382bb369d343125bfb2117af9c149795c6c65c50",
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 2,
+        "destination_base_fee": 0,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://oktc-mainnet.blastapi.io/0087e28f-aeff-41d3-8f42-0d46f40509c9"
+      }
+    ],
+    "created_date": "2023-02-23T13:35:39.968537+00:00"
+  },
+  {
+    "display_name": "Fuse",
+    "internal_name": "FUSE_MAINNET",
+    "native_currency": "FUSE",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:05:38.9021000",
+    "chain_id": "122",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.2,
+    "transaction_explorer_template": "https://explorer.fuse.io/tx/{0}",
+    "account_explorer_template": "https://explorer.fuse.io/address/{0}",
+    "currencies": [
+      {
+        "name": "USDC V2",
+        "asset": "USDC",
+        "contract_address": "0x28C3d1cD466Ba22f6cae51b1a4692a831696391A",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "FUSE",
+        "asset": "FUSE",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.0003,
+        "withdrawal_fee": 0.0003,
+        "source_base_fee": 13.599521,
+        "destination_base_fee": 13.599521,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.fuse.io"
+      }
+    ],
+    "created_date": "2023-03-14T13:13:35.552438+00:00"
+  },
+  {
+    "display_name": "zkSync Era",
+    "internal_name": "ZKSYNCERA_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:01:21.7756540",
+    "chain_id": "324",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 3,
+    "transaction_explorer_template": "https://explorer.zksync.io/tx/{0}",
+    "account_explorer_template": "https://explorer.zksync.io/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 2,
+        "deposit_fee": 0.000069,
+        "withdrawal_fee": 0.000069,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 2000,
+        "deposit_fee": 0.46,
+        "withdrawal_fee": 0.16,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xF9cda624FBC7e059355ce98a31693d299FACd963"
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://mainnet.era.zksync.io"
+      }
+    ],
+    "created_date": "2023-03-27T16:59:11.139+00:00"
+  },
+  {
+    "display_name": "Polygon",
+    "internal_name": "POLYGON_MAINNET",
+    "native_currency": "MATIC",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:02:18.1711060",
+    "chain_id": "137",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://polygonscan.com/tx/{0}",
+    "account_explorer_template": "https://polygonscan.com/address/{0}",
+    "currencies": [
+      {
+        "name": "WETH",
+        "asset": "ETH",
+        "contract_address": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000022,
+        "withdrawal_fee": 0.000009,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "USDC.E",
+        "asset": "USDC",
+        "contract_address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.06,
+        "withdrawal_fee": 0.03,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "MATIC",
+        "asset": "MATIC",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.015099,
+        "withdrawal_fee": 0.015099,
+        "source_base_fee": 1.307575,
+        "destination_base_fee": 1.307575,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 25770160
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://polygon-mainnet.public.blastapi.io"
+      }
+    ],
+    "created_date": "2023-03-27T13:39:08.451477+00:00"
+  },
+  {
+    "display_name": "Polygon zkEVM",
+    "internal_name": "POLYGONZK_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:16.5355410",
+    "chain_id": "1101",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://zkevm.polygonscan.com/tx/{0}",
+    "account_explorer_template": "https://zkevm.polygonscan.com/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000114,
+        "withdrawal_fee": 0.000114,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.89,
+        "withdrawal_fee": 0.37,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 57746
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://polygon-zkevm-mainnet.blastapi.io/0087e28f-aeff-41d3-8f42-0d46f40509c9"
+      }
+    ],
+    "created_date": "2023-03-30T15:15:02.315663+00:00"
+  },
+  {
+    "display_name": "Avalanche",
+    "internal_name": "AVAX_MAINNET",
+    "native_currency": "AVAX",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:00:59.7308640",
+    "chain_id": "43114",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.15,
+    "transaction_explorer_template": "https://snowtrace.io/tx/{0}",
+    "account_explorer_template": "https://snowtrace.io/address/{0}",
+    "currencies": [
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.08,
+        "withdrawal_fee": 0.04,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "AVAX",
+        "asset": "AVAX",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000682,
+        "withdrawal_fee": 0.000682,
+        "source_base_fee": 0.031279,
+        "destination_base_fee": 0.031279,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 11907934
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://ava-mainnet.public.blastapi.io/ext/bc/C/rpc"
+      }
+    ],
+    "created_date": "2023-05-29T13:19:19.214392+00:00"
+  },
+  {
+    "display_name": "Linea",
+    "internal_name": "LINEA_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:12.1184390",
+    "chain_id": "59144",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://lineascan.build/tx/{0}",
+    "account_explorer_template": "https://lineascan.build/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000079,
+        "withdrawal_fee": 0.000079,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.69,
+        "withdrawal_fee": 0.34,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "blockCreated": 42
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.linea.build"
+      }
+    ],
+    "created_date": "2023-07-18T13:59:45.503008+00:00"
+  },
+  {
+    "display_name": "Base",
+    "internal_name": "BASE_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:29.5988440",
+    "chain_id": "8453",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1.5,
+    "transaction_explorer_template": "https://basescan.org/tx/{0}",
+    "account_explorer_template": "https://basescan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.8,
+        "withdrawal_fee": 0.33,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 2,
+        "deposit_fee": 0.000112,
+        "withdrawal_fee": 0.000112,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xca11bde05977b3631167028862be2a173976ca11",
+        "blockCreated": 5022
+      },
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://base-mainnet.public.blastapi.io"
+      }
+    ],
+    "created_date": "2023-08-02T10:55:14.532517+00:00"
+  },
+  {
+    "display_name": "Public Goods Network",
+    "internal_name": "PGN_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:21.6726910",
+    "chain_id": "424",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.publicgoods.network/tx/{0}",
+    "account_explorer_template": "https://explorer.publicgoods.network/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 5,
+        "deposit_fee": 0.000062,
+        "withdrawal_fee": 0.000059,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.publicgoods.network"
+      }
+    ],
+    "created_date": "2023-08-07T10:53:23.933291+00:00"
+  },
+  {
+    "display_name": "Evmos",
+    "internal_name": "EVMOS_MAINNET",
+    "native_currency": "EVMOS",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:23.3457170",
+    "chain_id": "9001",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.1,
+    "transaction_explorer_template": "https://escan.live/tx/{0}",
+    "account_explorer_template": "https://escan.live/address/{0}",
+    "currencies": [
+      {
+        "name": "EVMOS",
+        "asset": "EVMOS",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "axlUSDC",
+        "asset": "USDC",
+        "contract_address": "0x15c3eb3b621d1bff62cba1c9536b7c1ae9149b57",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "blockCreated": 188483
+      }
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://evmos-mainnet.public.blastapi.io"
+      }
+    ],
+    "created_date": "2023-08-07T12:10:27.853964+00:00"
+  },
+  {
+    "display_name": "Mantle",
+    "internal_name": "MANTLE_MAINNET",
+    "native_currency": "MNT",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:16.2021430",
+    "chain_id": "5000",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.2,
+    "transaction_explorer_template": "https://explorer.mantle.xyz/tx/{0}",
+    "account_explorer_template": "https://rpc.mantle.xyz/address/{0}",
+    "currencies": [
+      {
+        "name": "WETH",
+        "asset": "ETH",
+        "contract_address": "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000448,
+        "withdrawal_fee": 0.000161,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "MNT",
+        "asset": "MNT",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.539739,
+        "withdrawal_fee": 0.539739,
+        "source_base_fee": 1.715539,
+        "destination_base_fee": 1.715539,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "blockCreated": 304717
+      },
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.mantle.xyz"
+      }
+    ],
+    "created_date": "2023-08-08T09:25:21.814907+00:00"
+  },
+  {
+    "display_name": "Zora",
+    "internal_name": "ZORA_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:12.6376360",
+    "chain_id": "7777777",
+    "status": "insufficient_liquidity",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.zora.energy/tx/{0}",
+    "account_explorer_template": "https://explorer.zora.energy/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "insufficient_liquidity",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000057,
+        "withdrawal_fee": 0.000057,
+        "source_base_fee": 0.000454,
+        "destination_base_fee": 0.000454,
+        "is_native": true
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "blockCreated": 5882
+      },
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.zora.energy"
+      }
+    ],
+    "created_date": "2023-08-16T09:25:37.51+00:00"
+  },
+  {
+    "display_name": "Rollux",
+    "internal_name": "ROLLUX_MAINNET",
+    "native_currency": "SYS",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:02:26.0152870",
+    "chain_id": "570",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.005,
+    "transaction_explorer_template": "https://explorer.rollux.com/tx/{0}",
+    "account_explorer_template": "https://explorer.rollux.com/address/{}",
+    "currencies": [
+      {
+        "name": "SYS",
+        "asset": "SYS",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0xaa1c53afd099e415208f47fcfa2c880f659e6904",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 0.8,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x368433CaC2A0B8D76E64681a9835502a1f2A8A30",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "blockCreated": 119222
+      },
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.rollux.com\t"
+      }
+    ],
+    "created_date": "2023-08-23T17:48:31.965531+00:00"
+  },
+  {
+    "display_name": "Manta Pacific",
+    "internal_name": "MANTA_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:20.1925450",
+    "chain_id": "169",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://manta-pacific.calderaexplorer.xyz/tx/{0}",
+    "account_explorer_template": "https://manta-pacific.calderaexplorer.xyz/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000093,
+        "withdrawal_fee": 0.000093,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xb73603c5d87fa094b7314c74ace2e64d165016fb",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.67,
+        "withdrawal_fee": 0.26,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://manta-pacific.calderachain.xyz/http"
+      }
+    ],
+    "created_date": "2023-09-12T14:22:22.976728+00:00"
+  },
+  {
+    "display_name": "opBNB",
+    "internal_name": "OPBNB_MAINNET",
+    "native_currency": "BNB",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:01:15.4600600",
+    "chain_id": "204",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://opbnbscan.com/tx/{0}",
+    "account_explorer_template": "https://opbnbscan.com/address/{0}",
+    "currencies": [
+      {
+        "name": "BNB",
+        "asset": "BNB",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": "0xe7798f023fc62146e8aa1b36da45fb70855a77ea",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 1,
+        "deposit_fee": 0.000002,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://opbnb-mainnet-rpc.bnbchain.org"
+      }
+    ],
+    "created_date": "2023-09-22T09:08:53.288372+00:00"
+  },
+  {
+    "display_name": "tanX",
+    "internal_name": "BRINE_MAINNET",
+    "native_currency": "SALT",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:02:35.7192870",
+    "chain_id": "mainnet",
+    "status": "active",
+    "type": "stark_ex",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://trade.tanx.fi/wallet",
+    "account_explorer_template": "https://trade.tanx.fi/wallet",
+    "currencies": [
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "SALT",
+        "asset": "SALT",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "ActivationUrl": "https://trade.tanx.fi"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-09-26T12:35:29.245679+00:00"
+  },
+  {
+    "display_name": "Scroll",
+    "internal_name": "SCROLL_MAINNET",
+    "native_currency": "ETH",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:03:03.0605110",
+    "chain_id": "534352",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://scrollscan.com/tx/{0}",
+    "account_explorer_template": "https://scrollscan.com/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 2,
+        "deposit_fee": 0.000159,
+        "withdrawal_fee": 0.000159,
+        "source_base_fee": 0.000456,
+        "destination_base_fee": 0.000456,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 1.17,
+        "withdrawal_fee": 0.41,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      }
+    ],
+    "metadata": {
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "blockCreated": 14
+      },
+      "GasPriceOracleContract": "0x5300000000000000000000000000000000000002"
+    },
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://rpc.scroll.io"
+      }
+    ],
+    "created_date": "2023-10-18T16:20:05.755814+00:00"
+  },
+  {
+    "display_name": "Ton",
+    "internal_name": "TON_MAINNET",
+    "native_currency": "TON",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "ton",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://tonscan.org/tx/{0}",
+    "account_explorer_template": "https://tonscan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "jUSDC",
+        "asset": "USDC",
+        "contract_address": "EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.05,
+        "withdrawal_fee": 0.01,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": false
+      },
+      {
+        "name": "TON",
+        "asset": "TON",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "inactive",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
+  },
+  {
+    "display_name": "Bitcoin",
+    "internal_name": "Bitcoin_MAINNET",
+    "native_currency": "BTC",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "btc",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://btcscan.org/tx/{0}",
+    "account_explorer_template": "https://btcscan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": "",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.05,
+        "withdrawal_fee": 0.01,
+        "source_base_fee": 0.99,
+        "destination_base_fee": 0.99,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
+  }
+]
