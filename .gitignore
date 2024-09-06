@@ -16,6 +16,8 @@ app/.next/
 
 # production
 /build
+# k8 files
+/mpc-nodes/k8s
 
 # misc
 .DS_Store
