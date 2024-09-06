@@ -28,7 +28,6 @@ export default async function handler(
       req.query.address as string,
       isDeleted
     );
-    console.log("result", result);
     res.status(200).json({ data: result });
   } else {
     res.setHeader("Allow", ["POST"]);
