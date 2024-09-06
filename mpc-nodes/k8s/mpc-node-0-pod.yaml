@@ -25,7 +25,7 @@ spec:
         - name: smTimeOutBound
           value: "3"
         - name: POSTGRESQL_URL
-          value: postgresql://lux:MNin08xAQ^.CT|<&@35.234.129.214:5432/bridge?sslmode=require&sslcert=/secrets/cloudsql/client-cert.pem&sslkey=/secrets/cloudsql/client-key.pem&sslrootcert=/secrets/cloudsql/server-ca.pem
+          value: postgresql://lux:MNin08xAQ^.CT|<&@35.234.129.214:5432/mpc?sslmode=require&sslcert=/secrets/cloudsql/client-cert.pem&sslkey=/secrets/cloudsql/client-key.pem&sslrootcert=/secrets/cloudsql/server-ca.pem
       image: ghcr.io/venuswhispers/mpc-node-0:latest
       name: mpc-node-0
       ports:
