@@ -25,7 +25,7 @@ spec:
         - name: smTimeOutBound
           value: "3"
         - name: POSTGRESQL_URL
-          value:
+          value: postgresql://username:password@url?sslmode=require&sslcert=&sslkey=&sslrootcert=
       image: ghcr.io/venuswhispers/mpc-node-1:latest
       name: mpc-node-1
       ports:
