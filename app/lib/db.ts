@@ -25,7 +25,7 @@ declare const globalThis: {
 } & typeof global;
 
 const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
-if (process.env.NEXT_PUBLIC_NODE_ENV === "production") {
+if (process.env.NEXT_PUBLIC_NODE_ENV === "production" && !globalThis.prismaGlobal) {
   // Decode and write client-cert.pem
   if (process.env.CLIENT_CERT_BASE64) {
     writeDecodedFile('client-cert.pem', process.env.CLIENT_CERT_BASE64);
