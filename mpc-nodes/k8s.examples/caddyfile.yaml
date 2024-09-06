@@ -6,18 +6,18 @@ data:
   Caddyfile: |
     teleport.lux.network {
       # Handle requests to /node0 and its subpaths
-      handle_path /node0* {
-        reverse_proxy mpc-node-0:6000
+      handle_path <path0>* {
+        reverse_proxy mpc-node-0:<PORT0>
       }
 
       # Handle requests to /node1 and its subpaths
-      handle_path /node1* {
-        reverse_proxy mpc-node-1:6000
+      handle_path <path1>* {
+        reverse_proxy mpc-node-1:<PORT1>
       }
 
       # Handle requests to /node2 and its subpaths
-      handle_path /node2* {
-        reverse_proxy mpc-node-2:6000
+      handle_path <path2>* {
+        reverse_proxy mpc-node-2:<PORT2>
       }
 
       # Catch-all for other requests, return 404 Not Found

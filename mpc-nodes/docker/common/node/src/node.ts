@@ -35,8 +35,6 @@ const rpcList = settings.RPC
 const networkName = settings.NetNames
 /* DECIMAL LIST */
 const DECIMALS = settings.DECIMALS
-/* Signature Re-signing flag */
-const newSigAllowed = settings.NewSigAllowed
 /* Signing MSG */
 const msg = settings.Msg //signing msg used in front running prevention
 /* Dupelist - a graylist for slowing flood attack */
@@ -88,12 +86,21 @@ app.use(cors())
 
 const port = process.env.PORT || 6000 //6000
 const server = app.listen(Number(port), "0.0.0.0", function () {
-  const host = server.address()
   console.log(`>> Teleporter_${process.env.node_number} Running At: ${port}`)
 })
 
 app.get("/", async (req: express.Request, res: express.Response) => {
   res.send(`>>> node_${process.env.node_number} is running at: ${port}`)
+})
+
+app.get("/dbcheck", async (req: express.Request, res: express.Response) => {
+  try {
+    const transactions = await prisma.teleporter.findMany()
+    res.status(200).json(transactions)
+  } catch (err) {
+    console.log("Failed to save tx to db", err)
+    res.status(500).json(err)
+  }
 })
 
 /*
