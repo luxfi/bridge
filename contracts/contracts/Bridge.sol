@@ -17,17 +17,21 @@ import "./ERC20B.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Vault} from "./Vault.sol";
+import "hardhat/console.sol";
 
 contract Bridge is Ownable, AccessControl {
     uint256 internal fee = 0; //zero default
     uint256 public feeRate = 100; // Fee rate 1%
     address internal payoutAddr;
-    address public vault = 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714; // luxdefi.eth vault
-
+    // address public vaultAddress = 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714; // luxdefi.eth vault
+    Vault public vault;
     /** Events */
     event BridgeBurned(address caller, uint256 amt);
-    event VaultDeposit(address depositor, uint256 amt);
+    event VaultDeposit(address depositor, uint256 amt, address token);
+    event VaultWithdraw(address receiver, uint256 amt, address token);
     event BridgeMinted(address recipient, address token, uint256 amt);
+    event BridgeWithdrawn(address recipient, address token, uint256 amt);
     event AdminGranted(address to);
     event AdminRevoked(address to);
     event SigMappingAdded(bytes _key);
@@ -158,9 +162,13 @@ contract Bridge is Ownable, AccessControl {
      * @dev set vault address for teleport bridge
      * @param to_ new vault address
      */
-    function setVault(address to_) public onlyAdmin {
+    function setVault(address payable to_) public onlyAdmin {
         require(to_ != address(0), "Invalid address");
-        vault = to_;
+        vault = Vault(to_);
+    }
+
+    function addNewERC20Vault(address _asset) public onlyAdmin {
+        vault.addNewERC20Vault(_asset);
     }
 
     /**
@@ -169,20 +177,28 @@ contract Bridge is Ownable, AccessControl {
      * @param tokenAddr_ token address to transfer
      */
     function vaultDeposit(uint256 amount_, address tokenAddr_) public payable {
-        if (tokenAddr_ == address(0)) {
-            require(msg.value >= amount_, "Insufficient ETH amount");
-            if (msg.value > amount_) {
-                (bool successRefund, ) = payable(msg.sender).call{
-                    value: msg.value - amount_
-                }("");
-                require(successRefund, "Refund failed.");
-            }
-            (bool successTransfer, ) = payable(vault).call{value: amount_}("");
-            require(successTransfer, "Transfer failed.");
-        } else {
-            IERC20(tokenAddr_).transferFrom(msg.sender, vault, amount_);
+        if (tokenAddr_ != address(0)) {
+            IERC20(tokenAddr_).transferFrom(msg.sender, address(vault), amount_);
         }
-        emit VaultDeposit(msg.sender, amount_);
+        vault.deposit{value: msg.value}(tokenAddr_, amount_);
+        emit VaultDeposit(msg.sender, amount_, tokenAddr_);
+    }
+
+    function vaultWithdraw(uint256 amount_, address tokenAddr_, address receiver) private {
+        address shareAddress;
+        if (tokenAddr_ == address(0)) {
+            shareAddress = vault.ethVaultAddress();
+        }
+        else {
+            shareAddress = vault.erc20Vault(tokenAddr_);
+        }
+        IERC20(shareAddress).approve(address(vault), type(uint256).max);
+        vault.withdraw(tokenAddr_, receiver, amount_);
+        emit VaultWithdraw(receiver, amount_, tokenAddr_);
+    }
+
+    function previewVaultWithdraw(uint256 amount_, address tokenAddr_) public view returns(bool){
+        return vault.previewWithdraw(tokenAddr_, amount_);
     }
 
     /**
@@ -352,6 +368,70 @@ contract Bridge is Ownable, AccessControl {
             keccak256(
                 abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
             );
+    }
+
+
+    function bridgeWithdrawStealth(
+        uint256 amt_,
+        string memory hashedId_,
+        address toTargetAddrStr_,
+        bytes memory signedTXInfo_,
+        address tokenAddrStr_,
+        string memory chainId_,
+        uint256 fromTokenDecimal_,
+        string memory vault_
+    ) public returns (address) {
+        // TeleportStruct memory teleport;
+        // // Hash calculations
+        // teleport.tokenAddrHash = keccak256(abi.encodePacked(tokenAddrStr_));
+        // teleport.toTargetAddr = toTargetAddrStr_;
+        // teleport.toTargetAddrStrHash = keccak256(
+        //     abi.encodePacked(toTargetAddrStr_)
+        // );
+        // teleport.amtStr = Strings.toString(amt_);
+        // teleport.decimalStr = Strings.toString(fromTokenDecimal_);
+        // teleport.toChainIdHash = keccak256(abi.encodePacked(chainId_));
+        // // Concatenate message
+        // string memory message = append(
+        //     teleport.amtStr,
+        //     Strings.toHexString(uint256(teleport.toTargetAddrStrHash), 32),
+        //     hashedId_,
+        //     Strings.toHexString(uint256(teleport.tokenAddrHash), 32),
+        //     Strings.toHexString(uint256(teleport.toChainIdHash), 32),
+        //     teleport.decimalStr,
+        //     vault_
+        // );
+
+        // // Check if signedTXInfo already exists
+        // require(!transactionMap[signedTXInfo_].exists, "DupeTX");
+        // address signer = recoverSigner(
+        //     prefixed(keccak256(abi.encodePacked(message))),
+        //     signedTXInfo_
+        // );
+        // console.log("signer: %s", signer);
+        // // Check if signer is MPCOracle and corresponds to the correct ERC20B
+        // require(MPCOracleAddrMap[signer].exists, "BadSig");
+
+        // // Calculate fee and adjust amount
+        // uint256 amount_ = (amt_ * 10 ** 18) / (10 ** fromTokenDecimal_);
+        // uint256 bridgeFee = (amount_ * feeRate) / 10 ** 4;
+        // uint256 adjustedAmt = amount_ - bridgeFee; // Use a local variable
+
+        // // If correct signer, then payout
+        // teleport.token.bridgeMint(payoutAddr, bridgeFee);
+        // teleport.token.bridgeMint(teleport.toTargetAddr, adjustedAmt);
+        uint256 amount_ = amt_;
+        if(tokenAddrStr_ != address(0)){
+         amount_ = (amt_ * 10 ** ERC20(tokenAddrStr_).decimals()) / (10 ** fromTokenDecimal_);
+        }
+        vaultWithdraw(amount_, tokenAddrStr_, msg.sender);
+        // Add new transaction ID mapping
+        addMappingStealth(signedTXInfo_);
+
+        emit BridgeWithdrawn(msg.sender, tokenAddrStr_, amount_);
+
+        // return signer;
+        return address(0);
     }
 
     receive() external payable {}
