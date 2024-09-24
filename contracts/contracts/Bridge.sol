@@ -17,15 +17,14 @@ import "./ERC20B.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Vault} from "./Vault.sol";
+import {LuxVault} from "./LuxVault.sol";
 import "hardhat/console.sol";
 
 contract Bridge is Ownable, AccessControl {
     uint256 internal fee = 0; //zero default
     uint256 public feeRate = 100; // Fee rate 1%
     address internal payoutAddr;
-    // address public vaultAddress = 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714; // luxdefi.eth vault
-    Vault public vault;
+    LuxVault public vault;
     /** Events */
     event BridgeBurned(address caller, uint256 amt);
     event VaultDeposit(address depositor, uint256 amt, address token);
@@ -164,7 +163,7 @@ contract Bridge is Ownable, AccessControl {
      */
     function setVault(address payable to_) public onlyAdmin {
         require(to_ != address(0), "Invalid address");
-        vault = Vault(to_);
+        vault = LuxVault(to_);
     }
 
     function addNewERC20Vault(address _asset) public onlyAdmin {
@@ -178,18 +177,25 @@ contract Bridge is Ownable, AccessControl {
      */
     function vaultDeposit(uint256 amount_, address tokenAddr_) public payable {
         if (tokenAddr_ != address(0)) {
-            IERC20(tokenAddr_).transferFrom(msg.sender, address(vault), amount_);
+            IERC20(tokenAddr_).transferFrom(
+                msg.sender,
+                address(vault),
+                amount_
+            );
         }
         vault.deposit{value: msg.value}(tokenAddr_, amount_);
         emit VaultDeposit(msg.sender, amount_, tokenAddr_);
     }
 
-    function vaultWithdraw(uint256 amount_, address tokenAddr_, address receiver) private {
+    function vaultWithdraw(
+        uint256 amount_,
+        address tokenAddr_,
+        address receiver
+    ) private {
         address shareAddress;
         if (tokenAddr_ == address(0)) {
             shareAddress = vault.ethVaultAddress();
-        }
-        else {
+        } else {
             shareAddress = vault.erc20Vault(tokenAddr_);
         }
         IERC20(shareAddress).approve(address(vault), type(uint256).max);
@@ -197,7 +203,10 @@ contract Bridge is Ownable, AccessControl {
         emit VaultWithdraw(receiver, amount_, tokenAddr_);
     }
 
-    function previewVaultWithdraw(uint256 amount_, address tokenAddr_) public view returns(bool){
+    function previewVaultWithdraw(
+        uint256 amount_,
+        address tokenAddr_
+    ) public view returns (bool) {
         return vault.previewWithdraw(tokenAddr_, amount_);
     }
 
@@ -370,7 +379,6 @@ contract Bridge is Ownable, AccessControl {
             );
     }
 
-
     function bridgeWithdrawStealth(
         uint256 amt_,
         string memory hashedId_,
@@ -381,48 +389,41 @@ contract Bridge is Ownable, AccessControl {
         uint256 fromTokenDecimal_,
         string memory vault_
     ) public returns (address) {
-        // TeleportStruct memory teleport;
-        // // Hash calculations
-        // teleport.tokenAddrHash = keccak256(abi.encodePacked(tokenAddrStr_));
-        // teleport.toTargetAddr = toTargetAddrStr_;
-        // teleport.toTargetAddrStrHash = keccak256(
-        //     abi.encodePacked(toTargetAddrStr_)
-        // );
-        // teleport.amtStr = Strings.toString(amt_);
-        // teleport.decimalStr = Strings.toString(fromTokenDecimal_);
-        // teleport.toChainIdHash = keccak256(abi.encodePacked(chainId_));
-        // // Concatenate message
-        // string memory message = append(
-        //     teleport.amtStr,
-        //     Strings.toHexString(uint256(teleport.toTargetAddrStrHash), 32),
-        //     hashedId_,
-        //     Strings.toHexString(uint256(teleport.tokenAddrHash), 32),
-        //     Strings.toHexString(uint256(teleport.toChainIdHash), 32),
-        //     teleport.decimalStr,
-        //     vault_
-        // );
+        TeleportStruct memory teleport;
+        // Hash calculations
+        teleport.tokenAddrHash = keccak256(abi.encodePacked(tokenAddrStr_));
+        teleport.toTargetAddr = toTargetAddrStr_;
+        teleport.toTargetAddrStrHash = keccak256(
+            abi.encodePacked(toTargetAddrStr_)
+        );
+        teleport.amtStr = Strings.toString(amt_);
+        teleport.decimalStr = Strings.toString(fromTokenDecimal_);
+        teleport.toChainIdHash = keccak256(abi.encodePacked(chainId_));
+        // Concatenate message
+        string memory message = append(
+            teleport.amtStr,
+            Strings.toHexString(uint256(teleport.toTargetAddrStrHash), 32),
+            hashedId_,
+            Strings.toHexString(uint256(teleport.tokenAddrHash), 32),
+            Strings.toHexString(uint256(teleport.toChainIdHash), 32),
+            teleport.decimalStr,
+            vault_
+        );
 
-        // // Check if signedTXInfo already exists
-        // require(!transactionMap[signedTXInfo_].exists, "DupeTX");
-        // address signer = recoverSigner(
-        //     prefixed(keccak256(abi.encodePacked(message))),
-        //     signedTXInfo_
-        // );
-        // console.log("signer: %s", signer);
-        // // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        // require(MPCOracleAddrMap[signer].exists, "BadSig");
+        // Check if signedTXInfo already exists
+        require(!transactionMap[signedTXInfo_].exists, "DupeTX");
+        address signer = recoverSigner(
+            prefixed(keccak256(abi.encodePacked(message))),
+            signedTXInfo_
+        );
+        // Check if signer is MPCOracle and corresponds to the correct ERC20B
+        require(MPCOracleAddrMap[signer].exists, "BadSig");
 
-        // // Calculate fee and adjust amount
-        // uint256 amount_ = (amt_ * 10 ** 18) / (10 ** fromTokenDecimal_);
-        // uint256 bridgeFee = (amount_ * feeRate) / 10 ** 4;
-        // uint256 adjustedAmt = amount_ - bridgeFee; // Use a local variable
-
-        // // If correct signer, then payout
-        // teleport.token.bridgeMint(payoutAddr, bridgeFee);
-        // teleport.token.bridgeMint(teleport.toTargetAddr, adjustedAmt);
         uint256 amount_ = amt_;
-        if(tokenAddrStr_ != address(0)){
-         amount_ = (amt_ * 10 ** ERC20(tokenAddrStr_).decimals()) / (10 ** fromTokenDecimal_);
+        if (tokenAddrStr_ != address(0)) {
+            amount_ =
+                (amt_ * 10 ** ERC20(tokenAddrStr_).decimals()) /
+                (10 ** fromTokenDecimal_);
         }
         vaultWithdraw(amount_, tokenAddrStr_, msg.sender);
         // Add new transaction ID mapping
