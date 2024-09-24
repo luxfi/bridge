@@ -31,7 +31,7 @@ describe("Create Initial Contracts of all types", function () {
     console.log("\tUSDT Contract deployed at:", USDTAddress);
   });
   it("should deploy vault contract", async function () {
-    const instanceVault = await ethers.getContractFactory("Vault");
+    const instanceVault = await ethers.getContractFactory("LuxVault");
     vault = await instanceVault.deploy([USDTAddress]);
     vaultAddress = await vault.getAddress();
     console.log("\tVault Contract deployed at:", vaultAddress);
