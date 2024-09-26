@@ -3,9 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-
 contract ETHVault is ERC20 {
-
     // Event to emit when ETH is deposited
     event Deposit(address indexed user, uint256 amount);
 
@@ -20,26 +18,39 @@ contract ETHVault is ERC20 {
     // Function to receive ETH and mint shares
     receive() external payable {}
 
-    function deposit(uint256 amount, address receiver) external payable {
-        require(msg.value > 0 && amount == msg.value, "Must send ETH");
+    /**
+     * @dev deposit ETH
+     * @param amount_ eth amount
+     * @param receiver_ receiver's address
+     */
+    function deposit(uint256 amount_, address receiver_) external payable {
+        require(msg.value > 0 && amount_ == msg.value, "Must send ETH");
         // Calculate the number of shares to mint
         uint256 shares = msg.value; // For simplicity, 1 ETH = 1 share
         // Mint the shares to the sender
-        _mint(receiver, shares);
+        _mint(receiver_, shares);
         emit Deposit(msg.sender, msg.value);
     }
 
-    // Allow owner to withdraw all ETH
-    function withdraw(uint256 amount, address receiver, address owner) external {
-        require(amount <= address(this).balance, "Insufficient balance");
-        if (msg.sender != owner) {
-            uint256 allowed = allowance(owner, msg.sender);
-            require(allowed >= amount, "Invalid alowance");
+    /**
+     * @dev withdraw eth
+     * @param amount_ eth amount
+     * @param receiver_ receiver's address
+     * @param owner_ owner's share address
+     */
+    function withdraw(
+        uint256 amount_,
+        address receiver_,
+        address owner_
+    ) external {
+        require(amount_ <= address(this).balance, "Insufficient balance");
+        if (msg.sender != owner_) {
+            uint256 allowed = allowance(owner_, msg.sender);
+            require(allowed >= amount_, "Invalid alowance");
         }
-        _burn(owner, amount);
-        (bool success, ) = payable(receiver).call{value:amount}("");
+        _burn(owner_, amount_);
+        (bool success, ) = payable(receiver_).call{value: amount_}("");
         require(success, "sending failed");
-        emit Withdraw(msg.sender, receiver, owner, amount);
+        emit Withdraw(msg.sender, receiver_, owner_, amount_);
     }
-
 }
