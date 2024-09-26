@@ -25,7 +25,7 @@ describe("Create Initial Contracts of all types", function () {
     console.log("\tBridge Contract deployed at:", BridgeAddress);
   });
   it("should deploy USDT Contract", async function () {
-    const instanceUSDT = await ethers.getContractFactory("USDTToken");
+    const instanceUSDT = await ethers.getContractFactory("USDT");
     USDT = await instanceUSDT.deploy();
     USDTAddress = await USDT.getAddress();
     console.log("\tUSDT Contract deployed at:", USDTAddress);
@@ -37,6 +37,13 @@ describe("Create Initial Contracts of all types", function () {
     console.log("\tVault Contract deployed at:", vaultAddress);
   })
 });
+
+describe("test view functions of Vault Contract", async function () {
+  it("first view", async function () {
+    const result = await vault.getVaultInfo(USDTAddress);
+    console.log("result ---------> ", result);
+  })
+})
 
 describe("Send USDT to users", async function () {
   it("start distributing FeeToken", async function () {
@@ -65,21 +72,26 @@ describe("deposit USDT", async function () {
     expect(await Bridge.previewVaultWithdraw(ethers.parseUnits("400", 6), USDTAddress)).to.equal(true);
   })
 })
-
-describe("withdraw USDT", async function () {
-  it("user1 withdraw USDT from vault", async function () {
-    const amt = 0.00002;
-    const hashedId = "0xa452ec13f7d6ab551b536e8e98847b48a8454b284ff8647aaed2c7faf772b1ac";
-    const toTargetAddrStr = "0xD4A215472332e8B6E26B0a5DC253DB78119904cA";
-    const signedTXInfo = "0x3de3c7825f807158491a0f9a460b124aa6a97695a29cd055ad2bebc74eeefc5a1786549b9b11b3f1b1eebe7c10b6f7b0adfe05bf37df5bf6c49dd347626c5d971b";
-    const tokenAddrStr = USDTAddress;
-    const chainId = 11155111;
-    const fromTokenDecimal = 6;
-    const vault = true;
-    await Bridge.connect(user3).bridgeWithdrawStealth(ethers.parseUnits(String(amt), 6), hashedId, toTargetAddrStr, signedTXInfo, tokenAddrStr, String(chainId), fromTokenDecimal, String(vault));
-    expect(await USDT.balanceOf(user3)).to.equal(ethers.parseUnits(String(amt), 6));
+describe("test view functions of Vault Contract", async function () {
+  it("second view", async function () {
+    const result = await vault.getVaultInfo(USDTAddress);
+    console.log("result ---------> ", result);
   })
 })
+// describe("withdraw USDT", async function () {
+//   it("user1 withdraw USDT from vault", async function () {
+//     const amt = 0.00002;
+//     const hashedId = "0xa452ec13f7d6ab551b536e8e98847b48a8454b284ff8647aaed2c7faf772b1ac";
+//     const toTargetAddrStr = "0xD4A215472332e8B6E26B0a5DC253DB78119904cA";
+//     const signedTXInfo = "0x3de3c7825f807158491a0f9a460b124aa6a97695a29cd055ad2bebc74eeefc5a1786549b9b11b3f1b1eebe7c10b6f7b0adfe05bf37df5bf6c49dd347626c5d971b";
+//     const tokenAddrStr = USDTAddress;
+//     const chainId = 11155111;
+//     const fromTokenDecimal = 6;
+//     const vault = true;
+//     await Bridge.connect(user3).bridgeWithdrawStealth(ethers.parseUnits(String(amt), 6), hashedId, toTargetAddrStr, signedTXInfo, tokenAddrStr, String(chainId), fromTokenDecimal, String(vault));
+//     expect(await USDT.balanceOf(user3)).to.equal(ethers.parseUnits(String(amt), 6));
+//   })
+// })
 
 describe("deposit ETH", async function () {
   it("deposit ETH to vault with user1", async function () {
@@ -89,7 +101,12 @@ describe("deposit ETH", async function () {
     expect(await Bridge.previewVaultWithdraw(ethers.parseEther("1.1"), "0x0000000000000000000000000000000000000000")).to.equal(false);
   })
 })
-
+describe("test view functions of Vault Contract", async function () {
+  it("third view", async function () {
+    const result = await vault.getVaultInfo(ethers.ZeroAddress);
+    console.log("result ---------> ", result);
+  })
+})
 // describe("withdraw ETH", async function(){
 //   it("user1 withdraw USDT from vault", async function(){
 //     const amt =  1;

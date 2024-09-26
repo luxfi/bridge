@@ -23,6 +23,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract LuxVault is Ownable {
     mapping(address => address) public erc20Vault;
     address payable public ethVaultAddress;
+    uint256 public totalVaultLength;
+    address[] public assets;
 
     event ERC20VaultCreated(
         address indexed asset,
@@ -67,6 +69,8 @@ contract LuxVault is Ownable {
         address newVaultAddress = address(newERC20Vault);
         erc20Vault[asset_] = newVaultAddress;
         IERC20(asset_).approve(newVaultAddress, type(uint256).max);
+        totalVaultLength++;
+        assets.push(asset_);
         emit ERC20VaultCreated(asset_, newVaultAddress);
     }
 
@@ -124,5 +128,45 @@ contract LuxVault is Ownable {
         }
         return false;
     }
+
+    /**
+     * @dev get vault info according to asset address
+     * @param asset_ ERC20 token address
+     */
+    function getVaultInfo(
+        address asset_
+    )
+        external
+        view
+        returns (
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            address,
+            uint256
+        )
+    {
+        if (asset_ == address(0)) {
+            return (
+                "Native Token",
+                "ETH",
+                ETHVault(ethVaultAddress).name(),
+                ETHVault(ethVaultAddress).symbol(),
+                ethVaultAddress,
+                ETHVault(ethVaultAddress).totalSupply()
+            );
+        } else {
+            return (
+                ERC20(asset_).name(),
+                ERC20(asset_).symbol(),
+                LERC4626(erc20Vault[asset_]).name(),
+                LERC4626(erc20Vault[asset_]).symbol(), // Add parentheses here
+                erc20Vault[asset_],
+                LERC4626(erc20Vault[asset_]).totalAssets()
+            );
+        }
+    }
+
     receive() external payable {}
 }

@@ -4,6 +4,7 @@ import { useWalletStore } from "../../../stores/walletStore"
 import KnownInternalNames from "../../knownIds"
 import { useCallback } from "react";
 import { ResolveStarknetWalletIcon } from "./resoveStarknetIcon";
+import { ModalResult } from "starknetkit/dist/types/modal";
 
 export default function useStarknet(): WalletProvider {
     const withdrawalSupportedNetworks = [KnownInternalNames.Networks.StarkNetMainnet, KnownInternalNames.Networks.StarkNetGoerli]
@@ -33,7 +34,7 @@ export default function useStarknet(): WalletProvider {
                     chainId: chainId as any
                 },
                 dappName: 'Bridge',
-            })
+            }) as any
             if (res && res.account && res.isConnected) {
                 addWallet({
                     address: res.account.address,
