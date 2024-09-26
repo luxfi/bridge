@@ -14,7 +14,7 @@ import FromNetworkForm from './from/NetworkFormField';
 import ToNetworkForm from './to/NetworkFormField';
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
+import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings.sandbox";
 import { useAtom } from "jotai";
 
 import {
