@@ -257,6 +257,59 @@ contract Bridge is Ownable, AccessControl {
     }
 
     /**
+     * @dev split ECDSA signature to r, s, v
+     * @param sig ECDSA signature
+     * @return splitted_ v,s,r
+     */
+    function splitSignature(
+        bytes memory sig
+    ) internal pure returns (uint8, bytes32, bytes32) {
+        require(sig.length == 65, "invalid Length");
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+            // first 32 bytes, after the length prefix
+            r := mload(add(sig, 32))
+            // second 32 bytes
+            s := mload(add(sig, 64))
+            // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(sig, 96)))
+        }
+
+        return (v, r, s);
+    }
+
+    /**
+     * @dev recover signer from message and ECDSA signature
+     * @param message_ message to be signed
+     * @param sig_ ECDSA signature
+     * @return signer signer of ECDSA
+     */
+    function recoverSigner(
+        bytes32 message_,
+        bytes memory sig_
+    ) internal pure returns (address) {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        (v, r, s) = splitSignature(sig_);
+        return ecrecover(message_, v, r, s);
+    }
+
+    /**
+     * @dev Builds a prefixed hash to mimic the behavior of eth_sign
+     * @return prefixed prefixed msg
+     */
+    function prefixed(bytes32 hash) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
+            );
+    }
+
+    /**
      * @dev Sig is specific to recipient target address, hashed txid, amount, block height, target token and target chain
      * @notice Sets the vault address. Sig can only be claimed once.
      * @param amt_ token amount that is transfered to lux vault in source chain
@@ -328,57 +381,18 @@ contract Bridge is Ownable, AccessControl {
     }
 
     /**
-     * @dev split ECDSA signature to r, s, v
-     * @param sig ECDSA signature
-     * @return splitted_ v,s,r
+     * @dev Sig is specific to recipient target address, hashed txid, amount, block height, target token and target chain
+     * @notice Sets the vault address. Sig can only be claimed once.
+     * @param amt_ token amount that is burnt in source chain
+     * @param hashedId_ hashed tx id in source chain
+     * @param toTargetAddrStr_ destinatoin address to withdraw in destination chain
+     * @param signedTXInfo_ mpc signed msg from teleport oracle network
+     * @param tokenAddrStr_ token address in destination chain
+     * @param chainId_ chain id
+     * @param fromTokenDecimal_ token decimal of source token
+     * @param vault_ if usage of vault
+     * @return signer return signer address of message
      */
-    function splitSignature(
-        bytes memory sig
-    ) internal pure returns (uint8, bytes32, bytes32) {
-        require(sig.length == 65, "invalid Length");
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-
-        assembly {
-            // first 32 bytes, after the length prefix
-            r := mload(add(sig, 32))
-            // second 32 bytes
-            s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes)
-            v := byte(0, mload(add(sig, 96)))
-        }
-
-        return (v, r, s);
-    }
-
-    /**
-     * @dev recover signer from message and ECDSA signature
-     * @param message_ message to be signed
-     * @param sig_ ECDSA signature
-     * @return signer signer of ECDSA
-     */
-    function recoverSigner(
-        bytes32 message_,
-        bytes memory sig_
-    ) internal pure returns (address) {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        (v, r, s) = splitSignature(sig_);
-        return ecrecover(message_, v, r, s);
-    }
-
-    /**
-     * @dev Builds a prefixed hash to mimic the behavior of eth_sign.
-     */
-    function prefixed(bytes32 hash) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
-            );
-    }
-
     function bridgeWithdrawStealth(
         uint256 amt_,
         string memory hashedId_,
@@ -432,7 +446,7 @@ contract Bridge is Ownable, AccessControl {
         emit BridgeWithdrawn(msg.sender, tokenAddrStr_, amount_);
 
         // return signer;
-        return address(0);
+        return signer;
     }
 
     receive() external payable {}
