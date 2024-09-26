@@ -180,7 +180,7 @@ export async function handleSwapCreation(data: SwapData) {
         return result;
     } catch (error) {
         console.log(error)
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(
             `Error creating swap and related entities: ${error.message}`
         );
@@ -255,7 +255,7 @@ export async function handlerGetSwap(id: string) {
             destination_asset: swap?.destination_asset?.asset,
         };
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -315,7 +315,7 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
         };
     } catch (error) {
         console.log(error)
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -375,7 +375,7 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
         };
     } catch (error) {
         console.log(error)
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -435,7 +435,7 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
         };
     } catch (error) {
         console.log(error)
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -477,7 +477,7 @@ export async function handlerGetSwaps(
             destination_asset: s?.destination_asset?.asset
         }));
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -516,7 +516,7 @@ export async function handlerGetHasBySwaps(address: string) {
             return [{ ...transaction.swap }];
         }
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -564,7 +564,7 @@ export async function handlerGetExplorer(status: string[]) {
             destination_asset: s?.destination_asset?.asset
         }));
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error getting swap: ${error.message}`);
     }
 }
@@ -577,7 +577,7 @@ export async function handlerUpdateSwaps(swapData: { id: string }) {
         });
         return "success";
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error deleting swaps: ${error.message}`);
     }
 }
@@ -639,7 +639,7 @@ export async function handlerUpdateSwap(swapData: UpdateSwapData) {
             return "failed";
         }
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error deleting swaps: ${error.message}`);
     }
 }
@@ -652,16 +652,16 @@ export async function handlerDelSwap(swapData: { id: string }) {
         });
         return "success";
     } catch (error) {
-        catchPrismaKnowError(error);
+        //catchPrismaKnowError(error);
         throw new Error(`Error deleting swaps: ${error.message}`);
     }
 }
 
-function catchPrismaKnowError(error: Error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new Error(
-            `Error getting Prisma code: ${error.name} msg:${error.message}`
-        );
-    }
-}
+// function catchPrismaKnowError(error: Error) {
+//     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+//         throw new Error(
+//             `Error getting Prisma code: ${error.name} msg:${error.message}`
+//         );
+//     }
+// }
 
