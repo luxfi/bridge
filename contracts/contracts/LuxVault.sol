@@ -23,10 +23,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract LuxVault is Ownable {
     mapping(address => address) public erc20Vault;
     address payable public ethVaultAddress;
+
     event ERC20VaultCreated(
         address indexed asset,
         address indexed vaultAddress
     );
+
     constructor(address[] memory _assets) Ownable(msg.sender) {
         for (uint i = 0; i < _assets.length; ++i) {
             _addNewERC20Vault(_assets[i]);
@@ -34,66 +36,93 @@ contract LuxVault is Ownable {
         ETHVault _newETHVault = new ETHVault("Native Vault", "ethVault");
         ethVaultAddress = payable(address(_newETHVault));
     }
+
     function concat(
         string memory a,
         string memory b
     ) internal pure returns (string memory) {
         return string(abi.encodePacked(a, b));
     }
-    function addNewERC20Vault(address _asset) external onlyOwner {
-        _addNewERC20Vault(_asset);
+
+    /**
+     * @dev add new ERC20 vault
+     * @param asset_ ERC20 token address
+     */
+    function addNewERC20Vault(address asset_) external onlyOwner {
+        _addNewERC20Vault(asset_);
     }
-    function _addNewERC20Vault(address _asset) private {
-        require(_asset != address(0), "Invalid asset address.");
-        require(erc20Vault[_asset] == address(0), "Already exist.");
+
+    /**
+     * @dev add new ERC20 vault
+     * @param asset_ ERC20 token address
+     */
+    function _addNewERC20Vault(address asset_) private {
+        require(asset_ != address(0), "Invalid asset address.");
+        require(erc20Vault[asset_] == address(0), "Vault already exists.");
         LERC4626 newERC20Vault = new LERC4626(
-            IERC20(_asset),
-            concat(ERC20(_asset).name(), " vault"),
-            concat("v", ERC20(_asset).symbol())
+            IERC20(asset_),
+            concat(ERC20(asset_).name(), " vault"),
+            concat("v", ERC20(asset_).symbol())
         );
         address newVaultAddress = address(newERC20Vault);
-        erc20Vault[_asset] = newVaultAddress;
-        IERC20(_asset).approve(newVaultAddress, type(uint256).max);
-        emit ERC20VaultCreated(_asset, newVaultAddress);
+        erc20Vault[asset_] = newVaultAddress;
+        IERC20(asset_).approve(newVaultAddress, type(uint256).max);
+        emit ERC20VaultCreated(asset_, newVaultAddress);
     }
 
+    /**
+     * @dev deposit asset
+     * @param asset_ ERC20 token address
+     * @param amount_ token amount
+     */
     function deposit(
-        address _asset,
-        uint256 _amount
+        address asset_,
+        uint256 amount_
     ) external payable onlyOwner {
-        if (_asset == address(0)) {
-            require(msg.value == _amount, "Insufficient ETH amount");
-            ETHVault(ethVaultAddress).deposit{value: _amount}(_amount, owner());
+        if (asset_ == address(0)) {
+            require(msg.value >= amount_, "Insufficient ETH amount");
+            ETHVault(ethVaultAddress).deposit{value: amount_}(amount_, owner());
         } else {
-            ERC4626(erc20Vault[_asset]).deposit(_amount, owner());
+            ERC4626(erc20Vault[asset_]).deposit(amount_, owner());
         }
     }
 
+    /**
+     * @dev withdraw asset
+     * @param asset_ ERC20 token address
+     * @param receiver_ receiver's address
+     * @param amount_ token amount
+     */
     function withdraw(
-        address _asset,
-        address receiver,
-        uint256 _amount
+        address asset_,
+        address receiver_,
+        uint256 amount_
     ) external onlyOwner {
-        if (_asset == address(0)) {
-            ETHVault(ethVaultAddress).withdraw(_amount, receiver, owner());
+        if (asset_ == address(0)) {
+            ETHVault(ethVaultAddress).withdraw(amount_, receiver_, owner());
         } else {
-            ERC4626(erc20Vault[_asset]).withdraw(_amount, receiver, owner());
+            ERC4626(erc20Vault[asset_]).withdraw(amount_, receiver_, owner());
         }
     }
 
+    /**
+     * @dev preview withdraw
+     * @param asset_ ERC20 token address
+     * @param amount_ token amount
+     * @return value true it possible to withdraw
+     */
     function previewWithdraw(
-        address _asset,
-        uint256 _amount
+        address asset_,
+        uint256 amount_
     ) public view returns (bool) {
-        if (_asset == address(0)) {
-            if (ETHVault(ethVaultAddress).balanceOf(owner()) >= _amount)
+        if (asset_ == address(0)) {
+            if (ETHVault(ethVaultAddress).balanceOf(owner()) >= amount_)
                 return true;
-            return false;
         } else {
-            if (ERC4626(erc20Vault[_asset]).maxWithdraw(owner()) >= _amount)
+            if (ERC4626(erc20Vault[asset_]).maxWithdraw(owner()) >= amount_)
                 return true;
-            return false;
         }
+        return false;
     }
     receive() external payable {}
 }
