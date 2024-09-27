@@ -1,0 +1,161 @@
+@import "tailwindcss/base"; 
+/* see https://stackoverflow.com/questions/69746121/using-nextjs-how-can-you-import-in-css-using-tailwind-css */
+@import "@luxdefi/ui/style/lux-tw-base-layer";
+
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+
+@layer utilities {
+
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+}
+
+
+iframe body {
+  display: none;
+}
+
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  transition: all 5000s ease-in-out 0s;
+  transition-property: background-color, color;
+
+    /* :aa TODO */
+  -webkit-text-fill-color: #f8fdff;
+  caret-color: #f8fdff;
+  -webkit-box-shadow: 0 0 0px 1000px #131e36 inset;
+  box-shadow: 0 0 0px 1000px #131e36 inset;
+
+}
+
+.shadowed-button {
+  transform: translate3d(0, 0, 0);
+}
+
+hr.horizontal-gradient {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(to right, theme('colors.muted.4'), theme('colors.muted.3'), theme('colors.muted.4'));
+}
+
+
+input::-webkit-input-placeholder {
+  line-height: normal !important;
+}
+
+body {
+  overflow: overlay;
+}
+
+body::-webkit-scrollbar,
+.dataTable::-webkit-scrollbar {
+  background-color: var(--lx-bg-1);
+  width: 0.375rem !important;
+  height: 0.375rem !important;
+}
+
+
+body::-webkit-scrollbar-thumb,
+.dataTable::-webkit-scrollbar-thumb {
+  background-color: var(--lx-bg-3);
+  border-radius: 0.25rem !important;
+}
+
+
+input:disabled,
+textarea:disabled,
+input:disabled::placeholder,
+textarea:disabled::placeholder {
+  opacity: 1; /* correct opacity on iOS */
+}
+
+.accordion .chevron-down {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  right: 0;
+  margin-right: 16px;
+}
+
+.disabled {
+  pointer-events: none;
+}
+
+.link-underline {
+  border-bottom-width: 0;
+  background-image: linear-gradient(transparent, transparent), linear-gradient(#fff, #fff);
+  background-size: 0 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size .5s ease-in-out;
+}
+
+.link-underline-black {
+  background-image: linear-gradient(transparent, transparent), linear-gradient(rgb(209 213 219 / var(--tw-text-opacity)), rgb(209 213 219 / var(--tw-text-opacity)))
+}
+
+.link-underline:hover {
+  background-size: 100% 2px;
+  background-position: 0 100%
+}
+
+.pendingAnim {
+  top: -4px;
+  left: 0;
+  width: 0;
+  right: 100%;
+  height: 4px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    transparent 50%,
+    #facc15,
+    #d0a90f
+  );
+  position: absolute;
+  animation: animateTop 2s linear infinite;
+}
+
+@keyframes animateTop {
+  0% {
+    left: 0%;
+    right: 100%;
+    width: 0%;
+  }
+  20% {
+    left: 0%;
+    right: 80%;
+    width: 20%;
+  }
+  80% {
+    right: 0%;
+    left: 20%;
+    width: 60%; 
+  }
+
+  100% {
+    left: 100%;
+    right: 0%;
+    width: 0%;
+  }
+}
