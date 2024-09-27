@@ -43,8 +43,8 @@ const Swap: FC = () => {
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
-  const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [swapI, setSwapId] = useAtom(swapIdAtom);
+  const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setEthPrice] = useAtom(ethPriceAtom);
 
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
@@ -56,25 +56,33 @@ const Swap: FC = () => {
   }, []);
 
   React.useEffect(() => {
-    if (sourceNetwork) {
-      setSourceAsset(sourceNetwork.currencies[0]);
-      setDestinationNetwork(destinationNetworks[1]);
+    if (sourceNetwork?.chain_id === 7777) {
+      console.log("evms")
+    } else {
+      console.log("lux")
     }
-  }, [sourceNetwork]);
+  }, [sourceNetwork, sourceAsset])
 
-  React.useEffect(() => {
-    if (destinationNetwork) {
-      setSourceNetwork(sourceNetworks[0])
-    }
+  // React.useEffect(() => {
+  //   if (sourceNetwork) {
+  //     setSourceAsset(sourceNetwork.currencies[0]);
+  //     setDestinationNetwork(destinationNetworks[1]);
+  //   }
+  // }, [sourceNetwork]);
 
-    if (destinationNetwork && sourceAsset) {
-      if (sourceAsset.asset === "ETH") {
-        setDestinationAsset(destinationNetwork.currencies[1])
-      } else {
-        setDestinationAsset(destinationNetwork.currencies[2])
-      }
-    }
-  }, [destinationNetwork, sourceAsset]);
+  // React.useEffect(() => {
+  //   if (destinationNetwork) {
+  //     setSourceNetwork(sourceNetworks[0])
+  //   }
+
+  //   if (destinationNetwork && sourceAsset) {
+  //     if (sourceAsset.asset === "ETH") {
+  //       setDestinationAsset(destinationNetwork.currencies[1])
+  //     } else {
+  //       setDestinationAsset(destinationNetwork.currencies[2])
+  //     }
+  //   }
+  // }, [destinationNetwork, sourceAsset]);
 
   const warnningMessage = React.useMemo(() => {
     if (!sourceNetwork) {
@@ -138,7 +146,10 @@ const Swap: FC = () => {
             <FromNetworkForm
               network={sourceNetwork}
               asset={sourceAsset}
-              setNetwork={(network: Network) => setSourceNetwork(network)}
+              setNetwork={(network: Network) => {
+                console.log(network)
+                setSourceNetwork(network)
+              }}
               setAsset={(token: Token) => setSourceAsset(token)}
               networks={sourceNetworks}
             />
