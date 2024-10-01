@@ -32,11 +32,15 @@ contract LuxVault is Ownable {
     );
 
     constructor(address[] memory _assets) Ownable(msg.sender) {
+        // add native asset vault
+        ETHVault _newETHVault = new ETHVault("Native Vault", "ethVault");
+        ethVaultAddress = payable(address(_newETHVault));
+        totalVaultLength++;
+        assets.push(address(0));
+        // add initial erc20 vaults
         for (uint i = 0; i < _assets.length; ++i) {
             _addNewERC20Vault(_assets[i]);
         }
-        ETHVault _newETHVault = new ETHVault("Native Vault", "ethVault");
-        ethVaultAddress = payable(address(_newETHVault));
     }
 
     function concat(
@@ -63,7 +67,7 @@ contract LuxVault is Ownable {
         require(erc20Vault[asset_] == address(0), "Vault already exists.");
         LERC4626 newERC20Vault = new LERC4626(
             IERC20(asset_),
-            concat(ERC20(asset_).name(), " vault"),
+            concat(ERC20(asset_).name(), " Vault"),
             concat("v", ERC20(asset_).symbol())
         );
         address newVaultAddress = address(newERC20Vault);
@@ -132,6 +136,7 @@ contract LuxVault is Ownable {
     /**
      * @dev get vault info according to asset address
      * @param asset_ ERC20 token address
+     * @return info vault info
      */
     function getVaultInfo(
         address asset_
