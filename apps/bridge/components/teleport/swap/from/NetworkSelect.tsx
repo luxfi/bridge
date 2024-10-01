@@ -31,7 +31,7 @@ const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, 
                 <CommandWrapper>
                     <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
                     {
-                        networks ?
+                        networks && networks.length > 0 ?
                             <CommandList>
                                 <CommandEmpty>No results found.</CommandEmpty>
                                 {
