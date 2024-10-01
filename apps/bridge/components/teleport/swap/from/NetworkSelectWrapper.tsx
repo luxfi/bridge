@@ -37,6 +37,8 @@ export default function NetworkSelectWrapper<T>({
         }
     }, [])
 
+    console.log(network)
+
     return (
         <>
             <div className="flex items-center relative">
