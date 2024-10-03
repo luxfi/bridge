@@ -17,9 +17,10 @@ interface IProps {
     sourceAsset?: Token,
     setNetwork: (network: Network) => void,
     setAsset: (asset: Token) => void,
+    disabled: boolean
 }
 
-const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAsset, setNetwork, setAsset }) => {
+const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAsset, setNetwork, setAsset, disabled }) => {
 
     const [amount] = useAtom(sourceAmountAtom);
 
@@ -32,7 +33,7 @@ const NetworkFormField: React.FC<IProps> = ({ networks, network, asset, sourceAs
                 <div>
                     <div className="w-full">
                         <NetworkSelectWrapper
-                            disabled={false}
+                            disabled={disabled}
                             placeholder={'Destination'}
                             setNetwork={setNetwork}
                             network={network}
