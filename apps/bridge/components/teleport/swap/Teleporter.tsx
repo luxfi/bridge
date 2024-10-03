@@ -14,7 +14,7 @@ import FromNetworkForm from './from/NetworkFormField';
 import ToNetworkForm from './to/NetworkFormField';
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings.sandbox";
+import { networks } from "@/components/teleport/constants/settings.sandbox";
 import { useAtom } from "jotai";
 
 import {
@@ -43,9 +43,24 @@ const Swap: FC = () => {
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom);
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
-  const [swapI, setSwapId] = useAtom(swapIdAtom);
+  const [swapId, setSwapId] = useAtom(swapIdAtom);
   const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setEthPrice] = useAtom(ethPriceAtom);
+
+  const sourceNetworks = networks;
+  const [destinationNetworks, setDestinationNetworks] = React.useState<Network[]>([]);
+
+  React.useEffect(() => {
+    if (sourceNetwork?.chain_id === 7777) {
+      const _networks = networks.filter((n: Network) => n.chain_id !== 7777);
+      setDestinationNetworks(_networks);
+      setDestinationNetwork(_networks[0]);
+    } else {
+      const _networks = networks.filter((n: Network) => n.chain_id === 7777);
+      setDestinationNetworks(_networks);
+      setDestinationNetwork(_networks[0]);
+    }
+  }, [sourceNetwork]);
 
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
 
@@ -144,6 +159,7 @@ const Swap: FC = () => {
         <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
           <div className="flex flex-col w-full">
             <FromNetworkForm
+              disabled={false}
               network={sourceNetwork}
               asset={sourceAsset}
               setNetwork={(network: Network) => {
@@ -161,6 +177,7 @@ const Swap: FC = () => {
 
           <div className="flex flex-col w-full">
             <ToNetworkForm
+              disabled={!sourceNetwork}
               network={destinationNetwork}
               asset={destinationAsset}
               sourceAsset={sourceAsset}
