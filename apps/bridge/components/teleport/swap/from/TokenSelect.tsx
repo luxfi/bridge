@@ -5,11 +5,10 @@ import Image from 'next/image';
 
 interface IProps {
     values: Token[],
-    value?: Token,
     setValue: (token: Token) => void
 }
 
-const TokenSelect: React.FC<IProps> = ({ values, value, setValue }) => {
+const TokenSelect: React.FC<IProps> = ({ values, setValue }) => {
     return (
         <CommandWrapper>
             <CommandList>

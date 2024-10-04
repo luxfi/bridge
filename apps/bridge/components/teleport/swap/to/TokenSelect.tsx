@@ -5,38 +5,21 @@ import { Token } from '@/types/teleport';
 
 interface IProps {
     values: Token[],
-    value?: Token,
-    sourceAsset?: Token,
     setValue: (token: Token) => void,
-    setShowModal: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const TokenSelect: React.FC<IProps> = ({ values, value, sourceAsset, setValue, setShowModal }) => {
-
-    const pairCheck = (item: Token) => {
-        return (sourceAsset?.asset === 'ETH' && item.asset === 'LETH') || (sourceAsset?.asset !== 'ETH' && item.asset === 'LUSD')
-    }
-
-    const handleSelect = React.useCallback((item: Token) => {
-        if (item.status === 'active' && pairCheck(item)) {
-            setValue(item);
-            setShowModal(false);
-        }
-    }, [])
-
+const TokenSelect: React.FC<IProps> = ({ values, setValue }) => {
     return (
         <CommandWrapper>
             <CommandList>
                 {values.map(item => {
                     return (
                         <CommandItem
-                            className={`border-t border-t-slate-500 justify-between gap-6 ${!pairCheck(item) && 'opacity-30'}`}
+                            className={`border-t border-t-slate-500 justify-between gap-6 ${item.status !== 'active' && 'opacity-30'}`}
                             disabled={false}
                             value={item.asset}
                             key={item.asset}
-                            onSelect={() => {
-                                handleSelect(item)
-                            }}
+                            onSelect={() => setValue(item)}
                         >
                             <div className="flex items-center w-full">
                                 <div className="flex-shrink-0 h-6 w-6 relative">
@@ -58,7 +41,7 @@ const TokenSelect: React.FC<IProps> = ({ values, value, sourceAsset, setValue, s
                                     </p>
                                 </div>
                             </div>
-                            <div className='text-xs text-[white]/60'>{(item.status === 'active' && pairCheck(item)) && 'active'}</div>
+                            <div className='text-xs text-[white]/60'>{item.status === 'active' && 'active'}</div>
                         </CommandItem>
                     );
                 })}

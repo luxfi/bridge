@@ -320,7 +320,7 @@ export const networks: Network[] = [
         is_featured: false,
         average_completion_time: "00:01:04.0494430",
         chain_id: 56,
-        status: "inactive",
+        status: "active",
         type: "evm",
         refuel_amount_in_usd: 0.5,
         transaction_explorer_template: "https://bscscan.io/tx/{0}",
@@ -384,7 +384,7 @@ export const networks: Network[] = [
                 logo: "https://cdn.lux.network/bridge/currencies/dai.png",
                 contract_address: "",
                 decimals: 18,
-                status: "inactive",
+                status: "active",
                 is_deposit_enabled: true,
                 is_withdrawal_enabled: true,
                 is_refuel_enabled: false,
@@ -645,4 +645,22 @@ export const CONTRACTS = {
     7777: {
         teleporter: "0xB2237fb7DBB19Ff09BBD64029064eC05B3C369Ac"
     }
+}
+
+export const SWAP_PAIRS: Record<string, string[]> = {
+    "LETH": ["ETH"],
+    "LPOL": ["POL", "MATIC"],
+    "LBNB": ["BNB"],
+    "LFTM": ["FTM"],
+    "LCELO": ["CELO"],
+    "LUSD": ["USDT", "USDC", "DAI"],
+
+    "ETH": ["LETH"],
+    "POL": ["LPOL"],
+    "BNB": ["LBNB"],
+    "FTM": ["LFTM"],
+    "CELO": ["LCELO"],
+    "USDT": ["LUSD"],
+    "USDC": ["LUSD"],
+    "DAI": ["LUSD"],
 }

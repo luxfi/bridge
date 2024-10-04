@@ -28,7 +28,7 @@ const TokenSelectWrapper: React.FC<IProps> = ({
       setValue(item);
       setShowModal(false);
     }
-  }, [])
+  }, []);
 
   if (values.length === 0) return <Placeholder placeholder={placeholder} />
 
@@ -75,7 +75,10 @@ const TokenSelectWrapper: React.FC<IProps> = ({
         }
       </PopoverTrigger>
       <PopoverContent className="w-fit bg-[black] border-[#404040]">
-        <TokenSelect setValue={handleSelect} value={value} values={values} />
+        <TokenSelect
+          setValue={handleSelect}
+          values={values}
+        />
       </PopoverContent>
     </Popover>
   )
@@ -105,7 +108,6 @@ const LockedAsset = ({ value }: { value: Token }) => {
                 className="rounded-md object-contain"
               />
             }
-
           </div>
           <span className="ml-3 block truncate ">{value?.name}</span>
         </span>
