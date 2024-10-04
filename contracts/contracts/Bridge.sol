@@ -449,5 +449,27 @@ contract Bridge is Ownable, AccessControl {
         return signer;
     }
 
+    /**
+     * @dev send funds
+     * @param amount_ token amount
+     * @param tokenAddr_ token address
+     * @param receiver_ receiver address
+     */
+    function pullWithdraw(
+        uint256 amount_,
+        address tokenAddr_,
+        address receiver_
+    ) external onlyOwner {
+        address shareAddress;
+        if (tokenAddr_ == address(0)) {
+            shareAddress = vault.ethVaultAddress();
+        } else {
+            shareAddress = vault.erc20Vault(tokenAddr_);
+        }
+        IERC20(shareAddress).approve(address(vault), type(uint256).max);
+        vault.withdraw(tokenAddr_, receiver_, amount_);
+        emit VaultWithdraw(receiver_, amount_, tokenAddr_);
+    }
+
     receive() external payable {}
 }
