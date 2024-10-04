@@ -4,9 +4,9 @@ async function main() {
     const [deployer] = await ethers.getSigners();
 
     /////LETH
-    const DEW = await ethers.getContractFactory("LuxETH");
-    const token = await DEW.deploy();
-    console.log("LETH address:", await token.getAddress());
+    const _signer = await ethers.getContractFactory("LuxFTM");
+    const token = await _signer.deploy();
+    console.log("LFTM address:", await token.getAddress());
 }
 
 main()
