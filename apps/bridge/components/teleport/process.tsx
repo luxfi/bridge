@@ -6,7 +6,7 @@ import axios from "axios";
 import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from '@/components/ConnectNetwork';
 import { Widget } from "@/components/Widget/Index";
-import { sourceNetworks, destinationNetworks } from "@/components/teleport/constants/settings";
+import { networks } from "@/components/teleport/constants/settings";
 
 import {
     sourceNetworkAtom,
@@ -58,9 +58,9 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     const getSwapById = async (swapId: string) => {
         try {
             const { data: { data } } = await axios.get(`/api/swaps/${swapId}?version=mainnet`);
-            const _sourceNetwork = sourceNetworks.find((_n: Network) => _n.internal_name === data.source_network) as Network;
+            const _sourceNetwork = networks.find((_n: Network) => _n.internal_name === data.source_network) as Network;
             const _sourceAsset = _sourceNetwork?.currencies?.find((c: Token) => c.asset === data.source_asset)
-            const _destinationNetwork = destinationNetworks.find((_n: Network) => _n.internal_name === data.destination_network) as Network;
+            const _destinationNetwork = networks.find((_n: Network) => _n.internal_name === data.destination_network) as Network;
             const _destinationAsset = _destinationNetwork?.currencies?.find((c: Token) => c.asset === data.destination_asset)
             setSourceNetwork(_sourceNetwork);
             setSourceAsset(_sourceAsset);
