@@ -249,139 +249,145 @@ const SwapForm: FC<Props> = ({ partner, isPartnerWallet }) => {
   );
 
   return (
-    <>
-      <Widget className="sm:min-h-[504px]">
-        <Form
-          className={`h-full ${isSubmitting ? "pointer-events-none" : "pointer-events-auto"
-            }`}
-        >
-          <Widget.Content>
-            <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
-              {!(query?.hideFrom && values?.from) && (
-                <div className="flex flex-col w-full">
-                  <NetworkFormField direction="from" label="From" />
-                </div>
-              )}
-              <div className="gap-4 flex relative items-center outline-none w-full px-4 py-3  text-xs md:text-base">
-                <DetailedEstimates
-                  networks={layers}
-                  selected_currency={toCurrency}
-                  source={source}
-                  destination={destination}
-                />
-              </div>
-              {!(query?.hideTo && values?.to) && (
-                <div className="flex flex-col w-full">
-                  <NetworkFormField direction="to" label="To" />
-                </div>
-              )}
-            </div>
-            {!hideAddress ? (
-              <div className="w-full mb-3.5 leading-4">
-                <label
-                  htmlFor="destination_address"
-                  className="block font-semibold text-xs"
-                >
-                  {`To ${values?.to?.display_name || ""} address`}
-                </label>
-                <AddressButton
-                  disabled={
-                    (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
-                    (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
-                  }
-                  isPartnerWallet={!!isPartnerWallet}
-                  openAddressModal={() => setShowAddressModal(true)}
-                  partnerImage={partnerImage}
-                  values={values}
-                />
-                <Modal
-                  header={`To ${values?.to?.display_name || ""} address`}
-                  height="fit"
-                  show={showAddressModal}
-                  setShow={setShowAddressModal}
-                  className="min-h-[70%]"
-                >
-                  <Address
-                    close={() => setShowAddressModal(false)}
-                    disabled={
-                      lockAddress || (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
-                      (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
-                    }
-                    name={"destination_address"}
-                    partnerImage={partnerImage}
-                    isPartnerWallet={!!isPartnerWallet}
-                    partner={partner}
-                    address_book={[]}
-                  />
-                </Modal>
-              </div>
-            ) : (
-              <></>
-            )}
-            <>
-              {/* <FeeDetailsComponent values={values} /> */}
-              {
-                //TODO refactor
-                destination && toAsset && (
-                  <WarningMessage messageType="warning" className="mt-4">
-                    <span className="font-normal">
-                      <span>
-                        We&apos;re experiencing delays for transfers of
-                      </span>{" "}
-                      <span>{values?.toCurrency?.asset}</span> <span>to</span>{" "}
-                      <span>{values?.to?.display_name}</span>
-                      <span>
-                        . Estimated arrival time can take up to 2 hours.
-                      </span>
-                    </span>
-                  </WarningMessage>
-                )
-              }
+    <Widget className="sm:min-h-[504px]">
+      <div></div>
+    </Widget>
+  )
 
-              {
-                //TODO refactor
-                destination &&
-                toAsset &&
-                destination?.internal_name ===
-                KnownInternalNames.Networks.StarkNetMainnet &&
-                averageTimeInMinutes > 30 && (
-                  <WarningMessage messageType="warning" className="mt-4">
-                    <span className="font-normal">
-                      <span>{destination?.display_name}</span>{" "}
-                      <span>
-                        network congestion. Transactions can take up to 1
-                        hour.
-                      </span>
-                    </span>
-                  </WarningMessage>
-                )
-              }
-              <ReserveGasNote
-                onSubmit={(walletBalance, networkGas) =>
-                  handleReserveGas(walletBalance, networkGas)
-                }
-              />
-            </>
-          </Widget.Content>
-          <Widget.Footer>
-            <SwapButton
-              className="plausible-event-name=Swap+initiated"
-              type="submit"
-              isDisabled={!isValid}
-              isSubmitting={isSubmitting}
-            >
-              {ActionText(errors, actionDisplayName as string)}
-            </SwapButton>
-          </Widget.Footer>
-        </Form>
-      </Widget>
-      {process.env.NEXT_PUBLIC_SHOW_GAS_DETAILS === "true" &&
-        values.from &&
-        values.fromCurrency && (
-          <GasDetails network={values.from} currency={values.fromCurrency} />
-        )}
-    </>
-  );
+  // return (
+  //   <>
+  //     <Widget className="sm:min-h-[504px]">
+  //       <Form
+  //         className={`h-full ${isSubmitting ? "pointer-events-none" : "pointer-events-auto"
+  //           }`}
+  //       >
+  //         <Widget.Content>
+  //           <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
+  //             {!(query?.hideFrom && values?.from) && (
+  //               <div className="flex flex-col w-full">
+  //                 <NetworkFormField direction="from" label="From" />
+  //               </div>
+  //             )}
+  //             <div className="gap-4 flex relative items-center outline-none w-full px-4 py-3  text-xs md:text-base">
+  //               <DetailedEstimates
+  //                 networks={layers}
+  //                 selected_currency={toCurrency}
+  //                 source={source}
+  //                 destination={destination}
+  //               />
+  //             </div>
+  //             {!(query?.hideTo && values?.to) && (
+  //               <div className="flex flex-col w-full">
+  //                 <NetworkFormField direction="to" label="To" />
+  //               </div>
+  //             )}
+  //           </div>
+  //           {!hideAddress ? (
+  //             <div className="w-full mb-3.5 leading-4">
+  //               <label
+  //                 htmlFor="destination_address"
+  //                 className="block font-semibold text-xs"
+  //               >
+  //                 {`To ${values?.to?.display_name || ""} address`}
+  //               </label>
+  //               <AddressButton
+  //                 disabled={
+  //                   (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+  //                   (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+  //                 }
+  //                 isPartnerWallet={!!isPartnerWallet}
+  //                 openAddressModal={() => setShowAddressModal(true)}
+  //                 partnerImage={partnerImage}
+  //                 values={values}
+  //               />
+  //               <Modal
+  //                 header={`To ${values?.to?.display_name || ""} address`}
+  //                 height="fit"
+  //                 show={showAddressModal}
+  //                 setShow={setShowAddressModal}
+  //                 className="min-h-[70%]"
+  //               >
+  //                 <Address
+  //                   close={() => setShowAddressModal(false)}
+  //                   disabled={
+  //                     lockAddress || (!values.from && !values.fromExchange) || (!values.fromCurrency && !values.currencyGroup) ||
+  //                     (!values.to && !values.toExchange) || (!values.toCurrency && !values.currencyGroup)
+  //                   }
+  //                   name={"destination_address"}
+  //                   partnerImage={partnerImage}
+  //                   isPartnerWallet={!!isPartnerWallet}
+  //                   partner={partner}
+  //                   address_book={[]}
+  //                 />
+  //               </Modal>
+  //             </div>
+  //           ) : (
+  //             <></>
+  //           )}
+  //           <>
+  //             {/* <FeeDetailsComponent values={values} /> */}
+  //             {
+  //               //TODO refactor
+  //               destination && toAsset && (
+  //                 <WarningMessage messageType="warning" className="mt-4">
+  //                   <span className="font-normal">
+  //                     <span>
+  //                       We&apos;re experiencing delays for transfers of
+  //                     </span>{" "}
+  //                     <span>{values?.toCurrency?.asset}</span> <span>to</span>{" "}
+  //                     <span>{values?.to?.display_name}</span>
+  //                     <span>
+  //                       . Estimated arrival time can take up to 2 hours.
+  //                     </span>
+  //                   </span>
+  //                 </WarningMessage>
+  //               )
+  //             }
+
+  //             {
+  //               //TODO refactor
+  //               destination &&
+  //               toAsset &&
+  //               destination?.internal_name ===
+  //               KnownInternalNames.Networks.StarkNetMainnet &&
+  //               averageTimeInMinutes > 30 && (
+  //                 <WarningMessage messageType="warning" className="mt-4">
+  //                   <span className="font-normal">
+  //                     <span>{destination?.display_name}</span>{" "}
+  //                     <span>
+  //                       network congestion. Transactions can take up to 1
+  //                       hour.
+  //                     </span>
+  //                   </span>
+  //                 </WarningMessage>
+  //               )
+  //             }
+  //             <ReserveGasNote
+  //               onSubmit={(walletBalance, networkGas) =>
+  //                 handleReserveGas(walletBalance, networkGas)
+  //               }
+  //             />
+  //           </>
+  //         </Widget.Content>
+  //         <Widget.Footer>
+  //           <SwapButton
+  //             className="plausible-event-name=Swap+initiated"
+  //             type="submit"
+  //             isDisabled={!isValid}
+  //             isSubmitting={isSubmitting}
+  //           >
+  //             {ActionText(errors, actionDisplayName as string)}
+  //           </SwapButton>
+  //         </Widget.Footer>
+  //       </Form>
+  //     </Widget>
+  //     {process.env.NEXT_PUBLIC_SHOW_GAS_DETAILS === "true" &&
+  //       values.from &&
+  //       values.fromCurrency && (
+  //         <GasDetails network={values.from} currency={values.fromCurrency} />
+  //       )}
+  //   </>
+  // );
 };
 
 function ActionText(
