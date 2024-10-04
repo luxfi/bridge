@@ -14,7 +14,7 @@ import FromNetworkForm from './from/NetworkFormField';
 import ToNetworkForm from './to/NetworkFormField';
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import { networks } from "@/components/teleport/constants/settings.sandbox";
+import { networks, SWAP_PAIRS } from "@/components/teleport/constants/settings.sandbox";
 import { useAtom } from "jotai";
 
 import {
@@ -51,16 +51,25 @@ const Swap: FC = () => {
   const [destinationNetworks, setDestinationNetworks] = React.useState<Network[]>([]);
 
   React.useEffect(() => {
-    if (sourceNetwork?.chain_id === 7777) {
-      const _networks = networks.filter((n: Network) => n.chain_id !== 7777);
-      setDestinationNetworks(_networks);
-      setDestinationNetwork(_networks[0]);
-    } else {
-      const _networks = networks.filter((n: Network) => n.chain_id === 7777);
+    sourceNetwork && sourceNetwork.currencies.length > 0 && setSourceAsset(sourceNetwork.currencies.find(c => c.status === 'active'));
+  }, [sourceNetwork]);
+
+  React.useEffect(() => {
+    if (sourceAsset) {
+      const _networks = networks.filter((n: Network) => (
+        n.currencies.some((c: Token) => SWAP_PAIRS[sourceAsset.asset] ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset) : false)
+      )).map((n: Network) => ({
+        ...n,
+        currencies: n.currencies.map((c: Token) => ({ ...c, status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset) ? "active" : "inactive" }))
+      }))
       setDestinationNetworks(_networks);
       setDestinationNetwork(_networks[0]);
     }
-  }, [sourceNetwork]);
+  }, [sourceAsset]);
+
+  React.useEffect(() => {
+    setDestinationAsset(destinationNetwork?.currencies.find(c => c.status === 'active'));
+  }, [destinationNetwork])
 
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
 
@@ -69,35 +78,6 @@ const Swap: FC = () => {
       setEthPrice(Number(data?.data?.data?.price))
     });
   }, []);
-
-  React.useEffect(() => {
-    if (sourceNetwork?.chain_id === 7777) {
-      console.log("evms")
-    } else {
-      console.log("lux")
-    }
-  }, [sourceNetwork, sourceAsset])
-
-  // React.useEffect(() => {
-  //   if (sourceNetwork) {
-  //     setSourceAsset(sourceNetwork.currencies[0]);
-  //     setDestinationNetwork(destinationNetworks[1]);
-  //   }
-  // }, [sourceNetwork]);
-
-  // React.useEffect(() => {
-  //   if (destinationNetwork) {
-  //     setSourceNetwork(sourceNetworks[0])
-  //   }
-
-  //   if (destinationNetwork && sourceAsset) {
-  //     if (sourceAsset.asset === "ETH") {
-  //       setDestinationAsset(destinationNetwork.currencies[1])
-  //     } else {
-  //       setDestinationAsset(destinationNetwork.currencies[2])
-  //     }
-  //   }
-  // }, [destinationNetwork, sourceAsset]);
 
   const warnningMessage = React.useMemo(() => {
     if (!sourceNetwork) {
@@ -163,7 +143,6 @@ const Swap: FC = () => {
               network={sourceNetwork}
               asset={sourceAsset}
               setNetwork={(network: Network) => {
-                console.log(network)
                 setSourceNetwork(network)
               }}
               setAsset={(token: Token) => setSourceAsset(token)}
