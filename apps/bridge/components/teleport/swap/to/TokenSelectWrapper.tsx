@@ -23,7 +23,14 @@ const TokenSelectWrapper: React.FC<IProps> = ({
   placeholder,
   disabled
 }) => {
-  const [showModal, setShowModal] = React.useState(false)
+  const [showModal, setShowModal] = React.useState(false);
+
+  const handleSelect = React.useCallback((item: Token) => {
+    if (item.status === 'active') {
+      setValue(item);
+      setShowModal(false);
+    }
+  }, []);
 
   if (values.length === 0) return <Placeholder placeholder={placeholder} />
 
@@ -70,7 +77,10 @@ const TokenSelectWrapper: React.FC<IProps> = ({
         }
       </PopoverTrigger>
       <PopoverContent className="w-fit bg-[black] border-[#404040]">
-        <TokenSelect setValue={setValue} setShowModal={setShowModal} sourceAsset={sourceAsset} value={value} values={values} />
+        <TokenSelect
+          setValue={handleSelect}
+          values={values}
+        />
       </PopoverContent>
     </Popover>
   )
