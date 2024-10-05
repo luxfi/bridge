@@ -8,6 +8,7 @@ dotenv.config();
 const PRIVATE_KEY: string = process.env.PRIVATE_KEY!;
 const SEPOLIA_RPC: string = process.env.SEPOLIA_RPC!;
 const BASE_RPC: string = process.env.BASE_RPC!;
+const BASE_SEPOLIA_RPC: string = process.env.BASE_SEPOLIA_RPC!;
 const BSC_TESTNET_RPC: string = process.env.BSC_TESTNET_RPC!;
 const LUX_MAINNET_RPC: string = process.env.LUX_MAINNET_RPC!;
 const LUX_TESTNET_RPC: string = process.env.LUX_TESTNET_RPC!;
@@ -19,8 +20,12 @@ const config: HardhatUserConfig = {
       url: SEPOLIA_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
-    bsc_testnet: {
+    bscTestnet: {
       url: BSC_TESTNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    baseTestnet: {
+      url: BASE_SEPOLIA_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
     base: {
@@ -31,7 +36,7 @@ const config: HardhatUserConfig = {
       url: LUX_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
-    "lux-test": {
+    luxTestnet: {
       url: LUX_TESTNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`]
     }
@@ -41,8 +46,9 @@ const config: HardhatUserConfig = {
       sepolia: process.env.ETHERSCAN_API_KEY!,
       bsc: process.env.BSCSCAN_API_KEY!,
       bscTestnet: process.env.BSCSCAN_API_KEY!,
+      baseSepolia: process.env.BASESCAN_API_KEY!,
       lux: "your API key", // Leave empty if not applicable
-      "lux-test": "your API key" // Leave empty if not applicable
+      luxTestnet: "your API key" // Leave empty if not applicable
     },
     customChains: [
       {
@@ -54,7 +60,7 @@ const config: HardhatUserConfig = {
         }
       },
       {
-        network: "lux-test",
+        network: "luxTestnet",
         chainId: 8888,
         urls: {
           apiURL: "https://api.explore.lux-test.network/api",
