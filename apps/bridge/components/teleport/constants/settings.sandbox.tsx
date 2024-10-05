@@ -9,14 +9,13 @@ export const networks: Network[] = [
         is_testnet: false,
         is_featured: true,
         average_completion_time: "00:01:04.0494430",
-        chain_id: 11155111, //sepolia
-        // chain_id: 1,
+        chain_id: 84532, //base sepolia
         status: "active",
         type: "evm",
         refuel_amount_in_usd: 0.5,
-        transaction_explorer_template: "https://sepolia.etherscan.io/tx/{0}", // sepolia
-        account_explorer_template: "https://sepolia.etherscan.io/address/{0}", // sepolia
-        node: "https://sepolia.infura.io/v3/2e58a899d3c64eccb6955c2f33fc8a88", // sepolia
+        transaction_explorer_template: "https://sepolia.basescan.org/tx/{0}", // sepolia
+        account_explorer_template: "https://sepolia.basescan.org/address/{0}", // sepolia
+        node: "https://sepolia.base.org", // sepolia
         currencies: [
             {
                 name: "ETH",
@@ -39,7 +38,7 @@ export const networks: Network[] = [
                 name: "USDT",
                 asset: "USDT",
                 logo: "https://cdn.lux.network/bridge/currencies/usdt.png",
-                contract_address: "0xa92E09451140d645A2fE262c9631Dd808439dDEd",// sepolia
+                contract_address: "0x46390FA219b22f739C63F0bF1c165a1FBc30B57c",
                 decimals: 6,
                 status: "active",
                 is_deposit_enabled: false,
@@ -56,7 +55,7 @@ export const networks: Network[] = [
                 name: "USDC",
                 asset: "USDC",
                 logo: "https://cdn.lux.network/bridge/currencies/usdc.png",
-                contract_address: "0xB587bAb3d507d720625D30544C2889D661446BF7",//sepolia
+                contract_address: "0xE49355609F94A4B8a2EfC6FBd077542F8EC90080",//sepolia
                 decimals: 6,
                 status: "active",
                 is_deposit_enabled: true,
@@ -73,7 +72,7 @@ export const networks: Network[] = [
                 name: "DAI",
                 asset: "DAI",
                 logo: "https://cdn.lux.network/bridge/currencies/dai.png",
-                contract_address: "0x7390C3FA8576a0E9E7c788cc7955c3151c4c1612",
+                contract_address: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -137,76 +136,7 @@ export const networks: Network[] = [
         transaction_explorer_template: "https://arbiscan.io/tx/{0}",
         account_explorer_template: "https://arbiscan.io/address/{0}",
         node: "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7",
-        currencies: [
-            {
-                name: "ETH",
-                asset: "ETH",
-                logo: "https://cdn.lux.network/bridge/currencies/eth.png",
-                contract_address: null,
-                decimals: 18,
-                status: "active",
-                is_deposit_enabled: true,
-                is_withdrawal_enabled: true,
-                is_refuel_enabled: false,
-                max_withdrawal_amount: 1,
-                deposit_fee: 0.001462,
-                withdrawal_fee: 0.001462,
-                source_base_fee: 0.000456,
-                destination_base_fee: 0.000456,
-                is_native: true
-            },
-            {
-                name: "USDT",
-                asset: "USDT",
-                logo: "https://cdn.lux.network/bridge/currencies/usdt.png",
-                contract_address: "0xa92E09451140d645A2fE262c9631Dd808439dDEd",// sepolia
-                decimals: 6,
-                status: "active",
-                is_deposit_enabled: false,
-                is_withdrawal_enabled: false,
-                is_refuel_enabled: false,
-                max_withdrawal_amount: 0,
-                deposit_fee: 4.68,
-                withdrawal_fee: 2.24,
-                source_base_fee: 1,
-                destination_base_fee: 1,
-                is_native: false
-            },
-            {
-                name: "USDC",
-                asset: "USDC",
-                logo: "https://cdn.lux.network/bridge/currencies/usdc.png",
-                contract_address: "0xB587bAb3d507d720625D30544C2889D661446BF7",//sepolia
-                decimals: 6,
-                status: "active",
-                is_deposit_enabled: true,
-                is_withdrawal_enabled: true,
-                is_refuel_enabled: true,
-                max_withdrawal_amount: 3000,
-                deposit_fee: 12.79,
-                withdrawal_fee: 6.4,
-                source_base_fee: 0.99,
-                destination_base_fee: 0.99,
-                is_native: false
-            },
-            {
-                name: "DAI",
-                asset: "DAI",
-                logo: "https://cdn.lux.network/bridge/currencies/dai.png",
-                contract_address: "0x7390C3FA8576a0E9E7c788cc7955c3151c4c1612",
-                decimals: 18,
-                status: "active",
-                is_deposit_enabled: true,
-                is_withdrawal_enabled: true,
-                is_refuel_enabled: true,
-                max_withdrawal_amount: 3000,
-                deposit_fee: 12.79,
-                withdrawal_fee: 6.4,
-                source_base_fee: 0.99,
-                destination_base_fee: 0.99,
-                is_native: false
-            }
-        ]
+        currencies: []
     },
     {
         display_name: "Celo",
@@ -234,7 +164,7 @@ export const networks: Network[] = [
         is_featured: false,
         average_completion_time: "00:01:04.0494430",
         chain_id: 8453,
-        status: "active",
+        status: "inactive",
         type: "evm",
         refuel_amount_in_usd: 0.5,
         transaction_explorer_template: "https://basescan.io/tx/{0}",
@@ -319,13 +249,13 @@ export const networks: Network[] = [
         is_testnet: false,
         is_featured: false,
         average_completion_time: "00:01:04.0494430",
-        chain_id: 56,
+        chain_id: 97,
         status: "active",
         type: "evm",
         refuel_amount_in_usd: 0.5,
-        transaction_explorer_template: "https://bscscan.io/tx/{0}",
-        account_explorer_template: "https://bscscan.io/address/{0}",
-        node: "https://bsc-dataseed1.binance.org/",
+        transaction_explorer_template: "https://testnet.bscscan.com/tx/{0}",
+        account_explorer_template: "https://testnet.bscscan.com/address/{0}",
+        node: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
         currencies: [
             {
                 name: "BNB",
@@ -348,7 +278,7 @@ export const networks: Network[] = [
                 name: "USDT",
                 asset: "USDT",
                 logo: "https://cdn.lux.network/bridge/currencies/usdt.png",
-                contract_address: "",
+                contract_address: "0x5519582dde6eb1f53F92298622c2ecb39A64369A",
                 decimals: 6,
                 status: "active",
                 is_deposit_enabled: false,
@@ -365,7 +295,7 @@ export const networks: Network[] = [
                 name: "USDC",
                 asset: "USDC",
                 logo: "https://cdn.lux.network/bridge/currencies/usdc.png",
-                contract_address: "",
+                contract_address: "0x6a49DbeD52B9Bd9a53E21C3bCb67dc2697cD6697",
                 decimals: 6,
                 status: "active",
                 is_deposit_enabled: true,
@@ -382,7 +312,7 @@ export const networks: Network[] = [
                 name: "DAI",
                 asset: "DAI",
                 logo: "https://cdn.lux.network/bridge/currencies/dai.png",
-                contract_address: "",
+                contract_address: "0x2E8A24dE21105772FD161BF56471A0470A8AF45e",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
