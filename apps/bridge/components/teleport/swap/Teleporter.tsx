@@ -194,11 +194,12 @@ const Swap: FC = () => {
               close={() => setShowAddressModal(false)}
               disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
               address={destinationAddress}
+              setAddress={setDestinationAddress}
               name={"destination_address"}
               partnerImage={'partnerImage'}
               isPartnerWallet={false}
               address_book={[]}
-              setAddress={setDestinationAddress}
+              network={destinationNetwork}
             />
           </Modal>
         </div>
