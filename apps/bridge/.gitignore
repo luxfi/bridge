@@ -13,6 +13,7 @@
 /out/
 /dist/
 
+/prisma/dev.sqlite
 # production
 /build
 
