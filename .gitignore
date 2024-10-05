@@ -9,13 +9,9 @@ node_modules/
 # testing
 /coverage
 
-# next.js
-/.next/
-app/.next/
-/out/
+apps/bridge/.next/
+apps/explorer/.next/
 
-# production
-/build
 # k8 files
 /mpc-nodes/k8s
 
