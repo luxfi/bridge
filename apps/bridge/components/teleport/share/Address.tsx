@@ -1,21 +1,14 @@
 'use client'
-import { useFormikContext } from "formik";
-import React, { ChangeEvent, FC, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AddressBookItem } from "@/lib/BridgeApiClient";
-import { SwapFormValues } from "@/components/DTOs/SwapFormValues";
-import { useSwapDataUpdate } from "@/context/swap";
-import { Info } from "lucide-react";
-import KnownInternalNames from "@/lib/knownIds";
-import { useSettingsState } from "@/context/settings";
-import { isValidAddress } from "@/lib/addressValidator";
-import { RadioGroup } from "@headlessui/react";
-import Image from 'next/image';
 import { Partner } from "@/Models/Partner";
+import { AddressBookItem } from "@/lib/BridgeApiClient";
+import { isValidAddress } from "@/lib/addressValidator";
+import { Network } from "@/types/teleport";
+import React, { ChangeEvent, FC, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from 'next/image';
+import KnownInternalNames from "@/lib/knownIds";
 import shortenAddress from "@/components/utils/ShortenAddress";
-import AddressIcon from "@/components/AddressIcon";
 import WalletIcon from "@/components/icons/WalletIcon";
 import useWallet from "@/hooks/useWallet";
-import { cn } from "@luxdefi/ui/util";
 
 interface IProps extends Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'as' | 'onChange'> {
     hideLabel?: boolean;
@@ -30,22 +23,23 @@ interface IProps extends Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'as' | 
     partner?: Partner,
     canFocus?: boolean,
     address_book?: AddressBookItem[],
-    setAddress: React.Dispatch<React.SetStateAction<string>>
+    setAddress: React.Dispatch<React.SetStateAction<string>>,
+    network?: Network
 }
 
-const Address: FC<IProps> = ({ name, canFocus, close, address_book, disabled, isPartnerWallet, partnerImage, partner, address, setAddress }) => {
+const Address: FC<IProps> = ({ name, close, disabled, isPartnerWallet, partnerImage, partner, address, setAddress, network }) => {
 
     const [wrongNetwork, setWrongNetwork] = useState(false)
     const [inputValue, setInputValue] = useState<string | undefined>(address)
     const [validInputAddress, setValidInputAddress] = useState<string | undefined>('')
 
     const { connectWallet, disconnectWallet, getAutofillProvider: getProvider, getAutofillProviderWithNetworkName } = useWallet()
-    const provider = getAutofillProviderWithNetworkName("ETHEREUM_MAINNET")
+    const provider = getAutofillProviderWithNetworkName(network?.internal_name ?? "ETHEREUM_MAINNET")
 
     const connectedWallet = provider?.getConnectedWallet()
 
     useEffect(() => {
-        if (isValidAddress(connectedWallet?.address, { internal_name: "ETHEREUM_MAINNET" }) && !address) {
+        if (isValidAddress(connectedWallet?.address, { internal_name: network?.internal_name ?? "ETHEREUM_MAINNET" }) && !address) {
             //TODO move to wallet implementation
             if (connectedWallet
                 && connectedWallet.providerName === 'starknet'
@@ -66,11 +60,11 @@ const Address: FC<IProps> = ({ name, canFocus, close, address_book, disabled, is
         address && setInputValue(address)
     }, [address])
 
-    const destination = { internal_name: "ETHEREUM_MAINNET" }
+    const destination = { internal_name: network?.internal_name ?? "ETHEREUM_MAINNET" }
     const inputAddressIsValid = isValidAddress(inputValue, destination)
     let errorMessage = '';
     if (inputValue && !isValidAddress(inputValue, destination)) {
-        errorMessage = `Enter a valid LUX address`
+        errorMessage = `Enter a valid ${network?.display_name ?? "ETHEREUM_MAINNET"} address`
     }
 
     const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +87,7 @@ const Address: FC<IProps> = ({ name, canFocus, close, address_book, disabled, is
         setInputValue("")
     }, [])
 
-    const destinationChainId = 7777
+    const destinationChainId = network?.chain_id ?? "ETHEREUM_MAINNET"
 
     return (
         <div className='w-full flex flex-col justify-between h-full '>

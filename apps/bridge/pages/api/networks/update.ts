@@ -30,6 +30,8 @@ export default async function handler(
         console.log("deleted rpcNode...")
         await prisma.network.deleteMany({});
         console.log("deleted network...")
+        await prisma.swap.deleteMany({});
+        console.log("deleted swap...")
         for (let index = 0; index < networks.length; index++) {
             const n = networks[index];
             const _network = await prisma.network.create({
@@ -65,6 +67,7 @@ export default async function handler(
                 }))
             })
         }
+        console.log("success")
         return res.status(200).json(
             {
                 status: "success"
