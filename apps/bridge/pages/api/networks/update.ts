@@ -24,14 +24,14 @@ export default async function handler(
         console.log("deleted quote...")
         await prisma.depositAction.deleteMany({});
         console.log("deleted depositAction...")
+        await prisma.swap.deleteMany({});
+        console.log("deleted swap...")
         await prisma.currency.deleteMany({});
         console.log("deleted currency...")
         await prisma.rpcNode.deleteMany({});
         console.log("deleted rpcNode...")
         await prisma.network.deleteMany({});
         console.log("deleted network...")
-        await prisma.swap.deleteMany({});
-        console.log("deleted swap...")
         for (let index = 0; index < networks.length; index++) {
             const n = networks[index];
             const _network = await prisma.network.create({
