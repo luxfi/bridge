@@ -6,15 +6,15 @@ async function main() {
 
     /////LuxVault
     const assets = [
-        "0xFa005D52398B4BdAAf73C4e2E3AF8095533D790E", //usdt
-        "0x42449554b0c7D85EbD488e14D7D48c6A78D3F9Be", //usdc
-        "0xc16ECFE3cB80e142d7110b97a442d4caAA203ABf", //dai
+        "0x5519582dde6eb1f53F92298622c2ecb39A64369A", //usdt
+        "0x6a49DbeD52B9Bd9a53E21C3bCb67dc2697cD6697", //usdc
+        "0x2E8A24dE21105772FD161BF56471A0470A8AF45e", //dai
     ]
 
     const _signer = await ethers.getContractFactory("LuxVault");
-    const token = await _signer.deploy(assets);
-    await token.waitForDeployment();
-    console.log("LuxVault sepolia address:", await token.getAddress());
+    const _vault = await _signer.deploy(assets);
+    await _vault.waitForDeployment();
+    console.log("LuxVault bscTestnet address:", await _vault.getAddress());
 }
 
 main()
