@@ -496,6 +496,23 @@ export const networks: Network[] = [
                 is_native: false
             },
             {
+                name: "LXDAI",
+                asset: "LXDAI",
+                logo: "https://cdn.lux.network/bridge/currencies/xdai.png",
+                contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: false,
+                max_withdrawal_amount: 1,
+                deposit_fee: 0.001462,
+                withdrawal_fee: 0.001462,
+                source_base_fee: 0.000456,
+                destination_base_fee: 0.000456,
+                is_native: false
+            },
+            {
                 name: "LUSD",
                 asset: "LUSD",
                 logo: "https://cdn.lux.network/bridge/currencies/lusd.png",
