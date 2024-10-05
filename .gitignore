@@ -11,6 +11,7 @@ node_modules/
 
 apps/bridge/.next/
 apps/explorer/.next/
+explorer/.next
 
 # k8 files
 /mpc-nodes/k8s
