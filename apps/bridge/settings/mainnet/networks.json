@@ -12,20 +12,89 @@
     "refuel_amount_in_usd": 0.5,
     "transaction_explorer_template": "https://etherscan.io/tx/{0}",
     "account_explorer_template": "https://etherscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 14353601
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
       },
-      "ensRegistry": {
-        "address": "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
       },
-      "ensUniversalResolver": {
-        "address": "0xc0497E381f536Be9ce14B0dD3817cBcAe57d2F62",
-        "blockCreated": 16966585
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
-    },
+    ],
+    "metadata": null,
     "managed_accounts": [
       {
         "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
@@ -96,13 +165,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://explore.lux.network/tx/{0}",
     "account_explorer_template": "https://explore.lux.network/address/{0}",
-    "currencies": [],
-    "metadata": null,
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "LUX",
+        "asset": "LUX",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://api.lux.network"
@@ -123,13 +269,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://explore.lux-test.network/tx/{0}",
     "account_explorer_template": "https://explore.lux-test.network/address/{0}",
-    "currencies": [],
-    "metadata": null,
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "LUX",
+        "asset": "LUX",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://api.lux-test.network"
@@ -150,18 +373,90 @@
     "refuel_amount_in_usd": 0.5,
     "transaction_explorer_template": "https://polygonscan.com/tx/{0}",
     "account_explorer_template": "https://polygonscan.com/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 25770160
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "POL",
+        "asset": "POL",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://polygon-mainnet.public.blastapi.io"
@@ -182,19 +477,90 @@
     "refuel_amount_in_usd": 0.5,
     "transaction_explorer_template": "https://optimistic.etherscan.io/tx/{0}",
     "account_explorer_template": "https://optimistic.etherscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 4286263
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x4200000000000000000000000000000000000006",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://optimism-mainnet.public.blastapi.io"
@@ -215,18 +581,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://arbiscan.io/tx/{0}",
     "account_explorer_template": "https://arbiscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 7654707
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://arb-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7"
@@ -250,19 +688,90 @@
     "refuel_amount_in_usd": 1.5,
     "transaction_explorer_template": "https://celoscan.io/tx/{0}",
     "account_explorer_template": "https://celoscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 5022
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "CELO",
+        "asset": "CELO",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x122013fd7dF1C6F636a5bb8f03108E876548b455",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xef4229c8c3250c675f21bcefa42f58efbff6002a",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0xE4fE50cdD716522A56204352f00AA110F731932d",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://celo.drpc.org"
@@ -283,19 +792,90 @@
     "refuel_amount_in_usd": 1.5,
     "transaction_explorer_template": "https://basescan.org/tx/{0}",
     "account_explorer_template": "https://basescan.org/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 5022
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x4200000000000000000000000000000000000006",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://base-mainnet.public.blastapi.io"
@@ -316,19 +896,90 @@
     "refuel_amount_in_usd": 1.5,
     "transaction_explorer_template": "https://sepolia.basescan.org/tx/{0}",
     "account_explorer_template": "https://sepolia.basescan.org/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 5022
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x7390C3FA8576a0E9E7c788cc7955c3151c4c1612",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x46390FA219b22f739C63F0bF1c165a1FBc30B57c",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xE49355609F94A4B8a2EfC6FBd077542F8EC90080",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://sepolia.base.org"
@@ -349,18 +1000,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://bscscan.com/tx/{0}",
     "account_explorer_template": "https://bscscan.com/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 15921452
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "BNB",
+        "asset": "BNB",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "ttttttttttttttttttttttttttttttttttt",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x9e5AAC1Ba1a2e6aEd6b32689DFcF62A509Ca96f3",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://lb.drpc.org/ogrpc?network=bsc&dkey=ArPkRplEc0Blq_2CpG9Z__4Tj6aBjcER7qzvYkscDoZX"
@@ -396,18 +1119,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://testnet.bscscan.com/tx/{0}",
     "account_explorer_template": "https://testnet.bscscan.com/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 15921452
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "BNB",
+        "asset": "BNB",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0xA5fec41B6B2C98dd6036df4030396C947aFe1AcB",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x5519582dde6eb1f53F92298622c2ecb39A64369A",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x6a49DbeD52B9Bd9a53E21C3bCb67dc2697cD6697",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x2E8A24dE21105772FD161BF56471A0470A8AF45e",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
@@ -428,19 +1223,90 @@
     "refuel_amount_in_usd": 1.5,
     "transaction_explorer_template": "https://gnosisscan.io/tx/{0}",
     "account_explorer_template": "https://gnosisscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 5022
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "xDAI",
+        "asset": "xDAI",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x4ecaba5870353805a9f068101a40e0f32ed605c6",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xddafbb505ad214d7b80b1f830fccc89b60fb7a83",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x44fa8e6f47987339850636f88629646662444217",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://rpc.gnosischain.com"
@@ -461,18 +1327,90 @@
     "refuel_amount_in_usd": 0.15,
     "transaction_explorer_template": "https://snowtrace.io/tx/{0}",
     "account_explorer_template": "https://snowtrace.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 11907934
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xde3a24028580884448a5397872046a019649b084",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://ava-mainnet.public.blastapi.io/ext/bc/C/rpc"
@@ -493,18 +1431,90 @@
     "refuel_amount_in_usd": 0.15,
     "transaction_explorer_template": "https://ftmscan.io/tx/{0}",
     "account_explorer_template": "https://ftmscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 11907934
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "FTM",
+        "asset": "FTM",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x695921034f0387eac4e11620ee91b1b15a6a09fe",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xcc1b99ddac1a33c201a742a1851662e87bc7f22c",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x04068da6c83afcfa0e13ba15a6696662335d5b75",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://rpcapi.fantom.network"
@@ -525,18 +1535,90 @@
     "refuel_amount_in_usd": 0.15,
     "transaction_explorer_template": "https://explorer.aurora.dev/tx/{0}",
     "account_explorer_template": "https://explorer.aurora.dev/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xca11bde05977b3631167028862be2a173976ca11",
-        "blockCreated": 11907934
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0xC9BdeEd33CD01541e1eeD10f90519d2C06Fe3feB",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x4988a896b1227218e4A686fdE5EabdcAbd91571f",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x368ebb46aca6b8d0787c96b2b20bd3cc3f2c45f7",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0xe3520349f477a5f6eb06107066048508498a291b",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://mainnet.aurora.dev"
@@ -557,19 +1639,42 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://explorer.zora.energy/tx/{0}",
     "account_explorer_template": "https://explorer.zora.energy/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
-        "blockCreated": 5882
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x4200000000000000000000000000000000000006",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://rpc.zora.energy"
@@ -590,19 +1695,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://blastscan.io/tx/{0}",
     "account_explorer_template": "https://blastscan.io/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
-        "blockCreated": 5882
-      },
-      "GasPriceOracleContract": "0x420000000000000000000000000000000000000F"
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0x4300000000000000000000000000000000000004",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0x0be9a0e280962213bf85c4f8669359291b2e404a",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0xcdb5835bdb75c5b3671633d12d7e0db6be5873a5",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x9C6Fc5bF860A4a012C9De812002dB304AD04F581",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://rpc.blast.io"
@@ -623,18 +1799,90 @@
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://lineascan.build/tx/{0}",
     "account_explorer_template": "https://lineascan.build/address/{0}",
-    "currencies": [],
-    "metadata": {
-      "multicall3": {
-        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
-        "blockCreated": 42
-      }
-    },
-    "managed_accounts": [
+    "currencies": [
       {
-        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xA219439258ca9da29E9Cc4cE5596924745e12B93",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x4af15ec2a0bd43db75dd04e62faa3b8ef36b00d5",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
       }
     ],
+    "metadata": null,
+    "managed_accounts": [],
     "nodes": [
       {
         "url": "https://rpc.linea.build"
