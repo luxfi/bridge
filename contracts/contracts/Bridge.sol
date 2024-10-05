@@ -159,11 +159,11 @@ contract Bridge is Ownable, AccessControl {
 
     /**
      * @dev set vault address for teleport bridge
-     * @param to_ new vault address
+     * @param vault_ new vault address
      */
-    function setVault(address payable to_) public onlyAdmin {
-        require(to_ != address(0), "Invalid address");
-        vault = LuxVault(to_);
+    function setVault(address payable vault_) public onlyAdmin {
+        require(vault_ != address(0), "Invalid address");
+        vault = LuxVault(vault_);
     }
 
     function addNewERC20Vault(address _asset) public onlyAdmin {
