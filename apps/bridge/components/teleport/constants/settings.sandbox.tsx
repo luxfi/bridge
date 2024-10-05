@@ -170,76 +170,7 @@ export const networks: Network[] = [
         transaction_explorer_template: "https://basescan.io/tx/{0}",
         account_explorer_template: "https://basescan.io/address/{0}",
         node: "https://mainnet.base.org",
-        currencies: [
-            {
-                name: "ETH",
-                asset: "ETH",
-                logo: "https://cdn.lux.network/bridge/currencies/eth.png",
-                contract_address: null,
-                decimals: 18,
-                status: "active",
-                is_deposit_enabled: true,
-                is_withdrawal_enabled: true,
-                is_refuel_enabled: false,
-                max_withdrawal_amount: 1,
-                deposit_fee: 0.001462,
-                withdrawal_fee: 0.001462,
-                source_base_fee: 0.000456,
-                destination_base_fee: 0.000456,
-                is_native: true
-            },
-            {
-                name: "USDT",
-                asset: "USDT",
-                logo: "https://cdn.lux.network/bridge/currencies/usdt.png",
-                contract_address: "0xa92E09451140d645A2fE262c9631Dd808439dDEd",// sepolia
-                decimals: 6,
-                status: "active",
-                is_deposit_enabled: false,
-                is_withdrawal_enabled: false,
-                is_refuel_enabled: false,
-                max_withdrawal_amount: 0,
-                deposit_fee: 4.68,
-                withdrawal_fee: 2.24,
-                source_base_fee: 1,
-                destination_base_fee: 1,
-                is_native: false
-            },
-            {
-                name: "USDC",
-                asset: "USDC",
-                logo: "https://cdn.lux.network/bridge/currencies/usdc.png",
-                contract_address: "0xB587bAb3d507d720625D30544C2889D661446BF7",//sepolia
-                decimals: 6,
-                status: "active",
-                is_deposit_enabled: true,
-                is_withdrawal_enabled: true,
-                is_refuel_enabled: true,
-                max_withdrawal_amount: 3000,
-                deposit_fee: 12.79,
-                withdrawal_fee: 6.4,
-                source_base_fee: 0.99,
-                destination_base_fee: 0.99,
-                is_native: false
-            },
-            {
-                name: "DAI",
-                asset: "DAI",
-                logo: "https://cdn.lux.network/bridge/currencies/dai.png",
-                contract_address: "0x7390C3FA8576a0E9E7c788cc7955c3151c4c1612",
-                decimals: 18,
-                status: "active",
-                is_deposit_enabled: true,
-                is_withdrawal_enabled: true,
-                is_refuel_enabled: true,
-                max_withdrawal_amount: 3000,
-                deposit_fee: 12.79,
-                withdrawal_fee: 6.4,
-                source_base_fee: 0.99,
-                destination_base_fee: 0.99,
-                is_native: false
-            }
-        ]
+        currencies: []
     },
     {
         display_name: "Binance Smart Chain",
@@ -483,7 +414,7 @@ export const networks: Network[] = [
                 name: "LETH",
                 asset: "LETH",
                 logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
-                contract_address: "0xD4A215472332e8B6E26B0a5DC253DB78119904cA",
+                contract_address: "0x999Ab39dF1Ae0F0069303B430A52f16FFdaAC69C",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -500,7 +431,7 @@ export const networks: Network[] = [
                 name: "LPOL",
                 asset: "LPOL",
                 logo: "https://cdn.lux.network/bridge/currencies/polygon.png",
-                contract_address: "0xD4A215472332e8B6E26B0a5DC253DB78119904cA",
+                contract_address: "0x305B062C74F92d05de7Cbccd1923f19c7B27eAB1",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -517,7 +448,7 @@ export const networks: Network[] = [
                 name: "LBNB",
                 asset: "LBNB",
                 logo: "https://cdn.lux.network/bridge/currencies/bnb.png",
-                contract_address: "0xD4A215472332e8B6E26B0a5DC253DB78119904cA",
+                contract_address: "0x2c04439Dc52080E56882f61B2C4fb059A412fD5b",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -534,7 +465,24 @@ export const networks: Network[] = [
                 name: "LFTM",
                 asset: "LFTM",
                 logo: "https://cdn.lux.network/bridge/currencies/ftm.svg",
-                contract_address: "0xD4A215472332e8B6E26B0a5DC253DB78119904cA",
+                contract_address: "0xE1276a2F675A1D7F69FC2C78Ca6a39d1D951fD35",
+                decimals: 18,
+                status: "active",
+                is_deposit_enabled: true,
+                is_withdrawal_enabled: true,
+                is_refuel_enabled: false,
+                max_withdrawal_amount: 1,
+                deposit_fee: 0.001462,
+                withdrawal_fee: 0.001462,
+                source_base_fee: 0.000456,
+                destination_base_fee: 0.000456,
+                is_native: false
+            },
+            {
+                name: "LCELO",
+                asset: "LCELO",
+                logo: "https://cdn.lux.network/bridge/currencies/celo.svg",
+                contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -551,7 +499,7 @@ export const networks: Network[] = [
                 name: "LUSD",
                 asset: "LUSD",
                 logo: "https://cdn.lux.network/bridge/currencies/lusd.png",
-                contract_address: "0xc16ECFE3cB80e142d7110b97a442d4caAA203ABf",
+                contract_address: "0xA7EF94FfacA04aA51aCB66Ad93691a10Ce6eAcf4",
                 decimals: 18,
                 status: "active",
                 is_deposit_enabled: true,
@@ -569,11 +517,80 @@ export const networks: Network[] = [
 ]
 
 export const CONTRACTS = {
-    11155111: {
-        teleporter: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
+    84532: {
+        chain_id: 84532, //base sepolia
+        teleporter: "0x517d8c2d062c01F6187e40C98e8190d0b8bc5ec4",
+        vault: "0x3F249aE1aB4aB9dFa953500fa96a0062aDBAe12f"
     },
-    7777: {
-        teleporter: "0xB2237fb7DBB19Ff09BBD64029064eC05B3C369Ac"
+    137: {
+        chain_id: 137,
+        teleporter: "",
+        vault: ""
+    },
+    10: {
+        chain_id: 10,
+        teleporter: "",
+        vault: ""
+    },
+    42161: {
+        chain_id: 42161,
+        teleporter: "",
+        vault: ""
+    },
+    42220: {
+        chain_id: 42220,
+        teleporter: "",
+        vault: ""
+    },
+    8453: {
+        chain_id: 8453,
+        teleporter: "",
+        vault: ""
+    },
+    97: { //bsc testnet
+        chain_id: 97,
+        teleporter: "0xa92E09451140d645A2fE262c9631Dd808439dDEd",
+        vault: "0x40850F41d7c510B5f74E412FCbc512A5660dbe3E"
+    },
+    100: {
+        chain_id: 100,
+        teleporter: "",
+        vault: ""
+    },
+    43114: {
+        chain_id: 43114,
+        teleporter: "",
+        vault: ""
+    },
+    250: {
+        chain_id: 250,
+        teleporter: "",
+        vault: ""
+    },
+    1313161554: {
+        chain_id: 1313161554,
+        teleporter: "",
+        vault: ""
+    },
+    7777777: {
+        chain_id: 7777777,
+        teleporter: "",
+        vault: ""
+    },
+    81457: {
+        chain_id: 81457,
+        teleporter: "",
+        vault: ""
+    },
+    59144: {
+        chain_id: 59144,
+        teleporter: "",
+        vault: ""
+    },
+    8888: {
+        chain_id: 8888,
+        teleporter: "0x46390FA219b22f739C63F0bF1c165a1FBc30B57c",
+        vault: "0xA563ebea2Cd4895559D64b1945943D370F5336d4"
     }
 }
 
