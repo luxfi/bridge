@@ -9,7 +9,6 @@ export const networks: Network[] = [
         is_testnet: false,
         is_featured: true,
         average_completion_time: "00:01:04.0494430",
-<<<<<<< HEAD
         chain_id: 1,
         status: "inactive",
         type: "evm",
@@ -96,8 +95,6 @@ export const networks: Network[] = [
         is_testnet: false,
         is_featured: true,
         average_completion_time: "00:01:04.0494430",
-=======
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
         chain_id: 84532, //base sepolia
         status: "active",
         type: "evm",
@@ -269,7 +266,6 @@ export const networks: Network[] = [
         is_testnet: false,
         is_featured: false,
         average_completion_time: "00:01:04.0494430",
-<<<<<<< HEAD
         chain_id: 56,
         status: "inactive",
         type: "evm",
@@ -356,8 +352,6 @@ export const networks: Network[] = [
         is_testnet: false,
         is_featured: false,
         average_completion_time: "00:01:04.0494430",
-=======
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
         chain_id: 97,
         status: "active",
         type: "evm",
@@ -555,7 +549,6 @@ export const networks: Network[] = [
         node: "https://rpc.linea.build",
         currencies: []
     },
-<<<<<<< HEAD
 
     {
         display_name: "Lux Testnet",
@@ -711,8 +704,6 @@ export const networks: Network[] = [
             },
         ]
     },
-=======
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
     {
         display_name: "Lux",
         internal_name: "LUX_MAINNET",
@@ -722,11 +713,7 @@ export const networks: Network[] = [
         is_featured: true,
         average_completion_time: "00:00:07.7777777",
         chain_id: 7777,
-<<<<<<< HEAD
         status: "inactive",
-=======
-        status: "active",
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
         type: "evm",
         refuel_amount_in_usd: 1,
         transaction_explorer_template: "https://explore.lux.network/tx/{0}",
@@ -953,35 +940,20 @@ export const CONTRACTS = {
 
 export const SWAP_PAIRS: Record<string, string[]> = {
     "LETH": ["ETH"],
-<<<<<<< HEAD
     "LBNB": ["BNB"],
     "LFTM": ["FTM"],
     "LPOL": ["POL", "MATIC"],
     "LUSD": ["USDT", "USDC", "DAI"],
     "LCELO": ["CELO"],
     "LXDAI": ["XDAI"],
-=======
-    "LPOL": ["POL", "MATIC"],
-    "LBNB": ["BNB"],
-    "LFTM": ["FTM"],
-    "LCELO": ["CELO"],
-    "LUSD": ["USDT", "USDC", "DAI"],
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
 
     "ETH": ["LETH"],
     "POL": ["LPOL"],
     "BNB": ["LBNB"],
     "FTM": ["LFTM"],
-<<<<<<< HEAD
     "DAI": ["LUSD"],
     "USDT": ["LUSD"],
     "USDC": ["LUSD"],
     "CELO": ["LCELO"],
     "XDAI": ["LXDAI"],
-=======
-    "CELO": ["LCELO"],
-    "USDT": ["LUSD"],
-    "USDC": ["LUSD"],
-    "DAI": ["LUSD"],
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
 }

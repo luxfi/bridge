@@ -6,11 +6,7 @@ import axios from "axios";
 import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from '@/components/ConnectNetwork';
 import { Widget } from "@/components/Widget/Index";
-<<<<<<< HEAD
 import { networks } from "@/components/teleport/constants/settings.sandbox";
-=======
-import { networks } from "@/components/teleport/constants/settings";
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
 
 import {
     sourceNetworkAtom,
