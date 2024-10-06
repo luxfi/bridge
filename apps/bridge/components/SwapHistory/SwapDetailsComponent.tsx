@@ -47,6 +47,8 @@ const SwapDetails: FC<Props> = ({ swap }) => {
     if (!swap)
         return <SwapDetailsComponentSceleton />
 
+    console.log(sourceLayer)
+
     return (
         <>
             <div className="w-full grid grid-flow-row animate-fade-in">
