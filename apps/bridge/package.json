@@ -5,10 +5,9 @@
   "scripts": {
     "debug": "next dev",
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "tc": "tsc --noEmit",
-    "postinstall": "prisma generate",
     "clean": "rm -rf ./.next && rm -rf ./node_modules",
     "cn": "rm -rf ./.next",
     "storybook": "storybook dev -p 6006",
