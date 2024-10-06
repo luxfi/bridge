@@ -95,7 +95,15 @@
       }
     ],
     "metadata": null,
+<<<<<<< HEAD
     "managed_accounts": [],
+=======
+    "managed_accounts": [
+      {
+        "address": "0x591d819ac3BCD0af934a92442997f38fa80fB53c"
+      }
+    ],
+>>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
     "nodes": [
       {
         "url": "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7"
@@ -241,6 +249,7 @@
         "source_base_fee": 1,
         "destination_base_fee": 1,
         "is_native": false
+<<<<<<< HEAD
       },
       {
         "name": "LETH",
@@ -369,6 +378,8 @@
         "source_base_fee": 1,
         "destination_base_fee": 1,
         "is_native": false
+=======
+>>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
       }
     ],
     "metadata": null,
@@ -473,6 +484,7 @@
         "source_base_fee": 1,
         "destination_base_fee": 1,
         "is_native": false
+<<<<<<< HEAD
       },
       {
         "name": "LETH",
@@ -601,6 +613,8 @@
         "source_base_fee": 1,
         "destination_base_fee": 1,
         "is_native": false
+=======
+>>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
       }
     ],
     "metadata": null,

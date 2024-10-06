@@ -34,9 +34,17 @@ export class BridgeAppSettings {
             return (item as Partner)?.logo_url;
         }
         else if ((item as any)?.internal_name != undefined) {
+<<<<<<< HEAD
             return `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
         }
         else if ((item as any)?.asset != undefined) {
+=======
+            // basePath.pathname = `/layerswap/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+            return `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/networks/${(item as any)?.internal_name?.toLowerCase()}.png`;
+        }
+        else if ((item as any)?.asset != undefined) {
+            // basePath.pathname = `/layerswap/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
+>>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
             return `${process.env.NEXT_PUBLIC_CDN_URL}/bridge/currencies/${(item as any)?.asset?.toLowerCase()}.png`;
         }
 
