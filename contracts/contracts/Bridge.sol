@@ -190,7 +190,7 @@ contract Bridge is Ownable, AccessControl {
     function vaultWithdraw(
         uint256 amount_,
         address tokenAddr_,
-        address receiver
+        address receiver_
     ) private {
         address shareAddress;
         if (tokenAddr_ == address(0)) {
@@ -199,8 +199,8 @@ contract Bridge is Ownable, AccessControl {
             shareAddress = vault.erc20Vault(tokenAddr_);
         }
         IERC20(shareAddress).approve(address(vault), type(uint256).max);
-        vault.withdraw(tokenAddr_, receiver, amount_);
-        emit VaultWithdraw(receiver, amount_, tokenAddr_);
+        vault.withdraw(tokenAddr_, receiver_, amount_);
+        emit VaultWithdraw(receiver_, amount_, tokenAddr_);
     }
 
     function previewVaultWithdraw(
