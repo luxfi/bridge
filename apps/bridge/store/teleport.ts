@@ -2,11 +2,7 @@ import { atom } from 'jotai';
 import { networks } from "@/components/teleport/constants/settings.sandbox";
 import { Network, Token } from '@/types/teleport';
 
-<<<<<<< HEAD
 export const sourceNetworkAtom = atom<Network | undefined>(networks.find(n => n.status === 'active'));
-=======
-export const sourceNetworkAtom = atom<Network | undefined>(networks[0]);
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
 export const sourceAssetAtom = atom<Token | undefined>(undefined);
 export const destinationNetworkAtom = atom<Network | undefined>(undefined);
 export const destinationAssetAtom = atom<Token | undefined>(undefined);

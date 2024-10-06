@@ -6,11 +6,7 @@ import {
 } from '@/store/teleport'
 import { ArrowRight, Router } from 'lucide-react';
 import { Contract } from 'ethers';
-<<<<<<< HEAD
 import { CONTRACTS } from '@/components/teleport/constants/settings.sandbox';
-=======
-import { CONTRACTS } from '@/components/teleport/constants/settings';
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
 
 import teleporterABI from '@/components/teleport/constants/abi/bridge.json'
 import erc20ABI from '@/components/teleport/constants/abi/erc20.json'
@@ -119,10 +115,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
                 signer,
             )
 
-<<<<<<< HEAD
             console.log({ _amount, _asset: sourceAsset.contract_address ?? '0x0000000000000000000000000000000000000000' })
-=======
->>>>>>> 0c54d0f34ca749f49db7636c39fb5f4a1ae58e95
             const _bridgeTransferTx = await bridgeContract.vaultDeposit(
                 _amount,
                 sourceAsset.contract_address ?? '0x0000000000000000000000000000000000000000',
