@@ -13,7 +13,9 @@ export default async function handler(
   try {
     const versionFromQuery = req.query.version as string;
     const destination_network = req.query.destination_network as string;
-    const isMainnet = versionFromQuery === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet =
+      versionFromQuery === "mainnet" ||
+      process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     const settings = isMainnet ? mainnetSettings : testnetSettings;
 
     const { exchanges, networks } = settings.data;
