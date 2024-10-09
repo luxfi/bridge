@@ -16,7 +16,6 @@ export default async function handler(
 ) {
   try {
     const data = await prisma.quote.findMany({});
-
     return res.status(200).json({
       status: "success",
       data,
