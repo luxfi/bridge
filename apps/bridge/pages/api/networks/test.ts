@@ -22,7 +22,7 @@ export default async function handler(
       data,
     });
   } catch (error) {
-    console.error("Error in updating networks", error);
+    console.error("Error in fetching networks", error);
     res.status(500).json({ data: error.message });
   }
 }
