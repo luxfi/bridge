@@ -1,6 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { mainnetSettings, testnetSettings } from "../../../settings";
 import prisma from "../../../lib/db";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 /**
  * update network and currencies according to settings file
