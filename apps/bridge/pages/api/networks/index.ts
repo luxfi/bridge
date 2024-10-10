@@ -10,15 +10,15 @@ export default async function handler(
 ) {
   try {
     const { version } = req.query;
-    const isMainnet = version === "mainnet" || process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet =
+      version === "mainnet" ||
+      process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     // settings
     const settings = isMainnet ? mainnetSettings : testnetSettings;
     const { networks } = settings.data;
-    return res.status(200).json(
-      {
-        data: networks
-      }
-    )
+    return res.status(200).json({
+      data: networks,
+    });
   } catch (error) {
     console.error("Error in fetching networks", error);
     res.status(500).json({ data: error.message });
