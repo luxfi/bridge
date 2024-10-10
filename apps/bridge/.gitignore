@@ -15,6 +15,7 @@
 /prisma/schema.prisma
 
 /prisma/dev.sqlite
+/prisma/schema.prisma
 # production
 /build
 
