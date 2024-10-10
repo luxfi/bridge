@@ -12,6 +12,7 @@
 /.next/
 /out/
 /dist/
+/prisma/schema.prisma
 
 /prisma/dev.sqlite
 # production
