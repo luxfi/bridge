@@ -70,7 +70,7 @@ export default async function handler(
       //     refuel,
       //   },
       // });
-      res.status(200).json({ id: 'newSwapTransaction.id', message: "Success" });
+      res.status(200).json({ id: "newSwapTransaction.id", message: "Success" });
     } catch (error) {
       console.error(error);
       res

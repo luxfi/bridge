@@ -1,20 +1,22 @@
-import Layout from '../components/layout'
-import { InferGetServerSidePropsType } from 'next'
-import { SwapDataProvider } from '../context/swap'
-import TransfersWrapper from '../components/SwapHistory/TransfersWrapper'
-import { getServerSideProps } from '../helpers/getSettings'
+import Layout from "../components/layout";
+import TransfersWrapper from "../components/SwapHistory/TransfersWrapper";
+import { InferGetServerSidePropsType } from "next";
+import { SwapDataProvider } from "../context/swap";
+import { getServerSideProps } from "../helpers/getSettings";
 
-export default function Transactions({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-
+export default function Transactions({
+  settings,
+  themeData,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Layout settings={settings} themeData={themeData}>
-        <SwapDataProvider >
+        <SwapDataProvider>
           <TransfersWrapper />
-        </SwapDataProvider >
+        </SwapDataProvider>
       </Layout>
     </>
-  )
+  );
 }
 
 export { getServerSideProps };
