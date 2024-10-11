@@ -26,7 +26,7 @@ contract Bridge is Ownable, AccessControl {
     address internal payoutAddr;
     LuxVault public vault;
     /** Events */
-    event BridgeBurned(address caller, uint256 amt);
+    event BridgeBurned(address caller, uint256 amt, address token);
     event VaultDeposit(address depositor, uint256 amt, address token);
     event VaultWithdraw(address receiver, uint256 amt, address token);
     event BridgeMinted(address recipient, address token, uint256 amt);
@@ -218,9 +218,9 @@ contract Bridge is Ownable, AccessControl {
     function bridgeBurn(uint256 amount_, address tokenAddr_) public {
         TeleportStruct memory teleport;
         teleport.token = ERC20B(tokenAddr_);
-        require((teleport.token.balanceOf(msg.sender) > 0), "Zero Balance");
+        require((teleport.token.balanceOf(msg.sender) >= amount_), "Insufficient token balance");
         teleport.token.bridgeBurn(msg.sender, amount_);
-        emit BridgeBurned(msg.sender, amount_);
+        emit BridgeBurned(msg.sender, amount_, tokenAddr_);
     }
 
     /**
