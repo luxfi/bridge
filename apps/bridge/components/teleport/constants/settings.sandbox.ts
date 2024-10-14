@@ -673,7 +673,7 @@ export const networks: Network[] = [
         name: "Lux xDAI",
         asset: "LXDAI",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lxdai.svg",
-        contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
+        contract_address: "0xFdAad51cE3C28bfCCC5217AFddCEFc2a3Da6Ab54",
         decimals: 18,
         status: "active",
         is_deposit_enabled: true,
@@ -863,8 +863,8 @@ export const networks: Network[] = [
 
 export const CONTRACTS = {
   84532: {
-    chain_id: 84532, //base sepolia
-    teleporter: "0x517d8c2d062c01F6187e40C98e8190d0b8bc5ec4",
+    chain_id: 84532,
+    teleporter: "0x6374d9d1E0CB5eA5e77D92E9a306f7f2ec41660a",
     vault: "0x3F249aE1aB4aB9dFa953500fa96a0062aDBAe12f",
   },
   137: {
@@ -895,8 +895,8 @@ export const CONTRACTS = {
   97: {
     //bsc testnet
     chain_id: 97,
-    teleporter: "0xa92E09451140d645A2fE262c9631Dd808439dDEd",
-    vault: "0x40850F41d7c510B5f74E412FCbc512A5660dbe3E",
+    teleporter: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
+    vault: "0xE49355609F94A4B8a2EfC6FBd077542F8EC90080",
   },
   100: {
     chain_id: 100,
@@ -935,8 +935,8 @@ export const CONTRACTS = {
   },
   8888: {
     chain_id: 8888,
-    teleporter: "0xcbeBca6825CA416f9cf25ba8c13F0B90636e6920",
-    vault: "0x91eEB7f2fd5153a6a8AfAd8056884C50F8D0c42F",
+    teleporter: "0x23E4BFDAC278FFE22DbBFAc5c1474E10cE7631CD",
+    vault: "0x43A4Ab078Edcd3e28385C714950fd099c9595279",
   },
 };
 
