@@ -54,6 +54,11 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const { switchNetwork } = useSwitchNetwork();
   const { connectWallet } = useWallet();
 
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset.name.startsWith("Lux") ? true : false),
+    [sourceAsset]
+  );
+
   //chain id
   const chainId = chain?.id;
 
@@ -62,14 +67,12 @@ const UserTokenDepositor: React.FC<IProps> = ({
       connectWallet("evm");
     } else {
       if (chainId === sourceNetwork?.chain_id) {
-        transferToken();
+        isWithdrawal ? burnToken() : transferToken();
       } else {
         switchNetwork!(sourceNetwork.chain_id);
       }
     }
-  }, [chainId, signer]);
-
-  console.log(sourceAsset);
+  }, [chainId, signer, isWithdrawal]);
 
   const transferToken = async () => {
     try {
@@ -151,6 +154,61 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setIsTokenTransferring(false);
     }
   };
+
+  const burnToken = async () => {
+    try {
+      setIsTokenTransferring(true);
+      const _amount = parseUnits(String(sourceAmount), sourceAsset.decimals);
+
+      const erc20Contract = new Contract(
+        sourceAsset?.contract_address as string,
+        erc20ABI,
+        signer
+      );
+      setUserDepositNotice(`Checking token balance...`);
+      const _balance = await erc20Contract.balanceOf(
+        signer?._address as string
+      );
+      if (_balance < _amount) {
+        toast.error(`Insufficient ${sourceAsset.asset} amount`);
+        return;
+      }
+      setUserDepositNotice(`Burning ${sourceAsset.asset}...`);
+
+      const bridgeContract = new Contract(
+        CONTRACTS[sourceNetwork.chain_id].teleporter,
+        teleporterABI,
+        signer
+      );
+
+      console.log({
+        _amount,
+        _asset: sourceAsset.contract_address,
+      });
+      const _bridgeTransferTx = await bridgeContract.bridgeBurn(
+        _amount,
+        sourceAsset.contract_address
+      );
+      await _bridgeTransferTx.wait();
+      await axios.post(`/api/swaps/transfer/${swapId}`, {
+        txHash: _bridgeTransferTx.hash,
+        amount: sourceAmount,
+        from: signer?._address,
+        to: CONTRACTS[sourceNetwork.chain_id].teleporter,
+      });
+      setUserTransferTransaction(_bridgeTransferTx.hash);
+      setSwapStatus("teleport_processing_pending");
+    } catch (err) {
+      console.log(err);
+      if (String(err).includes("user rejected transaction")) {
+        toast.error(`User rejected transaction`);
+      } else {
+        toast.error(`Failed to run transaction`);
+      }
+    } finally {
+      setIsTokenTransferring(false);
+    }
+  };
   const handleTokenTransfer = async () => {
     if (!signer) {
       toast.error(`No connected wallet. Please connect your wallet`);
@@ -158,7 +216,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
     } else if (chainId !== sourceNetwork.chain_id) {
       switchNetwork!(sourceNetwork.chain_id);
     } else {
-      transferToken();
+      isWithdrawal ? burnToken() : transferToken();
     }
   };
 
@@ -188,7 +246,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
           {isTokenTransferring ? (
             <span className="grow">{userDepositNotice}</span>
           ) : (
-            <span className="grow">Transfer {sourceAsset.asset}</span>
+            <span className="grow">
+              {isWithdrawal ? "Burn" : "Transfer"} {sourceAsset.asset}
+            </span>
           )}
         </button>
       </div>
