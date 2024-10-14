@@ -566,7 +566,7 @@ export const networks: Network[] = [
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://explore.lux.network/tx/{0}",
     account_explorer_template: "https://explore.lux.network/address/{0}",
-    node: "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7",
+    node: "https://api.lux-test.network",
     currencies: [
       {
         name: "LUX",
@@ -936,8 +936,8 @@ export const CONTRACTS = {
   },
   8888: {
     chain_id: 8888,
-    teleporter: "0x46390FA219b22f739C63F0bF1c165a1FBc30B57c",
-    vault: "0xA563ebea2Cd4895559D64b1945943D370F5336d4",
+    teleporter: "0x6CF6aFF7CcfF500AcEAeb308Ce52cc31e9393d71",
+    vault: "0x1044d0f16b46D6f0E300bC28C27101Ca099301CA",
   },
 };
 
