@@ -64,6 +64,11 @@ const TeleportProcessor: React.FC<IProps> = ({
   //chain id
   const chainId = chain?.id;
 
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset.name.startsWith("Lux") ? true : false),
+    [sourceAsset]
+  );
+
   React.useEffect(() => {
     if (!signer) {
       connectWallet("evm");
@@ -176,7 +181,10 @@ const TeleportProcessor: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>{sourceAsset?.asset} transferred</span>
+                  <span>
+                    {sourceAsset?.asset}{" "}
+                    {isWithdrawal ? "Burned" : "Transferred"}
+                  </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
                     <Tooltip>

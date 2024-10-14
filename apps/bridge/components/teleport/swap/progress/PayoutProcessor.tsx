@@ -31,6 +31,7 @@ import SpinIcon from "@/components/icons/spinIcon";
 import { Gauge } from "@/components/gauge";
 import { Network, Token } from "@/types/teleport";
 import { ArrowRight } from "lucide-react";
+import { formatUnits } from "viem";
 
 interface IProps {
   className?: string;
@@ -66,6 +67,11 @@ const PayoutProcessor: React.FC<IProps> = ({
   const { switchNetwork } = useSwitchNetwork();
   const { connectWallet } = useWallet();
 
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset.name.startsWith("Lux") ? true : false),
+    [sourceAsset]
+  );
+
   //chain id
   const chainId = chain?.id;
 
@@ -74,12 +80,12 @@ const PayoutProcessor: React.FC<IProps> = ({
       connectWallet("evm");
     } else {
       if (chainId === destinationNetwork.chain_id) {
-        payoutDestinationToken();
+        isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
       } else {
         switchNetwork!(destinationNetwork.chain_id);
       }
     }
-  }, [swapStatus, chainId, signer]);
+  }, [swapStatus, chainId, signer, isWithdrawal]);
 
   const payoutDestinationToken = async () => {
     const mintData = {
@@ -110,7 +116,7 @@ const PayoutProcessor: React.FC<IProps> = ({
         signer
       );
 
-      const _signer = await bridgeContract.bridgePreviewStealth(
+      const _signer = await bridgeContract.previewBridgeStealth(
         mintData.hashedTxId_,
         mintData.toTokenAddress_,
         mintData.tokenAmount_,
@@ -150,6 +156,96 @@ const PayoutProcessor: React.FC<IProps> = ({
       setIsGettingPayout(false);
     }
   };
+
+  const withdrawDestinationToken = async () => {
+    const mintData = {
+      hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
+      toTokenAddress_: destinationAsset?.contract_address,
+      tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
+      fromTokenDecimals_: sourceAsset?.decimals,
+      receiverAddress_: destinationAddress,
+      signedTXInfo_: mpcSignature,
+      vault_: "true",
+    };
+
+    // previewVaultWithdraw
+
+    console.log("data for bridge mint:::", mintData);
+
+    try {
+      const bridgeContract = new Contract(
+        CONTRACTS[destinationNetwork.chain_id].teleporter,
+        teleporterABI,
+        signer
+      );
+
+      const previewVaultWithdraw = await bridgeContract.previewVaultWithdraw(
+        parseUnits(String(sourceAmount), sourceAsset.decimals),
+        mintData.toTokenAddress_
+      );
+
+      if (
+        Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) <
+        Number(sourceAmount)
+      ) {
+        toast.error(
+          `Bridge doesnt have enough balance to withdraw. You can only withdraw ${Number(
+            formatUnits(previewVaultWithdraw, destinationAsset.decimals)
+          )}tokens now. Please wait for the withdrawal to be activated.`
+        );
+        return;
+      }
+      // console.log("::canWithdraw", canWithdraw);
+      setIsGettingPayout(true);
+      // string memory hashedTxId_,
+      // address toTokenAddress_,
+      // uint256 tokenAmount_,
+      // uint256 fromTokenDecimals_,
+      // address receiverAddress_,
+      // bytes memory signedTXInfo_,
+      // string memory vault_
+
+      const _signer = await bridgeContract.previewBridgeStealth(
+        mintData.hashedTxId_,
+        mintData.toTokenAddress_,
+        mintData.tokenAmount_,
+        mintData.fromTokenDecimals_,
+        mintData.receiverAddress_,
+        mintData.signedTXInfo_,
+        mintData.vault_
+      );
+      console.log("::signer", _signer);
+
+      const _bridgePayoutTx = await bridgeContract.bridgeWithdrawStealth(
+        mintData.hashedTxId_,
+        mintData.toTokenAddress_,
+        mintData.tokenAmount_,
+        mintData.fromTokenDecimals_,
+        mintData.receiverAddress_,
+        mintData.signedTXInfo_,
+        mintData.vault_
+      );
+      await _bridgePayoutTx.wait();
+      setBridgeMintTransactionHash(_bridgePayoutTx.hash);
+      await axios.post(`/api/swaps/payout/${swapId}`, {
+        txHash: _bridgePayoutTx.hash,
+        amount: sourceAmount,
+        from: CONTRACTS[String(sourceNetwork?.chain_id)].teleporter,
+        to: destinationAddress,
+      });
+      setSwapStatus("payout_success");
+    } catch (err) {
+      console.log(err);
+      if (String(err).includes("user rejected transaction")) {
+        toast.error(`User rejected transaction`);
+      } else {
+        toast.error(`Failed to run transaction`);
+      }
+    } finally {
+      setIsGettingPayout(false);
+    }
+  };
+
   const handlePayoutDestinationToken = () => {
     if (!signer) {
       toast.error(`No connected wallet. Please connect your wallet`);
@@ -157,7 +253,7 @@ const PayoutProcessor: React.FC<IProps> = ({
     } else if (chainId !== destinationNetwork.chain_id) {
       switchNetwork!(destinationNetwork.chain_id);
     } else {
-      payoutDestinationToken();
+      isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
     }
   };
 
@@ -180,7 +276,10 @@ const PayoutProcessor: React.FC<IProps> = ({
               <span className="animate-spin">
                 <Gauge value={60} size="medium" />
               </span>
-              <div className="mt-2">Get Your {destinationAsset.asset}</div>
+              <div className="mt-2">
+                {isWithdrawal ? "Withdraw" : "Get"} Your{" "}
+                {destinationAsset.asset}
+              </div>
             </div>
             <div className="flex flex-col gap-2 py-5">
               <div className="flex gap-3 items-center">
