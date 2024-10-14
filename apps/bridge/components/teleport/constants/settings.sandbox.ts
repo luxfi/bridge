@@ -551,7 +551,6 @@ export const networks: Network[] = [
     node: "https://rpc.linea.build",
     currencies: [],
   },
-
   {
     display_name: "Lux Testnet",
     internal_name: "LUX_TESTNET",
@@ -564,8 +563,8 @@ export const networks: Network[] = [
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 1,
-    transaction_explorer_template: "https://explore.lux.network/tx/{0}",
-    account_explorer_template: "https://explore.lux.network/address/{0}",
+    transaction_explorer_template: "https://explore.lux-test.network/tx/{0}",
+    account_explorer_template: "https://explore.lux-test.network/address/{0}",
     node: "https://api.lux-test.network",
     currencies: [
       {
@@ -586,7 +585,7 @@ export const networks: Network[] = [
         is_native: true,
       },
       {
-        name: "LETH",
+        name: "Lux ETH",
         asset: "LETH",
         logo: "https://cdn.lux.network/bridge/currencies/lux/leth.svg",
         contract_address: "0x999Ab39dF1Ae0F0069303B430A52f16FFdaAC69C",
@@ -603,7 +602,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LPOL",
+        name: "Lux POL",
         asset: "LPOL",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lpol.svg",
         contract_address: "0x305B062C74F92d05de7Cbccd1923f19c7B27eAB1",
@@ -620,7 +619,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LBNB",
+        name: "Lux BNB",
         asset: "LBNB",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lbnb.svg",
         contract_address: "0x2c04439Dc52080E56882f61B2C4fb059A412fD5b",
@@ -637,7 +636,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LFTM",
+        name: "Lux FTM",
         asset: "LFTM",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lftm.svg",
         contract_address: "0xE1276a2F675A1D7F69FC2C78Ca6a39d1D951fD35",
@@ -654,7 +653,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LCELO",
+        name: "Lux CELO",
         asset: "LCELO",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lcelo.svg",
         contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
@@ -671,7 +670,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LXDAI",
+        name: "Lux xDAI",
         asset: "LXDAI",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lxdai.svg",
         contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
@@ -688,7 +687,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LUSD",
+        name: "Lux Dollar",
         asset: "LUSD",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lusd.svg",
         contract_address: "0xA7EF94FfacA04aA51aCB66Ad93691a10Ce6eAcf4",
@@ -740,7 +739,7 @@ export const networks: Network[] = [
         is_native: true,
       },
       {
-        name: "LETH",
+        name: "Lux ETH",
         asset: "LETH",
         logo: "https://cdn.lux.network/bridge/currencies/lux/leth.svg",
         contract_address: "0x999Ab39dF1Ae0F0069303B430A52f16FFdaAC69C",
@@ -757,7 +756,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LPOL",
+        name: "Lux POL",
         asset: "LPOL",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lpol.svg",
         contract_address: "0x305B062C74F92d05de7Cbccd1923f19c7B27eAB1",
@@ -774,7 +773,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LBNB",
+        name: "Lux BNB",
         asset: "LBNB",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lbnb.svg",
         contract_address: "0x2c04439Dc52080E56882f61B2C4fb059A412fD5b",
@@ -791,7 +790,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LFTM",
+        name: "Lux FTM",
         asset: "LFTM",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lftm.svg",
         contract_address: "0xE1276a2F675A1D7F69FC2C78Ca6a39d1D951fD35",
@@ -808,7 +807,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LCELO",
+        name: "Lux CELO",
         asset: "LCELO",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lcelo.svg",
         contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
@@ -825,7 +824,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LXDAI",
+        name: "Lux xDAI",
         asset: "LXDAI",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lxdai.svg",
         contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
@@ -842,7 +841,7 @@ export const networks: Network[] = [
         is_native: false,
       },
       {
-        name: "LUSD",
+        name: "Lux Dollar",
         asset: "LUSD",
         logo: "https://cdn.lux.network/bridge/currencies/lux/lusd.svg",
         contract_address: "0xA7EF94FfacA04aA51aCB66Ad93691a10Ce6eAcf4",
@@ -936,8 +935,8 @@ export const CONTRACTS = {
   },
   8888: {
     chain_id: 8888,
-    teleporter: "0x6CF6aFF7CcfF500AcEAeb308Ce52cc31e9393d71",
-    vault: "0x1044d0f16b46D6f0E300bC28C27101Ca099301CA",
+    teleporter: "0xcbeBca6825CA416f9cf25ba8c13F0B90636e6920",
+    vault: "0x91eEB7f2fd5153a6a8AfAd8056884C50F8D0c42F",
   },
 };
 
