@@ -43,7 +43,7 @@ const TokenSelect: React.FC<IProps> = ({ values, setValue }) => {
                   )}
                 </div>
                 <div className="ml-4 flex items-center gap-3 justify-between w-full">
-                  <p className="text-md font-medium">{item.name}</p>
+                  <p className="text-md font-medium">{item.asset}</p>
                 </div>
               </div>
               <div className="text-xs text-[white]/60">
