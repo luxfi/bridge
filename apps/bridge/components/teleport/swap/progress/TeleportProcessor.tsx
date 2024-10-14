@@ -7,7 +7,7 @@ import {
   userTransferTransactionAtom,
   mpcSignatureAtom,
 } from "@/store/teleport";
-import { CONTRACTS } from "@/components/teleport/constants/settings";
+import { CONTRACTS } from "@/components/teleport/constants/settings.sandbox";
 import {
   Tooltip,
   TooltipContent,
@@ -94,7 +94,6 @@ const TeleportProcessor: React.FC<IProps> = ({
         txId: userTransferTransaction,
         fromNetworkId: sourceNetwork?.chain_id,
         toNetworkId: toNetworkId,
-        // fromTokenName: sourceAsset?.asset,
         toTokenAddress: destinationAsset?.contract_address,
         msgSignature: msgSignature,
         receiverAddressHash: receiverAddressHash,
