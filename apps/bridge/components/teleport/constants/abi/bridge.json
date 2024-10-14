@@ -465,55 +465,6 @@
         "type": "string"
       }
     ],
-    "name": "bridgePreviewStealth",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "hashedTxId_",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "toTokenAddress_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenAmount_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fromTokenDecimals_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "receiverAddress_",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signedTXInfo_",
-        "type": "bytes"
-      },
-      {
-        "internalType": "string",
-        "name": "vault_",
-        "type": "string"
-      }
-    ],
     "name": "bridgeWithdrawStealth",
     "outputs": [
       {
@@ -666,10 +617,54 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "hashedTxId_",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "toTokenAddress_",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
-        "name": "amount_",
+        "name": "tokenAmount_",
         "type": "uint256"
       },
+      {
+        "internalType": "uint256",
+        "name": "fromTokenDecimals_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "receiverAddress_",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signedTXInfo_",
+        "type": "bytes"
+      },
+      {
+        "internalType": "string",
+        "name": "vault_",
+        "type": "string"
+      }
+    ],
+    "name": "previewBridgeStealth",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "address",
         "name": "tokenAddr_",
@@ -679,9 +674,9 @@
     "name": "previewVaultWithdraw",
     "outputs": [
       {
-        "internalType": "bool",
+        "internalType": "uint256",
         "name": "",
-        "type": "bool"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
