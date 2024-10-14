@@ -1272,7 +1272,7 @@
       {
         "name": "WETH",
         "asset": "WETH",
-        "contract_address": "ttttttttttttttttttttttttttttttttttt",
+        "contract_address": "0x7b03a103fc847348e5e59f8d3b0740c48d597973",
         "decimals": 18,
         "status": "active",
         "is_deposit_enabled": false,
