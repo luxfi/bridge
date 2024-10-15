@@ -1,3 +1,6 @@
+import Web3 from "web3"
+import { RegisteredSubscription } from "web3/lib/commonjs/eth.exports"
+
 export type CONTRACTS = {
   [key: string]: string
 }
@@ -17,4 +20,16 @@ export type SETTINGS = {
   NewSigAllowed: boolean
   SigningManagers: string[]
   KeyStore: string
+}
+
+export type SIGN_REQUEST = {
+  tokenAmount: string
+  web3Form: Web3<RegisteredSubscription>
+  vault: boolean
+  decimals: number
+  receiverAddressHash: string
+  toNetworkId: string
+  toTokenAddress: string
+  hashedTxId: string
+  nonce: string
 }

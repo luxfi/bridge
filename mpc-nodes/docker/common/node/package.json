@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "ts-node-dev src/node.ts",
-    "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias && npx prisma generate",
     "server": "node dist/node.js",
     "keygen": "cd dist/multiparty && ./target/release/examples/gg18_keygen_client http://sm-manager:8000 keys.store",
     "production": "set PORT=80&&set ENVIRONMENT=PRODUCTION&&ts-node src/node.ts",
@@ -44,6 +44,7 @@
     "dotenv": "^16.4.5",
     "ethers": "^6.13.2",
     "express": "^4.19.2",
+    "express-validator": "^7.2.0",
     "find-process": "^1.4.7",
     "prisma": "^5.19.1",
     "web3": "^4.11.1"
