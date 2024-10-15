@@ -20,7 +20,7 @@ export const networks: Network[] = [
       {
         name: "ETH",
         asset: "ETH",
-        logo: "https://cdn.lux.network/bridge/currencies/eth.png",
+        logo: "https://cdn.lux.network/bridge/currencies/ethereum_eth.svg",
         contract_address: "0x0000000000000000000000000000000000000000",
         decimals: 18,
         status: "active",
@@ -192,7 +192,7 @@ export const networks: Network[] = [
       {
         name: "ETH",
         asset: "ETH",
-        logo: "https://cdn.lux.network/bridge/currencies/eth.png",
+        logo: "https://cdn.lux.network/bridge/currencies/ethereum_eth.svg",
         contract_address: "0x0000000000000000000000000000000000000000",
         decimals: 18,
         status: "active",
