@@ -21,12 +21,12 @@ const keyStore = settings.KeyStore
 
 const killSigner = async (signerProc: string) => {
   try {
-    console.log("Killing Signer..")
+    console.log("::Killing Signer..")
     const cmd = "kill -9 " + signerProc
     const out = await exec(cmd)
-    console.log("Signer dead...", out)
+    console.log("::Signer dead...", out)
   } catch (e) {
-    console.log("Signer process already dead:", e)
+    console.log("::Signer process already dead:", e)
   }
 }
 
@@ -36,7 +36,7 @@ export const signClient = async (i: number, msgHash: string) =>
       console.log("========================================================= In Sign Client ============================================================")
       const list = await find("name", `${signClientName} ${signSmManager}`)
       if (list.length > 0) {
-        console.log("clientAlreadyRunning:::", list)
+        console.log("::clientAlreadyRunning:::", list)
         try {
           const x = list.length === 1 ? 0 : 1
           const uptimeCmd = "ps -p " + list[x].pid + " -o etime"
@@ -46,11 +46,11 @@ export const signClient = async (i: number, msgHash: string) =>
 
           if (upStdout) {
             const up = upStdout.split("\n")[1].trim().split(":")
-            console.log("upStdout:", up, "Time Bound:", smTimeOutBound)
+            console.log("::upStdout:", up, "Time Bound:", smTimeOutBound)
             const upStdoutArr = up
             // SM Manager timed out
             if (Number(upStdoutArr[upStdoutArr.length - 1]) >= smTimeOutBound) {
-              console.log("SM Manager signing timeout reached")
+              console.log("::SM Manager signing timeout reached")
               try {
                 // await killSigner(signClientName)
                 for (const p of list) {
@@ -59,7 +59,7 @@ export const signClient = async (i: number, msgHash: string) =>
                 const cmd = `./target/release/examples/${signClientName} ${signSmManager} ${keyStore} ${msgHash}`
                 await exec(cmd, { cwd: __dirname + "/multiparty", shell: "/bin/bash" }) // Make sure it"s dead
               } catch (err) {
-                console.log("Partial signature process may not have exited:", err)
+                console.log("::Partial signature process may not have exited:", err)
                 resolve(signClient(i, msgHash))
                 //reject("SignerKill: Try transaction again with new nonce.")
                 return
@@ -71,12 +71,12 @@ export const signClient = async (i: number, msgHash: string) =>
               return
             }
           } else {
-            console.log("upStderr:", upStderr)
-            reject("SignerDeadError2:" + upStderr)
+            console.log("::upStderr:", upStderr)
+            reject("::SignerDeadError2:" + upStderr)
             return
           }
         } catch (err) {
-          console.log("SignerDeadError3:", err)
+          console.log("::SignerDeadError3:", err)
           reject("SignerDeadError3:" + err)
           return
         }
@@ -84,12 +84,12 @@ export const signClient = async (i: number, msgHash: string) =>
         console.log("About to message signers...")
         try {
           //Invoke client signer
-          console.log("signSmManager", signSmManager, i)
+          console.log("::signSmManager", signSmManager, i)
           const cmd = `./target/release/examples/${signClientName} ${signSmManager} ${keyStore} ${msgHash}`
-          console.log("command: ", cmd)
+          console.log("::command: ", cmd)
           const out = await exec(cmd, { cwd: __dirname + "/multiparty" }) // Make sure it"s dead
           const { stdout, stderr } = out
-          console.log("stdout:", stdout, stderr)
+          console.log("::stdout:", stdout, stderr)
           if (stdout) {
             const sig = stdout.split("sig_json")[1].split(",")
             if (sig.length > 0) {
@@ -105,17 +105,17 @@ export const signClient = async (i: number, msgHash: string) =>
                 signature = "0x0" + signature.split("0x")[1]
               }
 
-              console.log("Signature3:", signature)
+              console.log("::Signature3:", signature)
               resolve({ r, s, v, signature })
               return
             }
           } else {
-            console.log("stderr:" + stderr)
+            console.log("::stderr:" + stderr)
             reject("SignerFailError1:" + stderr)
             return
           }
         } catch (err) {
-          console.log("SignerFailError2:" + err)
+          console.log("::SignerFailError2:" + err)
 
           if (err.toString().includes("elements in xs are not pairwise distinct")) {
             await sleep(2000)
@@ -129,7 +129,7 @@ export const signClient = async (i: number, msgHash: string) =>
       }
       return
     } catch (err) {
-      console.log("sign cilent error: =======================")
+      console.log("::sign cilent error: =======================")
       console.log(err.stack || err)
       reject(err.stack)
       return

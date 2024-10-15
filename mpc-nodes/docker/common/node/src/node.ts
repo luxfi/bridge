@@ -334,12 +334,12 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
  * @returns object { status, data }
  */
 const checkStealthSignature = async (hashedTxId: string) => {
-  console.log("Searching for txid:", hashedTxId)
+  console.log("::Searching for txid:", hashedTxId)
   try {
     const data = await prisma.teleporter.findUnique({
       where: { hashedTxId: hashedTxId }
     })
-    console.log("Find Stealth Hash: ", data)
+    console.log("::Find Stealth Hash: ", data)
     if (data) {
       return Promise.resolve({ status: true, data: data })
     } else {
@@ -361,7 +361,7 @@ const savehashedTxId = async (data: { chainType: string; txId: string; amount: s
       where: { hashedTxId: data.hashedTxId }
     })
     if (_tx) {
-      console.log("Already Existed Tx")
+      console.log("::Already Existed Tx")
     } else {
       await prisma.teleporter.create({ data })
     }
