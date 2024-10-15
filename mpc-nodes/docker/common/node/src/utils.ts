@@ -6,6 +6,7 @@ import { recoverAddress } from "ethers"
 import { promisify } from "util"
 import { exec as childExec } from "child_process"
 import { settings } from "./config"
+import { SIGN_REQUEST } from "./types"
 
 const exec = promisify(childExec)
 dotenv.config()
@@ -29,12 +30,10 @@ const killSigner = async (signerProc: string) => {
   }
 }
 
-export const signClient = async (i: number, msgHash: string, txInfo: string[]) =>
+export const signClient = async (i: number, msgHash: string) =>
   new Promise(async (resolve, reject) => {
     try {
       console.log("========================================================= In Sign Client ============================================================")
-      const [txid, fromNetId, toNetIdHash, tokenName, tokenAddrHash, toTargetAddrHash, msgSig, nonce] = txInfo
-      const txidNonce = txid + nonce
       const list = await find("name", `${signClientName} ${signSmManager}`)
       if (list.length > 0) {
         console.log("clientAlreadyRunning:::", list)
@@ -61,14 +60,14 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
                 await exec(cmd, { cwd: __dirname + "/multiparty", shell: "/bin/bash" }) // Make sure it"s dead
               } catch (err) {
                 console.log("Partial signature process may not have exited:", err)
-                resolve(signClient(i, msgHash, txInfo))
+                resolve(signClient(i, msgHash))
                 //reject("SignerKill: Try transaction again with new nonce.")
                 return
               }
             } else {
               //Loop SM Mangers
               i = 0
-              resolve(signClient(i, msgHash, txInfo))
+              resolve(signClient(i, msgHash))
               return
             }
           } else {
@@ -120,7 +119,7 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
 
           if (err.toString().includes("elements in xs are not pairwise distinct")) {
             await sleep(2000)
-            resolve(signClient(i, msgHash, txInfo))
+            resolve(signClient(i, msgHash))
             return
           } else {
             reject("SignerFailError2: " + err)
@@ -138,25 +137,26 @@ export const signClient = async (i: number, msgHash: string, txInfo: string[]) =
   })
 
 /**
+ * sign message
  * @param message
  * @param web3
- * @param txInfo
- * @param txProcMap
  * @returns
  */
-export const signMsg = async (message: string, web3: Web3<RegisteredSubscription>, txInfo: string[]) => {
+export const signMessage = async (message: string, web3: Web3<RegisteredSubscription>) => {
   try {
-    // const sig = web3.eth.accounts.sign(message, "")
+    // console.log("::hashed msg to sign", message)
+    // const sig = web3.eth.accounts.sign(message, "0x00...") //0x84326CC39D69471b35A38aaAA9980eE0E6Ab5959
     // const { signature, messageHash, r, s, v } = sig
     // const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
     // const signer = recoverAddress(myMsgHashAndPrefix, signature)
     // console.log("MPC Address:", signer)
     // return Promise.resolve({ signature, signer })
+
     const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
     const netSigningMsg = myMsgHashAndPrefix.substr(2)
     const i = 0
     try {
-      const { signature, r, s, v } = (await signClient(i, netSigningMsg, txInfo)) as any
+      const { signature, r, s, v } = (await signClient(i, netSigningMsg)) as any
       let signer = ""
       try {
         signer = recoverAddress(myMsgHashAndPrefix, signature)
@@ -177,40 +177,36 @@ export const signMsg = async (message: string, web3: Web3<RegisteredSubscription
 
 /**
  * Concatenate the message to be hashed.
- * @param amt
- * @param targetAddressHash
- * @param txid
- * @param toContractAddress
- * @param toChainIdHash
+ * @param toNetworkIdHash
+ * @param txIdHash
+ * @param toTokenAddress
+ * @param tokenAmount
+ * @param decimals
+ * @param receiverAddressHash
  * @param vault
- * @returns string
+ * @returns merged msg
  */
-export const concatMsg = (amount: string, targetAddressHash: string, txid: string, toContractAddress: string, toChainIdHash: string, decimals: string, vault: boolean) => {
-  return amount + targetAddressHash + txid + toContractAddress + toChainIdHash + decimals + vault
+export const concatMsg = (toNetworkIdHash: string, hashedTxId: string, toTokenAddress: string, tokenAmount: string, decimals: number, receiverAddressHash: string, vault: boolean) => {
+  return toNetworkIdHash + hashedTxId + toTokenAddress + tokenAmount + decimals + receiverAddressHash + vault
 }
 
 /**
- * @param amt
- * @param web3
- * @param vault
- * @param txInfo
- * @param _decimals
+ * hash tx
+ * @param param0
+ * @returns
  */
-export const hashAndSignTx = async (amount: string, web3: Web3<RegisteredSubscription>, vault: boolean, txInfo: string[], _decimals: string) => {
+export const hashAndSignTx = async ({ web3Form, vault, toNetworkId, hashedTxId, toTokenAddress, tokenAmount, decimals, receiverAddressHash, nonce }: SIGN_REQUEST) => {
   try {
-    const toTargetAddrHash = txInfo[5]
-    const txHash = txInfo[0]
-    const toChainIdHash = txInfo[2]
-    const toContractAddress = txInfo[4]
-    const nonce = txInfo[7]
-    const message = concatMsg(amount, toTargetAddrHash, txHash, toContractAddress, toChainIdHash, _decimals, vault)
-
-    const hash = web3.utils.soliditySha3(message)
-    const { signature, signer } = await signMsg(hash, web3, txInfo)
+    const toNetworkIdHash = Web3.utils.keccak256(toNetworkId)
+    const toTokenAddressHash = Web3.utils.keccak256(toTokenAddress)
+    const message = concatMsg(toNetworkIdHash, hashedTxId, toTokenAddressHash, tokenAmount, decimals, receiverAddressHash, vault)
+    console.log("::message to sign: ", message)
+    const hash = web3Form.utils.soliditySha3(message)
+    const { signature, signer } = await signMessage(hash, web3Form)
     return Promise.resolve({ signature, mpcSigner: signer })
   } catch (err) {
     if (err.toString().includes("invalid point")) {
-      hashAndSignTx(amount, web3, vault, txInfo, _decimals)
+      hashAndSignTx({ web3Form, vault, toNetworkId, hashedTxId, toTokenAddress, tokenAmount, decimals, receiverAddressHash, nonce })
     } else {
       console.log(err)
       return Promise.reject(err)
