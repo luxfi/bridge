@@ -8,15 +8,17 @@
  * Signatures allow minting to occur cross chain.
  */
 import cors from "cors"
-import express from "express"
-import Web3 from "web3"
+import express, { Request, Response, NextFunction } from "express"
+import Web3, { net } from "web3"
 import { Interface } from "ethers"
 import { promisify } from "util"
 import { exec as childExec } from "child_process"
-import { settings, swapMappings } from "./config"
+import { settings } from "./config"
 import { RegisteredSubscription } from "web3/lib/commonjs/eth.exports"
-import { hashAndSignTx, signClient, sleep } from "./utils"
 import { PrismaClient } from "@prisma/client"
+import { signDataValidator } from "./validator"
+import { MAIN_NETWORKS, SWAP_PAIRS, TEST_NETWORKS } from "./config/settings"
+import { hashAndSignTx } from "./utils"
 
 const exec = promisify(childExec)
 const prisma = new PrismaClient()
@@ -29,71 +31,63 @@ for (const [key, value] of Object.entries(settings)) {
   settingsMap.set(key, value)
 }
 
-/* RPC list */
-const rpcList = settings.RPC
-/* Networks (ie. chains) */
-const networkName = settings.NetNames
-/* DECIMAL LIST */
-const DECIMALS = settings.DECIMALS
 /* Signing MSG */
 const msg = settings.Msg //signing msg used in front running prevention
 /* Dupelist - a graylist for slowing flood attack */
 let dupeStart = 0
 const dupeListLimit = Number(settings.DupeListLimit)
 let dupeList = new Map()
-/* Bridge contracts for Teleport Bridge */
-const list = settings.Teleporter
 
 /**
- * get WEB3 object by given network id
- * @param networkId
+ * get WEB3 object by given network's rpc url
+ * @param rpcUrl
  * @returns
  */
-function getWeb3ForId(networkId: number) {
+function getWeb3FormForRPC(rpcUrl: string) {
   try {
-    const _web3 = new Web3(new Web3.providers.HttpProvider(rpcList[networkId]))
-    return Promise.resolve(_web3)
+    const _web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl))
+    return _web3
   } catch (err) {
-    return Promise.reject("error to build web3 object")
+    return null
   }
 }
 
 /**
  * Given network id returns the appropriate contract to talk to as array of values
  * @param networkId
- * @param tokenName
+ * @param fromTokenName
  * @returns boject { fromTokenConAddr, w3From, frombridgeConAddr }
  */
-const getNetworkInfo = async (networkId: number, tokenName: string) => {
+const getNetworkInfo = async (networkId: string, fromTokenName: string) => {
   try {
-    const web3 = await getWeb3ForId(networkId)
-    const chainName: string = networkName[networkId]
-    if (!chainName) throw "no chain"
-    return {
-      fromTokenConAddr: settingsMap.get(tokenName.toString())[chainName],
-      w3From: web3,
-      frombridgeConAddr: list[chainName]
-    }
+    // const web3 = await getWeb3ForId(networkId)
+    // const chainName: string = networkName[networkId]
+    // if (!chainName) throw "no chain"
+    // return {
+    //   fromTokenConAddr: settingsMap.get(fromTokenName.toString())[chainName],
+    //   w3From: web3,
+    //   frombridgeConAddr: list[chainName]
+    // }
   } catch (err) {
     return null
   }
 }
 
-const Exp = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i
-
 const app = express()
+app.use(express.json())
 app.use(cors())
+app.use(express.urlencoded({ extended: true }))
 
 const port = process.env.PORT || 6000 //6000
 const server = app.listen(Number(port), "0.0.0.0", function () {
   console.log(`>> Teleporter_${process.env.node_number} Running At: ${port}`)
 })
 
-app.get("/", async (req: express.Request, res: express.Response) => {
+app.get("/", async (req: Request, res: Response) => {
   res.send(`>>> node_${process.env.node_number} is running at: ${port}`)
 })
 
-app.get("/dbcheck", async (req: express.Request, res: express.Response) => {
+app.get("/dbcheck", async (req: Request, res: Response) => {
   try {
     const transactions = await prisma.teleporter.findMany()
     res.status(200).json(transactions)
@@ -108,20 +102,13 @@ app.get("/dbcheck", async (req: express.Request, res: express.Response) => {
  * Parameters specific to where funds are being moved / minted to, are hashed, such that only the user has knowledge of
  * mint destination. Effectively, the transaction is teleported stealthily.
  */
-app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash/tokenName/:tokenName/tokenAddr/:tokenAddr/msgSig/:msgSig/toTargetAddrHash/:toTargetAddrHash/nonce/:nonce", async (req: express.Request, res: express.Response) => {
+app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res: Response) => {
   // Checking inputs
   const stealthMode = true // Stealth overrride by default, for now.
 
-  const txid = req.params.txid.trim()
-  if (!(txid.length > 0) && !txid.match(Exp)) {
-    const output = {
-      status: false,
-      msg: "NullTransactionError: bad transaction hash"
-    }
-    res.json(output)
-    return
-  }
+  let { txId, fromNetworkId, toNetworkId, toTokenAddress, receiverAddressHash, msgSignature, nonce } = req.body
 
+  console.log(typeof fromNetworkId)
   // Dupelist reset if time has elapsed.
   const dupeStop = new Date() //time now
   if ((Number(dupeStop) - dupeStart) / 1000 >= 2400) {
@@ -130,11 +117,11 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
   }
 
   // Limit on checks here, else you go into graylist.
-  if (dupeList.get(txid.toString()) == undefined) {
+  if (dupeList.get(txId.toString()) == undefined) {
     //First time
-    dupeList.set(txid.toString(), 0) // init
+    dupeList.set(txId.toString(), 0) // init
   } else {
-    if (dupeList.get(txid.toString()) >= dupeListLimit) {
+    if (dupeList.get(txId.toString()) >= dupeListLimit) {
       // temp blacklist - pm2 cron will reset graylist after 12hrs
       console.log("Dupe transaction request limit hit")
       const output = {
@@ -144,102 +131,14 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
       res.json(output)
       return
     }
-    dupeList.set(txid.toString(), dupeList.get(txid.toString()) + 1)
+    dupeList.set(txId.toString(), dupeList.get(txId.toString()) + 1)
   }
 
-  const fromNetId = req.params.fromNetId.trim()
-  if (!fromNetId) {
-    const output = {
-      status: false,
-      msg: "NullFromNetIDError: No fromNetId sent."
-    }
-    res.json(output)
-    return
-  }
-
-  const toNetIdHash = req.params.toNetIdHash.trim()
-  if (!toNetIdHash) {
-    const output = {
-      status: false,
-      msg: "NullToNetIDHashError: No toNetIdHash sent."
-    }
-    res.json(output)
-    return
-  }
-
-  const tokenName = req.params.tokenName.trim()
-  if (!tokenName) {
-    const output = {
-      status: false,
-      msg: "NullTokenNameError: No tokenName sent."
-    }
-    res.json(output)
-    return
-  }
-
-  const tokenAddr = req.params.tokenAddr.trim()
-  if (!tokenAddr) {
-    const output = {
-      status: false,
-      msg: "NullTokenAddressHashError: No token address sent."
-    }
-    res.json(output)
-    return
-  }
-
-  let toTargetAddrHash = req.params.toTargetAddrHash.trim()
-  if (!toTargetAddrHash) {
-    const output = {
-      status: false,
-      msg: "NullToTargetAddrHashError: No target address hash sent."
-    }
-    res.json(output)
-    return
-  }
-
-  const msgSig = req.params.msgSig.trim()
-  if (!msgSig) {
-    const output = {
-      status: false,
-      msg: "NullMessageSignatureError: Challenge message signature not sent."
-    }
-    res.json(output)
-    return
-  }
-
-  const nonce = req.params.nonce.trim()
-  if (!nonce) {
-    const output = {
-      status: false,
-      msg: "NullNonceError: No nonce sent."
-    }
-    res.json(output)
-    return
-  }
-  // TODO: check swap available according to source tokenName and destination token address
-  const _availableTokensByDesTokenAddress = swapMappings[tokenAddr]
-  if (!_availableTokensByDesTokenAddress) {
-    const output = {
-      status: false,
-      msg: "NullDestinationTokenError: No destination Token."
-    }
-    res.json(output)
-    return
-  }
-  if (!_availableTokensByDesTokenAddress.includes(tokenName)) {
-    const output = {
-      status: false,
-      msg: "NullDestinationTokenError: No Swap Permitted Token."
-    }
-    res.json(output)
-    return
-  }
-
-  const tokenAddrHash = Web3.utils.keccak256(tokenAddr) // hash the destinationTokenAddress
-  const evmTxHash = Web3.utils.soliditySha3(txid)
+  const toTokenAddressHash = Web3.utils.keccak256(toTokenAddress) // hash the destination token address
+  const hashedTxId = Web3.utils.soliditySha3(txId)
 
   // check replay attack
-  const { status, data } = await checkStealthSignature(evmTxHash)
+  const { status, data } = await checkStealthSignature(hashedTxId)
   if (status) {
     const output = {
       status: false,
@@ -249,151 +148,198 @@ app.get("/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
     return
   }
 
-  const txidNonce = stealthMode ? evmTxHash + nonce : txid + nonce
-  const txStub = stealthMode ? evmTxHash : txid
-  const txInfo = [txStub, fromNetId, toNetIdHash, tokenName, tokenAddrHash, toTargetAddrHash, msgSig, nonce]
-  // console.log("txidNonce:", txidNonce)
-  // console.log("txProcMapX:", txProcMap.get(txidNonce.toString()), "TX MAP:", txProcMap)
-  // get network settings
-  const fromNetArr = await getNetworkInfo(Number(fromNetId), tokenName)
+  const txidNonce = stealthMode ? hashedTxId + nonce : txId + nonce
+  const txStub = stealthMode ? hashedTxId : txId
 
-  if (!fromNetArr) {
-    console.log("FromNetArrLengthError:")
+  // console.log("txidNonce:", txidNonce)
+
+  const fromNetwork = MAIN_NETWORKS.find((n) => n.chain_id === fromNetworkId) ?? TEST_NETWORKS.find((n) => n.chain_id === fromNetworkId)
+  const toNetwork = MAIN_NETWORKS.find((n) => n.chain_id === toNetworkId) ?? TEST_NETWORKS.find((n) => n.chain_id === toNetworkId)
+  if (!fromNetwork) {
+    res.json({
+      status: false,
+      msg: `Unrecognized Source Network Error: Teleport does not support this network id ${fromNetworkId}.`
+    })
+    return
+  } else if (!toNetwork) {
+    res.json({
+      status: false,
+      msg: `Unrecognized Destination Network Error: Teleport does not support this network id ${toNetworkId}.`
+    })
+    return
+  } else if (fromNetwork.is_testnet !== toNetwork.is_testnet) {
+    res.json({
+      status: false,
+      msg: `Unmatched Network Type Error: Src and Dst chains' types are not matched.`
+    })
+    return
+  }
+  // get Web3Form using rpc url of specific network
+  const web3Form = getWeb3FormForRPC(fromNetwork.node)
+  if (!web3Form) {
+    res.json({
+      status: false,
+      msg: `Web3 object build Error: Cannot setup web3 object for this network ${fromNetwork.node}.`
+    })
+    return
+  }
+  const fromBridgeAddress = fromNetwork.teleporter
+  if (!fromBridgeAddress) {
+    res.json({
+      status: false,
+      msg: `Null teleporter Error: Cannot find teleporter from this chain ${fromNetwork.chain_id}.`
+    })
+    return
+  }
+
+  // get transaction info according to chains
+  const { status: txStatus, msg: txMsg, payload: txPayload } = await getEvmTransactionUsingTxId(txId, web3Form)
+
+  if (!txStatus) {
+    res.json({
+      status: false,
+      msg: `BadTransactionError: ${txMsg}`
+    })
+    return
+  }
+
+  console.log("::caught event:", txPayload)
+
+  const { teleporter: fromBridgeAddressByTx, token: fromTokenAddress, from, eventName, value: tokenAmount } = txPayload
+
+  const vault = eventName.toString() === "VaultDeposit" ? true : false
+
+  // TODO: check bridge addresses
+  if (fromBridgeAddress.toLowerCase() !== fromBridgeAddressByTx.toLowerCase()) {
+    res.json({
+      status: false,
+      msg: `InvalidBridgeAddressError: ${fromBridgeAddressByTx} is not a vaild bridge address of chain ${fromNetworkId}`
+    })
+    return
+  }
+  // TODO: check swap possibility according to src & dst chains
+  const fromToken = fromNetwork.currencies.find((c) => c.contract_address === fromTokenAddress)
+  const toToken = toNetwork.currencies.find((c) => c.contract_address === toTokenAddress)
+  // console.log("::tokens: ", { fromToken, toToken })
+
+  if (!fromToken) {
+    res.json({
+      status: false,
+      msg: `InvalidSrcTokenAddressError: ${fromTokenAddress} is not supported for current teleport`
+    })
+    return
+  } else if (!toToken) {
+    res.json({
+      status: false,
+      msg: `InvalidDstTokenAddressError: ${toTokenAddress} is not supported for current teleport`
+    })
+    return
+  }
+
+  if (!SWAP_PAIRS[fromToken.asset]?.includes(toToken.asset)) {
+    res.json({
+      status: false,
+      msg: `InvalidTokenPairsToSwap: These tokens are not possible to swap each others`
+    })
+    return
+  }
+
+  //To prove user signed we recover signer for (msg, sig) using testSig which rtrns address which must == toTargetAddr or return error
+  let signerAddress = ""
+  try {
+    signerAddress = web3Form.eth.accounts.recover(msg, msgSignature) //best  on server
+  } catch (err) {
     const output = {
       status: false,
-      msg: "Invalid source network settings."
+      msg: "SignerRecoverError: can not recover signer from msgSignature"
     }
     res.json(output)
     return
   }
+  console.log("::signerAddress:", signerAddress.toString().toLowerCase(), "::From Address:", from.toString().toLowerCase())
 
-  const { fromTokenConAddr, w3From, frombridgeConAddr } = fromNetArr
-  // get transaction info according to chains
-  const transaction = await getEVMTx(txid, w3From)
-  if (!transaction) {
+  // Bad signer (test transaction signer must be same as burn transaction signer) => exit, front run attempt
+  let signerOk = false
+  if (signerAddress.toString().toLowerCase() !== from.toString().toLowerCase()) {
+    console.log("*** Possible front run attempt, message signer not transaction sender ***")
     const output = {
       status: false,
-      msg: "NullTransactionError: bad transaction hash, no transaction on chain"
+      msg: "InvalidSenderError: Invalid Token Sender."
     }
     res.json(output)
     return
   } else {
-    const { teleporter, from, token: fromTokenContract, value: amount, eventName } = transaction
-    let vault = false
-    if (!eventName) {
-      const output = {
-        status: false,
-        msg: "NotVaultedOrBurnedError: No tokens were vaulted or burned."
-      }
-      res.json(output)
-      return
-    } else {
-      if (eventName.toString() === "BridgeBurned") {
-        vault = false
-      } else if (eventName.toString() === "VaultDeposit") {
-        vault = true
-      }
-    }
+    signerOk = true
+  }
 
-    // To prove user signed we recover signer for (msg, sig) using testSig which rtrns address which must == toTargetAddr or return error
-    let signerAddress = ""
-    try {
-      signerAddress = w3From.eth.accounts.recover(msg, msgSig) //best  on server
-    } catch (err) {
-      const output = {
-        status: false,
-        msg: "can not recover signer from msgSig"
-      }
-      res.json(output)
-      return
-    }
-    console.log("signerAddress:", signerAddress.toString().toLowerCase(), "From Address:", from.toString().toLowerCase())
-    // Bad signer (test transaction signer must be same as burn transaction signer) => exit, front run attempt
-    let signerOk = false
-    if (signerAddress.toString().toLowerCase() != from.toString().toLowerCase()) {
-      console.log("*** Possible front run attempt, message signer not transaction sender ***")
-      const output = {
-        status: false,
-        msg: "InvalidSenderError: Invalid Token Sender."
-      }
-      res.json(output)
-      return
-    } else {
-      signerOk = true
-    }
+  // // If signerOk we use the receiverAddressHash provided, else we hash the from address.
+  // receiverAddressHash = signerOk ? receiverAddressHash : Web3.utils.keccak256(from)
 
-    // If signerOk we use the toTargetAddrHash provided, else we hash the from address.
-    toTargetAddrHash = signerOk ? toTargetAddrHash : Web3.utils.keccak256(from)
-    // console.log("token contract:", fromTokenContract.toLowerCase(), "fromTokenConAddr", fromTokenConAddr.toLowerCase(), "contract", contract.toLowerCase(), "frombridgeConAddr", frombridgeConAddr.toLowerCase())
-    // Token was burned.
-    const _decimals = DECIMALS[tokenName] ?? "18"
-    if (fromTokenContract.toLowerCase() === fromTokenConAddr.toLowerCase() && teleporter.toLowerCase() === frombridgeConAddr.toLowerCase()) {
-      // console.log("fromTokenConAddr", fromTokenConAddr, "tokenAddrHash", tokenAddrHash)
-      //Produce signature for minting approval.
-      try {
-        const { signature, mpcSigner } = await hashAndSignTx(amount.toString(), w3From, vault, txInfo, _decimals)
-        //NOTE: For private transactions, store only the sig.
-        const output = {
-          fromTokenContractAddress: fromTokenContract,
-          contract: teleporter,
-          from: toTargetAddrHash,
-          tokenAmt: amount,
-          signature: signature,
-          mpcSigner: mpcSigner,
-          hashedTxId: evmTxHash,
-          tokenAddrHash: tokenAddrHash,
-          vault: vault
-        }
-        await saveEvmTxHash({
-          chainType: "evm",
-          txId: txid,
-          amount: amount.toString(),
-          signature,
-          hashedTxId: evmTxHash
-        })
-        res.status(200).json({
-          status: true,
-          data: output
-        })
-        return
-      } catch (err) {
-        let output: any
-        if (err === "AlreadyMintedError") {
-          console.log(err)
-          output = { status: false, msg: err + " It appears these coins were already bridged." }
-        } else if (err === "GasTooLowError") {
-          console.log(err)
-          output = { status: false, msg: err + " Try setting higher gas prices. Do you have enough tokens to pay for fees?" }
-        } else {
-          console.log(err)
-          output = { status: false, msg: err }
-        }
-        res.json(output)
-        return
-      }
-    } else {
-      const output = {
-        status: false,
-        msg: "ContractMisMatchError: bad token or bridge contract address."
-      }
-      res.json(output)
-      return
+  try {
+    const { signature, mpcSigner } = await hashAndSignTx({
+      web3Form,
+      toNetworkId,
+      hashedTxId: hashedTxId,
+      toTokenAddress: toToken.contract_address,
+      tokenAmount: tokenAmount.toString(),
+      decimals: fromToken.decimals,
+      receiverAddressHash,
+      nonce: txidNonce,
+      vault
+    })
+    //NOTE: For private transactions, store only the sig.
+    const output = {
+      fromTokenAddress: fromTokenAddress,
+      contract: fromNetwork.teleporter,
+      from: from,
+      tokenAmount: tokenAmount.toString(),
+      signature: signature,
+      mpcSigner: mpcSigner,
+      hashedTxId: hashedTxId,
+      toTokenAddressHash: toTokenAddressHash,
+      vault: vault
     }
+    // await savehashedTxId({
+    //   chainType: "evm",
+    //   txId: txId,
+    //   amount: tokenAmount.toString(),
+    //   signature,
+    //   hashedTxId: hashedTxId
+    // })
+    res.status(200).json({
+      status: true,
+      data: output
+    })
+    return
+  } catch (err) {
+    let output: any
+    if (err === "AlreadyMintedError") {
+      console.log(err)
+      output = { status: false, msg: err + " It appears these coins were already bridged." }
+    } else if (err === "GasTooLowError") {
+      console.log(err)
+      output = { status: false, msg: err + " Try setting higher gas prices. Do you have enough tokens to pay for fees?" }
+    } else {
+      console.log(err)
+      output = { status: false, msg: err }
+    }
+    res.json(output)
+    return
   }
 })
 
 /**
  * check relay attack
- * @param evmTxHash
+ * @param hashedTxId
  * @returns object { status, data }
  */
-const checkStealthSignature = async (evmTxHash: string) => {
-  console.log("Searching for txid:", evmTxHash)
+const checkStealthSignature = async (hashedTxId: string) => {
+  console.log("::Searching for txid:", hashedTxId)
   try {
     const data = await prisma.teleporter.findUnique({
-      where: { hashedTxId: evmTxHash }
+      where: { hashedTxId: hashedTxId }
     })
-    console.log("Find Stealth Hash: ", data)
+    console.log("::Find Stealth Hash: ", data)
     if (data) {
       return Promise.resolve({ status: true, data: data })
     } else {
@@ -409,13 +355,13 @@ const checkStealthSignature = async (evmTxHash: string) => {
  * save Tx info to db
  * @param data
  */
-const saveEvmTxHash = async (data: { chainType: string; txId: string; amount: string; signature: string; hashedTxId: string }) => {
+const savehashedTxId = async (data: { chainType: string; txId: string; amount: string; signature: string; hashedTxId: string }) => {
   try {
     const _tx = await prisma.teleporter.findUnique({
       where: { hashedTxId: data.hashedTxId }
     })
     if (_tx) {
-      console.log("Already Existed Tx")
+      console.log("::Already Existed Tx")
     } else {
       await prisma.teleporter.create({ data })
     }
@@ -431,62 +377,72 @@ const saveEvmTxHash = async (data: { chainType: string; txId: string; amount: st
  * @param w3From
  * @returns
  */
-const getEVMTx = async (txHash: string, w3From: Web3<RegisteredSubscription>) => {
+const getEvmTransactionUsingTxId = async (txId: string, w3From: Web3<RegisteredSubscription>) => {
   try {
-    const transaction = await w3From.eth.getTransaction(txHash)
-    const transactionReceipt = await w3From.eth.getTransactionReceipt(txHash)
-    if (transaction != null && transactionReceipt != null && transaction != undefined && transactionReceipt != undefined) {
-      // console.log("Transaction:", transaction, "Transaction Receipt:", transactionReceipt)
+    const transaction = await w3From.eth.getTransaction(txId)
+    const transactionReceipt = await w3From.eth.getTransactionReceipt(txId)
+    if (transaction && transactionReceipt) {
+      // console.log("::Transaction: ", transaction, "::Transaction Receipt:", transactionReceipt)
       const tx = { ...transaction, ...transactionReceipt }
       if (transactionReceipt.logs.length === 0) {
-        throw new Error("getEVMTXError: there was a problem with the transaction receipt.")
+        return {
+          status: false,
+          msg: "there was a problem with the transaction receipt. Null logs",
+          payload: null
+        }
       }
-      // console.log({ transaction })
-      // const addrTo = transactionReceipt.logs.length > 0 ? transactionReceipt.logs[0].address : transactionReceipt.to
       const teleporter = String(transactionReceipt?.to)
+      const _addressOfLog0 = String(transactionReceipt?.logs[0]?.address)
+      const _addressToken = _addressOfLog0.toLowerCase() === teleporter.toLowerCase() ? "0x0000000000000000000000000000000000000000" : _addressOfLog0
 
-      const _addressOfLog = String(transactionReceipt?.logs[0]?.address)
-      const _addressToken = _addressOfLog.toLowerCase() === teleporter.toLowerCase() ? "0x0000000000000000000000000000000000000000" : _addressOfLog
+      console.log("::fromTokenAddress: =======>", _addressToken)
 
-      console.log("fromTokenAddress: =======>", _addressToken)
-      // console.log({ addrTo, log0: transactionReceipt.logs[0] })
-      // let tokenAmt = parseInt(transaction.input.slice(74, 138), 16)
-      // console.log(tokenAmt)
-      // tokenAmt -= tokenAmt * 0.008
       const from = transaction.from
-      const abi = ["event BridgeBurned(address caller, uint256 amt)", "event VaultDeposit(address depositor, uint256 amt)"]
+      const abi = ["event BridgeBurned (address depositor, uint256 amt, address token)", "event VaultDeposit (address depositor, uint256 amt, address token)"]
       const iface = new Interface(abi)
       const eventLog = tx.logs
-      let _eventName: string = ""
-      // console.log("Log Length:", eventLog.length)
-      for (const _event of eventLog) {
-        try {
-          //@ts-expect-error "_event type not matching"
-          const log = iface.parseLog(_event)
-          _eventName = log.name
-        } catch (error) {
-          // console.log(`EventNotFoundError in log number:`, _event)
+
+      //@ts-expect-error "_event type not matching"
+      const _logs = await Promise.all(eventLog.map((e) => iface.parseLog(e)))
+      const _log = _logs.filter((l) => l !== null)[0]
+
+      if (!_log) {
+        return {
+          status: false,
+          msg: "No tokens were vaulted or burned.",
+          payload: null
         }
       }
 
-      // amount = transactionReceipt.logs.length > 0 && transactionReceipt.logs[0].data == "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ? 0 : Number(transactionReceipt.logs[0].data)
-      // amount = Number(Web3.utils.fromWei(amount.toLocaleString("fullwide", { useGrouping: false }).toString(), "ether"))
-      const _tokenAmount = transactionReceipt.logs.length === 1 ? String(transactionReceipt.logs[0].data).substring(66) : String(transactionReceipt.logs[1].data).substring(66)
-      // const amount = transactionReceipt.logs.length === 1 ? Number('0x' + String(transactionReceipt.logs[0]).substring(66)) : Number('0x' + String(transactionReceipt.logs[1]).substring(66))
-      const _amount = Number("0x" + _tokenAmount)
+      const _eventName: string = _log.name
+      const _caller: string = _log.args[0]
+      const _tokenAmount: string = _log.args[1]
+      const _fromTokenAddress: string = _log.args[2]
+
       const transactionObj = {
-        teleporter, // source teleporter address
-        token: _addressToken,
-        from,
-        // tokenAmount: tokenAmt,
-        eventName: _eventName,
-        value: _amount
+        teleporter, //source network's telepor bridge address
+        token: _fromTokenAddress, //token address
+        from, //caller address
+        eventName: _eventName, //type
+        value: _tokenAmount // amount of token
       }
-      return transactionObj
+      return Promise.resolve({
+        status: true,
+        msg: "success",
+        payload: transactionObj
+      })
+    } else {
+      return {
+        status: false,
+        msg: "Cannot find transaction from this txId",
+        payload: null
+      }
     }
   } catch (err) {
-    const error2 = "TransactionRetrievalError: Failed to retrieve transaction. Check transaction hash is correct."
-    console.log("Error:", error2)
-    return null
+    return {
+      status: false,
+      msg: "bad transaction hash, no transaction on chain",
+      payload: null
+    }
   }
 }
