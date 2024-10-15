@@ -102,10 +102,12 @@ const Swap: FC = () => {
   const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    axios.get("/api/tokens/price/ETH").then((data) => {
-      setEthPrice(Number(data?.data?.data?.price));
-    });
-  }, []);
+    if (sourceAsset) {
+      axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
+        setEthPrice(Number(data?.data?.data?.price));
+      });
+    }
+  }, [sourceAsset]);
 
   const warnningMessage = React.useMemo(() => {
     if (!sourceNetwork) {
