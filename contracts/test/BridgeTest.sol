@@ -13,12 +13,13 @@ pragma solidity ^0.8.20;
     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝╚═════╝  ╚═════╝ ╚══════╝
  */
 
+import "./ERC20B.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "./ERC20B.sol";
-import "./LuxVault.sol";
+import {LuxVault} from "./LuxVault.sol";
+import "hardhat/console.sol";
 
 contract Bridge is Ownable, AccessControl {
     // Use the library functions from OpenZeppelin
@@ -217,13 +218,14 @@ contract Bridge is Ownable, AccessControl {
 
     /**
      * @dev preview vault withdraw
+     * @param amount_ token amount to withdraw
      * @param tokenAddr_ token address to withdraw
-     * @return amount token available amount for withdrawal
      */
     function previewVaultWithdraw(
+        uint256 amount_,
         address tokenAddr_
-    ) public view returns (uint256) {
-        return vault.previewWithdraw(tokenAddr_);
+    ) public view returns (bool) {
+        return vault.previewWithdraw(tokenAddr_, amount_);
     }
 
     /**
@@ -326,57 +328,7 @@ contract Bridge is Ownable, AccessControl {
     }
 
     /**
-     * @dev get signer from tx data
-     * @notice Sets the vault address. Sig can only be claimed once.
-     * @param hashedTxId_ hashed tx id in source chain
-     * @param toTokenAddress_ token address in destination chain
-     * @param tokenAmount_ token amount that is transfered to lux vault in source chain
-     * @param fromTokenDecimals_ token decimal of source token
-     * @param receiverAddress_ destinatoin address to mint in destination chain
-     * @param signedTXInfo_ mpc signed msg from teleport oracle network
-     * @param vault_ if usage of vault
-     * @return signer return signer address of message
-     */
-    function previewBridgeStealth(
-        string memory hashedTxId_,
-        address toTokenAddress_,
-        uint256 tokenAmount_,
-        uint256 fromTokenDecimals_,
-        address receiverAddress_,
-        bytes memory signedTXInfo_,
-        string memory vault_
-    ) public view returns (address) {
-        TeleportStruct memory teleport;
-        // Hash calculations
-        teleport.tokenAddressHash = keccak256(abi.encodePacked(toTokenAddress_));
-        teleport.token = ERC20B(toTokenAddress_);
-        teleport.receiverAddress = receiverAddress_;
-        teleport.receiverAddressHash = keccak256(
-            abi.encodePacked(receiverAddress_)
-        );
-        teleport.tokenAmount = Strings.toString(tokenAmount_);
-        teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(abi.encodePacked(block.chainid.toString()));
-        // Concatenate message
-        string memory message = append(
-            Strings.toHexString(uint256(teleport.networkIdHash), 32),
-            hashedTxId_,
-            Strings.toHexString(uint256(teleport.tokenAddressHash), 32),
-            teleport.tokenAmount,
-            teleport.decimals,
-            Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
-            vault_
-        );
-        // Check if signedTXInfo already exists
-        require(!transactionMap[signedTXInfo_].exists, "DupeTX");
-        address signer = recoverSigner(
-            prefixed(keccak256(abi.encodePacked(message))),
-            signedTXInfo_
-        );
-        return signer;
-    }
-    /**
-     * @dev stealth mint tokens using mpc signature
+     * @dev Sig is specific to recipient target address, hashed txid, amount, block height, target token and target chain
      * @notice Sets the vault address. Sig can only be claimed once.
      * @param hashedTxId_ hashed tx id in source chain
      * @param toTokenAddress_ token address in destination chain
@@ -395,7 +347,7 @@ contract Bridge is Ownable, AccessControl {
         address receiverAddress_,
         bytes memory signedTXInfo_,
         string memory vault_
-    ) external returns (address) {
+    ) public returns (address) {
         TeleportStruct memory teleport;
         // Hash calculations
         teleport.tokenAddressHash = keccak256(abi.encodePacked(toTokenAddress_));
@@ -417,100 +369,114 @@ contract Bridge is Ownable, AccessControl {
             Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
             vault_
         );
+
+        console.log("::hashedTxId_", hashedTxId_);
+        console.log("::toTokenAddress_", toTokenAddress_);
+        console.log("::tokenAmount", tokenAmount_);
+        console.log("::fromTokenDecimals_", fromTokenDecimals_);
+        console.log("::receiverAddress_", receiverAddress_);
+        console.log("::vault_", vault_);
+        console.log("::message", message);
+
         // Check if signedTXInfo already exists
         require(!transactionMap[signedTXInfo_].exists, "DupeTX");
         address signer = recoverSigner(
             prefixed(keccak256(abi.encodePacked(message))),
             signedTXInfo_
         );
+
+        console.log("signer", signer);
         // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        require(MPCOracleAddrMap[signer].exists, "BadSig");
+        // require(MPCOracleAddrMap[signer].exists, "BadSig");
+
         // Calculate fee and adjust amount
-        uint256 _amount = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
-        uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
-        uint256 _adjustedAmount = _amount - _bridgeFee; // Use a local variable
+        uint256 _amount_ = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
+        uint256 _bridgeFee = (_amount_ * feeRate) / 10 ** 4;
+        uint256 _adjustedAmount = _amount_ - _bridgeFee; // Use a local variable
+
+        console.log("::bridgeFee", _bridgeFee);
+        console.log("::adjustedAmount", _adjustedAmount);
         // If correct signer, then payout
-        teleport.token.bridgeMint(payoutAddress, _bridgeFee);
-        teleport.token.bridgeMint(teleport.receiverAddress, _adjustedAmount);
+        // teleport.token.bridgeMint(payoutAddress, _bridgeFee);
+        // teleport.token.bridgeMint(teleport.receiverAddress, _adjustedAmount);
+
+
         // Add new transaction ID mapping
         addMappingStealth(signedTXInfo_);
 
         emit BridgeMinted(teleport.receiverAddress, toTokenAddress_, _adjustedAmount);
+
         return signer;
     }
 
-    /**
-     * @dev withdraw tokens using mpc signature
-     * @notice Sets the vault address. Sig can only be claimed once.
-     * @param hashedTxId_ hashed tx id in source chain
-     * @param toTokenAddress_ token address in destination chain
-     * @param tokenAmount_ token amount that is transfered to lux vault in source chain
-     * @param fromTokenDecimals_ token decimal of source token
-     * @param receiverAddress_ destinatoin address to mint in destination chain
-     * @param signedTXInfo_ mpc signed msg from teleport oracle network
-     * @param vault_ if usage of vault
-     * @return signer return signer address of message
-     */
-    function bridgeWithdrawStealth(
-        string memory hashedTxId_,
-        address toTokenAddress_,
-        uint256 tokenAmount_,
-        uint256 fromTokenDecimals_,
-        address receiverAddress_,
-        bytes memory signedTXInfo_,
-        string memory vault_
-    ) external returns (address) {
-        TeleportStruct memory teleport;
-        // Hash calculations
-        teleport.tokenAddressHash = keccak256(abi.encodePacked(toTokenAddress_));
-        teleport.token = ERC20B(toTokenAddress_);
-        teleport.receiverAddress = receiverAddress_;
-        teleport.receiverAddressHash = keccak256(
-            abi.encodePacked(receiverAddress_)
-        );
-        teleport.tokenAmount = Strings.toString(tokenAmount_);
-        teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(abi.encodePacked(block.chainid.toString()));
-        // Concatenate message
-        string memory message = append(
-            Strings.toHexString(uint256(teleport.networkIdHash), 32),
-            hashedTxId_,
-            Strings.toHexString(uint256(teleport.tokenAddressHash), 32),
-            teleport.tokenAmount,
-            teleport.decimals,
-            Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
-            vault_
-        );
-        // Check if signedTXInfo already exists
-        require(!transactionMap[signedTXInfo_].exists, "DupeTX");
-        address signer = recoverSigner(
-            prefixed(keccak256(abi.encodePacked(message))),
-            signedTXInfo_
-        );
-        // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        require(MPCOracleAddrMap[signer].exists, "BadSig");
+    // /**
+    //  * @dev Sig is specific to recipient target address, hashed txid, amount, block height, target token and target chain
+    //  * @notice Sets the vault address. Sig can only be claimed once.
+    //  * @param amt_ token amount that is burnt in source chain
+    //  * @param hashedId_ hashed tx id in source chain
+    //  * @param toTargetAddrStr_ destinatoin address to withdraw in destination chain
+    //  * @param signedTXInfo_ mpc signed msg from teleport oracle network
+    //  * @param tokenAddrStr_ token address in destination chain
+    //  * @param chainId_ chain id
+    //  * @param fromTokenDecimal_ token decimal of source token
+    //  * @param vault_ if usage of vault
+    //  * @return signer return signer address of message
+    //  */
+    // function bridgeWithdrawStealth(
+    //     uint256 amt_,
+    //     string memory hashedId_,
+    //     address toTargetAddrStr_,
+    //     bytes memory signedTXInfo_,
+    //     address tokenAddrStr_,
+    //     string memory chainId_,
+    //     uint256 fromTokenDecimal_,
+    //     string memory vault_
+    // ) public returns (address) {
+    //     TeleportStruct memory teleport;
+    //     // Hash calculations
+    //     teleport.tokenAddrHash = keccak256(abi.encodePacked(tokenAddrStr_));
+    //     teleport.toTargetAddr = toTargetAddrStr_;
+    //     teleport.toTargetAddrStrHash = keccak256(
+    //         abi.encodePacked(toTargetAddrStr_)
+    //     );
+    //     teleport.amtStr = Strings.toString(amt_);
+    //     teleport.decimalStr = Strings.toString(fromTokenDecimal_);
+    //     teleport.toChainIdHash = keccak256(abi.encodePacked(chainId_));
+    //     // Concatenate message
+    //     string memory message = append(
+    //         teleport.amtStr,
+    //         Strings.toHexString(uint256(teleport.toTargetAddrStrHash), 32),
+    //         hashedId_,
+    //         Strings.toHexString(uint256(teleport.tokenAddrHash), 32),
+    //         Strings.toHexString(uint256(teleport.toChainIdHash), 32),
+    //         teleport.decimalStr,
+    //         vault_
+    //     );
 
-        uint256 _amount = tokenAmount_;
-        if (toTokenAddress_ == address(0)) {
-            _amount =
-                (tokenAmount_ * 10 ** 18) /
-                (10 ** fromTokenDecimals_);
-        } else {
-            _amount =
-                (tokenAmount_ * 10 ** ERC20(toTokenAddress_).decimals()) /
-                (10 ** fromTokenDecimals_);
-        }
-        uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
-        uint256 _adjustedAmount = _amount - _bridgeFee; // Use a local variable
-        // withdraw tokens
-        vaultWithdraw(_bridgeFee, toTokenAddress_, payoutAddress);
-        vaultWithdraw(_adjustedAmount, toTokenAddress_, teleport.receiverAddress);
-        // Add new transaction ID mapping
-        addMappingStealth(signedTXInfo_);
+    //     // Check if signedTXInfo already exists
+    //     require(!transactionMap[signedTXInfo_].exists, "DupeTX");
+    //     address signer = recoverSigner(
+    //         prefixed(keccak256(abi.encodePacked(message))),
+    //         signedTXInfo_
+    //     );
+    //     // Check if signer is MPCOracle and corresponds to the correct ERC20B
+    //     require(MPCOracleAddrMap[signer].exists, "BadSig");
 
-        emit BridgeWithdrawn(teleport.receiverAddress, toTokenAddress_, _amount);
-        return signer;
-    }
+    //     uint256 amount_ = amt_;
+    //     if (tokenAddrStr_ != address(0)) {
+    //         amount_ =
+    //             (amt_ * 10 ** ERC20(tokenAddrStr_).decimals()) /
+    //             (10 ** fromTokenDecimal_);
+    //     }
+    //     vaultWithdraw(amount_, tokenAddrStr_, msg.sender);
+    //     // Add new transaction ID mapping
+    //     addMappingStealth(signedTXInfo_);
+
+    //     emit BridgeWithdrawn(msg.sender, tokenAddrStr_, amount_);
+
+    //     // return signer;
+    //     return signer;
+    // }
 
     /**
      * @dev send funds
