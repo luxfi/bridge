@@ -116,21 +116,16 @@ contract LuxVault is Ownable {
     /**
      * @dev preview withdraw
      * @param asset_ ERC20 token address
-     * @param amount_ token amount
-     * @return value true it possible to withdraw
+     * @return value token amount available for withdrawal
      */
     function previewWithdraw(
-        address asset_,
-        uint256 amount_
-    ) public view returns (bool) {
+        address asset_
+    ) public view returns (uint256) {
         if (asset_ == address(0)) {
-            if (ETHVault(ethVaultAddress).balanceOf(owner()) >= amount_)
-                return true;
+            return ETHVault(ethVaultAddress).balanceOf(owner());
         } else {
-            if (ERC4626(erc20Vault[asset_]).maxWithdraw(owner()) >= amount_)
-                return true;
+            return ERC4626(erc20Vault[asset_]).maxWithdraw(owner());
         }
-        return false;
     }
 
     /**
