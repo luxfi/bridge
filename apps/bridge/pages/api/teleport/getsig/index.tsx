@@ -54,10 +54,8 @@ export default async function handler(
         receiverAddressHash,
         nonce: 0x0002,
       };
-
-      console.log("::sign data:", signData);
-
       const data = await getSigFromMpcOracleNetwork(signData);
+      console.log("::mpc sign data", data);
       res.status(200).json(data);
     } catch (err) {
       console.log(err);

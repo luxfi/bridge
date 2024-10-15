@@ -124,15 +124,14 @@ const UserTokenDepositor: React.FC<IProps> = ({
 
       console.log({
         _amount,
-        _asset:
-          sourceAsset.contract_address ??
-          "0x0000000000000000000000000000000000000000",
+        _asset: sourceAsset.contract_address,
       });
       const _bridgeTransferTx = await bridgeContract.vaultDeposit(
         _amount,
-        sourceAsset.contract_address ??
-          "0x0000000000000000000000000000000000000000",
-        { value: sourceAsset.contract_address ? 0 : _amount }
+        sourceAsset.contract_address,
+        {
+          value: sourceAsset.is_native ? _amount : 0,
+        }
       );
       await _bridgeTransferTx.wait();
       await axios.post(`/api/swaps/transfer/${swapId}`, {
