@@ -95,7 +95,7 @@ export const networks: Network[] = [
     is_testnet: true,
     is_featured: true,
     average_completion_time: "00:01:04.0494430",
-    chain_id: 11155111, //base sepolia
+    chain_id: 11155111,
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 0.5,
@@ -106,7 +106,7 @@ export const networks: Network[] = [
       {
         name: "ETH",
         asset: "ETH",
-        logo: "https://cdn.lux.network/bridge/currencies/eth.png",
+        logo: "https://cdn.lux.network/bridge/currencies/ethereum_eth.svg",
         contract_address: "0x0000000000000000000000000000000000000000",
         decimals: 18,
         status: "active",
