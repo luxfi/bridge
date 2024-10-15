@@ -22,6 +22,14 @@ export const getTokenPrice = async (token_id: string) => {
         { headers }
       );
       return Number(data.amount);
+    } else {
+      const {
+        data: { data },
+      } = await axios.get(
+        `https://api.coinbase.com/v2/prices/${token_id}-USD/buy`,
+        { headers }
+      );
+      return Number(data.amount);
     }
   } catch (err) {
     console.log("::not found token in coinbase", token_id);
