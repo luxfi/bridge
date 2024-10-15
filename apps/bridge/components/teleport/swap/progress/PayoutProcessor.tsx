@@ -98,7 +98,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       vault_: "true",
     };
 
-    console.log("data for bridge mint:::", mintData);
+    console.log("data for bridge mint::", mintData);
 
     try {
       setIsGettingPayout(true);
@@ -158,19 +158,19 @@ const PayoutProcessor: React.FC<IProps> = ({
   };
 
   const withdrawDestinationToken = async () => {
-    const mintData = {
+    const withdrawData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
       tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
-      vault_: "true",
+      vault_: "false",
     };
 
     // previewVaultWithdraw
 
-    console.log("data for bridge mint:::", mintData);
+    console.log("::data for bridge withdraw:", withdrawData);
 
     try {
       const bridgeContract = new Contract(
@@ -180,9 +180,14 @@ const PayoutProcessor: React.FC<IProps> = ({
       );
 
       const previewVaultWithdraw = await bridgeContract.previewVaultWithdraw(
-        parseUnits(String(sourceAmount), sourceAsset.decimals),
-        mintData.toTokenAddress_
+        withdrawData.toTokenAddress_
       );
+      console.log({
+        balance: Number(
+          formatUnits(previewVaultWithdraw, destinationAsset.decimals)
+        ),
+        todo: Number(sourceAmount),
+      });
 
       if (
         Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) <
@@ -206,24 +211,24 @@ const PayoutProcessor: React.FC<IProps> = ({
       // string memory vault_
 
       const _signer = await bridgeContract.previewBridgeStealth(
-        mintData.hashedTxId_,
-        mintData.toTokenAddress_,
-        mintData.tokenAmount_,
-        mintData.fromTokenDecimals_,
-        mintData.receiverAddress_,
-        mintData.signedTXInfo_,
-        mintData.vault_
+        withdrawData.hashedTxId_,
+        withdrawData.toTokenAddress_,
+        withdrawData.tokenAmount_,
+        withdrawData.fromTokenDecimals_,
+        withdrawData.receiverAddress_,
+        withdrawData.signedTXInfo_,
+        withdrawData.vault_
       );
       console.log("::signer", _signer);
 
       const _bridgePayoutTx = await bridgeContract.bridgeWithdrawStealth(
-        mintData.hashedTxId_,
-        mintData.toTokenAddress_,
-        mintData.tokenAmount_,
-        mintData.fromTokenDecimals_,
-        mintData.receiverAddress_,
-        mintData.signedTXInfo_,
-        mintData.vault_
+        withdrawData.hashedTxId_,
+        withdrawData.toTokenAddress_,
+        withdrawData.tokenAmount_,
+        withdrawData.fromTokenDecimals_,
+        withdrawData.receiverAddress_,
+        withdrawData.signedTXInfo_,
+        withdrawData.vault_
       );
       await _bridgePayoutTx.wait();
       setBridgeMintTransactionHash(_bridgePayoutTx.hash);
@@ -287,7 +292,10 @@ const PayoutProcessor: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>{sourceAsset?.asset} transferred</span>
+                  <span>
+                    {sourceAsset?.asset}{" "}
+                    {isWithdrawal ? "burnt" : "transferred"}
+                  </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
                     <Tooltip>
@@ -344,7 +352,10 @@ const PayoutProcessor: React.FC<IProps> = ({
               ) : (
                 <ArrowRight />
               )}
-              <span className="grow">Get Your {destinationAsset?.asset}</span>
+              <span className="grow">
+                {isWithdrawal ? "Withdraw" : "Get"} Your{" "}
+                {destinationAsset?.asset}
+              </span>
             </button>
           </div>
         </div>
