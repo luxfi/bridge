@@ -6,6 +6,7 @@
     "debug": "next dev",
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "npx prisma generate",
     "start": "next start",
     "tc": "tsc --noEmit",
     "clean": "rm -rf ./.next && rm -rf ./node_modules",
