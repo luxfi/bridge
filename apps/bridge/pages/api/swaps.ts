@@ -11,16 +11,14 @@ export default async function handler(
   if (req.method === "POST") {
     try {
       const result = await handleSwapCreation({
-        ...req.body
+        ...req.body,
       });
       res.status(200).json({ data: { ...result } });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).json({ error: error.message });
     }
-
   } else if (req.method === "GET") {
-
     const isDeleted =
       (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) ||
       undefined;
