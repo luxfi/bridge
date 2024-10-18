@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 
 import Link from "next/link";
 import Image from "next/image";
+import networks from "@/settings/mainnet/networks.json";
 import {
   ArrowRight,
   ChevronRight,
@@ -20,9 +21,8 @@ import BridgeApiClient, {
 } from "../../lib/BridgeApiClient";
 import SpinIcon from "../icons/spinIcon";
 import SwapDetails from "./SwapDetailsComponent";
-import { useSettingsState } from "../../context/settings";
 import { classNames } from "../utils/classNames";
-import SubmitButton, { DoubleLineText } from "../buttons/submitButton";
+import SubmitButton from "../buttons/submitButton";
 import { SwapHistoryComponentSceleton } from "../Sceletons";
 import StatusIcon from "./StatusIcons";
 import toast from "react-hot-toast";
@@ -32,14 +32,10 @@ import HeaderWithMenu from "../HeaderWithMenu";
 import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
 import { truncateDecimals } from "../utils/RoundDecimals";
-import { Layer } from "../../Models/Layer";
-import { Exchange } from "../../Models/Exchange";
-import { NetworkCurrency } from "../../Models/CryptoNetwork";
+import { resolveNetworkImage } from "@/helpers/utils";
 
 function TransactionsHistory() {
   const [page, setPage] = useState(0);
-  const settings = useSettingsState();
-  const { layers, exchanges, resolveImgSrc, getExchangeAsset } = settings;
   const [isLastPage, setIsLastPage] = useState(false);
   const [swaps, setSwaps] = useState<SwapItem[]>();
   const [loading, setLoading] = useState(false);
@@ -55,9 +51,9 @@ function TransactionsHistory() {
     window?.["navigation"]?.["canGoBack"]
       ? router.back()
       : router.push({
-        pathname: "/",
-        query: resolvePersistantQueryParams(router.query),
-      });
+          pathname: "/",
+          query: resolvePersistantQueryParams(router.query),
+        });
   }, [router]);
 
   useEffect(() => {
@@ -100,8 +96,6 @@ function TransactionsHistory() {
           toast.error(error.message);
           return;
         }
-        console.log("data=====>", data);
-
         setSwaps(data);
         setPage(1);
         if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
@@ -205,27 +199,23 @@ function TransactionsHistory() {
                     </thead>
                     <tbody>
                       {swaps?.map((swap, index) => {
-                        const {
-                          source_exchange: source_exchange_internal_name,
-                          destination_network: destination_network_internal_name,
-                          source_network: source_network_internal_name,
-                          destination_exchange: destination_exchange_internal_name,
-                          source_asset,
-                          destination_asset
-                        } = swap;
+                        const sourceNetwork = networks.find(
+                          (n) => n.internal_name === swap.source_network
+                        );
+                        const destinationNetwork = networks.find(
+                          (n) => n.internal_name === swap.destination_network
+                        );
 
-                        const sourceLayer = layers.find(n => n.internal_name === source_network_internal_name)
-                        const sourceExchange = exchanges.find(e => e.internal_name === source_exchange_internal_name)
-                        const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset(layers, sourceExchange, source_asset)
-
-                        const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
-                        const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
-                        const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
-                        const output_transaction = swap.transactions.find((t) => t.type === TransactionType.Output);
-
-                        // const sourceLayer = layers.find((e) => e.internal_name === source_network_internal_name);
-                        // const source_currency = source?.assets?.find((c) => c.asset === source_asset);
-                        // const destination = layers.find((n) => n.internal_name === destination_network_internal_name);
+                        const sourceAsset = sourceNetwork?.currencies.find(
+                          (c) => c.asset === swap.source_asset
+                        );
+                        const destinationAsset =
+                          destinationNetwork?.currencies.find(
+                            (c) => c.asset === swap.destination_asset
+                          );
+                        const output_transaction = swap.transactions.find(
+                          (t) => t.type === TransactionType.Output
+                        );
 
                         return (
                           <tr
@@ -240,27 +230,27 @@ function TransactionsHistory() {
                             >
                               <div className=" flex items-center">
                                 <div className="flex-shrink-0 h-5 w-5 relative">
-                                  {(sourceLayer || sourceExchange) && (
-                                    <Image
-                                      src={resolveImgSrc(sourceLayer ?? sourceExchange)}
-                                      alt="From Logo"
-                                      height="60"
-                                      width="60"
-                                      className="rounded-md object-contain"
-                                    />
-                                  )}
+                                  <Image
+                                    src={resolveNetworkImage(
+                                      swap.source_network
+                                    )}
+                                    alt="From Logo"
+                                    height="60"
+                                    width="60"
+                                    className="rounded-md object-contain"
+                                  />
                                 </div>
                                 <ArrowRight className="h-4 w-4 mx-2" />
                                 <div className="flex-shrink-0 h-5 w-5 relative block">
-                                  {(destinationLayer || destinationExchange) && (
-                                    <Image
-                                      src={resolveImgSrc(destinationLayer ?? destinationExchange)}
-                                      alt="To Logo"
-                                      height="60"
-                                      width="60"
-                                      className="rounded-md object-contain"
-                                    />
-                                  )}
+                                  <Image
+                                    src={resolveNetworkImage(
+                                      swap.destination_network
+                                    )}
+                                    alt="To Logo"
+                                    height="60"
+                                    width="60"
+                                    className="rounded-md object-contain"
+                                  />
                                 </div>
                               </div>
                               {index !== 0 ? (
@@ -295,16 +285,16 @@ function TransactionsHistory() {
                                     <span className="ml-1 md:ml-0">
                                       {output_transaction
                                         ? truncateDecimals(
-                                          output_transaction?.amount,
-                                          sourceAsset?.precision
-                                        )
+                                            output_transaction?.amount,
+                                            5
+                                          )
                                         : "-"}
                                     </span>
                                   ) : (
                                     <span>
                                       {truncateDecimals(
                                         swap.requested_amount,
-                                        sourceAsset?.precision ?? 5
+                                        5
                                       )}
                                     </span>
                                   )}
@@ -357,7 +347,9 @@ function TransactionsHistory() {
                           text_align="center"
                           onClick={() =>
                             router.push({
-                              pathname: selectedSwap?.use_teleporter ? `/swap/teleporter/${selectedSwap.id}` : `/swap/${selectedSwap.id}`,
+                              pathname: selectedSwap?.use_teleporter
+                                ? `/swap/teleporter/${selectedSwap.id}`
+                                : `/swap/${selectedSwap.id}`,
                               query: resolvePersistantQueryParams(router.query),
                             })
                           }
