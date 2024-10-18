@@ -5,9 +5,9 @@ import ResizablePanel from "../../ResizablePanel";
 import axios from "axios";
 import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from "@/components/ConnectNetwork";
+import mainNetworks from "@/components/lux/fireblocks/constants/networks.mainnets";
+import devNetworks from "@/components/lux/fireblocks/constants/networks.sandbox";
 import { Widget } from "@/components/Widget/Index";
-import { networks as devNetworks } from "@/components/lux/fireblocks/constants/networks.sandbox";
-import { networks as mainNetworks } from "@/components/lux/fireblocks/constants/networks.mainnets";
 import {
   sourceNetworkAtom,
   sourceAssetAtom,
@@ -36,7 +36,7 @@ interface IProps {
 
 const Form: React.FC<IProps> = ({ swapId }) => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-  const networks = isMainnet ? mainNetworks : devNetworks;
+  const { sourceNetworks, destinationNetworks } = isMainnet ? mainNetworks : devNetworks;
 
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
@@ -68,13 +68,13 @@ const Form: React.FC<IProps> = ({ swapId }) => {
       const {
         data: { data },
       } = await axios.get(`/api/swaps/${swapId}?version=mainnet`);
-      const _sourceNetwork = networks.find(
+      const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network
       ) as Network;
       const _sourceAsset = _sourceNetwork?.currencies?.find(
         (c: Token) => c.asset === data.source_asset
       );
-      const _destinationNetwork = networks.find(
+      const _destinationNetwork = destinationNetworks.find(
         (_n: Network) => _n.internal_name === data.destination_network
       ) as Network;
       const _destinationAsset = _destinationNetwork?.currencies?.find(
