@@ -95,9 +95,7 @@ export default class BridgeApiClient {
       .then((res) => res.data);
   }
 
-  async CreateSwapAsync(
-    params: CreateSwapParams
-  ): Promise<ApiResponse<any>> {
+  async CreateSwapAsync(params: CreateSwapParams): Promise<ApiResponse<any>> {
     // ): Promise<ApiResponse<CreateSwapData>> {
     const correlationId = uuidv4();
     return await this.AuthenticatedRequest<ApiResponse<any>>(
@@ -115,7 +113,8 @@ export default class BridgeApiClient {
   ): Promise<ApiResponse<SwapItem[]>> {
     return await this.AuthenticatedRequest<ApiResponse<SwapItem[]>>(
       "GET",
-      `/swaps?page=${page}${status ? `&status=${status}` : ""}&version=${BridgeApiClient.apiVersion
+      `/swaps?page=${page}${status ? `&status=${status}` : ""}&version=${
+        BridgeApiClient.apiVersion
       }`
     );
   }
@@ -177,7 +176,8 @@ export default class BridgeApiClient {
   ): Promise<ApiResponse<void>> {
     return await this.AuthenticatedRequest<ApiResponse<void>>(
       "POST",
-      `/swaps/${swapId}/exchange/${exchange}/withdraw${twoFactorCode ? `?twoFactorCode=${twoFactorCode}` : ""
+      `/swaps/${swapId}/exchange/${exchange}/withdraw${
+        twoFactorCode ? `?twoFactorCode=${twoFactorCode}` : ""
       }`
     );
   }
@@ -308,12 +308,12 @@ export type SwapItem = {
   has_pending_deposit: boolean;
   sequence_number: number;
   fail_reason?: string;
-  use_teleporter?: boolean,
+  use_teleporter?: boolean;
   deposit_address?: {
-    id: number,
-    type: string,
-    address: string
-  }
+    id: number;
+    type: string;
+    address: string;
+  };
 };
 
 export type AddressBookItem = {
