@@ -10,9 +10,10 @@ export default async function handler(
 ) {
   try {
     const { version } = req.query;
-    const isMainnet =
-      version === "mainnet" ||
-      process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet = true
+    // const isMainnet =
+    //   version === "mainnet" ||
+    //   process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     // settings
     const settings = isMainnet ? mainnetSettings : testnetSettings;
     const { networks } = settings.data;

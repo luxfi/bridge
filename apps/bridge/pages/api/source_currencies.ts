@@ -19,10 +19,10 @@ export default async function handler(
         const { exchanges, networks } = settings.data;
 
         const exchange = exchanges.find(
-            (e) => e.internal_name === source_network
+            (e: any) => e.internal_name === source_network
         );
         const network = networks.find(
-            (e) => e.internal_name === source_network
+            (e: any) => e.internal_name === source_network
         );
 
         if (exchange) {

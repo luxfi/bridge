@@ -6,7 +6,7 @@ import NetworkSelectWrapper from "./NetworkSelectWrapper";
 import { Network, Token } from "@/types/teleport";
 import TokenSelectWrapper from "@/components/lux/fireblocks/swap/from/TokenSelectWrapper";
 import { useAtom } from "jotai";
-import { sourceAmountAtom } from "@/store/teleport";
+import { sourceAmountAtom } from "@/store/fireblocks";
 
 interface IProps {
   networks: Network[];

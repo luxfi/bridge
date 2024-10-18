@@ -6,7 +6,7 @@ export type Network = {
     is_testnet: boolean,
     is_featured: boolean,
     average_completion_time: string,
-    chain_id: number,
+    chain_id: number | null,
     status: string,
     type: string,
     refuel_amount_in_usd: number,

@@ -1,6 +1,6 @@
 import React from "react";
 import SuccessIcon from "../SuccessIcon";
-import { bridgeMintTransactionAtom } from "@/store/teleport";
+import { bridgeMintTransactionAtom } from "@/store/fireblocks";
 import {
   Tooltip,
   TooltipContent,

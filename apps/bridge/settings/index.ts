@@ -20,7 +20,7 @@ export const mainnetSettings = {
     currencies: [],
     discovery: mainnetDiscovery,
     exchanges: [],
-    networks: mainnetNetworks,
+    networks: [...mainnetNetworks, ...testnetNetworks],
   },
   sources: [],
   destinations: [],
