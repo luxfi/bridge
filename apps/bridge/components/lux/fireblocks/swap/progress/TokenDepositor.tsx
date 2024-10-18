@@ -1,6 +1,9 @@
 import React from "react";
 import toast from "react-hot-toast";
-import { swapStatusAtom, userTransferTransactionAtom } from "@/store/teleport";
+import {
+  swapStatusAtom,
+  userTransferTransactionAtom,
+} from "@/store/fireblocks";
 import { ArrowRight, Router } from "lucide-react";
 import { Contract } from "ethers";
 import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
@@ -69,7 +72,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       if (chainId === sourceNetwork?.chain_id) {
         isWithdrawal ? burnToken() : transferToken();
       } else {
-        switchNetwork!(sourceNetwork.chain_id);
+        sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
       }
     }
   }, [chainId, signer, isWithdrawal]);
@@ -100,6 +103,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           toast.error(`Insufficient ${sourceAsset.asset} amount`);
           return;
         }
+        if (!sourceNetwork.chain_id) return
         // if allowance is less than amount, approve
         const _allowance = await erc20Contract.allowance(
           signer?._address as string,
@@ -115,7 +119,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       }
 
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`);
-
+      if (!sourceNetwork.chain_id) return
       const bridgeContract = new Contract(
         CONTRACTS[sourceNetwork.chain_id].teleporter,
         teleporterABI,
@@ -173,7 +177,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         return;
       }
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`);
-
+      if (!sourceNetwork.chain_id) return
       const bridgeContract = new Contract(
         CONTRACTS[sourceNetwork.chain_id].teleporter,
         teleporterABI,
@@ -213,7 +217,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       toast.error(`No connected wallet. Please connect your wallet`);
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
-      switchNetwork!(sourceNetwork.chain_id);
+      sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
     } else {
       isWithdrawal ? burnToken() : transferToken();
     }

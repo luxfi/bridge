@@ -21,9 +21,7 @@ export function useSettingsState() {
   const data = React.useContext<BridgeAppSettings>(
     SettingsStateContext as Context<BridgeAppSettings>
   );
-
-  console.log("::app settings:", Object.keys(data));
-
+  // console.log("::app settings:", Object.keys(data));
   if (data === undefined) {
     throw new Error("useSettingsState must be used within a SettingsProvider");
   }
