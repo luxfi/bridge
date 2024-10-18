@@ -1762,7 +1762,7 @@
         "asset": "ETH",
         "contract_address": "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
         "decimals": 6,
-        "status": "inactive",
+        "status": "active",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
@@ -1778,7 +1778,7 @@
         "asset": "SOL",
         "contract_address": null,
         "decimals": 9,
-        "status": "inactive",
+        "status": "active",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
@@ -1854,7 +1854,7 @@
         "asset": "TON",
         "contract_address": null,
         "decimals": 9,
-        "status": "inactive",
+        "status": "active",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
@@ -1863,6 +1863,178 @@
         "withdrawal_fee": 0,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
+  },
+  {
+    "display_name": "Bitcoin",
+    "internal_name": "Bitcoin_MAINNET",
+    "native_currency": "BTC",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "btc",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://btcscan.org/tx/{0}",
+    "account_explorer_template": "https://btcscan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": "",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
+  },
+  {
+    "display_name": "Solana",
+    "internal_name": "SOLANA_MAINNET",
+    "native_currency": "SOL",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:03:07.9874770",
+    "chain_id": null,
+    "status": "active",
+    "type": "solana",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.solana.com/tx/{0}",
+    "account_explorer_template": "https://explorer.solana.com/address/{0}",
+    "currencies": [
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0.00063,
+        "destination_base_fee": 0,
+        "is_native": false
+      },
+      {
+        "name": "SOL",
+        "asset": "SOL",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": true,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 1000,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "2ZUoHEPcN7bsSXw6YTj85CMrU8xNtcYNGiSMXPLomaa2"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://odella-kzfk20-fast-mainnet.helius-rpc.com/"
+      }
+    ],
+    "created_date": "2023-02-21T13:04:25.293958+00:00"
+  },
+  {
+    "display_name": "Ton",
+    "internal_name": "TON_MAINNET",
+    "native_currency": "TON",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "ton",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://tonscan.org/tx/{0}",
+    "account_explorer_template": "https://tonscan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "jUSDC",
+        "asset": "USDC",
+        "contract_address": "EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": false
+      },
+      {
+        "name": "TON",
+        "asset": "TON",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": true
       }
     ],

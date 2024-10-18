@@ -88,7 +88,7 @@ const Swap: FC = () => {
         currencies: n.currencies.map((c: Token) => ({
           ...c,
           status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-            ? "active"
+            ? c.status
             : "inactive",
         })),
       }));
@@ -97,31 +97,8 @@ const Swap: FC = () => {
     }
   }, [sourceAsset, sourceNetwork]);
 
-  // React.useEffect(() => {
-  //   if (sourceAsset) {
-  //     const _networks = networks
-  //       .filter(
-  //         (n: Network) =>
-  //           n.currencies.some((c: Token) =>
-  //             SWAP_PAIRS[sourceAsset.asset]
-  //               ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
-  //               : false
-  //           ) && n.is_testnet === sourceNetwork?.is_testnet
-  //       )
-  //       .map((n: Network) => ({
-  //         ...n,
-  //         currencies: n.currencies.map((c: Token) => ({
-  //           ...c,
-  //           status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-  //             ? "active"
-  //             : "inactive",
-  //         })),
-  //       }));
-  //     setDestinationNetwork(_networks[0]);
-  //   }
-  // }, [sourceAsset, sourceNetwork]);
-
   React.useEffect(() => {
+    console.log(destinationNetwork)
     setDestinationAsset(
       destinationNetwork?.currencies.find((c) => c.status === "active")
     );
