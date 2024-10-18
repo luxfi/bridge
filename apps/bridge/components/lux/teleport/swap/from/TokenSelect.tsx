@@ -1,11 +1,11 @@
-import React from "react";
-import Image from "next/image";
 import {
   CommandItem,
   CommandList,
   CommandWrapper,
-} from "../../../shadcn/command";
+} from "../../../../shadcn/command";
 import { Token } from "@/types/teleport";
+import React from "react";
+import Image from "next/image";
 
 interface IProps {
   values: Token[];
@@ -25,7 +25,9 @@ const TokenSelect: React.FC<IProps> = ({ values, setValue }) => {
               disabled={false}
               value={item.asset}
               key={item.asset}
-              onSelect={() => setValue(item)}
+              onSelect={() => {
+                setValue(item);
+              }}
             >
               <div className="flex items-center w-full">
                 <div className="flex-shrink-0 h-6 w-6 relative">
@@ -36,7 +38,7 @@ const TokenSelect: React.FC<IProps> = ({ values, setValue }) => {
                       height="40"
                       width="40"
                       loading="eager"
-                      className="rounded-md object-contain"
+                      className="rounded-full object-contain"
                     />
                   )}
                 </div>
@@ -55,9 +57,9 @@ const TokenSelect: React.FC<IProps> = ({ values, setValue }) => {
   );
 };
 
+export default TokenSelect;
+
 export enum LayerDisabledReason {
   LockNetworkIsTrue = "",
   InsufficientLiquidity = "Temporarily disabled. Please check later.",
 }
-
-export default TokenSelect;
