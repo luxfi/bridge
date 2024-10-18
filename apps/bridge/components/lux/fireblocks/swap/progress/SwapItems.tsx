@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
-import { ethPriceAtom } from "@/store/teleport";
+import { ethPriceAtom } from "@/store/fireblocks";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
 import { Network, Token } from "@/types/teleport";
 

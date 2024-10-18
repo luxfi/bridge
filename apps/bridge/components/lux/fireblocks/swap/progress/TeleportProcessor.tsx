@@ -5,7 +5,7 @@ import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
-} from "@/store/teleport";
+} from "@/store/fireblocks";
 import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
 import {
   Tooltip,
@@ -75,7 +75,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       if (chainId === sourceNetwork?.chain_id) {
         getMpcSignature();
       } else {
-        switchNetwork!(sourceNetwork.chain_id);
+        sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
       }
     }
   }, [swapStatus, chainId, signer]);
@@ -86,9 +86,6 @@ const TeleportProcessor: React.FC<IProps> = ({
       const msgSignature = await signer?.signMessage(
         "Sign to prove you are initiator of transaction."
       );
-      // const toNetworkId = Web3.utils.keccak256(
-      //   String(destinationNetwork?.chain_id)
-      // );
       const toNetworkId = destinationNetwork?.chain_id;
       const receiverAddressHash = Web3.utils.keccak256(
         String(destinationAddress)
@@ -144,7 +141,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       toast.error(`No connected wallet. Please connect your wallet`);
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
-      switchNetwork!(sourceNetwork.chain_id);
+      sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
     } else {
       getMpcSignature();
     }
