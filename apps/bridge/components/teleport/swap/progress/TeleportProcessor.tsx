@@ -2,12 +2,11 @@ import React from "react";
 import toast from "react-hot-toast";
 import Web3 from "web3";
 import {
-  ethPriceAtom,
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
 } from "@/store/teleport";
-import { CONTRACTS } from "@/components/teleport/constants/settings.sandbox";
+import { CONTRACTS } from "@/components/teleport/constants/settings";
 import {
   Tooltip,
   TooltipContent,
