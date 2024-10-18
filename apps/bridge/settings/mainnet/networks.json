@@ -383,7 +383,7 @@
   {
     "display_name": "Polygon",
     "internal_name": "POLYGON_MAINNET",
-    "native_currency": "MATIC",
+    "native_currency": "POL",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:02:18.1711060",
@@ -1703,7 +1703,6 @@
     "created_date": "2023-07-18T13:59:45.503008+00:00"
   },
 
-  
   {
     "display_name": "Bitcoin",
     "internal_name": "Bitcoin_MAINNET",
@@ -1716,7 +1715,7 @@
     "type": "btc",
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://btcscan.org/tx/{0}",
-    "account_explorer_template": "https://btcscan.org/address/{0}",                                                                                                                                                                                                                                                                                                                                                                            
+    "account_explorer_template": "https://btcscan.org/address/{0}",
     "currencies": [
       {
         "name": "BTC",

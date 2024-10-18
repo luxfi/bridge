@@ -17,8 +17,8 @@ import { Token, Network } from "@/types/teleport";
 import { SWAP_PAIRS } from "@/components/lux/fireblocks/constants/settings";
 import { useAtom } from "jotai";
 
-import { networks as devNetworks } from "@/components/lux/fireblocks/constants/networks.sandbox";
-import { networks as mainNetworks } from "@/components/lux/fireblocks/constants/networks.mainnets";
+import devNetworks from "@/components/lux/fireblocks/constants/networks.sandbox";
+import mainNetworks from "@/components/lux/fireblocks/constants/networks.mainnets";
 
 import {
   sourceNetworkAtom,
@@ -42,7 +42,7 @@ const Address = dynamic(
 
 const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-  const networks = isMainnet ? mainNetworks : devNetworks;
+  const { sourceNetworks, destinationNetworks: dstNetworks } = isMainnet ? mainNetworks : devNetworks;
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] =
@@ -61,14 +61,7 @@ const Swap: FC = () => {
   const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setEthPrice] = useAtom(ethPriceAtom);
 
-  const sourceNetworks = networks;
-  const [destinationNetworks, setDestinationNetworks] = React.useState<
-    Network[]
-  >([]);
-
-  React.useEffect(() => {
-    setSourceNetwork(networks.find((n) => n.status === "active"));
-  }, []);
+  const [destinationNetworks, setDestinationNetworks] = React.useState<Network[]>(dstNetworks);
 
   React.useEffect(() => {
     sourceNetwork &&
@@ -79,29 +72,54 @@ const Swap: FC = () => {
   }, [sourceNetwork]);
 
   React.useEffect(() => {
+    setSourceNetwork(sourceNetworks.find((n) => n.status === 'active'))
+  }, []);
+
+  React.useEffect(() => {
     if (sourceAsset) {
-      const _networks = networks
-        .filter(
-          (n: Network) =>
-            n.currencies.some((c: Token) =>
-              SWAP_PAIRS[sourceAsset.asset]
-                ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
-                : false
-            ) && n.is_testnet === sourceNetwork?.is_testnet
-        )
-        .map((n: Network) => ({
-          ...n,
-          currencies: n.currencies.map((c: Token) => ({
-            ...c,
-            status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-              ? "active"
-              : "inactive",
-          })),
-        }));
+      const _networks = dstNetworks.filter((n: Network) => {
+        if (n.currencies.some((c: Token) => SWAP_PAIRS[sourceAsset.asset])) {
+          return true;
+        } else {
+          return false;
+        }
+      }).map((n: Network) => ({
+        ...n,
+        currencies: n.currencies.map((c: Token) => ({
+          ...c,
+          status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
+            ? "active"
+            : "inactive",
+        })),
+      }));
       setDestinationNetworks(_networks);
       setDestinationNetwork(_networks[0]);
     }
   }, [sourceAsset, sourceNetwork]);
+
+  // React.useEffect(() => {
+  //   if (sourceAsset) {
+  //     const _networks = networks
+  //       .filter(
+  //         (n: Network) =>
+  //           n.currencies.some((c: Token) =>
+  //             SWAP_PAIRS[sourceAsset.asset]
+  //               ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
+  //               : false
+  //           ) && n.is_testnet === sourceNetwork?.is_testnet
+  //       )
+  //       .map((n: Network) => ({
+  //         ...n,
+  //         currencies: n.currencies.map((c: Token) => ({
+  //           ...c,
+  //           status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
+  //             ? "active"
+  //             : "inactive",
+  //         })),
+  //       }));
+  //     setDestinationNetwork(_networks[0]);
+  //   }
+  // }, [sourceAsset, sourceNetwork]);
 
   React.useEffect(() => {
     setDestinationAsset(
@@ -303,11 +321,11 @@ const Swap: FC = () => {
         >
           <ResizablePanel>
             {sourceNetwork &&
-            sourceAsset &&
-            sourceAmount &&
-            destinationNetwork &&
-            destinationAsset &&
-            destinationAddress ? (
+              sourceAsset &&
+              sourceAmount &&
+              destinationNetwork &&
+              destinationAsset &&
+              destinationAddress ? (
               <SwapDetails
                 className="min-h-[450px] justify-center"
                 sourceNetwork={sourceNetwork}
@@ -353,33 +371,33 @@ const AddressButton: FC<{
   disabled,
   address,
 }) => (
-  <button
-    type="button"
-    disabled={disabled}
-    onClick={openAddressModal}
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
-  >
-    {isPartnerWallet && (
-      <div className="shrink-0 flex items-center pointer-events-none">
-        {partnerImage && (
-          <Image
-            alt="Partner logo"
-            className="rounded-md object-contain"
-            src={partnerImage}
-            width="24"
-            height="24"
-          />
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={openAddressModal}
+      className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+    >
+      {isPartnerWallet && (
+        <div className="shrink-0 flex items-center pointer-events-none">
+          {partnerImage && (
+            <Image
+              alt="Partner logo"
+              className="rounded-md object-contain"
+              src={partnerImage}
+              width="24"
+              height="24"
+            />
+          )}
+        </div>
+      )}
+      <div className="truncate text-muted">
+        {address ? (
+          <TruncatedAdrress address={address} />
+        ) : (
+          <span>Enter your address here</span>
         )}
       </div>
-    )}
-    <div className="truncate text-muted">
-      {address ? (
-        <TruncatedAdrress address={address} />
-      ) : (
-        <span>Enter your address here</span>
-      )}
-    </div>
-  </button>
-);
+    </button>
+  );
 
 export default Swap;
