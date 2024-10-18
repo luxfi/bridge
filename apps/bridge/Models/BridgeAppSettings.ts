@@ -1,7 +1,7 @@
 import { CryptoNetwork, NetworkCurrency } from "./CryptoNetwork";
 import { Exchange } from "./Exchange";
 import { Layer } from "./Layer";
-import { BridgeSettings, Route } from "./BridgeSettings";
+import { BridgeSettings, Route } from "@/Models/BridgeSettings";
 import { Partner } from "./Partner";
 
 export class BridgeAppSettings {
