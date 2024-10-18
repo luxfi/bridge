@@ -461,14 +461,21 @@ export async function handlerUpdateMpcSignAction(
 
 export async function handlerGetSwaps(
   address: string,
-  isDe: boolean | undefined
+  isDeleted: boolean | undefined
 ) {
   try {
+    const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+
     const swaps = await prisma.swap.findMany({
       orderBy: {
         created_date: "desc",
       },
-      where: { source_address: address },
+      where: {
+        source_address: address,
+        source_network: {
+          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
+        },
+      },
       include: {
         source_network: true,
         source_asset: true,
@@ -487,6 +494,8 @@ export async function handlerGetSwaps(
         },
       },
     });
+
+    console.log(swaps);
 
     return swaps.map((s) => ({
       ...s,

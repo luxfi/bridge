@@ -6,7 +6,8 @@ import axios from "axios";
 import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from "@/components/ConnectNetwork";
 import { Widget } from "@/components/Widget/Index";
-import { networks } from "@/components/teleport/constants/settings.sandbox";
+import { networks as devNetworks } from "@/components/teleport/constants/networks.sandbox";
+import { networks as mainNetworks } from "@/components/teleport/constants/networks.mainnets";
 import {
   sourceNetworkAtom,
   sourceAssetAtom,
@@ -34,6 +35,9 @@ interface IProps {
 }
 
 const Form: React.FC<IProps> = ({ swapId }) => {
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const networks = isMainnet ? mainNetworks : devNetworks;
+
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
   const [destinationNetwork, setDestinationNetwork] = useAtom(

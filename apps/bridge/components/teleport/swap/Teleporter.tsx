@@ -14,11 +14,11 @@ import FromNetworkForm from "./from/NetworkFormField";
 import ToNetworkForm from "./to/NetworkFormField";
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import {
-  networks,
-  SWAP_PAIRS,
-} from "@/components/teleport/constants/settings.sandbox";
+import { SWAP_PAIRS } from "@/components/teleport/constants/settings";
 import { useAtom } from "jotai";
+
+import { networks as devNetworks } from "@/components/teleport/constants/networks.sandbox";
+import { networks as mainNetworks } from "@/components/teleport/constants/networks.mainnets";
 
 import {
   sourceNetworkAtom,
@@ -38,6 +38,9 @@ const Address = dynamic(() => import("@/components/teleport/share/Address"), {
 });
 
 const Swap: FC = () => {
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const networks = isMainnet ? mainNetworks : devNetworks;
+
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] =
     React.useState<boolean>(false);
@@ -198,7 +201,8 @@ const Swap: FC = () => {
             />
           </div>
           <div className="py-4 px-4">
-            Fee: {0} {process.env.NEXT_PUBLIC_NODE_ENV}
+            Fee: {1}
+            <span className="text-xs"> %</span>
           </div>
 
           <div className="flex flex-col w-full">

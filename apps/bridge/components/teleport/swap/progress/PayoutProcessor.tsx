@@ -8,7 +8,7 @@ import {
   userTransferTransactionAtom,
 } from "@/store/teleport";
 import { Contract } from "ethers";
-import { CONTRACTS } from "@/components/teleport/constants/settings.sandbox";
+import { CONTRACTS } from "@/components/teleport/constants/settings";
 import {
   Tooltip,
   TooltipContent,
