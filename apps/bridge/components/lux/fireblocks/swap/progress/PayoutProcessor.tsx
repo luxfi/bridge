@@ -6,7 +6,7 @@ import {
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
-} from "@/store/teleport";
+} from "@/store/fireblocks";
 import { Contract } from "ethers";
 import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
 import {
@@ -82,7 +82,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (chainId === destinationNetwork.chain_id) {
         isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
       } else {
-        switchNetwork!(destinationNetwork.chain_id);
+        destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
       }
     }
   }, [swapStatus, chainId, signer, isWithdrawal]);
@@ -109,6 +109,8 @@ const PayoutProcessor: React.FC<IProps> = ({
       // address receiverAddress_,
       // bytes memory signedTXInfo_,
       // string memory vault_
+
+      if (!destinationNetwork.chain_id) return
 
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
@@ -172,7 +174,10 @@ const PayoutProcessor: React.FC<IProps> = ({
 
     console.log("::data for bridge withdraw:", withdrawData);
 
+
     try {
+
+      if (!destinationNetwork.chain_id) return
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
         teleporterABI,
@@ -256,7 +261,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       toast.error(`No connected wallet. Please connect your wallet`);
       connectWallet("evm");
     } else if (chainId !== destinationNetwork.chain_id) {
-      switchNetwork!(destinationNetwork.chain_id);
+      destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
     } else {
       isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
     }

@@ -67,6 +67,10 @@ const Swap: FC = () => {
   >([]);
 
   React.useEffect(() => {
+    setSourceNetwork(networks.find((n) => n.status === "active"));
+  }, []);
+
+  React.useEffect(() => {
     sourceNetwork &&
       sourceNetwork.currencies.length > 0 &&
       setSourceAsset(

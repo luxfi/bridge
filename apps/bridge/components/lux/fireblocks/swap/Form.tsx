@@ -30,7 +30,7 @@ import {
   ethPriceAtom,
   swapStatusAtom,
   swapIdAtom,
-} from "@/store/teleport";
+} from "@/store/fireblocks";
 import SpinIcon from "@/components/icons/spinIcon";
 
 const Address = dynamic(
@@ -65,6 +65,10 @@ const Swap: FC = () => {
   const [destinationNetworks, setDestinationNetworks] = React.useState<
     Network[]
   >([]);
+
+  React.useEffect(() => {
+    setSourceNetwork(networks.find((n) => n.status === "active"));
+  }, []);
 
   React.useEffect(() => {
     sourceNetwork &&
