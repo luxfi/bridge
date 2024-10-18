@@ -21,7 +21,7 @@ import {
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
-} from "@/store/teleport";
+} from "@/store/fireblocks";
 import { useAtom } from "jotai";
 import { Network, Token } from "@/types/teleport";
 
