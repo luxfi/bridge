@@ -5,20 +5,20 @@ import Image from "next/image";
 import axios from "axios";
 import Modal from "@/components/modal/modal";
 import ResizablePanel from "@/components/ResizablePanel";
-import shortenAddress from "../../utils/ShortenAddress";
+import shortenAddress from "../../../utils/ShortenAddress";
 import { FC } from "react";
 import { ArrowLeftRight } from "lucide-react";
-import { Widget } from "../../Widget/Index";
+import { Widget } from "../../../Widget/Index";
 
 import FromNetworkForm from "./from/NetworkFormField";
 import ToNetworkForm from "./to/NetworkFormField";
 import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
-import { SWAP_PAIRS } from "@/components/teleport/constants/settings";
+import { SWAP_PAIRS } from "@/components/lux/fireblocks/constants/settings";
 import { useAtom } from "jotai";
 
-import { networks as devNetworks } from "@/components/teleport/constants/networks.sandbox";
-import { networks as mainNetworks } from "@/components/teleport/constants/networks.mainnets";
+import { networks as devNetworks } from "@/components/lux/fireblocks/constants/networks.sandbox";
+import { networks as mainNetworks } from "@/components/lux/fireblocks/constants/networks.mainnets";
 
 import {
   sourceNetworkAtom,
@@ -33,9 +33,12 @@ import {
 } from "@/store/teleport";
 import SpinIcon from "@/components/icons/spinIcon";
 
-const Address = dynamic(() => import("@/components/teleport/share/Address"), {
-  loading: () => <></>,
-});
+const Address = dynamic(
+  () => import("@/components/lux/fireblocks/share/Address"),
+  {
+    loading: () => <></>,
+  }
+);
 
 const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
