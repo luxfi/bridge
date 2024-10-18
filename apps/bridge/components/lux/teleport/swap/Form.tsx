@@ -94,7 +94,7 @@ const Swap: FC = () => {
           currencies: n.currencies.map((c: Token) => ({
             ...c,
             status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-              ? "active"
+              ? c.status
               : "inactive",
           })),
         }));

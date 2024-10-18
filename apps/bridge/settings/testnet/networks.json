@@ -542,5 +542,89 @@
       }
     ],
     "created_date": "2022-11-10T13:52:39.422241+00:00"
+  },
+  {
+    "display_name": "Bitcoin Testnet",
+    "internal_name": "Bitcoin_TESTNET",
+    "native_currency": "BTC",
+    "is_testnet": false,
+    "is_featured": true,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "btc",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://blockstream.info/testnet/tx/{0}",
+    "account_explorer_template": "https://blockstream.info/testnet/address/{0}",
+    "currencies": [
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": "",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
+  },
+  {
+    "display_name": "Solana",
+    "internal_name": "SOLANA_TESTNET",
+    "native_currency": "SOL",
+    "is_testnet": false,
+    "is_featured": false,
+    "average_completion_time": "00:03:07.9874770",
+    "chain_id": null,
+    "status": "active",
+    "type": "solana",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.solana.com/?cluster=testnet/tx/{0}",
+    "account_explorer_template": "https://explorer.solana.com/?cluster=testnet/address/{0}",
+    "currencies": [
+      {
+        "name": "SOL",
+        "asset": "SOL",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "2ZUoHEPcN7bsSXw6YTj85CMrU8xNtcYNGiSMXPLomaa2"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.testnet.solana.com"
+      }
+    ],
+    "created_date": "2023-02-21T13:04:25.293958+00:00"
   }
 ]
