@@ -7,7 +7,6 @@ import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from "@/components/ConnectNetwork";
 import { Widget } from "@/components/Widget/Index";
 import { networks } from "@/components/teleport/constants/settings.sandbox";
-
 import {
   sourceNetworkAtom,
   sourceAssetAtom,
