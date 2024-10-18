@@ -10,9 +10,9 @@ import {
 import React from "react";
 import Modal from '@/components/modal/modal';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
-import SelectItem from "./SelectItem";
 import SpinIcon from '@/components/icons/spinIcon';
-import { Network } from '@/types/teleport';
+import { Network, Token } from '@/types/teleport';
+import SelectItem from './SelectItem';
 
 interface IProps {
     show: boolean;
@@ -31,7 +31,7 @@ const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, 
                 <CommandWrapper>
                     <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
                     {
-                        networks ?
+                        networks && networks.length > 0 ?
                             <CommandList>
                                 <CommandEmpty>No results found.</CommandEmpty>
                                 {

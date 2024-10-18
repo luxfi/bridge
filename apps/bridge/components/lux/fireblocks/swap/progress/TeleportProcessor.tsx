@@ -6,7 +6,7 @@ import {
   userTransferTransactionAtom,
   mpcSignatureAtom,
 } from "@/store/teleport";
-import { CONTRACTS } from "@/components/teleport/constants/settings";
+import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
 import {
   Tooltip,
   TooltipContent,
