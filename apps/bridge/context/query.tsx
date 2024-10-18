@@ -1,20 +1,22 @@
-'use client'
+"use client";
 
-import React, { Context, FC } from 'react'
-import { QueryParams } from '../Models/QueryParams';
+import React, { Context, FC } from "react";
+import { QueryParams } from "@/Models/QueryParams";
 
 export const QueryStateContext = React.createContext<QueryParams | null>(null);
 
-const QueryProvider: FC<{ query: QueryParams, children?: React.ReactNode }> = ({ query, children }) => {
+const QueryProvider: FC<{ query: QueryParams; children?: React.ReactNode }> = ({
+  query,
+  children,
+}) => {
   return (
     <QueryStateContext.Provider value={mapLegacyQueryParams(query)}>
       {children}
     </QueryStateContext.Provider>
   );
-}
+};
 
 function mapLegacyQueryParams(params: QueryParams): QueryParams {
-
   return {
     ...params,
     ...(params.sourceExchangeName ? { from: params.sourceExchangeName } : {}),
@@ -23,14 +25,16 @@ function mapLegacyQueryParams(params: QueryParams): QueryParams {
     ...(params.lockNetwork ? { lockTo: params.lockNetwork } : {}),
     ...(params.addressSource ? { appName: params.addressSource } : {}),
     ...(params.asset ? { toAsset: params.asset } : {}),
-  }
+  };
 }
 
 export function useQueryState() {
-  const data = React.useContext<QueryParams>(QueryStateContext as Context<QueryParams>);
+  const data = React.useContext<QueryParams>(
+    QueryStateContext as Context<QueryParams>
+  );
 
   if (data === undefined) {
-    throw new Error('useQueryState must be used within a QueryStateProvider');
+    throw new Error("useQueryState must be used within a QueryStateProvider");
   }
 
   return data;
