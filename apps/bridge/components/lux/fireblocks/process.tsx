@@ -1,13 +1,13 @@
 "use client";
 import React from "react";
-import Modal from "../modal/modal";
-import ResizablePanel from "../ResizablePanel";
+import Modal from "../../modal/modal";
+import ResizablePanel from "../../ResizablePanel";
 import axios from "axios";
 import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from "@/components/ConnectNetwork";
 import { Widget } from "@/components/Widget/Index";
-import { networks as devNetworks } from "@/components/teleport/constants/networks.sandbox";
-import { networks as mainNetworks } from "@/components/teleport/constants/networks.mainnets";
+import { networks as devNetworks } from "@/components/lux/fireblocks/constants/networks.sandbox";
+import { networks as mainNetworks } from "@/components/lux/fireblocks/constants/networks.mainnets";
 import {
   sourceNetworkAtom,
   sourceAssetAtom,

@@ -8,14 +8,14 @@ import {
   userTransferTransactionAtom,
 } from "@/store/teleport";
 import { Contract } from "ethers";
-import { CONTRACTS } from "@/components/teleport/constants/settings";
+import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
 
-import teleporterABI from "@/components/teleport/constants/abi/bridge.json";
+import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 //hooks
 import { useSwitchNetwork } from "wagmi";
 import { useAtom } from "jotai";
