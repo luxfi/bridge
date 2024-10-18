@@ -82,7 +82,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (chainId === destinationNetwork.chain_id) {
         isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
       } else {
-        switchNetwork!(destinationNetwork.chain_id);
+        destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
       }
     }
   }, [swapStatus, chainId, signer, isWithdrawal]);
@@ -109,6 +109,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       // address receiverAddress_,
       // bytes memory signedTXInfo_,
       // string memory vault_
+      if (!destinationNetwork.chain_id) return
 
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
@@ -171,7 +172,7 @@ const PayoutProcessor: React.FC<IProps> = ({
     // previewVaultWithdraw
 
     console.log("::data for bridge withdraw:", withdrawData);
-
+    if (!destinationNetwork.chain_id) return
     try {
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
@@ -256,7 +257,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       toast.error(`No connected wallet. Please connect your wallet`);
       connectWallet("evm");
     } else if (chainId !== destinationNetwork.chain_id) {
-      switchNetwork!(destinationNetwork.chain_id);
+      destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
     } else {
       isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
     }
