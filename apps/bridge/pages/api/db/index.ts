@@ -49,11 +49,14 @@ export default async function handler(
       );
     }
 
+    const prisma = new PrismaClient();
+
     res.status(200).json({
       data: {
         "client-cert.pem": "client-cert.pem",
         "client-key.pem": "client-key.pem",
         "server-ca.pem": "server-ca.pem",
+        keys: Object.keys(prisma),
       },
     });
   } catch (error) {
