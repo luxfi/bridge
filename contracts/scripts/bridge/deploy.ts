@@ -4,7 +4,7 @@ async function main() {
     /////Bridge
     const _signer = await ethers.getContractFactory("Bridge");
     const _bridge = await _signer.deploy();
-    console.log("Bridge address on BaseTestnet:", await _bridge.getAddress());
+    console.log("Bridge address:", await _bridge.getAddress());
 }
 
 main()

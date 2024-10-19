@@ -39,6 +39,7 @@ contract Bridge is Ownable, AccessControl {
     event NewMPCOracleSet(address MPCOracle);
 
     constructor() Ownable(msg.sender) {
+        payoutAddress = msg.sender; // by default, the payout address is set to deployer
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
