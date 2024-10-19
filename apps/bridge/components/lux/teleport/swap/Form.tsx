@@ -32,6 +32,7 @@ import {
   swapIdAtom,
 } from "@/store/teleport";
 import SpinIcon from "@/components/icons/spinIcon";
+import { SwapStatus } from "@/Models/SwapStatus";
 
 const Address = dynamic(
   () => import("@/components/lux/teleport/share/Address"),
@@ -150,7 +151,7 @@ const Swap: FC = () => {
     try {
       const data = {
         amount: Number(sourceAmount),
-        source_network: sourceNetwork?.internal_name,
+        source_network: sourceNetwork,
         source_asset: sourceAsset?.asset,
         source_address: "",
         destination_network: destinationNetwork?.internal_name,
@@ -168,7 +169,7 @@ const Swap: FC = () => {
         "",
         `/swap/teleporter/${response.data?.data?.swap_id}`
       );
-      setSwapStatus("user_transfer_pending");
+      setSwapStatus(SwapStatus.UserDepositPending);
       setShowSwapModal(true);
     } catch (err) {
       console.log(err);

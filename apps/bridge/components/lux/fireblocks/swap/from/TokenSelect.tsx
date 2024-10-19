@@ -3,7 +3,7 @@ import {
   CommandList,
   CommandWrapper,
 } from "../../../../shadcn/command";
-import { Token } from "@/types/teleport";
+import { Token } from "@/types/fireblocks";
 import React from "react";
 import Image from "next/image";
 

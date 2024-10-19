@@ -3,7 +3,7 @@ import React from "react";
 import AmountField from "../AmountField";
 import NetworkSelectWrapper from "./NetworkSelectWrapper";
 
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 import TokenSelectWrapper from "@/components/lux/fireblocks/swap/from/TokenSelectWrapper";
 import { useAtom } from "jotai";
 import { sourceAmountAtom } from "@/store/fireblocks";

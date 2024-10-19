@@ -29,7 +29,7 @@ import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import SpinIcon from "@/components/icons/spinIcon";
 import { Gauge } from "@/components/gauge";
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 import { ArrowRight } from "lucide-react";
 import { formatUnits } from "viem";
 

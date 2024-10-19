@@ -4,7 +4,7 @@ import AmountField from "../AmountField";
 import NetworkSelectWrapper from "./NetworkSelectWrapper";
 import TokenSelectWrapper from "./TokenSelectWrapper";
 
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 import { useAtom } from "jotai";
 import { sourceAmountAtom } from "@/store/fireblocks";
 

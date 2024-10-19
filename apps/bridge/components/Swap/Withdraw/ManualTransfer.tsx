@@ -2,22 +2,20 @@
 import { FC, useCallback, useEffect } from "react"
 import Image from 'next/image';
 
-import useSWR from "swr"
 import { ArrowLeftRight } from "lucide-react"
 
-import { ApiResponse } from "../../../Models/ApiResponse";
-import { useSettingsState } from "../../../context/settings";
-import { useSwapDataState } from "../../../context/swap";
-import KnownInternalNames from "../../../lib/knownIds";
-import BackgroundField from "../../backgroundField";
-import BridgeApiClient, { DepositAddress, DepositAddressSource } from "../../../lib/BridgeApiClient";
-import SubmitButton from "../../buttons/submitButton";
-import shortenAddress from "../../utils/ShortenAddress";
-import { isValidAddress } from "../../../lib/addressValidator";
-import { useSwapDepositHintClicked } from "../../../stores/swapTransactionStore";
-import { useFee } from "../../../context/feeContext";
-import { Layer } from "../../../Models/Layer";
-import { Exchange } from "../../../Models/Exchange";
+import { useSettingsState } from "@/context/settings";
+import { useSwapDataState } from "@/context/swap";
+import KnownInternalNames from "@/lib/knownIds";
+import BackgroundField from "@/components/backgroundField";
+import BridgeApiClient, { DepositAddress, DepositAddressSource } from "@/lib/BridgeApiClient";
+import SubmitButton from "@/components/buttons/submitButton";
+import shortenAddress from "@/components/utils/ShortenAddress";
+import { isValidAddress } from "@/lib/addressValidator";
+import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
+import { useFee } from "@/context/feeContext";
+import { Layer } from "@/Models/Layer";
+import { Exchange } from "@/Models/Exchange";
 
 const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string): string | undefined => {
     if (!exchange || !asset) {

@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/shadcn/popover";
-import { Token } from "@/types/teleport";
+import { Token } from "@/types/fireblocks";
 
 interface IProps {
   setValue: (value: Token) => void;

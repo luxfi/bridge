@@ -1,5 +1,5 @@
 import React from "react";
-import { Network } from "@/types/teleport";
+import { Network } from "@/types/fireblocks";
 import Image from "next/image";
 
 interface IProps {

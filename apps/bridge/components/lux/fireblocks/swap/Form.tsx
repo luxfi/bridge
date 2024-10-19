@@ -13,7 +13,7 @@ import { Widget } from "../../../Widget/Index";
 import FromNetworkForm from "./from/NetworkFormField";
 import ToNetworkForm from "./to/NetworkFormField";
 import SwapDetails from "./SwapDetails";
-import { Token, Network } from "@/types/teleport";
+import { Token, Network } from "@/types/fireblocks";
 import { SWAP_PAIRS } from "@/components/lux/fireblocks/constants/settings";
 import { useAtom } from "jotai";
 
@@ -32,6 +32,7 @@ import {
   swapIdAtom,
 } from "@/store/fireblocks";
 import SpinIcon from "@/components/icons/spinIcon";
+import { SwapStatus } from "@/Models/SwapStatus";
 
 const Address = dynamic(
   () => import("@/components/lux/fireblocks/share/Address"),
@@ -145,25 +146,26 @@ const Swap: FC = () => {
     try {
       const data = {
         amount: Number(sourceAmount),
-        source_network: sourceNetwork?.internal_name,
+        source_network: sourceNetwork,
         source_asset: sourceAsset?.asset,
         source_address: "",
         destination_network: destinationNetwork?.internal_name,
         destination_asset: destinationAsset?.asset,
         destination_address: destinationAddress,
         refuel: false,
-        use_deposit_address: false,
-        use_teleporter: true,
+        use_deposit_address: true,
+        use_teleporter: false,
         app_name: "Bridge",
       };
-      const response = await axios.post(`/api/swaps?version=mainnet`, data);
+      const response = await axios.post(`/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`, data);
+      console.log("::fireblocks res:", response.data)
       setSwapId(response.data?.data?.swap_id);
       window.history.pushState(
         {},
         "",
-        `/swap/teleporter/${response.data?.data?.swap_id}`
+        `/swap/fireblocks/${response.data?.data?.swap_id}`
       );
-      setSwapStatus("user_transfer_pending");
+      setSwapStatus(SwapStatus.UserDepositPending);
       setShowSwapModal(true);
     } catch (err) {
       console.log(err);

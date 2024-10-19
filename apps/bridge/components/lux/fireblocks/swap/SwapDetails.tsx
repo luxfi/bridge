@@ -3,11 +3,12 @@ import { swapStatusAtom, swapIdAtom } from "@/store/fireblocks";
 //hooks
 import { useAtom } from "jotai";
 //types
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 import UserTokenDepositor from "./progress/TokenDepositor";
 import TeleportProcessor from "./progress/TeleportProcessor";
 import PayoutProcessor from "./progress/PayoutProcessor";
 import SwapSuccess from "./progress/SwapSuccess";
+import { SwapStatus } from "@/Models/SwapStatus";
 
 interface IProps {
   className?: string;
@@ -31,9 +32,8 @@ const SwapDetails: React.FC<IProps> = ({
   //atoms
   const [swapStatus] = useAtom(swapStatusAtom);
   const [swapId] = useAtom(swapIdAtom);
-
   //chain id
-  if (swapStatus === "user_transfer_pending") {
+  if (swapStatus === SwapStatus.UserDepositPending) {
     return (
       <UserTokenDepositor
         sourceNetwork={sourceNetwork}
@@ -85,6 +85,8 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     );
+  } else {
+    return <></>
   }
 };
 

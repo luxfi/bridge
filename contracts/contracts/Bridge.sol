@@ -169,11 +169,11 @@ contract Bridge is Ownable, AccessControl {
     }
 
     /**
-     * @dev add new ERC20 vault
+     * @dev add new  vault
      * @param asset_ new vault address
      */
-    function addNewERC20Vault(address asset_) public onlyAdmin {
-        vault.addNewERC20Vault(asset_);
+    function addNewVault(address asset_) public onlyAdmin {
+        vault.addNewVault(asset_);
     }
 
     /**

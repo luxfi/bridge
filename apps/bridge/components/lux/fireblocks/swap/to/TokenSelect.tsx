@@ -5,7 +5,7 @@ import {
   CommandList,
   CommandWrapper,
 } from "../../../../shadcn/command";
-import { Token } from "@/types/teleport";
+import { Token } from "@/types/fireblocks";
 
 interface IProps {
   values: Token[];

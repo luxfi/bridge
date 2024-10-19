@@ -24,7 +24,7 @@ import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { Gauge } from "@/components/gauge";
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 import { getTxHash } from "zksync/build/utils";
 
 interface IProps {

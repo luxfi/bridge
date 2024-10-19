@@ -3,11 +3,14 @@ import KnownInternalNames from "./knownIds";
 import { validateAndParseAddress } from "./starkNetAddressValidator";
 import { PublicKey } from '@solana/web3.js'
 import { Layer } from "../Models/Layer";
+import WAValidator from 'multicoin-address-validator';
 
 export function isValidAddress(address?: string, network?: { internal_name: string } | null): boolean {
     if (!address) {
         return false
     }
+
+    console.log("::valid address:", network, address)
     if (network?.internal_name === KnownInternalNames.Networks.RoninMainnet) {
         if (address.startsWith("ronin:")) {
             return isValidEtherAddress(address.replace("ronin:", "0x"));
@@ -47,8 +50,10 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
             return true;
         }
         return false
-    }
-    else {
+    } if (network?.internal_name?.toLowerCase().startsWith("bitcoin")) {
+        const isValid = WAValidator.validate(address, 'BTC');
+        return isValid;
+    } else {
         return isValidEtherAddress(address);
     }
 }
