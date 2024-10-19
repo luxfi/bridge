@@ -107,9 +107,6 @@ model Swap {
   fail_reason              String?
   metadata_sequence_number Int?
 
-  // current block_number from the chain
-  block_number Int
-
   deposit_address_id Int?
   deposit_address    DepositAddress? @relation(fields: [deposit_address_id], references: [id])
 
@@ -161,9 +158,10 @@ model Quote {
 }
 
 model DepositAddress {
-  id      Int    @id @default(autoincrement())
+  id      Int     @id @default(autoincrement())
   type    String
   address String
+  memo    String?
   Swap    Swap[]
 
   @@index([type])

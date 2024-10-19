@@ -11,7 +11,7 @@ import React from "react";
 import Modal from '@/components/modal/modal';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import SpinIcon from '@/components/icons/spinIcon';
-import { Network, Token } from '@/types/teleport';
+import { Network, Token } from '@/types/fireblocks';
 import SelectItem from './SelectItem';
 
 interface IProps {

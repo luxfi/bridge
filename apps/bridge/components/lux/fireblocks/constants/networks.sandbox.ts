@@ -1,16 +1,19 @@
-import { Network } from "@/types/teleport"
+import { Network } from "@/types/fireblocks"
 const sourceNetworks: Network[] = [
   {
     display_name: "Bitcoin Testnet",
-    internal_name: "Bitcoin_TESNET",
+    internal_name: "BITCOIN_TESTNET",
     native_currency: "BTC",
     logo: "https://cdn.lux.network/bridge/networks/bitcoin_mainnet.png",
-    is_testnet: false,
+    is_testnet: true,
     is_featured: true,
     average_completion_time: "00:04:39.5276290",
     chain_id: null,
     status: "active",
     type: "btc",
+    deposit_address: {
+      address: "tb1qgps3lt0lz3mufdnmj3lhcnpfh48s2u53996xdv"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://blockstream.info/testnet/tx/{0}",
     account_explorer_template: "https://blockstream.info/testnet/address/{0}",
@@ -46,6 +49,9 @@ const sourceNetworks: Network[] = [
     chain_id: 11155111,
     status: "active",
     type: "evm",
+    deposit_address: {
+      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec"
+    },
     refuel_amount_in_usd: 0.5,
     transaction_explorer_template: "https://sepolia.etherscan.io/tx/{0}",
     account_explorer_template: "https://sepolia.etherscan.io/address/{0}",
@@ -132,6 +138,9 @@ const sourceNetworks: Network[] = [
     chain_id: 84532, //base sepolia
     status: "active",
     type: "evm",
+    deposit_address: {
+      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec"
+    },
     refuel_amount_in_usd: 0.5,
     transaction_explorer_template: "https://sepolia.basescan.org/tx/{0}", // sepolia
     account_explorer_template: "https://sepolia.basescan.org/address/{0}", // sepolia
@@ -212,12 +221,15 @@ const sourceNetworks: Network[] = [
     internal_name: "SOLANA_TESTNET",
     native_currency: "SOL",
     logo: "https://cdn.lux.network/bridge/networks/solana_mainnet.png",
-    is_testnet: false,
+    is_testnet: true,
     is_featured: false,
     average_completion_time: "00:03:07.9874770",
     chain_id: null,
     status: "active",
     type: "solana",
+    deposit_address: {
+      address: "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://explorer.solana.com/?cluster=testnet/tx/{0}",
     account_explorer_template: "https://explorer.solana.com/?cluster=testnet/address/{0}",
@@ -241,6 +253,100 @@ const sourceNetworks: Network[] = [
         is_native: true,
       }
     ],
+  },
+  {
+    display_name: "Solana Devnet",
+    internal_name: "SOLANA_DEVNET",
+    native_currency: "SOL",
+    logo: "https://cdn.lux.network/bridge/networks/solana_mainnet.png",
+    is_testnet: true,
+    is_featured: false,
+    average_completion_time: "00:03:07.9874770",
+    chain_id: null,
+    status: "active",
+    type: "solana",
+    deposit_address: {
+      address: "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY"
+    },
+    refuel_amount_in_usd: 1,
+    transaction_explorer_template: "https://explorer.solana.com/?cluster=testnet/tx/{0}",
+    account_explorer_template: "https://explorer.solana.com/?cluster=testnet/address/{0}",
+    node: "https://api.testnet.solana.com",
+    currencies: [
+      {
+        name: "SOL",
+        asset: "SOL",
+        contract_address: null,
+        logo: "https://cdn.lux.network/bridge/currencies/sol.png",
+        decimals: 9,
+        status: "active",
+        is_deposit_enabled: false,
+        is_withdrawal_enabled: false,
+        is_refuel_enabled: false,
+        max_withdrawal_amount: 0,
+        deposit_fee: 0.1,
+        withdrawal_fee: 0.1,
+        source_base_fee: 0.1,
+        destination_base_fee: 0.1,
+        is_native: true,
+      }
+    ],
+  },
+  {
+    display_name: "Ton Testnet",
+    internal_name: "TON_TESTNET",
+    native_currency: "TON",
+    logo: "https://cdn.lux.network/bridge/networks/ton_mainnet.svg",
+    is_testnet: false,
+    is_featured: false,
+    average_completion_time: "00:04:39.5276290",
+    chain_id: null,
+    status: "active",
+    type: "ton",
+    deposit_address: {
+      address: "0QDMXrj5n4ldLGoq9l0svifDORdTLnKsOEH6ClAEXX5qj1Sq",
+      memo: "70A09E871BFAFCB0A216"
+    },
+    refuel_amount_in_usd: 1,
+    transaction_explorer_template: "https://tonscan.org/tx/{0}",
+    account_explorer_template: "https://tonscan.org/address/{0}",
+    node: "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB",
+    currencies: [
+      {
+        name: "TON",
+        asset: "TON",
+        contract_address: null,
+        logo: "https://cdn.lux.network/bridge/currencies/ton.svg",
+        decimals: 9,
+        status: "active",
+        is_deposit_enabled: false,
+        is_withdrawal_enabled: false,
+        is_refuel_enabled: false,
+        max_withdrawal_amount: 0,
+        deposit_fee: 0.1,
+        withdrawal_fee: 0.1,
+        source_base_fee: 0.1,
+        destination_base_fee: 0.1,
+        is_native: true,
+      },
+      {
+        name: "jUSDC",
+        asset: "jUSDC",
+        contract_address: "EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
+        logo: "https://cdn.lux.network/bridge/currencies/usdc.png",
+        decimals: 6,
+        status: "inactive",
+        is_deposit_enabled: false,
+        is_withdrawal_enabled: true,
+        is_refuel_enabled: true,
+        max_withdrawal_amount: 500,
+        deposit_fee: 0.1,
+        withdrawal_fee: 0.1,
+        source_base_fee: 0.1,
+        destination_base_fee: 0.1,
+        is_native: false,
+      },
+    ],
   }
 ];
 const destinationNetworks: Network[] = [
@@ -255,6 +361,9 @@ const destinationNetworks: Network[] = [
     chain_id: 8888,
     status: "active",
     type: "evm",
+    deposit_address: {
+      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://explore.lux-test.network/tx/{0}",
     account_explorer_template: "https://explore.lux-test.network/address/{0}",

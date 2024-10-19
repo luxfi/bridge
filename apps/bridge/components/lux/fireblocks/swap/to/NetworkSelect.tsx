@@ -12,7 +12,7 @@ import Modal from "@/components/modal/modal";
 import useWindowDimensions from "@/hooks/useWindowDimensions";
 import SelectItem from "@/components/lux/fireblocks/swap/to/SelectItem";
 import SpinIcon from "@/components/icons/spinIcon";
-import { Network } from "@/types/teleport";
+import { Network } from "@/types/fireblocks";
 
 interface IProps {
   show: boolean;

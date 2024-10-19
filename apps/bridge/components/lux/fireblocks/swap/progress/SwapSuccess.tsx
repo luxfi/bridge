@@ -11,7 +11,7 @@ import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
 import { Gauge } from "@/components/gauge";
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 
 interface IProps {
   className?: string;

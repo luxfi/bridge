@@ -31,16 +31,8 @@ contract LuxVault is Ownable {
         address indexed vaultAddress
     );
 
-    constructor(address[] memory _assets) Ownable(msg.sender) {
-        // add native asset vault
-        ETHVault _newETHVault = new ETHVault("Native Vault", "ethVault");
-        ethVaultAddress = payable(address(_newETHVault));
-        totalVaultLength++;
-        assets.push(address(0));
-        // add initial erc20 vaults
-        for (uint i = 0; i < _assets.length; ++i) {
-            _addNewERC20Vault(_assets[i]);
-        }
+    constructor() Ownable(msg.sender) {
+        ethVaultAddress = payable(0); // Setting to zero address
     }
 
     function concat(
@@ -54,8 +46,20 @@ contract LuxVault is Ownable {
      * @dev add new ERC20 vault
      * @param asset_ ERC20 token address
      */
-    function addNewERC20Vault(address asset_) external onlyOwner {
-        _addNewERC20Vault(asset_);
+    function addNewVault(address asset_) external onlyOwner {
+        _addNewVault(asset_);
+    }
+
+    /**
+     * @dev add new ERC20 or ETH vault
+     * @param asset_ asset address
+     */
+    function _addNewVault(address asset_) private {
+        if(asset_ == address(0)) {
+            _addETHVault();
+        } else {
+            _addNewERC20Vault(asset_);
+        }
     }
 
     /**
@@ -63,7 +67,6 @@ contract LuxVault is Ownable {
      * @param asset_ ERC20 token address
      */
     function _addNewERC20Vault(address asset_) private {
-        require(asset_ != address(0), "Invalid asset address.");
         require(erc20Vault[asset_] == address(0), "Vault already exists.");
         LERC4626 newERC20Vault = new LERC4626(
             IERC20(asset_),
@@ -78,6 +81,17 @@ contract LuxVault is Ownable {
         emit ERC20VaultCreated(asset_, newVaultAddress);
     }
 
+
+    /**
+     * @dev add ETH vault
+     */
+    function _addETHVault() private {
+        require(ethVaultAddress == payable(0), "ethVaultAddress already exists!");
+        ETHVault _newETHVault = new ETHVault("Native Vault", "ethVault");
+        ethVaultAddress = payable(address(_newETHVault));
+    }
+    
+
     /**
      * @dev deposit asset
      * @param asset_ ERC20 token address
@@ -88,9 +102,15 @@ contract LuxVault is Ownable {
         uint256 amount_
     ) external payable onlyOwner {
         if (asset_ == address(0)) {
+            if(ethVaultAddress == payable(0)) {
+                _addNewVault(address(0));
+            }
             require(msg.value >= amount_, "Insufficient ETH amount");
             ETHVault(ethVaultAddress).deposit{value: amount_}(amount_, owner());
         } else {
+        if(erc20Vault[asset_] == address(0)) {
+                _addNewVault(asset_);
+            }
             ERC4626(erc20Vault[asset_]).deposit(amount_, owner());
         }
     }
@@ -107,24 +127,34 @@ contract LuxVault is Ownable {
         uint256 amount_
     ) external onlyOwner {
         if (asset_ == address(0)) {
+            require(ethVaultAddress != payable(0), "Ethvault does not exist!");
             ETHVault(ethVaultAddress).withdraw(amount_, receiver_, owner());
         } else {
+            require(erc20Vault[asset_] != payable(0), "Ethvault does not exist!");
             ERC4626(erc20Vault[asset_]).withdraw(amount_, receiver_, owner());
         }
     }
 
     /**
      * @dev preview withdraw
-     * @param asset_ ERC20 token address
+     * @param asset_ asset address
      * @return value token amount available for withdrawal
      */
     function previewWithdraw(
         address asset_
     ) public view returns (uint256) {
         if (asset_ == address(0)) {
-            return ETHVault(ethVaultAddress).balanceOf(owner());
+            if(ethVaultAddress == payable(0)) {
+                return 0;
+            } else {
+                return ETHVault(ethVaultAddress).balanceOf(owner());
+            }
         } else {
-            return ERC4626(erc20Vault[asset_]).maxWithdraw(owner());
+            if(erc20Vault[asset_] == address(0)) {
+                return 0;
+            } else {
+                return ERC4626(erc20Vault[asset_]).maxWithdraw(owner());
+            }
         }
     }
 

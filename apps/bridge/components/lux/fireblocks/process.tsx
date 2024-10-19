@@ -23,7 +23,7 @@ import {
   userTransferTransactionAtom,
 } from "@/store/fireblocks";
 import { useAtom } from "jotai";
-import { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/fireblocks";
 
 type NetworkToConnect = {
   DisplayName: string;
@@ -67,7 +67,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     try {
       const {
         data: { data },
-      } = await axios.get(`/api/swaps/${swapId}?version=mainnet`);
+      } = await axios.get(`/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`);
       const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network
       ) as Network;
@@ -80,6 +80,10 @@ const Form: React.FC<IProps> = ({ swapId }) => {
       const _destinationAsset = _destinationNetwork?.currencies?.find(
         (c: Token) => c.asset === data.destination_asset
       );
+
+      console.log("::swap data:", data);
+
+
       setSourceNetwork(_sourceNetwork);
       setSourceAsset(_sourceAsset);
       setDestinationNetwork(_destinationNetwork);

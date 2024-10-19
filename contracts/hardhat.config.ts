@@ -15,7 +15,16 @@ const LUX_TESTNET_RPC: string = process.env.LUX_TESTNET_RPC!;
 const MAINNET_RPC: string = process.env.MAINNET_RPC!;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 100,
+      },
+      viaIR: true,
+    },
+  },
   networks: {
     mainnet: {
       url: MAINNET_RPC,

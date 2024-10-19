@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { mainnetSettings, testnetSettings } from "../../../settings";
-import prisma from "../../../lib/db";
+import { mainnetSettings } from "@/settings";
+import prisma from "@/lib/db";
 
 /**
  * update network and currencies according to settings file
@@ -16,9 +16,7 @@ export default async function handler(
 ) {
   try {
     const { version } = req.query;
-    const isMainnet =
-      version === "mainnet" ||
-      process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     // settings
     const settings = mainnetSettings;
     const { networks } = settings.data;

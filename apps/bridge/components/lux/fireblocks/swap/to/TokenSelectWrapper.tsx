@@ -3,7 +3,7 @@ import Image from 'next/image'
 import TokenSelect from './TokenSelect'
 import { ChevronDown } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover'
-import { Token } from '@/types/teleport';
+import { Token } from '@/types/fireblocks';
 
 interface IProps {
   setValue: (value: Token) => void;

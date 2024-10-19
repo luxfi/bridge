@@ -1,8 +1,8 @@
-import { Network } from "@/types/teleport"
+import { Network } from "@/types/fireblocks"
 const sourceNetworks: Network[] = [
   {
     display_name: "Bitcoin",
-    internal_name: "Bitcoin_MAINNET",
+    internal_name: "BITCOIN_MAINNET",
     native_currency: "BTC",
     logo: "https://cdn.lux.network/bridge/networks/bitcoin_mainnet.png",
     is_testnet: false,
@@ -11,6 +11,9 @@ const sourceNetworks: Network[] = [
     chain_id: null,
     status: "active",
     type: "btc",
+    deposit_address: {
+      address: "bc1qx6t60aknh95vjmnudf48mfjvwm47a607prqv4t"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://btcscan.org/tx/{0}",
     account_explorer_template: "https://btcscan.org/address/{0}",
@@ -46,6 +49,9 @@ const sourceNetworks: Network[] = [
     chain_id: null,
     status: "active",
     type: "solana",
+    deposit_address: {
+      address: "52n85bTwSqkXuZxsz5sVEtzC7WQDMva228iUY2wZkLN1"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://explorer.solana.com/tx/{0}",
     account_explorer_template: "https://explorer.solana.com/address/{0}",
@@ -73,7 +79,7 @@ const sourceNetworks: Network[] = [
         asset: "WETH",
         contract_address: "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
         logo: "https://cdn.lux.network/bridge/currencies/ethereum_eth.svg",
-        decimals: 6,
+        decimals: 8,
         status: "active",
         is_deposit_enabled: false,
         is_withdrawal_enabled: false,
@@ -115,6 +121,10 @@ const sourceNetworks: Network[] = [
     chain_id: null,
     status: "active",
     type: "ton",
+    deposit_address: {
+      address: "UQCdW7qm_Kh3zX6YdBPxK9_bHq1D7gowVkDEb2ekxb9GdR8P",
+      memo: "BCE7D5F9B0A66291B221"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://tonscan.org/tx/{0}",
     account_explorer_template: "https://tonscan.org/address/{0}",
@@ -159,16 +169,19 @@ const sourceNetworks: Network[] = [
 ];
 const destinationNetworks: Network[] = [
   {
-    display_name: "Lux Testnet",
-    internal_name: "LUX_TESTNET",
+    display_name: "Lux Mainnet",
+    internal_name: "LUX_MAINNET",
     native_currency: "LUX",
     logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
-    is_testnet: true,
+    is_testnet: false,
     is_featured: true,
     average_completion_time: "00:00:07.7777777",
-    chain_id: 8888,
+    chain_id: 7777,
     status: "active",
     type: "evm",
+    deposit_address: {
+      address: "0x903670c142c670260cf96929Da156370d0dBE93a"
+    },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://explore.lux-test.network/tx/{0}",
     account_explorer_template: "https://explore.lux-test.network/address/{0}",
