@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 
 import Link from "next/link";
 import Image from "next/image";
-import networks from "@/settings/mainnet/networks.json";
 import {
   ArrowRight,
   ChevronRight,
@@ -21,20 +20,38 @@ import BridgeApiClient, {
 } from "../../lib/BridgeApiClient";
 import SpinIcon from "../icons/spinIcon";
 import SwapDetails from "./SwapDetailsComponent";
-import { classNames } from "../utils/classNames";
 import SubmitButton from "../buttons/submitButton";
-import { SwapHistoryComponentSceleton } from "../Sceletons";
 import StatusIcon from "./StatusIcons";
 import toast from "react-hot-toast";
 import ToggleButton from "../buttons/toggleButton";
 import Modal from "../modal/modal";
-import HeaderWithMenu from "../HeaderWithMenu";
-import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import AppSettings from "../../lib/AppSettings";
+import HeaderWithMenu from "../HeaderWithMenu";
+import { classNames } from "../utils/classNames";
+import { SwapHistoryComponentSceleton } from "../Sceletons";
+import { resolvePersistantQueryParams } from "../../helpers/querryHelper";
 import { truncateDecimals } from "../utils/RoundDecimals";
-import { resolveNetworkImage } from "@/helpers/utils";
+//networks
+import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/networks.mainnets";
+import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
+import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
+import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
 
 function TransactionsHistory() {
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const networksFireblock = isMainnet
+    ? [
+        ...fireblockNetworksMainnet.sourceNetworks,
+        ...fireblockNetworksMainnet.destinationNetworks,
+      ]
+    : [
+        ...fireblockNetworksTestnet.sourceNetworks,
+        ...fireblockNetworksTestnet.destinationNetworks,
+      ];
+  const networksTeleport = isMainnet
+    ? teleportNetworksMainnet
+    : teleportNetworksTestnet;
+
   const [page, setPage] = useState(0);
   const [isLastPage, setIsLastPage] = useState(false);
   const [swaps, setSwaps] = useState<SwapItem[]>();
@@ -199,6 +216,9 @@ function TransactionsHistory() {
                     </thead>
                     <tbody>
                       {swaps?.map((swap, index) => {
+                        const networks = swap.use_teleporter
+                          ? networksTeleport
+                          : networksFireblock;
                         const sourceNetwork = networks.find(
                           (n) => n.internal_name === swap.source_network
                         );
@@ -231,9 +251,8 @@ function TransactionsHistory() {
                               <div className=" flex items-center">
                                 <div className="flex-shrink-0 h-5 w-5 relative">
                                   <Image
-                                    src={resolveNetworkImage(
-                                      swap.source_network
-                                    )}
+                                    // src={resolveNetworkImage(swap.source_asset)}
+                                    src={sourceAsset?.logo!}
                                     alt="From Logo"
                                     height="60"
                                     width="60"
@@ -243,9 +262,8 @@ function TransactionsHistory() {
                                 <ArrowRight className="h-4 w-4 mx-2" />
                                 <div className="flex-shrink-0 h-5 w-5 relative block">
                                   <Image
-                                    src={resolveNetworkImage(
-                                      swap.destination_network
-                                    )}
+                                    // src={resolveNetworkImage(swap.destination_asset)}
+                                    src={destinationAsset?.logo!}
                                     alt="To Logo"
                                     height="60"
                                     width="60"
