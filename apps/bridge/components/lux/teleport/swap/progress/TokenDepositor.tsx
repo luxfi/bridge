@@ -96,12 +96,14 @@ const UserTokenDepositor: React.FC<IProps> = ({
           signer?._address as string
         );
 
+        console.log(_balance, sourceAsset);
+
         if (_balance < _amount) {
           toast.error(`Insufficient ${sourceAsset.asset} amount`);
           return;
         }
 
-        if (!sourceNetwork.chain_id) return
+        if (!sourceNetwork.chain_id) return;
         // if allowance is less than amount, approve
         const _allowance = await erc20Contract.allowance(
           signer?._address as string,
@@ -116,7 +118,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         }
       }
 
-      if (!sourceNetwork.chain_id) return
+      if (!sourceNetwork.chain_id) return;
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`);
       const bridgeContract = new Contract(
         CONTRACTS[sourceNetwork.chain_id].teleporter,
@@ -175,7 +177,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         return;
       }
 
-      if (!sourceNetwork.chain_id) return
+      if (!sourceNetwork.chain_id) return;
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`);
 
       const bridgeContract = new Contract(

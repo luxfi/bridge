@@ -10,14 +10,33 @@ import { ExternalLink } from "lucide-react";
 import { resolveNetworkImage } from "@/helpers/utils";
 import { FC } from "react";
 import { SwapItem, TransactionType } from "../../lib/BridgeApiClient";
-
-import networks from "@/settings/mainnet/networks.json";
+//networks
+import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/networks.mainnets";
+import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
+import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
+import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
 
 type Props = {
   swap: SwapItem;
 };
 
 const SwapDetails: FC<Props> = ({ swap }) => {
+  // make networks
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const networksFireblock = isMainnet
+    ? [
+        ...fireblockNetworksMainnet.sourceNetworks,
+        ...fireblockNetworksMainnet.destinationNetworks,
+      ]
+    : [
+        ...fireblockNetworksTestnet.sourceNetworks,
+        ...fireblockNetworksTestnet.destinationNetworks,
+      ];
+  const networksTeleport = isMainnet
+    ? teleportNetworksMainnet
+    : teleportNetworksTestnet;
+  const networks = swap.use_teleporter ? networksTeleport : networksFireblock;
+
   const sourceNetwork = networks.find(
     (n) => n.internal_name === swap.source_network
   );
@@ -87,7 +106,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                 <div className="flex-shrink-0 h-5 w-5 relative">
                   {
                     <Image
-                      src={resolveNetworkImage(swap?.source_network)}
+                      src={sourceNetwork?.logo!}
                       alt="Exchange Logo"
                       height="60"
                       width="60"
@@ -105,7 +124,8 @@ const SwapDetails: FC<Props> = ({ swap }) => {
               <div className="flex items-center">
                 <div className="flex-shrink-0 h-5 w-5 relative">
                   <Image
-                    src={resolveNetworkImage(swap?.destination_network)}
+                    // src={resolveNetworkImage(swap?.destination_network)}
+                    src={destinationNetwork?.logo!}
                     alt="Exchange Logo"
                     height="60"
                     width="60"
