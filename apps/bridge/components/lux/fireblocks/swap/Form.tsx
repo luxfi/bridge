@@ -30,6 +30,7 @@ import {
   ethPriceAtom,
   swapStatusAtom,
   swapIdAtom,
+  timeToExpireAtom,
 } from "@/store/fireblocks";
 import SpinIcon from "@/components/icons/spinIcon";
 import { SwapStatus } from "@/Models/SwapStatus";
@@ -43,7 +44,9 @@ const Address = dynamic(
 
 const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-  const { sourceNetworks, destinationNetworks: dstNetworks } = isMainnet ? mainNetworks : devNetworks;
+  const { sourceNetworks, destinationNetworks: dstNetworks } = isMainnet
+    ? mainNetworks
+    : devNetworks;
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] =
@@ -61,8 +64,10 @@ const Swap: FC = () => {
   const [swapId, setSwapId] = useAtom(swapIdAtom);
   const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setEthPrice] = useAtom(ethPriceAtom);
+  const [, setTimeToExpire] = useAtom(timeToExpireAtom);
 
-  const [destinationNetworks, setDestinationNetworks] = React.useState<Network[]>(dstNetworks);
+  const [destinationNetworks, setDestinationNetworks] =
+    React.useState<Network[]>(dstNetworks);
 
   React.useEffect(() => {
     sourceNetwork &&
@@ -73,33 +78,35 @@ const Swap: FC = () => {
   }, [sourceNetwork]);
 
   React.useEffect(() => {
-    setSourceNetwork(sourceNetworks.find((n) => n.status === 'active'))
+    setSourceNetwork(sourceNetworks.find((n) => n.status === "active"));
   }, []);
 
   React.useEffect(() => {
     if (sourceAsset) {
-      const _networks = dstNetworks.filter((n: Network) => {
-        if (n.currencies.some((c: Token) => SWAP_PAIRS[sourceAsset.asset])) {
-          return true;
-        } else {
-          return false;
-        }
-      }).map((n: Network) => ({
-        ...n,
-        currencies: n.currencies.map((c: Token) => ({
-          ...c,
-          status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-            ? c.status
-            : "inactive",
-        })),
-      }));
+      const _networks = dstNetworks
+        .filter((n: Network) => {
+          if (n.currencies.some((c: Token) => SWAP_PAIRS[sourceAsset.asset])) {
+            return true;
+          } else {
+            return false;
+          }
+        })
+        .map((n: Network) => ({
+          ...n,
+          currencies: n.currencies.map((c: Token) => ({
+            ...c,
+            status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
+              ? c.status
+              : "inactive",
+          })),
+        }));
       setDestinationNetworks(_networks);
       setDestinationNetwork(_networks[0]);
     }
   }, [sourceAsset, sourceNetwork]);
 
   React.useEffect(() => {
-    console.log(destinationNetwork)
+    console.log(destinationNetwork);
     setDestinationAsset(
       destinationNetwork?.currencies.find((c) => c.status === "active")
     );
@@ -157,9 +164,13 @@ const Swap: FC = () => {
         use_teleporter: false,
         app_name: "Bridge",
       };
-      const response = await axios.post(`/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`, data);
-      console.log("::fireblocks res:", response.data)
+      const response = await axios.post(
+        `/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
+        data
+      );
+      console.log("::fireblocks res:", response.data);
       setSwapId(response.data?.data?.swap_id);
+      setTimeToExpire(new Date(response.data?.data?.created_data).getTime());
       window.history.pushState(
         {},
         "",
@@ -300,11 +311,11 @@ const Swap: FC = () => {
         >
           <ResizablePanel>
             {sourceNetwork &&
-              sourceAsset &&
-              sourceAmount &&
-              destinationNetwork &&
-              destinationAsset &&
-              destinationAddress ? (
+            sourceAsset &&
+            sourceAmount &&
+            destinationNetwork &&
+            destinationAsset &&
+            destinationAddress ? (
               <SwapDetails
                 className="min-h-[450px] justify-center"
                 sourceNetwork={sourceNetwork}
@@ -350,33 +361,33 @@ const AddressButton: FC<{
   disabled,
   address,
 }) => (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={openAddressModal}
-      className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
-    >
-      {isPartnerWallet && (
-        <div className="shrink-0 flex items-center pointer-events-none">
-          {partnerImage && (
-            <Image
-              alt="Partner logo"
-              className="rounded-md object-contain"
-              src={partnerImage}
-              width="24"
-              height="24"
-            />
-          )}
-        </div>
-      )}
-      <div className="truncate text-muted">
-        {address ? (
-          <TruncatedAdrress address={address} />
-        ) : (
-          <span>Enter your address here</span>
+  <button
+    type="button"
+    disabled={disabled}
+    onClick={openAddressModal}
+    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+  >
+    {isPartnerWallet && (
+      <div className="shrink-0 flex items-center pointer-events-none">
+        {partnerImage && (
+          <Image
+            alt="Partner logo"
+            className="rounded-md object-contain"
+            src={partnerImage}
+            width="24"
+            height="24"
+          />
         )}
       </div>
-    </button>
-  );
+    )}
+    <div className="truncate text-muted">
+      {address ? (
+        <TruncatedAdrress address={address} />
+      ) : (
+        <span>Enter your address here</span>
+      )}
+    </div>
+  </button>
+);
 
 export default Swap;

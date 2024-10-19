@@ -4,9 +4,11 @@ import {
   swapStatusAtom,
   userTransferTransactionAtom,
 } from "@/store/fireblocks";
+import WAValidator from "multicoin-address-validator";
 import { ArrowRight, Router } from "lucide-react";
 import { Contract } from "ethers";
 import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
+import { Gauge } from "@/components/gauge";
 
 import teleporterABI from "@/components/lux/fireblocks/constants/abi/bridge.json";
 import erc20ABI from "@/components/lux/fireblocks/constants/abi/erc20.json";
@@ -237,25 +239,16 @@ const UserTokenDepositor: React.FC<IProps> = ({
             sourceAmount={sourceAmount}
           />
         </div>
-        {/* <button
-          disabled={isTokenTransferring}
-          onClick={handleTokenTransfer}
-          className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
-        >
-          {isTokenTransferring ? (
-            <SpinIcon className="animate-spin h-5 w-5" />
-          ) : (
-            <ArrowRight />
-          )}
-          {isTokenTransferring ? (
-            <span className="grow">{userDepositNotice}</span>
-          ) : (
-            <span className="grow">
-              {isWithdrawal ? "Burn" : "Transfer"} {sourceAsset.asset}
-            </span>
-          )}
-        </button> */}
-        <ManualTransfer 
+        <div className="font-normal pb-4 flex flex-col w-full relative z-10 space-y-4 items-center border-dashed border-b-2 border-[#404040]">
+          <span className="animate-spin">
+            <Gauge value={60} size="medium" />
+          </span>
+          <div className="mt-2">Waiting for your deposit</div>
+          <div className="text-sm !mt-2">
+            Processing time for expiration: ~15s
+          </div>
+        </div>
+        <ManualTransfer
           sourceNetwork={sourceNetwork}
           sourceAsset={sourceAsset}
           destinationNetwork={destinationNetwork}

@@ -39,6 +39,7 @@ contract Bridge is Ownable, AccessControl {
     event NewMPCOracleSet(address MPCOracle);
 
     constructor() Ownable(msg.sender) {
+        payoutAddress = msg.sender; // by default, the payout address is set to deployer
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -132,7 +133,7 @@ contract Bridge is Ownable, AccessControl {
      * @param key_ transaction hash
      */
     function addMappingStealth(bytes memory key_) internal {
-        require(!transactionMap[key_].exists, "Already exist");
+        require(!transactionMap[key_].exists, "Tx Hash Already Exists");
         transactionMap[key_].exists = true;
         emit SigMappingAdded(key_);
     }
@@ -234,7 +235,10 @@ contract Bridge is Ownable, AccessControl {
     function bridgeBurn(uint256 amount_, address tokenAddr_) public {
         TeleportStruct memory teleport;
         teleport.token = ERC20B(tokenAddr_);
-        require((teleport.token.balanceOf(msg.sender) >= amount_), "Insufficient token balance");
+        require(
+            (teleport.token.balanceOf(msg.sender) >= amount_),
+            "Insufficient token balance"
+        );
         teleport.token.bridgeBurn(msg.sender, amount_);
         emit BridgeBurned(msg.sender, amount_, tokenAddr_);
     }
@@ -348,7 +352,9 @@ contract Bridge is Ownable, AccessControl {
     ) public view returns (address) {
         TeleportStruct memory teleport;
         // Hash calculations
-        teleport.tokenAddressHash = keccak256(abi.encodePacked(toTokenAddress_));
+        teleport.tokenAddressHash = keccak256(
+            abi.encodePacked(toTokenAddress_)
+        );
         teleport.token = ERC20B(toTokenAddress_);
         teleport.receiverAddress = receiverAddress_;
         teleport.receiverAddressHash = keccak256(
@@ -356,7 +362,9 @@ contract Bridge is Ownable, AccessControl {
         );
         teleport.tokenAmount = Strings.toString(tokenAmount_);
         teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(abi.encodePacked(block.chainid.toString()));
+        teleport.networkIdHash = keccak256(
+            abi.encodePacked(block.chainid.toString())
+        );
         // Concatenate message
         string memory message = append(
             Strings.toHexString(uint256(teleport.networkIdHash), 32),
@@ -367,8 +375,7 @@ contract Bridge is Ownable, AccessControl {
             Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
             vault_
         );
-        // Check if signedTXInfo already exists
-        require(!transactionMap[signedTXInfo_].exists, "DupeTX");
+
         address signer = recoverSigner(
             prefixed(keccak256(abi.encodePacked(message))),
             signedTXInfo_
@@ -398,7 +405,9 @@ contract Bridge is Ownable, AccessControl {
     ) external returns (address) {
         TeleportStruct memory teleport;
         // Hash calculations
-        teleport.tokenAddressHash = keccak256(abi.encodePacked(toTokenAddress_));
+        teleport.tokenAddressHash = keccak256(
+            abi.encodePacked(toTokenAddress_)
+        );
         teleport.token = ERC20B(toTokenAddress_);
         teleport.receiverAddress = receiverAddress_;
         teleport.receiverAddressHash = keccak256(
@@ -406,7 +415,9 @@ contract Bridge is Ownable, AccessControl {
         );
         teleport.tokenAmount = Strings.toString(tokenAmount_);
         teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(abi.encodePacked(block.chainid.toString()));
+        teleport.networkIdHash = keccak256(
+            abi.encodePacked(block.chainid.toString())
+        );
         // Concatenate message
         string memory message = append(
             Strings.toHexString(uint256(teleport.networkIdHash), 32),
@@ -417,16 +428,22 @@ contract Bridge is Ownable, AccessControl {
             Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
             vault_
         );
-        // Check if signedTXInfo already exists
-        require(!transactionMap[signedTXInfo_].exists, "DupeTX");
+        // Check if signedTxInfo already exists
+        require(
+            !transactionMap[signedTXInfo_].exists,
+            "Duplicated Transaction Hash"
+        );
         address signer = recoverSigner(
             prefixed(keccak256(abi.encodePacked(message))),
             signedTXInfo_
         );
+
         // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        require(MPCOracleAddrMap[signer].exists, "BadSig");
+        require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
+
         // Calculate fee and adjust amount
-        uint256 _amount = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
+        uint256 _amount = (tokenAmount_ * 10 ** 18) /
+            (10 ** fromTokenDecimals_);
         uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
         uint256 _adjustedAmount = _amount - _bridgeFee; // Use a local variable
         // If correct signer, then payout
@@ -435,7 +452,11 @@ contract Bridge is Ownable, AccessControl {
         // Add new transaction ID mapping
         addMappingStealth(signedTXInfo_);
 
-        emit BridgeMinted(teleport.receiverAddress, toTokenAddress_, _adjustedAmount);
+        emit BridgeMinted(
+            teleport.receiverAddress,
+            toTokenAddress_,
+            _adjustedAmount
+        );
         return signer;
     }
 
@@ -462,7 +483,9 @@ contract Bridge is Ownable, AccessControl {
     ) external returns (address) {
         TeleportStruct memory teleport;
         // Hash calculations
-        teleport.tokenAddressHash = keccak256(abi.encodePacked(toTokenAddress_));
+        teleport.tokenAddressHash = keccak256(
+            abi.encodePacked(toTokenAddress_)
+        );
         teleport.token = ERC20B(toTokenAddress_);
         teleport.receiverAddress = receiverAddress_;
         teleport.receiverAddressHash = keccak256(
@@ -470,7 +493,9 @@ contract Bridge is Ownable, AccessControl {
         );
         teleport.tokenAmount = Strings.toString(tokenAmount_);
         teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(abi.encodePacked(block.chainid.toString()));
+        teleport.networkIdHash = keccak256(
+            abi.encodePacked(block.chainid.toString())
+        );
         // Concatenate message
         string memory message = append(
             Strings.toHexString(uint256(teleport.networkIdHash), 32),
@@ -481,20 +506,22 @@ contract Bridge is Ownable, AccessControl {
             Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
             vault_
         );
-        // Check if signedTXInfo already exists
-        require(!transactionMap[signedTXInfo_].exists, "DupeTX");
+        // Check if signedTxInfo already exists
+        require(
+            !transactionMap[signedTXInfo_].exists,
+            "Duplicated Transaction Hash"
+        );
         address signer = recoverSigner(
             prefixed(keccak256(abi.encodePacked(message))),
             signedTXInfo_
         );
+
         // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        require(MPCOracleAddrMap[signer].exists, "BadSig");
+        require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
 
         uint256 _amount = tokenAmount_;
         if (toTokenAddress_ == address(0)) {
-            _amount =
-                (tokenAmount_ * 10 ** 18) /
-                (10 ** fromTokenDecimals_);
+            _amount = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
         } else {
             _amount =
                 (tokenAmount_ * 10 ** ERC20(toTokenAddress_).decimals()) /
@@ -504,11 +531,19 @@ contract Bridge is Ownable, AccessControl {
         uint256 _adjustedAmount = _amount - _bridgeFee; // Use a local variable
         // withdraw tokens
         vaultWithdraw(_bridgeFee, toTokenAddress_, payoutAddress);
-        vaultWithdraw(_adjustedAmount, toTokenAddress_, teleport.receiverAddress);
+        vaultWithdraw(
+            _adjustedAmount,
+            toTokenAddress_,
+            teleport.receiverAddress
+        );
         // Add new transaction ID mapping
         addMappingStealth(signedTXInfo_);
 
-        emit BridgeWithdrawn(teleport.receiverAddress, toTokenAddress_, _amount);
+        emit BridgeWithdrawn(
+            teleport.receiverAddress,
+            toTokenAddress_,
+            _amount
+        );
         return signer;
     }
 

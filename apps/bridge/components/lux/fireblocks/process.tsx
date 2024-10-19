@@ -21,6 +21,7 @@ import {
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
+  timeToExpireAtom,
 } from "@/store/fireblocks";
 import { useAtom } from "jotai";
 import { Network, Token } from "@/types/fireblocks";
@@ -36,7 +37,9 @@ interface IProps {
 
 const Form: React.FC<IProps> = ({ swapId }) => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-  const { sourceNetworks, destinationNetworks } = isMainnet ? mainNetworks : devNetworks;
+  const { sourceNetworks, destinationNetworks } = isMainnet
+    ? mainNetworks
+    : devNetworks;
 
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
@@ -54,6 +57,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom);
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom);
   const [, setMpcSignature] = useAtom(mpcSignatureAtom);
+  const [, setTimeToExpire] = useAtom(timeToExpireAtom);
 
   React.useEffect(() => {
     if (sourceAsset) {
@@ -67,7 +71,11 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     try {
       const {
         data: { data },
-      } = await axios.get(`/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`);
+      } = await axios.get(
+        `/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
+      );
+      // set time to expire
+      setTimeToExpire(new Date(data.created_data).getTime());
       const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network
       ) as Network;
@@ -82,7 +90,6 @@ const Form: React.FC<IProps> = ({ swapId }) => {
       );
 
       console.log("::swap data:", data);
-
 
       setSourceNetwork(_sourceNetwork);
       setSourceAsset(_sourceAsset);

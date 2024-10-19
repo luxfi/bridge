@@ -3,12 +3,12 @@ import { swapStatusAtom, swapIdAtom } from "@/store/fireblocks";
 //hooks
 import { useAtom } from "jotai";
 //types
-import { Network, Token } from "@/types/fireblocks";
 import UserTokenDepositor from "./progress/TokenDepositor";
 import TeleportProcessor from "./progress/TeleportProcessor";
 import PayoutProcessor from "./progress/PayoutProcessor";
 import SwapSuccess from "./progress/SwapSuccess";
 import { SwapStatus } from "@/Models/SwapStatus";
+import { Network, Token } from "@/types/fireblocks";
 
 interface IProps {
   className?: string;
@@ -86,7 +86,7 @@ const SwapDetails: React.FC<IProps> = ({
       />
     );
   } else {
-    return <></>
+    return <></>;
   }
 };
 

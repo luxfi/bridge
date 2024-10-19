@@ -774,8 +774,8 @@ export const TEST_NETWORKS: NETWORK[] = [
     internal_name: "ETHEREUM_SEPOLIA",
     is_testnet: true,
     chain_id: "11155111",
-    teleporter: "0x306533aaedc8d2e28F05a7d42E999730C45aB5B1",
-    vault: "0xF2d3BE50D818d48A4e516FbaBb61609F9792CfA6",
+    teleporter: "0xb34e8a93A56De724c432fD41052E715657Fb0B1D",
+    vault: "0x63139CFe43cEe881332a2264851940108333e8D0",
     node: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`,
     currencies: [
       {
@@ -820,8 +820,8 @@ export const TEST_NETWORKS: NETWORK[] = [
     internal_name: "BASE_SEPOLIA",
     is_testnet: true,
     chain_id: "84532",
-    teleporter: "0x6374d9d1E0CB5eA5e77D92E9a306f7f2ec41660a",
-    vault: "0x3Aa3179Bd3A8b1d8269dd840E39f8112fb3eD27a",
+    teleporter: "0xE139056397091c15F860E94b20cCc169520b086A",
+    vault: "0x2c4908f1B607A4448272ea29A054bf9AA08A1D76",
     node: "https://sepolia.base.org",
     currencies: [
       {
@@ -866,8 +866,8 @@ export const TEST_NETWORKS: NETWORK[] = [
     internal_name: "BSC_TESTNET",
     is_testnet: true,
     chain_id: "97",
-    teleporter: "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
-    vault: "0xE49355609F94A4B8a2EfC6FBd077542F8EC90080",
+    teleporter: "0xD293337c79A951C0e93aEb6a5E255097d65b671f",
+    vault: "0xe0feC703840364714b97272973B8945FD5eB5600",
     node: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
     currencies: [
       {
@@ -912,8 +912,8 @@ export const TEST_NETWORKS: NETWORK[] = [
     internal_name: "LUX_TESTNET",
     is_testnet: true,
     chain_id: "8888",
-    teleporter: "0x23E4BFDAC278FFE22DbBFAc5c1474E10cE7631CD",
-    vault: "0x43A4Ab078Edcd3e28385C714950fd099c9595279",
+    teleporter: "0x7d462c69057E404a172690E8C5021563382CAa78",
+    vault: "0xD1496b961855c3F554F3F71A653915EEe035c55e",
     node: "https://api.lux-test.network",
     currencies: [
       {
@@ -961,7 +961,21 @@ export const TEST_NETWORKS: NETWORK[] = [
       {
         name: "LBTC",
         asset: "LBTC",
-        contract_address: "0xD293337c79A951C0e93aEb6a5E255097d65b671f",
+        contract_address: "0xd7bE6F0E47acb95944fcc357a4392cAa5670B9e4",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LSOL",
+        asset: "LSOL",
+        contract_address: "0x4516dcca0EeE9021A1fe6BBe5deE68B501246Cd1",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LTON",
+        asset: "LTON",
+        contract_address: "0xf41380968E9D408a143ddC63322565793d0750f8",
         decimals: 18,
         is_native: false
       },
@@ -996,7 +1010,7 @@ export const TEST_NETWORKS: NETWORK[] = [
       {
         name: "LXDAI",
         asset: "LXDAI",
-        contract_address: "0x426123c16f821A1C945F57d8730210185DA16724",
+        contract_address: "0xFdAad51cE3C28bfCCC5217AFddCEFc2a3Da6Ab54",
         decimals: 18,
         is_native: false
       },

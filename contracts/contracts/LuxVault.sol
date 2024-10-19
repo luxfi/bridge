@@ -81,7 +81,6 @@ contract LuxVault is Ownable {
         emit ERC20VaultCreated(asset_, newVaultAddress);
     }
 
-
     /**
      * @dev add ETH vault
      */
@@ -90,7 +89,6 @@ contract LuxVault is Ownable {
         ETHVault _newETHVault = new ETHVault("Native Vault", "ethVault");
         ethVaultAddress = payable(address(_newETHVault));
     }
-    
 
     /**
      * @dev deposit asset
