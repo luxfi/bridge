@@ -10,7 +10,7 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
         return false
     }
 
-    console.log("::valid address:", network, address)
+    console.log("::validate address:", network, address)
     if (network?.internal_name === KnownInternalNames.Networks.RoninMainnet) {
         if (address.startsWith("ronin:")) {
             return isValidEtherAddress(address.replace("ronin:", "0x"));
@@ -51,6 +51,7 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
         }
         return false
     } if (network?.internal_name?.toLowerCase().startsWith("bitcoin")) {
+        console.log("bitcoin")
         const isValid = WAValidator.validate(address, 'BTC');
         return isValid;
     } else {
