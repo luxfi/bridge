@@ -467,7 +467,7 @@ app.get('/api/v1/getsig/txid/:txid/fromNetId/:fromNetId/toNetIdHash/:toNetIdHash
                                         });
                                    }
 
-                                   catch (e) {
+                                   catch( e: any ) {
 
                                         if (e==="AlreadyMintedError"){
                                              console.log(e);
@@ -677,7 +677,7 @@ async function signClient(i, msgHash, txInfo, txProcMap){
                               }
 
                          }
-                         catch (e) {
+                         catch( e: any ) {
                               console.log('SignerDeadError3:', e);
                               reject('SignerDeadError3:',e);
                               return;
@@ -767,7 +767,7 @@ async function signClient(i, msgHash, txInfo, txProcMap){
                          }
 
                     }
-                    catch (e){
+                    catch( e: any ){
                          console.log('SignerFailError3:',e);
                          reject('SignerFailError3:', e);
                          return;
@@ -805,7 +805,7 @@ async function killSigner(signerProc){
           out = await exec(cmd);
           console.log("Signer dead...", out);
      }
-     catch (e){
+     catch( e: any ){
           console.log('Signer process already dead:', e);
      }
 }
@@ -847,7 +847,7 @@ async function getEVMTx(txh, w3From){ //, fromBridgeContract){
                          console.log('log', log.name);
                          log = log.name;
 
-                    } catch (error) {
+                    } catch ( error: any ) {
                          console.log("EventNotFoundError in log number:", i);
                     }
 
@@ -869,7 +869,7 @@ async function getEVMTx(txh, w3From){ //, fromBridgeContract){
                return null;
           }
 
-     } catch (error) {
+     } catch ( error: any ) {
           console.log('getEVMTxError:', error);
           return null;
      }

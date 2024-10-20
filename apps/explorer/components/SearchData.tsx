@@ -7,7 +7,7 @@ import useSWR from "swr";
 import { StatusIcon } from "@/components/SwapHistory/StatusIcons";
 import Link from "next/link";
 import Image from "next/image";
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import LoadingBlocks from "@/components/LoadingBlocks";
 import { SwapStatus } from "@/models/SwapStatus";
 import AppSettings from "@/lib/AppSettings";
@@ -68,7 +68,7 @@ const version = "sandbox";
 export default function SearchData({ searchParam }: { searchParam: string }) {
   console.log("🚀 ~ SearchData ~ searchParam:", searchParam);
 
-  const settings = useSettingsState();
+  const settings = useSettings();
   const router = useRouter();
   const pathname = usePathname();
   const fetcher = async (url: string) => {

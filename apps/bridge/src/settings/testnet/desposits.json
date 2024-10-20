@@ -1,0 +1,18 @@
+{
+    "evm": {
+        "address": "0xD4952A4c2644469D59F9dE340E0e829e51836Dec",
+        "memo": null
+    },
+    "TON": {
+        "address": "0QDMXrj5n4ldLGoq9l0svifDORdTLnKsOEH6ClAEXX5qj1Sq",
+        "memo": "70A09E871BFAFCB0A216"
+    },
+    "btc": {
+        "address": "tb1qgps3lt0lz3mufdnmj3lhcnpfh48s2u53996xdv",
+        "memo": null
+    },
+    "solana": {
+        "address": "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY",
+        "memo": null
+    }
+}
