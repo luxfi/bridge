@@ -4,7 +4,7 @@ interface Props {
     className?: string
 }
 
-const BridgeExplorerLogo: FC<Props> = (({ className }) => {
+const BridgeExplorerLogo: React.FC<Props> = (({ className }) => {
     return (
         <>
             <svg className={className} xmlns="http://www.w3.org/2000/svg" width="213" height="75" viewBox="0 0 213 75" fill="none">
