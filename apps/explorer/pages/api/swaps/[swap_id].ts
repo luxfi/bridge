@@ -15,7 +15,7 @@ export default async function handler(
   //   try {
   //     const result = await handlerGetSwap(swap_id as string);
   //     res.status(200).json({ data: { ...result } });
-  //   } catch (error) {
+  //   } catch ( error: any ) {
   //     res.status(500).json({ error: error.message });
   //   }
   // } else {
