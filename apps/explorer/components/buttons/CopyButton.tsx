@@ -12,7 +12,7 @@ interface CopyButtonProps {
   iconClassName?: string
 }
 
-const CopyButton: FC<CopyButtonProps> = ({ className, toCopy, children, iconHeight, iconWidth, iconClassName }) => {
+const CopyButton: React.FC<CopyButtonProps> = ({ className, toCopy, children, iconHeight, iconWidth, iconClassName }) => {
   const [isCopied, setCopied] = useCopyClipboard()
 
   return (

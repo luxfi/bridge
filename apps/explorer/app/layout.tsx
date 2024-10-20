@@ -20,7 +20,6 @@ const RootLayout: React.FC<PropsWithChildren> = ({
 }) => (
   <SettingsProvider>
   <html lang="en" className='lux-dark-theme'>
-    <Script defer data-domain="bridge.lux.network" src="https://plausible.io/js/script.js" />
     <body className={bodyClasses}>
       <Header />
       {children}

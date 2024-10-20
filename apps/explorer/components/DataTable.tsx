@@ -2,7 +2,7 @@
 import { ApiResponse } from "@/models/ApiResponse";
 import useSWR from "swr";
 import { ChevronRight } from "lucide-react";
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import Image from "next/image";
 import Link from "next/link";
 import LoadingBlocks from "@/components/LoadingBlocks";
@@ -48,7 +48,7 @@ const DataTable: React.FC = () => {
   };
   // const version = process.env.NEXT_PUBLIC_API_VERSION
   const version = "sandbox";
-  const settings = useSettingsState();
+  const settings = useSettings();
 
   const { data, error, isLoading } = useSWR<ApiResponse<Swap[]>>(
     `${AppSettings.BridgeApiUri}/api/explorer?statuses=1&statuses=3&statuses=4&version=${version}`,
