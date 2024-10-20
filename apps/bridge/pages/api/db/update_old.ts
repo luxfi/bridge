@@ -34,7 +34,6 @@ export default async function handler(
     console.log("deleted network...");
 
     let rpcCount = 0, networksCount = 0, currenciesCount = 0;
-
     for (let index = 0; index < networks.length; index++) {
       const n = networks[index];
       const _network = await prisma.network.create({
@@ -73,8 +72,6 @@ export default async function handler(
       rpcCount += n.nodes.length;
       currenciesCount += n.currencies.length;
     }
-    
-    console.log("success");
     return res.status(200).json({
       status: "success",
       data: { rpcCount, networksCount, currenciesCount }

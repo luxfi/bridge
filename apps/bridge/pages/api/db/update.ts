@@ -30,7 +30,6 @@ export default async function handler(
     console.log("deleted rpcNode...");
     await prisma.network.deleteMany({});
     console.log("deleted network...");
-
     const { count: networksCount } = await prisma.network.createMany({
       data: networks.map((n) => ({
           display_name: n.display_name,
@@ -76,8 +75,6 @@ export default async function handler(
       data: currencies,
     });
 
-    
-    console.log("success");
     return res.status(200).json({
       status: "success",
       data: { rpcCount, networksCount, currenciesCount }
