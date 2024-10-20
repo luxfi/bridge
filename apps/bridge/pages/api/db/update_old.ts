@@ -32,6 +32,9 @@ export default async function handler(
     console.log("deleted rpcNode...");
     await prisma.network.deleteMany({});
     console.log("deleted network...");
+
+    let rpcCount = 0, networksCount = 0, currenciesCount = 0;
+
     for (let index = 0; index < networks.length; index++) {
       const n = networks[index];
       const _network = await prisma.network.create({
@@ -66,10 +69,15 @@ export default async function handler(
           is_native: c.is_native,
         })),
       });
+      networksCount ++;
+      rpcCount += n.nodes.length;
+      currenciesCount += n.currencies.length;
     }
+    
     console.log("success");
     return res.status(200).json({
       status: "success",
+      data: { rpcCount, networksCount, currenciesCount }
     });
   } catch (error) {
     console.error("Error in updating networks", error);
