@@ -1,11 +1,7 @@
-import BridgeApiClient from "@/lib/BridgeApiClient";
+import React from "react";
 import Layout from "@/components/layout";
 import { InferGetServerSidePropsType } from "next";
-import React from "react";
-import { SwapDataProvider } from "@/context/swap";
-import { TimerProvider } from "@/context/timerContext";
 import { getThemeData } from "@/helpers/settingsHelper";
-import SwapWithdrawal from "@/components/SwapWithdrawal";
 
 import SwapProcess from "@/components/lux/teleport/process";
 
@@ -38,14 +34,16 @@ export const getServerSideProps = async (ctx: any) => {
     };
   }
 
-  const apiClient = new BridgeApiClient();
-  const { data: networkData } = await apiClient.GetLSNetworksAsync();
-  const { data: exchangeData } = await apiClient.GetExchangesAsync();
-  if (!networkData || !exchangeData) return;
+  // const apiClient = new BridgeApiClient();
+  // const { data: networkData } = await apiClient.GetLSNetworksAsync();
+  // const { data: exchangeData } = await apiClient.GetExchangesAsync();
+  // if (!networkData || !exchangeData) return;
 
   const settings = {
-    networks: networkData,
-    exchanges: exchangeData,
+    // networks: networkData,
+    // exchanges: exchangeData,
+    networks: [],
+    exchanges: [],
   };
 
   const themeData = await getThemeData(ctx.query);

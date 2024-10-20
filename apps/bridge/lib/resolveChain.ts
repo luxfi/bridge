@@ -1,9 +1,8 @@
-import { Layer } from "../Models/Layer";
-import NetworkSettings from "./NetworkSettings";
+import { resolveNetworkImage } from "@/helpers/utils";
 import { SendErrorMessage } from "./telegram";
 
-export default function resolveChain(network: Layer): (Chain & RainbowKitChain) | undefined {
-    const nativeCurrency = network.assets.find(c => c.is_native);
+export default function resolveChain(network: any): (Chain & RainbowKitChain) | undefined {
+    const nativeCurrency = network.currencies.find((c: any) => c.is_native);
     const blockExplorersBaseURL = new URL(network.transaction_explorer_template).origin;
     const metadata = network.metadata
     const { ensRegistry, ensUniversalResolver, multicall3 } = metadata || {}
@@ -22,13 +21,13 @@ export default function resolveChain(network: Layer): (Chain & RainbowKitChain) 
             symbol: nativeCurrency.asset,
             decimals: nativeCurrency.decimals
         },
-        iconUrl: network.img_url,
+        iconUrl: resolveNetworkImage(network.internal_name),
         rpcUrls: {
             default: {
-                http: network.nodes.map(n => n?.url),
+                http: network.nodes.map((n: any) => n?.url),
             },
             public: {
-                http: network.nodes.map(n => n?.url),
+                http: network.nodes.map((n: any) => n?.url),
             },
         },
         blockExplorers: {
@@ -53,21 +52,21 @@ export default function resolveChain(network: Layer): (Chain & RainbowKitChain) 
         },
     }
 
-    const defaultPriorityFee = NetworkSettings.KnownSettings[network.internal_name]?.DefaultPriorityFee?.toString()
-    const baseFeeMultiplier = NetworkSettings.KnownSettings[network.internal_name]?.BaseFeeMultiplier ?? 1.2
+    // const defaultPriorityFee = NetworkSettings.KnownSettings[network.internal_name]?.DefaultPriorityFee?.toString()
+    // const baseFeeMultiplier = NetworkSettings.KnownSettings[network.internal_name]?.BaseFeeMultiplier ?? 1.2
 
-    if (defaultPriorityFee) {
-        res.fees = {
-            ...res.fees,
-            defaultPriorityFee: () => parseGwei(defaultPriorityFee),
-        }
-    }
-    if (baseFeeMultiplier) {
-        res.fees = {
-            ...res.fees,
-            baseFeeMultiplier: () => baseFeeMultiplier
-        }
-    }
+    // if (defaultPriorityFee) {
+    //     res.fees = {
+    //         ...res.fees,
+    //         defaultPriorityFee: () => parseGwei(defaultPriorityFee),
+    //     }
+    // }
+    // if (baseFeeMultiplier) {
+    //     res.fees = {
+    //         ...res.fees,
+    //         baseFeeMultiplier: () => baseFeeMultiplier
+    //     }
+    // }
     return res
 }
 
