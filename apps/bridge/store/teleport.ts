@@ -13,4 +13,4 @@ export const swapIdAtom = atom<string>("");
 export const userTransferTransactionAtom = atom<string>("");
 export const bridgeMintTransactionAtom = atom<string>("");
 export const mpcSignatureAtom = atom<string>("");
-export const useTelepoterAtom = atom<boolean>(false);
+export const useTelepoterAtom = atom<boolean>(true);
