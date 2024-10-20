@@ -4,10 +4,11 @@
     "src/next-env.d.ts",
     ".next/types/**/*.ts",
     "src/**/*.ts",
-    "src/**/*.tsx" 
+    "src/**/*.tsx"
   ],
   "exclude": [ "node_modules", "x_pages" ],
   "compilerOptions": {
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
