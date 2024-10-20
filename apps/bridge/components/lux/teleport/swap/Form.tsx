@@ -99,8 +99,9 @@ const Swap: FC = () => {
               : "inactive",
           })),
         }));
+
       setDestinationNetworks(_networks);
-      setDestinationNetwork(_networks[0]);
+      setDestinationNetwork(_networks.find((n) => n.status === "active"));
     }
   }, [sourceAsset, sourceNetwork]);
 

@@ -82,7 +82,8 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (chainId === destinationNetwork.chain_id) {
         isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
       } else {
-        destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
+        destinationNetwork.chain_id &&
+          switchNetwork!(destinationNetwork.chain_id);
       }
     }
   }, [swapStatus, chainId, signer, isWithdrawal]);
@@ -110,7 +111,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       // bytes memory signedTXInfo_,
       // string memory vault_
 
-      if (!destinationNetwork.chain_id) return
+      if (!destinationNetwork.chain_id) return;
 
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
@@ -174,10 +175,8 @@ const PayoutProcessor: React.FC<IProps> = ({
 
     console.log("::data for bridge withdraw:", withdrawData);
 
-
     try {
-
-      if (!destinationNetwork.chain_id) return
+      if (!destinationNetwork.chain_id) return;
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
         teleporterABI,
@@ -261,7 +260,8 @@ const PayoutProcessor: React.FC<IProps> = ({
       toast.error(`No connected wallet. Please connect your wallet`);
       connectWallet("evm");
     } else if (chainId !== destinationNetwork.chain_id) {
-      destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
+      destinationNetwork.chain_id &&
+        switchNetwork!(destinationNetwork.chain_id);
     } else {
       isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
     }
@@ -343,7 +343,10 @@ const PayoutProcessor: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>Teleporter has confirmed your Deposit</span>
+                  <span>
+                    Teleporter has confirmed your token{" "}
+                    {isWithdrawal ? "burn" : "deposit"}
+                  </span>
                 </div>
               </div>
             </div>
