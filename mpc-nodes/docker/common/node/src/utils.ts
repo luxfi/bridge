@@ -25,7 +25,7 @@ const killSigner = async (signerProc: string) => {
     const cmd = "kill -9 " + signerProc
     const out = await exec(cmd)
     console.log("::Signer dead...", out)
-  } catch (e) {
+  } catch( e: any ) {
     console.log("::Signer process already dead:", e)
   }
 }

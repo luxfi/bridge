@@ -13,7 +13,7 @@ const getNetworks = async (req, res) => {
     });
 
     res.json(response.data);
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(error.response.status).json({ error: error.response.data });
   }
 };
@@ -36,7 +36,7 @@ const getRoutes = async (req, res) => {
       },
     );
     res.json(response.data);
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(error.response.status).json({ error: error.response.data });
   }
 };
@@ -67,7 +67,7 @@ const getRate = async (req, res) => {
     );
 
     res.json(response.data);
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(error.response.status).json({ error: error.response.data });
   }
 };
@@ -117,7 +117,7 @@ const createSwap = async (req, res) => {
       );
       res.json(result.data);
     }
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(error.response.status).json({ error: error.response.data });
   }
 };
@@ -139,7 +139,7 @@ const getSwaps = async (req, res) => {
     );
     swaps = responses.map(({ data }) => data.data || data.error);
     res.json(swaps);
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(500).json({ error: error.response.data });
   }
 };
@@ -153,7 +153,7 @@ const getSwap = async (req, res) => {
       },
     });
     res.json(response.data);
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(500).json({ error: error.response?.data });
   }
 };
@@ -174,7 +174,7 @@ const deleteSwap = async (req, res) => {
       });
       res.json(result.data.data);
     }
-  } catch (error) {
+  } catch ( error: any ) {
     res.status(400).json({ error: error.response?.data });
   }
 };
@@ -189,7 +189,7 @@ const prepareSwap = async (req, res) => {
       },
     });
     res.json(response.data);
-  } catch (error) {
+  } catch ( error: any ) {
     console.log(error);
     res.status(error.response.status).json({ error: error.response.data });
   }
