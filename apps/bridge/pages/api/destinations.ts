@@ -30,7 +30,7 @@ export default async function handler(
                         asset: 'LUX'
                     },
                     {
-                        network: 'LUXLINK',
+                        network: 'LUXFI',
                         asset: 'LUX'
                     },
                 ]
@@ -52,7 +52,7 @@ export default async function handler(
                         asset: 'LUX'
                     },
                     {
-                        network: 'LUXLINK',
+                        network: 'LUXFI',
                         asset: 'LUX'
                     },
                     {
