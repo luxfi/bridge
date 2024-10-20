@@ -192,7 +192,7 @@ export const networks: Network[] = [
       {
         name: "BNB",
         asset: "BNB",
-        logo: "https://cdn.lux.network/bridge/networks/ethereum_mainnet.png",
+        logo: "https://cdn.lux.network/bridge/networks/bsc_mainnet.png",
         contract_address: "0x0000000000000000000000000000000000000000",
         decimals: 18,
         status: "active",

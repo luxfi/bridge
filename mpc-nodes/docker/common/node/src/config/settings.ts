@@ -37,6 +37,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
         decimals: 18,
         is_native: true
       },
+      // main tokens
       {
         name: "Wrapped Ether",
         asset: "WETH",
@@ -65,59 +66,74 @@ export const MAIN_NETWORKS: NETWORK[] = [
         decimals: 18,
         is_native: false
       },
+      // lux tokens
       {
         name: "LETH",
         asset: "LETH",
-        contract_address: "0xA7EF94FfacA04aA51aCB66Ad93691a10Ce6eAcf4",
+        contract_address: "0x2951A9386df11a4EA8ae5A823B94DC257dEb35Cb",
         decimals: 18,
         is_native: false
       },
       {
         name: "LBTC",
         asset: "LBTC",
-        contract_address: "",
+        contract_address: "0xebD1Ee9BCAaeE50085077651c1a2dD452fc6b72e",
         decimals: 18,
         is_native: false
       },
       {
         name: "LUSD",
         asset: "LUSD",
-        contract_address: "",
+        contract_address: "0x42b733cA4b3A8FC0237dBE39A47441cfD525f0F1",
         decimals: 18,
         is_native: false
       },
       {
         name: "LFTM",
         asset: "LFTM",
-        contract_address: "",
+        contract_address: "0x15BA7dCA26c63029E33C81f7B3978B54Bc0CB08B",
         decimals: 18,
         is_native: false
       },
       {
         name: "LCELO",
         asset: "LCELO",
-        contract_address: "",
+        contract_address: "0xD257ADA332da217c78959A609e97c71ce5214925",
         decimals: 18,
         is_native: false
       },
       {
         name: "LPOL",
         asset: "LPOL",
-        contract_address: "",
+        contract_address: "0x9F47CeB09cb88362f0274Bb354a9807Fd976D963",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LSOL",
+        asset: "LSOL",
+        contract_address: "0x372b3B7Cb87A7aE9Cb024861775f01015A71058C",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LTON",
+        asset: "LTON",
+        contract_address: "0xa4AA40ff2F2Cbe4FFcDfa5fF2A466fa7aF3390e5",
         decimals: 18,
         is_native: false
       },
       {
         name: "LXDAI",
         asset: "LXDAI",
-        contract_address: "",
+        contract_address: "0x0D15251ad56cE56cC22588F6645c20ee7d77aE39",
         decimals: 18,
         is_native: false
       },
       {
         name: "LBNB",
         asset: "LBNB",
-        contract_address: "",
+        contract_address: "0xcf963Fe4E4cE126047147661e6e06e171f366506",
         decimals: 18,
         is_native: false
       }
@@ -188,7 +204,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
       {
         name: "Wrapped Ether",
         asset: "WETH",
-        contract_address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        contract_address: "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
         decimals: 18,
         is_native: false
       },
@@ -202,7 +218,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
       {
         name: "USDC",
         asset: "USDC",
-        contract_address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        contract_address: "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
         decimals: 6,
         is_native: false
       },
@@ -810,6 +826,52 @@ export const TEST_NETWORKS: NETWORK[] = [
         name: "DAI",
         asset: "DAI",
         contract_address: "0x3FADaC51B852273e11Da42Db30714FddA785b8C5",
+        decimals: 18,
+        is_native: false
+      }
+    ]
+  },
+  {
+    display_name: "Holesky Testnet",
+    internal_name: "HOLESKY_TESTNET",
+    is_testnet: true,
+    chain_id: "17000",
+    teleporter: "0x2951A9386df11a4EA8ae5A823B94DC257dEb35Cb",
+    vault: "0xebD1Ee9BCAaeE50085077651c1a2dD452fc6b72e",
+    node: `https://eth-holesky.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+    currencies: [
+      {
+        name: "ETH",
+        asset: "ETH",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "Wrapped Ether",
+        asset: "WETH",
+        contract_address: "0xcf963Fe4E4cE126047147661e6e06e171f366506",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "USDT",
+        asset: "USDT",
+        contract_address: "0xD257ADA332da217c78959A609e97c71ce5214925",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "USDC",
+        asset: "USDC",
+        contract_address: "0x15BA7dCA26c63029E33C81f7B3978B54Bc0CB08B",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "DAI",
+        asset: "DAI",
+        contract_address: "0x9F47CeB09cb88362f0274Bb354a9807Fd976D963",
         decimals: 18,
         is_native: false
       }
