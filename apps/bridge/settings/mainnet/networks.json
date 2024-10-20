@@ -1502,7 +1502,7 @@
     "is_featured": false,
     "average_completion_time": "00:01:12.6376360",
     "chain_id": "81457",
-    "status": "insufficient_liquidity",
+    "status": "inactive",
     "type": "evm",
     "refuel_amount_in_usd": 1,
     "transaction_explorer_template": "https://blastscan.io/tx/{0}",

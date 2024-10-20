@@ -75,6 +75,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
         `/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
       );
       // set time to expire
+      console.log("::swap data for fireblocks: ", data);
       setTimeToExpire(new Date(data.created_data).getTime());
       const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network

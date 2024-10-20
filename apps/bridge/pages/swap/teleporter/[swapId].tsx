@@ -38,14 +38,14 @@ export const getServerSideProps = async (ctx: any) => {
     };
   }
 
-  const apiClient = new BridgeApiClient();
-  const { data: networkData } = await apiClient.GetLSNetworksAsync();
-  const { data: exchangeData } = await apiClient.GetExchangesAsync();
-  if (!networkData || !exchangeData) return;
+  // const apiClient = new BridgeApiClient();
+  // // const { data: networkData } = await apiClient.GetLSNetworksAsync();
+  // const { data: exchangeData } = await apiClient.GetExchangesAsync();
+  // if (!networkData || !exchangeData) return;
 
   const settings = {
-    networks: networkData,
-    exchanges: exchangeData,
+    networks: [],
+    exchanges: [],
   };
 
   const themeData = await getThemeData(ctx.query);
