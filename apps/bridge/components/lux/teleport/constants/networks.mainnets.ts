@@ -88,7 +88,7 @@ export const networks: Network[] = [
     ],
   },
   {
-    display_name: "BASE",
+    display_name: "Base",
     internal_name: "BASE_MAINNET",
     native_currency: "ETH",
     logo: "https://cdn.lux.network/bridge/networks/base_mainnet.png",
@@ -191,7 +191,7 @@ export const networks: Network[] = [
     ]
   },
   {
-    display_name: "OPTIMISM",
+    display_name: "Optimism",
     internal_name: "OPTIMISM_MAINNET",
     native_currency: "ETH",
     logo: "https://cdn.lux.network/bridge/networks/optimism_mainnet.png",
@@ -434,7 +434,7 @@ export const networks: Network[] = [
     node: "https://celo.drpc.org",
     currencies: [],
   },
-  
+
   {
     display_name: "Binance Smart Chain",
     internal_name: "BSC_MAINNET",
@@ -556,7 +556,7 @@ export const networks: Network[] = [
     currencies: [],
   },
   {
-    display_name: "Avalanche One",
+    display_name: "Avalanche",
     internal_name: "AVAX_MAINNET",
     native_currency: "AVAX",
     logo: "https://cdn.lux.network/bridge/networks/avax_mainnet.png",
