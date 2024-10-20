@@ -2113,7 +2113,7 @@
   },
   {
     "display_name": "Bitcoin",
-    "internal_name": "Bitcoin_MAINNET",
+    "internal_name": "BITCOIN_MAINNET",
     "native_currency": "BTC",
     "is_testnet": false,
     "is_featured": true,

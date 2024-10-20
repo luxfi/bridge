@@ -170,7 +170,7 @@ const Swap: FC = () => {
         "",
         `/swap/teleporter/${response.data?.data?.swap_id}`
       );
-      setSwapStatus(SwapStatus.UserDepositPending);
+      setSwapStatus(SwapStatus.UserTransferPending);
       setShowSwapModal(true);
     } catch (err) {
       console.log(err);
