@@ -26,8 +26,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "LUX_MAINNET",
     is_testnet: false,
     chain_id: "7777",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xC58E07f1C07627af94ad77549499b642aeFf0a3C",
+    vault: "0x7C6e3BE7B72805f0f52d788b96695b9d7e59A00c",
     node: "https://api.lux.network",
     currencies: [
       {
@@ -190,8 +190,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "POLYGON_MAINNET",
     is_testnet: false,
     chain_id: "137",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xE09C9b6Ed2BADAa97AB00652dF75da05adc6dAeF",
+    vault: "0x217feE2a1a6A31Dda68433270531F56C91EC8D2B",
     node: `https://lb.drpc.org/ogrpc?network=polygon&dkey=${DRPC_KEY}`,
     currencies: [
       {
@@ -236,8 +236,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "OPTIMISM_MAINNET",
     is_testnet: false,
     chain_id: "10",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95",
+    vault: "0x37d9fB96722ebDDbC8000386564945864675099B",
     node: `https://lb.drpc.org/ogrpc?network=optimism&dkey=${DRPC_KEY}`,
     currencies: [
       {
@@ -374,8 +374,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "BASE_MAINNET",
     is_testnet: false,
     chain_id: "8453",
-    teleporter: "",
-    vault: "",
+    teleporter: "0x37d9fB96722ebDDbC8000386564945864675099B",
+    vault: "0x3226bb1d3055685EFC1b0E49718B909a1c6Ce18d",
     node: `https://lb.drpc.org/ogrpc?network=base&dkey=${DRPC_KEY}`,
     currencies: [
       {
@@ -420,8 +420,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "BSC_MAINNET",
     is_testnet: false,
     chain_id: "56",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xebD1Ee9BCAaeE50085077651c1a2dD452fc6b72e",
+    vault: "0xcf963Fe4E4cE126047147661e6e06e171f366506",
     node: `https://lb.drpc.org/ogrpc?network=bsc&dkey=${DRPC_KEY}`,
     currencies: [
       {
