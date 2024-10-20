@@ -80,6 +80,12 @@ const UserTokenDepositor: React.FC<IProps> = ({
       const _amount = parseUnits(String(sourceAmount), sourceAsset.decimals);
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance();
+        console.log("::balance checking: ", {
+          balance: Number(_balance),
+          required: Number(_amount),
+          gap: Number(_balance) - Number(_amount),
+        });
+
         if (Number(_balance) < Number(_amount)) {
           toast.error(`Insufficient ${sourceAsset.asset} amount`);
           return;
@@ -96,7 +102,11 @@ const UserTokenDepositor: React.FC<IProps> = ({
           signer?._address as string
         );
 
-        console.log(_balance, sourceAsset);
+        console.log("::balance checking: ", {
+          balance: Number(_balance),
+          required: Number(_amount),
+          gap: Number(_balance) - Number(_amount),
+        });
 
         if (_balance < _amount) {
           toast.error(`Insufficient ${sourceAsset.asset} amount`);
@@ -126,10 +136,6 @@ const UserTokenDepositor: React.FC<IProps> = ({
         signer
       );
 
-      console.log({
-        _amount,
-        _asset: sourceAsset.contract_address,
-      });
       const _bridgeTransferTx = await bridgeContract.vaultDeposit(
         _amount,
         sourceAsset.contract_address,
