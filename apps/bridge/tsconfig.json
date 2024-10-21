@@ -6,9 +6,8 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "exclude": [ "node_modules", "x_pages" ],
+  "exclude": [ "/node_modules", "x_pages", "../../node_modules/.pnpm" ],
   "compilerOptions": {
-    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],

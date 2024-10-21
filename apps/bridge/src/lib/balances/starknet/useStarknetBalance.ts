@@ -60,10 +60,11 @@ export default function useStarknetBalance(): BalanceProvider {
 
     const getGas = async ({ layer, currency, wallet }: GasProps) => {
 
-        const { CallData,
-            cairo,
-            Account,
-            SequencerProvider
+        const { 
+          CallData,
+          cairo,
+          Account,
+          RpcProvider
         } = await import("starknet");
 
         const { BigNumber } = await import("ethers");
@@ -77,11 +78,13 @@ export default function useStarknetBalance(): BalanceProvider {
 
         if (!contract_address || !asset || !wallet) return
 
-        const provider = new SequencerProvider({
-            baseUrl: 'https://alpha-mainnet.starknet.io',
+        const provider = new RpcProvider({
+            nodeUrl: 'https://alpha-mainnet.starknet.io',
         });
 
-        const account = new Account(provider, wallet.address, wallet.metadata?.starknetAccount?.account.signer.pk);
+  // :aa TODO ZACH
+//        const account = new Account(provider, wallet.address, wallet.metadata?.starknetAccount?.account.signer.pk);
+        const account = new Account(provider, wallet.address, '');
 
         let transferCall = {
             contractAddress: contract_address.toLowerCase(),
