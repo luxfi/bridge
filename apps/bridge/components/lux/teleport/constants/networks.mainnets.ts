@@ -593,7 +593,7 @@ export const networks: Network[] = [
     display_name: "Aurora",
     internal_name: "AURORA_MAINNET",
     native_currency: "ETH",
-    logo: "https://cdn.lux.network/bridge/networks/fantom_mainnet.svg",
+    logo: "https://cdn.lux.network/bridge/networks/aurora_mainnet.png",
     is_testnet: false,
     is_featured: true,
     average_completion_time: "00:00:07.7777777",
