@@ -2,6 +2,7 @@ import React from "react";
 import toast from "react-hot-toast";
 import {
   swapStatusAtom,
+  timeToExpireAtom,
   userTransferTransactionAtom,
 } from "@/store/fireblocks";
 import WAValidator from "multicoin-address-validator";
@@ -59,6 +60,10 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const signer = useEthersSigner();
   const { switchNetwork } = useSwitchNetwork();
   const { connectWallet } = useWallet();
+  // time to expire
+  const [timeToExpire, setTimeToExpire] = useAtom(timeToExpireAtom);
+
+  console.log("::time to expire ", timeToExpire);
 
   // const isWithdrawal = React.useMemo(
   //   () => (sourceAsset.name.startsWith("Lux") ? true : false),

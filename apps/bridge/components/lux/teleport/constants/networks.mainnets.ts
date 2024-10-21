@@ -88,7 +88,7 @@ export const networks: Network[] = [
     ],
   },
   {
-    display_name: "BASE",
+    display_name: "Base",
     internal_name: "BASE_MAINNET",
     native_currency: "ETH",
     logo: "https://cdn.lux.network/bridge/networks/base_mainnet.png",
@@ -191,7 +191,7 @@ export const networks: Network[] = [
     ]
   },
   {
-    display_name: "OPTIMISM",
+    display_name: "Optimism",
     internal_name: "OPTIMISM_MAINNET",
     native_currency: "ETH",
     logo: "https://cdn.lux.network/bridge/networks/optimism_mainnet.png",
@@ -593,7 +593,7 @@ export const networks: Network[] = [
     display_name: "Aurora",
     internal_name: "AURORA_MAINNET",
     native_currency: "ETH",
-    logo: "https://cdn.lux.network/bridge/networks/fantom_mainnet.svg",
+    logo: "https://cdn.lux.network/bridge/networks/aurora_mainnet.png",
     is_testnet: false,
     is_featured: true,
     average_completion_time: "00:00:07.7777777",

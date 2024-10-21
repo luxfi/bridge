@@ -76,7 +76,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
       );
       // set time to expire
       console.log("::swap data for fireblocks: ", data);
-      setTimeToExpire(new Date(data.created_data).getTime());
+      setTimeToExpire(new Date(data.created_date).getTime());
       const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network
       ) as Network;
