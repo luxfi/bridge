@@ -170,7 +170,7 @@ const Swap: FC = () => {
       );
       console.log("::fireblocks res:", response.data);
       setSwapId(response.data?.data?.swap_id);
-      setTimeToExpire(new Date(response.data?.data?.created_data).getTime());
+      setTimeToExpire(new Date(response.data?.data?.created_date).getTime());
       window.history.pushState(
         {},
         "",
