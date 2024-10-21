@@ -186,7 +186,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   },
   {
-    display_name: "POLYGON",
+    display_name: "Polygon",
     internal_name: "POLYGON_MAINNET",
     is_testnet: false,
     chain_id: "137",

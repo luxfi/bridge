@@ -383,7 +383,7 @@
   {
     "display_name": "Polygon",
     "internal_name": "POLYGON_MAINNET",
-    "native_currency": "MATIC",
+    "native_currency": "POL",
     "is_testnet": false,
     "is_featured": false,
     "average_completion_time": "00:02:18.1711060",
