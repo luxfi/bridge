@@ -589,7 +589,7 @@
     "created_date": "2021-10-06T15:57:09.429819+00:00"
   },
   {
-    "display_name": "Arbitrum One",
+    "display_name": "Arbitrum",
     "internal_name": "ARBITRUM_MAINNET",
     "native_currency": "ETH",
     "is_testnet": false,
@@ -904,7 +904,7 @@
     "created_date": "2023-08-02T10:55:14.532517+00:00"
   },
   {
-    "display_name": "BSC",
+    "display_name": "Binance Smart Chain",
     "internal_name": "BSC_MAINNET",
     "native_currency": "BNB",
     "is_testnet": false,
@@ -1231,7 +1231,7 @@
     "created_date": "2023-05-29T13:19:19.214392+00:00"
   },
   {
-    "display_name": "FANTOM",
+    "display_name": "Fantom",
     "internal_name": "FANTOM_MAINNET",
     "native_currency": "FTM",
     "is_testnet": false,

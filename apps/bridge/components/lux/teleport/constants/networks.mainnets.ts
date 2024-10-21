@@ -401,7 +401,7 @@ export const networks: Network[] = [
     ],
   },
   {
-    display_name: "Arbitrum",
+    display_name: "Arbitrum One",
     internal_name: "ARBITRUM_MAINNET",
     native_currency: "ETH",
     logo: "https://cdn.lux.network/bridge/networks/arbitrum_mainnet.png",
@@ -434,7 +434,7 @@ export const networks: Network[] = [
     node: "https://celo.drpc.org",
     currencies: [],
   },
-  
+
   {
     display_name: "Binance Smart Chain",
     internal_name: "BSC_MAINNET",
@@ -556,7 +556,7 @@ export const networks: Network[] = [
     currencies: [],
   },
   {
-    display_name: "Avalanche One",
+    display_name: "Avalanche",
     internal_name: "AVAX_MAINNET",
     native_currency: "AVAX",
     logo: "https://cdn.lux.network/bridge/networks/avax_mainnet.png",
@@ -593,7 +593,7 @@ export const networks: Network[] = [
     display_name: "Aurora",
     internal_name: "AURORA_MAINNET",
     native_currency: "ETH",
-    logo: "https://cdn.lux.network/bridge/networks/aurora_mainnet.png",
+    logo: "https://cdn.lux.network/bridge/networks/fantom_mainnet.svg",
     is_testnet: false,
     is_featured: true,
     average_completion_time: "00:00:07.7777777",

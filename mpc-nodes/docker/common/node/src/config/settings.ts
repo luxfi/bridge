@@ -278,7 +278,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   },
   {
-    display_name: "Arbitrum One",
+    display_name: "Arbitrum",
     internal_name: "ARBITRUM_MAINNET",
     is_testnet: false,
     chain_id: "42161",
@@ -554,7 +554,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   },
   {
-    display_name: "FANTOM",
+    display_name: "Fantom",
     internal_name: "FANTOM_MAINNET",
     is_testnet: false,
     chain_id: "42220",
