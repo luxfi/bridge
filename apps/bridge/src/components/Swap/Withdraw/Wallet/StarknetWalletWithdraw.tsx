@@ -100,16 +100,19 @@ const StarknetWalletWithdrawStep: React.FC<Props> = ({ depositAddress, amount })
             if (!depositAddress) {
                 throw Error("depositAddress is not defined for starknet transfer")
             }
+
             const erc20Contract = new Contract(
                 Erc20Abi,
                 sourceCurrency.contract_address,
-                wallet.metadata?.starknetAccount?.account,
+                // :aa TODO ZACH
+            //    wallet.metadata?.starknetAccount?.account,
             )
 
             const watchDogContract = new Contract(
                 WatchDogAbi,
                 source_network.metadata.WatchdogContractAddress,
-                wallet.metadata?.starknetAccount?.account
+                // :aa TODO ZACH
+                //wallet.metadata?.starknetAccounts?.account
             )
 
             const call = erc20Contract.populate(
@@ -126,6 +129,7 @@ const StarknetWalletWithdrawStep: React.FC<Props> = ({ depositAddress, amount })
             );
 
             try {
+              /* :aa TODO ZACH
                 const { transaction_hash: transferTxHash } = (await wallet?.metadata?.starknetAccount?.account?.execute([call, watch]) || {});
                 if (transferTxHash) {
                     setSwapTransaction(swap.id, PublishedSwapTransactionStatus.Completed, transferTxHash);
@@ -134,6 +138,7 @@ const StarknetWalletWithdrawStep: React.FC<Props> = ({ depositAddress, amount })
                 else {
                     toast('Transfer failed or terminated')
                 }
+              */
             }
             catch( e: any ) {
                 toast(e.message)
