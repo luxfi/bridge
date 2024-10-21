@@ -3,7 +3,6 @@ import React  from 'react'
 import { DrawerMargin, Header } from '@luxfi/ui'
 
 import siteDef from '@/site-def'
-import '@/blocks/registerComponents'
 
 type Props = {
   searchParams?: { [key: string]: string | string[] | undefined }
