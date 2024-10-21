@@ -169,7 +169,7 @@ const sourceNetworks: Network[] = [
 ];
 const destinationNetworks: Network[] = [
   {
-    display_name: "Lux Mainnet",
+    display_name: "Lux",
     internal_name: "LUX_MAINNET",
     native_currency: "LUX",
     logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
@@ -179,13 +179,10 @@ const destinationNetworks: Network[] = [
     chain_id: 7777,
     status: "active",
     type: "evm",
-    deposit_address: {
-      address: "0x903670c142c670260cf96929Da156370d0dBE93a"
-    },
     refuel_amount_in_usd: 1,
-    transaction_explorer_template: "https://explore.lux-test.network/tx/{0}",
-    account_explorer_template: "https://explore.lux-test.network/address/{0}",
-    node: "https://api.lux-test.network",
+    transaction_explorer_template: "https://explore.lux.network/tx/{0}",
+    account_explorer_template: "https://explore.lux.network/address/{0}",
+    node: "https://api.lux.network",
     currencies: [
       {
         name: "LUX",
@@ -374,7 +371,7 @@ const destinationNetworks: Network[] = [
         destination_base_fee: 0.1,
         is_native: false,
       },
-    ]
+    ],
   }
 ];
 export default { sourceNetworks, destinationNetworks }
