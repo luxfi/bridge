@@ -298,7 +298,7 @@ export const networks: Network[] = [
   {
     display_name: "Polygon",
     internal_name: "POLYGON_MAINNET",
-    native_currency: "ETH",
+    native_currency: "POL",
     logo: "https://cdn.lux.network/bridge/networks/polygon_mainnet.png",
     is_testnet: false,
     is_featured: true,
