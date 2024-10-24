@@ -10,7 +10,7 @@ export const networks: Network[] = [
     is_featured: true,
     average_completion_time: "00:01:04.0494430",
     chain_id: 1,
-    status: "inactive",
+    status: "active",
     type: "evm",
     refuel_amount_in_usd: 0.5,
     transaction_explorer_template: "https://sepolia.basescan.org/tx/{0}", // sepolia
@@ -188,7 +188,7 @@ export const networks: Network[] = [
         destination_base_fee: 0.1,
         is_native: false,
       },
-    ]
+    ],
   },
   {
     display_name: "Optimism",
@@ -202,10 +202,8 @@ export const networks: Network[] = [
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 1,
-    transaction_explorer_template:
-      "https://optimistic.etherscan.io/tx/{0}",
-    account_explorer_template:
-      "https://optimistic.etherscan.io//address/{0}",
+    transaction_explorer_template: "https://optimistic.etherscan.io/tx/{0}",
+    account_explorer_template: "https://optimistic.etherscan.io//address/{0}",
     node: "https://eth-mainnet.g.alchemy.com/v2/-z4Zrujiou9ajXAplVapFFWWrPuLPSm7",
     currencies: [
       {
@@ -307,10 +305,8 @@ export const networks: Network[] = [
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 1,
-    transaction_explorer_template:
-      "https://polygonscan.com/tx/{0}",
-    account_explorer_template:
-      "https://polygonscan.com/address/{0}",
+    transaction_explorer_template: "https://polygonscan.com/tx/{0}",
+    account_explorer_template: "https://polygonscan.com/address/{0}",
     node: "https://polygon-bor-rpc.publicnode.com/",
     currencies: [
       {
@@ -536,7 +532,7 @@ export const networks: Network[] = [
         destination_base_fee: 0.1,
         is_native: false,
       },
-    ]
+    ],
   },
   {
     display_name: "Gnosis",

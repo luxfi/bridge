@@ -144,8 +144,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "ETHEREUM_MAINNET",
     is_testnet: false,
     chain_id: "1",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xebD1Ee9BCAaeE50085077651c1a2dD452fc6b72e",
+    vault: "0xcf963Fe4E4cE126047147661e6e06e171f366506",
     node: `https://lb.drpc.org/ogrpc?network=ethereum&dkey=${DRPC_KEY}`,
     currencies: [
       {
