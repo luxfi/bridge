@@ -1,4 +1,4 @@
-import { Network } from "@/types/fireblocks"
+import { Network } from "@/types/fireblocks";
 const sourceNetworks: Network[] = [
   {
     display_name: "Bitcoin Testnet",
@@ -12,7 +12,7 @@ const sourceNetworks: Network[] = [
     status: "active",
     type: "btc",
     deposit_address: {
-      address: "tb1qgps3lt0lz3mufdnmj3lhcnpfh48s2u53996xdv"
+      address: "tb1qgps3lt0lz3mufdnmj3lhcnpfh48s2u53996xdv",
     },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://blockstream.info/testnet/tx/{0}",
@@ -50,7 +50,7 @@ const sourceNetworks: Network[] = [
     status: "active",
     type: "evm",
     deposit_address: {
-      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec"
+      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec",
     },
     refuel_amount_in_usd: 0.5,
     transaction_explorer_template: "https://sepolia.etherscan.io/tx/{0}",
@@ -139,7 +139,7 @@ const sourceNetworks: Network[] = [
     status: "active",
     type: "evm",
     deposit_address: {
-      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec"
+      address: "0xD4952A4c2644469D59F9dE340E0e829e51836Dec",
     },
     refuel_amount_in_usd: 0.5,
     transaction_explorer_template: "https://sepolia.basescan.org/tx/{0}", // sepolia
@@ -228,11 +228,13 @@ const sourceNetworks: Network[] = [
     status: "active",
     type: "solana",
     deposit_address: {
-      address: "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY"
+      address: "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY",
     },
     refuel_amount_in_usd: 1,
-    transaction_explorer_template: "https://explorer.solana.com/?cluster=testnet/tx/{0}",
-    account_explorer_template: "https://explorer.solana.com/?cluster=testnet/address/{0}",
+    transaction_explorer_template:
+      "https://explorer.solana.com/?cluster=testnet/tx/{0}",
+    account_explorer_template:
+      "https://explorer.solana.com/?cluster=testnet/address/{0}",
     node: "https://api.testnet.solana.com",
     currencies: [
       {
@@ -251,7 +253,7 @@ const sourceNetworks: Network[] = [
         source_base_fee: 0.1,
         destination_base_fee: 0.1,
         is_native: true,
-      }
+      },
     ],
   },
   {
@@ -266,11 +268,13 @@ const sourceNetworks: Network[] = [
     status: "active",
     type: "solana",
     deposit_address: {
-      address: "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY"
+      address: "DsBiAAy92HtjXKFf78ZTQKCaMDuMGyUeh6v7pPSHrVbY",
     },
     refuel_amount_in_usd: 1,
-    transaction_explorer_template: "https://explorer.solana.com/?cluster=testnet/tx/{0}",
-    account_explorer_template: "https://explorer.solana.com/?cluster=testnet/address/{0}",
+    transaction_explorer_template:
+      "https://explorer.solana.com/?cluster=testnet/tx/{0}",
+    account_explorer_template:
+      "https://explorer.solana.com/?cluster=testnet/address/{0}",
     node: "https://api.testnet.solana.com",
     currencies: [
       {
@@ -289,7 +293,7 @@ const sourceNetworks: Network[] = [
         source_base_fee: 0.1,
         destination_base_fee: 0.1,
         is_native: true,
-      }
+      },
     ],
   },
   {
@@ -305,7 +309,7 @@ const sourceNetworks: Network[] = [
     type: "ton",
     deposit_address: {
       address: "0QDMXrj5n4ldLGoq9l0svifDORdTLnKsOEH6ClAEXX5qj1Sq",
-      memo: "70A09E871BFAFCB0A216"
+      memo: "70A09E871BFAFCB0A216",
     },
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://tonscan.org/tx/{0}",
@@ -347,12 +351,12 @@ const sourceNetworks: Network[] = [
         is_native: false,
       },
     ],
-  }
+  },
 ];
 const destinationNetworks: Network[] = [
   {
-    display_name: "Lux",
-    internal_name: "LUX_MAINNET",
+    display_name: "Lux Testnet",
+    internal_name: "LUX_TESTNET",
     native_currency: "LUX",
     logo: "https://cdn.lux.network/bridge/networks/lux_mainnet.png",
     is_testnet: false,
@@ -362,9 +366,9 @@ const destinationNetworks: Network[] = [
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 1,
-    transaction_explorer_template: "https://explore.lux.network/tx/{0}",
-    account_explorer_template: "https://explore.lux.network/address/{0}",
-    node: "https://api.lux.network",
+    transaction_explorer_template: "https://explore.lux-test.network/tx/{0}",
+    account_explorer_template: "https://explore.lux-test.network/address/{0}",
+    node: "https://api.lux-test.network",
     currencies: [
       {
         name: "LUX",
@@ -554,6 +558,6 @@ const destinationNetworks: Network[] = [
         is_native: false,
       },
     ],
-  }
+  },
 ];
-export default { sourceNetworks, destinationNetworks }
+export default { sourceNetworks, destinationNetworks };
