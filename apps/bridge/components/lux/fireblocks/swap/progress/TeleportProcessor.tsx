@@ -75,7 +75,9 @@ const TeleportProcessor: React.FC<IProps> = ({
       if (chainId === sourceNetwork?.chain_id) {
         getMpcSignature();
       } else {
-        sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+        sourceNetwork.chain_id &&
+          switchNetwork &&
+          switchNetwork(sourceNetwork.chain_id);
       }
     }
   }, [swapStatus, chainId, signer]);
@@ -141,7 +143,9 @@ const TeleportProcessor: React.FC<IProps> = ({
       toast.error(`No connected wallet. Please connect your wallet`);
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
-      sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+      sourceNetwork.chain_id &&
+        switchNetwork &&
+        switchNetwork(sourceNetwork.chain_id);
     } else {
       getMpcSignature();
     }

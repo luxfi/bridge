@@ -48,10 +48,10 @@ const SwapItems: React.FC<IProps> = ({
           </div>
           <div className="flex flex-col">
             <p className=" text-sm">
-              {truncateDecimals(Number(sourceAmount), 4)} {sourceAsset.asset}
+              {truncateDecimals(Number(sourceAmount), 6)} {sourceAsset.asset}
             </p>
             <p className=" text-sm flex justify-end">
-              ${truncateDecimals(Number(sourceAmount) * tokenPrice, 4)}
+              ${truncateDecimals(Number(sourceAmount) * tokenPrice, 6)}
             </p>
           </div>
         </div>

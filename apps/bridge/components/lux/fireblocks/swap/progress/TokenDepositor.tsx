@@ -80,7 +80,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   //     if (chainId === sourceNetwork?.chain_id) {
   //       isWithdrawal ? burnToken() : transferToken();
   //     } else {
-  //       sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+  //       sourceNetwork.chain_id && switchNetwork && switchNetwork(sourceNetwork.chain_id);
   //     }
   //   }
   // }, [chainId, signer, isWithdrawal]);
@@ -225,7 +225,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   //     toast.error(`No connected wallet. Please connect your wallet`);
   //     connectWallet("evm");
   //   } else if (chainId !== sourceNetwork.chain_id) {
-  //     sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+  //     sourceNetwork.chain_id && switchNetwork && switchNetwork(sourceNetwork.chain_id);
   //   } else {
   //     isWithdrawal ? burnToken() : transferToken();
   //   }

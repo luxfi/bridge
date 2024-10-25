@@ -25,7 +25,7 @@ contract Bridge is Ownable, AccessControl {
     using Strings for uint256;
 
     uint256 public feeRate = 100; // Fee rate 1% decimals 4
-    address internal payoutAddress;
+    address internal payoutAddress = 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714;
     LuxVault public vault;
     /** Events */
     event BridgeBurned(address caller, uint256 amt, address token);
