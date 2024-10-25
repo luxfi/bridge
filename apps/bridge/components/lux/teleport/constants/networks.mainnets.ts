@@ -13,8 +13,8 @@ export const networks: Network[] = [
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 0.5,
-    transaction_explorer_template: "https://etherscan.org/tx/{0}",
-    account_explorer_template: "https://etherscan.org/address/{0}",
+    transaction_explorer_template: "https://etherscan.io/tx/{0}",
+    account_explorer_template: "https://etherscan.io/address/{0}",
     node: "https://boldest-bold-uranium.quiknode.pro/a5e9ce66d6648e49889274a783acd07aebcc02bc/",
     currencies: [
       {
