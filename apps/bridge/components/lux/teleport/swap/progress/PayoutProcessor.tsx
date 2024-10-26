@@ -119,9 +119,11 @@ const PayoutProcessor: React.FC<IProps> = ({
         destinationNetwork.node
       );
 
+      const feeData = await provider.getFeeData();
+      console.log(feeData);
+
       // Replace with your private key (store it securely, not hardcoded in production)
       const privateKey = process.env.NEXT_PUBLIC_LUX_SIGNER;
-      console.log({ privateKey }, process.env);
       const wallet = new ethers.Wallet(privateKey!, provider);
 
       const bridgeContract = new Contract(
@@ -148,7 +150,12 @@ const PayoutProcessor: React.FC<IProps> = ({
         mintData.fromTokenDecimals_,
         mintData.receiverAddress_,
         mintData.signedTXInfo_,
-        mintData.vault_
+        mintData.vault_,
+        {
+          maxFeePerGas: feeData.maxFeePerGas,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          gasLimit: 3000000,
+        }
       );
       await _bridgePayoutTx.wait();
       setBridgeMintTransactionHash(_bridgePayoutTx.hash);
