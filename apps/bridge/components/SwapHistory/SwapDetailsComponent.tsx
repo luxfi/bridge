@@ -130,7 +130,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                     height="60"
                     width="60"
                     layout="responsive"
-                    className="rounded-md object-contain"
+                    className="rounded-md border border-[#f3f3f32d] object-contain"
                   />
                 </div>
                 <div className="mx-1 ">

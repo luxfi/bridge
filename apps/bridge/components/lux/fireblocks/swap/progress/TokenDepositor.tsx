@@ -14,16 +14,13 @@ import { Gauge } from "@/components/gauge";
 import teleporterABI from "@/components/lux/fireblocks/constants/abi/bridge.json";
 import erc20ABI from "@/components/lux/fireblocks/constants/abi/erc20.json";
 //hooks
-import { useSwitchNetwork } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
 import { parseUnits } from "@/lib/resolveChain";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
-import SpinIcon from "@/components/icons/spinIcon";
 import { Network, Token } from "@/types/fireblocks";
 import ManualTransfer from "./ManualTransfer";
 
@@ -53,13 +50,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
     React.useState<boolean>(false);
   const [userDepositNotice, setUserDepositNotice] = React.useState<string>("");
   //atoms
-  const [, setSwapStatus] = useAtom(swapStatusAtom);
-  const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom);
-  //hooks
-  const { chain } = useNetwork();
   const signer = useEthersSigner();
-  const { switchNetwork } = useSwitchNetwork();
-  const { connectWallet } = useWallet();
   // time to expire
   const [timeToExpire, setTimeToExpire] = useAtom(timeToExpireAtom);
 

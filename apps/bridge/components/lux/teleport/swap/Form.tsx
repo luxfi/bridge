@@ -16,6 +16,7 @@ import SwapDetails from "./SwapDetails";
 import { Token, Network } from "@/types/teleport";
 import { SWAP_PAIRS } from "@/components/lux/teleport/constants/settings";
 import { useAtom } from "jotai";
+import { useRouter } from "next/navigation";
 
 import { networks as devNetworks } from "@/components/lux/teleport/constants/networks.sandbox";
 import { networks as mainNetworks } from "@/components/lux/teleport/constants/networks.mainnets";
@@ -44,6 +45,8 @@ const Address = dynamic(
 const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
   const networks = isMainnet ? mainNetworks : devNetworks;
+
+  const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] =
@@ -164,17 +167,17 @@ const Swap: FC = () => {
         app_name: "Bridge",
       };
       const response = await axios.post(`/api/swaps?version=mainnet`, data);
-      setSwapId(response.data?.data?.swap_id);
-      window.history.pushState(
-        {},
-        "",
-        `/swap/teleporter/${response.data?.data?.swap_id}`
-      );
-      setSwapStatus(SwapStatus.UserTransferPending);
-      setShowSwapModal(true);
+      // setSwapId(response.data?.data?.swap_id);
+      // window.history.pushState(
+      //   {},
+      //   "",
+      //   `/swap/teleporter/${response.data?.data?.swap_id}`
+      // );
+      // setSwapStatus(SwapStatus.UserTransferPending);
+      // setShowSwapModal(true);
+      router.push(`/swap/teleporter/${response.data?.data?.swap_id}`);
     } catch (err) {
       console.log(err);
-    } finally {
       setIsSubmitting(false);
     }
   };

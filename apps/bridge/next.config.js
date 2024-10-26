@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const withMDX = require("@next/mdx")();
 const { PHASE_PRODUCTION_SERVER } = require("next/constants");
-const path = require("path")
+const path = require("path");
 
 const securityHeaders = [
   // { key: "Access-Control-Allow-Origin", value: "*" },
@@ -50,9 +50,10 @@ module.exports = (phase, { defaultConfig }) => {
     },
     reactStrictMode: false,
     webpack: (config, { isServer }) => {
+      config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       if (!isServer) {
-        config.resolve.alias['@'] = path.resolve(__dirname);
+        config.resolve.alias["@"] = path.resolve(__dirname);
       }
       return config;
     },

@@ -1,5 +1,4 @@
 import React from "react";
-import toast from "react-hot-toast";
 import { swapStatusAtom, userTransferTransactionAtom } from "@/store/teleport";
 import { ArrowRight, Router } from "lucide-react";
 import { Contract } from "ethers";
@@ -8,10 +7,9 @@ import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
 import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 import erc20ABI from "@/components/lux/teleport/constants/abi/erc20.json";
 //hooks
-import { useSwitchNetwork } from "wagmi";
+import { useChainId, useSwitchChain } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
 import { parseUnits } from "@/lib/resolveChain";
 
 import axios from "axios";
@@ -19,6 +17,7 @@ import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import SpinIcon from "@/components/icons/spinIcon";
 import { Network, Token } from "@/types/teleport";
+import useNotification from "@/hooks/useNotification";
 
 interface IProps {
   className?: string;
@@ -41,6 +40,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   className,
   swapId,
 }) => {
+  const { showNotification } = useNotification();
   //state
   const [isTokenTransferring, setIsTokenTransferring] =
     React.useState<boolean>(false);
@@ -49,9 +49,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom);
   //hooks
-  const { chain } = useNetwork();
   const signer = useEthersSigner();
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchChain } = useSwitchChain();
   const { connectWallet } = useWallet();
 
   const isWithdrawal = React.useMemo(
@@ -60,7 +59,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   );
 
   //chain id
-  const chainId = chain?.id;
+  const chainId = useChainId();
 
   React.useEffect(() => {
     if (!signer) {
@@ -70,8 +69,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
         isWithdrawal ? burnToken() : transferToken();
       } else {
         sourceNetwork.chain_id &&
-          switchNetwork &&
-          switchNetwork(sourceNetwork.chain_id);
+          switchChain &&
+          switchChain({ chainId: sourceNetwork.chain_id });
       }
     }
   }, [chainId, signer, isWithdrawal]);
@@ -89,7 +88,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         });
 
         if (Number(_balance) < Number(_amount)) {
-          toast.error(`Insufficient ${sourceAsset.asset} amount`);
+          showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
       } else {
@@ -111,7 +110,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         });
 
         if (_balance < _amount) {
-          toast.error(`Insufficient ${sourceAsset.asset} amount`);
+          showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
 
@@ -157,9 +156,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification(`User rejected transaction`, "warn");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification(`Failed to run transaction`, "error");
       }
     } finally {
       setIsTokenTransferring(false);
@@ -181,7 +180,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         signer?._address as string
       );
       if (_balance < _amount) {
-        toast.error(`Insufficient ${sourceAsset.asset} amount`);
+        showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
         return;
       }
 
@@ -214,9 +213,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification("User rejected transaction", "error");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification("Failed to run transaction", "error");
       }
     } finally {
       setIsTokenTransferring(false);
@@ -224,12 +223,15 @@ const UserTokenDepositor: React.FC<IProps> = ({
   };
   const handleTokenTransfer = async () => {
     if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
+      showNotification(
+        "No connected wallet. Please connect your wallet",
+        "error"
+      );
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
       sourceNetwork.chain_id &&
-        switchNetwork &&
-        switchNetwork(sourceNetwork.chain_id);
+        switchChain &&
+        switchChain({ chainId: sourceNetwork.chain_id });
     } else {
       isWithdrawal ? burnToken() : transferToken();
     }
