@@ -7,7 +7,7 @@ import { Trophy } from "lucide-react"
 import useSWR from "swr"
 import { useAccount } from "wagmi"
 
-import { useSettingsState } from "@/context/settings"
+import { useSettings } from "@/context/settings"
 import BridgeApiClient, { type Campaign, type Leaderboard, type Reward } from "@/lib/BridgeApiClient"
 import { ApiResponse } from "@/Models/ApiResponse"
 
@@ -25,7 +25,7 @@ const Component: React.FC<{
 }) => {
 
     const [openTopModal, setOpenTopModal] = useState(false)
-    const settings = useSettingsState()
+    const settings = useSettings()
     const { address } = useAccount();
 
     const handleOpenTopModal = () => {

@@ -7,7 +7,7 @@ import isGuid from "../utils/isGuid";
 import KnownInternalNames from "../../lib/knownIds";
 import { SwapDetailsComponentSceleton } from "../Sceletons";
 import { ExternalLink } from "lucide-react";
-import { resolveNetworkImage } from "@/helpers/utils";
+import { resolveNetworkImage } from "@/util";
 import { type SwapItem, TransactionType } from "../../lib/BridgeApiClient";
 
 import networks from "@/settings/mainnet/networks.json";

@@ -1,29 +1,24 @@
 'use client'
-import { useCallback, useEffect } from "react";
-import MessageComponent from "../MessageComponent";
-import SubmitButton, { DoubleLineText } from "../buttons/submitButton";
-import GoHomeButton from "../utils/GoHome";
-import { useAuthState } from "../../context/authContext";
-import { useIntercom } from "react-use-intercom";
-//import { type TrackEvent } from '../../pages/_document';
-import { Home, MessageSquare } from "lucide-react";
-import { useRouter } from "next/router";
+import { useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useIntercom } from 'react-use-intercom'
+import { Home, MessageSquare } from 'lucide-react'
 
-enum TrackEvent {
-  SignedIn = 'Signed in',
-  SwapFailed = 'Swap failed',
-}
+import MessageComponent from '../MessageComponent'
+import SubmitButton, { DoubleLineText } from '../buttons/submitButton'
+import GoHomeButton from '../utils/GoHome'
+import { useAuthState } from '../../context/authContext'
 
 const NotFound: React.FC = () => {
 
     const { email, userId } = useAuthState()
     const { boot, show, update } = useIntercom()
-    const { query } = useRouter()
-    const updateWithProps = () => update({ email: email, userId: userId, customAttributes: { swapId: query?.swapId } })
+    const query = useSearchParams()
+    const updateWithProps = () => update({ email: email, userId: userId, customAttributes: { swapId: query.get('swapId') ?? '' } })
 
     const startIntercom = useCallback(() => {
-        boot();
-        show();
+        boot()
+        show()
         updateWithProps()
     }, [boot, show, updateWithProps])
 
@@ -33,7 +28,7 @@ const NotFound: React.FC = () => {
                 Swap not found
             </MessageComponent.Header>
             <MessageComponent.Description>
-                <span className="text-sm mt-5">
+                <span className='text-sm mt-5'>
                     <p>
                         Your funds are safe, but there seems to be an issue with the swap.
                     </p>
@@ -45,9 +40,9 @@ const NotFound: React.FC = () => {
         </MessageComponent.Content>
         <MessageComponent.Buttons>
             <MessageComponent.Buttons>
-                <div className="flex flex-row  text-base space-x-2">
+                <div className='flex flex-row  text-base space-x-2'>
                     <div className='basis-1/3'>
-                        <SubmitButton text_align='left' onClick={startIntercom} isDisabled={false} isSubmitting={false} buttonStyle='outline' icon={<MessageSquare className="h-5 w-5" aria-hidden="true" />}>
+                        <SubmitButton text_align='left' onClick={startIntercom} isDisabled={false} isSubmitting={false} buttonStyle='outline' icon={<MessageSquare className='h-5 w-5' aria-hidden='true' />}>
                             <DoubleLineText
                                 colorStyle='mltln-text-dark'
                                 primaryText='Support'
@@ -57,7 +52,7 @@ const NotFound: React.FC = () => {
                     </div>
                     <div className='basis-2/3'>
                         <GoHomeButton>
-                            <SubmitButton button_align='right' text_align='left' isDisabled={false} isSubmitting={false} buttonStyle='outline' icon={<Home className="h-5 w-5" aria-hidden="true" />}>
+                            <SubmitButton button_align='right' text_align='left' isDisabled={false} isSubmitting={false} buttonStyle='outline' icon={<Home className='h-5 w-5' aria-hidden='true' />}>
                                 <DoubleLineText
                                     colorStyle='mltln-text-dark'
                                     primaryText='Swap'
@@ -71,4 +66,5 @@ const NotFound: React.FC = () => {
         </MessageComponent.Buttons>
     </MessageComponent>
 }
+
 export default NotFound

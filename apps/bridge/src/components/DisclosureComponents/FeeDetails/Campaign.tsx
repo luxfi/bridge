@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { type Layer } from "@/Models/Layer"
 import BridgeApiClient, { type Campaign } from "@/lib/BridgeApiClient"
 import { ApiResponse } from "@/Models/ApiResponse"
-import { useSettingsState } from "@/context/settings"
+import { useSettings } from "@/context/settings"
 import { truncateDecimals } from "../../utils/RoundDecimals"
 import ClickTooltip from "../../Tooltips/ClickTooltip"
 import { type NetworkCurrency } from "@/Models/CryptoNetwork"
@@ -52,7 +52,7 @@ const CampaignDisplay: React.FC<{
   fee, 
   selected_currency 
 }) => {
-    const { resolveImgSrc, layers } = useSettingsState()
+    const { resolveImgSrc, layers } = useSettings()
     const layer = layers.find(l => l.internal_name === campaign.network)
     const campaignAsset = layer?.assets.find(c => c?.asset === campaign?.asset)
     const feeinUsd = fee * selected_currency.price_in_usd

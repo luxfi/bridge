@@ -1,44 +1,46 @@
 'use client'
-import { Disclosure } from '@headlessui/react';
-import { Album, ChevronDown, Mail, ScrollText, User } from 'lucide-react';
-import { Field, Form, Formik, type FieldProps, type FormikErrors } from 'formik';
 import { useCallback } from 'react'
-import toast from 'react-hot-toast';
-import { useAuthDataUpdate, useAuthState } from '../context/authContext';
-import { useTimerState } from '../context/timerContext';
-import TokenService from '../lib/TokenService';
-import BridgeAuthApiClient from '../lib/userAuthApiClient';
-import SubmitButton from './buttons/submitButton';
-import { Widget } from './Widget/Index';
+
+import { Disclosure } from '@headlessui/react'
+import { Album, ChevronDown, Mail, ScrollText, User } from 'lucide-react'
+import { Field, Form, Formik, type FieldProps, type FormikErrors } from 'formik'
+import toast from 'react-hot-toast'
+
+import { useAuthDataUpdate, useAuthState } from '../context/authContext'
+import { useTimerState } from '../context/timerContext'
+import TokenService from '../lib/TokenService'
+import BridgeAuthApiClient from '../lib/userAuthApiClient'
+import SubmitButton from './buttons/submitButton'
+import Widget from './Widget/Index'
 
 type EmailFormValues = {
-    email: string;
+    email: string
 }
 
 const SendEmail: React.FC<{
-    onSend: (email: string) => void;
-    disclosureLogin?: boolean;
+  onSend: (email: string) => void
+  disclosureLogin?: boolean
 }> = ({ 
   onSend, 
   disclosureLogin 
 }) => {
-    const { codeRequested, tempEmail, userType } = useAuthState()
-    const { setCodeRequested, updateTempEmail } = useAuthDataUpdate();
-    const initialValues: EmailFormValues = { email: tempEmail ?? "" };
+    const { codeRequested, tempEmail } = useAuthState()
+    const { setCodeRequested, updateTempEmail } = useAuthDataUpdate()
+    const initialValues: EmailFormValues = { email: tempEmail ?? "" }
     const { start: startTimer } = useTimerState()
 
     const sendEmail = useCallback(async (values: EmailFormValues) => {
         try {
-            const inputEmail = values.email;
+            const inputEmail = values.email
 
             if (inputEmail != tempEmail || !codeRequested) {
 
-                const apiClient = new BridgeAuthApiClient();
+                const apiClient = new BridgeAuthApiClient()
                 const res = await apiClient.getCodeAsync(inputEmail)
                 if (res.error)
                     throw new Error(res.error)
                 TokenService.setCodeNextTime(res?.data?.next)
-                setCodeRequested(true);
+                setCodeRequested(true)
                 updateTempEmail(inputEmail)
                 const next = new Date(res?.data?.next)
                 const now = new Date()
@@ -59,13 +61,13 @@ const SendEmail: React.FC<{
     }, [tempEmail])
 
     function validateEmail(values: EmailFormValues) {
-        let error: FormikErrors<EmailFormValues> = {};
+        let error: FormikErrors<EmailFormValues> = {}
         if (!values.email) {
-            error.email = 'Required';
+            error.email = 'Required'
         } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
-            error.email = 'Invalid email address';
+            error.email = 'Invalid email address'
         }
-        return error;
+        return error
     }
 
     return (
@@ -127,7 +129,7 @@ const SendEmail: React.FC<{
                   <User className='w-16 h-16 text-secondary self-center mt-auto' />
                   <div>
                       <p className='mb-6 mt-2 pt-2 text-2xl font-bold  leading-6 text-center font-roboto'>
-                          What&apos;s your email?
+                          What&aposs your email?
                       </p>
                   </div>
                   <div className="relative rounded-md shadow-sm">
@@ -199,4 +201,4 @@ const SendEmail: React.FC<{
     )
 }
 
-export default SendEmail;
+export default SendEmail

@@ -5,7 +5,7 @@ import SubmitButton from '../../../buttons/submitButton';
 import { useSwapDataState } from '../../../../context/swap';
 import toast from 'react-hot-toast';
 import { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
-import { useSettingsState } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings';
 import WarningMessage from '../../../WarningMessage';
 import GuideLink from '../../../guideLink';
 import useWallet from '../../../../hooks/useWallet';
@@ -19,7 +19,7 @@ const ImtblxWalletWithdrawStep: React.FC<Props> = ({ depositAddress }) => {
     const [loading, setLoading] = useState(false)
     const [transferDone, setTransferDone] = useState<boolean>()
     const { swap } = useSwapDataState()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const { setSwapTransaction } = useSwapTransactionStore();
 
     const { source_network: source_network_internal_name } = swap || {}

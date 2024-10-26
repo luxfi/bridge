@@ -1,5 +1,5 @@
 import { type AuthData } from "../context/authContext";
-import { checkStorageIsAvailable } from "../helpers/storageAvailable";
+import { checkStorageIsAvailable } from "../util/storageAvailable";
 
 class TokenService {
     getAuthData(): (AuthData | undefined | null) {

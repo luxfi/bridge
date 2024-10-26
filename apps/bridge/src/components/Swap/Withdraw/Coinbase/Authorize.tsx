@@ -1,39 +1,49 @@
 'use client'
-import { useCallback, useEffect, useRef, useState, type ChangeEventHandler } from 'react'
-import toast from 'react-hot-toast';
-import { useSettingsState } from '../../../../context/settings';
-import { useSwapDataState } from '../../../../context/swap';
-import { useInterval } from '../../../../hooks/useInterval';
-import { CalculateMinimalAuthorizeAmount } from '../../../../lib/fees';
-import { parseJwt } from '../../../../lib/jwtParser';
-import BridgeApiClient from '../../../../lib/BridgeApiClient';
-import { OpenLink } from '../../../../lib/openLink';
-import TokenService from '../../../../lib/TokenService';
-import SubmitButton from '../../../buttons/submitButton';
-import Carousel, { CarouselItem, type CarouselRef } from '../../../Carousel';
-import { FirstScreen, FourthScreen, LastScreen, SecondScreen, ThirdScreen } from './ConnectGuideScreens';
-import KnownInternalNames from '../../../../lib/knownIds';
-import { type Layer } from '../../../../Models/Layer';
-import { ArrowLeft } from 'lucide-react';
-import IconButton from '../../../buttons/iconButton';
-import { motion } from 'framer-motion';
-import { useCoinbaseStore } from './CoinbaseStore';
-import { useRouter } from 'next/router';
-import { Widget } from '../../../Widget/Index';
+import { useCallback, useRef, useState, type ChangeEventHandler } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
+import { ArrowLeft } from 'lucide-react'
 
-type Props = {
-    onAuthorized: () => void,
-    onDoNotConnect: () => void,
-    stickyFooter: boolean,
-    hideHeader?: boolean,
-}
 
-const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect, hideHeader }) => {
+import { useSettings } from '@/context/settings'
+import { useSwapDataState } from '@/context/swap'
+import { useInterval } from '@/hooks/useInterval'
+import { CalculateMinimalAuthorizeAmount } from '@/lib/fees'
+import { parseJwt } from '@/lib/jwtParser'
+//import BridgeApiClient from '@/lib/BridgeApiClient'
+import { OpenLink } from '@/lib/openLink'
+import TokenService from '@/lib/TokenService'
+import SubmitButton from '../../../buttons/submitButton'
+import Carousel, { CarouselItem, type CarouselRef } from '../../../Carousel'
+import { FirstScreen, FourthScreen, LastScreen, SecondScreen, ThirdScreen } from './ConnectGuideScreens'
+import KnownInternalNames from '@/lib/knownIds'
+import { type Layer } from '@/Models/Layer'
+import IconButton from '../../../buttons/iconButton'
+import { useCoinbaseStore } from './CoinbaseStore'
+import Widget from '../../../Widget/Index'
+
+
+const Authorize: React.FC<{
+  onAuthorized: () => void,
+  onDoNotConnect: () => void,
+  stickyFooter: boolean,
+  hideHeader?: boolean,
+}> = ({ 
+  onAuthorized, 
+  //stickyFooter, 
+  //onDoNotConnect, 
+  hideHeader 
+}) => {
+
     const { swap } = useSwapDataState()
-    const { layers } = useSettingsState()
-    const router = useRouter()
-    let alreadyFamiliar = useCoinbaseStore((state) => state.alreadyFamiliar);
-    let toggleAlreadyFamiliar = useCoinbaseStore((state) => state.toggleAlreadyFamiliar);
+    const { layers } = useSettings()
+    
+    const params = useSearchParams()
+    const paramsString = params.toString()
+
+    let alreadyFamiliar = useCoinbaseStore((state) => state.alreadyFamiliar)
+    let toggleAlreadyFamiliar = useCoinbaseStore((state) => state.toggleAlreadyFamiliar)
     const [carouselFinished, setCarouselFinished] = useState(alreadyFamiliar)
 
     const [authWindow, setAuthWindow] = useState<Window | null>()
@@ -41,7 +51,7 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
 
     const carouselRef = useRef<CarouselRef | null>(null)
     const exchange_internal_name = swap?.source_exchange
-    const asset_name = swap?.source_asset;
+    const asset_name = swap?.source_asset
 
     const exchange = layers.find(e => e.internal_name?.toLowerCase() === exchange_internal_name?.toLowerCase()) as Layer
     const currency = exchange?.assets.find(c => asset_name?.toLocaleUpperCase() === c.asset?.toLocaleUpperCase())
@@ -78,7 +88,7 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
                 return
             if (!carouselFinished && !alreadyFamiliar) {
                 carouselRef?.current?.next()
-                return;
+                return
             }
             const access_token = TokenService.getAuthData()?.access_token
             if (!access_token) {
@@ -87,17 +97,17 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
             }
             const { sub } = parseJwt(access_token) || {}
             const encoded = btoa(JSON.stringify({ SwapId: swap?.id, UserId: sub, RedirectUrl: `${window.location.origin}/salon` }))
-            const authWindow = OpenLink({ link: oauth_authorize_url + encoded, query: router.query, swapId: swap.id })
+            const authWindow = OpenLink({ link: oauth_authorize_url + encoded, query: params, swapId: swap.id })
             setAuthWindow(authWindow)
         }
         catch( e: any ) {
             toast.error(e.message)
         }
-    }, [carouselFinished, alreadyFamiliar, swap?.id, oauth_authorize_url, router.query])
+    }, [carouselFinished, alreadyFamiliar, swap?.id, oauth_authorize_url, paramsString])
 
     const handlePrev = useCallback(() => {
         carouselRef?.current?.prev()
-        return;
+        return
     }, [])
 
     const exchange_name = exchange?.display_name
@@ -108,11 +118,11 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
 
     const handleToggleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
         if (e.target.checked) {
-            carouselRef?.current?.goToLast();
+            carouselRef?.current?.goToLast()
         } else {
-            carouselRef?.current?.goToFirst();
+            carouselRef?.current?.goToFirst()
         }
-        toggleAlreadyFamiliar();
+        toggleAlreadyFamiliar()
     }
 
     return (
@@ -160,7 +170,7 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
                                 checked={alreadyFamiliar}
                             />
                             <label htmlFor="alreadyFamiliar" className="ml-2 cursor-pointer block text-sm ">
-                                I&apos;m already familiar with the process.
+                                I&aposm already familiar with the process.
                             </label>
                         </div>
                     }
@@ -184,7 +194,7 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
                     }
                     <div className="pt-2 font-normal text-xs ">
                         <p className="block font-lighter text-left">
-                            <span>Even after authorization Bridge can&apos;t initiate a withdrawal without your explicit confirmation.&nbsp;</span>
+                            <span>Even after authorization Bridge can&apost initiate a withdrawal without your explicit confirmation.&nbsp</span>
                             <a target='_blank' href='https://docs.bridge.lux.network/user-docs/connect-a-coinbase-account' className=' underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
                     </div>
                 </div>
@@ -193,4 +203,4 @@ const Authorize: React.FC<Props> = ({ onAuthorized, stickyFooter, onDoNotConnect
     )
 }
 
-export default Authorize;
+export default Authorize

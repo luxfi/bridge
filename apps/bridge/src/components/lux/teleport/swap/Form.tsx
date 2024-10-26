@@ -1,25 +1,24 @@
-"use client";
-import { useEffect, useMemo, useState } from "react"
+'use client'
+import { useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
+import Image from 'next/image'
+import axios from 'axios'
+import { ArrowLeftRight } from 'lucide-react'
+import { useAtom } from 'jotai'
 
-import dynamic from "next/dynamic";
-import Image from "next/image";
-import axios from "axios";
-import { ArrowLeftRight } from "lucide-react";
-import { useAtom } from "jotai";
+import Modal from '@/components/modal/modal'
+import ResizablePanel from '@/components/ResizablePanel'
+import shortenAddress from '../../../utils/ShortenAddress'
+import Widget from '../../../Widget/Index'
 
-import Modal from "@/components/modal/modal";
-import ResizablePanel from "@/components/ResizablePanel";
-import shortenAddress from "../../../utils/ShortenAddress";
-import { Widget } from "../../../Widget/Index";
+import FromNetworkForm from './from/NetworkFormField'
+import ToNetworkForm from './to/NetworkFormField'
+import SwapDetails from './SwapDetails'
+import type { Token, Network } from '@/types/teleport'
+import { SWAP_PAIRS } from '@/components/lux/teleport/constants/settings'
 
-import FromNetworkForm from "./from/NetworkFormField";
-import ToNetworkForm from "./to/NetworkFormField";
-import SwapDetails from "./SwapDetails";
-import type { Token, Network } from "@/types/teleport";
-import { SWAP_PAIRS } from "@/components/lux/teleport/constants/settings";
-
-import { networks as devNetworks } from "@/components/lux/teleport/constants/networks.sandbox";
-import { networks as mainNetworks } from "@/components/lux/teleport/constants/networks.mainnets";
+import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
+import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
 
 import {
   sourceNetworkAtom,
@@ -31,53 +30,53 @@ import {
   ethPriceAtom,
   swapStatusAtom,
   swapIdAtom,
-} from "@/store/teleport";
-import SpinIcon from "@/components/icons/spinIcon";
+} from '@/store/teleport'
+import SpinIcon from '@/components/icons/spinIcon'
 
 const Address = dynamic(
-  () => import("@/components/lux/teleport/share/Address"),
+  () => import('@/components/lux/teleport/share/Address'),
   {
     loading: () => <></>,
   }
-);
+)
 
 const Swap: React.FC = () => {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
-  const networks = isMainnet ? mainNetworks : devNetworks;
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
+  const networks = isMainnet ? mainNetworks : devNetworks
 
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [showAddressModal, setShowAddressModal] =
-    useState<boolean>(false);
-  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
-  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
+    useState<boolean>(false)
+  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
+  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
   const [destinationNetwork, setDestinationNetwork] = useAtom(
     destinationNetworkAtom
-  );
-  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
+  )
+  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
   const [destinationAddress, setDestinationAddress] = useAtom(
     destinationAddressAtom
-  );
-  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
-  const [swapId, setSwapId] = useAtom(swapIdAtom);
-  const [, setSwapStatus] = useAtom(swapStatusAtom);
-  const [, setEthPrice] = useAtom(ethPriceAtom);
+  )
+  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
+  const [swapId, setSwapId] = useAtom(swapIdAtom)
+  const [, setSwapStatus] = useAtom(swapStatusAtom)
+  const [, setEthPrice] = useAtom(ethPriceAtom)
 
-  const sourceNetworks = networks;
+  const sourceNetworks = networks
   const [destinationNetworks, setDestinationNetworks] = useState<
     Network[]
-  >([]);
+  >([])
 
   useEffect(() => {
-    setSourceNetwork(networks.find((n) => n.status === "active"));
-  }, []);
+    setSourceNetwork(networks.find((n) => n.status === 'active'))
+  }, [])
 
   useEffect(() => {
     sourceNetwork &&
       sourceNetwork.currencies.length > 0 &&
       setSourceAsset(
-        sourceNetwork.currencies.find((c) => c.status === "active")
-      );
-  }, [sourceNetwork]);
+        sourceNetwork.currencies.find((c) => c.status === 'active')
+      )
+  }, [sourceNetwork])
 
   useEffect(() => {
     if (sourceAsset) {
@@ -95,48 +94,48 @@ const Swap: React.FC = () => {
           currencies: n.currencies.map((c: Token) => ({
             ...c,
             status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-              ? "active"
-              : "inactive",
+              ? 'active'
+              : 'inactive',
           })),
-        }));
-      setDestinationNetworks(_networks);
-      setDestinationNetwork(_networks[0]);
+        }))
+      setDestinationNetworks(_networks)
+      setDestinationNetwork(_networks[0])
     }
-  }, [sourceAsset, sourceNetwork]);
+  }, [sourceAsset, sourceNetwork])
 
   useEffect(() => {
     setDestinationAsset(
-      destinationNetwork?.currencies.find((c) => c.status === "active")
-    );
-  }, [destinationNetwork]);
+      destinationNetwork?.currencies.find((c) => c.status === 'active')
+    )
+  }, [destinationNetwork])
 
-  const [showSwapModal, setShowSwapModal] = useState<boolean>(false);
+  const [showSwapModal, setShowSwapModal] = useState<boolean>(false)
 
   useEffect(() => {
     if (sourceAsset) {
       axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
-        setEthPrice(Number(data?.data?.data?.price));
-      });
+        setEthPrice(Number(data?.data?.data?.price))
+      })
     }
-  }, [sourceAsset]);
+  }, [sourceAsset])
 
   const warnningMessage = useMemo(() => {
     if (!sourceNetwork) {
-      return "Select Source Network";
+      return 'Select Source Network'
     } else if (!sourceAsset) {
-      return "Select Source Asset";
+      return 'Select Source Asset'
     } else if (!destinationNetwork) {
-      return "Select Destination Network";
+      return 'Select Destination Network'
     } else if (!destinationAsset) {
-      return "Select Destination Asset";
+      return 'Select Destination Asset'
     } else if (!destinationAddress) {
-      return "Input Address";
-    } else if (sourceAmount === "") {
-      return "Enter Token Amount";
+      return 'Input Address'
+    } else if (sourceAmount === '') {
+      return 'Enter Token Amount'
     } else if (Number(sourceAmount) <= 0) {
-      return "Invalid Token Amount";
+      return 'Invalid Token Amount'
     } else {
-      return "Swap Now";
+      return 'Swap Now'
     }
   }, [
     sourceNetwork,
@@ -145,7 +144,7 @@ const Swap: React.FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
-  ]);
+  ])
 
   const createSwap = async () => {
     try {
@@ -153,30 +152,30 @@ const Swap: React.FC = () => {
         amount: Number(sourceAmount),
         source_network: sourceNetwork?.internal_name,
         source_asset: sourceAsset?.asset,
-        source_address: "",
+        source_address: '',
         destination_network: destinationNetwork?.internal_name,
         destination_asset: destinationAsset?.asset,
         destination_address: destinationAddress,
         refuel: false,
         use_deposit_address: false,
         use_teleporter: true,
-        app_name: "Bridge",
-      };
-      const response = await axios.post(`/api/swaps?version=mainnet`, data);
-      setSwapId(response.data?.data?.swap_id);
+        app_name: 'Bridge',
+      }
+      const response = await axios.post(`/api/swaps?version=mainnet`, data)
+      setSwapId(response.data?.data?.swap_id)
       window.history.pushState(
         {},
-        "",
+        '',
         `/swap/teleporter/${response.data?.data?.swap_id}`
-      );
-      setSwapStatus("user_transfer_pending");
-      setShowSwapModal(true);
+      )
+      setSwapStatus('user_transfer_pending')
+      setShowSwapModal(true)
     } catch (err) {
-      console.log(err);
+      console.log(err)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleSwap = () => {
     if (
@@ -187,33 +186,33 @@ const Swap: React.FC = () => {
       destinationAddress &&
       Number(sourceAmount) > 0
     ) {
-      createSwap();
-      setIsSubmitting(true);
+      createSwap()
+      setIsSubmitting(true)
     }
-  };
+  }
 
   return (
-    <Widget className="sm:min-h-[504px]">
+    <Widget className='sm:min-h-[504px]'>
       <Widget.Content>
-        <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
-          <div className="flex flex-col w-full">
+        <div className='flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden'>
+          <div className='flex flex-col w-full'>
             <FromNetworkForm
               disabled={false}
               network={sourceNetwork}
               asset={sourceAsset}
               setNetwork={(network: Network) => {
-                setSourceNetwork(network);
+                setSourceNetwork(network)
               }}
               setAsset={(token: Token) => setSourceAsset(token)}
               networks={sourceNetworks}
             />
           </div>
-          <div className="py-4 px-4">
+          <div className='py-4 px-4'>
             Fee: {1}
-            <span className="text-xs"> %</span>
+            <span className='text-xs'> %</span>
           </div>
 
-          <div className="flex flex-col w-full">
+          <div className='flex flex-col w-full'>
             <ToNetworkForm
               disabled={!sourceNetwork}
               network={destinationNetwork}
@@ -226,12 +225,12 @@ const Swap: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-full !-mb-3 leading-4">
+        <div className='w-full !-mb-3 leading-4'>
           <label
-            htmlFor="destination_address"
-            className="block font-semibold text-xs"
+            htmlFor='destination_address'
+            className='block font-semibold text-xs'
           >
-            {`To ${destinationNetwork?.display_name ?? ""} address`}
+            {`To ${destinationNetwork?.display_name ?? ''} address`}
           </label>
           <AddressButton
             disabled={
@@ -242,15 +241,15 @@ const Swap: React.FC = () => {
             }
             isPartnerWallet={false}
             openAddressModal={() => setShowAddressModal(true)}
-            partnerImage={"partnerImage"}
+            partnerImage={'partnerImage'}
             address={destinationAddress}
           />
           <Modal
-            header={`To ${destinationNetwork?.display_name ?? ""} address`}
-            height="fit"
+            header={`To ${destinationNetwork?.display_name ?? ''} address`}
+            height='fit'
             show={showAddressModal}
             setShow={setShowAddressModal}
-            className="min-h-[70%]"
+            className='min-h-[70%]'
           >
             <Address
               close={() => setShowAddressModal(false)}
@@ -262,8 +261,8 @@ const Swap: React.FC = () => {
               }
               address={destinationAddress}
               setAddress={setDestinationAddress}
-              name={"destination_address"}
-              partnerImage={"partnerImage"}
+              name={'destination_address'}
+              partnerImage={'partnerImage'}
               isPartnerWallet={false}
               address_book={[]}
               network={destinationNetwork}
@@ -283,20 +282,20 @@ const Swap: React.FC = () => {
             Number(sourceAmount) <= 0 ||
             isSubmitting
           }
-          className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          className='border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated'
         >
           {isSubmitting ? (
-            <SpinIcon className="animate-spin h-5 w-5" />
+            <SpinIcon className='animate-spin h-5 w-5' />
           ) : (
-            warnningMessage === "Swap Now" && (
-              <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
+            warnningMessage === 'Swap Now' && (
+              <ArrowLeftRight className='h-5 w-5' aria-hidden='true' />
             )
           )}
-          <span className="grow">{warnningMessage}</span>
+          <span className='grow'>{warnningMessage}</span>
         </button>
 
         <Modal
-          height="fit"
+          height='fit'
           show={showSwapModal}
           setShow={setShowSwapModal}
           header={`Complete the swap`}
@@ -310,7 +309,7 @@ const Swap: React.FC = () => {
             destinationAsset &&
             destinationAddress ? (
               <SwapDetails
-                className="min-h-[450px] justify-center"
+                className='min-h-[450px] justify-center'
                 sourceNetwork={sourceNetwork}
                 sourceAsset={sourceAsset}
                 destinationNetwork={destinationNetwork}
@@ -319,12 +318,12 @@ const Swap: React.FC = () => {
                 sourceAmount={sourceAmount}
               />
             ) : (
-              <div className="w-full h-[430px]">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
+              <div className='w-full h-[430px]'>
+                <div className='animate-pulse flex space-x-4'>
+                  <div className='flex-1 space-y-6 py-1'>
+                    <div className='h-32 bg-level-1 rounded-lg'></div>
+                    <div className='h-40 bg-level-1 rounded-lg'></div>
+                    <div className='h-12 bg-level-1 rounded-lg'></div>
                   </div>
                 </div>
               </div>
@@ -333,20 +332,20 @@ const Swap: React.FC = () => {
         </Modal>
       </Widget.Content>
     </Widget>
-  );
-};
+  )
+}
 
 const TruncatedAdrress = ({ address }: { address: string }) => {
-  const shortAddress = shortenAddress(address);
-  return <div className="tracking-wider ">{shortAddress}</div>;
-};
+  const shortAddress = shortenAddress(address)
+  return <div className='tracking-wider '>{shortAddress}</div>
+}
 
 const AddressButton: React.FC<{
-  openAddressModal: () => void;
-  isPartnerWallet: boolean;
-  partnerImage?: string;
-  disabled: boolean;
-  address: string;
+  openAddressModal: () => void
+  isPartnerWallet: boolean
+  partnerImage?: string
+  disabled: boolean
+  address: string
 }> = ({
   openAddressModal,
   isPartnerWallet,
@@ -355,25 +354,25 @@ const AddressButton: React.FC<{
   address,
 }) => (
   <button
-    type="button"
+    type='button'
     disabled={disabled}
     onClick={openAddressModal}
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+    className='flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3'
   >
     {isPartnerWallet && (
-      <div className="shrink-0 flex items-center pointer-events-none">
+      <div className='shrink-0 flex items-center pointer-events-none'>
         {partnerImage && (
           <Image
-            alt="Partner logo"
-            className="rounded-md object-contain"
+            alt='Partner logo'
+            className='rounded-md object-contain'
             src={partnerImage}
-            width="24"
-            height="24"
+            width='24'
+            height='24'
           />
         )}
       </div>
     )}
-    <div className="truncate text-muted">
+    <div className='truncate text-muted'>
       {address ? (
         <TruncatedAdrress address={address} />
       ) : (
@@ -381,6 +380,6 @@ const AddressButton: React.FC<{
       )}
     </div>
   </button>
-);
+)
 
-export default Swap;
+export default Swap

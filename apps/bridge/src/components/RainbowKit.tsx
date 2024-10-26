@@ -27,7 +27,7 @@ import {
   phantomWallet
 } from '@rainbow-me/rainbowkit/wallets'
 
-import { useSettingsState } from "../context/settings"
+import { useSettings } from "../context/settings"
 import { NetworkType } from "../Models/CryptoNetwork"
 import resolveChain from "../lib/resolveChain"
 import AddressIcon from "./AddressIcon"
@@ -38,7 +38,7 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
 
 const RainbowKitComponent: React.FC<PropsWithChildren> = ({ children }) => {
 
-  const settings = useSettingsState();
+  const settings = useSettings();
   const isChain = (c: Chain | undefined): c is Chain => c != undefined
   const settingsChains = settings?.layers
     .sort((a, b) => Number(a.chain_id) - Number(b.chain_id))

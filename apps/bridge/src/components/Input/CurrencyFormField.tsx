@@ -4,7 +4,7 @@ import { useFormikContext } from "formik";
 
 import useSWR from "swr";
 
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import { SelectMenuItem, type ISelectMenuItem } from "../Select/Shared/Props/selectMenuItem";
 import PopoverSelectWrapper from "../Select/Popover/PopoverSelectWrapper";
@@ -30,7 +30,7 @@ const CurrencyFormField: React.FC<{
   const { to, fromCurrency, toCurrency, from, currencyGroup } = values;
 
   const [allRoutes, setAllRoutes] = useState<string[]>([]);
-  const { resolveImgSrc } = useSettingsState();
+  const { resolveImgSrc } = useSettings();
   const name = direction === "from" ? "fromCurrency" : "toCurrency";
   const query = useQueryState();
   const { balances, isBalanceLoading } = useBalancesState();

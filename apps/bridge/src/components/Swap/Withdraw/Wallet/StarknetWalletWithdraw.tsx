@@ -5,7 +5,7 @@ import SubmitButton from '../../../buttons/submitButton';
 import { useSwapDataState } from '../../../../context/swap';
 import toast from 'react-hot-toast';
 import { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
-import { useSettingsState } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings';
 import WarningMessage from '../../../WarningMessage';
 import { Contract, type BigNumberish, cairo } from 'starknet';
 import Erc20Abi from "../../../../lib/abis/ERC20.json"
@@ -38,7 +38,7 @@ const StarknetWalletWithdrawStep: React.FC<Props> = ({ depositAddress, amount })
 
     const { userId } = useAuthState()
     const { swap } = useSwapDataState()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
 
     const { setSwapTransaction } = useSwapTransactionStore();
     const { source_network: source_network_internal_name } = swap || {}

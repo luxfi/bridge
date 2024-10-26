@@ -9,11 +9,11 @@ import { type ActionData } from "./sharedTypes";
 import SubmitButton from "../../../../buttons/submitButton";
 import useWallet from "../../../../../hooks/useWallet";
 import { useSwapDataState } from "../../../../../context/swap";
-import { useSettingsState } from "../../../../../context/settings";
+import { useSettings } from "../../../../../context/settings";
 
 export const ConnectWalletButton: React.FC = () => {
     const { swap } = useSwapDataState()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const { getWithdrawalProvider: getProvider } = useWallet()
     const source_layer = layers.find(l => l.internal_name === swap?.source_network)
     const provider = useMemo(() => {

@@ -1,30 +1,33 @@
-import { AlignLeft, X } from 'lucide-react';
+'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import WalletTransfer from './Wallet';
-import ManualTransfer from './ManualTransfer';
-import FiatTransfer from './FiatTransfer';
-import { useSettingsState } from '../../../context/settings';
-import { useSwapDataState, useSwapDataUpdate } from '../../../context/swap';
-import KnownInternalNames from '../../../lib/knownIds';
-import { type Tab, TabHeader } from '../../Tabs/Index';
-import SwapSummary from '../Summary';
-import Coinbase from './Coinbase';
-import External from './External';
-import { WithdrawType } from '../../../lib/BridgeApiClient';
-import WalletIcon from '../../icons/WalletIcon';
-import shortenAddress, { shortenEmail } from '../../utils/ShortenAddress';
-import { useAccountModal } from '@rainbow-me/rainbowkit';
-import Image from 'next/image';
-import SpinIcon from '../../icons/spinIcon';
-import { NetworkType } from '../../../Models/CryptoNetwork';
-import useWallet from '../../../hooks/useWallet';
-import { useQueryState } from '../../../context/query';
-import { Widget } from '../../Widget/Index';
+import Image from 'next/image'
+import { AlignLeft, X } from 'lucide-react'
+import { useAccountModal } from '@rainbow-me/rainbowkit'
+
+
+import WalletTransfer from './Wallet'
+import ManualTransfer from './ManualTransfer'
+//import FiatTransfer from './FiatTransfer'
+import { useSettings } from '@/context/settings'
+import { useSwapDataState, useSwapDataUpdate } from '@/context/swap'
+import KnownInternalNames from '@/lib/knownIds'
+import { type Tab, TabHeader } from '../../Tabs/Index'
+import SwapSummary from '../Summary'
+//import Coinbase from './Coinbase'
+import External from './External'
+import { WithdrawType } from '@/lib/BridgeApiClient'
+import WalletIcon from '../../icons/WalletIcon'
+import shortenAddress, { shortenEmail } from '../../utils/ShortenAddress'
+import SpinIcon from '../../icons/spinIcon'
+import { NetworkType } from '@/Models/CryptoNetwork'
+import useWallet from '@/hooks/useWallet'
+import { useQueryState } from '@/context/query'
+import Widget from '../../Widget/Index'
 
 const Withdraw: React.FC = () => {
     const { swap } = useSwapDataState()
     const { setWithdrawType } = useSwapDataUpdate()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const { appName, signature } = useQueryState()
     const source_internal_name = swap?.source_exchange ?? swap?.source_network
     const source = layers.find(n => n.internal_name === source_internal_name)
@@ -97,9 +100,9 @@ const Withdraw: React.FC = () => {
                 footer: <ManualTransfer />,
                 content: <></>
             }
-        ];
+        ]
     }
-    const [activeTabId, setActiveTabId] = useState(tabs.find(t => t.enabled)?.id);
+    const [activeTabId, setActiveTabId] = useState(tabs.find(t => t.enabled)?.id)
 
     const activeTab = tabs.find(t => t.id === activeTabId)
     const showTabsHeader = tabs?.filter(t => t.enabled)?.length > 1
@@ -121,7 +124,7 @@ const Withdraw: React.FC = () => {
                             {
                                 showTabsHeader &&
                                 <>
-                                    <div className="mb-4 ml-1 text-base">Choose how you&apos;d like to complete the swap</div>
+                                    <div className="mb-4 ml-1 text-base">Choose how you&aposd like to complete the swap</div>
                                     <div className="flex space-x-3 w-full">
                                         {activeTabId && tabs.filter(t => t.enabled).map((tab) => (
                                             <TabHeader
@@ -152,11 +155,11 @@ const Withdraw: React.FC = () => {
 }
 
 const WalletTransferContent: React.FC = () => {
-    const { openAccountModal } = useAccountModal();
+    const { openAccountModal } = useAccountModal()
     const { getWithdrawalProvider: getProvider, disconnectWallet } = useWallet()
-    const { layers, resolveImgSrc } = useSettingsState()
+    const { layers, resolveImgSrc } = useSettings()
     const { swap } = useSwapDataState()
-    const [isLoading, setIsloading] = useState(false);
+    const [isLoading, setIsloading] = useState(false)
     const { mutateSwap } = useSwapDataUpdate()
 
     const {
@@ -176,11 +179,11 @@ const WalletTransferContent: React.FC = () => {
 
     const handleDisconnect = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
         if (!wallet) return
-        setIsloading(true);
+        setIsloading(true)
         await disconnectWallet(wallet.providerName, swap)
         if (source_exchange) await mutateSwap()
-        setIsloading(false);
-        e?.stopPropagation();
+        setIsloading(false)
+        e?.stopPropagation()
     }, [sourceNetworkType, swap?.source_exchange, disconnectWallet])
 
     let accountAddress: string | undefined = ""
@@ -188,7 +191,7 @@ const WalletTransferContent: React.FC = () => {
         accountAddress = swap.exchange_account_name || ""
     }
     else if (wallet) {
-        accountAddress = wallet.address || "";
+        accountAddress = wallet.address || ""
     }
 
     const canOpenAccount = sourceNetworkType === NetworkType.EVM && !swap?.source_exchange

@@ -1,53 +1,50 @@
-import { v4 as uuidv4 } from "uuid";
-import axios, { type AxiosInstance, type Method } from "axios";
-import { type NextRouter } from "next/router";
+import { v4 as uuidv4 } from 'uuid'
+import axios, { type AxiosInstance, type Method } from 'axios'
 
-
-import { type BridgeSettings } from "../Models/BridgeSettings";
-import { SwapStatus } from "../Models/SwapStatus";
-import AppSettings from "./AppSettings";
-import { InitializeInstance } from "./axiosInterceptor";
-import { AuthRefreshFailedError } from "./Errors/AuthRefreshFailedError";
-import { ApiResponse, EmptyApiResponse } from "../Models/ApiResponse";
-import BridgeAuthApiClient from "./userAuthApiClient";
-import { type CryptoNetwork } from "../Models/CryptoNetwork";
-import { type Exchange } from "../Models/Exchange";
+import { type BridgeSettings } from '../Models/BridgeSettings'
+import { SwapStatus } from '../Models/SwapStatus'
+import AppSettings from './AppSettings'
+import { InitializeInstance } from './axiosInterceptor'
+import { AuthRefreshFailedError } from './Errors/AuthRefreshFailedError'
+import { ApiResponse, EmptyApiResponse } from '../Models/ApiResponse'
+import BridgeAuthApiClient from './userAuthApiClient'
+import { type CryptoNetwork } from '../Models/CryptoNetwork'
+import { type Exchange } from '../Models/Exchange'
 
 export default class BridgeApiClient {
-  static apiBaseEndpoint?: string = AppSettings.BridgeApiUri;
-  static apiVersion: string = AppSettings.ApiVersion;
+  static apiBaseEndpoint?: string = AppSettings.BridgeApiUri
+  static apiVersion: string = AppSettings.ApiVersion
 
-  _authInterceptor: AxiosInstance;
+  _authInterceptor: AxiosInstance
   constructor(
-    private readonly _router?: NextRouter,
-    private readonly _redirect?: string
+    private readonly _redirect?: string // :aa ???
   ) {
     this._authInterceptor = InitializeInstance(
       BridgeAuthApiClient.identityBaseEndpoint
-    );
+    )
   }
 
   fetcher = (url: string) =>
-    this.AuthenticatedRequest<ApiResponse<any>>("GET", url);
+    this.AuthenticatedRequest<ApiResponse<any>>('GET', url)
 
   async GetNetworksAsync(): Promise<
     ApiResponse<{
-      network: string;
-      asset: string;
+      network: string
+      asset: string
     }>
   > {
     return await axios
       .get(
         `${BridgeApiClient.apiBaseEndpoint}/api/sources?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data);
+      .then((res) => res.data)
   }
 
   async GetSourceRoutesAsync(): Promise<
     ApiResponse<
       {
-        network: string;
-        asset: string;
+        network: string
+        asset: string
       }[]
     >
   > {
@@ -55,14 +52,14 @@ export default class BridgeApiClient {
       .get(
         `${BridgeApiClient.apiBaseEndpoint}/api/sources?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data);
+      .then((res) => res.data)
   }
 
   async GetDestinationRoutesAsync(): Promise<
     ApiResponse<
       {
-        network: string;
-        asset: string;
+        network: string
+        asset: string
       }[]
     >
   > {
@@ -70,7 +67,7 @@ export default class BridgeApiClient {
       .get(
         `${BridgeApiClient.apiBaseEndpoint}/api/destinations?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data);
+      .then((res) => res.data)
   }
 
   async GetExchangesAsync(): Promise<ApiResponse<Exchange[]>> {
@@ -78,7 +75,7 @@ export default class BridgeApiClient {
       .get(
         `${BridgeApiClient.apiBaseEndpoint}/api/exchanges?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data);
+      .then((res) => res.data)
   }
 
   async GetSettingsAsync(): Promise<ApiResponse<BridgeSettings>> {
@@ -86,7 +83,7 @@ export default class BridgeApiClient {
       .get(
         `${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data);
+      .then((res) => res.data)
   }
 
   async GetLSNetworksAsync(): Promise<ApiResponse<CryptoNetwork[]>> {
@@ -94,19 +91,19 @@ export default class BridgeApiClient {
       .get(
         `${BridgeApiClient.apiBaseEndpoint}/api/networks?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data);
+      .then((res) => res.data)
   }
 
   async CreateSwapAsync(params: CreateSwapParams): Promise<ApiResponse<any>> {
     // ): Promise<ApiResponse<CreateSwapData>> {
-    const correlationId = uuidv4();
+    const correlationId = uuidv4()
     return await this.AuthenticatedRequest<ApiResponse<any>>(
       // return await this.AuthenticatedRequest<ApiResponse<CreateSwapData>>(
-      "POST",
+      'POST',
       `/swaps?version=${BridgeApiClient.apiVersion}`,
       params,
-      { "X-LS-CORRELATION-ID": correlationId }
-    );
+      { 'X-LS-CORRELATION-ID': correlationId }
+    )
   }
 
   async GetSwapsAsync(
@@ -114,25 +111,25 @@ export default class BridgeApiClient {
     status?: SwapStatusInNumbers
   ): Promise<ApiResponse<SwapItem[]>> {
     return await this.AuthenticatedRequest<ApiResponse<SwapItem[]>>(
-      "GET",
-      `/swaps?page=${page}${status ? `&status=${status}` : ""}&version=${
+      'GET',
+      `/swaps?page=${page}${status ? `&status=${status}` : ''}&version=${
         BridgeApiClient.apiVersion
       }`
-    );
+    )
   }
 
   async GetPendingSwapsAsync(): Promise<ApiResponse<SwapItem[]>> {
     return await this.AuthenticatedRequest<ApiResponse<SwapItem[]>>(
-      "GET",
+      'GET',
       `/swaps?status=0&version=${BridgeApiClient.apiVersion}`
-    );
+    )
   }
 
   async CancelSwapAsync(swapid: string): Promise<ApiResponse<void>> {
     return await this.AuthenticatedRequest<ApiResponse<void>>(
-      "DELETE",
+      'DELETE',
       `/swaps/${swapid}`
-    );
+    )
   }
 
   async DisconnectExchangeAsync(
@@ -140,16 +137,16 @@ export default class BridgeApiClient {
     exchangeName: string
   ): Promise<ApiResponse<void>> {
     return await this.AuthenticatedRequest<ApiResponse<void>>(
-      "DELETE",
+      'DELETE',
       `/swaps/${swapid}/exchange/${exchangeName}/disconnect`
-    );
+    )
   }
 
   async GetSwapDetailsAsync(id: string): Promise<ApiResponse<SwapItem>> {
     return await this.AuthenticatedRequest<ApiResponse<SwapItem>>(
-      "GET",
+      'GET',
       `/swaps/${id}?version=${BridgeApiClient.apiVersion}`
-    );
+    )
   }
 
   async GetDepositAddress(
@@ -157,18 +154,18 @@ export default class BridgeApiClient {
     source: DepositAddressSource
   ): Promise<ApiResponse<DepositAddress>> {
     return await this.AuthenticatedRequest<ApiResponse<DepositAddress>>(
-      "GET",
+      'GET',
       `/swaps?network=${network}&source=${source}`
-    );
+    )
   }
 
   async GenerateDepositAddress(
     network: string
   ): Promise<ApiResponse<DepositAddress>> {
     return await this.AuthenticatedRequest<ApiResponse<any>>(
-      "POST",
+      'POST',
       `/deposit_addresses/${network}`
-    );
+    )
   }
 
   async WithdrawFromExchange(
@@ -177,35 +174,35 @@ export default class BridgeApiClient {
     twoFactorCode?: string
   ): Promise<ApiResponse<void>> {
     return await this.AuthenticatedRequest<ApiResponse<void>>(
-      "POST",
+      'POST',
       `/swaps/${swapId}/exchange/${exchange}/withdraw${
-        twoFactorCode ? `?twoFactorCode=${twoFactorCode}` : ""
+        twoFactorCode ? `?twoFactorCode=${twoFactorCode}` : ''
       }`
-    );
+    )
   }
 
   async SwapsMigration(GuestAuthorization: string): Promise<ApiResponse<void>> {
     return await this.AuthenticatedRequest<ApiResponse<void>>(
-      "POST",
+      'POST',
       `/swaps/migrate`,
       null,
       { GuestAuthorization }
-    );
+    )
   }
 
   async RewardLeaderboard(campaign: string): Promise<ApiResponse<any>> {
     return await this.AuthenticatedRequest<ApiResponse<any>>(
-      "PUT",
+      'PUT',
       `/campaigns/${campaign}/leaderboard`
-    );
+    )
   }
 
   async GetFee(params: GetFeeParams): Promise<ApiResponse<any>> {
     return await this.AuthenticatedRequest<ApiResponse<any>>(
-      "POST",
+      'POST',
       `/swaps/quote?version=${BridgeApiClient.apiVersion}`,
       params
-    );
+    )
   }
 
   private async AuthenticatedRequest<T extends EmptyApiResponse>(
@@ -214,39 +211,39 @@ export default class BridgeApiClient {
     data?: any,
     header?: Record<string, string>
   ): Promise<T> {
-    const uri = `${BridgeApiClient.apiBaseEndpoint}/api${endpoint}`;
+    const uri = `${BridgeApiClient.apiBaseEndpoint}/api${endpoint}`
     try {
       const res = await this._authInterceptor(uri, {
         method: method,
         data: data,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          'Access-Control-Allow-Origin': '*',
           ...header,
         },
-      });
+      })
 
-      //   console.log(`BridgeApiClient.AuthenticatedRequest succ: ${res}`, res);
+      //   console.log(`BridgeApiClient.AuthenticatedRequest succ: ${res}`, res)
 
-      return { ...res?.data, loading: false } as T;
+      return { ...res?.data, loading: false } as T
     } catch (reason) {
       console.log(
         `BridgeApiClient.AuthenticatedRequest failed: ${reason}`,
         reason
-      );
+      )
 
       if (reason instanceof AuthRefreshFailedError) {
-        return new EmptyApiResponse() as T;
+        return new EmptyApiResponse() as T
       } else {
-        throw reason;
+        throw reason
       }
     }
   }
 }
 
 export type DepositAddress = {
-  type: string;
-  address: `0x${string}`;
-};
+  type: string
+  address: `0x${string}`
+}
 
 export enum DepositAddressSource {
   UserGenerated = 0,
@@ -254,123 +251,123 @@ export enum DepositAddressSource {
 }
 
 type NetworkAccountParams = {
-  address: string;
-  network: string;
-  signature: string;
-};
+  address: string
+  network: string
+  signature: string
+}
 
 export type NetworkAccount = {
-  id: string;
-  address: string;
-  note: string;
-  network_id: string;
-  network: string;
-};
+  id: string
+  address: string
+  note: string
+  network_id: string
+  network: string
+}
 
 export type CreateSwapParams = {
-  amount: number;
-  app_name?: string;
-  reference_id?: string;
-  refuel?: boolean;
-  source_network?: string;
-  source_exchange?: string;
-  source_asset: string;
-  source_address?: string;
-  destination_network?: string;
-  destination_exchange?: string;
-  destination_asset: string;
-  destination_address?: string;
-  use_deposit_address?: boolean;
-};
+  amount: number
+  app_name?: string
+  reference_id?: string
+  refuel?: boolean
+  source_network?: string
+  source_exchange?: string
+  source_asset: string
+  source_address?: string
+  destination_network?: string
+  destination_exchange?: string
+  destination_asset: string
+  destination_address?: string
+  use_deposit_address?: boolean
+}
 
 export type SwapItem = {
-  id: string;
-  created_date: string;
-  fee?: number;
-  status: SwapStatus;
-  destination_address: `0x${string}`;
-  requested_amount: number;
-  message?: string;
-  reference_id?: string;
-  app_name?: string;
-  refuel_price?: number;
-  refuel_transaction_id?: string;
-  source_asset: string;
-  source_network: string;
-  source_exchange?: string;
-  destination_asset: string;
-  destination_network: string;
-  destination_exchange?: string;
-  transactions: Transaction[];
-  refuel?: boolean;
-  exchange_account_connected: boolean;
-  exchange_account_name?: string;
-  fiat_session_id?: string;
-  fiat_redirect_url?: string;
-  has_pending_deposit: boolean;
-  sequence_number: number;
-  fail_reason?: string;
-  use_teleporter?: boolean;
+  id: string
+  created_date: string
+  fee?: number
+  status: SwapStatus
+  destination_address: `0x${string}`
+  requested_amount: number
+  message?: string
+  reference_id?: string
+  app_name?: string
+  refuel_price?: number
+  refuel_transaction_id?: string
+  source_asset: string
+  source_network: string
+  source_exchange?: string
+  destination_asset: string
+  destination_network: string
+  destination_exchange?: string
+  transactions: Transaction[]
+  refuel?: boolean
+  exchange_account_connected: boolean
+  exchange_account_name?: string
+  fiat_session_id?: string
+  fiat_redirect_url?: string
+  has_pending_deposit: boolean
+  sequence_number: number
+  fail_reason?: string
+  use_teleporter?: boolean
   deposit_address?: {
-    id: number;
-    type: string;
-    address: string;
-  };
-};
+    id: number
+    type: string
+    address: string
+  }
+}
 
 export type AddressBookItem = {
-  address: string;
-  date: string;
-  networks: string[];
-  exchanges: string[];
-};
+  address: string
+  date: string
+  networks: string[]
+  exchanges: string[]
+}
 
 export type Transaction = {
-  type: TransactionType;
-  from: string;
-  to: string;
-  created_date: string;
-  amount: number;
-  transaction_id: string;
-  confirmations: number;
-  max_confirmations: number;
-  explorer_url: string;
-  account_explorer_url: string;
-  usd_value: number;
-  usd_price: number;
-  status: TransactionStatus;
-};
+  type: TransactionType
+  from: string
+  to: string
+  created_date: string
+  amount: number
+  transaction_id: string
+  confirmations: number
+  max_confirmations: number
+  explorer_url: string
+  account_explorer_url: string
+  usd_value: number
+  usd_price: number
+  status: TransactionStatus
+}
 
 export enum TransactionType {
-  Input = "input",
-  Output = "output",
-  Refuel = "refuel",
+  Input = 'input',
+  Output = 'output',
+  Refuel = 'refuel',
 }
 
 export enum TransactionStatus {
-  Completed = "completed",
-  Initiated = "initiated",
-  Pending = "pending",
+  Completed = 'completed',
+  Initiated = 'initiated',
+  Pending = 'pending',
 }
 
 export enum DepositType {
-  Manual = "manual",
-  Wallet = "wallet",
+  Manual = 'manual',
+  Wallet = 'wallet',
 }
 
 export type Fee = {
-  min_amount: number;
-  max_amount: number;
-  fee_amount: number;
-  deposit_type: DepositType;
-};
+  min_amount: number
+  max_amount: number
+  fee_amount: number
+  deposit_type: DepositType
+}
 
 type GetFeeParams = {
-  source: string;
-  destination: string;
-  asset: string;
-  refuel?: boolean;
-};
+  source: string
+  destination: string
+  asset: string
+  refuel?: boolean
+}
 
 export enum PublishedSwapTransactionStatus {
   Pending,
@@ -381,39 +378,39 @@ export enum PublishedSwapTransactionStatus {
 export type PublishedSwapTransactions = {
   state: {
     swapTransactions: {
-      [key: string]: SwapTransaction;
-    };
-  };
-};
+      [key: string]: SwapTransaction
+    }
+  }
+}
 
 export type SwapTransaction = {
-  hash: string;
-  status: PublishedSwapTransactionStatus;
-};
+  hash: string
+  status: PublishedSwapTransactionStatus
+}
 
 export enum SwapType {
-  OnRamp = "cex_to_network",
-  OffRamp = "network_to_cex",
-  CrossChain = "network_to_network",
+  OnRamp = 'cex_to_network',
+  OffRamp = 'network_to_cex',
+  CrossChain = 'network_to_network',
 }
 
 export enum WithdrawType {
-  Wallet = "wallet",
-  Manually = "manually",
-  Stripe = "stripe",
-  Coinbase = "coinbase",
-  External = "external",
+  Wallet = 'wallet',
+  Manually = 'manually',
+  Stripe = 'stripe',
+  Coinbase = 'coinbase',
+  External = 'external',
 }
 export type ConnectParams = {
-  api_key: string;
-  api_secret: string;
-  keyphrase?: string;
-  exchange: string;
-};
+  api_key: string
+  api_secret: string
+  keyphrase?: string
+  exchange: string
+}
 
 export type CreateSwapData = {
-  swap_id: string;
-};
+  swap_id: string
+}
 
 export enum SwapStatusInNumbers {
   Pending = 0,
@@ -422,45 +419,45 @@ export enum SwapStatusInNumbers {
   Expired = 3,
   Delayed = 4,
   Cancelled = 5,
-  SwapsWithoutCancelledAndExpired = "0&status=1&status=2&status=4",
+  SwapsWithoutCancelledAndExpired = '0&status=1&status=2&status=4',
 }
 
 export type Campaign = {
-  id: number;
-  name: string;
-  display_name: string;
-  asset: string;
-  network: string;
-  percentage: number;
-  start_date: string;
-  end_date: string;
-  min_payout_amount: number;
-  total_budget: number;
-  distributed_amount: number;
-  status: "active" | "inactive";
-};
+  id: number
+  name: string
+  display_name: string
+  asset: string
+  network: string
+  percentage: number
+  start_date: string
+  end_date: string
+  min_payout_amount: number
+  total_budget: number
+  distributed_amount: number
+  status: 'active' | 'inactive'
+}
 
 export type Reward = {
   user_reward: {
-    period_pending_amount: number;
-    total_amount: number;
-    total_pending_amount: number;
-    position: number;
-  };
-  next_airdrop_date: string | Date;
-};
+    period_pending_amount: number
+    total_amount: number
+    total_pending_amount: number
+    position: number
+  }
+  next_airdrop_date: string | Date
+}
 
 export type Leaderboard = {
   leaderboard: {
-    address: string;
-    amount: number;
-    position: number;
-  }[];
-  leaderboard_budget: number;
-};
+    address: string
+    amount: number
+    position: number
+  }[]
+  leaderboard_budget: number
+}
 
 export type RewardPayout = {
-  date: string;
-  transaction_id: string;
-  amount: number;
-};
+  date: string
+  transaction_id: string
+  amount: number
+}

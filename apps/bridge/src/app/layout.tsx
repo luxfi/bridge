@@ -9,14 +9,18 @@ import {
 import siteDef from '@/site-def'
 import _metadata from '@/metadata'
 
+import Contexts from '@/components/Contexts'
+
 export const metadata = { ..._metadata }
 export const viewport = { ...ViewportCode}
 
 const RootLayout: React.FC<PropsWithChildren> = async ({
   children
 }) => (
-  <RootLayoutCore siteDef={siteDef} >
-    {children}
+  <RootLayoutCore siteDef={siteDef} showHeader>
+    <Contexts >
+      {children}
+    </Contexts>
   </RootLayoutCore>
 )
 

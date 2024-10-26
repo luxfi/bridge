@@ -10,7 +10,7 @@ import { type AddressBookItem } from "@/lib/BridgeApiClient";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import { useSwapDataUpdate } from "@/context/swap";
 import KnownInternalNames from "@/lib/knownIds";
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { isValidAddress } from "@/lib/addressValidator";
 import { type Partner } from "@/Models/Partner";
 import shortenAddress from "../utils/ShortenAddress";
@@ -59,7 +59,7 @@ const Address: React.FC<Input> = forwardRef<HTMLInputElement, Input>(function Ad
     }, [values?.to, getProvider])
 
     const connectedWallet = provider?.getConnectedWallet()
-    const settings = useSettingsState()
+    const settings = useSettings()
 
     useEffect(() => {
         if (destination && isValidAddress(connectedWallet?.address, destination) && !values?.destination_address) {

@@ -5,7 +5,7 @@ import useSWR from "swr"
 import { Clock } from "lucide-react"
 import { useAccount } from "wagmi"
 
-import { useSettingsState } from "@/context/settings"
+import { useSettings } from "@/context/settings"
 import BackgroundField from "../../backgroundField";
 import type { Campaign, Reward, RewardPayout } from "@/lib/BridgeApiClient"
 import BridgeApiClient from "@/lib/BridgeApiClient"
@@ -21,7 +21,7 @@ const Rewards: React.FC<{
   campaign 
 }) => {
 
-    const settings = useSettingsState()
+    const settings = useSettings()
     const { resolveImgSrc, layers } = settings
     const { address } = useAccount();
     const apiClient = new BridgeApiClient()

@@ -7,7 +7,7 @@ import { BridgeAppSettings } from '@/models/BridgeAppSettings';
 import React, { ReactNode } from 'react'
 import useSWR from 'swr';
 
-const SettingsStateContext = React.createContext<BridgeAppSettings | null>(null);
+const SettingsContext = React.createContext<BridgeAppSettings | null>(null);
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
@@ -26,17 +26,17 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   let appSettings = new BridgeAppSettings(settings);
 
   return (
-    <SettingsStateContext.Provider value={appSettings}>
+    <SettingsContext.Provider value={appSettings}>
       {children}
-    </SettingsStateContext.Provider>
+    </SettingsContext.Provider>
   );
 }
 
-export function useSettingsState() {
-  const data = React.useContext(SettingsStateContext);
+export function useSettings() {
+  const data = React.useContext(SettingsContext);
 
   if (data === undefined) {
-    throw new Error('useSettingsState must be used within a SettingsProvider');
+    throw new Error('useSettings must be used within a SettingsProvider');
   }
 
   return data;

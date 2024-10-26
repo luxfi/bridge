@@ -3,7 +3,7 @@ import { useDisconnect } from 'wagmi';
 import { useAccount } from "wagmi"
 
 import { NetworkType } from "../../../Models/CryptoNetwork"
-import { useSettingsState } from "../../../context/settings"
+import { useSettings } from "../../../context/settings"
 import { type WalletProvider } from "../../../hooks/useWallet"
 import KnownInternalNames from "../../knownIds"
 import { ResolveEVMWalletIcon } from "./resolveEVMIcon"
@@ -12,7 +12,7 @@ export default function useEVM(): WalletProvider {
 
     const { disconnect } = useDisconnect();
 
-    const { layers } = useSettingsState();
+    const { layers } = useSettings();
     const withdrawalSupportedNetworks = [
         ...layers.filter(layer => layer.type === NetworkType.EVM).map(l => l.internal_name),
         KnownInternalNames.Networks.ZksyncMainnet

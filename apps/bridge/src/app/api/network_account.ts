@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
 
-import { validateSignature } from '@/helpers/validateSignature';
+import { validateSignature } from '@/util/validateSignature';
 import { parseJwt } from '@/lib/jwtParser';
 import BridgeApiClient from '@/lib/BridgeApiClient';
 import { type AuthConnectResponse } from '@/Models/BridgeAuth';

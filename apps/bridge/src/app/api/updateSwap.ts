@@ -6,7 +6,7 @@ import {
   //handleSwapCreation,
   //handlerGetSwaps,
   handlerUpdateSwaps,
-} from "@/helpers/swapHelper";
+} from "@/util/swapHelper";
 //import { mainnetSettings, testnetSettings } from "@/settings";
 
 const swapTransactionSchema = Joi.object({

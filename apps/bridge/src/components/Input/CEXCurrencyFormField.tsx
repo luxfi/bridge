@@ -2,7 +2,7 @@
 import { useCallback, useEffect } from "react";
 import { useFormikContext } from "formik";
 
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import { SelectMenuItem, type ISelectMenuItem } from "../Select/Shared/Props/selectMenuItem";
 import PopoverSelectWrapper from "../Select/Popover/PopoverSelectWrapper";
@@ -29,7 +29,7 @@ const CurrencyGroupFormField: React.FC<{
 
     console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange, toExchange })
 
-    const { resolveImgSrc } = useSettingsState();
+    const { resolveImgSrc } = useSettings();
     const name = "currencyGroup";
 
     const query = useQueryState();

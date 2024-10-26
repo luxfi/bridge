@@ -1,4 +1,4 @@
-import { useSettingsState } from "../../../context/settings"
+import { useSettings } from "../../../context/settings"
 import type { Balance, BalanceProps, BalanceProvider, GasProps } from "../../../Models/Balance"
 import { NetworkType } from "../../../Models/CryptoNetwork"
 import NetworkSettings, { GasCalculation } from "../../NetworkSettings"
@@ -6,7 +6,7 @@ import NetworkSettings, { GasCalculation } from "../../NetworkSettings"
 export default function useEVMBalance(): BalanceProvider {
     const name = 'eth'
 
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const supportedNetworks = layers.filter(l => l.type === NetworkType.EVM && NetworkSettings.KnownSettings[l.internal_name]?.GasCalculationType !== GasCalculation.OptimismType).map(l => l.internal_name)
 
     const getBalance = async ({ layer, address }: BalanceProps) => {

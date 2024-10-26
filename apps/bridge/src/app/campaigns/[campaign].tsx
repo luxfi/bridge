@@ -1,18 +1,9 @@
 import React from 'react'
 
-import type { InferGetServerSidePropsType } from 'next'
-
-import Layout from '@/components/layout'
 import CampaignDetails from '@/components/Campaigns/Details'
-import { getServerSideProps } from '@/helpers/getSettings'
 
-function RewardsPage({ settings, themeData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-
-  return (
-    <Layout settings={settings} themeData={themeData}>
-      <CampaignDetails />
-    </Layout>
-  )
-}
+const RewardsPage: React.FC = () => (
+  <CampaignDetails /> 
+)
 
 export default RewardsPage
