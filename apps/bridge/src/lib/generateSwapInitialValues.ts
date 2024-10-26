@@ -1,7 +1,7 @@
 import { type SwapFormValues } from "../components/DTOs/SwapFormValues";
 import { QueryParams } from "../Models/QueryParams";
 import { isValidAddress } from "./addressValidator";
-import { FilterDestinationLayers, FilterSourceLayers } from "../helpers/settingsHelper";
+import { FilterDestinationLayers, FilterSourceLayers } from "../util/settingsHelper";
 import { BridgeAppSettings } from "../Models/BridgeAppSettings";
 import { type SwapItem } from "./BridgeApiClient";
 

@@ -10,7 +10,7 @@ import {
   SwapDataStateContext,
   SwapDataUpdateContext,
 } from "../context/swap";
-import { SettingsStateContext } from "../context/settings";
+import { SettingsProvider } from "../context/settings";
 import { WagmiConfig, configureChains, createConfig } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
@@ -41,7 +41,7 @@ import {
 } from "../context/authContext";
 import { IntercomProvider } from "react-use-intercom";
 import { THEME_COLORS } from "../Models/Theme";
-import Layout from "../components/layout";
+import Layout from "../components/Contexts";
 import RainbowKitComponent from "../components/RainbowKit";
 import SwapDetails from "../components/Swap";
 import SwapMockFunctions from "./Mocks/context/SwapDataUpdate";
@@ -100,12 +100,11 @@ const Comp: React.FC<{
   if (!appSettings) {
     return <div>Loading...</div>;
   }
-  const themeData = theme ? THEME_COLORS[theme] : THEME_COLORS["default"];
   return (
     <WagmiConfig config={wagmiConfig}>
       <IntercomProvider appId="123">
-        <SettingsStateContext.Provider value={appSettings}>
-          <Layout settings={Settings} themeData={themeData}>
+        <SettingsProvider settings={appSettings}>
+          <Layout settings={Settings} >
             <RainbowKitComponent>
               <SwapDataStateContext.Provider value={swapContextInitialValues}>
                 <AuthStateContext.Provider
@@ -135,7 +134,7 @@ const Comp: React.FC<{
               </SwapDataStateContext.Provider>
             </RainbowKitComponent>
           </Layout>
-        </SettingsStateContext.Provider>
+        </SettingsProvider>
       </IntercomProvider>
     </WagmiConfig>
   );

@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { IntercomProvider } from 'react-use-intercom';
 import { SWRConfig } from 'swr'
 

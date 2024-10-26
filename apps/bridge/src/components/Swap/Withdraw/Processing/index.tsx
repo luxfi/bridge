@@ -1,12 +1,12 @@
 'use client'
 import { useSwapDataState } from '@/context/swap';
-import { useSettingsState } from '@/context/settings';
+import { useSettings } from '@/context/settings';
 import Processing from './Processing';
 
 const Component: React.FC = () => {
 
     const { swap } = useSwapDataState()
-    const settings = useSettingsState()
+    const settings = useSettings()
 
     return swap ? (<Processing settings={settings} swap={swap} />) : null
 }

@@ -10,7 +10,7 @@ import {
 } from "../shadcn/select";
 import { useFormikContext } from "formik";
 import { forwardRef, useCallback, useEffect, useState } from "react";
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import { SelectMenuItem } from "../Select/Shared/Props/selectMenuItem";
 import useSWR from "swr";
@@ -31,7 +31,7 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
   const name = direction;
 
   const { from, to, fromCurrency, toCurrency } = values;
-  const { layers, resolveImgSrc } = useSettingsState();
+  const { layers, resolveImgSrc } = useSettings();
 
   const filterWith = direction === "from" ? to : from;
   const filterWithAsset =

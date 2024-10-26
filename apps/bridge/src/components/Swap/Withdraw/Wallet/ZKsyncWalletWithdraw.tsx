@@ -10,7 +10,7 @@ import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore
 import { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
 import { useSwapDataState } from '../../../../context/swap';
 import { ChangeNetworkButton, ConnectWalletButton } from './WalletTransfer/buttons';
-import { useSettingsState } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings';
 import { useNetwork } from 'wagmi';
 import { type TransactionReceipt } from 'zksync/build/types';
 
@@ -29,7 +29,7 @@ const ZkSyncWalletWithdrawStep: React.FC<Props> = ({ depositAddress, amount }) =
     const signer = useEthersSigner();
     const { chain } = useNetwork();
 
-    const { layers } = useSettingsState();
+    const { layers } = useSettings();
     const { source_network: source_network_internal_name } = swap || {};
     const source_network = layers.find(n => n.internal_name === source_network_internal_name);
     const source_layer = layers.find(l => l.internal_name === source_network_internal_name)

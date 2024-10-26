@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { handlerUpdateMpcSignAction } from "@/helpers/swapHelper";
+import { handlerUpdateMpcSignAction } from "@/util/swapHelper";
 
 /**
  * get swap data

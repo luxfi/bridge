@@ -1,5 +1,5 @@
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
-import { checkStorageIsAvailable, type storageType } from '../helpers/storageAvailable';
+import { checkStorageIsAvailable, type storageType } from '../util/storageAvailable';
 
 type PersistedState<T> = [T, Dispatch<SetStateAction<T>>];
 

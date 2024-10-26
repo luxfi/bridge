@@ -1,5 +1,5 @@
 import { type Layer } from "@/Models/Layer";
-import { GetDefaultAsset } from "@/helpers/settingsHelper";
+import { GetDefaultAsset } from "@/util/settingsHelper";
 import { CaluclateRefuelAmount } from "@/lib/fees";
 import { truncateDecimals } from "../../utils/RoundDecimals";
 import { type NetworkCurrency } from "@/Models/CryptoNetwork";

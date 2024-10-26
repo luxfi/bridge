@@ -1,63 +1,30 @@
-import React from "react";
-import type { InferGetServerSidePropsType } from "next";
+import React from "react"
+import { redirect } from 'next/navigation'
 
-import BridgeApiClient from "@/lib/BridgeApiClient";
-import Layout from "@/components/layout";
-import { SwapDataProvider } from "@/context/swap";
-import { TimerProvider } from "@/context/timerContext";
-import { getThemeData } from "@/helpers/settingsHelper";
-import SwapWithdrawal from "@/components/SwapWithdrawal";
+import { useSettingsContainer } from '@/context/settings'
 
-import SwapProcess from "@/components/lux/teleport/process";
+import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
+import SwapProcess from "@/components/lux/teleport/process"
+import getApiSettings from '../getApiSettings'
 
-const SwapDetails = ({
-  settings,
-  themeData,
-  swapId,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  return (
-    <>
-      <Layout settings={settings} themeData={themeData}>
-        <SwapProcess swapId={swapId} />
-      </Layout>
-    </>
-  );
-};
+const SwapDetails: React.FC<{ 
+  params: { swapId: string } 
+}> = async ({ 
+  params 
+}) => {
 
-export const getServerSideProps = async (ctx: any) => {
-  const params = ctx.params;
-  let isValidGuid =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      params.swapId
-    );
-  if (!isValidGuid) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
+  const apiSettings = await getApiSettings(params.swapId)
+  const settingsContainer = useSettingsContainer()
+  if (apiSettings.error?.startsWith('invalid guid')) {
+    redirect('/')
   }
 
-  const apiClient = new BridgeApiClient();
-  const { data: networkData } = await apiClient.GetLSNetworksAsync();
-  const { data: exchangeData } = await apiClient.GetExchangesAsync();
-  if (!networkData || !exchangeData) return;
+  if (settingsContainer) {
+    settingsContainer.settings = new BridgeAppSettings((apiSettings.networks) ? apiSettings : {}) 
+  }
+  return (
+    <SwapProcess swapId={params.swapId} />
+  )
+}
 
-  const settings = {
-    networks: networkData,
-    exchanges: exchangeData,
-  };
-
-  const themeData = await getThemeData(ctx.query);
-
-  return {
-    props: {
-      settings,
-      themeData,
-      swapId: params.swapId,
-    },
-  };
-};
-
-export default SwapDetails;
+export default SwapDetails

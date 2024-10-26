@@ -1,4 +1,4 @@
-import { useSettingsState } from "../context/settings"
+import { useSettings } from "../context/settings"
 import { useSwapDataState } from "../context/swap"
 import { NetworkType } from "../Models/CryptoNetwork"
 import useWallet from "./useWallet"
@@ -11,7 +11,7 @@ export default function useWalletTransferOptions() {
     const { checkContractWallet, contractWallets } = useContractWalletsStore()
     const [isContractWallet, setIsContractWallet] = useState<ContractWallet | null>()
     const { getWithdrawalProvider: getProvider } = useWallet()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const source_layer = layers.find(n => n.internal_name === swap?.source_network)
     const provider = useMemo(() => {
         return source_layer && getProvider(source_layer)

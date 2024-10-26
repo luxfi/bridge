@@ -9,7 +9,7 @@ import { useSwapDataState, useSwapDataUpdate } from '../../../../context/swap';
 import BridgeApiClient, { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
 import { LSAPIKnownErrorCode } from '../../../../Models/ApiError';
 import toast from 'react-hot-toast';
-import { useSettingsState } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings';
 import { TimerProvider, useTimerState } from '../../../../context/timerContext';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
 const TIMER_SECONDS = 120
@@ -23,7 +23,7 @@ const Coinbase: React.FC = () => {
 const TransferElements: React.FC = () => {
     const { swap, codeRequested } = useSwapDataState()
     const { setCodeRequested, mutateSwap } = useSwapDataUpdate()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const {
         destination_network: destination_network_internal_name,
     } = swap || {}

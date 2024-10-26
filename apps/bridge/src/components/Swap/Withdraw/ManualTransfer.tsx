@@ -3,7 +3,7 @@ import { useCallback, useEffect } from "react"
 import Image from 'next/image';
 import { ArrowLeftRight } from "lucide-react"
 
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { useSwapDataState } from "@/context/swap";
 import KnownInternalNames from "@/lib/knownIds";
 import BackgroundField from "../../backgroundField";
@@ -36,7 +36,7 @@ const ManualTransfer: React.FC = () => {
         source_asset
     } = swap || {}
 
-    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettingsState()
+    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettings()
     const sourceLayer = layers.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
     const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
@@ -73,7 +73,7 @@ const ManualTransfer: React.FC = () => {
 
 const TransferInvoice = () => {
 
-    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettingsState()
+    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettings()
     const { swap } = useSwapDataState()
     const { valuesChanger, minAllowedAmount } = useFee()
 
@@ -217,7 +217,7 @@ const TransferInvoice = () => {
 }
 
 // const ExchangeNetworkPicker: React.FC<{ onChange: (network: NetworkCurrency) => void }> = ({ onChange }) => {
-//     const { layers, resolveImgSrc } = useSettingsState()
+//     const { layers, resolveImgSrc } = useSettings()
 //     const { swap } = useSwapDataState()
 //     const {
 //         source_exchange: source_exchange_internal_name,

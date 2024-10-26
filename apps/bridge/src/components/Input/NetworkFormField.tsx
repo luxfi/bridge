@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { useFormikContext } from "formik";
 import useSWR from "swr";
 
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import {
   type ISelectMenuItem,
@@ -79,7 +79,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   } = values;
   const { lockFrom, lockTo } = useQueryState();
 
-  const { resolveImgSrc, layers, exchanges } = useSettingsState();
+  const { resolveImgSrc, layers, exchanges } = useSettings();
 
   let placeholder = "";
   let searchHint = "";
