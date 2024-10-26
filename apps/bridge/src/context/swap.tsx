@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import {
   type Context,
@@ -7,24 +7,24 @@ import {
   useState,
   createContext,
   useContext,
-} from "react";
+} from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-import { type SwapFormValues } from "../components/DTOs/SwapFormValues";
+import { type SwapFormValues } from '../components/DTOs/SwapFormValues'
 import BridgeApiClient, {
   type CreateSwapParams,
   type SwapItem,
   type SwapTransaction,
   WithdrawType,
-} from "../lib/BridgeApiClient";
-import { useRouter } from "next/router";
-import { useSettingsState } from "./settings";
-import { QueryParams } from "../Models/QueryParams";
-import useSWR, { type KeyedMutator } from "swr";
-import { ApiResponse } from "../Models/ApiResponse";
-import { type Partner } from "../Models/Partner";
-import { type ApiError } from "../Models/ApiError";
-import { ResolvePollingInterval } from "../components/utils/SwapStatus";
-import { type NetworkCurrency } from "../Models/CryptoNetwork";
+} from '../lib/BridgeApiClient'
+import { useSettings } from './settings'
+import { QueryParams } from '../Models/QueryParams'
+import useSWR, { type KeyedMutator } from 'swr'
+import { ApiResponse } from '../Models/ApiResponse'
+import { type Partner } from '../Models/Partner'
+import { type ApiError } from '../Models/ApiError'
+import { ResolvePollingInterval } from '../components/utils/SwapStatus'
+import { type NetworkCurrency } from '../Models/CryptoNetwork'
 
 export const SwapDataStateContext = createContext<SwapData>({
   codeRequested: false,
@@ -34,62 +34,65 @@ export const SwapDataStateContext = createContext<SwapData>({
   withdrawType: undefined,
   swapTransaction: undefined,
   selectedAssetNetwork: undefined,
-});
-export const SwapDataUpdateContext = createContext<UpdateInterface | null>(
-  null
-);
+})
+
+export const SwapDataUpdateContext = createContext<UpdateInterface | null>(null)
 
 export type UpdateInterface = {
   createSwap: (
     values: SwapFormValues,
     query: QueryParams,
     partner?: Partner
-  ) => Promise<string | undefined>;
-  setCodeRequested: (codeSubmitted: boolean) => void;
-  cancelSwap: (swapId: string) => Promise<void>;
-  setAddressConfirmed: (value: boolean) => void;
-  setInterval: (value: number) => void;
-  mutateSwap: KeyedMutator<ApiResponse<SwapItem>>;
-  setDepositeAddressIsfromAccount: (value: boolean) => void;
-  setWithdrawType: (value: WithdrawType) => void;
-  setSelectedAssetNetwork: (assetNetwork: NetworkCurrency) => void;
-  setSwapId: (value: string) => void;
-};
+  ) => Promise<string | undefined>
+  setCodeRequested: (codeSubmitted: boolean) => void
+  cancelSwap: (swapId: string) => Promise<void>
+  setAddressConfirmed: (value: boolean) => void
+  setInterval: (value: number) => void
+  mutateSwap: KeyedMutator<ApiResponse<SwapItem>>
+  setDepositeAddressIsfromAccount: (value: boolean) => void
+  setWithdrawType: (value: WithdrawType) => void
+  setSelectedAssetNetwork: (assetNetwork: NetworkCurrency) => void
+  setSwapId: (value: string) => void
+}
 
 export type SwapData = {
-  codeRequested: boolean;
-  swap?: SwapItem;
-  swapApiError?: ApiError;
-  addressConfirmed: boolean;
-  depositeAddressIsfromAccount: boolean;
-  withdrawType: WithdrawType | undefined;
-  swapTransaction: SwapTransaction | undefined;
-  selectedAssetNetwork: NetworkCurrency | undefined;
-};
+  codeRequested: boolean
+  swap?: SwapItem
+  swapApiError?: ApiError
+  addressConfirmed: boolean
+  depositeAddressIsfromAccount: boolean
+  withdrawType: WithdrawType | undefined
+  swapTransaction: SwapTransaction | undefined
+  selectedAssetNetwork: NetworkCurrency | undefined
+}
 
 export function SwapDataProvider({
   id,
   children,
 }: {
-  id?: string;
-  children: any;
+  id?: string
+  children: any
 }) {
-  const [addressConfirmed, setAddressConfirmed] = useState<boolean>(false);
-  const [codeRequested, setCodeRequested] = useState<boolean>(false);
-  const [withdrawType, setWithdrawType] = useState<WithdrawType>();
+  const [addressConfirmed, setAddressConfirmed] = useState<boolean>(false)
+  const [codeRequested, setCodeRequested] = useState<boolean>(false)
+  const [withdrawType, setWithdrawType] = useState<WithdrawType>()
   const [depositeAddressIsfromAccount, setDepositeAddressIsfromAccount] =
-    useState<boolean>();
-  const router = useRouter();
-  const [swapId, setSwapId] = useState<string | undefined>(
-    id || router.query.swapId?.toString()
-  );
-  const { layers, getExchangeNetwork } = useSettingsState();
+    useState<boolean>()
+  
+  const router = useRouter()
+  const params = useSearchParams()
 
-  const client = new BridgeApiClient();
-  const apiVersion = BridgeApiClient.apiVersion;
-  const swap_details_endpoint = `/swaps/${swapId}?version=${apiVersion}`;
-  console.log({ swap_details_endpoint });
-  const [interval, setInterval] = useState(0);
+
+  const _id = (id ?? params.get('swapId')) ?? undefined
+
+  const [swapId, setSwapId] = useState<string | undefined>(_id)
+  const { layers, getExchangeNetwork } = useSettings()
+
+  const client = new BridgeApiClient()
+  const apiVersion = BridgeApiClient.apiVersion
+  const swap_details_endpoint = `/swaps/${swapId}?version=${apiVersion}`
+  console.log({ swap_details_endpoint })
+  const [interval, setInterval] = useState(0)
   const {
     data: swapResponse,
     mutate,
@@ -98,46 +101,46 @@ export function SwapDataProvider({
     swapId ? swap_details_endpoint : null,
     client.fetcher,
     { refreshInterval: interval }
-  );
+  )
 
-  const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>();
+  const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>()
   const source_exchange = layers.find(
     (n) =>
       n?.internal_name?.toLowerCase() ===
       swapResponse?.data?.source_exchange?.toLowerCase()
-  );
+  )
 
   const exchangeAssets = source_exchange?.assets?.filter(
     (a) => a?.asset === swapResponse?.data?.source_asset
-  );
+  )
   const source_network = layers.find(
     (n) =>
       n.internal_name?.toLowerCase() ===
       swapResponse?.data?.source_network?.toLowerCase()
-  );
+  )
   const defaultSourceNetwork =
-    exchangeAssets?.[0] || source_network?.assets?.[0];
+    exchangeAssets?.[0] || source_network?.assets?.[0]
   const [selectedAssetNetwork, setSelectedAssetNetwork] = useState<
     NetworkCurrency | undefined
-  >(defaultSourceNetwork);
+  >(defaultSourceNetwork)
 
-  const swapStatus = swapResponse?.data?.status;
+  const swapStatus = swapResponse?.data?.status
   useEffect(() => {
-    if (swapStatus) setInterval(ResolvePollingInterval(swapStatus));
+    if (swapStatus) setInterval(ResolvePollingInterval(swapStatus))
     return () => {
-      setInterval(0);
-    };
-  }, [swapStatus]);
+      setInterval(0)
+    }
+  }, [swapStatus])
 
   useEffect(() => {
-    setSelectedAssetNetwork(defaultSourceNetwork);
-  }, [defaultSourceNetwork]);
+    setSelectedAssetNetwork(defaultSourceNetwork)
+  }, [defaultSourceNetwork])
 
   // useEffect(() => {
   //     if (!swapId)
   //         return
-  //     const data: PublishedSwapTransactions = JSON.parse(localStorage.getItem('swapTransactions') || "{}")
-  //     const txForSwap = data.state.swapTransactions?.[swapId];
+  //     const data: PublishedSwapTransactions = JSON.parse(localStorage.getItem('swapTransactions') || '{}')
+  //     const txForSwap = data.state.swapTransactions?.[swapId]
   //     setSwapTransaction(txForSwap)
   //     setSwapTransaction({
   //         hash: '1234',
@@ -147,7 +150,7 @@ export function SwapDataProvider({
 
   const createSwap = useCallback(
     async (values: SwapFormValues, query: QueryParams, partner: Partner) => {
-      if (!values) throw new Error("No swap data");
+      if (!values) throw new Error('No swap data')
 
       const {
         to,
@@ -158,7 +161,7 @@ export function SwapDataProvider({
         refuel,
         fromExchange,
         toExchange,
-      } = values;
+      } = values
 
       if (
         (!values.from && !values.fromExchange) ||
@@ -168,7 +171,7 @@ export function SwapDataProvider({
         !values.amount ||
         !values.destination_address
       ) {
-        throw new Error("Form data is missing");
+        throw new Error('Form data is missing')
       }
 
       const data: CreateSwapParams = {
@@ -193,29 +196,29 @@ export function SwapDataProvider({
 
         app_name: partner
           ? query?.appName
-          : apiVersion === "sandbox"
-          ? "BridgeSandbox"
-          : "Bridge",
+          : apiVersion === 'sandbox'
+          ? 'BridgeSandbox'
+          : 'Bridge',
         reference_id: query.externalId,
-      };
-
-      const swapResponse = await client.CreateSwapAsync(data);
-      if (swapResponse?.error) {
-        throw swapResponse?.error;
       }
-      console.log(swapResponse);
-      const swapId = swapResponse?.data?.swap_id;
-      return swapId;
+
+      const swapResponse = await client.CreateSwapAsync(data)
+      if (swapResponse?.error) {
+        throw swapResponse?.error
+      }
+      console.log(swapResponse)
+      const swapId = swapResponse?.data?.swap_id
+      return swapId
     },
     []
-  );
+  )
 
   const cancelSwap = useCallback(
     async (swapId: string) => {
-      await client.CancelSwapAsync(swapId);
+      await client.CancelSwapAsync(swapId)
     },
     [router]
-  );
+  )
 
   const updateFns: UpdateInterface = {
       // @ts-ignore
@@ -229,7 +232,7 @@ export function SwapDataProvider({
     setWithdrawType,
     setSelectedAssetNetwork,
     setSwapId,
-  };
+  }
   return (
     <SwapDataStateContext.Provider
       value={{
@@ -247,25 +250,25 @@ export function SwapDataProvider({
         {children}
       </SwapDataUpdateContext.Provider>
     </SwapDataStateContext.Provider>
-  );
+  )
 }
 
 export function useSwapDataState() {
-  const data = useContext(SwapDataStateContext);
+  const data = useContext(SwapDataStateContext)
 
   if (data === undefined) {
-    throw new Error("swapData must be used within a SwapDataProvider");
+    throw new Error('swapData must be used within a SwapDataProvider')
   }
-  return data;
+  return data
 }
 
 export function useSwapDataUpdate() {
   const updateFns = useContext<UpdateInterface>(
     SwapDataUpdateContext as Context<UpdateInterface>
-  );
+  )
   if (updateFns === undefined) {
-    throw new Error("useSwapDataUpdate must be used within a SwapDataProvider");
+    throw new Error('useSwapDataUpdate must be used within a SwapDataProvider')
   }
 
-  return updateFns;
+  return updateFns
 }

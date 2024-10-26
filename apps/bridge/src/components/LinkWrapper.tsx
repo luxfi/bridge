@@ -1,32 +1,35 @@
 'use client'
-import Link, { type LinkProps } from "next/link";
-import { useRouter } from "next/router";
-import { resolvePersistantQueryParams } from "../helpers/querryHelper";
+import Link, { type LinkProps } from 'next/link'
 
-const LinkWrapper: React.FC<Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> & LinkProps & {
-    children?: React.ReactNode;
-} & React.RefAttributes<HTMLAnchorElement>> = (props) => {
+import resolvePersistantQueryParams from '@/util/resolvePersisitentQueryParams'
+import type { PropsWithChildren } from 'react'
+
+const LinkWrapper: React.FC<
+  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> & 
+  LinkProps & 
+  React.RefAttributes<HTMLAnchorElement> & 
+  PropsWithChildren
+> = ({
+  children,
+  href,
+  ...rest
+}) => {
   
-    const router = useRouter();
-    const { children } = props
-
-    const pathname = typeof props.href === 'object' ? props.href.pathname : props.href
-    const query = (typeof props.href === 'object' && typeof props.href.query === 'object' && props.href.query) || {}
-    
-    return (
-        <Link
-            {...props}
-            href={{
-                pathname: pathname,
-                query: {
-                    ...resolvePersistantQueryParams(router.query),
-                    ...query
-                }
-            }}
-        >
-            {children}
-        </Link>
-    )
+  const pathname = typeof href === 'object' ? href.pathname : href
+  const query = (typeof href === 'object' && typeof href.query === 'object') ? href.query : {}
+  const sp = new URLSearchParams(query as Record<string, string>)
+  
+  return (
+    <Link
+      {...rest}
+      href={{
+        pathname: pathname,
+        query: resolvePersistantQueryParams(sp).toString() 
+      }}
+    >
+        {children}
+    </Link>
+  )
 }
 
 export default LinkWrapper

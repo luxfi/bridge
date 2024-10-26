@@ -1,4 +1,4 @@
-import { GetDefaultAsset } from "../helpers/settingsHelper";
+import { GetDefaultAsset } from "../util/settingsHelper";
 import { type NetworkCurrency } from "../Models/CryptoNetwork";
 import { type Layer } from "../Models/Layer";
 

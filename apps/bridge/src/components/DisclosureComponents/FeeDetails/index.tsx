@@ -4,7 +4,7 @@ import { type SwapFormValues } from '../../DTOs/SwapFormValues';
 import { ReceiveAmounts } from './ReceiveAmounts';
 import DetailedEstimates from './DetailedEstimates';
 import { useFee } from '@/context/feeContext';
-import { useSettingsState } from '@/context/settings';
+import { useSettings } from '@/context/settings';
 import RefuelToggle from './Refuel';
 //import CEXNetworkFormField from '../../Input/CEXNetworkFormField';
 import FeeDetails from './FeeDetailsComponent';
@@ -19,7 +19,7 @@ const FeeDetailsComponent: React.FC<{ values: SwapFormValues }> = ({
   const { toCurrency, from, to, refuel, fromExchange, toExchange } = values || {};
   const { fee } = useFee()
   const currency = toCurrency
-  const { layers } = useSettingsState()
+  const { layers } = useSettings()
   const query = useQueryState();
 
   return (<>

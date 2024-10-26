@@ -1,34 +1,34 @@
 'use client'
-import { useEffect } from "react";
-import { useSwapDataState, useSwapDataUpdate } from "../context/swap";
-import SwapDetails from "./Swap";
-import { Widget } from "./Widget/Index";
-import NotFound from "./Swap/NotFound";
-import { BalancesDataProvider } from "../context/balances";
+import { useEffect } from 'react'
+import { useSwapDataState, useSwapDataUpdate } from '../context/swap'
+import SwapDetails from './Swap'
+import Widget from './Widget/Index'
+import NotFound from './Swap/NotFound'
+import { BalancesDataProvider } from '../context/balances'
 
 const SwapWithdrawal: React.FC = () => {
-    const { swap, swapApiError } = useSwapDataState()
-    const { mutateSwap } = useSwapDataUpdate()
 
-    useEffect(() => {
-        mutateSwap()
-    }, [])
+  const { swap, swapApiError } = useSwapDataState()
+  const { mutateSwap } = useSwapDataUpdate()
 
-    if (!swap)
-        return <Widget>
-            <div className={`pb-6 rounded-lg w-full overflow-hidden relative h-[548px]`}>
-                {swapApiError &&
-                    <NotFound />
-                }
-            </div>
-        </Widget>
+  useEffect(() => {
+    mutateSwap()
+  }, [])
 
 
-    return (
-        <BalancesDataProvider>
-            <SwapDetails type="widget" />
-        </BalancesDataProvider>
-    )
-};
+  return (swap ? (
+    <BalancesDataProvider>
+      <SwapDetails type='widget' />
+    </BalancesDataProvider>
 
-export default SwapWithdrawal;
+  ) : (
+    <Widget>
+      <div className={`pb-6 rounded-lg w-full overflow-hidden relative h-[548px]`}>
+        {swapApiError && (<NotFound />) }
+      </div>
+    </Widget>
+
+  ))
+}
+
+export default SwapWithdrawal

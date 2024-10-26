@@ -1,31 +1,33 @@
 'use client'
-import { ExternalLink } from 'lucide-react';
-import { Widget } from '../../../Widget/Index';
-import shortenAddress from '../../../utils/ShortenAddress';
-import Steps from '../../StepsComponent';
-import SwapSummary from '../../Summary';
-import { GetDefaultAsset } from '../../../../helpers/settingsHelper';
-import AverageCompletionTime from '../../../Common/AverageCompletionTime';
-import { type SwapItem, TransactionStatus, TransactionType } from '../../../../lib/BridgeApiClient';
-import { truncateDecimals } from '../../../utils/RoundDecimals';
-import { BridgeAppSettings } from '../../../../Models/BridgeAppSettings';
-import { SwapStatus } from '../../../../Models/SwapStatus';
-import { SwapFailReasons } from '../../../../Models/RangeError';
-import { Gauge } from '../../../gauge';
-import { Progress, type ProgressStates, ProgressStatus, type StatusStep } from './types';
-import { useFee } from '../../../../context/feeContext';
-import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
-import Failed from '../Failed';
+import { ExternalLink } from 'lucide-react'
 
-type Props = {
-    settings: BridgeAppSettings;
-    swap: SwapItem;
-}
+import Widget from '../../../Widget/Index'
+import shortenAddress from '../../../utils/ShortenAddress'
+import Steps from '../../StepsComponent'
+import SwapSummary from '../../Summary'
+import { GetDefaultAsset } from '@/util/settingsHelper'
+import AverageCompletionTime from '../../../Common/AverageCompletionTime'
+import { type SwapItem, TransactionStatus, TransactionType } from '@/lib/BridgeApiClient'
+import { truncateDecimals } from '../../../utils/RoundDecimals'
+import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
+import { SwapStatus } from '@/Models/SwapStatus'
+import { SwapFailReasons } from '@/Models/RangeError'
+import { Gauge } from '../../../gauge'
+import { Progress, type ProgressStates, ProgressStatus, type StatusStep } from './types'
+import { useFee } from '@/context/feeContext'
+import { useSwapTransactionStore } from '@/stores/swapTransactionStore'
+import Failed from '../Failed'
 
-const Processing: React.FC<Props> = ({ settings, swap }) => {
+const Processing: React.FC<{
+  settings: BridgeAppSettings
+  swap: SwapItem
+}> = ({ 
+  settings, 
+  swap 
+}) => {
 
-    const swapStatus = swap.status;
-    const storedWalletTransactions = useSwapTransactionStore();
+    const swapStatus = swap.status
+    const storedWalletTransactions = useSwapTransactionStore()
     const { fee } = useFee()
 
     const source_network = settings.layers?.find(e => e.internal_name === swap.source_network)
@@ -48,7 +50,7 @@ const Processing: React.FC<Props> = ({ settings, swap }) => {
     const truncatedRefuelAmount = swapRefuelTransaction?.amount ? truncateDecimals(swapRefuelTransaction?.amount, nativeCurrency?.precision) : null
 
     const progressStatuses = getProgressStatuses(swap, swapStatus)
-    const stepStatuses = progressStatuses.stepStatuses;
+    const stepStatuses = progressStatuses.stepStatuses
 
     const outputPendingDetails = <div className='flex items-center space-x-1'>
         <span>Estimated arrival after confirmation:</span>
@@ -200,8 +202,8 @@ const Processing: React.FC<Props> = ({ settings, swap }) => {
         }
     ]
 
-    let currentSteps = allSteps.filter((s) => s.status && s.status != ProgressStatus.Removed);
-    let stepsProgressPercentage = currentSteps.filter(x => x.status == ProgressStatus.Complete).length / currentSteps.length * 100;
+    let currentSteps = allSteps.filter((s) => s.status && s.status != ProgressStatus.Removed)
+    let stepsProgressPercentage = currentSteps.filter(x => x.status == ProgressStatus.Complete).length / currentSteps.length * 100
 
     if (!swap) return <></>
     return (
@@ -251,42 +253,42 @@ const Processing: React.FC<Props> = ({ settings, swap }) => {
 
 
 const getProgressStatuses = (swap: SwapItem, swapStatus: SwapStatus): { stepStatuses: { [key in Progress]: ProgressStatus }, generalStatus: { title: string, subTitle: string | null } } => {
-    let generalTitle = "Transfer in progress";
-    let subtitle: string | null = "";
+    let generalTitle = "Transfer in progress"
+    let subtitle: string | null = ""
     //TODO might need to check stored wallet transaction statuses
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
 
-    const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output);
-    const swapRefuelTransaction = swap?.transactions?.find(t => t.type === TransactionType.Refuel);
-    let inputIsCompleted = swapInputTransaction?.status == TransactionStatus.Completed && swapInputTransaction.confirmations >= swapInputTransaction.max_confirmations;
+    const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
+    const swapRefuelTransaction = swap?.transactions?.find(t => t.type === TransactionType.Refuel)
+    let inputIsCompleted = swapInputTransaction?.status == TransactionStatus.Completed && swapInputTransaction.confirmations >= swapInputTransaction.max_confirmations
     if (!inputIsCompleted) {
         // Magic case, shows estimated time
         subtitle = null
     }
-    let input_transfer = inputIsCompleted ? ProgressStatus.Complete : ProgressStatus.Current;
+    let input_transfer = inputIsCompleted ? ProgressStatus.Complete : ProgressStatus.Current
 
     let output_transfer =
         (!swapOutputTransaction && inputIsCompleted) || swapOutputTransaction?.status == TransactionStatus.Pending ? ProgressStatus.Current
             : swapOutputTransaction?.status == TransactionStatus.Initiated || swapOutputTransaction?.status == TransactionStatus.Completed ? ProgressStatus.Complete
-                : ProgressStatus.Upcoming;
+                : ProgressStatus.Upcoming
 
     let refuel_transfer =
         (swap.refuel && !swapRefuelTransaction) ? ProgressStatus.Upcoming
             : swapRefuelTransaction?.status == TransactionStatus.Pending ? ProgressStatus.Current
                 : swapRefuelTransaction?.status == TransactionStatus.Initiated || swapRefuelTransaction?.status == TransactionStatus.Completed ? ProgressStatus.Complete
-                    : ProgressStatus.Removed;
+                    : ProgressStatus.Removed
 
     if (swapStatus === SwapStatus.Failed) {
-        output_transfer = output_transfer == ProgressStatus.Complete ? ProgressStatus.Complete : ProgressStatus.Failed;
-        refuel_transfer = refuel_transfer !== ProgressStatus.Complete ? ProgressStatus.Removed : refuel_transfer;
-        generalTitle = swap?.fail_reason == SwapFailReasons.RECEIVED_MORE_THAN_VALID_RANGE ? "Transfer on hold" : "Transfer failed";
+        output_transfer = output_transfer == ProgressStatus.Complete ? ProgressStatus.Complete : ProgressStatus.Failed
+        refuel_transfer = refuel_transfer !== ProgressStatus.Complete ? ProgressStatus.Removed : refuel_transfer
+        generalTitle = swap?.fail_reason == SwapFailReasons.RECEIVED_MORE_THAN_VALID_RANGE ? "Transfer on hold" : "Transfer failed"
         subtitle = "View instructions below"
     }
 
     if (swapStatus === SwapStatus.UserTransferDelayed) {
-        input_transfer = ProgressStatus.Removed;
-        output_transfer = ProgressStatus.Removed;
-        refuel_transfer = ProgressStatus.Removed;
+        input_transfer = ProgressStatus.Removed
+        output_transfer = ProgressStatus.Removed
+        refuel_transfer = ProgressStatus.Removed
         generalTitle = "Transfer delayed"
         subtitle = "View instructions below"
     }
@@ -313,8 +315,8 @@ const getProgressStatuses = (swap: SwapItem, swapStatus: SwapStatus): { stepStat
             title: generalTitle,
             subTitle: subtitle
         }
-    };
+    }
 
 }
 
-export default Processing;
+export default Processing

@@ -1,20 +1,20 @@
 'use client'
 import { useCallback, useRef, useState } from 'react'
-import { Info, ScanFace } from 'lucide-react';
-import { Form, Formik, type FormikErrors, type FormikProps } from 'formik';
-import toast from 'react-hot-toast';
+import { Info, ScanFace } from 'lucide-react'
+import { Form, Formik, type FormikErrors, type FormikProps } from 'formik'
+import toast from 'react-hot-toast'
 
-import { useSwapDataState } from '@/context/swap';
-import { useTimerState } from '@/context/timerContext';
-import BridgeApiClient from '@/lib/BridgeApiClient';
-import { type ApiError, LSAPIKnownErrorCode } from '@/Models/ApiError';
-import SubmitButton from '../../../buttons/submitButton';
-import SpinIcon from '../../../icons/spinIcon';
-import NumericInput from '../../../Input/NumericInput';
-import MessageComponent from '../../../MessageComponent';
-import Modal from '../../../modal/modal';
-import TimerWithContext from '../../../TimerComponent';
-import { Widget } from '../../../Widget/Index';
+import { useSwapDataState } from '@/context/swap'
+import { useTimerState } from '@/context/timerContext'
+import BridgeApiClient from '@/lib/BridgeApiClient'
+import { type ApiError, LSAPIKnownErrorCode } from '@/Models/ApiError'
+import SubmitButton from '../../../buttons/submitButton'
+import SpinIcon from '../../../icons/spinIcon'
+import NumericInput from '../../../Input/NumericInput'
+import MessageComponent from '../../../MessageComponent'
+import Modal from '../../../modal/modal'
+import TimerWithContext from '../../../TimerComponent'
+import Widget from '../../../Widget/Index'
 
 const TIMER_SECONDS = 120
 
@@ -37,7 +37,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
 
     const { start: startTimer } = useTimerState()
 
-    const formikRef = useRef<FormikProps<CodeFormValues>>(null);
+    const formikRef = useRef<FormikProps<CodeFormValues>>(null)
 
     const handleSubmit = useCallback(async (values: CodeFormValues) => {
         if (!swap || !swap.source_exchange)
@@ -73,7 +73,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
             return
         setLoading(true)
         try {
-            formikRef.current?.setFieldValue("Code", "");
+            formikRef.current?.setFieldValue("Code", "")
             const client = new BridgeApiClient()
             await client.WithdrawFromExchange(swap.id, swap.source_exchange)
         } catch ( error: any ) {
@@ -103,7 +103,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
                         Transfer failed
                     </MessageComponent.Header>
                     <MessageComponent.Description>
-                        This transfer can&apos;t be processed because you don&apos;t have enough available funds on Coinbase.
+                        This transfer can&apost be processed because you don&apost have enough available funds on Coinbase.
                     </MessageComponent.Description>
                 </MessageComponent.Content>
                 <MessageComponent.Buttons>
@@ -122,7 +122,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
                         Transfer failed
                     </MessageComponent.Header>
                     <MessageComponent.Description>
-                        This transfer can&apos;t be processed because your funds might be on hold on Coinbase. This usually happens when you want to cash out immediately after completeing a purchare or adding cash.
+                        This transfer can&apost be processed because your funds might be on hold on Coinbase. This usually happens when you want to cash out immediately after completeing a purchare or adding cash.
                     </MessageComponent.Description>
                 </MessageComponent.Content>
                 <MessageComponent.Buttons>
@@ -139,14 +139,14 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
             validateOnMount={true}
             innerRef={formikRef}
             validate={(values: CodeFormValues) => {
-                const errors: FormikErrors<CodeFormValues> = {};
+                const errors: FormikErrors<CodeFormValues> = {}
                 if (!/^[0-9]*$/.test(values.Code)) {
-                    errors.Code = "Value should be numeric";
+                    errors.Code = "Value should be numeric"
                 }
                 else if (values.Code.length != 7 && values.Code.length != 6) {
-                    errors.Code = `The length should be 6 or 7 instead of ${values.Code.length}`;
+                    errors.Code = `The length should be 6 or 7 instead of ${values.Code.length}`
                 }
-                return errors;
+                return errors
             }}
             onSubmit={handleSubmit}
         >
@@ -214,7 +214,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
                 </Form >
             )}
         </Formik>
-    </>;
+    </>
 }
 
-export default Coinbase2FA;
+export default Coinbase2FA

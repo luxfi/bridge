@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import BridgeAuthApiClient from '@/lib/userAuthApiClient';
 import { InferGetServerSidePropsType } from 'next';
 import { BridgeAppSettings } from '@/Models/BridgeAppSettings';

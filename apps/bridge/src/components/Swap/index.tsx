@@ -1,22 +1,27 @@
 'use client'
-import { Widget } from '../Widget/Index';
-import { useSwapDataState } from '../../context/swap';
-import Withdraw from './Withdraw';
-import Processing from './Withdraw/Processing';
-import { PublishedSwapTransactionStatus, TransactionType } from '../../lib/BridgeApiClient';
-import { SwapStatus } from '../../Models/SwapStatus';
-import GasDetails from '../gasDetails';
-import { useSettingsState } from '../../context/settings';
+import Widget from '../Widget/Index'
+import { useSwapDataState } from '../../context/swap'
+import Withdraw from './Withdraw'
+import Processing from './Withdraw/Processing'
+import { PublishedSwapTransactionStatus, TransactionType } from '../../lib/BridgeApiClient'
+import { SwapStatus } from '../../Models/SwapStatus'
+import GasDetails from '../gasDetails'
+import { useSettings } from '../../context/settings'
 
-type Props = {
-    type: "widget" | "contained",
-}
-import { useSwapTransactionStore } from '../../stores/swapTransactionStore';
+import { useSwapTransactionStore } from '../../stores/swapTransactionStore'
+import type React from 'react'
+import type { PropsWithChildren } from 'react'
 
-const SwapDetails: React.FC<Props> = ({ type }) => {
+type Type = "widget" | "contained"
+
+const SwapDetails: React.FC<{
+  type: Type,
+}> = ({ 
+  type 
+}) => {
     const { swap } = useSwapDataState()
-    const settings = useSettingsState()
-    const swapStatus = swap?.status;
+    const settings = useSettings()
+    const swapStatus = swap?.status
     const storedWalletTransactions = useSwapTransactionStore()
 
     const swapInputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
@@ -59,16 +64,17 @@ const SwapDetails: React.FC<Props> = ({ type }) => {
     }
 }
 
-const Container = ({ type, children }: Props & {
-    children: JSX.Element | JSX.Element[]
-}) => {
-    if (type === "widget")
-        return <Widget><>{children}</></Widget>
-    else
-        return <div className="w-full flex flex-col justify-between h-full space-y-2">
-            {children}
-        </div>
-
-}
+const Container: React.FC<{
+  type: Type
+} & PropsWithChildren> = ({
+  type,
+  children
+}) => ((type === "widget") ? (
+  <Widget><>{children}</></Widget>
+) : (
+  <div className="w-full flex flex-col justify-between h-full space-y-2">
+    {children}
+  </div>
+))
 
 export default SwapDetails

@@ -1,17 +1,18 @@
-import React from "react";
-import { useAtom } from "jotai";
-import { useTelepoterAtom } from "@/store/teleport";
-import Teleporter from "@/components/lux/teleport/swap/Form";
-import SwapFireblock from "@/components/lux/fireblocks/swap/Form";
+import React from 'react'
+import { useAtom } from 'jotai'
+
+import { useTelepoterAtom } from '@/store/teleport'
+import Teleporter from '@/components/lux/teleport/swap/Form'
+import SwapFireblock from '@/components/lux/fireblocks/swap/Form'
 
 const Swapper: React.FC = () => {
-  const [useTeleporter] = useAtom(useTelepoterAtom);
+  const [useTeleporter, _] = useAtom(useTelepoterAtom)
 
   if (useTeleporter) {
-    return <Teleporter />;
+    return <Teleporter />
   } else {
-    return <SwapFireblock />;
+    return <SwapFireblock />
   }
-};
+}
 
-export default Swapper;
+export default Swapper

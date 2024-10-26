@@ -1,6 +1,6 @@
 'use client'
 import { ApiResponse } from "../../../../Models/ApiResponse"
-import { useSettingsState } from "../../../../context/settings"
+import { useSettings } from "../../../../context/settings"
 import { useSwapDataState } from "../../../../context/swap"
 import KnownInternalNames from "../../../../lib/knownIds"
 import BridgeApiClient, { type DepositAddress } from "../../../../lib/BridgeApiClient"
@@ -16,7 +16,7 @@ import { useFee } from "../../../../context/feeContext"
 //TODO have separate components for evm and none_evm as others are sweepless anyway
 const WalletTransfer: React.FC = () => {
     const { swap } = useSwapDataState()
-    const { layers } = useSettingsState()
+    const { layers } = useSettings()
     const { minAllowedAmount } = useFee()
 
     const { source_network: source_network_internal_name } = swap || {}

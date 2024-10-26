@@ -1,28 +1,61 @@
-"use client";
+"use client"
 
-import { type Context, type PropsWithChildren, createContext, useContext} from "react";
-import { BridgeAppSettings } from "@/Models/BridgeAppSettings";
+import { 
+  type Context, 
+  type MutableRefObject, 
+  type PropsWithChildren, 
+  createContext, 
+  useContext, 
+  useRef
+} from "react"
 
-export const SettingsStateContext = createContext<BridgeAppSettings | null>(null);
+import { BridgeAppSettings } from "@/Models/BridgeAppSettings"
 
-export const SettingsProvider: React.FC<{
-  data: BridgeAppSettings;
-} & PropsWithChildren> = ({ children, data }) => {
+type SettingsContainer = {
+  settings: BridgeAppSettings
+}
+const SettingsContext = createContext<SettingsContainer | null>(null)
+
+const SettingsProvider: React.FC<{
+  settings: BridgeAppSettings
+} & PropsWithChildren> = ({ 
+  children, 
+  settings 
+}) => {
+
   return (
-    <SettingsStateContext.Provider value={data}>
+    <SettingsContext.Provider value={{settings}}>
       {children}
-    </SettingsStateContext.Provider>
-  );
-};
+    </SettingsContext.Provider>
+  )
+}
 
-export function useSettingsState() {
-  const data = useContext<BridgeAppSettings>(
-    SettingsStateContext as Context<BridgeAppSettings>
-  );
-  // console.log("::app settings:", Object.keys(data));
-  if (data === undefined) {
-    throw new Error("useSettingsState must be used within a SettingsProvider");
+const useSettings = (): BridgeAppSettings => {
+
+  const container = useContext<SettingsContainer | null>(SettingsContext)
+
+  // console.log("::app settings:", Object.keys(data))
+  if (container === undefined) {
+    throw new Error("useSettings must be used within a SettingsProvider")
   }
 
-  return data;
+  return container!.settings
+}
+
+const useSettingsContainer = (): SettingsContainer | null => {
+
+  const container = useContext<SettingsContainer | null>(SettingsContext)
+
+  // console.log("::app settings:", Object.keys(data))
+  if (container === undefined) {
+    throw new Error("useSettings must be used within a SettingsProvider")
+  }
+
+  return container
+}
+
+export {
+  SettingsProvider,
+  useSettings,
+  useSettingsContainer
 }

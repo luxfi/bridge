@@ -3,7 +3,7 @@ import Image from "next/image";
 import useSWR from 'swr'
 
 import { type Layer } from "@/Models/Layer";
-import { useSettingsState } from "@/context/settings";
+import { useSettings } from "@/context/settings";
 import { truncateDecimals } from "../../utils/RoundDecimals";
 import shortenAddress, { shortenEmail } from "../../utils/ShortenAddress";
 import BridgeApiClient from "@/lib/BridgeApiClient";
@@ -44,7 +44,7 @@ const Summary: React.FC<SwapInfoProps> = ({
     exchange_account_connected,
     exchange_account_name
 }) => {
-    const { resolveImgSrc, layers } = useSettingsState()
+    const { resolveImgSrc, layers } = useSettings()
     const { getWithdrawalProvider: getProvider } = useWallet()
     // const provider = useMemo(() => {
     //     return from && getProvider(from)

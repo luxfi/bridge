@@ -1,40 +1,45 @@
 'use client'
-import { ChevronDown, MailOpen } from 'lucide-react';
-import { Form, Formik, type FormikErrors } from 'formik';
 import { useCallback, useState } from 'react'
-import toast from 'react-hot-toast';
-import { useAuthDataUpdate, useAuthState, UserType } from '../context/authContext';
-import { useTimerState } from '../context/timerContext';
-import BridgeApiClient from '../lib/BridgeApiClient';
-import BridgeAuthApiClient from '../lib/userAuthApiClient';
-import { type AuthConnectResponse } from '../Models/BridgeAuth';
-import SubmitButton from './buttons/submitButton';
-import { DocIframe } from './docInIframe';
-import NumericInput from './Input/NumericInput';
-import Modal from './modal/modal';
-import TimerWithContext from './TimerComponent';
-import { classNames } from './utils/classNames';
-import { Widget } from './Widget/Index';
-interface VerifyEmailCodeProps {
-    onSuccessfullVerify: (authresponse: AuthConnectResponse) => Promise<void>;
-    disclosureLogin?: boolean
-}
+import { MailOpen } from 'lucide-react'
+import { Form, Formik, type FormikErrors } from 'formik'
+import toast from 'react-hot-toast'
+
+import { useAuthDataUpdate, useAuthState, UserType } from '@/context/authContext'
+import { useTimerState } from '@/context/timerContext'
+import BridgeApiClient from '@/lib/BridgeApiClient'
+import BridgeAuthApiClient from '@/lib/userAuthApiClient'
+import { type AuthConnectResponse } from '@/Models/BridgeAuth'
+
+import SubmitButton from './buttons/submitButton'
+import { DocIframe } from './docInIframe'
+import NumericInput from './Input/NumericInput'
+import Modal from './modal/modal'
+import TimerWithContext from './TimerComponent'
+import { classNames } from './utils/classNames'
+import Widget from './Widget/Index'
 
 interface CodeFormValues {
-    Code: string
+  Code: string
 }
 
-const VerifyEmailCode: React.FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, disclosureLogin }) => {
+const VerifyEmailCode: React.FC<{
+  onSuccessfullVerify: (authresponse: AuthConnectResponse) => Promise<void>
+  disclosureLogin?: boolean
+}> = ({ 
+  onSuccessfullVerify, 
+  disclosureLogin 
+}) => {
+
     const initialValues: CodeFormValues = { Code: '' }
     const { start: startTimer, started } = useTimerState()
-    const { tempEmail, userLockedOut, guestAuthData, userType } = useAuthState();
+    const { tempEmail, userLockedOut, guestAuthData, userType } = useAuthState()
     const { updateAuthData, setUserLockedOut } = useAuthDataUpdate()
-    const [modalUrl, setModalUrl] = useState<string | null>(null);
+    const [modalUrl, setModalUrl] = useState<string | null>(null)
     const [showDocModal, setShowDocModal] = useState(false)
 
     const handleResendCode = useCallback(async () => {
         try {
-            const apiClient = new BridgeAuthApiClient();
+            const apiClient = new BridgeAuthApiClient()
             const res = await apiClient.getCodeAsync(tempEmail ?? '')
             const next = new Date(res?.data?.next)
             const now = new Date()
@@ -70,14 +75,14 @@ const VerifyEmailCode: React.FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, 
             initialValues={initialValues}
             validateOnMount={true}
             validate={(values: CodeFormValues) => {
-                const errors: FormikErrors<CodeFormValues> = {};
+                const errors: FormikErrors<CodeFormValues> = {}
                 if (!/^[0-9]*$/.test(values.Code)) {
-                    errors.Code = "Value should be numeric";
+                    errors.Code = "Value should be numeric"
                 }
                 else if (values.Code.length != 6) {
-                    errors.Code = `The length should be 6 instead of ${values.Code.length}`;
+                    errors.Code = `The length should be 6 instead of ${values.Code.length}`
                 }
-                return errors;
+                return errors
             }}
             onSubmit={async (values: CodeFormValues) => {
                 try {
@@ -85,11 +90,11 @@ const VerifyEmailCode: React.FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, 
                         //TODO show validation error
                         return
                     }
-                    var apiAuthClient = new BridgeAuthApiClient();
+                    var apiAuthClient = new BridgeAuthApiClient()
                     var apiClient = new BridgeApiClient()
                     const res = await apiAuthClient.connectAsync(tempEmail, values.Code)
                     updateAuthData(res)
-                    await onSuccessfullVerify(res);
+                    await onSuccessfullVerify(res)
                     if (userType == UserType.GuestUser && guestAuthData?.access_token) await apiClient.SwapsMigration(guestAuthData?.access_token)
                 }
                 catch ( error: any ) {
@@ -171,7 +176,7 @@ const VerifyEmailCode: React.FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, 
                                 <Widget.Content center={true}>
                                     <MailOpen className='w-16 h-16 mt-auto text-secondary self-center' />
                                     <div className='text-center mt-5'>
-                                        <p className='text-lg'><span>Please enter the 6 digit code sent to&nbsp;</span><span className='font-medium '>{tempEmail}</span></p>
+                                        <p className='text-lg'><span>Please enter the 6 digit code sent to&nbsp</span><span className='font-medium '>{tempEmail}</span></p>
                                     </div>
                                     <div className="relative rounded-md shadow-sm mt-5">
                                         <NumericInput
@@ -203,10 +208,10 @@ const VerifyEmailCode: React.FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, 
                                 </Widget.Content>
                                 <Widget.Footer>
                                     <p className=' text-xs sm:text-sm mb-3 md:mb-5'>
-                                        <span>By clicking Confirm you agree to Bridge&apos;s&nbsp;</span><span
+                                        <span>By clicking Confirm you agree to Bridge&aposs&nbsp</span><span
                                             onClick={handleOpenTerms}
                                             className='decoration  underline-offset-1 underline hover:no-underline cursor-pointer'> Terms of Service
-                                        </span><span>&nbsp;and&nbsp;</span>
+                                        </span><span>&nbspand&nbsp</span>
                                         <span
                                             onClick={handleOpenPrivacyPolicy}
                                             className='decoration  underline-offset-1 underline hover:no-underline cursor-pointer'>Privacy Policy
@@ -229,7 +234,7 @@ const VerifyEmailCode: React.FC<VerifyEmailCodeProps> = ({ onSuccessfullVerify, 
         </Formik>
     </>
 
-    );
+    )
 }
 
-export default VerifyEmailCode;
+export default VerifyEmailCode
