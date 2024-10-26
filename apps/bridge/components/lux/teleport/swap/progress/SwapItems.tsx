@@ -177,7 +177,7 @@ const SwapItems: React.FC<IProps> = ({
               <>
                 <WalletIcon height={20} width={20} />
                 <div className="opacity-80">
-                  {Intl.NumberFormat().format(Number(sourceBalance))}{" "}
+                  {truncateDecimals(Number(sourceBalance), 5)}{" "}
                   {sourceAsset.asset}
                 </div>
               </>
@@ -205,11 +205,11 @@ const SwapItems: React.FC<IProps> = ({
             </div>
             <div className="flex flex-col text-[#85c285]">
               <p className=" text-sm">
-                {truncateDecimals(Number(sourceAmount), 6)}{" "}
+                {truncateDecimals(Number(sourceAmount) * 0.99, 6)}{" "}
                 {destinationAsset.asset}
               </p>
               <p className=" text-sm flex justify-end">
-                ${truncateDecimals(Number(sourceAmount) * tokenPrice, 6)}
+                ${truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6)}
               </p>
             </div>
           </div>
@@ -222,7 +222,7 @@ const SwapItems: React.FC<IProps> = ({
               <>
                 <WalletIcon height={20} width={20} />
                 <div className="opacity-80">
-                  {Intl.NumberFormat().format(Number(destinationBalance))}{" "}
+                  {truncateDecimals(Number(destinationBalance), 5)}{" "}
                   {destinationAsset.asset}
                 </div>
               </>
