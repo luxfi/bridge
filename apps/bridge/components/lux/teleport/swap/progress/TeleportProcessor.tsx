@@ -12,12 +12,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
+import useNotification from "@/hooks/useNotification";
 
 //hooks
-import { useSwitchNetwork } from "wagmi";
+import { useSwitchChain, useChainId } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
@@ -25,7 +25,6 @@ import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { Gauge } from "@/components/gauge";
 import { Network, Token } from "@/types/teleport";
-import { getTxHash } from "zksync/build/utils";
 
 interface IProps {
   className?: string;
@@ -56,12 +55,11 @@ const TeleportProcessor: React.FC<IProps> = ({
   const [, setMpcSignature] = useAtom(mpcSignatureAtom);
   //hooks
   const signer = useEthersSigner();
-  const { chain } = useNetwork();
-  const { switchNetwork } = useSwitchNetwork();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const { connectWallet } = useWallet();
 
-  //chain id
-  const chainId = chain?.id;
+  const { showNotification } = useNotification();
 
   const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith("Lux") ? true : false),
@@ -76,8 +74,8 @@ const TeleportProcessor: React.FC<IProps> = ({
         getMpcSignature();
       } else {
         sourceNetwork.chain_id &&
-          switchNetwork &&
-          switchNetwork(sourceNetwork.chain_id);
+          switchChain &&
+          switchChain({ chainId: sourceNetwork.chain_id });
       }
     }
   }, [swapStatus, chainId, signer]);
@@ -126,12 +124,14 @@ const TeleportProcessor: React.FC<IProps> = ({
       } else {
         const { msg } = res;
         if (String(msg).includes("InvalidSenderError")) {
-          toast.error(
-            `Invaild Token Sender, Please try using sender's account`
+          showNotification(
+            "Invalid token sender. Try again using correct sender's account",
+            "warn"
           );
         } else {
-          toast.error(
-            `Failed to get signature from MPC oracle network, Please try again`
+          showNotification(
+            "Failed to get signature from MPC oracle network, Please try again",
+            "error"
           );
         }
       }
@@ -143,12 +143,15 @@ const TeleportProcessor: React.FC<IProps> = ({
   };
   const handleGetMpcSignature = () => {
     if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
+      showNotification(
+        "No connected wallet. Please connect your wallet",
+        "warn"
+      );
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
       sourceNetwork.chain_id &&
-        switchNetwork &&
-        switchNetwork(sourceNetwork.chain_id);
+        switchChain &&
+        switchChain({ chainId: sourceNetwork.chain_id });
     } else {
       getMpcSignature();
     }

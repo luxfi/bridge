@@ -1,6 +1,6 @@
 import React from "react";
-import toast from "react-hot-toast";
 import Web3 from "web3";
+import useNotification from "@/hooks/useNotification";
 import {
   swapStatusAtom,
   mpcSignatureAtom,
@@ -14,13 +14,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
-
+import { ethers } from "ethers";
 import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 //hooks
-import { useSwitchNetwork } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
 import { parseUnits } from "@/lib/resolveChain";
 
 import axios from "axios";
@@ -32,6 +30,7 @@ import { Gauge } from "@/components/gauge";
 import { Network, Token } from "@/types/teleport";
 import { ArrowRight } from "lucide-react";
 import { formatUnits } from "viem";
+import { useChainId, useSwitchChain } from "wagmi";
 
 interface IProps {
   className?: string;
@@ -54,6 +53,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   className,
   swapId,
 }) => {
+  const { showNotification } = useNotification();
   //state
   const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false);
   //atoms
@@ -62,9 +62,9 @@ const PayoutProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
   const [mpcSignature] = useAtom(mpcSignatureAtom);
   //hooks
-  const { chain } = useNetwork();
+  const chainId = useChainId();
   const signer = useEthersSigner();
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchChain } = useSwitchChain();
   const { connectWallet } = useWallet();
 
   const isWithdrawal = React.useMemo(
@@ -72,17 +72,20 @@ const PayoutProcessor: React.FC<IProps> = ({
     [sourceAsset]
   );
 
-  //chain id
-  const chainId = chain?.id;
-
   React.useEffect(() => {
     if (!signer) {
       connectWallet("evm");
     } else {
-      if (chainId === destinationNetwork.chain_id) {
-        isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
+      if (isWithdrawal) {
+        if (chainId === destinationNetwork.chain_id) {
+          withdrawDestinationToken();
+        } else {
+          destinationNetwork.chain_id &&
+            switchChain &&
+            switchChain({ chainId: destinationNetwork.chain_id });
+        }
       } else {
-        destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
+        payoutDestinationToken();
       }
     }
   }, [swapStatus, chainId, signer, isWithdrawal]);
@@ -109,12 +112,22 @@ const PayoutProcessor: React.FC<IProps> = ({
       // address receiverAddress_,
       // bytes memory signedTXInfo_,
       // string memory vault_
-      if (!destinationNetwork.chain_id) return
+      if (!destinationNetwork.chain_id) return;
+
+      // Set up provider and wallet
+      const provider = new ethers.providers.JsonRpcProvider(
+        destinationNetwork.node
+      );
+
+      // Replace with your private key (store it securely, not hardcoded in production)
+      const privateKey = process.env.NEXT_PUBLIC_LUX_SIGNER;
+      console.log({ privateKey }, process.env);
+      const wallet = new ethers.Wallet(privateKey!, provider);
 
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
         teleporterABI,
-        signer
+        wallet
       );
 
       const _signer = await bridgeContract.previewBridgeStealth(
@@ -149,9 +162,9 @@ const PayoutProcessor: React.FC<IProps> = ({
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification(`User rejected transaction`, "warn");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification(`Failed to run transaction`, "error");
       }
     } finally {
       setIsGettingPayout(false);
@@ -172,7 +185,7 @@ const PayoutProcessor: React.FC<IProps> = ({
     // previewVaultWithdraw
 
     console.log("::data for bridge withdraw:", withdrawData);
-    if (!destinationNetwork.chain_id) return
+    if (!destinationNetwork.chain_id) return;
     try {
       const bridgeContract = new Contract(
         CONTRACTS[destinationNetwork.chain_id].teleporter,
@@ -194,10 +207,11 @@ const PayoutProcessor: React.FC<IProps> = ({
         Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) <
         Number(sourceAmount)
       ) {
-        toast.error(
+        showNotification(
           `Bridge doesnt have enough balance to withdraw. You can only withdraw ${Number(
             formatUnits(previewVaultWithdraw, destinationAsset.decimals)
-          )}tokens now. Please wait for the withdrawal to be activated.`
+          )}tokens now. Please wait for the withdrawal to be activated.`,
+          "error"
         );
         return;
       }
@@ -243,9 +257,9 @@ const PayoutProcessor: React.FC<IProps> = ({
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification(`User rejected transaction`, "warn");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification(`Failed to run transaction`, "error");
       }
     } finally {
       setIsGettingPayout(false);
@@ -254,12 +268,23 @@ const PayoutProcessor: React.FC<IProps> = ({
 
   const handlePayoutDestinationToken = () => {
     if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
+      showNotification(
+        `No connected wallet. Please connect your wallet`,
+        "error"
+      );
       connectWallet("evm");
-    } else if (chainId !== destinationNetwork.chain_id) {
-      destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
     } else {
-      isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
+      if (isWithdrawal) {
+        if (chainId === destinationNetwork.chain_id) {
+          withdrawDestinationToken();
+        } else {
+          destinationNetwork.chain_id &&
+            switchChain &&
+            switchChain({ chainId: destinationNetwork.chain_id });
+        }
+      } else {
+        payoutDestinationToken();
+      }
     }
   };
 

@@ -14,10 +14,8 @@ import {
 } from "@/components/shadcn/tooltip";
 
 //hooks
-import { useSwitchNetwork } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
@@ -25,7 +23,6 @@ import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { Gauge } from "@/components/gauge";
 import { Network, Token } from "@/types/fireblocks";
-import { getTxHash } from "zksync/build/utils";
 
 interface IProps {
   className?: string;
@@ -56,100 +53,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   const [, setMpcSignature] = useAtom(mpcSignatureAtom);
   //hooks
   const signer = useEthersSigner();
-  const { chain } = useNetwork();
-  const { switchNetwork } = useSwitchNetwork();
   const { connectWallet } = useWallet();
-
-  //chain id
-  const chainId = chain?.id;
-
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith("Lux") ? true : false),
-    [sourceAsset]
-  );
-
-  React.useEffect(() => {
-    if (!signer) {
-      connectWallet("evm");
-    } else {
-      if (chainId === sourceNetwork?.chain_id) {
-        getMpcSignature();
-      } else {
-        sourceNetwork.chain_id &&
-          switchNetwork &&
-          switchNetwork(sourceNetwork.chain_id);
-      }
-    }
-  }, [swapStatus, chainId, signer]);
-
-  const getMpcSignature = async () => {
-    try {
-      setIsMpcSigning(true);
-      const msgSignature = await signer?.signMessage(
-        "Sign to prove you are initiator of transaction."
-      );
-      const toNetworkId = destinationNetwork?.chain_id;
-      const receiverAddressHash = Web3.utils.keccak256(
-        String(destinationAddress)
-      ); //Web3.utils.keccak256(evmToAddress.slice(2));
-
-      const signData = {
-        txId: userTransferTransaction,
-        fromNetworkId: sourceNetwork?.chain_id,
-        toNetworkId: toNetworkId,
-        toTokenAddress: destinationAsset?.contract_address,
-        msgSignature: msgSignature,
-        receiverAddressHash: receiverAddressHash,
-      };
-
-      const response = await fetch(`/api/teleport/getsig`, {
-        method: "POST", // Specify the method (GET is default, so it's optional here)
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signData),
-      });
-      const res = await response.json();
-      console.log("data from mpc oracle network:::", res);
-      if (res.status) {
-        await axios.post(`/api/swaps/mpcsign/${swapId}`, {
-          txHash: res.data.signature,
-          amount: sourceAmount,
-          from: signer?._address,
-          to: CONTRACTS[String(sourceNetwork?.chain_id)].teleporter,
-        });
-        setMpcSignature(res.data.signature);
-        setSwapStatus("user_payout_pending");
-      } else {
-        const { msg } = res;
-        if (String(msg).includes("InvalidSenderError")) {
-          toast.error(
-            `Invaild Token Sender, Please try using sender's account`
-          );
-        } else {
-          toast.error(
-            `Failed to get signature from MPC oracle network, Please try again`
-          );
-        }
-      }
-    } catch (err) {
-      console.log("mpc sign request failed:::", err);
-    } finally {
-      setIsMpcSigning(false);
-    }
-  };
-  const handleGetMpcSignature = () => {
-    if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
-      connectWallet("evm");
-    } else if (chainId !== sourceNetwork.chain_id) {
-      sourceNetwork.chain_id &&
-        switchNetwork &&
-        switchNetwork(sourceNetwork.chain_id);
-    } else {
-      getMpcSignature();
-    }
-  };
 
   return (
     <div className={`w-full flex flex-col ${className}`}>
@@ -181,10 +85,7 @@ const TeleportProcessor: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>
-                    {sourceAsset?.asset}{" "}
-                    {isWithdrawal ? "Burned" : "Transferred"}
-                  </span>
+                  <span>{sourceAsset?.asset} </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
                     <Tooltip>
@@ -262,10 +163,7 @@ const TeleportProcessor: React.FC<IProps> = ({
                   </svg>
                   <div className="flex items-center gap-3 text-sm">
                     <span>Signing from MPC Oracle</span>{" "}
-                    <a
-                      onClick={handleGetMpcSignature}
-                      className="underline font-bold cursor-pointer hover:font-extrabold text-[#77aa63]"
-                    >
+                    <a className="underline font-bold cursor-pointer hover:font-extrabold text-[#77aa63]">
                       Try Again
                     </a>
                   </div>

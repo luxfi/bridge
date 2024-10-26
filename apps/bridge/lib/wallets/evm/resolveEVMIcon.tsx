@@ -1,60 +1,59 @@
-import MetaMaskIcon from "../../../components/icons/Wallets/MetaMask"
-import WalletConnectIcon from "../../../components/icons/Wallets/WalletConnect"
-import BitKeep from "../../../components/icons/Wallets/BitKeep"
-import RainbowIcon from "../../../components/icons/Wallets/Rainbow"
-import CoinbaseIcon from "../../../components/icons/Wallets/Coinbase"
-import { Coins } from "lucide-react"
-import Phantom from "../../../components/icons/Wallets/Phantom"
-import { Connector } from "wagmi"
+import MetaMaskIcon from "../../../components/icons/Wallets/MetaMask";
+import WalletConnectIcon from "../../../components/icons/Wallets/WalletConnect";
+import BitKeep from "../../../components/icons/Wallets/BitKeep";
+import RainbowIcon from "../../../components/icons/Wallets/Rainbow";
+import CoinbaseIcon from "../../../components/icons/Wallets/Coinbase";
+import { Coins } from "lucide-react";
+import Phantom from "../../../components/icons/Wallets/Phantom";
+import { Connector } from "wagmi";
 
-export const ResolveEVMWalletIcon = ({ connector }: { connector: Connector<any, any> }) => {
-    let icon: ((props: any) => JSX.Element) | null = null;
+export const ResolveEVMWalletIcon = ({
+  connector,
+}: {
+  connector: Connector;
+}) => {
+  let icon: ((props: any) => JSX.Element) | null = null;
 
-    // Check first by id then by name
-    switch (connector?.id?.toLowerCase()) {
-        case KnownKonnectorIds.MetaMask:
-            icon = MetaMaskIcon;
-            break;
-        case KnownKonnectorIds.WalletConnect:
-            icon = WalletConnectIcon;
-            break;
-        case KnownKonnectorIds.Rainbow:
-            icon = RainbowIcon;
-            break;
-        case KnownKonnectorIds.BitKeep:
-            icon = BitKeep;
-            break;
-        case KnownKonnectorIds.CoinbaseWallet:
-            icon = CoinbaseIcon;
-            break;
+  // Check first by id then by name
+  const _wallet = connector?.id?.toLowerCase() ?? "";
+  if (_wallet.includes(KnownKonnectorIds.MetaMask)) {
+    icon = MetaMaskIcon;
+  } else if (_wallet.includes(KnownKonnectorIds.WalletConnect)) {
+    icon = WalletConnectIcon;
+  } else if (_wallet.includes(KnownKonnectorIds.Rainbow)) {
+    icon = RainbowIcon;
+  } else if (_wallet.includes(KnownKonnectorIds.BitKeep)) {
+    icon = BitKeep;
+  } else if (_wallet.includes(KnownKonnectorIds.CoinbaseWallet)) {
+    icon = CoinbaseIcon;
+  }
+
+  if (icon == null) {
+    switch (connector?.name?.toLowerCase()) {
+      case KnownKonnectorNames.Phantom:
+        icon = Phantom;
     }
+  }
 
-    if (icon == null) {
-        switch (connector?.name?.toLowerCase()) {
-            case KnownKonnectorNames.Phantom:
-                icon = Phantom;
-        }
-    }
+  if (icon == null) {
+    icon = CoinsIcon;
+  }
 
-    if (icon == null) {
-        icon = CoinsIcon
-    }
-
-    return icon;
-}
+  return icon;
+};
 
 const KnownKonnectorIds = {
-    MetaMask: 'metamask',
-    WalletConnect: 'walletconnect',
-    Rainbow: 'rainbow',
-    BitKeep: 'bitkeep',
-    CoinbaseWallet: 'coinbasewallet',
-}
+  MetaMask: "metamask",
+  WalletConnect: "walletconnect",
+  Rainbow: "rainbow",
+  BitKeep: "bitkeep",
+  CoinbaseWallet: "coinbasewallet",
+};
 
 const KnownKonnectorNames = {
-    Phantom: 'phantom',
-}
+  Phantom: "phantom",
+};
 
 const CoinsIcon = (props) => {
-    return <Coins {...props} strokeWidth={2} />
-}
+  return <Coins {...props} strokeWidth={2} />;
+};

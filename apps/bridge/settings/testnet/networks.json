@@ -823,7 +823,7 @@
     "currencies": [
       {
         "name": "jUSDC",
-        "asset": "USDC",
+        "asset": "jUSDC",
         "contract_address": "EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
         "decimals": 6,
         "status": "active",

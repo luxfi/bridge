@@ -60,6 +60,7 @@ model Currency {
   source_currency             Swap[]          @relation("sourceAsset")
   destination_currency        Swap[]          @relation("destinationAsset")
 
+  @@unique([network_id, asset]) // Composite unique constraint
   @@index([network_id])
   @@index([asset])
 }

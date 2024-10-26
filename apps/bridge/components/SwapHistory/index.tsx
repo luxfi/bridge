@@ -237,6 +237,8 @@ function TransactionsHistory() {
                           (t) => t.type === TransactionType.Output
                         );
 
+                        console.log(networks);
+
                         return (
                           <tr
                             onClick={() => handleopenSwapDetails(swap)}
@@ -249,25 +251,25 @@ function TransactionsHistory() {
                               )}
                             >
                               <div className=" flex items-center">
-                                <div className="flex-shrink-0 h-5 w-5 relative">
+                                <div className="flex-shrink-0 h-6 w-6 relative block">
                                   <Image
                                     // src={resolveNetworkImage(swap.source_asset)}
                                     src={sourceAsset?.logo!}
                                     alt="From Logo"
                                     height="60"
                                     width="60"
-                                    className="rounded-md object-contain"
+                                    className="rounded-full object-contain"
                                   />
                                 </div>
                                 <ArrowRight className="h-4 w-4 mx-2" />
-                                <div className="flex-shrink-0 h-5 w-5 relative block">
+                                <div className="flex-shrink-0 h-6 w-6 relative block">
                                   <Image
                                     // src={resolveNetworkImage(swap.destination_asset)}
                                     src={destinationAsset?.logo!}
                                     alt="To Logo"
-                                    height="60"
-                                    width="60"
-                                    className="rounded-md object-contain"
+                                    height="70"
+                                    width="70"
+                                    className="rounded-full border border-[#f3f3f32d] object-contain"
                                   />
                                 </div>
                               </div>

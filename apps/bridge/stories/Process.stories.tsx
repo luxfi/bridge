@@ -11,8 +11,8 @@ import {
   SwapDataUpdateContext,
 } from "../context/swap";
 import { SettingsStateContext } from "../context/settings";
-import { WagmiConfig, configureChains, createConfig } from "wagmi";
-import { publicProvider } from "wagmi/providers/public";
+// import { WagmiConfig, configureChains, createConfig } from "wagmi";
+// import { publicProvider } from "wagmi/providers/public";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   BalancesStateContext,
@@ -53,28 +53,28 @@ import BalancesStateMock from "./Mocks/context/BalancesState";
 const WALLETCONNECT_PROJECT_ID = "28168903b2d30c75e5f7f2d71902581b";
 const settingsChains = SettingChains;
 
-const { chains, publicClient } = configureChains(settingsChains, [
-  publicProvider(),
-]);
+// const { chains, publicClient } = configureChains(settingsChains, [
+//   publicProvider(),
+// ]);
 
 const projectId = WALLETCONNECT_PROJECT_ID;
-const connectors = connectorsForWallets([
-  {
-    groupName: "Popular",
-    wallets: [
-      metaMaskWallet({ projectId, chains }),
-      walletConnectWallet({ projectId, chains }),
-    ],
-  },
-  {
-    groupName: "Wallets",
-    wallets: [
-      argentWallet({ projectId, chains }),
-      bitgetWallet({ projectId, chains }),
-      rainbowWallet({ projectId, chains }),
-    ],
-  },
-]);
+// const connectors = connectorsForWallets([
+//   {
+//     groupName: "Popular",
+//     wallets: [
+//       metaMaskWallet({ projectId, chains }),
+//       walletConnectWallet({ projectId, chains }),
+//     ],
+//   },
+//   {
+//     groupName: "Wallets",
+//     wallets: [
+//       argentWallet({ projectId, chains }),
+//       bitgetWallet({ projectId, chains }),
+//       rainbowWallet({ projectId, chains }),
+//     ],
+//   },
+// ]);
 window.plausible = () => {};
 const Comp: FC<{
   settings: any;
@@ -83,63 +83,64 @@ const Comp: FC<{
   failedSwapOutOfRange?: SwapItem;
   theme?: "default" | "light";
 }> = ({ settings, swap, failedSwap, failedSwapOutOfRange, theme }) => {
-  const wagmiConfig = createConfig({
-    autoConnect: true,
-    connectors,
-    publicClient,
-  });
-  const appSettings = new BridgeAppSettings(Settings);
-  const swapContextInitialValues: SwapData = {
-    codeRequested: false,
-    swap,
-    addressConfirmed: false,
-    depositeAddressIsfromAccount: false,
-    withdrawType: undefined,
-    swapTransaction: undefined,
-    selectedAssetNetwork: undefined,
-  };
-  if (!appSettings) {
-    return <div>Loading...</div>;
-  }
-  const themeData = theme ? THEME_COLORS[theme] : THEME_COLORS["default"];
-  return (
-    <WagmiConfig config={wagmiConfig}>
-      <IntercomProvider appId="123">
-        <SettingsStateContext.Provider value={appSettings}>
-          <Layout settings={Settings} themeData={themeData}>
-            <RainbowKitComponent>
-              <SwapDataStateContext.Provider value={swapContextInitialValues}>
-                <AuthStateContext.Provider
-                  value={{
-                    authData: undefined,
-                    email: "asd@gmail.com",
-                    codeRequested: false,
-                    guestAuthData: undefined,
-                    tempEmail: undefined,
-                    userId: "1",
-                    userLockedOut: false,
-                    userType: UserType.AuthenticatedUser,
-                  }}
-                >
-                  <AuthDataUpdateContext.Provider value={AuthMockFunctions}>
-                    <SwapDataUpdateContext.Provider value={SwapMockFunctions}>
-                      <BalancesStateContext.Provider value={BalancesStateMock}>
-                        <BalancesStateUpdateContext.Provider
-                          value={WalletMockFunctions}
-                        >
-                          <SwapDetails type="widget" />
-                        </BalancesStateUpdateContext.Provider>
-                      </BalancesStateContext.Provider>
-                    </SwapDataUpdateContext.Provider>
-                  </AuthDataUpdateContext.Provider>
-                </AuthStateContext.Provider>
-              </SwapDataStateContext.Provider>
-            </RainbowKitComponent>
-          </Layout>
-        </SettingsStateContext.Provider>
-      </IntercomProvider>
-    </WagmiConfig>
-  );
+  // const wagmiConfig = createConfig({
+  //   autoConnect: true,
+  //   connectors,
+  //   publicClient,
+  // });
+  // const appSettings = new BridgeAppSettings(Settings);
+  // const swapContextInitialValues: SwapData = {
+  //   codeRequested: false,
+  //   swap,
+  //   addressConfirmed: false,
+  //   depositeAddressIsfromAccount: false,
+  //   withdrawType: undefined,
+  //   swapTransaction: undefined,
+  //   selectedAssetNetwork: undefined,
+  // };
+  // if (!appSettings) {
+  //   return <div>Loading...</div>;
+  // }
+  // const themeData = theme ? THEME_COLORS[theme] : THEME_COLORS["default"];
+  // return (
+  //   <WagmiConfig config={wagmiConfig}>
+  //     <IntercomProvider appId="123">
+  //       <SettingsStateContext.Provider value={appSettings}>
+  //         <Layout settings={Settings} themeData={themeData}>
+  //           <RainbowKitComponent>
+  //             <SwapDataStateContext.Provider value={swapContextInitialValues}>
+  //               <AuthStateContext.Provider
+  //                 value={{
+  //                   authData: undefined,
+  //                   email: "asd@gmail.com",
+  //                   codeRequested: false,
+  //                   guestAuthData: undefined,
+  //                   tempEmail: undefined,
+  //                   userId: "1",
+  //                   userLockedOut: false,
+  //                   userType: UserType.AuthenticatedUser,
+  //                 }}
+  //               >
+  //                 <AuthDataUpdateContext.Provider value={AuthMockFunctions}>
+  //                   <SwapDataUpdateContext.Provider value={SwapMockFunctions}>
+  //                     <BalancesStateContext.Provider value={BalancesStateMock}>
+  //                       <BalancesStateUpdateContext.Provider
+  //                         value={WalletMockFunctions}
+  //                       >
+  //                         <SwapDetails type="widget" />
+  //                       </BalancesStateUpdateContext.Provider>
+  //                     </BalancesStateContext.Provider>
+  //                   </SwapDataUpdateContext.Provider>
+  //                 </AuthDataUpdateContext.Provider>
+  //               </AuthStateContext.Provider>
+  //             </SwapDataStateContext.Provider>
+  //           </RainbowKitComponent>
+  //         </Layout>
+  //       </SettingsStateContext.Provider>
+  //     </IntercomProvider>
+  //   </WagmiConfig>
+  // );
+  return <div></div>;
 };
 
 const DUMMY_TRANSACTION = {
