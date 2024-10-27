@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 
-export const Gauge = ({
+const Gauge = ({
     value,
     size = "small",
     showCheckmark = false
@@ -84,4 +84,6 @@ export const Gauge = ({
             ) : null}
         </div>
     );
-};
+}
+
+export default Gauge

@@ -24,7 +24,7 @@ import SpinIcon from '../icons/spinIcon'
 import SwapDetails from './SwapDetailsComponent'
 import { classNames } from '../utils/classNames'
 import SubmitButton from '../buttons/submitButton'
-import { SwapHistoryComponentSceleton } from '../Sceletons'
+import { SwapHistoryComponentSkeleton } from '../Skeletons'
 import StatusIcon from './StatusIcons'
 import toast from 'react-hot-toast'
 import ToggleButton from '../buttons/toggleButton'
@@ -159,7 +159,7 @@ function TransactionsHistory() {
     <div className='bg-background border border-[#404040]  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]'>
       <HeaderWithMenu goBack={goBack} />
       {page == 0 && loading ? (
-        <SwapHistoryComponentSceleton />
+        <SwapHistoryComponentSkeleton />
       ) : (
         <>
           {Number(swaps?.length) > 0 ? (

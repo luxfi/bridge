@@ -11,7 +11,7 @@ import { useSettings } from "@/context/settings"
 import BridgeApiClient, { type Campaign, type Leaderboard, type Reward } from "@/lib/BridgeApiClient"
 import { ApiResponse } from "@/Models/ApiResponse"
 
-import { RewardsComponentLeaderboardSceleton } from "../../Sceletons"
+import { RewardsComponentLeaderboardSkeleton } from "../../Skeletons"
 import ClickTooltip from "../../Tooltips/ClickTooltip"
 import shortenAddress from "../../utils/ShortenAddress"
 import { truncateDecimals } from "../../utils/RoundDecimals"
@@ -38,7 +38,7 @@ const Component: React.FC<{
     const leaderboard = leaderboardData?.data
 
     if (isLoading) {
-        return <RewardsComponentLeaderboardSceleton />
+        return <RewardsComponentLeaderboardSkeleton />
     }
 
     if (!leaderboard) {

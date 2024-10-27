@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ExternalLink } from "lucide-react";
-import { DocInFrameSceleton } from "./Sceletons";
+import { DocInFrameSkeleton } from "./Skeletons";
 
 type Props = {
     URl: string;
@@ -19,7 +19,7 @@ export function DocIframe({ URl, onConfirm, className }: Props) {
     return (
         <div className="flex flex-col justify-between space-y-4 h-full">
             {
-                loading && <DocInFrameSceleton />
+                loading && <DocInFrameSkeleton />
             }
             <div className='h-full'>
 

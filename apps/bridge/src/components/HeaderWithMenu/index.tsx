@@ -7,14 +7,15 @@ import { ArrowLeft } from 'lucide-react'
 import ChatIcon from "../icons/ChatIcon"
 import dynamic from "next/dynamic"
 import BridgeMenu from "../BridgeMenu"
-import { Button } from "@luxdefi/ui/primitives"
+import { Button } from "@hanzo/ui/primitives"
 import ToggleButton from "../buttons/toggleButton"
 import { useAtom } from "jotai"
 import { useTelepoterAtom } from "@/store/teleport"
 
-const WalletsHeader = dynamic(() => import("../ConnectedWallets").then((comp) => (comp.WalletsHeader)), {
-  loading: () => <></>
-})
+const WalletsHeader = dynamic(
+  () => import("../ConnectedWallets").then((comp) => (comp.WalletsHeader)), 
+  { loading: () => (null) }
+)
 
 function HeaderWithMenu({ goBack }: { goBack: (() => void) | undefined | null }) {
   const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom);

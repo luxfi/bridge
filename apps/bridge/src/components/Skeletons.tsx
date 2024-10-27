@@ -2,7 +2,7 @@ import { ChevronRight, Clock } from "lucide-react"
 import BackgroundField from "./backgroundField"
 import { classNames } from "./utils/classNames"
 
-export const SwapHistoryComponentSceleton = () => {
+export const SwapHistoryComponentSkeleton = () => {
 
   return <div className="animate-pulse">
     <div className=" mb-10 ">
@@ -176,7 +176,7 @@ export const SwapHistoryComponentSceleton = () => {
 
 }
 
-export const SwapDetailsComponentSceleton = () => {
+export const SwapDetailsComponentSkeleton = () => {
   return <div className="animate-pulse"><div className="w-full grid grid-flow-row">
     <div className="rounded-md w-full grid grid-flow-row">
       <div className="items-center block text-base font-lighter leading-6 ">
@@ -199,7 +199,7 @@ export const SwapDetailsComponentSceleton = () => {
   </div>
 }
 
-export const DocInFrameSceleton = () => {
+export const DocInFrameSkeleton = () => {
   return <div className="shadow rounded-md w-full mx-auto px-2 md:px-4">
     <div className="animate-pulse flex space-x-4">
       <div className="flex-1 items-center space-y-6 py-1 content-start">
@@ -222,7 +222,7 @@ export const DocInFrameSceleton = () => {
   </div>
 }
 
-export const ExchangesComponentSceleton = () => {
+export const ExchangesComponentSkeleton = () => {
 
   return <>
     {[...Array(12)]?.map((item, index) =>
@@ -245,7 +245,7 @@ export const ExchangesComponentSceleton = () => {
 
 }
 
-export const RewardsComponentSceleton = () => {
+export const RewardsComponentSkeleton = () => {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
@@ -306,7 +306,7 @@ export const RewardsComponentSceleton = () => {
   )
 }
 
-export const RewardsComponentLeaderboardSceleton = () => (
+export const RewardsComponentLeaderboardSkeleton = () => (
   <div className="space-y-2">
     <div className="flex justify-start">
       <div className="rounded-md w-48 bg-gray-500 h-5 animate-pulse" />

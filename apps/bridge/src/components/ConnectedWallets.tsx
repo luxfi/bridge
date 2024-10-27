@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 
-import { Button } from '@luxdefi/ui/primitives'
+import { Button } from '@hanzo/ui/primitives'
 
 import WalletIcon from "./icons/WalletIcon"
 import shortenAddress from "./utils/ShortenAddress"
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import AddressIcon from "./AddressIcon"
 import { type Wallet } from "../stores/walletStore"
 
-export const WalletsHeader = () => {
+const WalletsHeader = () => {
 
   const { wallets } = useWallet()
   const [openDialog, setOpenDialog] = useState<boolean>(false)
@@ -71,7 +71,7 @@ const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
   )
 }
 
-export const WalletsMenu = () => {
+const WalletsMenu = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false)
   const { wallets } = useWallet()
   const wallet = wallets[0]
@@ -173,3 +173,10 @@ const ConnectedWalletsDialog = ({ openDialog, setOpenDialog }: { openDialog: boo
     </Dialog>
   )
 }
+
+export {
+  ConnectedWalletsDialog as default,
+  WalletsMenu,
+  WalletsHeader
+}
+
