@@ -5,7 +5,7 @@ import { truncateDecimals } from "../../utils/RoundDecimals";
 import { type NetworkCurrency } from "@/Models/CryptoNetwork";
 
 
-export const ReceiveAmounts: React.FC<{
+const ReceiveAmounts: React.FC<{
   receive_amount?: number;
   currency?: NetworkCurrency | null;
   to: Layer | undefined | null;
@@ -49,7 +49,7 @@ export const ReceiveAmounts: React.FC<{
     </>
 }
 
-export const Refuel: React.FC<{
+const Refuel: React.FC<{
   currency?: NetworkCurrency | null;
   to?: Layer | null;
   refuel: boolean
@@ -77,4 +77,9 @@ export const Refuel: React.FC<{
         }
     </>
 
+}
+
+export {
+  ReceiveAmounts as default,
+  Refuel
 }

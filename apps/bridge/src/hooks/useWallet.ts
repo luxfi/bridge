@@ -19,7 +19,7 @@ export type WalletProvider = {
   name: string;
 };
 
-export default function useWallet() {
+function useWallet() {
   const WalletProviders: WalletProvider[] = [
     useTON(),
     useEVM(),
@@ -106,3 +106,5 @@ export default function useWallet() {
     getWithdrawalProviderWithNetworkName,
   };
 }
+
+export default useWallet

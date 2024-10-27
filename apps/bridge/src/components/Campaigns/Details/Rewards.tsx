@@ -9,7 +9,7 @@ import { useSettings } from "@/context/settings"
 import BackgroundField from "../../backgroundField";
 import type { Campaign, Reward, RewardPayout } from "@/lib/BridgeApiClient"
 import BridgeApiClient from "@/lib/BridgeApiClient"
-import { RewardsComponentSceleton } from "../../Sceletons"
+import { RewardsComponentSkeleton } from "../../Skeletons"
 import { ApiResponse } from "@/Models/ApiResponse"
 import ClickTooltip from "../../Tooltips/ClickTooltip"
 import shortenAddress from "../../utils/ShortenAddress"
@@ -30,7 +30,7 @@ const Rewards: React.FC<{
     const { data: payoutsData, isLoading: payoutsIsLoading } = useSWR<ApiResponse<RewardPayout[]>>(`/campaigns/${campaign.id}/payouts/${address}`, apiClient.fetcher, { dedupingInterval: 60000 })
 
     if (rewardsIsLoading || payoutsIsLoading) {
-        return <RewardsComponentSceleton />
+        return <RewardsComponentSkeleton />
     }
 
     const payouts = payoutsData?.data || []

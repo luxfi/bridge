@@ -1,5 +1,5 @@
 import { type ComponentProps, forwardRef } from 'react'
-import { cn } from '@luxdefi/ui/util'
+import { cn } from '@hanzo/ui/util'
 
 interface IconButtonProps extends Omit<ComponentProps<'button'>, 'color' | 'ref'> {
     icon?: React.ReactNode

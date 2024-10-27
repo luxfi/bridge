@@ -276,7 +276,7 @@ const TransferInvoice = () => {
 // }
 
 
-const Sceleton = () => {
+const Skeleton = () => {
     return <div className="animate-pulse rounded-lg p-4 flex items-center text-center bg-level-2 border border-[#404040]">
         <div className="flex-1 space-y-6 py-1 p-8 pt-4 items-center">
             <div className="h-2 bg-level-4 rounded self-center w-16 m-auto"></div>

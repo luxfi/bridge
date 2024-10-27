@@ -5,7 +5,7 @@ import { type Wallet } from "../../../stores/walletStore";
 import { type WalletProvider } from "../../../hooks/useWallet";
 import TON from "../../../components/icons/Wallets/TON";
 
-export default function useTON(): WalletProvider {
+function useTON(): WalletProvider {
     const withdrawalSupportedNetworks = [KnownInternalNames.Networks.TONMainnet]
     const autofillSupportedNetworks = withdrawalSupportedNetworks
     const name = 'ton'
@@ -46,3 +46,5 @@ export default function useTON(): WalletProvider {
         name
     }
 }
+
+export default useTON

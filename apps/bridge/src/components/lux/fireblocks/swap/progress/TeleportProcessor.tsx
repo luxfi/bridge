@@ -23,7 +23,7 @@ import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
-import { Gauge } from "@/components/gauge";
+import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
 
 const TeleportProcessor: React.FC<{

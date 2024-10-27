@@ -10,7 +10,7 @@ export default {
   applicationName: 'Lux Bridge',
   authors: {name: 'Lux Dev team'},
   keywords: "Lux Network, Blockchain Bridge, Multi-Chain, EVM, Solana, Bitcoin, Cross-Chain, Interoperability, Cryptocurrency, Blockchain Technology",
-  themeColor: { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  //themeColor: { media: "(prefers-color-scheme: dark)", color: "#000000" },
   icons: [
     {
       rel: 'icon',

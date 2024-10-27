@@ -9,7 +9,7 @@ import {
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
-import { Gauge } from "@/components/gauge";
+import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
 
 interface IProps {

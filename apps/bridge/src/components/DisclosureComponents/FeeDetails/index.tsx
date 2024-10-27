@@ -1,7 +1,7 @@
 
 'use client'
 import { type SwapFormValues } from '../../DTOs/SwapFormValues';
-import { ReceiveAmounts } from './ReceiveAmounts';
+import ReceiveAmounts from './ReceiveAmounts';
 import DetailedEstimates from './DetailedEstimates';
 import { useFee } from '@/context/feeContext';
 import { useSettings } from '@/context/settings';

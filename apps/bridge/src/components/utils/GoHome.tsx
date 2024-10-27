@@ -5,7 +5,7 @@ import { renderToString } from 'react-dom/server'
 import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
 import { Paperclip } from 'lucide-react'
 
-import { Logo } from '@luxdefi/ui/common'
+import { Logo } from '@luxfi/ui'
 
 import CopyButton from "../buttons/copyButton";
 import BridgeLogo from "../icons/BridgeLogo";
@@ -26,7 +26,7 @@ const GoHomeButton: React.FC<{
     {children ?? (
       <ContextMenuPrimitive.Root>
         <ContextMenuPrimitive.Trigger>
-          <Logo size='md' className="text-primary"/>
+          <Logo size='md' outerClx={className}/>
         </ContextMenuPrimitive.Trigger>
         <ContextMenuPrimitive.Content className="dialog-overlay absolute z-40 border h-fit text-muted border-[#404040] mt-2 w-fit rounded-md shadow-lg bg-level-1 focus:outline-none">
           <ContextMenuPrimitive.ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full rounded-t hover:bg-level-2 whitespace-nowrap">

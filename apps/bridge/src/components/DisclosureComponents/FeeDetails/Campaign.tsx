@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import useSWR from "swr"
 import Image from 'next/image';
 import { motion } from "framer-motion"

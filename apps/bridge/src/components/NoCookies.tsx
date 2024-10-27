@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from "react";
 
-import { LinkElement } from "@luxdefi/ui/primitives";
+import { LinkElement } from '@hanzo/ui/primitives';
 
 import MessageComponent from "./MessageComponent";
 import inIframe from "./utils/inIframe";
@@ -39,7 +39,7 @@ const NoCookies: React.FC = () => {
                     {embedded && (
                       <LinkElement
                         def={{
-                          href: window?.location?.href,
+                          href: window?.location?.href ?? '',
                           title: 'Try on Bridge',
                           variant: 'primary',
                           size: 'default'

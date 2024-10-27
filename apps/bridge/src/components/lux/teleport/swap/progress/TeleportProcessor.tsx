@@ -13,7 +13,6 @@ import {
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
 
-//hooks
 import { useSwitchNetwork } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
@@ -23,7 +22,7 @@ import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
-import { Gauge } from "@/components/gauge";
+import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
 import type { ContractsKey } from "@/components/lux/fireblocks/constants/settings"
 

@@ -1,6 +1,6 @@
 'use client'
-import { Button } from '@luxdefi/ui/primitives'
-import React, { type PropsWithChildren, useState, useEffect  } from 'react'
+import { Button } from '@hanzo/ui/primitives'
+import React, { useState, useEffect  } from 'react'
 import { useTheme } from 'next-themes'
 
 const ThemeToggleButton: React.FC = () => {
