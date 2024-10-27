@@ -8,6 +8,7 @@ import { getServerSideProps } from "../helpers/getSettings";
 export default function Salon({
   settings,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  
   const router = useRouter();
 
   useEffect(() => {
