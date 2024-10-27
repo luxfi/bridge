@@ -30,7 +30,7 @@ import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import SpinIcon from "@/components/icons/spinIcon";
-import { Gauge } from "@/components/gauge";
+import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
 import { useEffect, useMemo, useState } from "react"
 

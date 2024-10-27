@@ -5,7 +5,7 @@ import CopyButton from "../buttons/copyButton";
 import StatusIcon from "./StatusIcons";
 import isGuid from "../utils/isGuid";
 import KnownInternalNames from "../../lib/knownIds";
-import { SwapDetailsComponentSceleton } from "../Sceletons";
+import { SwapDetailsComponentSkeleton } from "../Skeletons";
 import { ExternalLink } from "lucide-react";
 import { resolveNetworkImage } from "@/util";
 import { type SwapItem, TransactionType } from "../../lib/BridgeApiClient";
@@ -38,7 +38,7 @@ const SwapDetails: React.FC<Props> = ({ swap }) => {
     (t) => t.type === TransactionType.Output
   );
 
-  if (!swap) return <SwapDetailsComponentSceleton />;
+  if (!swap) return <SwapDetailsComponentSkeleton />;
 
   return (
     <>

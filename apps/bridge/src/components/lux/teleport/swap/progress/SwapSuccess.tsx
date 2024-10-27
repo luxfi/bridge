@@ -9,7 +9,7 @@ import {
 } from "@/components/shadcn/tooltip";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
-import { Gauge } from "@/components/gauge";
+import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
 
 const SwapSuccess: React.FC<{

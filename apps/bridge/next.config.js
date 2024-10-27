@@ -3,6 +3,8 @@
 const withMDX = require("@next/mdx")();
 const { PHASE_PRODUCTION_SERVER } = require("next/constants");
 const path = require("path")
+const svgrPluginConfig = require('./next-conf/svgr.next.config')
+
 
 const securityHeaders = [
   // { key: "Access-Control-Allow-Origin", value: "*" },
@@ -21,11 +23,16 @@ module.exports = (phase, { defaultConfig }) => {
    * @type {import('next').NextConfig}
    */
   const nextConfig = {
+    pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+    reactStrictMode: true,
+
     i18n: {
       locales: ["en"],
       defaultLocale: "en",
     },
     images: {
+      domains: ["cdn.lux.network"],
+
       remotePatterns: [
         {
           protocol: "https",
@@ -43,6 +50,15 @@ module.exports = (phase, { defaultConfig }) => {
           protocol: "https",
           hostname: "cdn.lux.network",
         },
+        {
+          protocol: 'https',
+          hostname: 'img.youtube.com',
+          pathname: '**',
+        },
+        {
+          protocol: "http",
+          hostname: "localhost",
+        }
       ],
     },
     compiler: {
@@ -52,14 +68,14 @@ module.exports = (phase, { defaultConfig }) => {
     webpack: (config, { isServer }) => {
       config.resolve.fallback = { fs: false, net: false, tls: false };
       if (!isServer) {
-        config.resolve.alias['@'] = path.resolve(__dirname);
+        config.resolve.alias['@'] = path.resolve(__dirname + '/src');
       }
-      return config;
+      let conf = svgrPluginConfig(config)
+      return conf
     },
     productionBrowserSourceMaps: true,
     // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
     transpilePackages: [
-      "@luxdefi/ui",
       '@hanzo/ui', 
       '@hanzo/auth', 
       '@hanzo/commerce', 
@@ -67,6 +83,7 @@ module.exports = (phase, { defaultConfig }) => {
       '@luxfi/data'
     ],
   };
+
   if (process.env.APP_BASE_PATH) {
     nextConfig.basePath = process.env.APP_BASE_PATH;
   }

@@ -1,6 +1,6 @@
 import { Check, X } from "lucide-react";
 import { classNames } from "../utils/classNames";
-import { Gauge } from "../gauge";
+import Gauge from "../gauge";
 import { ProgressStatus, type StatusStep } from "./Withdraw/Processing/types";
 
 function renderStepIcon(step: StatusStep) {
