@@ -6,7 +6,7 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "exclude": [ "/node_modules", "x_pages", "../../node_modules/.pnpm" ],
+  "exclude": [ "/node_modules", "/x_please_keep", "../../node_modules/.pnpm" ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

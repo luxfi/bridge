@@ -1,29 +1,22 @@
-@import "tailwindcss/base";
-/* see https://stackoverflow.com/questions/69746121/using-nextjs-how-can-you-import-in-css-using-tailwind-css */
-@import "@luxdefi/ui/style/lux-tw-base-layer";
-
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-
-@layer utilities {
-
-  /* Chrome, Safari, Edge, Opera */
-  input::-webkit-outer-spin-button,
-  input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  /* Firefox */
-  input[type="number"] {
-    -moz-appearance: textfield;
-  }
-  
-  .styled-scroll {
-    @apply scrollbar:!w-1.5 scrollbar:!h-1.5 scrollbar:bg-level-2  scrollbar-thumb:!rounded scrollbar-thumb:!bg-level-3;
-  }
-  
+.styled-scroll {
+  width: 6px;
+  height: 6px;
+  background-color: theme('colors.level.2');
 }
+
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 
 *::-webkit-scrollbar {
   height: 0.375rem !important;
