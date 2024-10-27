@@ -5,6 +5,9 @@ import {
   viewport as ViewportCode, 
 } from '@luxfi/ui/root-layout'
 
+import '../styles/globals.css'
+import '../styles/dialog-transition.css'
+import '@rainbow-me/rainbowkit/styles.css'
 
 import siteDef from '@/site-def'
 import _metadata from '@/metadata'
