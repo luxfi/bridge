@@ -77,8 +77,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
 
   const locale = (number: number) => {
     return new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 18,
+      minimumFractionDigits: 0,
       maximumFractionDigits: 18,
+      useGrouping: false, // Disable commas
     }).format(number);
   };
 
