@@ -75,10 +75,21 @@ const UserTokenDepositor: React.FC<IProps> = ({
     }
   }, [chainId, signer, isWithdrawal]);
 
+  const locale = (number: number) => {
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 18,
+      maximumFractionDigits: 18,
+    }).format(number);
+  };
+
   const transferToken = async () => {
     try {
       setIsTokenTransferring(true);
-      const _amount = parseUnits(String(sourceAmount), sourceAsset.decimals);
+      console.log(sourceAmount, sourceAsset);
+      const _amount = parseUnits(
+        locale(Number(sourceAmount)),
+        sourceAsset.decimals
+      );
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance();
         console.log("::balance checking: ", {
