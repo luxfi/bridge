@@ -86,24 +86,30 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   let valueGrouper: (values: ISelectMenuItem[]) => SelectMenuItemGroup[];
 
   const filterWith = direction === "from" ? to : from;
-  const filterWithAsset = direction === "from" ? toCurrency?.asset : fromCurrency?.asset;
+  const filterWithAsset =
+    direction === "from" ? toCurrency?.asset : fromCurrency?.asset;
   const filterWithExchange = direction === "from" ? toExchange : fromExchange;
 
   const apiClient = new BridgeApiClient();
   const version = BridgeApiClient.apiVersion;
 
-  const routesEndpoint = `/${direction === "from" ? "sources" : "destinations"
-    }${filterWith
-      ? `?${direction === "to" ? "source_network" : "destination_network"}=${filterWith.internal_name
-      }&${direction === "to" ? "source_asset" : "destination_asset"
-      }=${filterWithAsset}&`
+  const routesEndpoint = `/${
+    direction === "from" ? "sources" : "destinations"
+  }${
+    filterWith
+      ? `?${direction === "to" ? "source_network" : "destination_network"}=${
+          filterWith.internal_name
+        }&${
+          direction === "to" ? "source_asset" : "destination_asset"
+        }=${filterWithAsset}&`
       : filterWithExchange
-        ? `?${direction === "from"
-          ? "destination_asset_group"
-          : "source_asset_group"
+      ? `?${
+          direction === "from"
+            ? "destination_asset_group"
+            : "source_asset_group"
         }=${filterWithExchange?.internal_name}&`
-        : "?"
-    }version=${version}`;
+      : "?"
+  }version=${version}`;
 
   const { data: routes, isLoading } = useSWR<
     ApiResponse<
@@ -128,15 +134,13 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   if (direction === "from") {
     placeholder = "Source";
     searchHint = "Swap from";
-    filteredLayers = layers.filter(
-      (l) =>
-        // l.internal_name !== filterWith?.internal_name &&
-        routesData?.some((r) => r.network === l.internal_name)
+    filteredLayers = layers.filter((l) =>
+      // l.internal_name !== filterWith?.internal_name &&
+      routesData?.some((r) => r.network === l.internal_name)
     );
-    filteredExchanges = exchanges.filter(
-      (e) =>
-        // e.internal_name !== filterWith?.internal_name &&
-        routesData?.some((r) => r.network === e.internal_name)
+    filteredExchanges = exchanges.filter((e) =>
+      // e.internal_name !== filterWith?.internal_name &&
+      routesData?.some((r) => r.network === e.internal_name)
     );
     menuItems = GenerateMenuItems(
       filteredLayers,
@@ -172,7 +176,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     x.type === "layer"
       ? x.id == (direction === "from" ? from : to)?.internal_name
       : x.id ==
-      (direction === "from" ? fromExchange : toExchange)?.internal_name
+        (direction === "from" ? fromExchange : toExchange)?.internal_name
   );
 
   const handleSelect = useCallback(
@@ -192,8 +196,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   );
 
   const { fee } = useFee();
-
-  console.log(toCurrency)
 
   const parsedReceiveAmount = parseFloat(
     fee.manualReceiveAmount?.toFixed(toCurrency?.precision ?? 6) || ""
@@ -221,19 +223,21 @@ const NetworkFormField = forwardRef(function NetworkFormField(
           </div>
         </div>
         <div className="flex justify-between items-center mt-2 pl-3 pr-4">
-          {
-            direction === "from" ? <AmountField /> :
-              parsedReceiveAmount > 0 ?
-                <div className="font-semibold md:font-bold text-right leading-4">
-                  <p>
-                    <span>{parsedReceiveAmount}</span>&nbsp;
-                    <span>{destinationNetworkCurrency?.asset}</span>
-                  </p>
-                  {refuel && (
-                    <Refuel currency={toCurrency} to={to} refuel={refuel} />
-                  )}
-                </div> : <>-</>
-          }
+          {direction === "from" ? (
+            <AmountField />
+          ) : parsedReceiveAmount > 0 ? (
+            <div className="font-semibold md:font-bold text-right leading-4">
+              <p>
+                <span>{parsedReceiveAmount}</span>&nbsp;
+                <span>{destinationNetworkCurrency?.asset}</span>
+              </p>
+              {refuel && (
+                <Refuel currency={toCurrency} to={to} refuel={refuel} />
+              )}
+            </div>
+          ) : (
+            <>-</>
+          )}
           {value?.type === "cex" ? (
             <CurrencyGroupFormField direction={name} />
           ) : (

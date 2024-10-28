@@ -10,7 +10,7 @@ import erc20ABI from "@/components/lux/teleport/constants/abi/erc20.json";
 import { useChainId, useSwitchChain } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { parseUnits } from "@/lib/resolveChain";
+import { parseUnits } from "ethers/lib/utils";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
@@ -81,18 +81,18 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setIsTokenTransferring(true);
       console.log(sourceAmount, sourceAsset);
       const _amount = parseUnits(
-        localeNumber(Number(sourceAmount)),
+        localeNumber(sourceAmount),
         sourceAsset.decimals
       );
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance();
         console.log("::balance checking: ", {
-          balance: Number(_balance),
+          balance: Number(_balance) ?? 0,
           required: Number(_amount),
-          gap: Number(_balance) - Number(_amount),
+          gap: Number(_balance) ?? 0 - Number(_amount),
         });
 
-        if (Number(_balance) < Number(_amount)) {
+        if (Number(_balance) ?? 0 < Number(_amount)) {
           showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
@@ -107,6 +107,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
         const _balance = await erc20Contract.balanceOf(
           signer?._address as string
         );
+
+        console.log(_amount);
 
         console.log("::balance checking: ", {
           balance: Number(_balance),

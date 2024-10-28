@@ -237,8 +237,6 @@ function TransactionsHistory() {
                           (t) => t.type === TransactionType.Output
                         );
 
-                        console.log(networks);
-
                         return (
                           <tr
                             onClick={() => handleopenSwapDetails(swap)}
