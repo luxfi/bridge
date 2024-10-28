@@ -15,8 +15,9 @@ const getSigFromMpcOracleNetwork = (signData: {
   toTokenAddress: string;
   msgSignature: string;
   receiverAddressHash: string;
-}) =>
-  new Promise((resolve, reject) => {
+}) => {
+  console.log("::signdata:", signData);
+  return new Promise((resolve, reject) => {
     mpc_nodes.forEach(async (mpc_node: string) => {
       try {
         const data = await axios.post(
@@ -29,6 +30,7 @@ const getSigFromMpcOracleNetwork = (signData: {
       }
     });
   });
+};
 
 export default async function handler(
   req: NextApiRequest,

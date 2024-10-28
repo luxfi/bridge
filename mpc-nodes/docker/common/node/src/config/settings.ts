@@ -379,8 +379,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     node: `https://lb.drpc.org/ogrpc?network=base&dkey=${DRPC_KEY}`,
     currencies: [
       {
-        name: "CELO",
-        asset: "CELO",
+        name: "ETH",
+        asset: "ETH",
         contract_address: "0x0000000000000000000000000000000000000000",
         decimals: 18,
         is_native: true

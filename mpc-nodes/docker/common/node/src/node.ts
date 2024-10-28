@@ -63,10 +63,9 @@ app.get("/networks", async (req: Request, res: Response) => {
   try {
     const nettowks = {
       mainnets: MAIN_NETWORKS,
-      testnets: TEST_NETWORKS,
-      
+      testnets: TEST_NETWORKS
     }
-    res.status(200).json(nettowks);
+    res.status(200).json(nettowks)
   } catch (err) {
     console.log("Failed to save tx to db", err)
     res.status(500).json(err)
