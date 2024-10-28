@@ -16,8 +16,7 @@ import erc20ABI from "@/components/lux/fireblocks/constants/abi/erc20.json";
 //hooks
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { parseUnits } from "@/lib/resolveChain";
-
+import { parseUnits } from "ethers/lib/utils";
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";

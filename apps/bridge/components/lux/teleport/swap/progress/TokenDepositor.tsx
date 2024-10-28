@@ -18,6 +18,7 @@ import SwapItems from "./SwapItems";
 import SpinIcon from "@/components/icons/spinIcon";
 import { Network, Token } from "@/types/teleport";
 import useNotification from "@/hooks/useNotification";
+import { localeNumber } from "@/lib/utils";
 
 interface IProps {
   className?: string;
@@ -75,20 +76,12 @@ const UserTokenDepositor: React.FC<IProps> = ({
     }
   }, [chainId, signer, isWithdrawal]);
 
-  const locale = (number: number) => {
-    return new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 18,
-      useGrouping: false, // Disable commas
-    }).format(number);
-  };
-
   const transferToken = async () => {
     try {
       setIsTokenTransferring(true);
       console.log(sourceAmount, sourceAsset);
       const _amount = parseUnits(
-        locale(Number(sourceAmount)),
+        localeNumber(Number(sourceAmount)),
         sourceAsset.decimals
       );
       if (sourceAsset.is_native) {

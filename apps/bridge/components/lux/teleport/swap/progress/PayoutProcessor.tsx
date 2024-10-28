@@ -19,7 +19,6 @@ import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 //hooks
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { parseUnits } from "@/lib/resolveChain";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
@@ -31,6 +30,8 @@ import { Network, Token } from "@/types/teleport";
 import { ArrowRight } from "lucide-react";
 import { formatUnits } from "viem";
 import { useChainId, useSwitchChain } from "wagmi";
+import { localeNumber } from "@/lib/utils";
+import { parseUnits } from "ethers/lib/utils";
 
 interface IProps {
   className?: string;
@@ -94,7 +95,10 @@ const PayoutProcessor: React.FC<IProps> = ({
     const mintData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
+      tokenAmount_: parseUnits(
+        localeNumber(sourceAmount),
+        sourceAsset.decimals
+      ),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
