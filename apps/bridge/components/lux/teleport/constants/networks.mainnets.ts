@@ -99,8 +99,8 @@ export const networks: Network[] = [
     status: "active",
     type: "evm",
     refuel_amount_in_usd: 0.5,
-    transaction_explorer_template: "https://basescan.io/tx/{0}",
-    account_explorer_template: "https://basescan.io/address/{0}",
+    transaction_explorer_template: "https://basescan.org/tx/{0}",
+    account_explorer_template: "https://basescan.org/address/{0}",
     node: "https://mainnet.base.org",
     currencies: [
       {
