@@ -92,7 +92,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           gap: Number(_balance) ?? 0 - Number(_amount),
         });
 
-        if (Number(_balance) ?? 0 < Number(_amount)) {
+        if (Number(_balance) < Number(_amount)) {
           showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
@@ -116,7 +116,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           gap: Number(_balance) - Number(_amount),
         });
 
-        if (_balance < _amount) {
+        if (Number(_balance) < Number(_amount)) {
           showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
