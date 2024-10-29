@@ -212,10 +212,10 @@ const Swap: FC = () => {
               networks={sourceNetworks}
             />
           </div>
-          <div className="py-4 px-4">
+          {/* <div className="py-4 px-4">
             Fee: {1}
             <span className="text-xs"> %</span>
-          </div>
+          </div> */}
 
           <div className="flex flex-col w-full">
             <ToNetworkForm
