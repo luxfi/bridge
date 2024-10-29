@@ -193,8 +193,8 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
     return
   }
   // TODO: check swap possibility according to src & dst chains
-  const fromToken = fromNetwork.currencies.find((c) => c.contract_address === fromTokenAddress)
-  const toToken = toNetwork.currencies.find((c) => c.contract_address === toTokenAddress)
+  const fromToken = fromNetwork.currencies.find((c) => c.contract_address.toLowerCase() === fromTokenAddress.toLowerCase())
+  const toToken = toNetwork.currencies.find((c) => c.contract_address.toLowerCase() === toTokenAddress.toLowerCase())
   // console.log("::tokens: ", { fromToken, toToken })
 
   if (!fromToken) {
