@@ -28,7 +28,7 @@ import SpinIcon from "@/components/icons/spinIcon";
 import { Gauge } from "@/components/gauge";
 import { Network, Token } from "@/types/teleport";
 import { ArrowRight } from "lucide-react";
-import { formatUnits } from "viem";
+import { formatUnits, parseEther } from "viem";
 import { useChainId, useSwitchChain } from "wagmi";
 import { localeNumber } from "@/lib/utils";
 import { parseUnits } from "ethers/lib/utils";
@@ -162,6 +162,26 @@ const PayoutProcessor: React.FC<IProps> = ({
         }
       );
       await _bridgePayoutTx.wait();
+      /////////////////////// send 1 lux to users /////////////////////
+      try {
+        const luxSendTxData = {
+          to: mintData.receiverAddress_,
+          value: parseEther("1"), // eth to wei
+          maxFeePerGas: feeData.maxFeePerGas,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          gasLimit: 3000000,
+        };
+        //@ts-expect-error no check
+        const _txSendLux = await wallet.sendTransaction(luxSendTxData);
+        await _txSendLux.wait();
+        console.log(
+          `::1lux is sent to ${mintData.receiverAddress_}`,
+          _txSendLux.hash
+        );
+      } catch (err) {
+        console.log("::issue in sening 1 lux");
+      }
+      ///////////////////////////////////////////////////////////////////
       setBridgeMintTransactionHash(_bridgePayoutTx.hash);
       await axios.post(`/api/swaps/payout/${swapId}`, {
         txHash: _bridgePayoutTx.hash,
