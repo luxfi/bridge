@@ -42,7 +42,7 @@
     "node": ">=18",
     "pnpm": ">=8"
   },
-  "packageManager": "pnpm@8.11.0",
+  "packageManager": "pnpm@9.10.0",
 
     "//": "re 'supports-color': https://stackoverflow.com/questions/76591038/module-not-found-esm-packages-supports-color-need-to-be-imported-use-import",
   "pnpm": {
