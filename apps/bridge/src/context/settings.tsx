@@ -57,5 +57,6 @@ const useSettingsContainer = (): SettingsContainer | null => {
 export {
   SettingsProvider,
   useSettings,
-  useSettingsContainer
+  useSettingsContainer,
+  SettingsContext 
 }

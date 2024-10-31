@@ -25,11 +25,31 @@ const killSigner = async (signerProc: string) => {
     const cmd = "kill -9 " + signerProc
     const out = await exec(cmd)
     console.log("::Signer dead...", out)
-  } catch( e: any ) {
+  } catch (e) {
     console.log("::Signer process already dead:", e)
   }
 }
 
+/**
+ * get WEB3 object by given network's rpc url
+ * @param rpcUrl
+ * @returns
+ */
+export const getWeb3FormForRPC = (rpcUrl: string) => {
+  try {
+    const _web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl))
+    return _web3
+  } catch (err) {
+    return null
+  }
+}
+
+/**
+ * generate signature
+ * @param i 
+ * @param msgHash 
+ * @returns 
+ */
 export const signClient = async (i: number, msgHash: string) =>
   new Promise(async (resolve, reject) => {
     try {
