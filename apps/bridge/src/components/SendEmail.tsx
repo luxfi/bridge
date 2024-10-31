@@ -99,9 +99,8 @@ const SendEmail: React.FC<{
             <Disclosure.Panel className="text-sm font-normal mt-4">
               <div className='grid gap-4 grid-cols-5  items-center'>
                 <div className="relative rounded-md shadow-sm col-span-3">
-                  <Field 
-                    name="email"
-                    children={({ field }: FieldProps) => (
+                  <Field  name="email" >
+                    {({ field }: FieldProps) => (
                     <input
                         {...field}
                         id='email'
@@ -112,7 +111,7 @@ const SendEmail: React.FC<{
                           placeholder:text-sm placeholder:font-normal placeholder:text-muted-2 bg-level-1 w-full rounded-md"
                     />
                   )}
-                  />
+                  </Field>
                 </div>
                 <div className='col-start-4 col-span-2'>
                     <SubmitButton isDisabled={!isValid} isSubmitting={isSubmitting} >
