@@ -20,33 +20,28 @@ const writeDecodedFile = (filename: string, base64Content: string) => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<{
-    data: CryptoNetwork[] | any;
-  }>
+  res: NextApiResponse<{ data: CryptoNetwork[] | any }>
 ) {
   try {
     if (process.env.CLIENT_CERT_BASE64) {
       writeDecodedFile("client-cert.pem", process.env.CLIENT_CERT_BASE64);
-    } else {
-      console.log(
-        `${process.env.CLIENT_CERT_BASE64} environment variable is not set.`
-      );
+    } 
+    else {
+      console.log( 'CLIENT_CERT_BASE64 environment variable is not set.')
     }
     // Decode and write client-key.pem
     if (process.env.CLIENT_KEY_BASE64) {
       writeDecodedFile("client-key.pem", process.env.CLIENT_KEY_BASE64);
-    } else {
-      console.log(
-        `${process.env.CLIENT_KEY_BASE64} environment variable is not set.`
-      );
+    } 
+    else {
+      console.log( 'CLIENT_KEY_BASE64 environment variable is not set.' )
     }
     // Decode and write server-ca.pem
     if (process.env.SERVER_CA_BASE64) {
       writeDecodedFile("server-ca.pem", process.env.SERVER_CA_BASE64);
-    } else {
-      console.log(
-        `${process.env.SERVER_CA_BASE64} environment variable is not set.`
-      );
+    } 
+    else {
+      console.log( 'SERVER_CA_BASE64 environment variable is not set.' )
     }
 
     const prisma = new PrismaClient();
