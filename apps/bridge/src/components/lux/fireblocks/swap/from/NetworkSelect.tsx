@@ -1,6 +1,4 @@
 'use client'
-import type { Dispatch, SetStateAction } from 'react'
-
 import {
     CommandEmpty,
     CommandGroup,
@@ -9,11 +7,11 @@ import {
     CommandList,
     CommandWrapper
 } from '@/components/shadcn/command'
-
+import React from "react";
 import Modal from '@/components/modal/modal';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import SpinIcon from '@/components/icons/spinIcon';
-import { type Network } from '@/types/teleport';
+import type { Network, Token } from '@/types/fireblocks';
 import SelectItem from './SelectItem';
 
 interface IProps {
@@ -25,10 +23,10 @@ interface IProps {
     setNetwork: (value: Network) => void;
 }
 
-const CommandSelect: React.FC<IProps> = ({ networks, setNetwork, show, setShow, searchHint }) => {
+const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, setShow, searchHint }) => {
     const { isDesktop } = useWindowDimensions();
     return (
-        <Modal height='full' show={show} setShow={setShow as Dispatch<SetStateAction<boolean>>}>
+        <Modal height='full' show={show} setShow={setShow}>
             {show ?
                 <CommandWrapper>
                     <CommandInput autoFocus={isDesktop} placeholder={searchHint} />

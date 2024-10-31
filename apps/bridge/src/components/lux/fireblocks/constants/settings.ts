@@ -90,19 +90,13 @@ export const CONTRACTS = {
   },
 };
 
-export type ContractsKey = keyof typeof CONTRACTS
-
-
 export const SWAP_PAIRS: Record<string, string[]> = {
-  LETH: ["ETH"],
-  LBNB: ["BNB"],
-  LFTM: ["FTM"],
-  LPOL: ["POL", "MATIC"],
-  LUSD: ["USDT", "USDC", "DAI"],
-  LCELO: ["CELO"],
-  LXDAI: ["XDAI"],
-
+  BTC: ["LBTC"],
+  WETH: ["LETH"],
   ETH: ["LETH"],
+  TON: ["LTON"],
+  SOL: ["LSOL"],
+  jUSDC: ["LUSD"],
   POL: ["LPOL"],
   BNB: ["LBNB"],
   FTM: ["LFTM"],

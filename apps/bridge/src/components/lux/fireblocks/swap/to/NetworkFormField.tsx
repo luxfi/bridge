@@ -1,15 +1,14 @@
 "use client";
-import { useAtom } from "jotai";
-
+import React from "react";
 import AmountField from "../AmountField";
 import NetworkSelectWrapper from "./NetworkSelectWrapper";
 import TokenSelectWrapper from "./TokenSelectWrapper";
 
-import type { Network, Token } from "@/types/teleport";
+import type { Network, Token } from "@/types/fireblocks";
+import { useAtom } from "jotai";
 import { sourceAmountAtom } from "@/store/fireblocks";
 
-
-const NetworkFormField: React.FC<{
+interface IProps {
   networks: Network[];
   network?: Network;
   asset?: Token;
@@ -17,7 +16,9 @@ const NetworkFormField: React.FC<{
   setNetwork: (network: Network) => void;
   setAsset: (asset: Token) => void;
   disabled: boolean;
-}> = ({
+}
+
+const NetworkFormField: React.FC<IProps> = ({
   networks,
   network,
   asset,

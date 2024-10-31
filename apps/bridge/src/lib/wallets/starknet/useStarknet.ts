@@ -3,7 +3,7 @@ import { type WalletProvider } from "../../../hooks/useWallet";
 import { useWalletStore } from "../../../stores/walletStore"
 import KnownInternalNames from "../../knownIds"
 import { useCallback } from "react";
-import { ResolveStarknetWalletIcon } from "./resoveStarknetIcon";
+import { ResolveStarknetWalletIcon } from "./resolveStarknetIcon";
 
 export default function useStarknet(): WalletProvider {
     const withdrawalSupportedNetworks = [KnownInternalNames.Networks.StarkNetMainnet, KnownInternalNames.Networks.StarkNetGoerli]

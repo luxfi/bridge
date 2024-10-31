@@ -100,3 +100,16 @@ export const getAvailableDepositAddress = async (
     return Promise.reject("No free deposit address for this asset");
   }
 };
+
+/**
+ *
+ * @param number
+ * @returns
+ */
+export const localeNumber = (number: number | string) => {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 18,
+    useGrouping: false, // Disable commas
+  }).format(Number(number));
+};

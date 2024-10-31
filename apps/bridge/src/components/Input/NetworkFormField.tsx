@@ -96,18 +96,23 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   const apiClient = new BridgeApiClient();
   const version = BridgeApiClient.apiVersion;
 
-  const routesEndpoint = `/${direction === "from" ? "sources" : "destinations"
-    }${filterWith
-      ? `?${direction === "to" ? "source_network" : "destination_network"}=${filterWith.internal_name
-      }&${direction === "to" ? "source_asset" : "destination_asset"
-      }=${filterWithAsset}&`
+  const routesEndpoint = `/${
+    direction === "from" ? "sources" : "destinations"
+  }${
+    filterWith
+      ? `?${direction === "to" ? "source_network" : "destination_network"}=${
+          filterWith.internal_name
+        }&${
+          direction === "to" ? "source_asset" : "destination_asset"
+        }=${filterWithAsset}&`
       : filterWithExchange
-        ? `?${direction === "from"
-          ? "destination_asset_group"
-          : "source_asset_group"
+      ? `?${
+          direction === "from"
+            ? "destination_asset_group"
+            : "source_asset_group"
         }=${filterWithExchange?.internal_name}&`
-        : "?"
-    }version=${version}`;
+      : "?"
+  }version=${version}`;
 
   const { data: routes, isLoading } = useSWR<
     ApiResponse<
@@ -197,8 +202,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
 
   const { fee } = useFee();
 
-  console.log(toCurrency)
-
   const parsedReceiveAmount = parseFloat(
     fee.manualReceiveAmount?.toFixed(toCurrency?.precision ?? 6) || ""
   );
@@ -225,19 +228,21 @@ const NetworkFormField = forwardRef(function NetworkFormField(
           </div>
         </div>
         <div className="flex justify-between items-center mt-2 pl-3 pr-4">
-          {
-            direction === "from" ? <AmountField /> :
-              parsedReceiveAmount > 0 ?
-                <div className="font-semibold md:font-bold text-right leading-4">
-                  <p>
-                    <span>{parsedReceiveAmount}</span>&nbsp;
-                    <span>{destinationNetworkCurrency?.asset}</span>
-                  </p>
-                  {refuel && (
-                    <Refuel currency={toCurrency} to={to} refuel={refuel} />
-                  )}
-                </div> : <>-</>
-          }
+          {direction === "from" ? (
+            <AmountField />
+          ) : parsedReceiveAmount > 0 ? (
+            <div className="font-semibold md:font-bold text-right leading-4">
+              <p>
+                <span>{parsedReceiveAmount}</span>&nbsp;
+                <span>{destinationNetworkCurrency?.asset}</span>
+              </p>
+              {refuel && (
+                <Refuel currency={toCurrency} to={to} refuel={refuel} />
+              )}
+            </div>
+          ) : (
+            <>-</>
+          )}
           {value?.type === "cex" ? (
             <CurrencyGroupFormField direction={name} />
           ) : (

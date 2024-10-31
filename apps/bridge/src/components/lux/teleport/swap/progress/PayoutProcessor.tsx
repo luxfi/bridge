@@ -1,31 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import React from "react";
 import Web3 from "web3";
-
-import { ArrowRight } from "lucide-react";
-import { formatUnits } from "viem";
-import { Contract } from "ethers";
-
+import useNotification from "@/hooks/useNotification";
 import {
   swapStatusAtom,
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
 } from "@/store/teleport";
+import { Contract } from "ethers";
 import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
-
+import { ethers } from "ethers";
 import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 //hooks
-import { useSwitchNetwork } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
-import { parseUnits } from "@/lib/resolveChain";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
@@ -34,10 +27,13 @@ import shortenAddress from "@/components/utils/ShortenAddress";
 import SpinIcon from "@/components/icons/spinIcon";
 import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
-import type { ContractsKey } from "@/components/lux/fireblocks/constants/settings"
+import { ArrowRight } from "lucide-react";
+import { formatUnits } from "viem";
+import { useChainId, useSwitchChain } from "wagmi";
+import { localeNumber } from "@/lib/utils";
+import { parseUnits } from "ethers/lib/utils";
 
-
-const PayoutProcessor: React.FC<{
+interface IProps {
   className?: string;
   sourceNetwork: Network;
   sourceAsset: Token;
@@ -47,7 +43,8 @@ const PayoutProcessor: React.FC<{
   sourceAmount: string;
   swapId: string;
 }
-> = ({
+
+const PayoutProcessor: React.FC<IProps> = ({
   sourceNetwork,
   sourceAsset,
   destinationNetwork,
@@ -57,35 +54,39 @@ const PayoutProcessor: React.FC<{
   className,
   swapId,
 }) => {
+  const { showNotification } = useNotification();
   //state
-  const [isGettingPayout, setIsGettingPayout] = useState<boolean>(false);
+  const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false);
   //atoms
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom);
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom);
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
   const [mpcSignature] = useAtom(mpcSignatureAtom);
   //hooks
-  const { chain } = useNetwork();
+  const chainId = useChainId();
   const signer = useEthersSigner();
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchChain } = useSwitchChain();
   const { connectWallet } = useWallet();
 
-  const isWithdrawal = useMemo(
+  const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith("Lux") ? true : false),
     [sourceAsset]
   );
 
-  //chain id
-  const chainId = chain?.id;
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (!signer) {
       connectWallet("evm");
     } else {
-      if (chainId === destinationNetwork.chain_id) {
-        isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
+      if (isWithdrawal) {
+        if (chainId === destinationNetwork.chain_id) {
+          withdrawDestinationToken();
+        } else {
+          destinationNetwork.chain_id &&
+            switchChain &&
+            switchChain({ chainId: destinationNetwork.chain_id });
+        }
       } else {
-        destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
+        payoutDestinationToken();
       }
     }
   }, [swapStatus, chainId, signer, isWithdrawal]);
@@ -94,7 +95,10 @@ const PayoutProcessor: React.FC<{
     const mintData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
+      tokenAmount_: parseUnits(
+        localeNumber(sourceAmount),
+        sourceAsset.decimals
+      ),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
@@ -112,12 +116,24 @@ const PayoutProcessor: React.FC<{
       // address receiverAddress_,
       // bytes memory signedTXInfo_,
       // string memory vault_
-      if (!destinationNetwork.chain_id) return
+      if (!destinationNetwork.chain_id) return;
+
+      // Set up provider and wallet
+      const provider = new ethers.providers.JsonRpcProvider(
+        destinationNetwork.node
+      );
+
+      const feeData = await provider.getFeeData();
+      console.log(feeData);
+
+      // Replace with your private key (store it securely, not hardcoded in production)
+      const privateKey = process.env.NEXT_PUBLIC_LUX_SIGNER;
+      const wallet = new ethers.Wallet(privateKey!, provider);
 
       const bridgeContract = new Contract(
-        CONTRACTS[destinationNetwork.chain_id as ContractsKey].teleporter,
+        CONTRACTS[destinationNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
-        signer
+        wallet
       );
 
       const _signer = await bridgeContract.previewBridgeStealth(
@@ -138,23 +154,28 @@ const PayoutProcessor: React.FC<{
         mintData.fromTokenDecimals_,
         mintData.receiverAddress_,
         mintData.signedTXInfo_,
-        mintData.vault_
+        mintData.vault_,
+        {
+          maxFeePerGas: feeData.maxFeePerGas,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          gasLimit: 3000000,
+        }
       );
       await _bridgePayoutTx.wait();
       setBridgeMintTransactionHash(_bridgePayoutTx.hash);
       await axios.post(`/api/swaps/payout/${swapId}`, {
         txHash: _bridgePayoutTx.hash,
         amount: sourceAmount,
-        from: CONTRACTS[String(sourceNetwork?.chain_id) as unknown as ContractsKey].teleporter,
+        from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
         to: destinationAddress,
       });
       setSwapStatus("payout_success");
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification(`User rejected transaction`, "warn");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification(`Failed to run transaction`, "error");
       }
     } finally {
       setIsGettingPayout(false);
@@ -175,10 +196,10 @@ const PayoutProcessor: React.FC<{
     // previewVaultWithdraw
 
     console.log("::data for bridge withdraw:", withdrawData);
-    if (!destinationNetwork.chain_id) return
+    if (!destinationNetwork.chain_id) return;
     try {
       const bridgeContract = new Contract(
-        CONTRACTS[destinationNetwork.chain_id as ContractsKey].teleporter,
+        CONTRACTS[destinationNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       );
@@ -197,10 +218,11 @@ const PayoutProcessor: React.FC<{
         Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) <
         Number(sourceAmount)
       ) {
-        toast.error(
+        showNotification(
           `Bridge doesnt have enough balance to withdraw. You can only withdraw ${Number(
             formatUnits(previewVaultWithdraw, destinationAsset.decimals)
-          )}tokens now. Please wait for the withdrawal to be activated.`
+          )}tokens now. Please wait for the withdrawal to be activated.`,
+          "error"
         );
         return;
       }
@@ -239,16 +261,16 @@ const PayoutProcessor: React.FC<{
       await axios.post(`/api/swaps/payout/${swapId}`, {
         txHash: _bridgePayoutTx.hash,
         amount: sourceAmount,
-        from: CONTRACTS[String(sourceNetwork?.chain_id) as unknown as ContractsKey].teleporter,
+        from: CONTRACTS[sourceNetwork?.chain_id as keyof typeof CONTRACTS].teleporter,
         to: destinationAddress,
       });
       setSwapStatus("payout_success");
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification(`User rejected transaction`, "warn");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification(`Failed to run transaction`, "error");
       }
     } finally {
       setIsGettingPayout(false);
@@ -257,12 +279,23 @@ const PayoutProcessor: React.FC<{
 
   const handlePayoutDestinationToken = () => {
     if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
+      showNotification(
+        `No connected wallet. Please connect your wallet`,
+        "error"
+      );
       connectWallet("evm");
-    } else if (chainId !== destinationNetwork.chain_id) {
-      destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
     } else {
-      isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
+      if (isWithdrawal) {
+        if (chainId === destinationNetwork.chain_id) {
+          withdrawDestinationToken();
+        } else {
+          destinationNetwork.chain_id &&
+            switchChain &&
+            switchChain({ chainId: destinationNetwork.chain_id });
+        }
+      } else {
+        payoutDestinationToken();
+      }
     }
   };
 

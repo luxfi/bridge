@@ -30,6 +30,7 @@ import type { ErrorInfo, PropsWithChildren } from 'react'
 
 const INTERCOM_APP_ID = 'o1kmvctg'
 import '@rainbow-me/rainbowkit/styles.css'
+import { NotificationProvider } from '@/context/notificationProvider'
 
 
 const Contexts: React.FC<{
@@ -100,21 +101,23 @@ const Contexts: React.FC<{
     <TooltipProvider delayDuration={500}>
     <ErrorBoundary FallbackComponent={ErrorFallback} onError={logErrorToService}>
       <ThemeWrapper>
-        <JotaiProvider>
-          <TonConnectProvider basePath={''} themeData={themeData}>
-            <RainbowKit>
-              <Solana>
-                <FeeProvider>
-                  {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
-                    <MaintananceContent />
-                  ) : (
-                    children
-                  )}
-                </FeeProvider>
-              </Solana>
-            </RainbowKit>
-          </TonConnectProvider>
-        </JotaiProvider>
+        <NotificationProvider>
+          <JotaiProvider>
+            <TonConnectProvider basePath={''} themeData={themeData}>
+              <RainbowKit>
+                <Solana>
+                  <FeeProvider>
+                    {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
+                      <MaintananceContent />
+                    ) : (
+                      children
+                    )}
+                  </FeeProvider>
+                </Solana>
+              </RainbowKit>
+            </TonConnectProvider>
+          </JotaiProvider>
+        </NotificationProvider>
       </ThemeWrapper>
     </ErrorBoundary>
     </TooltipProvider>

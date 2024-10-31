@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { Network, Token } from "@/types/teleport";
+import { Network, Token } from "@/types/teleport";
 
 export const sourceNetworkAtom = atom<Network | undefined>(undefined);
 export const sourceAssetAtom = atom<Token | undefined>(undefined);

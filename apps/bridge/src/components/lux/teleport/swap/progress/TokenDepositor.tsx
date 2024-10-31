@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import React from "react";
 import { swapStatusAtom, userTransferTransactionAtom } from "@/store/teleport";
 import { ArrowRight, Router } from "lucide-react";
 import { Contract } from "ethers";
@@ -8,20 +7,20 @@ import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
 import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 import erc20ABI from "@/components/lux/teleport/constants/abi/erc20.json";
 //hooks
-import { useSwitchNetwork } from "wagmi";
+import { useChainId, useSwitchChain } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
-import { parseUnits } from "@/lib/resolveChain";
+import { parseUnits } from "ethers/lib/utils";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import SpinIcon from "@/components/icons/spinIcon";
 import type { Network, Token } from "@/types/teleport";
-import type { ContractsKey } from "@/components/lux/fireblocks/constants/settings"
+import useNotification from "@/hooks/useNotification";
+import { localeNumber } from "@/lib/utils";
 
-const UserTokenDepositor: React.FC<{
+interface IProps {
   className?: string;
   sourceNetwork: Network;
   sourceAsset: Token;
@@ -30,7 +29,9 @@ const UserTokenDepositor: React.FC<{
   destinationAddress: string;
   sourceAmount: string;
   swapId: string;
-}> = ({
+}
+
+const UserTokenDepositor: React.FC<IProps> = ({
   sourceNetwork,
   sourceAsset,
   destinationNetwork,
@@ -40,35 +41,37 @@ const UserTokenDepositor: React.FC<{
   className,
   swapId,
 }) => {
+  const { showNotification } = useNotification();
   //state
   const [isTokenTransferring, setIsTokenTransferring] =
-    useState<boolean>(false);
-  const [userDepositNotice, setUserDepositNotice] = useState<string>("");
+    React.useState<boolean>(false);
+  const [userDepositNotice, setUserDepositNotice] = React.useState<string>("");
   //atoms
   const [, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom);
   //hooks
-  const { chain } = useNetwork();
   const signer = useEthersSigner();
-  const { switchNetwork } = useSwitchNetwork();
+  const { switchChain } = useSwitchChain();
   const { connectWallet } = useWallet();
 
-  const isWithdrawal = useMemo(
+  const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith("Lux") ? true : false),
     [sourceAsset]
   );
 
   //chain id
-  const chainId = chain?.id;
+  const chainId = useChainId();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!signer) {
       connectWallet("evm");
     } else {
       if (chainId === sourceNetwork?.chain_id) {
         isWithdrawal ? burnToken() : transferToken();
       } else {
-        sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+        sourceNetwork.chain_id &&
+          switchChain &&
+          switchChain({ chainId: sourceNetwork.chain_id });
       }
     }
   }, [chainId, signer, isWithdrawal]);
@@ -76,11 +79,21 @@ const UserTokenDepositor: React.FC<{
   const transferToken = async () => {
     try {
       setIsTokenTransferring(true);
-      const _amount = parseUnits(String(sourceAmount), sourceAsset.decimals);
+      console.log(sourceAmount, sourceAsset);
+      const _amount = parseUnits(
+        localeNumber(sourceAmount),
+        sourceAsset.decimals
+      );
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance();
+        console.log("::balance checking: ", {
+          balance: Number(_balance) ?? 0,
+          required: Number(_amount),
+          gap: Number(_balance) ?? 0 - Number(_amount),
+        });
+
         if (Number(_balance) < Number(_amount)) {
-          toast.error(`Insufficient ${sourceAsset.asset} amount`);
+          showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
       } else {
@@ -95,38 +108,42 @@ const UserTokenDepositor: React.FC<{
           signer?._address as string
         );
 
-        if (_balance < _amount) {
-          toast.error(`Insufficient ${sourceAsset.asset} amount`);
+        console.log(_amount);
+
+        console.log("::balance checking: ", {
+          balance: Number(_balance),
+          required: Number(_amount),
+          gap: Number(_balance) - Number(_amount),
+        });
+
+        if (Number(_balance) < Number(_amount)) {
+          showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
           return;
         }
 
-        if (!sourceNetwork.chain_id) return
+        if (!sourceNetwork.chain_id) return;
         // if allowance is less than amount, approve
         const _allowance = await erc20Contract.allowance(
           signer?._address as string,
-          CONTRACTS[sourceNetwork.chain_id as ContractsKey].teleporter
+          CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter
         );
         if (_allowance < _amount) {
           const _approveTx = await erc20Contract.approve(
-            CONTRACTS[sourceNetwork.chain_id as ContractsKey].teleporter,
+            CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
             _amount
           );
           await _approveTx.wait();
         }
       }
 
-      if (!sourceNetwork.chain_id) return
+      if (!sourceNetwork.chain_id) return;
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`);
       const bridgeContract = new Contract(
-        CONTRACTS[sourceNetwork.chain_id as ContractsKey].teleporter,
+        CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       );
 
-      console.log({
-        _amount,
-        _asset: sourceAsset.contract_address,
-      });
       const _bridgeTransferTx = await bridgeContract.vaultDeposit(
         _amount,
         sourceAsset.contract_address,
@@ -139,16 +156,16 @@ const UserTokenDepositor: React.FC<{
         txHash: _bridgeTransferTx.hash,
         amount: sourceAmount,
         from: signer?._address,
-        to: CONTRACTS[sourceNetwork.chain_id as ContractsKey].teleporter,
+        to: CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
       });
       setUserTransferTransaction(_bridgeTransferTx.hash);
       setSwapStatus("teleport_processing_pending");
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification(`User rejected transaction`, "warn");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification(`Failed to run transaction`, "error");
       }
     } finally {
       setIsTokenTransferring(false);
@@ -170,15 +187,15 @@ const UserTokenDepositor: React.FC<{
         signer?._address as string
       );
       if (_balance < _amount) {
-        toast.error(`Insufficient ${sourceAsset.asset} amount`);
+        showNotification(`Insufficient ${sourceAsset.asset} amount`, "warn");
         return;
       }
 
-      if (!sourceNetwork.chain_id) return
+      if (!sourceNetwork.chain_id) return;
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`);
 
       const bridgeContract = new Contract(
-        CONTRACTS[sourceNetwork.chain_id as ContractsKey].teleporter,
+        CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       );
@@ -196,16 +213,16 @@ const UserTokenDepositor: React.FC<{
         txHash: _bridgeTransferTx.hash,
         amount: sourceAmount,
         from: signer?._address,
-        to: CONTRACTS[sourceNetwork.chain_id as ContractsKey].teleporter,
+        to: CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
       });
       setUserTransferTransaction(_bridgeTransferTx.hash);
       setSwapStatus("teleport_processing_pending");
     } catch (err) {
       console.log(err);
       if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
+        showNotification("User rejected transaction", "error");
       } else {
-        toast.error(`Failed to run transaction`);
+        showNotification("Failed to run transaction", "error");
       }
     } finally {
       setIsTokenTransferring(false);
@@ -213,10 +230,15 @@ const UserTokenDepositor: React.FC<{
   };
   const handleTokenTransfer = async () => {
     if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
+      showNotification(
+        "No connected wallet. Please connect your wallet",
+        "error"
+      );
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
-      sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+      sourceNetwork.chain_id &&
+        switchChain &&
+        switchChain({ chainId: sourceNetwork.chain_id });
     } else {
       isWithdrawal ? burnToken() : transferToken();
     }

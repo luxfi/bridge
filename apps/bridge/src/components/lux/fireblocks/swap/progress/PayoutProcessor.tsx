@@ -1,41 +1,28 @@
-import toast from "react-hot-toast";
-import Web3 from "web3";
-import { ArrowRight } from "lucide-react";
-import { formatUnits } from "viem";
-import { useSwitchNetwork, useNetwork } from "wagmi";
-import { useAtom } from "jotai";
-import axios from "axios";
-import { Contract } from "ethers";
-
-
+import React from "react";
 import {
   swapStatusAtom,
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
 } from "@/store/fireblocks";
-import { CONTRACTS, type ContractsKey } from "@/components/lux/fireblocks/constants/settings";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
-
-import teleporterABI from "@/components/lux/fireblocks/constants/abi/bridge.json";
 //hooks
+import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { parseUnits } from "@/lib/resolveChain";
 
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import SpinIcon from "@/components/icons/spinIcon";
 import Gauge from "@/components/gauge";
-import type { Network, Token } from "@/types/teleport";
-import { useEffect, useMemo, useState } from "react"
+import type { Network, Token } from "@/types/fireblocks";
+import { ArrowRight } from "lucide-react";
 
-
-const PayoutProcessor: React.FC<{
+interface IProps {
   className?: string;
   sourceNetwork: Network;
   sourceAsset: Token;
@@ -44,7 +31,9 @@ const PayoutProcessor: React.FC<{
   destinationAddress: string;
   sourceAmount: string;
   swapId: string;
-}> = ({
+}
+
+const PayoutProcessor: React.FC<IProps> = ({
   sourceNetwork,
   sourceAsset,
   destinationNetwork,
@@ -55,216 +44,20 @@ const PayoutProcessor: React.FC<{
   swapId,
 }) => {
   //state
-  const [isGettingPayout, setIsGettingPayout] = useState<boolean>(false);
+  const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false);
   //atoms
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom);
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom);
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
   const [mpcSignature] = useAtom(mpcSignatureAtom);
   //hooks
-  const { chain } = useNetwork();
   const signer = useEthersSigner();
-  const { switchNetwork } = useSwitchNetwork();
   const { connectWallet } = useWallet();
 
-  const isWithdrawal = useMemo(
+  const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith("Lux") ? true : false),
     [sourceAsset]
   );
-
-  const chainId = chain?.id;
-
-  useEffect(() => {
-    if (!signer) {
-      connectWallet("evm");
-    } else {
-      if (chainId === destinationNetwork.chain_id) {
-        isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
-      } else {
-        destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
-      }
-    }
-  }, [swapStatus, chainId, signer, isWithdrawal]);
-
-  const payoutDestinationToken = async () => {
-    const mintData = {
-      hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
-      toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
-      fromTokenDecimals_: sourceAsset?.decimals,
-      receiverAddress_: destinationAddress,
-      signedTXInfo_: mpcSignature,
-      vault_: "true",
-    };
-
-    console.log("data for bridge mint::", mintData);
-
-    try {
-      setIsGettingPayout(true);
-      // string memory hashedTxId_,
-      // address toTokenAddress_,
-      // uint256 tokenAmount_,
-      // uint256 fromTokenDecimals_,
-      // address receiverAddress_,
-      // bytes memory signedTXInfo_,
-      // string memory vault_
-
-      if (!destinationNetwork.chain_id) return
-
-      const bridgeContract = new Contract(
-        CONTRACTS[destinationNetwork.chain_id as ContractsKey].teleporter,
-        teleporterABI,
-        signer
-      );
-
-      const _signer = await bridgeContract.previewBridgeStealth(
-        mintData.hashedTxId_,
-        mintData.toTokenAddress_,
-        mintData.tokenAmount_,
-        mintData.fromTokenDecimals_,
-        mintData.receiverAddress_,
-        mintData.signedTXInfo_,
-        mintData.vault_
-      );
-      console.log("::signer", _signer);
-
-      const _bridgePayoutTx = await bridgeContract.bridgeMintStealth(
-        mintData.hashedTxId_,
-        mintData.toTokenAddress_,
-        mintData.tokenAmount_,
-        mintData.fromTokenDecimals_,
-        mintData.receiverAddress_,
-        mintData.signedTXInfo_,
-        mintData.vault_
-      );
-      await _bridgePayoutTx.wait();
-      setBridgeMintTransactionHash(_bridgePayoutTx.hash);
-      await axios.post(`/api/swaps/payout/${swapId}`, {
-        txHash: _bridgePayoutTx.hash,
-        amount: sourceAmount,
-        from: CONTRACTS[String(sourceNetwork?.chain_id) as unknown as ContractsKey].teleporter,
-        to: destinationAddress,
-      });
-      setSwapStatus("payout_success");
-    } catch (err) {
-      console.log(err);
-      if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
-      } else {
-        toast.error(`Failed to run transaction`);
-      }
-    } finally {
-      setIsGettingPayout(false);
-    }
-  };
-
-  const withdrawDestinationToken = async () => {
-    const withdrawData = {
-      hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
-      toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
-      fromTokenDecimals_: sourceAsset?.decimals,
-      receiverAddress_: destinationAddress,
-      signedTXInfo_: mpcSignature,
-      vault_: "false",
-    };
-
-    // previewVaultWithdraw
-
-    console.log("::data for bridge withdraw:", withdrawData);
-
-
-    try {
-
-      if (!destinationNetwork.chain_id) return
-      const bridgeContract = new Contract(
-        CONTRACTS[destinationNetwork.chain_id as ContractsKey].teleporter,
-        teleporterABI,
-        signer
-      );
-
-      const previewVaultWithdraw = await bridgeContract.previewVaultWithdraw(
-        withdrawData.toTokenAddress_
-      );
-      console.log({
-        balance: Number(
-          formatUnits(previewVaultWithdraw, destinationAsset.decimals)
-        ),
-        todo: Number(sourceAmount),
-      });
-
-      if (
-        Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) <
-        Number(sourceAmount)
-      ) {
-        toast.error(
-          `Bridge doesnt have enough balance to withdraw. You can only withdraw ${Number(
-            formatUnits(previewVaultWithdraw, destinationAsset.decimals)
-          )}tokens now. Please wait for the withdrawal to be activated.`
-        );
-        return;
-      }
-      // console.log("::canWithdraw", canWithdraw);
-      setIsGettingPayout(true);
-      // string memory hashedTxId_,
-      // address toTokenAddress_,
-      // uint256 tokenAmount_,
-      // uint256 fromTokenDecimals_,
-      // address receiverAddress_,
-      // bytes memory signedTXInfo_,
-      // string memory vault_
-
-      const _signer = await bridgeContract.previewBridgeStealth(
-        withdrawData.hashedTxId_,
-        withdrawData.toTokenAddress_,
-        withdrawData.tokenAmount_,
-        withdrawData.fromTokenDecimals_,
-        withdrawData.receiverAddress_,
-        withdrawData.signedTXInfo_,
-        withdrawData.vault_
-      );
-      console.log("::signer", _signer);
-
-      const _bridgePayoutTx = await bridgeContract.bridgeWithdrawStealth(
-        withdrawData.hashedTxId_,
-        withdrawData.toTokenAddress_,
-        withdrawData.tokenAmount_,
-        withdrawData.fromTokenDecimals_,
-        withdrawData.receiverAddress_,
-        withdrawData.signedTXInfo_,
-        withdrawData.vault_
-      );
-      await _bridgePayoutTx.wait();
-      setBridgeMintTransactionHash(_bridgePayoutTx.hash);
-      await axios.post(`/api/swaps/payout/${swapId}`, {
-        txHash: _bridgePayoutTx.hash,
-        amount: sourceAmount,
-        from: CONTRACTS[String(sourceNetwork?.chain_id) as unknown as ContractsKey].teleporter,
-        to: destinationAddress,
-      });
-      setSwapStatus("payout_success");
-    } catch (err) {
-      console.log(err);
-      if (String(err).includes("user rejected transaction")) {
-        toast.error(`User rejected transaction`);
-      } else {
-        toast.error(`Failed to run transaction`);
-      }
-    } finally {
-      setIsGettingPayout(false);
-    }
-  };
-
-  const handlePayoutDestinationToken = () => {
-    if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
-      connectWallet("evm");
-    } else if (chainId !== destinationNetwork.chain_id) {
-      destinationNetwork.chain_id && switchNetwork!(destinationNetwork.chain_id);
-    } else {
-      isWithdrawal ? withdrawDestinationToken() : payoutDestinationToken();
-    }
-  };
 
   return (
     <div className={`w-full flex flex-col ${className}`}>
@@ -342,13 +135,15 @@ const PayoutProcessor: React.FC<{
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>Teleporter has confirmed your Deposit</span>
+                  <span>
+                    Teleporter has confirmed your token{" "}
+                    {isWithdrawal ? "burn" : "deposit"}
+                  </span>
                 </div>
               </div>
             </div>
             <button
               disabled={isGettingPayout}
-              onClick={handlePayoutDestinationToken}
               className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
             >
               {isGettingPayout ? (
