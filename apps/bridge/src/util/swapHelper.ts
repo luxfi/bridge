@@ -8,7 +8,7 @@ import { getAvailableDepositAddress, getCurrentBlockNumber } from "@/lib/utils";
 
 export interface SwapData {
   amount: number;
-  source_network: string;
+  source_network: any;
   source_exchange?: string;
   source_asset: string;
   source_address: string;
@@ -18,6 +18,7 @@ export interface SwapData {
   destination_address: string;
   refuel: boolean;
   use_deposit_address: boolean;
+  use_teleporter: boolean;
   [property: string]: any;
 }
 
@@ -53,25 +54,14 @@ export async function handleSwapCreation(data: SwapData) {
     use_teleporter,
   } = data;
 
-  // current block number
-  // const block_number = await getCurrentBlockNumber(source_network).catch(err => {
-  //     throw new Error(
-  //         `Error fetching block number for chain ${source_network}`
-  //     );
-  // });
-  const block_number = 0;
-  // get available deposit address
-  const deposit_address_id = !use_teleporter
-    ? await getAvailableDepositAddress(source_network, source_asset)
-    : undefined;
-
   try {
     // source network
     const sourceNetwork = await prisma.network.findUnique({
       where: {
-        internal_name: source_network,
+        internal_name: source_network.internal_name,
       },
     });
+
     // source currency
     const sourceCurrency = await prisma.currency.findFirst({
       where: {
@@ -92,6 +82,15 @@ export async function handleSwapCreation(data: SwapData) {
         asset: destination_asset,
       },
     });
+    // deposit address
+    const deposit = use_teleporter ? undefined : await prisma.depositAddress.create({
+      data: {
+        type: source_network.type,
+        address: source_network.deposit_address.address,
+        memo: source_network.deposit_address.memo 
+      } as Prisma.DepositAddressUncheckedCreateInput
+    })
+
     const swap = await prisma.swap.create({
       data: {
         requested_amount: amount,
@@ -106,12 +105,12 @@ export async function handleSwapCreation(data: SwapData) {
         refuel,
         use_deposit_address,
         use_teleporter,
-        block_number,
-        deposit_address_id,
-        status: SwapStatus.UserTransferPending,
+        deposit_address_id: deposit?.id,
+        status: use_teleporter ? SwapStatus.UserTransferPending : SwapStatus.UserDepositPending,
         quotes: {},
-      },
+      } as Prisma.SwapUncheckedCreateInput
     });
+
     // native currency for fee pay
     const nativeCurrency = await prisma.currency.findFirst({
       where: {
@@ -122,7 +121,7 @@ export async function handleSwapCreation(data: SwapData) {
     // deposit actions
     const depositAction = await prisma.depositAction.create({
       data: {
-        type: "manual_transfer",
+        type: use_teleporter ? "bridge_transfer" : "manual_deposit",
         to_address: destination_address,
         amount,
         order_number: 0,
@@ -131,7 +130,7 @@ export async function handleSwapCreation(data: SwapData) {
         currency_id: Number(sourceCurrency?.id),
         fee_currency_id: Number(nativeCurrency?.id),
         call_data: null,
-        swap_id: swap.id,
+        swap_id: swap.id
       },
     });
 
@@ -173,13 +172,14 @@ export async function handleSwapCreation(data: SwapData) {
         source_asset,
         destination_network,
         destination_asset,
+        deposit_address: deposit
       },
       quote: { ...quote },
       refuel: null,
       reward: null,
     };
     return result;
-  } catch ( error: any ) {
+  } catch (error: any) {
     console.log(error);
     //catchPrismaKnowError(error);
     throw new Error(
@@ -255,7 +255,7 @@ export async function handlerGetSwap(id: string) {
       destination_network: swap?.destination_network?.internal_name,
       destination_asset: swap?.destination_asset?.asset,
     };
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
@@ -320,7 +320,7 @@ export async function handlerUpdateUserTransferAction(
     return {
       ...swap,
     };
-  } catch ( error: any ) {
+  } catch (error: any) {
     console.log(error);
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
@@ -386,7 +386,7 @@ export async function handlerUpdatePayoutAction(
     return {
       ...swap,
     };
-  } catch ( error: any ) {
+  } catch (error: any) {
     console.log(error);
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
@@ -452,7 +452,7 @@ export async function handlerUpdateMpcSignAction(
     return {
       ...swap,
     };
-  } catch ( error: any ) {
+  } catch (error: any) {
     console.log(error);
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
@@ -504,7 +504,7 @@ export async function handlerGetSwaps(
       destination_network: s?.destination_network?.internal_name,
       destination_asset: s?.destination_asset?.asset,
     }));
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
@@ -543,7 +543,7 @@ export async function handlerGetHasBySwaps(address: string) {
 
       return [{ ...transaction.swap }];
     }
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
@@ -551,7 +551,7 @@ export async function handlerGetHasBySwaps(address: string) {
 
 export async function handlerGetExplorer(status: string[]) {
   console.time();
-  const statuses = status.map((num: string) => (statusMapping[Number(num)]));
+  const statuses = status.map((numStr) => statusMapping[Number(numStr)]);
   console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses);
 
   try {
@@ -591,7 +591,7 @@ export async function handlerGetExplorer(status: string[]) {
       destination_network: s?.destination_network?.internal_name,
       destination_asset: s?.destination_asset?.asset,
     }));
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error getting swap: ${error.message}`);
   }
@@ -604,7 +604,7 @@ export async function handlerUpdateSwaps(swapData: { id: string }) {
       data: { ...swapData },
     });
     return "success";
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error deleting swaps: ${error.message}`);
   }
@@ -666,7 +666,7 @@ export async function handlerUpdateSwap(swapData: UpdateSwapData) {
     } else {
       return "failed";
     }
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error deleting swaps: ${error.message}`);
   }
@@ -679,7 +679,7 @@ export async function handlerDelSwap(swapData: { id: string }) {
       data: { ...swapData },
     });
     return "success";
-  } catch ( error: any ) {
+  } catch (error: any) {
     //catchPrismaKnowError(error);
     throw new Error(`Error deleting swaps: ${error.message}`);
   }

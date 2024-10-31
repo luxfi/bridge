@@ -117,7 +117,10 @@ const WalletsMenu = () => {
       <SubmitButton
         text_align="center"
         icon={<WalletIcon className='h-5 w-5' strokeWidth={2} />}
-        className='border-none !px-4' type="button" isDisabled={false} isSubmitting={false}
+        className='border-none !px-4' 
+        type="button" 
+        isDisabled={false} 
+        isSubmitting={false}
       >
         Connect a wallet
       </SubmitButton>
@@ -149,7 +152,9 @@ const ConnectedWalletsDialog = ({ openDialog, setOpenDialog }: { openDialog: boo
                 onClick={
                   () => {
                     disconnectWallet(wallet.providerName);
-                    // wallets.length === 1 && setOpenDialog(false)
+                    if (wallets.length === 1) {
+                      setOpenDialog(false)  
+                    }
                   }
                 }
                 className="p-1 hover:bg-level-2 text-xs  hover:opacity-75"

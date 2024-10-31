@@ -1,8 +1,7 @@
 'use client'
 import { type ReactNode, useCallback, useMemo } from "react";
-import {
-    useSwitchNetwork,
-} from "wagmi";
+import { useSwitchChain } from "wagmi";
+
 import WalletIcon from "../../../../icons/WalletIcon";
 import WalletMessage from "./message";
 import { type ActionData } from "./sharedTypes";
@@ -52,37 +51,30 @@ export const ChangeNetworkMessage: React.FC<{ data: ActionData, network: string 
     }
 }
 
-export const ChangeNetworkButton: React.FC<{ chainId: number, network: string }> = ({ chainId, network }) => {
+export const ChangeNetworkButton: React.FC<{ chainId: number; network: string }> = ({
+  chainId,
+  network,
+}) => {
+  const { switchChain } = useSwitchChain();
 
-    const networkChange = useSwitchNetwork({
-        chainId: chainId,
-    });
-
-    const clickHandler = useCallback(() => {
-        return networkChange?.switchNetwork && networkChange?.switchNetwork()
-    }, [networkChange])
-
-    return <>
-        {
-            <ChangeNetworkMessage
-                data={networkChange}
-                network={network}
-            />
-        }
-        {
-            !networkChange.isLoading &&
-            <ButtonWrapper
-                clcikHandler={clickHandler}
-                icon={<WalletIcon className="stroke-2 w-6 h-6" />}
-            >
-                {
-                    networkChange.isError ? <span>Try again</span>
-                        : <span>Send from wallet</span>
-                }
-            </ButtonWrapper>
-        }
+  return (
+    <>
+      {/* {<ChangeNetworkMessage data={networkChange} network={network} />}
+      {!networkChange.isLoading && (
+        <ButtonWrapper
+          clcikHandler={clickHandler}
+          icon={<WalletIcon className="stroke-2 w-6 h-6" />}
+        >
+          {networkChange.isError ? (
+            <span>Try again</span>
+          ) : (
+            <span>Send from wallet</span>
+          )}
+        </ButtonWrapper>
+      )} */}
     </>
-}
+  );
+};
 
 type ButtonWrapperProps = {
     icon?: ReactNode,

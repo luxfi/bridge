@@ -64,7 +64,6 @@ const CampaignDetails: React.FC = () => {
                   className='rounded-md object-contain' 
                 />
               </div>
-
             )}
               <h2 className='font-bold text-xl text-left flex items-center'>
                 {network?.display_name && (<span>network.display_name&nbsp;</span>)}
@@ -76,9 +75,9 @@ const CampaignDetails: React.FC = () => {
             ) : (
               <BriefInformation network={network} campaign={campaign} />
             )}
-            <Leaderboard campaign={campaign} />
+            <Leaderboard campaign={campaign} />            
           </div>
-        </Widget.Content>
+      </Widget.Content>
       {!isConnected ? (
         <Widget.Footer>
           <RainbowKit>
@@ -99,18 +98,20 @@ const BriefInformation: React.FC<{
   campaign, 
   network 
 }) => (
-  <p className='text-muted text-base'>
-      You can earn $<span>{campaign?.asset}</span>&nbsp;tokens by transferring assets to&nbsp;
-      <span>{network?.display_name || campaign.network}</span>. For each transaction, you'll receive&nbsp;
-      <span>{campaign?.percentage}</span>% of Bridge fee back.&nbsp;
-      <LinkElement
-        def={{
-          title: 'Learn more',
-          newTab: true,
-          href: 'https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards' 
-        }}
-        className='inline-flex text-primary underline hover:no-underline'
-      />
+    <p className="text-muted text-base">
+    You can earn $<span>{campaign?.asset}</span>&nbsp;tokens by transferring
+    assets to&nbsp;
+    <span>{network?.display_name || campaign.network}</span>. For each
+    transaction, you'll receive&nbsp;
+    <span>{campaign?.percentage}</span>% of Bridge fee back.&nbsp;
+    <LinkElement
+      def={{
+        title: "Learn more",
+        newTab: true,
+        href: "https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards",
+      }}
+      className="inline-flex text-primary underline hover:no-underline"
+    />
   </p>
 )
 

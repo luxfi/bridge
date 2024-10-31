@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import toast from "react-hot-toast";
 import Web3 from "web3";
 import {
@@ -12,11 +12,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
+import useNotification from "@/hooks/useNotification";
 
-import { useSwitchNetwork } from "wagmi";
+//hooks
+import { useSwitchChain, useChainId } from "wagmi";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { useNetwork } from "wagmi";
 
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
@@ -24,10 +25,8 @@ import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
-import type { ContractsKey } from "@/components/lux/fireblocks/constants/settings"
 
-
-const TeleportProcessor: React.FC<{
+interface IProps {
   className?: string;
   sourceNetwork: Network;
   sourceAsset: Token;
@@ -36,7 +35,9 @@ const TeleportProcessor: React.FC<{
   destinationAddress: string;
   sourceAmount: string;
   swapId: string;
-}> = ({
+}
+
+const TeleportProcessor: React.FC<IProps> = ({
   sourceNetwork,
   sourceAsset,
   destinationNetwork,
@@ -46,32 +47,35 @@ const TeleportProcessor: React.FC<{
   className,
   swapId,
 }) => {
-  const [isMpcSigning, setIsMpcSigning] = useState<boolean>(false);
-
+  //state
+  const [isMpcSigning, setIsMpcSigning] = React.useState<boolean>(false);
+  //atoms
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom);
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
   const [, setMpcSignature] = useAtom(mpcSignatureAtom);
-
+  //hooks
   const signer = useEthersSigner();
-  const { chain } = useNetwork();
-  const { switchNetwork } = useSwitchNetwork();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const { connectWallet } = useWallet();
 
-  const chainId = chain?.id;
+  const { showNotification } = useNotification();
 
-  const isWithdrawal = useMemo(
+  const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith("Lux") ? true : false),
     [sourceAsset]
   );
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!signer) {
       connectWallet("evm");
     } else {
       if (chainId === sourceNetwork?.chain_id) {
         getMpcSignature();
       } else {
-        sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+        sourceNetwork.chain_id &&
+          switchChain &&
+          switchChain({ chainId: sourceNetwork.chain_id });
       }
     }
   }, [swapStatus, chainId, signer]);
@@ -113,19 +117,21 @@ const TeleportProcessor: React.FC<{
           txHash: res.data.signature,
           amount: sourceAmount,
           from: signer?._address,
-          to: CONTRACTS[String(sourceNetwork?.chain_id) as unknown as ContractsKey].teleporter,
+          to: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
         });
         setMpcSignature(res.data.signature);
         setSwapStatus("user_payout_pending");
       } else {
         const { msg } = res;
         if (String(msg).includes("InvalidSenderError")) {
-          toast.error(
-            `Invaild Token Sender, Please try using sender's account`
+          showNotification(
+            "Invalid token sender. Try again using correct sender's account",
+            "warn"
           );
         } else {
-          toast.error(
-            `Failed to get signature from MPC oracle network, Please try again`
+          showNotification(
+            "Failed to get signature from MPC oracle network, Please try again",
+            "error"
           );
         }
       }
@@ -137,10 +143,15 @@ const TeleportProcessor: React.FC<{
   };
   const handleGetMpcSignature = () => {
     if (!signer) {
-      toast.error(`No connected wallet. Please connect your wallet`);
+      showNotification(
+        "No connected wallet. Please connect your wallet",
+        "warn"
+      );
       connectWallet("evm");
     } else if (chainId !== sourceNetwork.chain_id) {
-      sourceNetwork.chain_id && switchNetwork!(sourceNetwork.chain_id);
+      sourceNetwork.chain_id &&
+        switchChain &&
+        switchChain({ chainId: sourceNetwork.chain_id });
     } else {
       getMpcSignature();
     }

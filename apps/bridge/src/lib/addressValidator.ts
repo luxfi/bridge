@@ -2,11 +2,15 @@ import { keccak256 } from "js-sha3";
 import KnownInternalNames from "./knownIds";
 import { validateAndParseAddress } from "./starkNetAddressValidator";
 import { PublicKey } from '@solana/web3.js'
+import type { Layer } from "../Models/Layer";
+import WAValidator from 'multicoin-address-validator';
 
 export function isValidAddress(address?: string, network?: { internal_name: string } | null): boolean {
     if (!address) {
         return false
     }
+
+    console.log("::validate address:", network, address)
     if (network?.internal_name === KnownInternalNames.Networks.RoninMainnet) {
         if (address.startsWith("ronin:")) {
             return isValidEtherAddress(address.replace("ronin:", "0x"));
@@ -37,7 +41,7 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
             let pubkey = new PublicKey(address)
             let isSolana = PublicKey.isOnCurve(pubkey.toBuffer())
             return isSolana
-        } catch ( error: any ) {
+        } catch (error) {
             return false
         }
     }
@@ -46,8 +50,11 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
             return true;
         }
         return false
-    }
-    else {
+    } if (network?.internal_name?.toLowerCase().startsWith("bitcoin")) {
+        console.log("bitcoin")
+        const isValid = WAValidator.validate(address, 'BTC');
+        return isValid;
+    } else {
         return isValidEtherAddress(address);
     }
 }
