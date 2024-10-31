@@ -208,6 +208,110 @@
     "created_date": "2022-05-29T17:30:19.14963+00:00"
   },
   {
+    "display_name": "Holesky Testnet",
+    "internal_name": "HOLESKY_TESTNET",
+    "native_currency": "ETH",
+    "is_testnet": true,
+    "is_featured": true,
+    "average_completion_time": "00:01:04.0494430",
+    "chain_id": "17000",
+    "status": "active",
+    "type": "evm",
+    "refuel_amount_in_usd": 0.5,
+    "transaction_explorer_template": "https://holesky.etherscan.io/tx/{0}",
+    "account_explorer_template": "https://holesky.etherscan.io/address/{0}",
+    "currencies": [
+      {
+        "name": "ETH",
+        "asset": "ETH",
+        "contract_address": null,
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": true
+      },
+      {
+        "name": "WETH",
+        "asset": "WETH",
+        "contract_address": "0xcf963Fe4E4cE126047147661e6e06e171f366506",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.000108,
+        "withdrawal_fee": 0.000108,
+        "source_base_fee": 0.000545,
+        "destination_base_fee": 0.000545,
+        "is_native": false
+      },
+      {
+        "name": "USDT",
+        "asset": "USDT",
+        "contract_address": "0xD257ADA332da217c78959A609e97c71ce5214925",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "USDC",
+        "asset": "USDC",
+        "contract_address": "0x15BA7dCA26c63029E33C81f7B3978B54Bc0CB08B",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      },
+      {
+        "name": "DAI",
+        "asset": "DAI",
+        "contract_address": "0x9F47CeB09cb88362f0274Bb354a9807Fd976D963",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.2,
+        "withdrawal_fee": 0.2,
+        "source_base_fee": 1,
+        "destination_base_fee": 1,
+        "is_native": false
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [],
+    "nodes": [
+      {
+        "url": "https://ethereum-holesky-rpc.publicnode.com/"
+      }
+    ],
+    "created_date": "2022-05-29T17:30:19.14963+00:00"
+  },
+  {
     "display_name": "Lux Testnet",
     "internal_name": "LUX_TESTNET",
     "native_currency": "LUX",
@@ -247,10 +351,10 @@
         "is_withdrawal_enabled": true,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.000108,
-        "withdrawal_fee": 0.000108,
-        "source_base_fee": 0.000545,
-        "destination_base_fee": 0.000545,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -263,10 +367,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -279,10 +383,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -295,10 +399,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -311,26 +415,26 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
         "name": "LBTC",
         "asset": "LBTC",
-        "contract_address": "0xD293337c79A951C0e93aEb6a5E255097d65b671f",
+        "contract_address": "0xd7bE6F0E47acb95944fcc357a4392cAa5670B9e4",
         "decimals": 18,
         "status": "active",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -343,10 +447,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -359,10 +463,42 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": false
+      },
+      {
+        "name": "LTON",
+        "asset": "LTON",
+        "contract_address": "0xf41380968E9D408a143ddC63322565793d0750f8",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": false
+      },
+      {
+        "name": "LSOL",
+        "asset": "LSOL",
+        "contract_address": "",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -375,10 +511,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -391,10 +527,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -407,10 +543,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -423,10 +559,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       }
     ],
@@ -463,10 +599,10 @@
         "is_withdrawal_enabled": true,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.000108,
-        "withdrawal_fee": 0.000108,
-        "source_base_fee": 0.000545,
-        "destination_base_fee": 0.000545,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": true
       },
       {
@@ -479,10 +615,10 @@
         "is_withdrawal_enabled": true,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.000108,
-        "withdrawal_fee": 0.000108,
-        "source_base_fee": 0.000545,
-        "destination_base_fee": 0.000545,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -495,10 +631,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -511,10 +647,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       },
       {
@@ -527,10 +663,10 @@
         "is_withdrawal_enabled": false,
         "is_refuel_enabled": false,
         "max_withdrawal_amount": 0,
-        "deposit_fee": 0.2,
-        "withdrawal_fee": 0.2,
-        "source_base_fee": 1,
-        "destination_base_fee": 1,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
         "is_native": false
       }
     ],
@@ -542,5 +678,189 @@
       }
     ],
     "created_date": "2022-11-10T13:52:39.422241+00:00"
+  },
+  {
+    "display_name": "Bitcoin Testnet",
+    "internal_name": "BITCOIN_TESTNET",
+    "native_currency": "BTC",
+    "is_testnet": true,
+    "is_featured": true,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "btc",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://blockstream.info/testnet/tx/{0}",
+    "account_explorer_template": "https://blockstream.info/testnet/address/{0}",
+    "currencies": [
+      {
+        "name": "BTC",
+        "asset": "BTC",
+        "contract_address": "",
+        "decimals": 18,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
+  },
+  {
+    "display_name": "Solana",
+    "internal_name": "SOLANA_TESTNET",
+    "native_currency": "SOL",
+    "is_testnet": true,
+    "is_featured": false,
+    "average_completion_time": "00:03:07.9874770",
+    "chain_id": null,
+    "status": "active",
+    "type": "solana",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.solana.com/?cluster=testnet/tx/{0}",
+    "account_explorer_template": "https://explorer.solana.com/?cluster=testnet/address/{0}",
+    "currencies": [
+      {
+        "name": "SOL",
+        "asset": "SOL",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "2ZUoHEPcN7bsSXw6YTj85CMrU8xNtcYNGiSMXPLomaa2"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.testnet.solana.com"
+      }
+    ],
+    "created_date": "2023-02-21T13:04:25.293958+00:00"
+  },
+  {
+    "display_name": "Solana",
+    "internal_name": "SOLANA_DEVNET",
+    "native_currency": "SOL",
+    "is_testnet": true,
+    "is_featured": false,
+    "average_completion_time": "00:03:07.9874770",
+    "chain_id": null,
+    "status": "active",
+    "type": "solana",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://explorer.solana.com/?cluster=devnet/tx/{0}",
+    "account_explorer_template": "https://explorer.solana.com/?cluster=devnet/address/{0}",
+    "currencies": [
+      {
+        "name": "SOL",
+        "asset": "SOL",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "2ZUoHEPcN7bsSXw6YTj85CMrU8xNtcYNGiSMXPLomaa2"
+      }
+    ],
+    "nodes": [
+      {
+        "url": "https://api.testnet.solana.com"
+      }
+    ],
+    "created_date": "2023-02-21T13:04:25.293958+00:00"
+  },
+  {
+    "display_name": "Ton",
+    "internal_name": "TON_TESTNET",
+    "native_currency": "TON",
+    "is_testnet": true,
+    "is_featured": false,
+    "average_completion_time": "00:04:39.5276290",
+    "chain_id": null,
+    "status": "active",
+    "type": "ton",
+    "refuel_amount_in_usd": 1,
+    "transaction_explorer_template": "https://tonscan.org/tx/{0}",
+    "account_explorer_template": "https://tonscan.org/address/{0}",
+    "currencies": [
+      {
+        "name": "jUSDC",
+        "asset": "jUSDC",
+        "contract_address": "EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": true,
+        "max_withdrawal_amount": 500,
+        "deposit_fee": 0.1,
+        "withdrawal_fee": 0.1,
+        "source_base_fee": 0.1,
+        "destination_base_fee": 0.1,
+        "is_native": false
+      },
+      {
+        "name": "TON",
+        "asset": "TON",
+        "contract_address": null,
+        "decimals": 9,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "is_native": true
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [
+      {
+        "address": "UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"
+      }
+    ],
+    "nodes": [],
+    "created_date": "2023-05-01T15:13:15.929+00:00"
   }
 ]

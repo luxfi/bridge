@@ -30,7 +30,7 @@ export default async function handler(
                         asset: 'LUX'
                     },
                     {
-                        network: 'LUXLINK',
+                        network: 'LUXFI',
                         asset: 'LUX'
                     },
                 ]
@@ -52,7 +52,7 @@ export default async function handler(
                         asset: 'LUX'
                     },
                     {
-                        network: 'LUXLINK',
+                        network: 'LUXFI',
                         asset: 'LUX'
                     },
                     {
@@ -62,8 +62,8 @@ export default async function handler(
                 ]
             });
         }
-    } catch (error: any) {
+    } catch (error: any ) {
         console.error("Error in fetching destinations", error);
-        res.status(500).json({ data: error.message ?? ''});
+        res.status(500).json({ data: error.message });
     }
 }

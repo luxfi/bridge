@@ -6,11 +6,11 @@ import FiatTransfer from "./FiatTransfer";
 import { useSettings } from "@/context/settings";
 import { useSwapDataState, useSwapDataUpdate } from "@/context/swap";
 import KnownInternalNames from "@/lib/knownIds";
-import { Tab, TabHeader } from "../../Tabs/Index";
+import { type Tab, TabHeader } from "../../Tabs/Index";
 import SwapSummary from "../Summary";
 import Coinbase from "./Coinbase";
 import External from "./External";
-import { type WithdrawType } from "@/lib/BridgeApiClient";
+import { WithdrawType } from "@/lib/BridgeApiClient";
 import WalletIcon from "../../icons/WalletIcon";
 import shortenAddress, { shortenEmail } from "../../utils/ShortenAddress";
 import { useAccountModal } from "@rainbow-me/rainbowkit";
@@ -19,7 +19,7 @@ import SpinIcon from "../../icons/spinIcon";
 import { NetworkType } from "@/Models/CryptoNetwork";
 import useWallet from "@/hooks/useWallet";
 import { useQueryState } from "@/context/query";
-import { Widget } from "../../Widget/Index";
+import Widget from "../../Widget/Index";
 
 const Withdraw: FC = () => {
   const { swap } = useSwapDataState();
@@ -176,7 +176,7 @@ const Withdraw: FC = () => {
 const WalletTransferContent: FC = () => {
   const { openAccountModal } = useAccountModal();
   const { getWithdrawalProvider: getProvider, disconnectWallet } = useWallet();
-  const { layers, resolveImgSrc } = useSettingsState();
+  const { layers, resolveImgSrc } = useSettings();
   const { swap } = useSwapDataState();
   const [isLoading, setIsloading] = useState(false);
   const { mutateSwap } = useSwapDataUpdate();

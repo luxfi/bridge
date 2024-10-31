@@ -1,8 +1,10 @@
-import { toast, ToastContainer } from "react-toastify";
 import React from "react";
+import { toast, ToastContainer } from "react-toastify";
+
 type NotificationContextType = {
-  showNotification: (msg: string, type: string) => void;
+  showNotification: (msg: string, t: 'warn' | 'error') => void;
 };
+
 export const NotificationContext =
   React.createContext<NotificationContextType | null>(null);
 
@@ -11,17 +13,30 @@ export const NotificationProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const showNotification = (msg: string, type: string) => {
-    //@ts-ignore
-    toast[type](msg, {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      theme: "dark",
-    });
+  const showNotification = (msg: string, t: 'warn' | 'error') => {
+
+    if (t === 'warn') {
+      toast.warn(msg, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      })
+    }
+    else if (t === 'error') {
+      toast.error(msg, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      })
+    } 
   };
 
   return (
