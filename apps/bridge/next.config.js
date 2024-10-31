@@ -31,8 +31,6 @@ module.exports = (phase, { defaultConfig }) => {
       defaultLocale: "en",
     },
     images: {
-      domains: ["cdn.lux.network"],
-
       remotePatterns: [
         {
           protocol: "https",
@@ -66,6 +64,7 @@ module.exports = (phase, { defaultConfig }) => {
     },
     reactStrictMode: false,
     webpack: (config, { isServer }) => {
+      config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       if (!isServer) {
         config.resolve.alias['@'] = path.resolve(__dirname + '/src');

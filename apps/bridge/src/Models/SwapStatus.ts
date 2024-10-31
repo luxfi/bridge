@@ -2,6 +2,7 @@ export enum SwapStatus {
   Created = "created",
   UserTransferPending = "user_transfer_pending",
   UserTransferDelayed = "user_transfer_delayed",
+  UserDepositPending = "user_deposit_pending",
   BridgeTransferPending = "bridge_transfer_pending",
   Completed = "completed",
   Failed = "failed",

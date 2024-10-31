@@ -1,3 +1,4 @@
+import React from "react";
 import SuccessIcon from "../SuccessIcon";
 import { bridgeMintTransactionAtom } from "@/store/fireblocks";
 import {
@@ -5,12 +6,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/shadcn/tooltip";
-
+//hooks
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
 import Gauge from "@/components/gauge";
-import type { Network, Token } from "@/types/teleport";
+import type { Network, Token } from "@/types/fireblocks";
 
 interface IProps {
   className?: string;

@@ -1,12 +1,10 @@
 'use client'
-import { type ChangeEvent, useCallback, useEffect, useState } from "react";
-import Image from 'next/image';
-
-
 import { type Partner } from "@/Models/Partner";
 import { type AddressBookItem } from "@/lib/BridgeApiClient";
 import { isValidAddress } from "@/lib/addressValidator";
-import { type Network } from "@/types/teleport";
+import { type Network } from "@/types/fireblocks";
+import React, { type ChangeEvent, type FC, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from 'next/image';
 import KnownInternalNames from "@/lib/knownIds";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import WalletIcon from "@/components/icons/WalletIcon";
@@ -29,7 +27,7 @@ interface IProps extends Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'as' | 
     network?: Network
 }
 
-const Address: React.FC<IProps> = ({ name, close, disabled, isPartnerWallet, partnerImage, partner, address, setAddress, network }) => {
+const Address: FC<IProps> = ({ name, close, disabled, isPartnerWallet, partnerImage, partner, address, setAddress, network }) => {
 
     const [wrongNetwork, setWrongNetwork] = useState(false)
     const [inputValue, setInputValue] = useState<string | undefined>(address)

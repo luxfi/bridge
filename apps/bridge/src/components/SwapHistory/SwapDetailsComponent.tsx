@@ -7,16 +7,35 @@ import isGuid from "../utils/isGuid";
 import KnownInternalNames from "../../lib/knownIds";
 import { SwapDetailsComponentSkeleton } from "../Skeletons";
 import { ExternalLink } from "lucide-react";
-import { resolveNetworkImage } from "@/util";
+import { type FC } from "react";
 import { type SwapItem, TransactionType } from "../../lib/BridgeApiClient";
-
-import networks from "@/settings/mainnet/networks.json";
+//networks
+import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/networks.mainnets";
+import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
+import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
+import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
 
 type Props = {
   swap: SwapItem;
 };
 
-const SwapDetails: React.FC<Props> = ({ swap }) => {
+const SwapDetails: FC<Props> = ({ swap }) => {
+  // make networks
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const networksFireblock = isMainnet
+    ? [
+        ...fireblockNetworksMainnet.sourceNetworks,
+        ...fireblockNetworksMainnet.destinationNetworks,
+      ]
+    : [
+        ...fireblockNetworksTestnet.sourceNetworks,
+        ...fireblockNetworksTestnet.destinationNetworks,
+      ];
+  const networksTeleport = isMainnet
+    ? teleportNetworksMainnet
+    : teleportNetworksTestnet;
+  const networks = swap.use_teleporter ? networksTeleport : networksFireblock;
+
   const sourceNetwork = networks.find(
     (n) => n.internal_name === swap.source_network
   );
@@ -86,7 +105,7 @@ const SwapDetails: React.FC<Props> = ({ swap }) => {
                 <div className="flex-shrink-0 h-5 w-5 relative">
                   {
                     <Image
-                      src={resolveNetworkImage(swap?.source_network)}
+                      src={sourceNetwork?.logo!}
                       alt="Exchange Logo"
                       height="60"
                       width="60"
@@ -104,12 +123,13 @@ const SwapDetails: React.FC<Props> = ({ swap }) => {
               <div className="flex items-center">
                 <div className="flex-shrink-0 h-5 w-5 relative">
                   <Image
-                    src={resolveNetworkImage(swap?.destination_network)}
+                    // src={resolveNetworkImage(swap?.destination_network)}
+                    src={destinationNetwork?.logo!}
                     alt="Exchange Logo"
                     height="60"
                     width="60"
                     layout="responsive"
-                    className="rounded-md object-contain"
+                    className="rounded-md border border-[#f3f3f32d] object-contain"
                   />
                 </div>
                 <div className="mx-1 ">
