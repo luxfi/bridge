@@ -148,8 +148,11 @@ export function SwapDataProvider({
   //     })
   // }, [swapId])
 
+
+
   const createSwap = useCallback(
-    async (values: SwapFormValues, query: QueryParams, partner: Partner) => {
+
+    async (values: SwapFormValues, query: QueryParams, partner?: Partner) => {
       if (!values) throw new Error('No swap data')
 
       const {
@@ -221,8 +224,7 @@ export function SwapDataProvider({
   )
 
   const updateFns: UpdateInterface = {
-      // @ts-ignore
-    createSwap: createSwap,
+    createSwap,
     setCodeRequested: setCodeRequested,
     cancelSwap: cancelSwap,
     setAddressConfirmed: setAddressConfirmed,
