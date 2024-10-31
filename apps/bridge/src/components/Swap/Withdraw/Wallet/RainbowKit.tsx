@@ -1,4 +1,4 @@
-import { FC, type PropsWithChildren } from "react";
+import { type FC, type PropsWithChildren } from "react";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 

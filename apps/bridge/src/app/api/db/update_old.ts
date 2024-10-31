@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { mainnetSettings, testnetSettings } from "../../../settings";
-import prisma from "../../../lib/db";
+import { mainnetSettings } from "@/settings";
+import prisma from "@/lib/db";
 
 /**
  * update network and currencies according to settings file
@@ -16,9 +16,7 @@ export default async function handler(
 ) {
   try {
     const { version } = req.query;
-    const isMainnet =
-      version === "mainnet" ||
-      process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+    const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
     // settings
     const settings = mainnetSettings;
     const { networks } = settings.data;
@@ -34,6 +32,8 @@ export default async function handler(
     console.log("deleted rpcNode...");
     await prisma.network.deleteMany({});
     console.log("deleted network...");
+
+    let rpcCount = 0, networksCount = 0, currenciesCount = 0;
     for (let index = 0; index < networks.length; index++) {
       const n = networks[index];
       const _network = await prisma.network.create({
@@ -68,13 +68,16 @@ export default async function handler(
           is_native: c.is_native,
         })),
       });
+      networksCount ++;
+      rpcCount += n.nodes.length;
+      currenciesCount += n.currencies.length;
     }
-    console.log("success");
     return res.status(200).json({
       status: "success",
+      data: { rpcCount, networksCount, currenciesCount }
     });
   } catch (error: any) {
     console.error("Error in updating networks", error);
-    res.status(500).json({ data: error.message ?? 'error'});
+    res.status(500).json({ data: error.message });
   }
 }

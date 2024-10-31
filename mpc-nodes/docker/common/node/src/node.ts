@@ -8,19 +8,16 @@
  * Signatures allow minting to occur cross chain.
  */
 import cors from "cors"
-import express, { Request, Response, NextFunction } from "express"
-import Web3, { net } from "web3"
+import express, { Request, Response } from "express"
+import Web3 from "web3"
 import { Interface } from "ethers"
-import { promisify } from "util"
-import { exec as childExec } from "child_process"
 import { settings } from "./config"
 import { RegisteredSubscription } from "web3/lib/commonjs/eth.exports"
 import { PrismaClient } from "@prisma/client"
 import { signDataValidator } from "./validator"
 import { MAIN_NETWORKS, SWAP_PAIRS, TEST_NETWORKS } from "./config/settings"
-import { hashAndSignTx } from "./utils"
+import { getWeb3FormForRPC, hashAndSignTx } from "./utils"
 
-const exec = promisify(childExec)
 const prisma = new PrismaClient()
 
 /* Settings Mapping */
@@ -37,41 +34,6 @@ const msg = settings.Msg //signing msg used in front running prevention
 let dupeStart = 0
 const dupeListLimit = Number(settings.DupeListLimit)
 let dupeList = new Map()
-
-/**
- * get WEB3 object by given network's rpc url
- * @param rpcUrl
- * @returns
- */
-function getWeb3FormForRPC(rpcUrl: string) {
-  try {
-    const _web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl))
-    return _web3
-  } catch (err) {
-    return null
-  }
-}
-
-/**
- * Given network id returns the appropriate contract to talk to as array of values
- * @param networkId
- * @param fromTokenName
- * @returns boject { fromTokenConAddr, w3From, frombridgeConAddr }
- */
-const getNetworkInfo = async (networkId: string, fromTokenName: string) => {
-  try {
-    // const web3 = await getWeb3ForId(networkId)
-    // const chainName: string = networkName[networkId]
-    // if (!chainName) throw "no chain"
-    // return {
-    //   fromTokenConAddr: settingsMap.get(fromTokenName.toString())[chainName],
-    //   w3From: web3,
-    //   frombridgeConAddr: list[chainName]
-    // }
-  } catch (err) {
-    return null
-  }
-}
 
 const app = express()
 app.use(express.json())
@@ -91,6 +53,19 @@ app.get("/dbcheck", async (req: Request, res: Response) => {
   try {
     const transactions = await prisma.teleporter.findMany()
     res.status(200).json(transactions)
+  } catch (err) {
+    console.log("Failed to save tx to db", err)
+    res.status(500).json(err)
+  }
+})
+
+app.get("/networks", async (req: Request, res: Response) => {
+  try {
+    const nettowks = {
+      mainnets: MAIN_NETWORKS,
+      testnets: TEST_NETWORKS
+    }
+    res.status(200).json(nettowks)
   } catch (err) {
     console.log("Failed to save tx to db", err)
     res.status(500).json(err)
@@ -218,8 +193,8 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
     return
   }
   // TODO: check swap possibility according to src & dst chains
-  const fromToken = fromNetwork.currencies.find((c) => c.contract_address === fromTokenAddress)
-  const toToken = toNetwork.currencies.find((c) => c.contract_address === toTokenAddress)
+  const fromToken = fromNetwork.currencies.find((c) => c.contract_address.toLowerCase() === fromTokenAddress.toLowerCase())
+  const toToken = toNetwork.currencies.find((c) => c.contract_address.toLowerCase() === toTokenAddress.toLowerCase())
   // console.log("::tokens: ", { fromToken, toToken })
 
   if (!fromToken) {
@@ -299,13 +274,13 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
       toTokenAddressHash: toTokenAddressHash,
       vault: vault
     }
-    // await savehashedTxId({
-    //   chainType: "evm",
-    //   txId: txId,
-    //   amount: tokenAmount.toString(),
-    //   signature,
-    //   hashedTxId: hashedTxId
-    // })
+    await savehashedTxId({
+      chainType: "evm",
+      txId: txId,
+      amount: tokenAmount.toString(),
+      signature,
+      hashedTxId: hashedTxId
+    })
     res.status(200).json({
       status: true,
       data: output

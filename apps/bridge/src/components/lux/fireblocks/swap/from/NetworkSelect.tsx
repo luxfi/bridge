@@ -26,7 +26,7 @@ interface IProps {
 const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, setShow, searchHint }) => {
     const { isDesktop } = useWindowDimensions();
     return (
-        <Modal height='full' show={show} setShow={setShow}>
+        <Modal height='full' show={show} setShow={setShow as React.Dispatch<React.SetStateAction<boolean>>}>
             {show ?
                 <CommandWrapper>
                     <CommandInput autoFocus={isDesktop} placeholder={searchHint} />

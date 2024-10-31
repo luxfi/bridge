@@ -43,7 +43,7 @@ const TransferFromWallet: React.FC<{
       );
       const hash = data.state.swapTransactions?.[swapId]?.hash;
       if (hash) setSavedTransactionHash(hash);
-    } catch (e) {
+    } catch (e: any) {
       //TODO log to logger
       console.error(e.message);
     }

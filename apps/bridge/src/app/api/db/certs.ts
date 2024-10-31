@@ -61,6 +61,6 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error in fetching networks", error);
-    res.status(500).json({ data: error.message ?? 'error'});
+    res.status(500).json({ data: error.message });
   }
 }

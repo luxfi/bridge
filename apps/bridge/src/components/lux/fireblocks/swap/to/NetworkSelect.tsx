@@ -7,22 +7,23 @@ import {
   CommandList,
   CommandWrapper,
 } from "@/components/shadcn/command";
-import React, { type Dispatch, type SetStateAction } from "react";
+import React from "react";
 import Modal from "@/components/modal/modal";
 import useWindowDimensions from "@/hooks/useWindowDimensions";
 import SelectItem from "@/components/lux/fireblocks/swap/to/SelectItem";
 import SpinIcon from "@/components/icons/spinIcon";
-import type { Network } from "@/types/teleport";
+import { type Network } from "@/types/fireblocks";
 
-
-const CommandSelect: React.FC<{
+interface IProps {
   show: boolean;
   setShow: (value: boolean) => void;
   searchHint: string;
   networks: Network[];
   network?: Network;
   setNetwork: (value: Network) => void;
-}> = ({
+}
+
+const CommandSelect: React.FC<IProps> = ({
   networks,
   network,
   setNetwork,
@@ -32,7 +33,7 @@ const CommandSelect: React.FC<{
 }) => {
   const { isDesktop } = useWindowDimensions();
   return (
-    <Modal height="full" show={show} setShow={setShow as Dispatch<SetStateAction<boolean>>}>
+    <Modal height="full" show={show} setShow={setShow as React.Dispatch<React.SetStateAction<boolean>>}>
       {show ? (
         <CommandWrapper>
           <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
@@ -68,4 +69,4 @@ const CommandSelect: React.FC<{
   );
 };
 
-export default CommandSelect
+export default CommandSelect;

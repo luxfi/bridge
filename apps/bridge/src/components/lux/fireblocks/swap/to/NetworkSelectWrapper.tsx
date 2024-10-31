@@ -1,122 +1,90 @@
-import React, { useState } from 'react'
+'use client'
+import React, { useCallback, useState } from 'react'
 import Image from 'next/image'
-import TokenSelect from './TokenSelect'
+import NetworkSelect from './NetworkSelect'
+import { type Network } from '@/types/fireblocks';
 import { ChevronDown } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover'
-import { type Token } from '@/types/fireblocks';
 
-interface IProps {
-  setValue: (value: Token) => void;
-  values: Token[];
-  value?: Token;
-  sourceAsset?: Token;
-  placeholder?: string;
-  searchHint?: string;
-  disabled?: boolean;
+type NetworkSelectWrapperProps = {
+    network?: Network;
+    networks: Network[];
+    setNetwork: (network: Network) => void;
+    placeholder: string;
+    searchHint: string;
+    disabled: boolean;
+    className?: string
 }
 
-const TokenSelectWrapper: React.FC<IProps> = ({
-  setValue,
-  value,
-  sourceAsset,
-  values,
-  placeholder,
-  disabled
-}) => {
-  const [showModal, setShowModal] = React.useState(false);
+export default function NetworkSelectWrapper<T>({
+    network,
+    setNetwork,
+    networks,
+    disabled,
+    placeholder,
+    searchHint,
+    className
+}: NetworkSelectWrapperProps) {
+    const [showModal, setShowModal] = useState(false)
 
-  const handleSelect = React.useCallback((item: Token) => {
-    if (item.status === 'active') {
-      setValue(item);
-      setShowModal(false);
+    function openModal() {
+        setShowModal(true)
     }
-  }, []);
 
-  if (values.length === 0) return <Placeholder placeholder={placeholder} />
-
-  return (
-    <Popover open={showModal} onOpenChange={() => setShowModal(!showModal)}>
-      <PopoverTrigger asChild>
-        {
-          value ?
-            <button type='button' className='py-0 border-transparent bg-transparent font-semibold rounded-md flex items-center justify-between'>
-              <span className="flex items-center text-xs md:text-base">
-                <div className="flex-shrink-0 h-6 w-6 relative">
-                  {
-                    value.logo && <Image
-                      src={value.logo}
-                      alt="Project Logo"
-                      priority
-                      height="40"
-                      width="40"
-                      className="rounded-md object-contain"
-                    />
-                  }
-                </div>
-                <span className="ml-3 block">{value.asset}</span>
-              </span>
-
-              <span className="ml-1 flex items-center pointer-events-none ">
-                <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              </span>
-            </button>
-            :
-            <button type='button' className='py-0 border-transparent bg-transparent font-semibold rounded-md flex items-center justify-between'>
-              <div className="disabled:cursor-not-allowed relative grow flex items-center text-left w-full font-semibold">
-                <span className="flex grow text-left items-center">
-                  <span className="block text-xs md:text-base font-medium text-muted-3 flex-auto items-center">
-                    {placeholder}
-                  </span>
-                </span>
-              </div>
-
-              <span className="ml-1 flex items-center pointer-events-none">
-                <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              </span>
-            </button>
+    const handleSelect = useCallback((item: Network) => {
+        if (item.status === 'active') {
+            setNetwork(item)
+            setShowModal(false)
         }
-      </PopoverTrigger>
-      <PopoverContent className="w-fit bg-[black] border-[#404040]">
-        <TokenSelect
-          setValue={handleSelect}
-          values={values}
-        />
-      </PopoverContent>
-    </Popover>
-  )
+    }, [])
+
+    return (
+        <>
+            <div className="flex items-center relative">
+                <button
+                    type="button"
+                    onClick={openModal}
+                    disabled={disabled}
+                    className={`rounded-lg focus-peer:ring-primary focus-peer:border-muted-3 focus-peer:border focus-peer:ring-1 focus:outline-none disabled:cursor-not-allowed relative grow h-12 flex items-center text-left justify-bottom w-full pl-3 pr-4 py-2 border border-muted-3 font-semibold ${className}`}
+                >
+                    <span className='flex grow text-left items-center text-xs md:text-base'>
+                        {
+                            network && <div className="flex items-center">
+                                <div className="flex-shrink-0 h-6 w-6 relative">
+                                    <Image
+                                        src={network.logo}
+                                        alt="Project Logo"
+                                        height="40"
+                                        width="40"
+                                        loading="eager"
+                                        priority
+                                        className="rounded-md object-contain"
+                                    />
+                                </div>
+                            </div>
+                        }
+                        {network
+                            ?
+                            <span className="ml-3 block font-medium text-muted flex-auto items-center">
+                                {network.display_name}
+                            </span>
+                            :
+                            <span className="block font-medium text-muted-2 flex-auto items-center">
+                                {placeholder}
+                            </span>}
+                    </span>
+                    <span className="ml-3 right-0 flex items-center pointer-events-none">
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                </button>
+            </div>
+            <NetworkSelect
+                setShow={setShowModal}
+                setNetwork={handleSelect}
+                show={showModal}
+                network={network}
+                searchHint=''
+                networks={networks}
+            />
+        </>
+    )
 }
-
-const Placeholder = ({ placeholder }: { placeholder: string | undefined }) => {
-  return (
-    <span className="block text-xs md:text-base font-medium text-muted-3 flex-auto items-center">
-      {placeholder}
-    </span>
-  )
-}
-
-const LockedAsset = ({ value }: { value: Token }) => {
-  return (
-    <div className="rounded-lg focus-peer:ring-foreground focus-peer:border-muted-1 focus-peer:border focus-peer:ring-1 focus:outline-none disabled:cursor-not-allowed relative grow h-12 flex items-center text-left justify-bottom w-full pl-3 pr-2 py-2 bg-level-1 border border-[#404040] font-semibold align-sub ">
-      <div className='w-full border-transparent bg-transparent font-semibold rounded-md'>
-        <span className="flex items-center">
-          <div className="flex-shrink-0 h-6 w-6 relative">
-            {
-              value?.logo && <Image
-                src={value?.logo}
-                alt="Project Logo"
-                priority
-                height="40"
-                width="40"
-                className="rounded-md object-contain"
-              />
-            }
-
-          </div>
-          <span className="ml-3 block truncate ">{value?.name}</span>
-        </span>
-      </div>
-    </div>
-  )
-}
-
-export default TokenSelectWrapper;

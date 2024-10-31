@@ -136,7 +136,7 @@
     "created_date": "2022-07-14T20:23:10.387669+00:00"
   },
   {
-    "display_name": "Lux Exchange",
+    "display_name": "Lux US",
     "internal_name": "LUXUSA",
     "status": "inactive",
     "type": "cex",
@@ -231,7 +231,7 @@
   },
   {
     "display_name": "Lux Finance",
-    "internal_name": "LUXLINK",
+    "internal_name": "LUXFI",
     "status": "inactive",
     "type": "cex",
     "is_featured": false,
