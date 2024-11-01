@@ -14,7 +14,7 @@ import NumericInput from '../../../Input/NumericInput'
 import MessageComponent from '../../../MessageComponent'
 import Modal from '../../../modal/modal'
 import TimerWithContext from '../../../TimerComponent'
-import Widget from '../../../Widget/Index'
+import Widget from '../../../Widget'
 
 const TIMER_SECONDS = 120
 

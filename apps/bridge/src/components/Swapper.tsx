@@ -9,11 +9,10 @@ import SwapFireblock from '@/components/lux/fireblocks/swap/Form'
 const Swapper: React.FC = () => {
   const [useTeleporter, _] = useAtom(useTelepoterAtom)
 
-  if (useTeleporter) {
-    return <Teleporter />
-  } else {
-    return <SwapFireblock />
-  }
+  return (useTeleporter) ? 
+    ( <Teleporter /> )
+    :
+    ( <SwapFireblock /> ) 
 }
 
 export default Swapper

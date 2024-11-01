@@ -11,7 +11,7 @@ import { useTimerState } from '../context/timerContext'
 import TokenService from '../lib/TokenService'
 import BridgeAuthApiClient from '../lib/userAuthApiClient'
 import SubmitButton from './buttons/submitButton'
-import Widget from './Widget/Index'
+import Widget from './Widget'
 
 type EmailFormValues = {
     email: string

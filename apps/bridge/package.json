@@ -24,7 +24,7 @@
     "@imtbl/imx-sdk": "2.1.1",
     "@loopring-web/loopring-sdk": "3.3.5",
     "@loopring-web/web3-provider": "1.4.13",
-    "@luxfi/ui": "5.3.17",
+    "@luxfi/ui": "*",
     "@metamask/jazzicon": "^2.0.0",
     "@next/mdx": "14.1.0",
     "@prisma/client": "^5.21.1",

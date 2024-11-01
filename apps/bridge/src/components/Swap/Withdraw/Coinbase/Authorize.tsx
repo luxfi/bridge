@@ -21,7 +21,7 @@ import KnownInternalNames from '@/lib/knownIds'
 import { type Layer } from '@/Models/Layer'
 import IconButton from '../../../buttons/iconButton'
 import { useCoinbaseStore } from './CoinbaseStore'
-import Widget from '../../../Widget/Index'
+import Widget from '../../../Widget'
 
 
 const Authorize: React.FC<{

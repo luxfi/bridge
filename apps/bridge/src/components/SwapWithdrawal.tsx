@@ -2,7 +2,7 @@
 import { useEffect } from 'react'
 import { useSwapDataState, useSwapDataUpdate } from '../context/swap'
 import SwapDetails from './Swap'
-import Widget from './Widget/Index'
+import Widget from './Widget'
 import NotFound from './Swap/NotFound'
 import { BalancesDataProvider } from '../context/balances'
 
