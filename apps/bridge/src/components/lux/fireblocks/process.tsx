@@ -7,7 +7,7 @@ import SwapDetails from "./swap/SwapDetails";
 import ConnectNetwork from "@/components/ConnectNetwork";
 import mainNetworks from "@/components/lux/fireblocks/constants/networks.mainnets";
 import devNetworks from "@/components/lux/fireblocks/constants/networks.sandbox";
-import Widget from "@/components/Widget/Index";
+import Widget from "@/components/Widget";
 import {
   sourceNetworkAtom,
   sourceAssetAtom,

@@ -25,7 +25,7 @@ const WalletsHeader = () => {
         size='square'
         onClick={() => setOpenDialog(true)}
         aria-label='Connect wallet'
-        className="text-muted-2"
+        className="text-muted-2 p-0 flex items-center justify-center"
       >
         <WalletsIcons wallets={wallets} />
       </Button>
@@ -39,9 +39,9 @@ const WalletsHeader = () => {
         variant='outline'
         size='square'
         aria-label='Connect wallet'
-        className="text-muted-2"
+        className="text-muted-2 p-0 flex items-center justify-center"
       >
-        <WalletIcon className="h-6 w-6 mx-0.5" strokeWidth="1.5" />
+        <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" />
       </Button>
     </ConnectButton>
   )

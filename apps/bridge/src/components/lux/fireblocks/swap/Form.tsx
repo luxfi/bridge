@@ -8,7 +8,7 @@ import ResizablePanel from "@/components/ResizablePanel";
 import shortenAddress from "../../../utils/ShortenAddress";
 import { type FC } from "react";
 import { ArrowLeftRight } from "lucide-react";
-import Widget from "../../../Widget/Index";
+import Widget from "../../../Widget";
 
 import FromNetworkForm from "./from/NetworkFormField";
 import ToNetworkForm from "./to/NetworkFormField";
@@ -199,9 +199,9 @@ const Swap: FC = () => {
   };
 
   return (
-    <Widget className="sm:min-h-[504px]">
+    <Widget className="sm:min-h-[504px] max-w-lg ">
       <Widget.Content>
-        <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
+        <div  id='WIDGET_CONTENT' className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
           <div className="flex flex-col w-full">
             <FromNetworkForm
               disabled={false}

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { THEME_COLORS } from '../Models/Theme';
 import WalletMessage, { type WalletMessageProps } from '../components/Swap/Withdraw/Wallet/WalletTransfer/message';
-import Widget from '../components/Widget/Index';
+import Widget from '../components/Widget';
 import ColorSchema from '../components/ColorSchema';
 
 const Comp: React.FC<{ theme?: "default" | "light", header: string, status: 'pending' | 'error', details: string, showInModal?: boolean }> = ({ theme, status, details, header, showInModal }) => {

@@ -16,7 +16,7 @@ import NumericInput from './Input/NumericInput'
 import Modal from './modal/modal'
 import TimerWithContext from './TimerComponent'
 import { classNames } from './utils/classNames'
-import Widget from './Widget/Index'
+import Widget from './Widget'
 
 interface CodeFormValues {
   Code: string

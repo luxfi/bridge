@@ -1,6 +1,6 @@
 "use client";
 import { type FC } from "react";
-import Widget from "../Widget/Index";
+import Widget from "../Widget";
 import { useSwapDataState } from "../../context/swap";
 import Withdraw from "./Withdraw";
 import Processing from "./Withdraw/Processing";

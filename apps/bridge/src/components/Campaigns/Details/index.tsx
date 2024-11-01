@@ -18,7 +18,7 @@ import RainbowKit from '../../Swap/Withdraw/Wallet/RainbowKit'
 import SubmitButton from '../../buttons/submitButton';
 import WalletIcon from '../../icons/WalletIcon';
 import LinkWrapper from '../../LinkWrapper';
-import Widget from '../../Widget/Index';
+import Widget from '../../Widget';
 import Leaderboard from './Leaderboard'
 import Rewards from './Rewards';
 import SpinIcon from '../../icons/spinIcon'

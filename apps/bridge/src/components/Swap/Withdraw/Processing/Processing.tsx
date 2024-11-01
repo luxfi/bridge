@@ -1,7 +1,7 @@
 'use client'
 import { ExternalLink } from 'lucide-react'
 
-import Widget from '../../../Widget/Index'
+import Widget from '../../../Widget'
 import shortenAddress from '../../../utils/ShortenAddress'
 import Steps from '../../StepsComponent'
 import SwapSummary from '../../Summary'

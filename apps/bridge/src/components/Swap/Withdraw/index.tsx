@@ -19,7 +19,7 @@ import SpinIcon from "../../icons/spinIcon";
 import { NetworkType } from "@/Models/CryptoNetwork";
 import useWallet from "@/hooks/useWallet";
 import { useQueryState } from "@/context/query";
-import Widget from "../../Widget/Index";
+import Widget from "../../Widget";
 
 const Withdraw: FC = () => {
   const { swap } = useSwapDataState();
