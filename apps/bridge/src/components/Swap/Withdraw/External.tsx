@@ -1,4 +1,4 @@
-import Widget from '../../Widget/Index'
+import Widget from '../../Widget'
 
 
 const External: React.FC = () => (

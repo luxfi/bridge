@@ -86,7 +86,7 @@ const BridgeMenu: React.FC = () => {
       size='square'
       onClick={() => setOpenTopModal(true)}
       aria-label='Main menu'
-      className='text-muted-2 hidden md:inline-block'
+      className='text-muted-2 hidden p-0 flex items-center justify-center'
     >
       <MenuIcon className='h-6 w-6' strokeWidth={2} />
     </Button>

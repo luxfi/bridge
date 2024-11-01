@@ -7,7 +7,7 @@ import Modal from '../../modal/modal'
 import ResizablePanel from '../../ResizablePanel'
 import SwapDetails from './swap/SwapDetails'
 import ConnectNetwork from '@/components/ConnectNetwork'
-import Widget from '@/components/Widget/Index'
+import Widget from '@/components/Widget'
 import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
 import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
 import {

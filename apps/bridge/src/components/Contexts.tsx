@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 
 import * as Sentry from '@sentry/nextjs'
 
-import ThemeWrapper from './themeWrapper'
+import Main from './Main'
 import MaintananceContent from './maintanance/maintanance'
 import ErrorFallback from './ErrorFallback'
 import ColorSchema from './ColorSchema'
@@ -100,25 +100,25 @@ const Contexts: React.FC<{
     <AuthProvider>
     <TooltipProvider delayDuration={500}>
     <ErrorBoundary FallbackComponent={ErrorFallback} onError={logErrorToService}>
-      <ThemeWrapper>
         <NotificationProvider>
           <JotaiProvider>
             <TonConnectProvider basePath={''} themeData={themeData}>
               <RainbowKit>
                 <Solana>
                   <FeeProvider>
+      <Main>
                     {(process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true') ? (
                       <MaintananceContent />
                     ) : (
                       children
                     )}
+      </Main>
                   </FeeProvider>
                 </Solana>
               </RainbowKit>
             </TonConnectProvider>
           </JotaiProvider>
         </NotificationProvider>
-      </ThemeWrapper>
     </ErrorBoundary>
     </TooltipProvider>
     </AuthProvider>

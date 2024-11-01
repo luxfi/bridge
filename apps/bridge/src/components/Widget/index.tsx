@@ -18,14 +18,16 @@ const Widget = ({
 } & PropsWithChildren) => {
 
   const router = useRouter()
-  const wrapper = useRef(null)
+  const canGoBackRef = useRef<boolean>(false)
 
   const searchParams = useSearchParams()
   const paramString = resolvePersistantQueryParams(searchParams)
 
+
     // https://stackoverflow.com/questions/71853839/how-to-check-if-userouter-can-use-router-back-in-nextjs-app
   const goBack = useCallback(() => {
-    if (window.history?.length && window.history.length > 1) {
+    canGoBackRef.current = !!(window.history?.length && window.history.length > 1)
+    if (canGoBackRef.current) {
       router.back()
     }
     else {
@@ -37,28 +39,24 @@ const Widget = ({
   const sandbox = BridgeApiClient.apiVersion === 'sandbox'
 
   return (
-    <div className='rounded-lg w-full sm:overflow-hidden relative border border-[#404040]'>
-      {sandbox && (
-        <div className='relative z-20 pb-2'>
-          <div className='h-1 bg-secondary' />
-          <div className='absolute cursor-default -top-0.5 right-[calc(50%-68px)] bg-secondary  py-0.5 px-10 rounded-b-md text-xs scale-75'>
-            TESTNET
-          </div>
-        </div>
-      )}
-      {!hideMenu && (
-        <HeaderWithMenu goBack={goBack} />
-      )}
-      <div className='relative px-6'>
-        <div className='flex items-start' ref={wrapper}>
-          <div className='flex flex-nowrap grow'>
-            <div className={'w-full pb-6 flex flex-col justify-between space-y-1 h-full ' + className}>
-              {children}
+    <div id='WIDGET_OUTER' className='flex flex-col content-center items-center justify-center'>
+      <div id='WIDGET' className={'text-foreground rounded-lg w-full sm:overflow-hidden relative border ' + className}>
+        {sandbox && (
+          <div className='relative'>
+            <div className='h-1 bg-secondary' />
+            <div className='absolute cursor-default -top-0.5 right-[calc(50%-68px)] bg-secondary py-0.5 px-10 rounded-b-md text-xs scale-75'>
+              TESTNET
             </div>
           </div>
+        )}
+        {!hideMenu && (
+          <HeaderWithMenu goBack={(canGoBackRef.current) ? goBack : undefined} />
+        )}
+        <div className='w-full h-full px-6 pb-6 flex flex-col justify-between'>
+          {children}
         </div>
+        <div id='widget_root' />
       </div>
-      <div id='widget_root' />
     </div>
   )
 }
@@ -66,4 +64,4 @@ const Widget = ({
 Widget.Content = Content
 Widget.Footer = Footer
 
-export default Widget 
+export default Widget

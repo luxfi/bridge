@@ -11,7 +11,7 @@ import { useSettings } from '@/context/settings'
 
 import SpinIcon from '../icons/spinIcon'
 import LinkWrapper from '../LinkWrapper'
-import Widget from '../Widget/Index'
+import Widget from '../Widget'
 
 const Rewards = () => {
 

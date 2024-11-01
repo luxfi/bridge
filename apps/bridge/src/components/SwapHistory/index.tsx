@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import Link from "next/link";
@@ -66,10 +66,12 @@ function TransactionsHistory() {
   const PAGE_SIZE = 20;
 
   const searchParams = useSearchParams()
+  const canGoBackRef = useRef<boolean>(false)
   const paramString = resolvePersistantQueryParams(searchParams)
 
   const goBack = useCallback(() => {
-    if (window.history?.length && window.history.length > 1) {
+    canGoBackRef.current = !!(window.history?.length && window.history.length > 1)
+    if (canGoBackRef.current) {
       router.back()
     }
     else {
@@ -173,7 +175,7 @@ function TransactionsHistory() {
 
   return (
     <div className="bg-background border border-[#404040]  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]">
-      <HeaderWithMenu goBack={goBack} />
+      <HeaderWithMenu goBack={(canGoBackRef.current) ? goBack : undefined} />
       {page == 0 && loading ? (
         <SwapHistoryComponentSkeleton />
       ) : (
