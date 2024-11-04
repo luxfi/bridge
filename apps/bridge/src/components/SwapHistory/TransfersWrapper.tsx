@@ -1,16 +1,16 @@
 'use client'
-import TransactionsHistory from ".";
-import { useAuthState, UserType } from "../../context/authContext";
-import { FormWizardProvider } from "../../context/formWizardProvider";
-import { TimerProvider } from "../../context/timerContext";
-import { AuthStep } from "../../Models/Wizard";
-import GuestCard from "../guestCard";
+import TransactionsHistory from './index'
+import { useAuthState, UserType } from '@/context/authContext'
+import { FormWizardProvider } from '@/context/formWizardProvider'
+import { TimerProvider } from '@/context/timerContext'
+import { AuthStep } from '@/Models/Wizard'
+import GuestCard from '../guestCard'
 
 const TransfersWrapper: React.FC = () => {
     const { userType } = useAuthState()
 
     return (
-        <div className="">
+        <div className=''>
             <TransactionsHistory />
             {
                 userType && userType != UserType.AuthenticatedUser &&
@@ -22,6 +22,6 @@ const TransfersWrapper: React.FC = () => {
             }
         </div>
     )
-};
+}
 
-export default TransfersWrapper;
+export default TransfersWrapper
