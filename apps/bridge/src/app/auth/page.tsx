@@ -1,11 +1,11 @@
-import React from "react"
+import React from 'react'
 import { redirect } from 'next/navigation'
 
 import { useSettingsContainer } from '@/context/settings'
-import { FormWizardProvider } from "../context/formWizardProvider";
-import { AuthStep } from "../Models/Wizard";
-import AuthWizard from "../components/Wizard/AuthWizard";
-import { SwapDataProvider } from "../context/swap";
+import { FormWizardProvider } from '@/context/formWizardProvider'
+import { AuthStep } from '@/Models/Wizard'
+import AuthWizard from '@/components/Wizard/AuthWizard'
+import { SwapDataProvider } from '@/context/swap'
 import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
 import getBridgeSettings from '@/util/getBridgeSettings'
 

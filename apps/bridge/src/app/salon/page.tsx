@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { clearTempData, getTempData } from '../lib/openLink'
+
+import { clearTempData, getTempData } from '@/lib/openLink'
 
 const Salon: React.FC = () => {
   
