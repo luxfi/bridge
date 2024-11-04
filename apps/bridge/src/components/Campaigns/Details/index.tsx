@@ -1,6 +1,5 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Gift } from 'lucide-react'
 
@@ -22,18 +21,19 @@ import Widget from '../../Widget';
 import Leaderboard from './Leaderboard'
 import Rewards from './Rewards';
 import SpinIcon from '../../icons/spinIcon'
-import type React from 'react'
 
-const CampaignDetails: React.FC = () => {
+const CampaignDetails: React.FC<{
+  campaign: string
+}> = ({
+  campaign: campaignName
+}) => {
 
     const settings = useSettings()
     const { resolveImgSrc, layers } = settings
 
-    const params = useSearchParams()
-    const campaignName = params.get('campaign')
-
     const { isConnected } = useAccount();
 
+      // :aa Shouldn't this be loaded server-side in the parent page??
     const apiClient = new BridgeApiClient()
     const { data: campaignsData, isLoading } = useSWR<ApiResponse<Campaign[]>>('/campaigns', apiClient.fetcher)
     const campaign = campaignsData?.data?.find((c) => (c.name === campaignName))
