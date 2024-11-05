@@ -3,30 +3,30 @@ on:
   push:
     branches:
       - main
-    paths:  
-      - 'mpc-nodes/docker/**'  # Only trigger the workflow for changes in the mpc-node subfolder
+    paths:
+      - "mpc-nodes/docker/**" # Only trigger the workflow for changes in the mpc-node subfolder
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
-      - name: Set up Docker Buildx  
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to GitHub Container Registry
-        run : |  
+        run: |
           docker login --username venuswhispers --password ${{ secrets.GH_PAT }} ghcr.io
       - name: Build and push Docker images
-        run: | 
+        run: |
           cd mpc-nodes/docker  # Navigate to the subfolder containing the Docker project
           # sm-manager
-          docker build -f services/sm-manager -t ghcr.io/venuswhispers/sm-manager:latest .  
-          docker push ghcr.io/venuswhispers/sm-manager:latest
+          docker build -f services/sm-manager -t ghcr.io/luxfi/mpc-nodes/sm-manager:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/sm-manager:latest
           # mpc-node-0
-          docker build -f services/mpc-node-0 -t ghcr.io/venuswhispers/mpc-node-0:latest .  
-          docker push ghcr.io/venuswhispers/mpc-node-0:latest
+          docker build -f services/mpc-node-0 -t ghcr.io/luxfi/mpc-nodes/mpc-node-0:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/mpc-node-0:latest
           # mpc-node-1
-          docker build -f services/mpc-node-1 -t ghcr.io/venuswhispers/mpc-node-1:latest .  
-          docker push ghcr.io/venuswhispers/mpc-node-1:latest
+          docker build -f services/mpc-node-1 -t ghcr.io/luxfi/mpc-nodes/mpc-node-1:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/mpc-node-1:latest
           # mpc-node-2
-          docker build -f services/mpc-node-2 -t ghcr.io/venuswhispers/mpc-node-2:latest .  
-          docker push ghcr.io/venuswhispers/mpc-node-2:latest
+          docker build -f services/mpc-node-2 -t ghcr.io/luxfi/mpc-nodes/mpc-node-2:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/mpc-node-2:latest
