@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "nodemon",
+    "db": "node dist/db.js",
     "start": "ts-node-dev src/server.ts",
     "build": "tsc && tsc-alias && npx prisma generate",
     "server": "node dist/server.js",

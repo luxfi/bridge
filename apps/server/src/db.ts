@@ -1,12 +1,8 @@
-import { Router, Request, Response } from "express"
 import { mainnetSettings } from "@/settings"
 import { prisma } from "@/utils/db"
 
-const router: Router = Router()
-
-router.post("/update", async (req: Request, res: Response) => {
+const dbUpdate = async () => {
   try {
-    // settings
     const settings = mainnetSettings
     const { networks } = settings.data
     console.log("::staring update networks data.")
@@ -74,15 +70,9 @@ router.post("/update", async (req: Request, res: Response) => {
       currenciesCount += _network.currencies.length
     }
     console.log("::end networks update")
-
-    return res.status(200).json({
-      status: "success",
-      data: { networksCount: networks.length, currenciesCount }
-    })
   } catch (error) {
     console.error("Error in updating networks", error)
-    res.status(500).json({ data: error.message })
   }
-})
+}
 
-export default router
+dbUpdate()

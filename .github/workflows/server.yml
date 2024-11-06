@@ -1,10 +1,10 @@
-name: Docker Image CI for GHCR for Bridge Backend
+name: Docker Image CI for GHCR for Bridge Server
 on:
   push:
     branches:
       - main
     paths:
-      - "apps/bridge/backend**" # Only trigger the workflow for changes in the apps/bridge/backend subfoler
+      - "apps/server**" # Only trigger the workflow for changes in the apps/server subfoler
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
@@ -17,7 +17,6 @@ jobs:
           docker login --username venuswhispers --password ${{ secrets.GH_PAT }} ghcr.io
       - name: Build and push Docker images
         run: |
-          cd mpc-nodes/docker  # Navigate to the subfolder containing the Docker project
-          cd apps/bridge/backend
-          docker build -f Dockerfile -t ghcr.io/luxfi/bridge/backend:latest .  
-          docker push ghcr.io/luxfi/bridge/backend:latest
+          cd apps/server
+          docker build -f Dockerfile -t ghcr.io/luxfi/bridge/server:latest .
+          docker push ghcr.io/luxfi/bridge/server:latest
