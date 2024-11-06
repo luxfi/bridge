@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - "mpc-nodes/docker/**" # Only trigger the workflow for changes in the mpc-node subfolder
+      - "mpc-nodes/**" # Only trigger the workflow for changes in the mpc-nodes subfoler
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
@@ -21,12 +21,6 @@ jobs:
           # sm-manager
           docker build -f services/sm-manager -t ghcr.io/luxfi/mpc-nodes/sm-manager:latest .  
           docker push ghcr.io/luxfi/mpc-nodes/sm-manager:latest
-          # mpc-node-0
-          docker build -f services/mpc-node-0 -t ghcr.io/luxfi/mpc-nodes/mpc-node-0:latest .  
-          docker push ghcr.io/luxfi/mpc-nodes/mpc-node-0:latest
-          # mpc-node-1
-          docker build -f services/mpc-node-1 -t ghcr.io/luxfi/mpc-nodes/mpc-node-1:latest .  
-          docker push ghcr.io/luxfi/mpc-nodes/mpc-node-1:latest
-          # mpc-node-2
-          docker build -f services/mpc-node-2 -t ghcr.io/luxfi/mpc-nodes/mpc-node-2:latest .  
-          docker push ghcr.io/luxfi/mpc-nodes/mpc-node-2:latest
+          # mpc-node
+          docker build -f services/mpc-node -t ghcr.io/luxfi/mpc-nodes/mpc-node:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/mpc-node:latest
