@@ -4,9 +4,9 @@
     "src/next-env.d.ts",
     ".next/types/**/*.ts",
     "src/**/*.ts",
-    "src/**/*.tsx"
-, "src/app/api/admin/rate/[[...params]]/_route.ts_TODO"  ],
-  "exclude": [ "/node_modules", "/x_please_keep", "../../node_modules/.pnpm" ],
+    "src/**/*.tsx",
+  ],
+  "exclude": [ "/node_modules", "../../node_modules/.pnpm" ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
