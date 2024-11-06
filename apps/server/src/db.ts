@@ -69,7 +69,10 @@ const main = async () => {
       }
       currenciesCount += _network.currencies.length
     }
-    console.log("::end networks update")
+    console.log("::end networks update", {
+      networksCount: networks.length,
+      currenciesCount: currenciesCount
+    })
   } catch (error) {
     console.error("Error in updating networks", error)
   }
