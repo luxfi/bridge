@@ -1,7 +1,7 @@
 import { mainnetSettings } from "@/settings"
 import { prisma } from "@/utils/db"
 
-const dbUpdate = async () => {
+const main = async () => {
   try {
     const settings = mainnetSettings
     const { networks } = settings.data
@@ -75,4 +75,4 @@ const dbUpdate = async () => {
   }
 }
 
-dbUpdate()
+main()
