@@ -4,9 +4,9 @@
     "src/next-env.d.ts",
     ".next/types/**/*.ts",
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
   ],
-  "exclude": [ "/node_modules", "/x_please_keep", "../../node_modules/.pnpm" ],
+  "exclude": [ "/node_modules", "../../node_modules/.pnpm" ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
