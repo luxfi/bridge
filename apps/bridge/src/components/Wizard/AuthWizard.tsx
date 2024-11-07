@@ -9,7 +9,7 @@ import CodeStep from './Steps/CodeStep'
 import EmailStep from './Steps/EmailStep'
 import Wizard from './Wizard'
 import WizardItem from './WizardItem'
-import resolvePersistantQueryParams from '@/util/resolvePersisitentQueryParams'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import type { AuthConnectResponse } from '@/Models/BridgeAuth'
 
 
@@ -19,7 +19,7 @@ const AuthWizard: React.FC = () => {
 
   const router = useRouter()
   const searchParams = useSearchParams()
-  const paramsString = resolvePersistantQueryParams(searchParams).toString()
+  const paramsString = resolvePersistentQueryParams(searchParams).toString()
 
   const codeOnNext = useCallback(async (_: AuthConnectResponse) => {
     router.push(paramsString ? `/?${paramsString}` : '/')
