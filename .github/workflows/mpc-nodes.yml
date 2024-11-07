@@ -1,0 +1,26 @@
+name: Docker Image CI for GHCR for MPC-Nodes
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "mpc-nodes/**" # Only trigger the workflow for changes in the mpc-nodes subfoler
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        run: |
+          docker login --username venuswhispers --password ${{ secrets.GH_PAT }} ghcr.io
+      - name: Build and push Docker images
+        run: |
+          cd mpc-nodes/docker  # Navigate to the subfolder containing the Docker project
+          # sm-manager
+          docker build -f services/sm-manager -t ghcr.io/luxfi/mpc-nodes/sm-manager:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/sm-manager:latest
+          # mpc-node
+          docker build -f services/mpc-node -t ghcr.io/luxfi/mpc-nodes/mpc-node:latest .  
+          docker push ghcr.io/luxfi/mpc-nodes/mpc-node:latest

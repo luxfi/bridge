@@ -109,17 +109,17 @@ const config: HardhatUserConfig = {
     customChains: [
       {
         network: "lux",
-        chainId: 7777,
+        chainId: 96369,
         urls: {
-          apiURL: "https://api.explore.lux.network/api",
+          apiURL: "https://api-explore.lux.network",
           browserURL: "https://explore.lux.network",
         },
       },
       {
         network: "luxTestnet",
-        chainId: 8888,
+        chainId: 96368,
         urls: {
-          apiURL: "https://api.explore.lux-test.network/api",
+          apiURL: "https://api-explore.lux-test.network",
           browserURL: "https://explore.lux-test.network",
         },
       },

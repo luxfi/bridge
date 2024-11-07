@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderWithMenu from '../HeaderWithMenu'
 import Content  from './Content'
 import Footer from './Footer'
-import resolvePersistantQueryParams from '@/util/resolvePersisitentQueryParams'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import BridgeApiClient from '@/lib/BridgeApiClient'
 
 const Widget = ({ 
@@ -21,7 +21,7 @@ const Widget = ({
   const canGoBackRef = useRef<boolean>(false)
 
   const searchParams = useSearchParams()
-  const paramString = resolvePersistantQueryParams(searchParams)
+  const paramString = resolvePersistentQueryParams(searchParams)
 
 
     // https://stackoverflow.com/questions/71853839/how-to-check-if-userouter-can-use-router-back-in-nextjs-app

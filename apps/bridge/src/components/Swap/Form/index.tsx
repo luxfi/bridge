@@ -18,7 +18,7 @@ import { ApiResponse } from '@/Models/ApiResponse'
 import { type Partner } from '@/Models/Partner'
 import { UserType, useAuthDataUpdate } from '@/context/authContext'
 import { type ApiError, LSAPIKnownErrorCode } from '@/Models/ApiError'
-import resolvePersistantQueryParams from '@/util/resolvePersisitentQueryParams'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import { useQueryState } from '@/context/query'
 import TokenService from '@/lib/TokenService'
 import BridgeAuthApiClient from '@/lib/userAuthApiClient'
@@ -98,7 +98,7 @@ export default function Form() {
             if (swapId) {
                 setSwapId(swapId)
                 let swapURL = window.location.protocol + '//' + window.location.host + `/swap/${swapId}`
-                const params = resolvePersistantQueryParams(searchParams)
+                const params = resolvePersistentQueryParams(searchParams)
                 if (params.size) {
                   swapURL += `?${params.toString()}`
                 }
@@ -142,7 +142,7 @@ export default function Form() {
 
     const handleClosesSwapModal = () => {
       let homeURL = window.location.protocol + '//' + window.location.host
-      const params = resolvePersistantQueryParams(searchParams)
+      const params = resolvePersistentQueryParams(searchParams)
       if (params.size) {
         homeURL += `?${params.toString()}`
       }

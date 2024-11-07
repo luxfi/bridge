@@ -31,7 +31,7 @@ import Modal from '@/components/modal/modal'
 import Popover from '../modal/popover'
 import SendFeedback from '../sendFeedback'
 import { shortenEmail } from '../utils/ShortenAddress'
-import resolvePersistantQueryParams from '@/util/resolvePersisitentQueryParams'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import Menu from './Menu'
 
 import socialNav from './social'
@@ -67,7 +67,7 @@ const BridgeMenu: React.FC = () => {
   const handleLogout = useCallback(() => {
     TokenService.removeAuthData();
     if (path != '/') {
-      const paramString = resolvePersistantQueryParams(searchParams)
+      const paramString = resolvePersistentQueryParams(searchParams)
       router.push('/' + (paramString ? ('?' + paramString) : '' )) 
     } 
     else {
