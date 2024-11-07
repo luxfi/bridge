@@ -139,7 +139,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       if (!sourceNetwork.chain_id) return;
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`);
       const bridgeContract = new Contract(
-        CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[sourceNetwork.chain_id  as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       );
@@ -152,12 +152,15 @@ const UserTokenDepositor: React.FC<IProps> = ({
         }
       );
       await _bridgeTransferTx.wait();
-      await axios.post(`/api/swaps/transfer/${swapId}`, {
-        txHash: _bridgeTransferTx.hash,
-        amount: sourceAmount,
-        from: signer?._address,
-        to: CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
-      });
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/transfer/${swapId}`,
+        {
+          txHash: _bridgeTransferTx.hash,
+          amount: sourceAmount,
+          from: signer?._address,
+          to: CONTRACTS[sourceNetwork.chain_id  as keyof typeof CONTRACTS].teleporter,
+        }
+      );
       setUserTransferTransaction(_bridgeTransferTx.hash);
       setSwapStatus("teleport_processing_pending");
     } catch (err) {
@@ -195,7 +198,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`);
 
       const bridgeContract = new Contract(
-        CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[sourceNetwork.chain_id  as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       );
@@ -209,12 +212,15 @@ const UserTokenDepositor: React.FC<IProps> = ({
         sourceAsset.contract_address
       );
       await _bridgeTransferTx.wait();
-      await axios.post(`/api/swaps/transfer/${swapId}`, {
-        txHash: _bridgeTransferTx.hash,
-        amount: sourceAmount,
-        from: signer?._address,
-        to: CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
-      });
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/transfer/${swapId}`,
+        {
+          txHash: _bridgeTransferTx.hash,
+          amount: sourceAmount,
+          from: signer?._address,
+          to: CONTRACTS[sourceNetwork.chain_id  as keyof typeof CONTRACTS].teleporter,
+        }
+      );
       setUserTransferTransaction(_bridgeTransferTx.hash);
       setSwapStatus("teleport_processing_pending");
     } catch (err) {

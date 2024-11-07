@@ -11,60 +11,20 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-  mpc-node-0:
+  mpc-node:
     build:
       context: .
-      dockerfile: ./services/mpc-node-0
+      dockerfile: ./services/mpc-node
     environment:
-      - NODE_ENV=production
-      - smTimeOutBound=3
-      - sign_client_name=gg18_sign_client
-      - node_number=0
-      - sign_sm_manager=http://sm-manager:8000/
-      - PORT=6000
+      - NODE_ENV=
+      - smTimeOutBound=
+      - sign_client_name=
+      - node_number=
+      - sign_sm_manager=
+      - PORT=
       - POSTGRESQL_URL=
     ports:
       - 6000:6000
-    networks:
-      - lux-network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-  mpc-node-1:
-    build:
-      context: .
-      dockerfile: ./services/mpc-node-1
-    environment:
-      - NODE_ENV=production
-      - smTimeOutBound=3
-      - sign_client_name=gg18_sign_client
-      - node_number=1
-      - sign_sm_manager=http://sm-manager:8000/
-      - PORT=6001
-      - POSTGRESQL_URL=
-    ports:
-      - 6001:6001
-    networks:
-      - lux-network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-  mpc-node-2:
-    build:
-      context: .
-      dockerfile: ./services/mpc-node-2
-    environment:
-      - NODE_ENV=production
-      - smTimeOutBound=3
-      - sign_client_name=gg18_sign_client
-      - node_number=2
-      - sign_sm_manager=http://sm-manager:8000/
-      - PORT=6002
-      - POSTGRESQL_URL=
-    ports:
-      - 6002:6002
     networks:
       - lux-network
     deploy:

@@ -1,7 +1,7 @@
 'use client'
 import Link, { type LinkProps } from 'next/link'
 
-import resolvePersistantQueryParams from '@/util/resolvePersisitentQueryParams'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import type { PropsWithChildren } from 'react'
 
 const LinkWrapper: React.FC<
@@ -24,7 +24,7 @@ const LinkWrapper: React.FC<
       {...rest}
       href={{
         pathname: pathname,
-        query: resolvePersistantQueryParams(sp).toString() 
+        query: resolvePersistentQueryParams(sp).toString() 
       }}
     >
         {children}

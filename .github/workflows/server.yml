@@ -1,0 +1,22 @@
+name: Docker Image CI for GHCR for Bridge Server
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "server/**" # Only trigger the workflow for changes in the server dir
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        run: |
+          docker login --username venuswhispers --password ${{ secrets.GH_PAT }} ghcr.io
+      - name: Build and push Docker images
+        run: |
+          cd server
+          docker build -f Dockerfile -t ghcr.io/luxfi/bridge/server:latest .
+          docker push ghcr.io/luxfi/bridge/server:latest

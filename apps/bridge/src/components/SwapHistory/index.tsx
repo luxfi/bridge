@@ -1,23 +1,23 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useCallback, useRef, useState } from "react";
 
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation"
+
 import {
   ArrowRight,
   ChevronRight,
   Eye,
   RefreshCcw,
   Scroll,
-  X,
 } from "lucide-react";
 
 import BridgeApiClient, {
   type SwapItem,
   SwapStatusInNumbers,
   TransactionType,
-} from "../../lib/BridgeApiClient";
+} from "@/lib/BridgeApiClient";
 import SpinIcon from "../icons/spinIcon";
 import SwapDetails from "./SwapDetailsComponent";
 import SubmitButton from "../buttons/submitButton";
@@ -25,18 +25,19 @@ import StatusIcon from "./StatusIcons";
 import toast from "react-hot-toast";
 import ToggleButton from "../buttons/toggleButton";
 import Modal from "../modal/modal";
-import AppSettings from "../../lib/AppSettings";
+import AppSettings from "@/lib/AppSettings";
 import HeaderWithMenu from "../HeaderWithMenu";
 import { classNames } from "../utils/classNames";
 import { SwapHistoryComponentSkeleton } from "../Skeletons";
-import resolvePersistantQueryParams from "../../util/resolvePersisitentQueryParams";
+import resolvePersistentQueryParams from "@/util/resolvePersistentQueryParams";
 import { truncateDecimals } from "../utils/RoundDecimals";
 //networks
 import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/networks.mainnets";
 import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
 import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
 import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
-import { useSearchParams } from "next/navigation"
+import useAsyncEffect from "use-async-effect";
+import axios from "axios";
 
 function TransactionsHistory() {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
@@ -67,7 +68,7 @@ function TransactionsHistory() {
 
   const searchParams = useSearchParams()
   const canGoBackRef = useRef<boolean>(false)
-  const paramString = resolvePersistantQueryParams(searchParams)
+  const paramString = resolvePersistentQueryParams(searchParams)
 
   const goBack = useCallback(() => {
     canGoBackRef.current = !!(window.history?.length && window.history.length > 1)
@@ -79,64 +80,77 @@ function TransactionsHistory() {
     }
   }, [paramString])
 
-  useEffect(() => {
-    (async () => {
-      const client = new BridgeApiClient("/transactions");
-      const { data } = await client.GetSwapsAsync(
-        1,
-        SwapStatusInNumbers.Cancelled
+  const getSwaps = async (page: number, status?: string | number) => {
+    try {
+      const {
+        data: { data },
+      } = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps?page=${page}${
+          status ? `&status=${status}` : ""
+        }&version=${BridgeApiClient.apiVersion}`
       );
-      if (Number(data?.length) > 0) setShowToggleButton(true);
-    })();
+      return {
+        data: data,
+        error: null,
+      };
+    } catch (err) {
+      return {
+        data: null,
+        error: "Cannot get swaps. Please try again later.",
+      };
+    }
+  };
+
+  useAsyncEffect(async () => {
+    const { data, error } = await getSwaps(1, SwapStatusInNumbers.Cancelled);
+    if (Number(data?.length) > 0) setShowToggleButton(true);
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      setIsLastPage(false);
-      setLoading(true);
-      const client = new BridgeApiClient("/transactions");
+  useAsyncEffect(async () => {
+    setIsLastPage(false);
+    setLoading(true);
 
-      if (showAllSwaps) {
-        const { data, error } = await client.GetSwapsAsync(1);
+    if (showAllSwaps) {
+      const { data, error } = await getSwaps(1);
 
-        if (error) {
-          toast.error(error.message);
-          return;
-        }
-
-        setSwaps(data);
-        setPage(1);
-        if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
-
-        setLoading(false);
-      } else {
-        const { data, error } = await client.GetSwapsAsync(
-          1,
-          SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
-        );
-
-        if (error) {
-          toast.error(error.message);
-          return;
-        }
-        setSwaps(data);
-        setPage(1);
-        if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
-        setLoading(false);
+      if (error) {
+        toast.error(error);
+        return;
       }
-    })();
+
+      setSwaps(data);
+      setPage(1);
+      if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
+
+      setLoading(false);
+    } else {
+      const { data, error } = await getSwaps(
+        1,
+        SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
+      );
+
+      if (error) {
+        toast.error(error);
+        return;
+      }
+
+      setSwaps(data);
+      setPage(1);
+      if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
+      setLoading(false);
+    }
   }, [paramString, showAllSwaps]);
 
   const handleLoadMore = useCallback(async () => {
     //TODO refactor page change
     const nextPage = page + 1;
     setLoading(true);
-    const client = new BridgeApiClient("/transactions");
+
     if (showAllSwaps) {
-      const { data, error } = await client.GetSwapsAsync(nextPage);
+      const { data, error } = await getSwaps(nextPage);
 
       if (error) {
-        toast.error(error.message);
+        toast.error(error);
         return;
       }
 
@@ -146,13 +160,13 @@ function TransactionsHistory() {
 
       setLoading(false);
     } else {
-      const { data, error } = await client.GetSwapsAsync(
+      const { data, error } = await getSwaps(
         nextPage,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
       );
 
       if (error) {
-        toast.error(error.message);
+        toast.error(error);
         return;
       }
 
@@ -175,7 +189,7 @@ function TransactionsHistory() {
 
   return (
     <div className="bg-background border border-[#404040]  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]">
-      <HeaderWithMenu goBack={(canGoBackRef.current) ? goBack : undefined} />
+      <HeaderWithMenu goBack={goBack} />
       {page == 0 && loading ? (
         <SwapHistoryComponentSkeleton />
       ) : (
@@ -369,14 +383,14 @@ function TransactionsHistory() {
                       <div className="flex flex-row  text-base space-x-2">
                         <SubmitButton
                           text_align="center"
-                          onClick={() =>
+                          onClick={() => {
                             router.push((selectedSwap?.use_teleporter ? 
                                 `/swap/teleporter/${selectedSwap.id}`
                                 : 
                                 `/swap/${selectedSwap.id}`
                               ) + paramString
                             )
-                          }
+                          }}
                           isDisabled={false}
                           isSubmitting={false}
                           icon={<Eye className="h-5 w-5" />}

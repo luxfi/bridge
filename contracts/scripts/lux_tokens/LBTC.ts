@@ -2,8 +2,6 @@ import { ethers } from "hardhat";
 
 async function main() {
     const [deployer] = await ethers.getSigners();
-
-    /////LETH
     const _signer = await ethers.getContractFactory("LuxBTC");
     const token = await _signer.deploy();
     console.log("LBTC address:", await token.getAddress());

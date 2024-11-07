@@ -1,0 +1,19 @@
+services:
+  bridge-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PORT=
+      - POSTGRESQL_URL=
+    ports:
+      - "6000:6000"
+    networks:
+      - lux-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+networks:
+  lux-network:
+    driver: bridge

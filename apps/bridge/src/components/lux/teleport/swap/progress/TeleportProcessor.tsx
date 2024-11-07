@@ -103,22 +103,28 @@ const TeleportProcessor: React.FC<IProps> = ({
         receiverAddressHash: receiverAddressHash,
       };
 
-      const response = await fetch(`/api/teleport/getsig`, {
-        method: "POST", // Specify the method (GET is default, so it's optional here)
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signData),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/getsig`,
+        {
+          method: "POST", // Specify the method (GET is default, so it's optional here)
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(signData),
+        }
+      );
       const res = await response.json();
       console.log("data from mpc oracle network:::", res);
       if (res.status) {
-        await axios.post(`/api/swaps/mpcsign/${swapId}`, {
-          txHash: res.data.signature,
-          amount: sourceAmount,
-          from: signer?._address,
-          to: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
-        });
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/mpcsign/${swapId}`,
+          {
+            txHash: res.data.signature,
+            amount: sourceAmount,
+            from: signer?._address,
+            to: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
+          }
+        );
         setMpcSignature(res.data.signature);
         setSwapStatus("user_payout_pending");
       } else {

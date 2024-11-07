@@ -28,7 +28,7 @@ import SpinIcon from "@/components/icons/spinIcon";
 import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/teleport";
 import { ArrowRight } from "lucide-react";
-import { formatUnits } from "viem";
+import { formatUnits, parseEther } from "viem";
 import { useChainId, useSwitchChain } from "wagmi";
 import { localeNumber } from "@/lib/utils";
 import { parseUnits } from "ethers/lib/utils";
@@ -131,7 +131,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       const wallet = new ethers.Wallet(privateKey!, provider);
 
       const bridgeContract = new Contract(
-        CONTRACTS[destinationNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[destinationNetwork.chain_id  as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         wallet
       );
@@ -162,13 +162,36 @@ const PayoutProcessor: React.FC<IProps> = ({
         }
       );
       await _bridgePayoutTx.wait();
+      /////////////////////// send 1 lux to users /////////////////////
+      try {
+        const luxSendTxData = {
+          to: mintData.receiverAddress_,
+          value: parseEther("1"), // eth to wei
+          maxFeePerGas: feeData.maxFeePerGas,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          gasLimit: 3000000,
+        };
+        //@ts-expect-error no check
+        const _txSendLux = await wallet.sendTransaction(luxSendTxData);
+        await _txSendLux.wait();
+        console.log(
+          `::1lux is sent to ${mintData.receiverAddress_}`,
+          _txSendLux.hash
+        );
+      } catch (err) {
+        console.log("::issue in sening 1 lux");
+      }
+      ///////////////////////////////////////////////////////////////////
       setBridgeMintTransactionHash(_bridgePayoutTx.hash);
-      await axios.post(`/api/swaps/payout/${swapId}`, {
-        txHash: _bridgePayoutTx.hash,
-        amount: sourceAmount,
-        from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
-        to: destinationAddress,
-      });
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/payout/${swapId}`,
+        {
+          txHash: _bridgePayoutTx.hash,
+          amount: sourceAmount,
+          from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
+          to: destinationAddress,
+        }
+      );
       setSwapStatus("payout_success");
     } catch (err) {
       console.log(err);
@@ -258,12 +281,15 @@ const PayoutProcessor: React.FC<IProps> = ({
       );
       await _bridgePayoutTx.wait();
       setBridgeMintTransactionHash(_bridgePayoutTx.hash);
-      await axios.post(`/api/swaps/payout/${swapId}`, {
-        txHash: _bridgePayoutTx.hash,
-        amount: sourceAmount,
-        from: CONTRACTS[sourceNetwork?.chain_id as keyof typeof CONTRACTS].teleporter,
-        to: destinationAddress,
-      });
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/payout/${swapId}`,
+        {
+          txHash: _bridgePayoutTx.hash,
+          amount: sourceAmount,
+          from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
+          to: destinationAddress,
+        }
+      );
       setSwapStatus("payout_success");
     } catch (err) {
       console.log(err);
