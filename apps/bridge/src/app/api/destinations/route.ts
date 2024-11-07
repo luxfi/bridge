@@ -1,6 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { mainnetSettings, testnetSettings } from "@/settings";
 
+// https://github.com/vercel/next.js/discussions/62725
+export const dynamic = 'force-dynamic'
+
+
 export async function GET(
   req: NextRequest,
 ) {

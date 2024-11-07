@@ -1,6 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { getTokenPrice } from "@/util/tokenHelper";
 
+// https://github.com/vercel/next.js/discussions/62725
+export const dynamic = 'force-dynamic'
+
+
 /**
  * get quote swap information
  * api/quote?source_network=&source_token=&destination_network=&destination_token=&amount=&refuel=&use_deposit_address=
