@@ -5,6 +5,7 @@
   "scripts": {
     "debug": "next dev",
     "dev": "next dev",
+    "prebuild:linux": "export NODE_OPTIONS=--max_old_space_size=4096",
     "build": "next build",
     "postinstall": "npx prisma generate",
     "start": "next start",

@@ -11,10 +11,8 @@ export async function GET(
   for (let index = 0; index < types.length; index++) {
       const el = types[index];
       const _data = await prisma.depositAddress.findMany({
-          where: { type: el.type },
-          select: {
-              address: true
-          }
+        where: { type: el.type },
+        select: { address: true }
       });
       data[el.type] = _data.map(_d => _d.address);
   }
