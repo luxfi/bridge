@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation";
 
 import {
   ArrowRight,
@@ -66,19 +66,20 @@ function TransactionsHistory() {
 
   const PAGE_SIZE = 20;
 
-  const searchParams = useSearchParams()
-  const canGoBackRef = useRef<boolean>(false)
-  const paramString = resolvePersistentQueryParams(searchParams)
+  const searchParams = useSearchParams();
+  const canGoBackRef = useRef<boolean>(false);
+  const paramString = resolvePersistentQueryParams(searchParams);
 
   const goBack = useCallback(() => {
-    canGoBackRef.current = !!(window.history?.length && window.history.length > 1)
+    canGoBackRef.current = !!(
+      window.history?.length && window.history.length > 1
+    );
     if (canGoBackRef.current) {
-      router.back()
+      router.back();
+    } else {
+      router.push("/" + (paramString ? "?" + paramString : ""));
     }
-    else {
-      router.push('/' + (paramString ? ('?' + paramString) : '' )) 
-    }
-  }, [paramString])
+  }, [paramString]);
 
   const getSwaps = async (page: number, status?: string | number) => {
     try {
@@ -188,7 +189,7 @@ function TransactionsHistory() {
   };
 
   return (
-    <div className="bg-background border border-[#404040]  rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px]">
+    <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg mt-20">
       <HeaderWithMenu goBack={goBack} />
       {page == 0 && loading ? (
         <SwapHistoryComponentSkeleton />
@@ -384,12 +385,11 @@ function TransactionsHistory() {
                         <SubmitButton
                           text_align="center"
                           onClick={() => {
-                            router.push((selectedSwap?.use_teleporter ? 
-                                `/swap/teleporter/${selectedSwap.id}`
-                                : 
-                                `/swap/${selectedSwap.id}`
-                              ) + paramString
-                            )
+                            router.push(
+                              (selectedSwap?.use_teleporter
+                                ? `/swap/teleporter/${selectedSwap.id}`
+                                : `/swap/${selectedSwap.id}`) + paramString
+                            );
                           }}
                           isDisabled={false}
                           isSubmitting={false}
