@@ -9,7 +9,7 @@ overrides:
   react-dom: 18.3.1
   '@types/react': 18.3.12
   '@types/react-dom': 18.3.1
-  '@luxfi/ui': 5.3.21
+  '@luxfi/ui': 5.3.22
   '@luxfi/data': 1.0.9
   '@hanzo/auth': 2.5.1
   '@hanzo/commerce': 7.3.4
@@ -46,8 +46,8 @@ importers:
         specifier: 1.4.13
         version: 1.4.13(@babel/core@7.26.0)(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)
       '@luxfi/ui':
-        specifier: 5.3.21
-        version: 5.3.21(d6upxnjomumrpbw2hkfxfrx7te)
+        specifier: 5.3.22
+        version: 5.3.22(d6upxnjomumrpbw2hkfxfrx7te)
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
@@ -2177,8 +2177,8 @@ packages:
       tailwindcss-animate: ^1.0.6
       tailwindcss-interaction-media: ^0.1.0
 
-  '@luxfi/ui@5.3.21':
-    resolution: {integrity: sha512-Q4p3HgDi35FFqAZIWN4qzQlRN4cKznSe+ACEjJ0RODzpkayvB9yBAg48hDW6iAK5O38AW/yiswcLlx+RrKdTBg==}
+  '@luxfi/ui@5.3.22':
+    resolution: {integrity: sha512-wRqno4wZTpt00y6Cu7DbkqmsZQgE3rF1JunvWPLnkFvNTIRWyJpj4OZfkF4k6HlhiAN81tklJfMDv3JDJkFHjA==}
     peerDependencies:
       '@hanzo/auth': 2.5.1
       '@hanzo/commerce': 7.3.4
@@ -16064,7 +16064,7 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@luxfi/ui@5.3.21(d6upxnjomumrpbw2hkfxfrx7te)':
+  '@luxfi/ui@5.3.22(d6upxnjomumrpbw2hkfxfrx7te)':
     dependencies:
       '@hanzo/auth': 2.5.1(r5pbb5ybeshdanrkfay7qjvzx4)
       '@hanzo/commerce': 7.3.2(rms3dgqx7vobnx476kpg4mz7ei)
