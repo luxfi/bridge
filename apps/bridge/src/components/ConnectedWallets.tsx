@@ -114,16 +114,13 @@ const WalletsMenu = () => {
 
   return (
     <ConnectButton>
-      <SubmitButton
-        text_align="center"
-        icon={<WalletIcon className='h-5 w-5' strokeWidth={2} />}
-        className='border-none !px-4' 
+      <Button
+        className='border-none !px-4 flex justify-center gap-2' 
         type="button" 
-        isDisabled={false} 
-        isSubmitting={false}
       >
-        Connect a wallet
-      </SubmitButton>
+        <WalletIcon className='h-5 w-5' strokeWidth={2} />
+        <span>Connect a wallet</span>
+      </Button>
     </ConnectButton>
   )
 }
