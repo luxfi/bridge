@@ -4,7 +4,7 @@ import BridgeApiClient, { type SwapItem } from "../lib/BridgeApiClient";
 import { type Wallet } from "../stores/walletStore";
 // import useTON from "../lib/wallets/ton/useTON";
 import useEVM from "../lib/wallets/evm/useEVM";
-import useStarknet from "../lib/wallets/starknet/useStarknet";
+//import useStarknet from "../lib/wallets/starknet/useStarknet";
 import useImmutableX from "../lib/wallets/immutableX/useIMX";
 import useSolana from "../lib/wallets/solana/useSolana";
 
@@ -23,7 +23,7 @@ function useWallet() {
   const WalletProviders: WalletProvider[] = [
     // useTON(),
     useEVM(),
-    useStarknet(),
+    //useStarknet(),
     useImmutableX(),
     useSolana(),
   ];

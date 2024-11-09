@@ -21,7 +21,7 @@ const Widget = ({
   const canGoBackRef = useRef<boolean>(false)
 
   const searchParams = useSearchParams()
-  const paramString = resolvePersistentQueryParams(searchParams)
+  const paramString = resolvePersistentQueryParams(searchParams).toString()
 
 
     // https://stackoverflow.com/questions/71853839/how-to-check-if-userouter-can-use-router-back-in-nextjs-app
