@@ -5,11 +5,7 @@ import {
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
 } from "@/store/fireblocks";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/shadcn/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 //hooks
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";

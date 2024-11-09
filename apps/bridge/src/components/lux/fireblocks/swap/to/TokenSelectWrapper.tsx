@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 
 import TokenSelect from './TokenSelect'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@hanzo/ui/primitives'
 import type { Token } from '@/types/teleport';
 
 
