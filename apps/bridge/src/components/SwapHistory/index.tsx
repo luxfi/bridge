@@ -4,6 +4,8 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
+import useAsyncEffect from "use-async-effect";
+import axios from "axios";
 
 import {
   ArrowRight,
@@ -36,8 +38,6 @@ import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/netw
 import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
 import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
 import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
-import useAsyncEffect from "use-async-effect";
-import axios from "axios";
 
 function TransactionsHistory() {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
@@ -68,7 +68,7 @@ function TransactionsHistory() {
 
   const searchParams = useSearchParams();
   const canGoBackRef = useRef<boolean>(false);
-  const paramString = resolvePersistentQueryParams(searchParams);
+  const paramString = resolvePersistentQueryParams(searchParams).toString();
 
   const goBack = useCallback(() => {
     canGoBackRef.current = !!(
@@ -80,6 +80,7 @@ function TransactionsHistory() {
       router.push("/" + (paramString ? "?" + paramString : ""));
     }
   }, [paramString]);
+
 
   const getSwaps = async (page: number, status?: string | number) => {
     try {
@@ -94,10 +95,10 @@ function TransactionsHistory() {
         data: data,
         error: null,
       };
-    } catch (err) {
+    } catch (err: any) {
       return {
         data: null,
-        error: "Cannot get swaps. Please try again later.",
+        error: `Could not get swaps: ${err.message ?? 'unknown'}`,
       };
     }
   };
@@ -116,15 +117,19 @@ function TransactionsHistory() {
 
       if (error) {
         toast.error(error);
+        setLoading(false);
         return;
       }
 
       setSwaps(data);
       setPage(1);
-      if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
+      if (Number(data?.length) < PAGE_SIZE) {
+        setIsLastPage(true);
+      }
 
       setLoading(false);
-    } else {
+    } 
+    else {
       const { data, error } = await getSwaps(
         1,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
@@ -132,12 +137,15 @@ function TransactionsHistory() {
 
       if (error) {
         toast.error(error);
+        setLoading(false);
         return;
       }
 
       setSwaps(data);
       setPage(1);
-      if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
+      if (Number(data?.length) < PAGE_SIZE) {
+        setIsLastPage(true);
+      }
       setLoading(false);
     }
   }, [paramString, showAllSwaps]);
@@ -148,19 +156,25 @@ function TransactionsHistory() {
     setLoading(true);
 
     if (showAllSwaps) {
+
       const { data, error } = await getSwaps(nextPage);
 
       if (error) {
+        setLoading(false);
         toast.error(error);
         return;
       }
 
       setSwaps((old) => [...(old ? old : []), ...(data ? data : [])]);
       setPage(nextPage);
-      if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
+      if (Number(data?.length) < PAGE_SIZE) {
+        setIsLastPage(true);
+      }
 
       setLoading(false);
-    } else {
+    } 
+    else {
+
       const { data, error } = await getSwaps(
         nextPage,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
@@ -168,12 +182,15 @@ function TransactionsHistory() {
 
       if (error) {
         toast.error(error);
+        setLoading(false);
         return;
       }
 
       setSwaps((old) => [...(old ? old : []), ...(data ? data : [])]);
       setPage(nextPage);
-      if (Number(data?.length) < PAGE_SIZE) setIsLastPage(true);
+      if (Number(data?.length) < PAGE_SIZE) {
+        setIsLastPage(true);
+      }
 
       setLoading(false);
     }
@@ -271,25 +288,30 @@ function TransactionsHistory() {
                             >
                               <div className=" flex items-center">
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
-                                  <Image
-                                    // src={resolveNetworkImage(swap.source_asset)}
-                                    src={sourceAsset?.logo!}
-                                    alt="From Logo"
-                                    height="60"
-                                    width="60"
-                                    className="rounded-full object-contain"
-                                  />
+                                  {sourceAsset?.logo && (
+                                    <Image
+                                      // src={resolveNetworkImage(swap.source_asset)}
+                                      src={sourceAsset.logo}
+                                      alt="From Logo"
+                                      height="60"
+                                      width="60"
+                                      className="rounded-full object-contain"
+                                    />
+                                  )}
                                 </div>
                                 <ArrowRight className="h-4 w-4 mx-2" />
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
-                                  <Image
-                                    // src={resolveNetworkImage(swap.destination_asset)}
-                                    src={destinationAsset?.logo!}
-                                    alt="To Logo"
-                                    height="70"
-                                    width="70"
-                                    className="rounded-full border border-[#f3f3f32d] object-contain"
-                                  />
+                                  {destinationAsset?.logo && (
+                                    <Image
+                                      // src={resolveNetworkImage(swap.destination_asset)}
+                                      src={destinationAsset.logo}
+                                      alt="To Logo"
+                                      height="70"
+                                      width="70"
+                                      className="rounded-full border border-[#f3f3f32d] object-contain"
+                                    />
+                                  )}
+
                                 </div>
                               </div>
                               {index !== 0 ? (
