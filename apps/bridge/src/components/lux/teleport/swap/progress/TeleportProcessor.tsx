@@ -1,25 +1,23 @@
 import React from "react";
 import toast from "react-hot-toast";
 import Web3 from "web3";
+import { useSwitchChain, useChainId } from "wagmi";
+import { useAtom } from "jotai";
+import axios from "axios";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
+
 import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
 } from "@/store/teleport";
 import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/shadcn/tooltip";
 import useNotification from "@/hooks/useNotification";
 
 //hooks
-import { useSwitchChain, useChainId } from "wagmi";
-import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
 
-import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";

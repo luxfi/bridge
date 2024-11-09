@@ -1,5 +1,9 @@
 import React from "react";
 import Web3 from "web3";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
+
+
 import useNotification from "@/hooks/useNotification";
 import {
   swapStatusAtom,
@@ -9,11 +13,6 @@ import {
 } from "@/store/teleport";
 import { Contract } from "ethers";
 import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/shadcn/tooltip";
 import { ethers } from "ethers";
 import teleporterABI from "@/components/lux/teleport/constants/abi/bridge.json";
 //hooks

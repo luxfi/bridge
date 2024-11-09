@@ -1,9 +1,12 @@
 'use client'
 
 import { Check, Copy } from 'lucide-react'
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
+
+
 import { classNames } from '../utils/classNames'
 import useCopyClipboard from '../../hooks/useCopyClipboard'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../shadcn/tooltip'
 
 interface CopyButtonProps {
   className?: string

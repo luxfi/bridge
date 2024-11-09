@@ -1,8 +1,13 @@
 import { useCallback, useState } from 'react'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger,
+} from '@hanzo/ui/primitives'
+
 import { type ISelectMenuItem, SelectMenuItem } from '../Shared/Props/selectMenuItem'
-import { Popover, PopoverContent, PopoverTrigger } from '../../shadcn/popover'
 import PopoverSelect from './PopoverSelect'
 import { CurrencyDisabledReason } from '../../Input/CurrencyFormField'
 
