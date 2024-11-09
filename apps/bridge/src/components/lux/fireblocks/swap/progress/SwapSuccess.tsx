@@ -1,11 +1,7 @@
 import React from "react";
 import SuccessIcon from "../SuccessIcon";
 import { bridgeMintTransactionAtom } from "@/store/fireblocks";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/shadcn/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 //hooks
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";

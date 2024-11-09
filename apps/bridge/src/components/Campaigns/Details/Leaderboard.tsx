@@ -89,7 +89,8 @@ const Component: React.FC<{
                                 </div >
                                 {
                                     leaderboard.leaderboard_budget > 0 && <div className="text-right flex items-center space-x-2">
-                                        <ClickTooltip text={
+                                        <ClickTooltip 
+                                          text={
                                             <div className="flex items-center space-x-1">
                                                 <span>+</span>
                                                 <div className="h-3.5 w-3.5 relative">
@@ -104,10 +105,12 @@ const Component: React.FC<{
                                                 <p>
                                                     <span>{leaderboardRewards[user.position - 1]} {campaign?.asset}</span>
                                                 </p>
-                                            </div>}>
-                                            <div className='text-muted hover:cursor-pointer hover:muted-2 ml-0.5 hover:bg-level-4 active:ring-2 active:ring-gray-200 active:bg-level-3 focus:outline-none cursor-default p-1 rounded'>
-                                                <Trophy className="h-4 w-4" aria-hidden="true" />
                                             </div>
+                                          }
+                                        >
+                                          <div className='text-muted hover:cursor-pointer hover:muted-2 ml-0.5 hover:bg-level-4 active:ring-2 active:ring-gray-200 active:bg-level-3 focus:outline-none cursor-default p-1 rounded'>
+                                              <Trophy className="h-4 w-4" aria-hidden="true" />
+                                          </div>
                                         </ClickTooltip>
                                     </div>
                                 }

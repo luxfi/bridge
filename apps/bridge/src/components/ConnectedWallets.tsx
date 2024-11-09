@@ -2,14 +2,19 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 
-import { Button } from '@hanzo/ui/primitives'
+import { 
+  Button, 
+  Dialog, 
+  DialogContent, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@hanzo/ui/primitives"
 
 import WalletIcon from "./icons/WalletIcon"
 import shortenAddress from "./utils/ShortenAddress"
 import useWallet from "../hooks/useWallet"
 import ConnectButton from "./buttons/connectButton"
-import SubmitButton from "./buttons/submitButton"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./shadcn/dialog"
 import AddressIcon from "./AddressIcon"
 import { type Wallet } from "../stores/walletStore"
 

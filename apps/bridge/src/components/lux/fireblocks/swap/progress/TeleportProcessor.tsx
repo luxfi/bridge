@@ -1,23 +1,19 @@
 import React from "react";
-import toast from "react-hot-toast";
-import Web3 from "web3";
+//import toast from "react-hot-toast";
+//import Web3 from "web3";
 import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
 } from "@/store/fireblocks";
-import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/shadcn/tooltip";
+//import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
 //hooks
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
 
-import axios from "axios";
+//import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";

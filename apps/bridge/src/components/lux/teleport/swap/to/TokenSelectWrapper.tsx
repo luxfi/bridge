@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
-import TokenSelect from './TokenSelect'
 import { ChevronDown } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcn/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@hanzo/ui/primitives'
+
+import TokenSelect from './TokenSelect'
 import type { Token } from '@/types/teleport';
 
 interface IProps {

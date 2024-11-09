@@ -1,26 +1,27 @@
 'use client'
-import {
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    CommandWrapper
-} from '@/components/shadcn/command'
-import Modal from '@/components/modal/modal';
-import useWindowDimensions from '@/hooks/useWindowDimensions';
-import SpinIcon from '@/components/icons/spinIcon';
-import type { Network } from '@/types/teleport';
-import SelectItem from './SelectItem';
 import type { Dispatch, SetStateAction } from 'react'
 
+import {
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@hanzo/ui/primitives'
+import CommandWrapper from '@/components/shadcn/command-wrapper'
+
+import Modal from '@/components/modal/modal'
+import useWindowDimensions from '@/hooks/useWindowDimensions'
+import SpinIcon from '@/components/icons/spinIcon'
+import type { Network } from '@/types/teleport'
+import SelectItem from './SelectItem'
+
 const CommandSelect: React.FC<{
-    show: boolean;
-    setShow: (value: boolean) => void;
-    searchHint: string;
-    networks: Network[],
-    network?: Network;
-    setNetwork: (value: Network) => void;
+  show: boolean
+  setShow: (value: boolean) => void
+  searchHint: string
+  networks: Network[],
+  network?: Network
+  setNetwork: (value: Network) => void
 }> = ({ 
   networks, 
   network, 
@@ -29,7 +30,7 @@ const CommandSelect: React.FC<{
   setShow, 
   searchHint 
 }) => {
-  const { isDesktop } = useWindowDimensions();
+  const { isDesktop } = useWindowDimensions()
   return (
     <Modal height='full' show={show} setShow={setShow as Dispatch<SetStateAction<boolean>>}>
       {show ? (

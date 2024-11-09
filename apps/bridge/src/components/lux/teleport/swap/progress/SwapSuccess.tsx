@@ -1,12 +1,9 @@
 import { useAtom } from "jotai";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
+
 import SuccessIcon from "../SuccessIcon";
 import { bridgeMintTransactionAtom } from "@/store/teleport";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/shadcn/tooltip";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import Gauge from "@/components/gauge";

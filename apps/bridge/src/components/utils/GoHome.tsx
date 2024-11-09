@@ -2,7 +2,14 @@
 import { type PropsWithChildren } from "react"
 import { renderToString } from 'react-dom/server'
 
-import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem
+} from '@hanzo/ui/primitives'
+
+
 import { Paperclip } from 'lucide-react'
 
 import { Logo } from '@luxfi/ui'
@@ -24,25 +31,25 @@ const GoHomeButton: React.FC<{
   return (
     <div onClick={goHome}>
     {children ?? (
-      <ContextMenuPrimitive.Root>
-        <ContextMenuPrimitive.Trigger>
+      <ContextMenu>
+        <ContextMenuTrigger>
           <Logo size='md' outerClx={className}/>
-        </ContextMenuPrimitive.Trigger>
-        <ContextMenuPrimitive.Content className="dialog-overlay absolute z-40 border h-fit text-muted border-[#404040] mt-2 w-fit rounded-md shadow-lg bg-level-1 focus:outline-none">
-          <ContextMenuPrimitive.ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full rounded-t hover:bg-level-2 whitespace-nowrap">
+        </ContextMenuTrigger>
+        <ContextMenuContent className="dialog-overlay absolute z-40 border h-fit text-muted border-[#404040] mt-2 w-fit rounded-md shadow-lg bg-level-1 focus:outline-none">
+          <ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full rounded-t hover:bg-level-2 whitespace-nowrap">
             <CopyButton toCopy={renderToString(<BridgeLogo />)}>Copy logo as SVG</CopyButton>
-          </ContextMenuPrimitive.ContextMenuItem >
-          <ContextMenuPrimitive.ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full hover:bg-level-2 whitespace-nowrap">
+          </ContextMenuItem >
+          <ContextMenuItem className="dialog-content px-4 py-2 text-sm text-left w-full hover:bg-level-2 whitespace-nowrap">
             <CopyButton toCopy={renderToString(<BridgeLogoSmall />)}>Copy symbol as SVG</CopyButton>
-          </ContextMenuPrimitive.ContextMenuItem >
-          <ContextMenuPrimitive.ContextMenuItem className="dialog-content">
+          </ContextMenuItem >
+          <ContextMenuItem className="dialog-content">
             <a href="" target='_blank' className='flex space-x-1 items-center px-4 py-2 rounded-b text-sm text-left w-full hover:bg-level-2 whitespace-nowrap'>
               <Paperclip width={16} />
               <p>Brand Guidelines</p>
             </a>
-          </ContextMenuPrimitive.ContextMenuItem >
-        </ContextMenuPrimitive.Content>
-      </ContextMenuPrimitive.Root>
+          </ContextMenuItem >
+        </ContextMenuContent>
+      </ContextMenu>
     )}
   </div>
   )

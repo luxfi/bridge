@@ -1,26 +1,27 @@
-"use client";
+'use client'
+import type { Dispatch, SetStateAction } from 'react'
+
 import {
   CommandEmpty,
-  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandWrapper,
-} from "@/components/shadcn/command";
-import Modal from "@/components/modal/modal";
-import useWindowDimensions from "@/hooks/useWindowDimensions";
-import SelectItem from "@/components/lux/teleport/swap/to/SelectItem";
-import SpinIcon from "@/components/icons/spinIcon";
-import type { Network } from "@/types/teleport";
-import type { Dispatch, SetStateAction } from "react"
+} from '@hanzo/ui/primitives'
+import CommandWrapper from '@/components/shadcn/command-wrapper'
+
+import Modal from '@/components/modal/modal'
+import useWindowDimensions from '@/hooks/useWindowDimensions'
+import SelectItem from '@/components/lux/teleport/swap/to/SelectItem'
+import SpinIcon from '@/components/icons/spinIcon'
+import type { Network } from '@/types/teleport'
 
 const CommandSelect: React.FC<{
-  show: boolean;
-  setShow: (value: boolean) => void;
-  searchHint: string;
-  networks: Network[];
-  network?: Network;
-  setNetwork: (value: Network) => void;
+  show: boolean
+  setShow: (value: boolean) => void
+  searchHint: string
+  networks: Network[]
+  network?: Network
+  setNetwork: (value: Network) => void
 }
 > = ({
   networks,
@@ -30,9 +31,9 @@ const CommandSelect: React.FC<{
   setShow,
   searchHint,
 }) => {
-  const { isDesktop } = useWindowDimensions();
+  const { isDesktop } = useWindowDimensions()
   return (
-    <Modal height="full" show={show} setShow={setShow as Dispatch<SetStateAction<boolean>>}>
+    <Modal height='full' show={show} setShow={setShow as Dispatch<SetStateAction<boolean>>}>
       {show ? (
         <CommandWrapper>
           <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
@@ -45,10 +46,10 @@ const CommandSelect: React.FC<{
                   value={n.internal_name}
                   key={n.internal_name}
                   onSelect={() => {
-                    setNetwork(n);
+                    setNetwork(n)
                   }}
                   className={`${
-                    n?.status == "active" ? "opacity-100" : "opacity-50"
+                    n?.status == 'active' ? 'opacity-100' : 'opacity-50'
                   }`}
                 >
                   <SelectItem network={n} />
@@ -56,8 +57,8 @@ const CommandSelect: React.FC<{
               ))}
             </CommandList>
           ) : (
-            <div className="flex justify-center h-full items-center">
-              <SpinIcon className="animate-spin h-5 w-5" />
+            <div className='flex justify-center h-full items-center'>
+              <SpinIcon className='animate-spin h-5 w-5' />
             </div>
           )}
         </CommandWrapper>

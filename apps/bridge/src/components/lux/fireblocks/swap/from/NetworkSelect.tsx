@@ -1,30 +1,32 @@
 'use client'
+import React from 'react'
 import {
     CommandEmpty,
-    CommandGroup,
     CommandInput,
     CommandItem,
     CommandList,
-    CommandWrapper
-} from '@/components/shadcn/command'
-import React from "react";
-import Modal from '@/components/modal/modal';
-import useWindowDimensions from '@/hooks/useWindowDimensions';
-import SpinIcon from '@/components/icons/spinIcon';
-import type { Network, Token } from '@/types/fireblocks';
-import SelectItem from './SelectItem';
+} from '@hanzo/ui/primitives'
+
+import CommandWrapper from '@/components/shadcn/command-wrapper'
+
+import Modal from '@/components/modal/modal'
+
+import useWindowDimensions from '@/hooks/useWindowDimensions'
+import SpinIcon from '@/components/icons/spinIcon'
+import type { Network } from '@/types/fireblocks'
+import SelectItem from './SelectItem'
 
 interface IProps {
-    show: boolean;
-    setShow: (value: boolean) => void;
-    searchHint: string;
-    networks: Network[],
-    network?: Network;
-    setNetwork: (value: Network) => void;
+  show: boolean
+  setShow: (value: boolean) => void
+  searchHint: string
+  networks: Network[],
+  network?: Network
+  setNetwork: (value: Network) => void
 }
 
 const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, setShow, searchHint }) => {
-    const { isDesktop } = useWindowDimensions();
+    const { isDesktop } = useWindowDimensions()
     return (
         <Modal height='full' show={show} setShow={setShow as React.Dispatch<React.SetStateAction<boolean>>}>
             {show ?
@@ -52,7 +54,7 @@ const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, 
                             </CommandList>
                             :
                             <div className='flex justify-center h-full items-center'>
-                                <SpinIcon className="animate-spin h-5 w-5" />
+                                <SpinIcon className='animate-spin h-5 w-5' />
                             </div>
                     }
                 </CommandWrapper>
@@ -62,4 +64,4 @@ const CommandSelect: React.FC<IProps> = ({ networks, network, setNetwork, show, 
     )
 }
 
-export default CommandSelect;
+export default CommandSelect

@@ -1,5 +1,12 @@
+import React from 'react'
+import {
+  CommandItem,
+  CommandList,
+} from '@hanzo/ui/primitives'
+import CommandWrapper from '@/components/shadcn/command-wrapper'
+
 import { type SelectProps } from '../Shared/Props/SelectProps'
-import { CommandItem, CommandList, CommandWrapper } from '../../shadcn/command';
+
 import SelectItem from '../Shared/SelectItem';
 
 export default function PopoverSelect({ values, value, setValue }: SelectProps) {

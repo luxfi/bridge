@@ -1,8 +1,8 @@
 import { type AnchorHTMLAttributes, forwardRef } from 'react'
 import {  ExternalLink } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
 import { classNames } from '../utils/classNames'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../shadcn/tooltip'
 
 interface ExploreButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   className?: string
