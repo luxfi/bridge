@@ -1,16 +1,17 @@
+/*
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react"
-import { Address } from "@ton/core";
-import KnownInternalNames from "../../knownIds";
-import { type Wallet } from "../../../stores/walletStore";
-import { type WalletProvider } from "../../../hooks/useWallet";
-import TON from "../../../components/icons/Wallets/TON";
+import { Address } from "@ton/core"
+import KnownInternalNames from "../../knownIds"
+import { type Wallet } from "@/stores/walletStore"
+import { type WalletProvider } from "@/hooks/useWallet"
+import TON from "@/components/icons/Wallets/TON"
 
 function useTON(): WalletProvider {
     const withdrawalSupportedNetworks = [KnownInternalNames.Networks.TONMainnet]
     const autofillSupportedNetworks = withdrawalSupportedNetworks
     const name = 'ton'
-    const wallet = useTonWallet();
-    const [tonConnectUI] = useTonConnectUI();
+    const wallet = useTonWallet()
+    const [tonConnectUI] = useTonConnectUI()
 
     const getWallet = () => {
         if (wallet) {
@@ -48,3 +49,4 @@ function useTON(): WalletProvider {
 }
 
 export default useTON
+*/

@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../shadcn/popover";
 import useWallet from "../../hooks/useWallet";
 import { NetworkType } from "../../Models/CryptoNetwork";
 import RainbowIcon from "../icons/Wallets/Rainbow";
-import TON from "../icons/Wallets/TON";
+//import TON from "../icons/Wallets/TON";
 import {
   Dialog,
   DialogContent,
@@ -16,11 +16,11 @@ import {
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import MetaMaskIcon from "../icons/Wallets/MetaMask";
 import WalletConnectIcon from "../icons/Wallets/WalletConnect";
-import Braavos from "../icons/Wallets/Braavos";
-import ArgentX from "../icons/Wallets/ArgentX";
-import Argent from "../icons/Wallets/Argent";
-import TonKeeper from "../icons/Wallets/TonKeeper";
-import OpenMask from "../icons/Wallets/OpenMask";
+//import Braavos from "../icons/Wallets/Braavos";
+//import ArgentX from "../icons/Wallets/ArgentX";
+//import Argent from "../icons/Wallets/Argent";
+//import TonKeeper from "../icons/Wallets/TonKeeper";
+//import OpenMask from "../icons/Wallets/OpenMask";
 import Phantom from "../icons/Wallets/Phantom";
 import Solflare from "../icons/Wallets/Solflare";
 import CoinbaseIcon from "../icons/Wallets/Coinbase";
@@ -187,8 +187,8 @@ const ResolveConnectorIcon = ({
 };
 
 const KnownConnectors = {
-  Starknet: "starknet",
+  //Starknet: "starknet",
   EVM: "evm",
-  TON: "ton",
+  //TON: "ton",
   Solana: "solana",
 };

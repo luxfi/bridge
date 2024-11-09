@@ -1,3 +1,4 @@
+/*
 import { fromHex } from "viem";
 import { type WalletProvider } from "../../../hooks/useWallet";
 import { useWalletStore } from "../../../stores/walletStore"
@@ -75,3 +76,4 @@ export default function useStarknet(): WalletProvider {
         name
     }
 }
+*/
