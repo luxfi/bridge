@@ -10,7 +10,10 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "strict": true,
+    "skipLibCheck": true
   },
-  "lib": ["es2018"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
