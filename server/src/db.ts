@@ -1,5 +1,5 @@
 import { mainnetSettings } from "@/settings"
-import { prisma } from "@/utils/db"
+import { prisma } from "@/lib/prisma"
 
 const main = async () => {
   try {
