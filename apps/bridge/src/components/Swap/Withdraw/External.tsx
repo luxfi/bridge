@@ -7,7 +7,7 @@ const External: React.FC = () => (
         <div className='md:text-3xl text-lg font-bold  leading-6 text-center'>
             Withdrawal pending
         </div>
-        <div className='flex place-content-center mt-20 mb-16 md:mb-8'>
+        <div className='flex place-content-center '>
             <div className='relative'>
                 <div className='absolute top-1 left-1 w-10 h-10 opacity-40 bg bg-primary rounded-full animate-ping'></div>
                 <div className='absolute top-2 left-2 w-8 h-8 opacity-40 bg bg-primary rounded-full animate-ping'></div>

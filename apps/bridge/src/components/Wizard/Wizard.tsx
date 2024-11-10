@@ -36,7 +36,7 @@ const Wizard: React.FC<PropsWithChildren> = ({ children }) => {
           </AnimatePresence>
         </div>
       </div>
-      <div id="widget_root" />
+      <div id="modal_portal_root" />
     </div>
   )
 }
