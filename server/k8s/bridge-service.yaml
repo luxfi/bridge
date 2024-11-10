@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bridge-server
+  labels:
+    app: bridge-server
+spec:
+  type: NodePort
+  ports:
+    - port: 6000
+      targetPort: 6000
+      nodePort: 30005
+  selector:
+    app: bridge-server
