@@ -9,6 +9,7 @@ type buttonSize = 'small' | 'medium' | 'large';
 type text_align = 'center' | 'left'
 type button_align = 'left' | 'right'
 
+  // :aa TODO Factor this out!  It recreates the ButtonVariants in @hanzo/ui/primitives/Button (shadcn)
 function constructClassNames(size: buttonSize, buttonStyle: buttonStyle) {
   let defaultStyle = ' border border-muted-3 disabled:border-[#404040] items-center space-x-1 ' + 
     'disabled:opacity-80 disabled:cursor-not-allowed ' + 

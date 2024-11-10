@@ -1,74 +1,65 @@
 import { Home, RefreshCcw } from "lucide-react";
 
-import SubmitButton from "./buttons/submitButton"
+import { Button } from '@hanzo/ui/primitives'
+
 import ContactSupport from "./ContactSupport"
 import MessageComponent from "./MessageComponent"
-import Navbar from "./navbar"
-import GoHomeButton from "./utils/GoHome"
+import Main from './main'
+import { useGoHome } from "@/hooks/useGoHome"
 
 export default function ErrorFallback({ error, resetErrorBoundary }: {error: any, resetErrorBoundary: () => void}) {
 
   const extension_error = error.stack?.includes?.("chrome-extension", "app://")
 
+  const goHome = useGoHome()
+
   return (
-    <div className="styled-scroll">
-      <main className="styled-scroll">
-        <div className="min-h-screen overflow-hidden relative">
-          <Navbar />
-          <div className="mx-auto max-w-xl  shadow-card rounded-lg w-full overflow-hidden relative px-0 md:px-8 py-6 h-[500px] min-h-[550px]">
-            <MessageComponent>
-              <MessageComponent.Content icon="red">
-                  <MessageComponent.Header>
-                      Unable to complete the request
-                  </MessageComponent.Header>
-                  <MessageComponent.Description>
-                      <p>
-                          <span>Sorry, but we were unable to complete this request.&nbsp;</span>
-                          {
-                              extension_error ?
-                                  <span>It seems that some of your extensions are preventing the app from running.</span>
-                                  : <span>We are informed, and are now investigating the issue.</span>
-                          }
-
-                      </p>
-                      <p>
-                          {
-                              extension_error ?
-                                  <span>Please disable extensions and try again or open in incognito mode. If the issue keeps happening,&nbsp;</span>
-                                  :
-                                  <span>Please try again. If the issue keeps happening,&nbsp;</span>
-                          }
-
-                          <span className="underline cursor-pointer "><ContactSupport>contact our support team.</ContactSupport></span>
-                      </p>
-                  </MessageComponent.Description>
-              </MessageComponent.Content>
-              <MessageComponent.Buttons>
-                  <div className="flex flex-row  text-xs sm:text-base space-x-2">
-                      <div className='basis-1/3'>
-                          {
-                              <GoHomeButton>
-                                  <SubmitButton className="truncate" text_align="left" buttonStyle="outline" isDisabled={false} isSubmitting={false} icon={<Home className="h-5 w-5" aria-hidden="true" />}>
-                                      Go home
-                                  </SubmitButton>
-                              </GoHomeButton>
-                          }
-                      </div>
-                      <div className='basis-2/3'>
-                          <SubmitButton className="truncate" button_align="right" text_align="left" isDisabled={false} isSubmitting={false}
-                              onClick={resetErrorBoundary}
-                              icon={<RefreshCcw className="h-5 w-5" aria-hidden="true" />}>
-                              Try Again
-                          </SubmitButton>
-                      </div>
-                  </div>
-              </MessageComponent.Buttons>
-            </MessageComponent>
-          </div>
-          <div id="widget_root" />
-        </div>
-      </main>
-    </div>
+    <Main className='mb-20'>
+      <MessageComponent>
+        <MessageComponent.Content icon="red">
+          <MessageComponent.Header>
+              Unable to complete the request
+          </MessageComponent.Header>
+          <MessageComponent.Description className='max-w-lg flex flex-col justify-between items-center mt-4'>
+            <p className='text-center'>
+              <span>Sorry, but we were unable to complete this request.&nbsp;</span>
+              {extension_error ?
+                <span>It seems that some of your extensions are preventing the app from running.</span>
+                : 
+                <span>Are team as been informed, and will investigate the issue.</span>
+              }
+            </p>
+            <p  className='text-center'>
+              {extension_error ?
+                <span>Please disable extensions and try again or open in incognito mode. If the issue keeps happening,&nbsp;</span>
+                :
+                <span>Please try again. If the issue keeps happening,&nbsp;</span>
+              }
+              <span className="underline cursor-pointer "><ContactSupport>contact our support team.</ContactSupport></span>
+            </p>
+          </MessageComponent.Description>
+        </MessageComponent.Content>
+        <MessageComponent.Buttons className="flex flex-row gap-4">
+          <Button 
+            className="flex gap-2" 
+            variant="outline" 
+            onClick={goHome}
+          >
+            <Home className="h-5 w-5" aria-hidden="true" />
+            <span>Go home</span>
+          </Button>
+          <Button 
+            className="flex gap-2" 
+            variant='primary'
+            onClick={resetErrorBoundary}
+          >
+            <RefreshCcw className="h-5 w-5" aria-hidden="true" />
+            <span>Try Again</span>
+          </Button>
+        </MessageComponent.Buttons>
+      </MessageComponent>
+      <div id="modal_portal_root" />
+    </Main>
   )
 }
 
