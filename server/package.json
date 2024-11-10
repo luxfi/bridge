@@ -18,7 +18,7 @@
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build": "docker build -t ghcr.io/luxfi/bridge/server:latest -f docker/Dockerfile .",
+    "docker:build": "docker buildx build --platform linux/amd64 -t ghcr.io/luxfi/bridge/server:latest -f docker/Dockerfile .",
     "docker:login": "echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin",
     "docker:push": "docker push ghcr.io/luxfi/bridge/server:latest",
     "k8s:apply": "kubectl apply -f k8s/bridge-deployment.yaml && kubectl apply -f k8s/bridge-service.yaml",
