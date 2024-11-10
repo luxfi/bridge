@@ -1,23 +1,26 @@
-# Use Node.js for the final image
-FROM node:20
+# Use alpine as supports platforms we care about
+FROM node:20-alpine
 
-# Set working directory in Node container  
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Set working directory in Node container
 WORKDIR /app
 
 # Copy only necessary files to avoid caching issues
 COPY package*.json ./
 
 # Install Node.js dependencies
-RUN npm install
+RUN pnpm install
 
 # Copy the rest of the app files
-COPY ./ . 
+COPY ./ .
 
 # Build the app (ensure this script exists in package.json)
-RUN npm run build
+RUN pnpm run build
 
 # Expose the port the app runs on
 EXPOSE 6000
 
 # Command to run the application
-CMD ["node", "dist/server.js"]  # Update this path to match your output file if different
+CMD ["pnpm", "start"]
