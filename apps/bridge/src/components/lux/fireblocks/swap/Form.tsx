@@ -199,7 +199,7 @@ const Swap: FC = () => {
   };
 
   return (
-    <Widget className="sm:min-h-[504px] max-w-lg mt-20">
+    <Widget className="sm:min-h-[504px] max-w-lg">
       <Widget.Content>
         <div
           id="WIDGET_CONTENT"

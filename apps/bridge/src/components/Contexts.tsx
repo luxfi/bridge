@@ -6,8 +6,6 @@ import * as Sentry from '@sentry/nextjs'
 
 import { TooltipProvider } from '@hanzo/ui/primitives'
 
-import Main from './Main'
-import MaintananceContent from './maintanance/maintanance'
 import ErrorFallback from './ErrorFallback'
 import ColorSchema from './ColorSchema'
 // import TonConnectProvider from './TonConnectProvider'
@@ -130,14 +128,7 @@ const Contexts: React.FC<
                       <RainbowKit>
                         <Solana>
                           <FeeProvider>
-                            <Main>
-                              {process.env.NEXT_PUBLIC_IN_MAINTANANCE ===
-                              'true' ? (
-                                <MaintananceContent />
-                              ) : (
-                                children
-                              )}
-                            </Main>
+                            {children}
                           </FeeProvider>
                         </Solana>
                       </RainbowKit>

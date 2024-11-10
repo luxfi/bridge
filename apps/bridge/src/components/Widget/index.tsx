@@ -55,7 +55,7 @@ const Widget = ({
         <div className='w-full h-full px-6 pb-6 flex flex-col justify-between'>
           {children}
         </div>
-        <div id='widget_root' />
+        <div id='modal_portal_root' />
       </div>
     </div>
   )

@@ -198,7 +198,7 @@ const Swap: FC = () => {
   };
 
   return (
-    <Widget className="sm:min-h-[504px] max-w-lg mt-20">
+    <Widget className="sm:min-h-[504px] max-w-lg">
       <Widget.Content>
         <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
           <div className="flex flex-col w-full">

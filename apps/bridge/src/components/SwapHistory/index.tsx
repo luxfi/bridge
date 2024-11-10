@@ -206,7 +206,7 @@ function TransactionsHistory() {
   };
 
   return (
-    <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg mt-20">
+    <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
       <HeaderWithMenu goBack={goBack} />
       {page == 0 && loading ? (
         <SwapHistoryComponentSkeleton />
@@ -443,7 +443,7 @@ function TransactionsHistory() {
           )}
         </>
       )}
-      <div id="widget_root" />
+      <div id="modal_portal_root" />
     </div>
   );
 }

@@ -98,7 +98,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
     return <>
         <Modal show={showInsufficientFundsModal} setShow={setShowInsufficientFundsModal} >
             <MessageComponent>
-                <MessageComponent.Content center icon='red'>
+                <MessageComponent.Content icon='red'>
                     <MessageComponent.Header>
                         Transfer failed
                     </MessageComponent.Header>
@@ -117,7 +117,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
         </Modal>
         <Modal show={showFundsOnHoldModal} setShow={setShowFundsOnHoldModal} >
             <MessageComponent>
-                <MessageComponent.Content center icon='red'>
+                <MessageComponent.Content icon='red'>
                     <MessageComponent.Header>
                         Transfer failed
                     </MessageComponent.Header>
