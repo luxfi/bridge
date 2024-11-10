@@ -4,6 +4,8 @@ import dotenv from "dotenv"
 //routers
 import swaps from "@/routes/swaps"
 import explorer from "@/routes/explorer"
+import settings from "@/routes/settings"
+import tokens from "@/routes/tokens"
 
 dotenv.config()
 
@@ -16,6 +18,8 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use("/api/swaps", swaps)
 app.use("/api/explorer", explorer)
+app.use("/api/settings", settings)
+app.use("/api/tokens", tokens)
 
 app.get("/", async (req, res) => {
   res.json(">>> Hello world. We are LUX!!!")

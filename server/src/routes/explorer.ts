@@ -1,4 +1,4 @@
-import { handlerGetExplorer, handlerGetHasBySwaps } from "@/helpers/swapHelper"
+import { handlerGetExplorer, handlerGetHasBySwaps } from "@/lib/swaps"
 import { Router, Request, Response } from "express"
 
 const router: Router = Router()

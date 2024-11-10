@@ -1,8 +1,8 @@
-import { prisma } from "@/utils/db"
-import { isValidAddress } from "@/utils/utils"
+import { prisma } from "@/lib/prisma"
+import { isValidAddress } from "@/lib/utils"
 import { statusMapping, SwapStatus } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
-import { getTokenPrice } from "./tokenHelper"
+import { getTokenPrice } from "./tokens"
 
 export interface SwapData {
   amount: number

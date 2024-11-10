@@ -37,7 +37,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1",
+    "@prisma/client": "^5.21.1",
     "axios": "^1.7.4",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",

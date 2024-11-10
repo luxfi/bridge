@@ -54,10 +54,10 @@ importers:
         version: 2.0.0
       '@next/mdx':
         specifier: 14.1.0
-        version: 14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
+        version: 14.1.0(@mdx-js/loader@3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
       '@prisma/client':
         specifier: ^5.21.1
-        version: 5.21.1(prisma@5.21.1)
+        version: 5.21.1(prisma@5.22.0)
       '@rainbow-me/rainbowkit':
         specifier: ^2.0.5
         version: 2.2.0(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(viem@2.21.35(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8))(wagmi@2.12.25(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.59.16)(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(bufferutil@4.0.8)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.6.3)(utf-8-validate@5.0.10)(viem@2.21.35(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))
@@ -235,7 +235,7 @@ importers:
     devDependencies:
       '@mdx-js/loader':
         specifier: ^3.0.0
-        version: 3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
+        version: 3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       '@mdx-js/react':
         specifier: ^3.0.0
         version: 3.1.0(@types/react@18.3.12)(react@18.3.1)
@@ -334,7 +334,7 @@ importers:
         version: 12.1.5(postcss@8.4.33)
       prisma-erd-generator:
         specifier: ^1.11.2
-        version: 1.11.2(@prisma/client@5.21.1(prisma@5.21.1))(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)
+        version: 1.11.2(@prisma/client@5.21.1(prisma@5.22.0))(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)
       storybook:
         specifier: ^7.4.5
         version: 7.6.20(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -460,8 +460,8 @@ importers:
   server:
     dependencies:
       '@prisma/client':
-        specifier: ^5.19.1
-        version: 5.21.1(prisma@5.21.1)
+        specifier: ^5.21.1
+        version: 5.21.1(prisma@5.22.0)
       '@solana/web3.js':
         specifier: ^1.95.4
         version: 1.95.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -486,9 +486,6 @@ importers:
       multicoin-address-validator:
         specifier: ^0.5.22
         version: 0.5.22
-      prisma:
-        specifier: ^5.19.1
-        version: 5.21.1
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
@@ -523,6 +520,9 @@ importers:
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.6.3)
@@ -2598,20 +2598,23 @@ packages:
   '@prisma/debug@5.21.1':
     resolution: {integrity: sha512-uY8SAhcnORhvgtOrNdvWS98Aq/nkQ9QDUxrWAgW8XrCZaI3j2X7zb7Xe6GQSh6xSesKffFbFlkw0c2luHQviZA==}
 
-  '@prisma/engines-version@5.21.1-1.bf0e5e8a04cada8225617067eaa03d041e2bba36':
-    resolution: {integrity: sha512-qvnEflL0//lh44S/T9NcvTMxfyowNeUxTunPcDfKPjyJNrCNf2F1zQLcUv5UHAruECpX+zz21CzsC7V2xAeM7Q==}
+  '@prisma/debug@5.22.0':
+    resolution: {integrity: sha512-AUt44v3YJeggO2ZU5BkXI7M4hu9BF2zzH2iF2V5pyXT/lRTyWiElZ7It+bRH1EshoMRxHgpYg4VB6rCM+mG5jQ==}
 
-  '@prisma/engines@5.21.1':
-    resolution: {integrity: sha512-hGVTldUkIkTwoV8//hmnAAiAchi4oMEKD3aW5H2RrnI50tTdwza7VQbTTAyN3OIHWlK5DVg6xV7X8N/9dtOydA==}
+  '@prisma/engines-version@5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2':
+    resolution: {integrity: sha512-2PTmxFR2yHW/eB3uqWtcgRcgAbG1rwG9ZriSvQw+nnb7c4uCr3RAcGMb6/zfE88SKlC1Nj2ziUvc96Z379mHgQ==}
 
-  '@prisma/fetch-engine@5.21.1':
-    resolution: {integrity: sha512-70S31vgpCGcp9J+mh/wHtLCkVezLUqe/fGWk3J3JWZIN7prdYSlr1C0niaWUyNK2VflLXYi8kMjAmSxUVq6WGQ==}
+  '@prisma/engines@5.22.0':
+    resolution: {integrity: sha512-UNjfslWhAt06kVL3CjkuYpHAWSO6L4kDCVPegV6itt7nD1kSJavd3vhgAEhjglLJJKEdJ7oIqDJ+yHk6qO8gPA==}
+
+  '@prisma/fetch-engine@5.22.0':
+    resolution: {integrity: sha512-bkrD/Mc2fSvkQBV5EpoFcZ87AvOgDxbG99488a5cexp5Ccny+UM6MAe/UFkUC0wLYD9+9befNOqGiIJhhq+HbA==}
 
   '@prisma/generator-helper@5.21.1':
     resolution: {integrity: sha512-56+FLaNGO7uKIEjN5asV7L0cAWqTc+IoyFbtafYnzfvBS3HURgT+l9UGHrHfPO5EWFiot3my3UOJ/hGZfhNPbA==}
 
-  '@prisma/get-platform@5.21.1':
-    resolution: {integrity: sha512-sRxjL3Igst3ct+e8ya/x//cDXmpLbZQ5vfps2N4tWl4VGKQAmym77C/IG/psSMsQKszc8uFC/q1dgmKFLUgXZQ==}
+  '@prisma/get-platform@5.22.0':
+    resolution: {integrity: sha512-pHhpQdr1UPFpt+zFfnPazhulaZYCUqeIcPpJViYoq9R+D/yw4fjE+CtnsnKzPYm0ddUbeXUzjGVGIRVgPDCk4Q==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -10776,8 +10779,8 @@ packages:
     peerDependencies:
       '@prisma/client': ^4.0.0 || ^5.0.0
 
-  prisma@5.21.1:
-    resolution: {integrity: sha512-PB+Iqzld/uQBPaaw2UVIk84kb0ITsLajzsxzsadxxl54eaU5Gyl2/L02ysivHxK89t7YrfQJm+Ggk37uvM70oQ==}
+  prisma@5.22.0:
+    resolution: {integrity: sha512-vtpjW3XuYCSnMsNVBjLMNkTj6OZbudcPPTPYHqX0CJfpcdWciI1dM8uHETwmDxxiqEwCIE6WvXucWUetJgfu/A==}
     engines: {node: '>=16.13'}
     hasBin: true
 
@@ -15892,9 +15895,9 @@ snapshots:
 
   '@magic-sdk/types@15.8.0': {}
 
-  '@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
+  '@mdx-js/loader@3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
     dependencies:
-      '@mdx-js/mdx': 3.1.0(acorn@8.14.0)
+      '@mdx-js/mdx': 3.1.0(acorn@7.4.1)
       source-map: 0.7.4
     optionalDependencies:
       webpack: 5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)
@@ -15908,6 +15911,36 @@ snapshots:
       source-map: 0.7.4
     optionalDependencies:
       webpack: 5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))
+    transitivePeerDependencies:
+      - acorn
+      - supports-color
+
+  '@mdx-js/mdx@3.1.0(acorn@7.4.1)':
+    dependencies:
+      '@types/estree': 1.0.6
+      '@types/estree-jsx': 1.0.5
+      '@types/hast': 3.0.4
+      '@types/mdx': 2.0.13
+      collapse-white-space: 2.1.0
+      devlop: 1.1.0
+      estree-util-is-identifier-name: 3.0.0
+      estree-util-scope: 1.0.0
+      estree-walker: 3.0.3
+      hast-util-to-jsx-runtime: 2.3.2
+      markdown-extensions: 2.0.0
+      recma-build-jsx: 1.0.0
+      recma-jsx: 1.0.0(acorn@7.4.1)
+      recma-stringify: 1.0.0
+      rehype-recma: 1.0.0
+      remark-mdx: 3.1.0
+      remark-parse: 11.0.0
+      remark-rehype: 11.1.1
+      source-map: 0.7.4
+      unified: 11.0.5
+      unist-util-position-from-estree: 2.0.0
+      unist-util-stringify-position: 4.0.0
+      unist-util-visit: 5.0.0
+      vfile: 6.0.3
     transitivePeerDependencies:
       - acorn
       - supports-color
@@ -16214,11 +16247,11 @@ snapshots:
     dependencies:
       glob: 10.3.10
 
-  '@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))':
+  '@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))':
     dependencies:
       source-map: 0.7.4
     optionalDependencies:
-      '@mdx-js/loader': 3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
+      '@mdx-js/loader': 3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       '@mdx-js/react': 3.1.0(@types/react@18.3.12)(react@18.3.1)
 
   '@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))':
@@ -16397,34 +16430,36 @@ snapshots:
 
   '@polka/url@1.0.0-next.28': {}
 
-  '@prisma/client@5.21.1(prisma@5.21.1)':
+  '@prisma/client@5.21.1(prisma@5.22.0)':
     optionalDependencies:
-      prisma: 5.21.1
+      prisma: 5.22.0
 
   '@prisma/debug@5.21.1': {}
 
-  '@prisma/engines-version@5.21.1-1.bf0e5e8a04cada8225617067eaa03d041e2bba36': {}
+  '@prisma/debug@5.22.0': {}
 
-  '@prisma/engines@5.21.1':
-    dependencies:
-      '@prisma/debug': 5.21.1
-      '@prisma/engines-version': 5.21.1-1.bf0e5e8a04cada8225617067eaa03d041e2bba36
-      '@prisma/fetch-engine': 5.21.1
-      '@prisma/get-platform': 5.21.1
+  '@prisma/engines-version@5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2': {}
 
-  '@prisma/fetch-engine@5.21.1':
+  '@prisma/engines@5.22.0':
     dependencies:
-      '@prisma/debug': 5.21.1
-      '@prisma/engines-version': 5.21.1-1.bf0e5e8a04cada8225617067eaa03d041e2bba36
-      '@prisma/get-platform': 5.21.1
+      '@prisma/debug': 5.22.0
+      '@prisma/engines-version': 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+      '@prisma/fetch-engine': 5.22.0
+      '@prisma/get-platform': 5.22.0
+
+  '@prisma/fetch-engine@5.22.0':
+    dependencies:
+      '@prisma/debug': 5.22.0
+      '@prisma/engines-version': 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+      '@prisma/get-platform': 5.22.0
 
   '@prisma/generator-helper@5.21.1':
     dependencies:
       '@prisma/debug': 5.21.1
 
-  '@prisma/get-platform@5.21.1':
+  '@prisma/get-platform@5.22.0':
     dependencies:
-      '@prisma/debug': 5.21.1
+      '@prisma/debug': 5.22.0
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -28219,10 +28254,10 @@ snapshots:
 
   pretty-hrtime@1.0.3: {}
 
-  prisma-erd-generator@1.11.2(@prisma/client@5.21.1(prisma@5.21.1))(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10):
+  prisma-erd-generator@1.11.2(@prisma/client@5.21.1(prisma@5.22.0))(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10):
     dependencies:
       '@mermaid-js/mermaid-cli': 10.9.1(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)
-      '@prisma/client': 5.21.1(prisma@5.21.1)
+      '@prisma/client': 5.21.1(prisma@5.22.0)
       '@prisma/generator-helper': 5.21.1
       dotenv: 16.4.5
     transitivePeerDependencies:
@@ -28232,9 +28267,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  prisma@5.21.1:
+  prisma@5.22.0:
     dependencies:
-      '@prisma/engines': 5.21.1
+      '@prisma/engines': 5.22.0
     optionalDependencies:
       fsevents: 2.3.3
 
@@ -28840,6 +28875,16 @@ snapshots:
       '@types/estree': 1.0.6
       estree-util-build-jsx: 3.0.1
       vfile: 6.0.3
+
+  recma-jsx@1.0.0(acorn@7.4.1):
+    dependencies:
+      acorn-jsx: 5.3.2(acorn@7.4.1)
+      estree-util-to-js: 2.0.0
+      recma-parse: 1.0.0
+      recma-stringify: 1.0.0
+      unified: 11.0.5
+    transitivePeerDependencies:
+      - acorn
 
   recma-jsx@1.0.0(acorn@8.14.0):
     dependencies:
