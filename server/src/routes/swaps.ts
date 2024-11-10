@@ -1,6 +1,6 @@
-import { getSigFromMpcOracleNetwork } from "@/helpers/mpcHelper"
+import { getSigFromMpcOracleNetwork } from "@/lib/mpc"
 import { Router, Request, Response } from "express"
-import { handleSwapCreation, handlerGetSwap, handlerGetSwaps, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction } from "@/helpers/swapHelper"
+import { handleSwapCreation, handlerGetSwap, handlerGetSwaps, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction } from "@/lib/swaps"
 
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
