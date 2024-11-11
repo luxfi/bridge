@@ -1,4 +1,4 @@
-name: @luxfi/bridge/server
+name: server
 
 on:
   push:
