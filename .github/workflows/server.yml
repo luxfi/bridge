@@ -51,5 +51,5 @@ jobs:
         run: |
           echo "$KUBE_YAML" > kubeconfig.yaml
           export KUBECONFIG=$(pwd)/kubeconfig.yaml
-          pnpm run k8s:apply
+          pnpm run k8s:restart
         working-directory: server
