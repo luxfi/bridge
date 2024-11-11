@@ -1,5 +1,5 @@
 {
-	"name": "@luxbridge/contracts",
+	"name": "@luxfi/bridge/contracts",
 	"devDependencies": {
 		"@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
 		"@nomicfoundation/hardhat-ethers": "^3.0.0",

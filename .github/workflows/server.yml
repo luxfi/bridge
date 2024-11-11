@@ -1,4 +1,4 @@
-name: Bridge Server Deployment
+name: @luxfi/bridge/server
 
 on:
   push:
