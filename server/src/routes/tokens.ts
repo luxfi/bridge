@@ -17,7 +17,7 @@ router.get("/price/:token_id", async (req: Request, res: Response) => {
       price
     }})
   } 
-  catch (error) {
+  catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })

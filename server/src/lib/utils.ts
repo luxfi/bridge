@@ -1,7 +1,9 @@
 import KnownInternalNames from "@/config/constants"
 import WAValidator from "multicoin-address-validator"
 import { isAddress } from "ethers"
-import { PublicKey } from "@solana/web3.js"
+// https://www.npmjs.com/package/@solana/addresses/v/2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+
+import { isAddress as isSolanoAddress } from "@solana/addresses"
 
 export function isValidAddress(address?: string, network?: { internal_name: string } | null): boolean {
   if (!address) {
@@ -33,10 +35,9 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
     return false
   } else if (network?.internal_name === KnownInternalNames.Networks.SolanaMainnet || network?.internal_name === KnownInternalNames.Networks.SolanaTestnet || network?.internal_name === KnownInternalNames.Networks.SolanaDevnet) {
     try {
-      let pubkey = new PublicKey(address)
-      let isSolana = PublicKey.isOnCurve(pubkey.toBuffer())
-      return isSolana
-    } catch (error) {
+      return isSolanoAddress(address) 
+    } 
+    catch (error: any) {
       return false
     }
   } else if (network?.internal_name === KnownInternalNames.Networks.SorareStage) {
