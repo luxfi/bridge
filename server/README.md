@@ -77,5 +77,6 @@ pnpm k8s:apply
 	4.	Push to your branch: git push origin feature-name.
 	5.	Submit a pull request.
 
+# Contact
 Lux Bridge empowers developers and end-users to bridge assets with ease. For
 more information, contact [Lux Partners](https://lux.partners).
