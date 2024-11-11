@@ -462,9 +462,9 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
-      '@solana/web3.js':
-        specifier: ^1.95.4
-        version: 1.95.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      '@solana/addresses':
+        specifier: 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+        version: 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)
       axios:
         specifier: ^1.7.4
         version: 1.7.7
@@ -483,9 +483,15 @@ importers:
       express-validator:
         specifier: ^7.2.0
         version: 7.2.0
+      module-alias:
+        specifier: ^2.2.3
+        version: 2.2.3
       multicoin-address-validator:
         specifier: ^0.5.22
         version: 0.5.22
+      prisma-client-91ed9af6366cdee33d6f3efcfe3929e8a5eb9f021d6e86a20189872a17e5b7eb:
+        specifier: link:prisma/client
+        version: link:prisma/client
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
@@ -493,9 +499,12 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
+      '@types/multicoin-address-validator':
+        specifier: ^0.5.3
+        version: 0.5.3
       '@types/node':
-        specifier: ^22.4.1
-        version: 22.8.1
+        specifier: ^20.11.0
+        version: 20.17.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.2.0
         version: 8.13.0(@typescript-eslint/parser@8.13.0(eslint@8.57.1)(typescript@5.6.3))(eslint@8.57.1)(typescript@5.6.3)
@@ -525,7 +534,7 @@ importers:
         version: 5.22.0
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.6.3)
+        version: 10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)
       tsc-alias:
         specifier: ^1.8.10
         version: 1.8.10
@@ -3850,6 +3859,12 @@ packages:
     peerDependencies:
       '@solana/web3.js': ^1.58.0
 
+  '@solana/addresses@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    resolution: {integrity: sha512-i2U29niAUMA0oj+rrmQwNtgRroaMpOVtNLyuEUBksNDL6dc0BymLMcFXL9cZB+2FqZQNhXcbPzJS/HDlubo3Zw==}
+
+  '@solana/assertions@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    resolution: {integrity: sha512-7BXizCyM5YNNIEVy5fobOa534a1WVT9vU6vPDGpGFxBc7q67RiOtL1hKQCSeA5lDhWoHVrbYJR+TFxB1h31NxQ==}
+
   '@solana/buffer-layout-utils@0.2.0':
     resolution: {integrity: sha512-szG4sxgJGktbuZYDg2FfNmkMi0DYQoVjN2h7ta1W1hPrwzarcFLBq9UpX1UjNXsNpT9dn+chgprtWGioUAr4/g==}
     engines: {node: '>= 10'}
@@ -3857,6 +3872,9 @@ packages:
   '@solana/buffer-layout@4.0.1':
     resolution: {integrity: sha512-E1ImOIAD1tBZFRdjeM4/pzTiTApC0AOBGwyAMS4fwIodCWArzJ3DWdoh8cKxeFM2fElkxBh2Aqts1BPC373rHA==}
     engines: {node: '>=5.10'}
+
+  '@solana/codecs-core@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    resolution: {integrity: sha512-XJCVPclx+my5g4/xiBfGgI6WS9vG4UF08HoehyLIoKBiT0/y87CIY5DR096xjGgRvPtZmZDfSdz8/TDilA1y4A==}
 
   '@solana/codecs-core@2.0.0-rc.1':
     resolution: {integrity: sha512-bauxqMfSs8EHD0JKESaNmNuNvkvHSuN3bbWAF5RjOfDu2PugxHrvRebmYauvSumZ3cTfQ4HJJX6PG5rN852qyQ==}
@@ -3868,10 +3886,18 @@ packages:
     peerDependencies:
       typescript: 5.6.3
 
+  '@solana/codecs-numbers@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    resolution: {integrity: sha512-QQ9Qf2z8uaui5a2nbxBREpWp+AuoJUbz0XvxUoXYupn8fLyNJQlpVAyvH5gDRLVckeTtfT8l/OJ45+XJP8bNpw==}
+
   '@solana/codecs-numbers@2.0.0-rc.1':
     resolution: {integrity: sha512-J5i5mOkvukXn8E3Z7sGIPxsThRCgSdgTWJDQeZvucQ9PT6Y3HiVXJ0pcWiOWAoQ3RX8e/f4I3IC+wE6pZiJzDQ==}
     peerDependencies:
       typescript: 5.6.3
+
+  '@solana/codecs-strings@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    resolution: {integrity: sha512-ESAa52yQeRwY0rWc/rtTEwVGvy5e7zZ9Z3wgqvlbzaOa0h7DbjOjYEDXFdJMmwZslabh+3k+SY1UdNH+F3WLZg==}
+    peerDependencies:
+      fastestsmallesttextencoderdecoder: ^1.0.22
 
   '@solana/codecs-strings@2.0.0-rc.1':
     resolution: {integrity: sha512-9/wPhw8TbGRTt6mHC4Zz1RqOnuPTqq1Nb4EyuvpZ39GW6O2t2Q7Q0XxiB3+BdoEjwA2XgPw6e2iRfvYgqty44g==}
@@ -3883,6 +3909,10 @@ packages:
     resolution: {integrity: sha512-qxoR7VybNJixV51L0G1RD2boZTcxmwUWnKCaJJExQ5qNKwbpSyDdWfFJfM5JhGyKe9DnPVOZB+JHWXnpbZBqrQ==}
     peerDependencies:
       typescript: 5.6.3
+
+  '@solana/errors@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    resolution: {integrity: sha512-oEZQ6ORyF9cN3zaGUv+tYUrGaKjylJGlKPoqcQEY0XTFXPGUg5a4Et6pYpuChg8Of99iWbrVlydDFVEwPF9Zvg==}
+    hasBin: true
 
   '@solana/errors@2.0.0-rc.1':
     resolution: {integrity: sha512-ejNvQ2oJ7+bcFAYWj225lyRkHnixuAeb7RQCixm+5mH4n1IA4Qya/9Bmfy5RAAHQzxK43clu3kZmL5eF9VGtYQ==}
@@ -10021,6 +10051,9 @@ packages:
   modern-ahocorasick@1.0.1:
     resolution: {integrity: sha512-yoe+JbhTClckZ67b2itRtistFKf8yPYelHLc7e5xAwtNAXxM6wJTUx2C7QeVSJFDzKT7bCIFyBVybPMKvmB9AA==}
 
+  module-alias@2.2.3:
+    resolution: {integrity: sha512-23g5BFj4zdQL/b6tor7Ji+QY4pEfNH784BMslY9Qb0UnJWRAt+lQGLYmRaM0KDBwIG23ffEBELhZDP2rhi9f/Q==}
+
   moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
@@ -15395,7 +15428,7 @@ snapshots:
   '@grpc/grpc-js@1.9.15':
     dependencies:
       '@grpc/proto-loader': 0.7.13
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@grpc/proto-loader@0.7.13':
     dependencies:
@@ -15644,14 +15677,14 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       jest-mock: 29.7.0
 
   '@jest/fake-timers@29.7.0':
     dependencies:
       '@jest/types': 29.6.3
       '@sinonjs/fake-timers': 10.3.0
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       jest-message-util: 29.7.0
       jest-mock: 29.7.0
       jest-util: 29.7.0
@@ -15684,7 +15717,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       '@types/yargs': 16.0.9
       chalk: 4.1.2
 
@@ -15693,7 +15726,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       '@types/yargs': 17.0.33
       chalk: 4.1.2
 
@@ -17951,6 +17984,19 @@ snapshots:
       - react
       - react-native
 
+  '@solana/addresses@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)':
+    dependencies:
+      '@solana/assertions': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/codecs-core': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/codecs-strings': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)
+      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+
+  '@solana/assertions@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    dependencies:
+      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+
   '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
     dependencies:
       '@solana/buffer-layout': 4.0.1
@@ -17966,6 +18012,10 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
+  '@solana/codecs-core@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    dependencies:
+      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+
   '@solana/codecs-core@2.0.0-rc.1(typescript@5.6.3)':
     dependencies:
       '@solana/errors': 2.0.0-rc.1(typescript@5.6.3)
@@ -17978,11 +18028,23 @@ snapshots:
       '@solana/errors': 2.0.0-rc.1(typescript@5.6.3)
       typescript: 5.6.3
 
+  '@solana/codecs-numbers@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+
   '@solana/codecs-numbers@2.0.0-rc.1(typescript@5.6.3)':
     dependencies:
       '@solana/codecs-core': 2.0.0-rc.1(typescript@5.6.3)
       '@solana/errors': 2.0.0-rc.1(typescript@5.6.3)
       typescript: 5.6.3
+
+  '@solana/codecs-strings@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/codecs-numbers': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      fastestsmallesttextencoderdecoder: 1.0.22
 
   '@solana/codecs-strings@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)':
     dependencies:
@@ -18002,6 +18064,11 @@ snapshots:
       typescript: 5.6.3
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
+
+  '@solana/errors@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+    dependencies:
+      chalk: 5.3.0
+      commander: 12.1.0
 
   '@solana/errors@2.0.0-rc.1(typescript@5.6.3)':
     dependencies:
@@ -19541,7 +19608,7 @@ snapshots:
 
   '@types/bn.js@4.11.6':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/bn.js@5.1.6':
     dependencies:
@@ -19550,13 +19617,13 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/cacheable-request@6.0.3':
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       '@types/responselike': 1.0.3
 
   '@types/caseless@0.12.5':
@@ -19564,17 +19631,17 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/cookie@0.6.0': {}
 
   '@types/cors@2.8.17':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/cross-spawn@6.0.6':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/crypto-js@4.2.2': {}
 
@@ -19612,7 +19679,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       '@types/qs': 6.9.16
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -19628,7 +19695,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.9':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/hast@3.0.4':
     dependencies:
@@ -19665,11 +19732,11 @@ snapshots:
 
   '@types/jsonwebtoken@9.0.7':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/lodash@4.17.12': {}
 
@@ -19696,12 +19763,12 @@ snapshots:
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       form-data: 4.0.1
 
   '@types/node-forge@1.3.11':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/node@12.20.55': {}
 
@@ -19729,7 +19796,7 @@ snapshots:
 
   '@types/pbkdf2@3.1.2':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/pretty-hrtime@1.0.3': {}
 
@@ -19751,7 +19818,7 @@ snapshots:
   '@types/request@2.48.12':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.2
     optional: true
@@ -19760,23 +19827,23 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/secp256k1@4.0.6':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/semver@7.5.8': {}
 
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       '@types/send': 0.17.4
 
   '@types/stack-utils@2.0.3': {}
@@ -19812,11 +19879,11 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/ws@8.5.3':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -19830,7 +19897,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
     optional: true
 
   '@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint@8.49.0)(typescript@5.6.3)':
@@ -22229,7 +22296,7 @@ snapshots:
 
   chrome-launcher@0.15.2:
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -22245,7 +22312,7 @@ snapshots:
 
   chromium-edge-launcher@0.2.0:
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -23602,7 +23669,7 @@ snapshots:
       debug: 4.3.7(supports-color@5.5.0)
       enhanced-resolve: 5.17.1
       eslint: 8.43.0
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
@@ -23621,7 +23688,7 @@ snapshots:
       debug: 4.3.7(supports-color@5.5.0)
       enhanced-resolve: 5.17.1
       eslint: 8.49.0
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.49.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.49.0))(eslint@8.49.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
@@ -23634,7 +23701,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -23645,7 +23712,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.49.0):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.49.0))(eslint@8.49.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -23677,7 +23744,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.43.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
@@ -23706,7 +23773,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.49.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.49.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.49.0))(eslint@8.49.0)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
@@ -25844,7 +25911,7 @@ snapshots:
       '@jest/environment': 29.7.0
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       jest-mock: 29.7.0
       jest-util: 29.7.0
 
@@ -25854,7 +25921,7 @@ snapshots:
     dependencies:
       '@jest/types': 29.6.3
       '@types/graceful-fs': 4.1.9
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -25881,12 +25948,12 @@ snapshots:
   jest-mock@27.5.1:
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
 
   jest-mock@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       jest-util: 29.7.0
 
   jest-regex-util@29.6.3: {}
@@ -25894,7 +25961,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -25911,13 +25978,13 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -27458,6 +27525,8 @@ snapshots:
 
   modern-ahocorasick@1.0.1: {}
 
+  module-alias@2.2.3: {}
+
   moment@2.30.1: {}
 
   monocle-ts@2.3.13(fp-ts@2.9.3):
@@ -28345,7 +28414,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.8.1
+      '@types/node': 20.17.1
       long: 5.2.3
 
   proxy-addr@2.0.7:
@@ -30248,7 +30317,6 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.7.40(@swc/helpers@0.5.13)
-    optional: true
 
   ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.6.3):
     dependencies:
@@ -30269,6 +30337,7 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.7.40(@swc/helpers@0.5.13)
+    optional: true
 
   ts-pnp@1.2.0(typescript@5.6.3):
     optionalDependencies:

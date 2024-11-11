@@ -12,11 +12,11 @@ router.get("/", async (req: Request, res: Response) => {
     // const { statuses } = req.query
     // // Get version from query parameter
     // const version = req.query.version
-    const statuses = []
-    const result = await handlerGetExplorer(statuses as string[])
+    const statuses: string[] = []
+    const result = await handlerGetExplorer(statuses)
     console.log("🚀 ~ result:", result)
     res.status(200).json({ data: result })
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })
@@ -33,7 +33,7 @@ router.get("/:transaction_has", async (req: Request, res: Response) => {
     } else {
       res.status(200).json({ data: [] })
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })

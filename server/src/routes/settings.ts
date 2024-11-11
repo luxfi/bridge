@@ -18,7 +18,7 @@ router.get("/", async (req: Request, res: Response) => {
     console.log("🚀 ~ settings:", settings)
     res.status(200).json({ data: settings })
   } 
-  catch (error) {
+  catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })
