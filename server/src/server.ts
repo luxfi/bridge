@@ -1,5 +1,4 @@
-import 'module-alias/register'
-import express, { Express, Request, Response } from "express"
+import express, { Express } from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 //routers
