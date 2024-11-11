@@ -1,4 +1,4 @@
-name: MPC Nodes Deployment
+name: @luxfi/bridge/mpc-nodes
 on:
   push:
     branches:
