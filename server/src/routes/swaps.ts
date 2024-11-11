@@ -14,7 +14,7 @@ router.get("/", async (req: Request, res: Response) => {
     const isDeleted = (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) || undefined
     const result = await handlerGetSwaps(req.query.address as string, isDeleted)
     res.status(200).json({ data: result })
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })
@@ -27,7 +27,7 @@ router.get("/:swapId", async (req: Request, res: Response) => {
     console.log({ swapId })
     const result = await handlerGetSwap(swapId as string)
     res.status(200).json({ data: result })
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })
@@ -56,7 +56,7 @@ router.post(
         ...req.body
       })
       res.status(200).json({ data: { ...result } })
-    } catch (error) {
+    } catch (error: any) {
       console.log(error)
       res.status(500).json({ error: error?.message })
     }
@@ -78,7 +78,7 @@ router.post(
       const { txHash, amount, from, to } = req.body
       const result = await handlerUpdateUserTransferAction(swapId as string, txHash, Number(amount), from, to)
       res.status(200).json({ data: result })
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: error?.message })
     }
   }
@@ -99,7 +99,7 @@ router.post(
       const { txHash, amount, from, to } = req.body
       const result = await handlerUpdatePayoutAction(swapId as string, txHash, Number(amount), from, to)
       res.status(200).json({ data: result })
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: error?.message })
     }
   }
@@ -120,7 +120,7 @@ router.post(
       const { txHash, amount, from, to } = req.body
       const result = await handlerUpdateMpcSignAction(swapId as string, txHash, Number(amount), from, to)
       res.status(200).json({ data: result })
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: error?.message })
     }
   }

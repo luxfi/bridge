@@ -73,7 +73,7 @@ const main = async () => {
       networksCount: networks.length,
       currenciesCount: currenciesCount
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in updating networks", error)
   }
 }
