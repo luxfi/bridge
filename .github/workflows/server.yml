@@ -1,4 +1,4 @@
-name: Docker Image CI for GHCR for Bridge Server
+name: Bridge Server Deployment
 
 on:
   push:
@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+      - name: Install pnpm
+        run: npm install -g pnpm
       - name: Install dependencies
         run: |
           corepack enable
