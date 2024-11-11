@@ -7,12 +7,6 @@ by Teleport protocol.
 
 It facilitates secure, scalable asset transfers across blockchain networks, leveraging advanced AI integrations, decentralized finance protocols, and a multi-functional SDK. Lux Bridge supports NFTs, Ethereum, and Lux Network token standards, making it ideal for swaps, exchanges, and seamless bridging of assets.
 
-# Project Overview
-
-	•	App: The main application interface for user interaction.
-	•	Explorer: Provides visibility and insights into bridge transactions and blockchain interactions.
-	•	SDK: A developer-friendly toolkit for interacting with Lux Bridge APIs, enabling custom integrations and programmatic access.
-
 # Prerequisites
 
 Ensure you have the following installed:
