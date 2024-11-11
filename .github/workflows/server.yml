@@ -7,7 +7,7 @@ on:
     paths:
       - 'server/**' # Only trigger the workflow for changes in the server directory
 jobs:
-  build_and_publish:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,11 +40,6 @@ jobs:
           docker buildx build --platform linux/amd64 -t ghcr.io/luxfi/bridge/server:latest -f docker/Dockerfile . --push
         working-directory: server
 
-  deploy:
-    needs: build_and_publish
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
@@ -54,5 +49,5 @@ jobs:
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
-          pnpm k8s:apply
+          pnpm run k8s:apply
         working-directory: server
