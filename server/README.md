@@ -1,82 +1,117 @@
-# bridge/server
+# luxfi/bridge/server
 
-> Lux Bridge API server powered Teleport protocol.
+The Lux Bridge Server is an API server that facilitates communication with Multi-Party Computation (MPC) nodes and manages asset swaps.
 
-Lux Bridge is a modular, high-performance decentralized bridge protocol powered
-by Teleport protocol.
+## Prerequisites
 
-It facilitates secure, scalable asset transfers across blockchain networks, leveraging advanced AI integrations, decentralized finance protocols, and a multi-functional SDK. Lux Bridge supports NFTs, Ethereum, and Lux Network token standards, making it ideal for swaps, exchanges, and seamless bridging of assets.
+	•	Node.js: Version 20 or higher.
+	•	pnpm: Version 9.10.0 or higher.
+	•	Docker: Ensure Docker is installed and running.
+	•	Kubernetes: Access to a Kubernetes cluster for deployment.
 
-# Prerequisites
+## Installation
 
-Ensure you have the following installed:
-	•	Node.js (>= 20) and pnpm (>= 9)
-	•	Docker (for deployment and image creation)
-	•	Kubernetes (for cloud deployment)
-
-# Getting Started
-
-1. Clone the Repository
+	1.	Clone the Repository:
 
 git clone https://github.com/luxfi/bridge.git
 cd bridge/server
 
-2. Install Dependencies
 
-The project uses pnpm as its package manager. Run the following to install all dependencies:
+	2.	Install Dependencies:
 
 pnpm install
 
-3. Build the Project
+## Development
 
-Lux Bridge has multiple packages that need to be built. You can build all at once or individual packages as needed.
-
-pnpm build:all
-
-4. Start the Development Server
-
-To start the application locally for development, use the dev command:
+	•	Start the Development Server:
 
 pnpm dev
 
-5. Production Start
+This command uses nodemon to watch for file changes and restarts the server automatically.
 
-To start the app in production mode:
+## Building the Project
 
-pnpm start
+	•	Build the Project:
 
-# Docker Usage
+pnpm build
 
-Lux Bridge supports Docker for containerized deployments. Use the following commands to build and push the Docker image to GitHub Container Registry (GHCR).
+This command compiles TypeScript files, resolves module aliases, and generates the Prisma client.
 
-Build and Push Docker Image
+## Database Management
+
+	•	Run Database Scripts:
+
+pnpm db
+
+This command executes the dist/db.js script for database operations.
+
+## Docker Operations
+
+	•	Build Docker Image:
 
 pnpm docker:build
+
+This command builds the Docker image using Buildx for the linux/amd64 platform.
+
+	•	Log in to GitHub Container Registry:
+
+pnpm docker:login
+
+Ensure that the environment variables GH_USER and GH_TOKEN are set with your GitHub username and personal access token, respectively.
+
+	•	Push Docker Image:
+
 pnpm docker:push
 
-# Kubernetes Deployment
+This command pushes the Docker image to the GitHub Container Registry.
 
-This project includes configurations for deploying to a Kubernetes cluster. After pushing the Docker image to GHCR, you can apply the Kubernetes configuration to update the deployment.
+## Kubernetes Deployment
 
-## Apply Kubernetes Configuration
+	•	Apply Kubernetes Configuration:
 
 pnpm k8s:apply
 
-# Additional Information
+This command applies the Kubernetes deployment and service configurations located in the k8s directory.
 
-	•	Node.js Version: Set to >=20 as defined in .nvmrc for consistency.
-	•	React and TailwindCSS: Core libraries for frontend styling and UI components.
-	•	Ethers.js: Utilized for Ethereum-based blockchain interactions.
-	•	TypeScript: For strong typing and maintaining consistency across the codebase.
+	•	Scale Deployment:
 
-# Contribution Guidelines
+pnpm k8s:scale
 
-	1.	Fork the repository.
-	2.	Create a feature branch: git checkout -b feature-name.
-	3.	Commit your changes: git commit -m 'Add new feature'.
-	4.	Push to your branch: git push origin feature-name.
-	5.	Submit a pull request.
+Set the REPLICAS environment variable to the desired number of replicas before running this command.
 
-# Contact
-Lux Bridge empowers developers and end-users to bridge assets with ease. For
-more information, contact [Lux Partners](https://lux.partners).
+	•	Create Kubernetes Secret:
+
+pnpm k8s:create-secret
+
+Ensure the POSTGRES_URL environment variable is set with your PostgreSQL connection string.
+
+	•	Restart Deployment:
+
+pnpm k8s:restart
+
+	•	Check Deployment Status:
+
+pnpm k8s:status
+
+This command retrieves the status of deployments, services, and pods labeled app=bridge-server.
+
+## Linting and Formatting
+
+	•	Lint Code:
+
+pnpm lint
+
+	•	Format Code:
+
+pnpm format
+
+## Environment Variables
+
+The server utilizes environment variables for configuration. Create a .env file in the server directory with the following variables:
+
+POSTGRES_URL=your_postgres_connection_string
+GH_USER=your_github_username
+GH_TOKEN=your_github_token
+REPLICAS=number_of_replicas
+
+Ensure that sensitive information is kept secure and not committed to version control.
