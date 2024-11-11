@@ -9,7 +9,7 @@ export enum NetworkType {
     Bitocoin = "btc"
 }
 
-export class CryptoNetwork {
+export type CryptoNetwork = {
     display_name: string;
     internal_name: string;
     transaction_explorer_template: string;
@@ -26,7 +26,7 @@ export class CryptoNetwork {
     img_url?: string
 }
 
-export class NetworkCurrency {
+export type NetworkCurrency = {
     asset: string;
     is_refuel_enabled: boolean;
     is_native: boolean
@@ -38,13 +38,13 @@ export class NetworkCurrency {
     availableInSource: boolean;
     availableInDestination: boolean;
 }
-export class NetworkNode {
+export type NetworkNode = {
     url: string;
 }
-export class ManagedAccount {
+export type ManagedAccount = {
     address: `0x${string}`;
 }
-export class Metadata {
+export type Metadata = {
     multicall3?: {
         address: `0x${string}`
         blockCreated: number
