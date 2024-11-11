@@ -78,4 +78,4 @@ pnpm k8s:apply
 	5.	Submit a pull request.
 
 Lux Bridge empowers developers and end-users to bridge assets with ease. For
-more information, visit [Lux Partners](https://lux.partners).
+more information, contact [Lux Partners](https://lux.partners).
