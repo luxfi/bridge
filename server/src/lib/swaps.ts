@@ -163,7 +163,7 @@ export async function handleSwapCreation(data: SwapData) {
       reward: null
     }
     return result
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
     //catchPrismaKnowError(error)
     throw new Error(`Error creating swap and related entities: ${error?.message}`)
@@ -232,7 +232,7 @@ export async function handlerGetSwap(id: string) {
       destination_network: swap?.destination_network?.internal_name,
       destination_asset: swap?.destination_asset?.asset
     }
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
   }
@@ -291,7 +291,7 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
     return {
       ...swap
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
@@ -351,7 +351,7 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
     return {
       ...swap
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
@@ -411,17 +411,15 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
     return {
       ...swap
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
   }
 }
 
-export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined) {
+export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false) {
   try {
-    const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet"
-
     const swaps = await prisma.swap.findMany({
       orderBy: {
         created_date: "desc"
@@ -451,16 +449,14 @@ export async function handlerGetSwaps(address: string, isDeleted: boolean | unde
       }
     })
 
-    console.log(swaps)
-
-    return swaps.map((s) => ({
+    return swaps.map((s: any) => ({
       ...s,
       source_network: s?.source_network?.internal_name,
       source_asset: s?.source_asset?.asset,
       destination_network: s?.destination_network?.internal_name,
       destination_asset: s?.destination_asset?.asset
     }))
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
   }
@@ -499,7 +495,7 @@ export async function handlerGetHasBySwaps(address: string) {
 
       return [{ ...transaction.swap }]
     }
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
   }
@@ -507,7 +503,7 @@ export async function handlerGetHasBySwaps(address: string) {
 
 export async function handlerGetExplorer(status: string[]) {
   console.time()
-  const statuses = status.map((number) => statusMapping[number])
+  const statuses = status.map((numberStr: string) => statusMapping[Number(numberStr)])
   console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses)
 
   try {
@@ -540,14 +536,14 @@ export async function handlerGetExplorer(status: string[]) {
     })
 
     console.timeEnd()
-    return swaps.map((s) => ({
+    return swaps.map((s: any) => ({
       ...s,
       source_network: s?.source_network?.internal_name,
       source_asset: s?.source_asset?.asset,
       destination_network: s?.destination_network?.internal_name,
       destination_asset: s?.destination_asset?.asset
     }))
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
   }
@@ -560,7 +556,7 @@ export async function handlerUpdateSwaps(swapData: { id: string }) {
       data: { ...swapData }
     })
     return "success"
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error deleting swaps: ${error?.message}`)
   }
@@ -622,7 +618,7 @@ export async function handlerUpdateSwap(swapData: UpdateSwapData) {
     } else {
       return "failed"
     }
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error deleting swaps: ${error?.message}`)
   }
@@ -635,7 +631,7 @@ export async function handlerDelSwap(swapData: { id: string }) {
       data: { ...swapData }
     })
     return "success"
-  } catch (error) {
+  } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error deleting swaps: ${error?.message}`)
   }
