@@ -1,19 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -f compose.yaml -o k8s/
-    kompose.version: 1.34.0 (cbf2835db)
+  name: bridge-service
   labels:
-    io.kompose.service: bridge-server
-  name: bridge-server
+    app: bridge-server
 spec:
-  type: NodePort # Change to NodePort to use a specific port
+  type: NodePort
   ports:
     - name: "6000"
       port: 6000
       targetPort: 6000
       protocol: TCP
-      nodePort: 30005 # Unique port accessible externally
+      nodePort: 30005
   selector:
-    io.kompose.service: bridge-server
+    app: bridge-server
