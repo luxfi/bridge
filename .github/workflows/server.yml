@@ -9,26 +9,33 @@ on:
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'pnpm'
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Install pnpm
-        run: npm install -g pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - name: Install dependencies
-        run: |
-          corepack enable
-          pnpm install
-        working-directory: server
+        run: pnpm install
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Log in to GitHub Container Registry
         run: |
           docker login --username "${{ secrets.GH_USER }}" --password "${{ secrets.GH_TOKEN }}" ghcr.io
+
       - name: Run Docker build and push with pnpm script
         run: |
           pnpm docker:build && pnpm docker:push
@@ -43,6 +50,7 @@ jobs:
         uses: azure/setup-kubectl@v3
         with:
           version: v1.30.6
+
       - name: Deploy to Kubernetes
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
