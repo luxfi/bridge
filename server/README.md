@@ -1,6 +1,6 @@
-# luxfi/bridge/server
+# bridge/server
 
-The Lux Bridge Server is an API server that facilitates communication with Multi-Party Computation (MPC) nodes and manages asset swaps.
+> The Lux Bridge Server is an API server that facilitates communication with Multi-Party Computation (MPC) nodes and manages asset swaps.
 
 ## Prerequisites
 
