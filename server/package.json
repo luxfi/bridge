@@ -24,7 +24,8 @@
     "k8s:scale": "kubectl scale deployment bridge-server --replicas=$REPLICAS",
     "k8s:create-secret": "kubectl create secret generic bridge-server-secret --from-literal=POSTGRES_URL=\"$POSTGRES_URL\" --dry-run=client -o yaml | kubectl apply -f -",
     "k8s:restart": "kubectl rollout restart deployment bridge-server",
-    "k8s:status": "kubectl get deployments,service,pods -l app=bridge-server -o wide"
+    "k8s:status": "kubectl get deployments,service,pods -l app=bridge-server -o wide",
+    "k8s:stop": "kubectl delete deployment bridge-server || true && kubectl delete service bridge-service || true"
   },
   "keywords": [],
   "author": "",
