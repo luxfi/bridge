@@ -12,7 +12,9 @@ const router: Router = Router()
 router.get("/", async (req: Request, res: Response) => {
   try {
     const isDeleted = (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) || undefined
-    const result = await handlerGetSwaps(req.query.address as string, isDeleted)
+    const isMainnet = req.query?.version === "mainnet"
+    console.log({ isDeleted, isMainnet })
+    const result = await handlerGetSwaps(req.query.address as string, isDeleted, isMainnet)
     res.status(200).json({ data: result })
   } catch (error: any) {
     res.status(500).json({ error: error?.message })

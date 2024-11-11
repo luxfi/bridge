@@ -418,10 +418,8 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
   }
 }
 
-export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined) {
+export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false) {
   try {
-    const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet"
-
     const swaps = await prisma.swap.findMany({
       orderBy: {
         created_date: "desc"
@@ -450,8 +448,6 @@ export async function handlerGetSwaps(address: string, isDeleted: boolean | unde
         }
       }
     })
-
-    console.log(swaps)
 
     return swaps.map((s: any) => ({
       ...s,
@@ -507,7 +503,7 @@ export async function handlerGetHasBySwaps(address: string) {
 
 export async function handlerGetExplorer(status: string[]) {
   console.time()
-  const statuses = status.map((numberStr: string) => (statusMapping[Number(numberStr)]))
+  const statuses = status.map((numberStr: string) => statusMapping[Number(numberStr)])
   console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses)
 
   try {

@@ -33,3 +33,4 @@ yarn-error.log*
 next-env.d.ts
 
 prisma/client/
+prisma/dev.sqlite

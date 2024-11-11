@@ -35,9 +35,8 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
     return false
   } else if (network?.internal_name === KnownInternalNames.Networks.SolanaMainnet || network?.internal_name === KnownInternalNames.Networks.SolanaTestnet || network?.internal_name === KnownInternalNames.Networks.SolanaDevnet) {
     try {
-      return isSolanoAddress(address) 
-    } 
-    catch (error: any) {
+      return isSolanoAddress(address)
+    } catch (error: any) {
       return false
     }
   } else if (network?.internal_name === KnownInternalNames.Networks.SorareStage) {

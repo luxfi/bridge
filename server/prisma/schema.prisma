@@ -4,14 +4,12 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider      = "prisma-client-js"
-//  _output = "../node_modules/.prisma/client"
-  output = "./client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  // provider  = "sqlite"
+  // provider  = "postgresql"
+  provider  = "sqlite"
   url       = env("POSTGRESQL_URL") // uses connection pooling
   directUrl = env("POSTGRESQL_URL") // uses a direct connection
 }
