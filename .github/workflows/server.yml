@@ -47,7 +47,9 @@ jobs:
 
       - name: Deploy to Kubernetes
         env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          KUBE_YAML: ${{ secrets.KUBE_YAML }}
         run: |
+          echo "$KUBE_YAML" > kubeconfig.yaml
+          export KUBECONFIG=$(pwd)/kubeconfig.yaml
           pnpm run k8s:apply
         working-directory: server
