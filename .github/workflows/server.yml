@@ -37,7 +37,7 @@ jobs:
 
       - name: Run Docker build and push with pnpm script
         run: |
-          docker buildx build --platform linux/amd64 -t ghcr.io/luxfi/bridge/server:latest -f docker/Dockerfile . --push
+          docker buildx build --platform linux/amd64 -t ghcr.io/luxfi/bridge/server:latest -f server/docker/Dockerfile ./server --push
         working-directory: server
 
       - name: Set up kubectl
