@@ -15,8 +15,6 @@
 
 git clone https://github.com/luxfi/bridge.git
 
-
-
 	2.	Install Dependencies:
 
 pnpm install (from root or any project subdir)
@@ -37,8 +35,8 @@ pnpm install (from root or any project subdir)
 datasource db {
   //provider  = "postgresql"
   provider  = "sqlite"
-  url       = env("POSTGRESQL_URL") 
-  directUrl = env("POSTGRESQL_URL") 
+  url       = env("POSTGRESQL_URL")
+  directUrl = env("POSTGRESQL_URL")
 }
 ```
   * set env variable to point to sqlite
