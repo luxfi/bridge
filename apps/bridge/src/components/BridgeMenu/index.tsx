@@ -1,51 +1,49 @@
 'use client'
-
-import React, { useCallback, useEffect, useState } from 'react'
-
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { useIntercom } from 'react-use-intercom'
 
-import { 
-  BookOpen, 
-  Gift, 
-  MenuIcon, 
-  Home, 
-  LogIn, 
-  LogOut, 
-  ScrollText, 
-  LibraryIcon, 
-  Shield, 
-  Users, 
-  MessageSquarePlus, 
-  UserCircle2 
-} from 'lucide-react'
-
-import { Button, LinkElement } from '@hanzo/ui/primitives'
-
-import { useAuthDataUpdate, useAuthState, UserType } from '@/context/authContext'
-import TokenService from '@/lib/TokenService'
-import ChatIcon from '../icons/ChatIcon'
-import inIframe from '../utils/inIframe'
+import Menu from './Menu'
 import Modal from '@/components/modal/modal'
 import Popover from '../modal/popover'
-import SendFeedback from '../sendFeedback'
-import { shortenEmail } from '../utils/ShortenAddress'
-import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
-import Menu from './Menu'
-
+import ChatIcon from '../icons/ChatIcon'
+import inIframe from '../utils/inIframe'
 import socialNav from './social'
+import TokenService from '@/lib/TokenService'
+import SendFeedback from '../sendFeedback'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
+
+import React, { useCallback, useEffect, useState } from 'react'
+import { useIntercom } from 'react-use-intercom'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import {
+  BookOpen,
+  Gift,
+  MenuIcon,
+  Home,
+  LogIn,
+  LogOut,
+  ScrollText,
+  LibraryIcon,
+  Shield,
+  Users,
+  MessageSquarePlus,
+  UserCircle2,
+} from 'lucide-react'
+import { shortenEmail } from '../utils/ShortenAddress'
+import { Button, LinkElement } from '@hanzo/ui/primitives'
+import {
+  useAuthDataUpdate,
+  useAuthState,
+  UserType,
+} from '@/context/authContext'
 
 const WalletsMenu = dynamic(
-    () => import('../ConnectedWallets').then((comp) => comp.WalletsMenu), 
-    {
-      loading: () => (<div/>)
-    }
+  () => import('../ConnectedWallets').then((comp) => comp.WalletsMenu),
+  {
+    loading: () => <div />,
+  }
 )
 
-
 const BridgeMenu: React.FC = () => {
-
   const { email, userType, userId } = useAuthState()
   const { setUserType } = useAuthDataUpdate()
   const { boot, show, update } = useIntercom()
@@ -62,166 +60,198 @@ const BridgeMenu: React.FC = () => {
     setEmbedded(inIframe())
   }, [])
 
-  const updateWithProps = () => {update({ email: email, userId: userId })}
+  const updateWithProps = () => {
+    update({ email: email, userId: userId })
+  }
 
   const handleLogout = useCallback(() => {
-    TokenService.removeAuthData();
+    TokenService.removeAuthData()
     if (path != '/') {
       const paramString = resolvePersistentQueryParams(searchParams)
-      router.push('/' + (paramString ? ('?' + paramString) : '' )) 
-    } 
-    else {
+      router.push('/' + (paramString ? '?' + paramString : ''))
+    } else {
       router.refresh()
     }
     setUserType(UserType.NotAuthenticatedUser)
   }, [paramsString])
 
   const handleCloseFeedback = () => {
-      setOpenFeedbackModal(false)
+    setOpenFeedbackModal(false)
   }
 
   const BurgerButton: React.FC = () => (
     <Button
-      variant='outline'
-      size='square'
+      variant="outline"
+      size="square"
       onClick={() => setOpenTopModal(true)}
-      aria-label='Main menu'
-      className='text-muted-2 hidden p-0 flex items-center justify-center'
+      aria-label="Main menu"
+      className="text-muted-2 p-0 flex items-center justify-center"
     >
-      <MenuIcon className='h-6 w-6' strokeWidth={2} />
+      <MenuIcon className="h-6 w-6" strokeWidth={2} />
     </Button>
   )
 
-  return ( <>
-    <BurgerButton />
-    <Modal
-      show={openTopModal}
-      setShow={setOpenTopModal}
-      header={<h2 className='font-normal leading-none tracking-tight'>Menu</h2>}
-    >
-      <div className='text-sm font-medium focus:outline-none h-full'>
-        <Menu>
-          <WalletsMenu />
-          <Menu.Group>
-            {path != '/' && (
-              <Menu.Item pathname='/' icon={<Home className='h-5 w-5' />} >
+  return (
+    <>
+      <BurgerButton />
+      <Modal
+        show={openTopModal}
+        setShow={setOpenTopModal}
+        header={
+          <h2 className="font-normal leading-none tracking-tight">Menu</h2>
+        }
+      >
+        <div className="text-sm font-medium focus:outline-none h-full">
+          <Menu>
+            <WalletsMenu />
+            <Menu.Group>
+              {path != '/' && (
+                <Menu.Item pathname="/" icon={<Home className="h-5 w-5" />}>
                   Home
-              </Menu.Item>
-            )}
-            {path != '/transactions' && (
-              <Menu.Item pathname='/transactions' icon={<ScrollText className='h-5 w-5' />} >
-                  Transfers
-              </Menu.Item>
-            )}
-            {!embedded && path != '/campaigns' && (
-              <Menu.Item pathname='/campaigns' icon={<Gift className='h-5 w-5' />} >
-                  Campaigns
-              </Menu.Item>
-            )}
-          </Menu.Group>
-          <Menu.Group>
-              <Menu.Item 
-                onClick={() => {
-                    boot();
-                    show();
-                    updateWithProps();
-                }} 
-                target='_blank' 
-                icon={<ChatIcon strokeWidth={2} className='h-5 w-5' />} 
-              >
-                  Help
-              </Menu.Item>
-              <Menu.Item pathname='https://docs.bridge.lux.network/' target='_blank' icon={<BookOpen className='h-5 w-5' />} >
-                  Docs for Users
-              </Menu.Item>
-              <Menu.Item pathname='https://docs.bridge.lux.network/user-docs/partners-and-integrations' target='_blank' icon={<Users className='h-5 w-5' />} >
-                  Docs for Partners
-              </Menu.Item>
-          </Menu.Group>
-          <Menu.Group>
-              <Menu.Item pathname='https://docs.bridge.lux.network/user-docs/information/privacy-policy' target='_blank' icon={<Shield className='h-5 w-5' />} >
-                  Privacy Policy
-              </Menu.Item>
-              <Menu.Item pathname='https://docs.bridge.lux.network/user-docs/information/terms-of-services' target='_blank' icon={<LibraryIcon className='h-5 w-5' />} >
-                  Terms of Service
-              </Menu.Item>
-          </Menu.Group>
-
-          <Menu.Group>
-            <Popover
-              opener={
-                <Menu.Item onClick={() => setOpenFeedbackModal(true)} target='_blank' icon={<MessageSquarePlus className='h-5 w-5' />} >
-                    Suggest a Feature
                 </Menu.Item>
-              }
-              isNested={true}
-              show={openFeedbackModal}
-              header='Suggest a Feature'
-              setShow={setOpenFeedbackModal} >
-              <div className='p-0 md:max-w-md'>
-                  <SendFeedback onSend={handleCloseFeedback} />
-              </div>
-            </Popover>
-          </Menu.Group>
-
-          <div className='space-y-3 w-full'>
-              <hr className='border-muted-3' />
-              <p className='text-muted-2 flex justify-center my-3'>Media links & suggestions:</p>
-          </div>
-
-          <div className='grid grid-row-2 grid-cols-3 gap-1'>
-          {socialNav.map(({className, ...rest}, index) => (
-            <LinkElement
-              def={{
-                ...rest,
-                variant: 'outline',
-                size:'sm'
-              }}
-              className={className + ' font-sans text-muted-2'}
-              key={index}
-            />
-          ))}
-          </div>
-          {path != '/auth' && (
-            <Menu.Footer>
-            {userType == UserType.AuthenticatedUser ? (
-              <div
-                className='gap-4 flex justify-between items-center relative select-none outline-none w-full'
+              )}
+              {path != '/transactions' && (
+                <Menu.Item
+                  pathname="/transactions"
+                  icon={<ScrollText className="h-5 w-5" />}
+                >
+                  Transfers
+                </Menu.Item>
+              )}
+              {!embedded && path != '/campaigns' && (
+                <Menu.Item
+                  pathname="/campaigns"
+                  icon={<Gift className="h-5 w-5" />}
+                >
+                  Campaigns
+                </Menu.Item>
+              )}
+            </Menu.Group>
+            <Menu.Group>
+              <Menu.Item
+                onClick={() => {
+                  boot()
+                  show()
+                  updateWithProps()
+                }}
+                target="_blank"
+                icon={<ChatIcon strokeWidth={2} className="h-5 w-5" />}
               >
-                <div className='font-normal flex gap-2 items-center'>
-                  <UserCircle2 className='h-5 w-5' />
-                  {email && (<span>{shortenEmail(email, 22)}</span>)}
+                Help
+              </Menu.Item>
+              <Menu.Item
+                pathname="https://docs.bridge.lux.network/"
+                target="_blank"
+                icon={<BookOpen className="h-5 w-5" />}
+              >
+                Docs for Users
+              </Menu.Item>
+              <Menu.Item
+                pathname="https://docs.bridge.lux.network/user-docs/partners-and-integrations"
+                target="_blank"
+                icon={<Users className="h-5 w-5" />}
+              >
+                Docs for Partners
+              </Menu.Item>
+            </Menu.Group>
+            <Menu.Group>
+              <Menu.Item
+                pathname="https://docs.bridge.lux.network/user-docs/information/privacy-policy"
+                target="_blank"
+                icon={<Shield className="h-5 w-5" />}
+              >
+                Privacy Policy
+              </Menu.Item>
+              <Menu.Item
+                pathname="https://docs.bridge.lux.network/user-docs/information/terms-of-services"
+                target="_blank"
+                icon={<LibraryIcon className="h-5 w-5" />}
+              >
+                Terms of Service
+              </Menu.Item>
+            </Menu.Group>
+
+            <Menu.Group>
+              <Popover
+                opener={
+                  <Menu.Item
+                    onClick={() => setOpenFeedbackModal(true)}
+                    target="_blank"
+                    icon={<MessageSquarePlus className="h-5 w-5" />}
+                  >
+                    Suggest a Feature
+                  </Menu.Item>
+                }
+                isNested={true}
+                show={openFeedbackModal}
+                header="Suggest a Feature"
+                setShow={setOpenFeedbackModal}
+              >
+                <div className="p-0 md:max-w-md">
+                  <SendFeedback onSend={handleCloseFeedback} />
                 </div>
+              </Popover>
+            </Menu.Group>
+
+            <div className="space-y-3 w-full">
+              <hr className="border-muted-3" />
+              <p className="text-muted-2 flex justify-center my-3">
+                Media links & suggestions:
+              </p>
+            </div>
+
+            <div className="grid grid-row-2 grid-cols-3 gap-1">
+              {socialNav.map(({ className, ...rest }, index) => (
                 <LinkElement
                   def={{
-                    href: '',
-                    title: 'Sign out',
-                    icon: <LogOut className='h-5 w-5' />,
+                    ...rest,
+                    variant: 'outline',
                     size: 'sm',
-                    variant: 'outline'
                   }}
-                  onClick={handleLogout}
-                  className='font-sans font-semibold text-muted-2'
+                  className={className + ' font-sans text-muted-2'}
+                  key={index}
                 />
-              </div>
-            ):(
-              <LinkElement
-                def={{
-                  href: '/auth',
-                  title: 'Sign in',
-                  icon: <LogIn className='h-5 w-5' />,
-                  size: 'default',
-                  variant: 'primary'
-                }}
-                className='font-sans font-semibold'
-              />
+              ))}
+            </div>
+            {path != '/auth' && (
+              <Menu.Footer>
+                {userType == UserType.AuthenticatedUser ? (
+                  <div className="gap-4 flex justify-between items-center relative select-none outline-none w-full">
+                    <div className="font-normal flex gap-2 items-center">
+                      <UserCircle2 className="h-5 w-5" />
+                      {email && <span>{shortenEmail(email, 22)}</span>}
+                    </div>
+                    <LinkElement
+                      def={{
+                        href: '',
+                        title: 'Sign out',
+                        icon: <LogOut className="h-5 w-5" />,
+                        size: 'sm',
+                        variant: 'outline',
+                      }}
+                      onClick={handleLogout}
+                      className="font-sans font-semibold text-muted-2"
+                    />
+                  </div>
+                ) : (
+                  <LinkElement
+                    def={{
+                      href: '/auth',
+                      title: 'Sign in',
+                      icon: <LogIn className="h-5 w-5" />,
+                      size: 'default',
+                      variant: 'primary',
+                    }}
+                    className="font-sans font-semibold"
+                  />
+                )}
+              </Menu.Footer>
             )}
-            </Menu.Footer>
-          )}
-        </Menu>
-      </div>
-    </Modal>
-  </>)
+          </Menu>
+        </div>
+      </Modal>
+    </>
+  )
 }
 
 export default BridgeMenu
