@@ -7,14 +7,14 @@ RUN npm install -g pnpm
 # Set working directory in Node container
 WORKDIR /app
 
-# Copy only necessary files to avoid caching issues
-COPY package*.json ./
+# Copy over package.json and pnpm-lock.yaml first to leverage Docker layer caching
+COPY ./package.json ./pnpm-lock.yaml ./
 
 # Install Node.js dependencies
-RUN pnpm install
+RUN pnpm install --prod
 
 # Copy the rest of the app files
-COPY ./ .
+COPY . .
 
 # Build the app (ensure this script exists in package.json)
 RUN pnpm run build
