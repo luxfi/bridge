@@ -3,7 +3,7 @@ import Web3 from 'web3'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
-import { useNotify } from '@/context/toast-provider';
+import { useNotify } from '@/context/toast-provider'
 
 import {
   swapStatusAtom,
@@ -53,7 +53,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   className,
   swapId,
 }) => {
-  const { notify } = useNotify();
+  const { notify } = useNotify()
   //state
   const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false)
   //atoms
@@ -197,12 +197,12 @@ const PayoutProcessor: React.FC<IProps> = ({
       )
       setSwapStatus('payout_success')
     } catch (err) {
-      console.log(err);
+      console.log(err)
       if (String(err).includes("user rejected transaction")) {
-        notify(`User rejected transaction`, "warn")
+        notify('User rejected transaction', "warn")
       } 
       else {
-        notify(`Failed to run transaction`, "error")
+        notify('Failed to run transaction', "error")
       }
     } finally {
       setIsGettingPayout(false)
@@ -255,7 +255,7 @@ const PayoutProcessor: React.FC<IProps> = ({
         )
         return
       }
-      // console.log("::canWithdraw", canWithdraw);
+      // console.log("::canWithdraw", canWithdraw)
       setIsGettingPayout(true)
       // string memory hashedTxId_,
       // address toTokenAddress_,
@@ -317,7 +317,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   const handlePayoutDestinationToken = () => {
     if (!signer) {
       notify(
-        `No connected wallet. Please connect your wallet`,
+        'No connected wallet. Please connect your wallet',
         'error'
       )
       connectWallet('evm')
@@ -427,8 +427,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                 <ArrowRight />
               )}
               <span className="grow">
-                {isWithdrawal ? 'Withdraw' : 'Get'} Your{' '}
-                {destinationAsset?.asset}
+                {isWithdrawal ? `Withdraw Your ${destinationAsset?.asset}` : `Get Your ${destinationAsset?.asset}`}
               </span>
             </button>
           </div>
