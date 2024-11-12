@@ -1,18 +1,18 @@
-"use client";
-import React, { useState } from "react";
+'use client'
+import React, { useState } from 'react'
 
 interface IProps {
-  disabled: boolean;
-  setValue?: (value: string) => void;
-  value: string;
+  disabled: boolean
+  setValue?: (value: string) => void
+  value: string
 }
 
 const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (/^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && setValue) {
-      setValue(e.target.value);
+      setValue(e.target.value)
     }
-  };
+  }
 
   return (
     <>
@@ -20,11 +20,11 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
         <div className="relative w-full">
           <div className="flex relative w-full">
             <input
-              pattern={"^[0-9]*[.,]?[0-9]*$"}
+              pattern={'^[0-9]*[.,]?[0-9]*$'}
               inputMode="decimal"
               autoComplete="off"
               disabled={disabled}
-              placeholder={"0.0"}
+              placeholder={'0.0'}
               autoCorrect="off"
               min={0}
               max={10000}
@@ -33,9 +33,9 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
               type="text"
               value={value}
               step={0.01}
-              name={"name"}
-              id={"name"}
-              className="rounded-r-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
+              name={'name'}
+              id={'name'}
+              className="rounded-r-none outline-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
               onChange={handleChange}
             />
           </div>
@@ -57,15 +57,15 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
                 } */}
       </div>
     </>
-  );
-};
+  )
+}
 
 type AmountLabelProps = {
-  detailsAvailable: boolean;
-  minAllowedAmount: number | undefined;
-  maxAllowedAmount: number | undefined;
-  isBalanceLoading: boolean;
-};
+  detailsAvailable: boolean
+  minAllowedAmount: number | undefined
+  maxAllowedAmount: number | undefined
+  isBalanceLoading: boolean
+}
 const AmountLabel = ({
   detailsAvailable,
   minAllowedAmount,
@@ -85,7 +85,7 @@ const AmountLabel = ({
             } */}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AmountField;
+export default AmountField
