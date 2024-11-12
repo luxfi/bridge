@@ -14,20 +14,57 @@
 	1.	Clone the Repository:
 
 git clone https://github.com/luxfi/bridge.git
-cd bridge/server
+
 
 
 	2.	Install Dependencies:
 
-pnpm install
+pnpm install (from root or any project subdir)
 
 ## Development
 
-	•	Start the Development Server:
+  * go into server dir
 
-pnpm dev
+    `cd server`
+  * generate prisma artifacts
+
+    `pnpx prisma generate`
+  * set up prisma to use sqlite
+
+    in `prisma/schema.prisma`
+
+```
+datasource db {
+  //provider  = "postgresql"
+  provider  = "sqlite"
+  url       = env("POSTGRESQL_URL") 
+  directUrl = env("POSTGRESQL_URL") 
+}
+```
+  * set env variable to point to sqlite
+
+    in `.env`
+
+    `POSTGRESQL_URL=file:./dev.sqlite`
+  * create the local `sqlite` instance
+
+    `pnpx prisma db push`
+  * Start the dev server
+
+    `pnpm dev`
+
 
 This command uses nodemon to watch for file changes and restarts the server automatically.
+
+```
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): src/**/*
+[nodemon] watching extensions: ts,js
+[nodemon] starting `node -r tsconfig-paths/register -r ts-node/register ./src/server.ts`
+>> Server is Running At: Port 5000
+```
+
+
 
 ## Building the Project
 

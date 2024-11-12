@@ -58,7 +58,6 @@
     "express": "^4.19.2",
     "express-validator": "^7.2.0",
     "module-alias": "^2.2.3",
-    "multicoin-address-validator": "^0.5.22",
-    "prisma-client-91ed9af6366cdee33d6f3efcfe3929e8a5eb9f021d6e86a20189872a17e5b7eb": "link:prisma/client"
+    "multicoin-address-validator": "^0.5.22"
   }
 }
