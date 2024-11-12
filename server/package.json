@@ -13,7 +13,7 @@
     "tc": "tsc",
     "prisma:gen": "pnpx prisma generate",
     "build": "tsc && tsc-alias && pnpx prisma generate",
-    "start": "ts-node src/server.ts",
+    "start": "ts-node -r tsconfig-paths/register src/server.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "colima:start": "colima start --arch aarch64,x86_64",
@@ -47,6 +47,7 @@
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.4"
   },
   "dependencies": {
