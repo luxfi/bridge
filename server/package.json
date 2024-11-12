@@ -21,7 +21,7 @@
     "docker:login": "docker login --username $GH_USER --password $GH_TOKEN ghcr.io",
     "docker:push": "docker push ghcr.io/luxfi/bridge/server:latest",
     "k8s:apply": "kubectl apply -f k8s/bridge-deployment.yaml && kubectl apply -f k8s/bridge-service.yaml",
-    "k8s:logs": "kubectl logs -l app=bridge-server",
+    "k8s:logs": "kubectl logs -l app=bridge-server -f",
     "k8s:scale": "kubectl scale deployment bridge-server --replicas=$REPLICAS",
     "k8s:create-secret": "kubectl create secret generic bridge-server-secret --from-literal=POSTGRES_URL=\"$POSTGRES_URL\" --dry-run=client -o yaml | kubectl apply -f -",
     "k8s:restart": "kubectl rollout restart deployment bridge-server",
