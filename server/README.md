@@ -72,14 +72,6 @@ pnpm build
 
 This command compiles TypeScript files, resolves module aliases, and generates the Prisma client.
 
-## Database Management
-
-	•	Run Database Scripts:
-
-pnpm db
-
-This command executes the dist/db.js script for database operations.
-
 ## Docker Operations
 
 	•	Build Docker Image:
