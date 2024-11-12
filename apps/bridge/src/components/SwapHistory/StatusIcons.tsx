@@ -1,18 +1,18 @@
-import { SwapStatus } from "../../Models/SwapStatus";
+import { SwapStatus } from '../../Models/SwapStatus'
 import {
   type PublishedSwapTransactions,
   type SwapItem,
   TransactionType,
-} from "../../lib/BridgeApiClient";
+} from '../../lib/BridgeApiClient'
 
 export default function StatusIcon({
   swap,
   short,
 }: {
-  swap: SwapItem;
-  short?: boolean;
+  swap: SwapItem
+  short?: boolean
 }) {
-  const status = swap.status;
+  const status = swap.status
   switch (status) {
     case SwapStatus.Failed:
       return (
@@ -22,7 +22,7 @@ export default function StatusIcon({
             {!short && <p>Failed</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.Completed:
       return (
         <>
@@ -31,7 +31,7 @@ export default function StatusIcon({
             {!short && <p>Completed</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.PayoutSuccess:
       return (
         <>
@@ -40,7 +40,7 @@ export default function StatusIcon({
             {!short && <p>Completed</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.Cancelled:
       return (
         <>
@@ -49,7 +49,7 @@ export default function StatusIcon({
             {!short && <p>Cancelled</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.Expired:
       return (
         <>
@@ -58,12 +58,12 @@ export default function StatusIcon({
             {!short && <p>Expired</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.UserTransferPending:
       const data: PublishedSwapTransactions = JSON.parse(
-        localStorage.getItem("swapTransactions") || "{}"
-      );
-      const txForSwap = data.state?.swapTransactions?.[swap.id];
+        localStorage.getItem('swapTransactions') || '{}'
+      )
+      const txForSwap = data.state?.swapTransactions?.[swap.id]
       if (
         txForSwap ||
         swap.transactions.find((t) => t.type === TransactionType.Input)
@@ -75,7 +75,7 @@ export default function StatusIcon({
               {!short && <p>Processing</p>}
             </div>
           </>
-        );
+        )
       } else {
         return (
           <>
@@ -84,7 +84,7 @@ export default function StatusIcon({
               {!short && <p>Pending</p>}
             </div>
           </>
-        );
+        )
       }
     case SwapStatus.BridgeTransferPending:
       return (
@@ -94,7 +94,7 @@ export default function StatusIcon({
             {!short && <p>Processing</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.TeleportProcessPending:
       return (
         <>
@@ -103,7 +103,7 @@ export default function StatusIcon({
             {!short && <p>Processing</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.UserPayoutPending:
       return (
         <>
@@ -112,7 +112,7 @@ export default function StatusIcon({
             {!short && <p>Processing</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.UserTransferDelayed:
       return (
         <>
@@ -121,7 +121,7 @@ export default function StatusIcon({
             {!short && <p>Delayed</p>}
           </div>
         </>
-      );
+      )
     case SwapStatus.Created:
       return (
         <>
@@ -130,9 +130,9 @@ export default function StatusIcon({
             {!short && <p>Created</p>}
           </div>
         </>
-      );
+      )
     default:
-      return <></>;
+      return <></>
   }
 }
 
@@ -148,8 +148,8 @@ export const RedIcon = () => {
         <circle cx="30" cy="30" r="30" fill="#E43636" />
       </svg>
     </div>
-  );
-};
+  )
+}
 
 export const GreenIcon = () => {
   return (
@@ -163,8 +163,8 @@ export const GreenIcon = () => {
         <circle cx="30" cy="30" r="30" fill="#55B585" />
       </svg>
     </div>
-  );
-};
+  )
+}
 
 export const YellowIcon = () => {
   return (
@@ -178,8 +178,8 @@ export const YellowIcon = () => {
         <circle cx="30" cy="30" r="30" fill="#facc15" />
       </svg>
     </div>
-  );
-};
+  )
+}
 
 export const GreyIcon = () => {
   return (
@@ -193,8 +193,8 @@ export const GreyIcon = () => {
         <circle cx="30" cy="30" r="30" fill="#808080" />
       </svg>
     </div>
-  );
-};
+  )
+}
 
 export const PurpleIcon = () => {
   return (
@@ -208,5 +208,5 @@ export const PurpleIcon = () => {
         <circle cx="30" cy="30" r="30" fill="#A020F0" />
       </svg>
     </div>
-  );
-};
+  )
+}

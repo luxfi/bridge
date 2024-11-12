@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 const MoveIcon: React.FC = () => {
   return (
@@ -197,7 +197,7 @@ const MoveIcon: React.FC = () => {
         ></animate>
       </circle>
     </svg>
-  );
-};
+  )
+}
 
-export default MoveIcon;
+export default MoveIcon

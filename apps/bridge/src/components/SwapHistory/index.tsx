@@ -1,46 +1,40 @@
-"use client";
-import { useCallback, useRef, useState } from "react";
+'use client'
+import { useCallback, useRef, useState } from 'react'
 
-import Link from "next/link";
-import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation";
-import useAsyncEffect from "use-async-effect";
-import axios from "axios";
+import Link from 'next/link'
+import Image from 'next/image'
+import { useSearchParams, useRouter } from 'next/navigation'
+import useAsyncEffect from 'use-async-effect'
+import axios from 'axios'
 
-import {
-  ArrowRight,
-  ChevronRight,
-  Eye,
-  RefreshCcw,
-  Scroll,
-} from "lucide-react";
+import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
 
 import BridgeApiClient, {
   type SwapItem,
   SwapStatusInNumbers,
   TransactionType,
-} from "@/lib/BridgeApiClient";
-import SpinIcon from "../icons/spinIcon";
-import SwapDetails from "./SwapDetailsComponent";
-import SubmitButton from "../buttons/submitButton";
-import StatusIcon from "./StatusIcons";
-import toast from "react-hot-toast";
-import ToggleButton from "../buttons/toggleButton";
-import Modal from "../modal/modal";
-import AppSettings from "@/lib/AppSettings";
-import HeaderWithMenu from "../HeaderWithMenu";
-import { classNames } from "../utils/classNames";
-import { SwapHistoryComponentSkeleton } from "../Skeletons";
-import resolvePersistentQueryParams from "@/util/resolvePersistentQueryParams";
-import { truncateDecimals } from "../utils/RoundDecimals";
+} from '@/lib/BridgeApiClient'
+import SpinIcon from '../icons/spinIcon'
+import SwapDetails from './SwapDetailsComponent'
+import SubmitButton from '../buttons/submitButton'
+import StatusIcon from './StatusIcons'
+import toast from 'react-hot-toast'
+import ToggleButton from '../buttons/toggleButton'
+import Modal from '../modal/modal'
+import AppSettings from '@/lib/AppSettings'
+import HeaderWithMenu from '../HeaderWithMenu'
+import { classNames } from '../utils/classNames'
+import { SwapHistoryComponentSkeleton } from '../Skeletons'
+import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
+import { truncateDecimals } from '../utils/RoundDecimals'
 //networks
-import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/networks.mainnets";
-import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
-import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
-import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
+import fireblockNetworksMainnet from '@/components/lux/fireblocks/constants/networks.mainnets'
+import fireblockNetworksTestnet from '@/components/lux/fireblocks/constants/networks.sandbox'
+import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
+import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
 
 function TransactionsHistory() {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
   const networksFireblock = isMainnet
     ? [
         ...fireblockNetworksMainnet.sourceNetworks,
@@ -49,38 +43,37 @@ function TransactionsHistory() {
     : [
         ...fireblockNetworksTestnet.sourceNetworks,
         ...fireblockNetworksTestnet.destinationNetworks,
-      ];
+      ]
   const networksTeleport = isMainnet
     ? teleportNetworksMainnet
-    : teleportNetworksTestnet;
+    : teleportNetworksTestnet
 
-  const [page, setPage] = useState(0);
-  const [isLastPage, setIsLastPage] = useState(false);
-  const [swaps, setSwaps] = useState<SwapItem[]>();
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const [selectedSwap, setSelectedSwap] = useState<SwapItem | undefined>();
-  const [openSwapDetailsModal, setOpenSwapDetailsModal] = useState(false);
-  const [showAllSwaps, setShowAllSwaps] = useState(false);
-  const [showToggleButton, setShowToggleButton] = useState(false);
+  const [page, setPage] = useState(0)
+  const [isLastPage, setIsLastPage] = useState(false)
+  const [swaps, setSwaps] = useState<SwapItem[]>()
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const [selectedSwap, setSelectedSwap] = useState<SwapItem | undefined>()
+  const [openSwapDetailsModal, setOpenSwapDetailsModal] = useState(false)
+  const [showAllSwaps, setShowAllSwaps] = useState(false)
+  const [showToggleButton, setShowToggleButton] = useState(false)
 
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 20
 
-  const searchParams = useSearchParams();
-  const canGoBackRef = useRef<boolean>(false);
-  const paramString = resolvePersistentQueryParams(searchParams).toString();
+  const searchParams = useSearchParams()
+  const canGoBackRef = useRef<boolean>(false)
+  const paramString = resolvePersistentQueryParams(searchParams).toString()
 
   const goBack = useCallback(() => {
     canGoBackRef.current = !!(
       window.history?.length && window.history.length > 1
-    );
+    )
     if (canGoBackRef.current) {
-      router.back();
+      router.back()
     } else {
-      router.push("/" + (paramString ? "?" + paramString : ""));
+      router.push('/' + (paramString ? '?' + paramString : ''))
     }
-  }, [paramString]);
-
+  }, [paramString])
 
   const getSwaps = async (page: number, status?: string | number) => {
     try {
@@ -88,122 +81,118 @@ function TransactionsHistory() {
         data: { data },
       } = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps?page=${page}${
-          status ? `&status=${status}` : ""
+          status ? `&status=${status}` : ''
         }&version=${BridgeApiClient.apiVersion}`
-      );
+      )
       return {
         data: data,
         error: null,
-      };
+      }
     } catch (err: any) {
       return {
         data: null,
         error: `Could not get swaps: ${err.message ?? 'unknown'}`,
-      };
+      }
     }
-  };
+  }
 
   useAsyncEffect(async () => {
-    const { data, error } = await getSwaps(1, SwapStatusInNumbers.Cancelled);
-    if (Number(data?.length) > 0) setShowToggleButton(true);
-  }, []);
+    const { data, error } = await getSwaps(1, SwapStatusInNumbers.Cancelled)
+    if (Number(data?.length) > 0) setShowToggleButton(true)
+  }, [])
 
   useAsyncEffect(async () => {
-    setIsLastPage(false);
-    setLoading(true);
+    setIsLastPage(false)
+    setLoading(true)
 
     if (showAllSwaps) {
-      const { data, error } = await getSwaps(1);
+      const { data, error } = await getSwaps(1)
 
       if (error) {
-        toast.error(error);
-        setLoading(false);
-        return;
+        toast.error(error)
+        setLoading(false)
+        return
       }
 
-      setSwaps(data);
-      setPage(1);
+      setSwaps(data)
+      setPage(1)
       if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true);
+        setIsLastPage(true)
       }
 
-      setLoading(false);
-    } 
-    else {
+      setLoading(false)
+    } else {
       const { data, error } = await getSwaps(
         1,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
-      );
+      )
 
       if (error) {
-        toast.error(error);
-        setLoading(false);
-        return;
+        toast.error(error)
+        setLoading(false)
+        return
       }
 
-      setSwaps(data);
-      setPage(1);
+      setSwaps(data)
+      setPage(1)
       if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true);
+        setIsLastPage(true)
       }
-      setLoading(false);
+      setLoading(false)
     }
-  }, [paramString, showAllSwaps]);
+  }, [paramString, showAllSwaps])
 
   const handleLoadMore = useCallback(async () => {
     //TODO refactor page change
-    const nextPage = page + 1;
-    setLoading(true);
+    const nextPage = page + 1
+    setLoading(true)
 
     if (showAllSwaps) {
-
-      const { data, error } = await getSwaps(nextPage);
+      const { data, error } = await getSwaps(nextPage)
 
       if (error) {
-        setLoading(false);
-        toast.error(error);
-        return;
+        setLoading(false)
+        toast.error(error)
+        return
       }
 
-      setSwaps((old) => [...(old ? old : []), ...(data ? data : [])]);
-      setPage(nextPage);
+      setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
+      setPage(nextPage)
       if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true);
+        setIsLastPage(true)
       }
 
-      setLoading(false);
-    } 
-    else {
-
+      setLoading(false)
+    } else {
       const { data, error } = await getSwaps(
         nextPage,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
-      );
+      )
 
       if (error) {
-        toast.error(error);
-        setLoading(false);
-        return;
+        toast.error(error)
+        setLoading(false)
+        return
       }
 
-      setSwaps((old) => [...(old ? old : []), ...(data ? data : [])]);
-      setPage(nextPage);
+      setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
+      setPage(nextPage)
       if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true);
+        setIsLastPage(true)
       }
 
-      setLoading(false);
+      setLoading(false)
     }
-  }, [page, setSwaps]);
+  }, [page, setSwaps])
 
   const handleopenSwapDetails = (swap: SwapItem) => {
-    setSelectedSwap(swap);
-    setOpenSwapDetailsModal(true);
-  };
+    setSelectedSwap(swap)
+    setOpenSwapDetailsModal(true)
+  }
 
   const handleToggleChange = (value: boolean) => {
-    setShowAllSwaps(value);
-  };
+    setShowAllSwaps(value)
+  }
 
   return (
     <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
@@ -256,24 +245,24 @@ function TransactionsHistory() {
                       {swaps?.map((swap, index) => {
                         const networks = swap.use_teleporter
                           ? networksTeleport
-                          : networksFireblock;
+                          : networksFireblock
                         const sourceNetwork = networks.find(
                           (n) => n.internal_name === swap.source_network
-                        );
+                        )
                         const destinationNetwork = networks.find(
                           (n) => n.internal_name === swap.destination_network
-                        );
+                        )
 
                         const sourceAsset = sourceNetwork?.currencies.find(
                           (c) => c.asset === swap.source_asset
-                        );
+                        )
                         const destinationAsset =
                           destinationNetwork?.currencies.find(
                             (c) => c.asset === swap.destination_asset
-                          );
+                          )
                         const output_transaction = swap.transactions.find(
                           (t) => t.type === TransactionType.Output
-                        );
+                        )
 
                         return (
                           <tr
@@ -282,8 +271,8 @@ function TransactionsHistory() {
                           >
                             <td
                               className={classNames(
-                                index === 0 ? "" : "border-t border-[#404040]",
-                                "relative text-sm  table-cell"
+                                index === 0 ? '' : 'border-t border-[#404040]',
+                                'relative text-sm  table-cell'
                               )}
                             >
                               <div className=" flex items-center">
@@ -311,7 +300,6 @@ function TransactionsHistory() {
                                       className="rounded-full border border-[#f3f3f32d] object-contain"
                                     />
                                   )}
-
                                 </div>
                               </div>
                               {index !== 0 ? (
@@ -320,8 +308,8 @@ function TransactionsHistory() {
                             </td>
                             <td
                               className={classNames(
-                                index === 0 ? "" : "border-t border-[#404040]",
-                                "relative text-sm table-cell"
+                                index === 0 ? '' : 'border-t border-[#404040]',
+                                'relative text-sm table-cell'
                               )}
                             >
                               <span className="flex items-center">
@@ -330,26 +318,26 @@ function TransactionsHistory() {
                             </td>
                             <td
                               className={classNames(
-                                index === 0 ? "" : "border-t border-[#404040]",
-                                "px-3 py-3.5 text-sm table-cell"
+                                index === 0 ? '' : 'border-t border-[#404040]',
+                                'px-3 py-3.5 text-sm table-cell'
                               )}
                             >
                               <div
                                 className="flex justify-between items-center cursor-pointer"
                                 onClick={(e) => {
-                                  handleopenSwapDetails(swap);
-                                  e.preventDefault();
+                                  handleopenSwapDetails(swap)
+                                  e.preventDefault()
                                 }}
                               >
                                 <div className="">
-                                  {swap?.status == "completed" ? (
+                                  {swap?.status == 'completed' ? (
                                     <span className="ml-1 md:ml-0">
                                       {output_transaction
                                         ? truncateDecimals(
                                             output_transaction?.amount,
                                             5
                                           )
-                                        : "-"}
+                                        : '-'}
                                     </span>
                                   ) : (
                                     <span>
@@ -367,7 +355,7 @@ function TransactionsHistory() {
                               </div>
                             </td>
                           </tr>
-                        );
+                        )
                       })}
                     </tbody>
                   </table>
@@ -411,7 +399,7 @@ function TransactionsHistory() {
                               (selectedSwap?.use_teleporter
                                 ? `/swap/teleporter/${selectedSwap.id}`
                                 : `/swap/${selectedSwap.id}`) + paramString
-                            );
+                            )
                           }}
                           isDisabled={false}
                           isSubmitting={false}
@@ -445,7 +433,7 @@ function TransactionsHistory() {
       )}
       <div id="modal_portal_root" />
     </div>
-  );
+  )
 }
 
-export default TransactionsHistory;
+export default TransactionsHistory
