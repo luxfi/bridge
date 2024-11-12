@@ -1,33 +1,25 @@
-"use client";
-import { useAtom } from "jotai";
+'use client'
+import { useAtom } from 'jotai'
 
-import AmountField from "../AmountField";
-import NetworkSelectWrapper from "./NetworkSelectWrapper";
+import AmountField from '../AmountField'
+import NetworkSelectWrapper from './NetworkSelectWrapper'
 
-import type { Network, Token } from "@/types/teleport";
-import TokenSelectWrapper from "./TokenSelectWrapper";
-import { sourceAmountAtom } from "@/store/teleport";
+import type { Network, Token } from '@/types/teleport'
+import TokenSelectWrapper from './TokenSelectWrapper'
+import { sourceAmountAtom } from '@/store/teleport'
 
 const NetworkFormField: React.FC<{
-  networks: Network[],
-  network?: Network,
-  asset?: Token,
-  setNetwork: (network: Network) => void,
-  setAsset: (asset: Token) => void,
+  networks: Network[]
+  network?: Network
+  asset?: Token
+  setNetwork: (network: Network) => void
+  setAsset: (asset: Token) => void
   disabled: boolean
-}> = ({ 
-  networks, 
-  network, 
-  asset, 
-  setNetwork, 
-  setAsset, 
-  disabled 
-}) => {
-
-  const [amount, setAmount] = useAtom(sourceAmountAtom);
+}> = ({ networks, network, asset, setNetwork, setAsset, disabled }) => {
+  const [amount, setAmount] = useAtom(sourceAmountAtom)
 
   return (
-    <div className='p-3' id='NETWORK_FORM_FIELD'>
+    <div className="p-3" id="NETWORK_FORM_FIELD">
       <label htmlFor={'name'} className="block font-semibold text-xs">
         From
       </label>
