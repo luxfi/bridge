@@ -11,7 +11,7 @@ WORKDIR /app
 COPY ./package.json ./pnpm-lock.yaml ./
 
 # Install Node.js dependencies
-RUN pnpm install --prod
+RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the app files
 COPY . .
