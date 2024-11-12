@@ -17,7 +17,7 @@ import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import SpinIcon from '@/components/icons/spinIcon'
 import type { Network, Token } from '@/types/teleport'
-import useNotification from '@/hooks/useNotification'
+import { useNotify } from '@/context/toast-provider'
 import { localeNumber } from '@/lib/utils'
 
 interface IProps {
@@ -41,7 +41,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   className,
   swapId,
 }) => {
-  const { showNotification } = useNotification()
+  const { notify } = useNotify()
   //state
   const [isTokenTransferring, setIsTokenTransferring] =
     React.useState<boolean>(false)
@@ -93,7 +93,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         })
 
         if (Number(_balance) < Number(_amount)) {
-          showNotification(`Insufficient ${sourceAsset.asset} amount`, 'warn')
+          notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
           return
         }
       } else {
@@ -117,8 +117,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
         })
 
         if (Number(_balance) < Number(_amount)) {
-          showNotification(`Insufficient ${sourceAsset.asset} amount`, 'warn')
-          return
+          notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
+          return;
         }
 
         if (!sourceNetwork.chain_id) return
@@ -165,14 +165,17 @@ const UserTokenDepositor: React.FC<IProps> = ({
       )
       setUserTransferTransaction(_bridgeTransferTx.hash)
       setSwapStatus('teleport_processing_pending')
-    } catch (err) {
-      console.log(err)
-      if (String(err).includes('user rejected transaction')) {
-        showNotification(`User rejected transaction`, 'warn')
-      } else {
-        showNotification(`Failed to run transaction`, 'error')
+    } 
+    catch (err) {
+      console.log(err);
+      if (String(err).includes("user rejected transaction")) {
+        notify(`User rejected transaction`, "warn")
+      } 
+      else {
+        notify(`Failed to run transaction`, "error")
       }
-    } finally {
+    } 
+    finally {
       setIsTokenTransferring(false)
     }
   }
@@ -190,7 +193,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setUserDepositNotice(`Checking token balance...`)
       const _balance = await erc20Contract.balanceOf(signer?._address as string)
       if (_balance < _amount) {
-        showNotification(`Insufficient ${sourceAsset.asset} amount`, 'warn')
+        notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
         return
       }
 
@@ -226,10 +229,10 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setSwapStatus('teleport_processing_pending')
     } catch (err) {
       console.log(err)
-      if (String(err).includes('user rejected transaction')) {
-        showNotification('User rejected transaction', 'error')
+      if (String(err).includes("user rejected transaction")) {
+        notify("User rejected transaction", "error")
       } else {
-        showNotification('Failed to run transaction', 'error')
+        notify("Failed to run transaction", "error")
       }
     } finally {
       setIsTokenTransferring(false)
@@ -237,11 +240,11 @@ const UserTokenDepositor: React.FC<IProps> = ({
   }
   const handleTokenTransfer = async () => {
     if (!signer) {
-      showNotification(
-        'No connected wallet. Please connect your wallet',
-        'error'
+      notify(
+        "No connected wallet. Please connect your wallet",
+        "error"
       )
-      connectWallet('evm')
+      connectWallet("evm")
     } else if (chainId !== sourceNetwork.chain_id) {
       sourceNetwork.chain_id &&
         switchChain &&
