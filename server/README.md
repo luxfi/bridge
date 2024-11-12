@@ -4,53 +4,57 @@
 
 ## Prerequisites
 
-	•	Node.js: Version 20 or higher.
-	•	pnpm: Version 9.10.0 or higher.
-	•	Docker: Ensure Docker is installed and running.
-	•	Kubernetes: Access to a Kubernetes cluster for deployment.
+    •	Node.js: Version 20 or higher.
+    •	pnpm: Version 9.10.0 or higher.
+    •	Docker: Ensure Docker is installed and running.
+    •	Kubernetes: Access to a Kubernetes cluster for deployment.
 
 ## Installation
 
-	1.	Clone the Repository:
+    1.	Clone the Repository:
 
 git clone https://github.com/luxfi/bridge.git
 
-	2.	Install Dependencies:
+    2.	Install Dependencies:
 
 pnpm install (from root or any project subdir)
 
 ## Development
 
-  * go into server dir
+- go into server dir
 
-    `cd server`
-  * generate prisma artifacts
+  `cd server`
 
-    `pnpx prisma generate`
-  * set up prisma to use sqlite
+- generate prisma artifacts
 
-    in `prisma/schema.prisma`
+  `pnpx prisma generate`
+
+- set up prisma to use sqlite
+
+  in `prisma/schema.prisma`
 
 ```
 datasource db {
   //provider  = "postgresql"
   provider  = "sqlite"
-  url       = env("POSTGRESQL_URL")
-  directUrl = env("POSTGRESQL_URL")
+  url       = env("POSTGRES_URL")
+  directUrl = env("POSTGRES_URL")
 }
 ```
-  * set env variable to point to sqlite
 
-    in `.env`
+- set env variable to point to sqlite
 
-    `POSTGRESQL_URL=file:./dev.sqlite`
-  * create the local `sqlite` instance
+  in `.env`
 
-    `pnpx prisma db push`
-  * Start the dev server
+  `POSTGRES_URL=file:./dev.sqlite`
 
-    `pnpm dev`
+- create the local `sqlite` instance
 
+  `pnpx prisma db push`
+
+- Start the dev server
+
+  `pnpm dev`
 
 This command uses nodemon to watch for file changes and restarts the server automatically.
 
@@ -62,11 +66,9 @@ This command uses nodemon to watch for file changes and restarts the server auto
 >> Server is Running At: Port 5000
 ```
 
-
-
 ## Building the Project
 
-	•	Build the Project:
+    •	Build the Project:
 
 pnpm build
 
@@ -74,19 +76,19 @@ This command compiles TypeScript files, resolves module aliases, and generates t
 
 ## Docker Operations
 
-	•	Build Docker Image:
+    •	Build Docker Image:
 
 pnpm docker:build
 
 This command builds the Docker image using Buildx for the linux/amd64 platform.
 
-	•	Log in to GitHub Container Registry:
+    •	Log in to GitHub Container Registry:
 
 pnpm docker:login
 
 Ensure that the environment variables GH_USER and GH_TOKEN are set with your GitHub username and personal access token, respectively.
 
-	•	Push Docker Image:
+    •	Push Docker Image:
 
 pnpm docker:push
 
@@ -94,29 +96,29 @@ This command pushes the Docker image to the GitHub Container Registry.
 
 ## Kubernetes Deployment
 
-	•	Apply Kubernetes Configuration:
+    •	Apply Kubernetes Configuration:
 
 pnpm k8s:apply
 
 This command applies the Kubernetes deployment and service configurations located in the k8s directory.
 
-	•	Scale Deployment:
+    •	Scale Deployment:
 
 pnpm k8s:scale
 
 Set the REPLICAS environment variable to the desired number of replicas before running this command.
 
-	•	Create Kubernetes Secret:
+    •	Create Kubernetes Secret:
 
 pnpm k8s:create-secret
 
 Ensure the POSTGRES_URL environment variable is set with your PostgreSQL connection string.
 
-	•	Restart Deployment:
+    •	Restart Deployment:
 
 pnpm k8s:restart
 
-	•	Check Deployment Status:
+    •	Check Deployment Status:
 
 pnpm k8s:status
 
@@ -124,11 +126,11 @@ This command retrieves the status of deployments, services, and pods labeled app
 
 ## Linting and Formatting
 
-	•	Lint Code:
+    •	Lint Code:
 
 pnpm lint
 
-	•	Format Code:
+    •	Format Code:
 
 pnpm format
 
