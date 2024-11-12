@@ -1,22 +1,22 @@
-"use client";
-import React from "react";
-import AmountField from "../AmountField";
-import NetworkSelectWrapper from "./NetworkSelectWrapper";
-import TokenSelectWrapper from "./TokenSelectWrapper";
+'use client'
+import React from 'react'
+import AmountField from '../AmountField'
+import NetworkSelectWrapper from './NetworkSelectWrapper'
+import TokenSelectWrapper from './TokenSelectWrapper'
 
-import type { Network, Token } from "@/types/teleport";
-import { useAtom } from "jotai";
-import { sourceAmountAtom } from "@/store/teleport";
-import { truncateDecimals } from "@/components/utils/RoundDecimals";
+import type { Network, Token } from '@/types/teleport'
+import { useAtom } from 'jotai'
+import { sourceAmountAtom } from '@/store/teleport'
+import { truncateDecimals } from '@/components/utils/RoundDecimals'
 
 interface IProps {
-  networks: Network[];
-  network?: Network;
-  asset?: Token;
-  sourceAsset?: Token;
-  setNetwork: (network: Network) => void;
-  setAsset: (asset: Token) => void;
-  disabled: boolean;
+  networks: Network[]
+  network?: Network
+  asset?: Token
+  sourceAsset?: Token
+  setNetwork: (network: Network) => void
+  setAsset: (asset: Token) => void
+  disabled: boolean
 }
 
 const NetworkFormField: React.FC<IProps> = ({
@@ -28,11 +28,11 @@ const NetworkFormField: React.FC<IProps> = ({
   setAsset,
   disabled,
 }) => {
-  const [amount] = useAtom(sourceAmountAtom);
+  const [amount] = useAtom(sourceAmountAtom)
 
   return (
     <div className={`p-3`}>
-      <label htmlFor={"name"} className="block font-semibold text-xs">
+      <label htmlFor={'name'} className="block font-semibold text-xs">
         To
       </label>
       <div className="border border-[#404040] bg-level-1 rounded-lg mt-1.5 pb-2">
@@ -40,11 +40,11 @@ const NetworkFormField: React.FC<IProps> = ({
           <div className="w-full">
             <NetworkSelectWrapper
               disabled={disabled}
-              placeholder={"Destination"}
+              placeholder={'Destination'}
               setNetwork={setNetwork}
               network={network}
               networks={networks}
-              searchHint={"searchHint"}
+              searchHint={'searchHint'}
               className="rounded-b-none border-t-0 border-x-0"
             />
           </div>
@@ -65,7 +65,7 @@ const NetworkFormField: React.FC<IProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default NetworkFormField;
+export default NetworkFormField

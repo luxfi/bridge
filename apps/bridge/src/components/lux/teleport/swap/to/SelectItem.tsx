@@ -1,13 +1,9 @@
-import type { Network } from "@/types/teleport";
-import Image from "next/image";
-
+import type { Network } from '@/types/teleport'
+import Image from 'next/image'
 
 const SelectItem: React.FC<{
   network: Network
-}
-> = ({ 
-  network 
-}) => (
+}> = ({ network }) => (
   <div className="flex items-center justify-between w-full">
     <div className="flex items-center">
       <div className="flex-shrink-0 h-6 w-6 relative">
@@ -24,7 +20,7 @@ const SelectItem: React.FC<{
         <p className="text-md font-medium">{network.display_name}</p>
       </div>
     </div>
-    <div>{network.status === "active" && "active"}</div>
+    <div>{network.status === 'active' && 'active'}</div>
   </div>
 )
 

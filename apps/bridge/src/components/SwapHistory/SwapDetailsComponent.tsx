@@ -1,27 +1,27 @@
-"use client";
-import Image from "next/image";
-import shortenAddress from "../utils/ShortenAddress";
-import CopyButton from "../buttons/copyButton";
-import StatusIcon from "./StatusIcons";
-import isGuid from "../utils/isGuid";
-import KnownInternalNames from "../../lib/knownIds";
-import { SwapDetailsComponentSkeleton } from "../Skeletons";
-import { ExternalLink } from "lucide-react";
-import { type FC } from "react";
-import { type SwapItem, TransactionType } from "../../lib/BridgeApiClient";
+'use client'
+import Image from 'next/image'
+import shortenAddress from '../utils/ShortenAddress'
+import CopyButton from '../buttons/copyButton'
+import StatusIcon from './StatusIcons'
+import isGuid from '../utils/isGuid'
+import KnownInternalNames from '../../lib/knownIds'
+import { SwapDetailsComponentSkeleton } from '../Skeletons'
+import { ExternalLink } from 'lucide-react'
+import { type FC } from 'react'
+import { type SwapItem, TransactionType } from '../../lib/BridgeApiClient'
 //networks
-import fireblockNetworksMainnet from "@/components/lux/fireblocks/constants/networks.mainnets";
-import fireblockNetworksTestnet from "@/components/lux/fireblocks/constants/networks.sandbox";
-import { networks as teleportNetworksMainnet } from "@/components/lux/teleport/constants/networks.mainnets";
-import { networks as teleportNetworksTestnet } from "@/components/lux/teleport/constants/networks.sandbox";
+import fireblockNetworksMainnet from '@/components/lux/fireblocks/constants/networks.mainnets'
+import fireblockNetworksTestnet from '@/components/lux/fireblocks/constants/networks.sandbox'
+import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
+import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
 
 type Props = {
-  swap: SwapItem;
-};
+  swap: SwapItem
+}
 
 const SwapDetails: FC<Props> = ({ swap }) => {
   // make networks
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
   const networksFireblock = isMainnet
     ? [
         ...fireblockNetworksMainnet.sourceNetworks,
@@ -30,34 +30,34 @@ const SwapDetails: FC<Props> = ({ swap }) => {
     : [
         ...fireblockNetworksTestnet.sourceNetworks,
         ...fireblockNetworksTestnet.destinationNetworks,
-      ];
+      ]
   const networksTeleport = isMainnet
     ? teleportNetworksMainnet
-    : teleportNetworksTestnet;
-  const networks = swap.use_teleporter ? networksTeleport : networksFireblock;
+    : teleportNetworksTestnet
+  const networks = swap.use_teleporter ? networksTeleport : networksFireblock
 
   const sourceNetwork = networks.find(
     (n) => n.internal_name === swap.source_network
-  );
+  )
   const destinationNetwork = networks.find(
     (n) => n.internal_name === swap.destination_network
-  );
+  )
 
   const sourceAsset = sourceNetwork?.currencies.find(
     (c) => c.asset === swap.source_asset
-  );
+  )
   const destinationAsset = destinationNetwork?.currencies.find(
     (c) => c.asset === swap.destination_asset
-  );
+  )
 
   const swapInputTransaction = swap?.transactions?.find(
     (t) => t.type === TransactionType.Input
-  );
+  )
   const swapOutputTransaction = swap?.transactions?.find(
     (t) => t.type === TransactionType.Output
-  );
+  )
 
-  if (!swap) return <SwapDetailsComponentSkeleton />;
+  if (!swap) return <SwapDetailsComponentSkeleton />
 
   return (
     <>
@@ -150,7 +150,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                       iconClassName="text-gray-500"
                     >
                       {swap?.destination_address.slice(0, 8) +
-                        "..." +
+                        '...' +
                         swap?.destination_address.slice(
                           swap?.destination_address.length - 5,
                           swap?.destination_address.length
@@ -169,9 +169,9 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                     <div className="inline-flex items-center">
                       <div className="underline hover:no-underline flex items-center space-x-1">
                         <a
-                          target={"_blank"}
+                          target={'_blank'}
                           href={sourceNetwork?.transaction_explorer_template?.replace(
-                            "{0}",
+                            '{0}',
                             swapInputTransaction.transaction_id
                           )}
                         >
@@ -209,9 +209,9 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                         ) : (
                           <div className="underline hover:no-underline flex items-center space-x-1">
                             <a
-                              target={"_blank"}
+                              target={'_blank'}
                               href={destinationNetwork?.transaction_explorer_template?.replace(
-                                "{0}",
+                                '{0}',
                                 swapOutputTransaction.transaction_id
                               )}
                             >
@@ -272,7 +272,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default SwapDetails;
+export default SwapDetails

@@ -1,32 +1,32 @@
-import React from "react";
-import Image from "next/image";
-import shortenAddress from "@/components/utils/ShortenAddress";
-import { useAtom } from "jotai";
-import { ethPriceAtom } from "@/store/teleport";
-import { truncateDecimals } from "@/components/utils/RoundDecimals";
-import type { Network, Token } from "@/types/teleport";
-import { useChainId } from "wagmi";
-import { useEthersSigner } from "@/lib/ethersToViem/ethers";
-import { networks as devNetworks } from "@/components/lux/teleport/constants/networks.sandbox";
-import { networks as mainNetworks } from "@/components/lux/teleport/constants/networks.mainnets";
-import { ethers } from "ethers";
+import React from 'react'
+import Image from 'next/image'
+import shortenAddress from '@/components/utils/ShortenAddress'
+import { useAtom } from 'jotai'
+import { ethPriceAtom } from '@/store/teleport'
+import { truncateDecimals } from '@/components/utils/RoundDecimals'
+import type { Network, Token } from '@/types/teleport'
+import { useChainId } from 'wagmi'
+import { useEthersSigner } from '@/lib/ethersToViem/ethers'
+import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
+import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
+import { ethers } from 'ethers'
 // import { erc20ABI } from "wagmi";
-import { formatEther } from "ethers/lib/utils";
-import MoveIcon from "./MoveIcon";
-import { WalletIcon } from "lucide-react";
-import { erc20ABI } from "@wagmi/core";
-import useWallet from "@/hooks/useWallet";
-import useAsyncEffect from "use-async-effect";
+import { formatEther } from 'ethers/lib/utils'
+import MoveIcon from './MoveIcon'
+import { WalletIcon } from 'lucide-react'
+import { erc20ABI } from '@wagmi/core'
+import useWallet from '@/hooks/useWallet'
+import useAsyncEffect from 'use-async-effect'
 
-const networks = [...devNetworks, ...mainNetworks];
+const networks = [...devNetworks, ...mainNetworks]
 
 interface IProps {
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
 }
 
 const SwapItems: React.FC<IProps> = ({
@@ -37,22 +37,22 @@ const SwapItems: React.FC<IProps> = ({
   destinationAsset,
   sourceAmount,
 }) => {
-  const [ethPrice] = useAtom(ethPriceAtom);
+  const [ethPrice] = useAtom(ethPriceAtom)
   //token price
-  const tokenPrice = ethPrice;
+  const tokenPrice = ethPrice
 
-  const { connectWallet } = useWallet();
+  const { connectWallet } = useWallet()
 
-  const [sourceBalance, setSourceBalance] = React.useState<string>("0");
+  const [sourceBalance, setSourceBalance] = React.useState<string>('0')
   const [destinationBalance, setDestinationBalance] =
-    React.useState<string>("0");
+    React.useState<string>('0')
 
-  const [isFetching, setIsFetching] = React.useState<boolean>(true);
+  const [isFetching, setIsFetching] = React.useState<boolean>(true)
 
-  const chainId = useChainId();
-  const signer = useEthersSigner();
+  const chainId = useChainId()
+  const signer = useEthersSigner()
 
-  const _network = networks.find((n) => n.chain_id === chainId);
+  const _network = networks.find((n) => n.chain_id === chainId)
 
   const _renderWallet = () => {
     if (signer) {
@@ -70,7 +70,7 @@ const SwapItems: React.FC<IProps> = ({
               <span>{_network.display_name}</span>
             </div>
           ) : (
-            "Unsupported Chain"
+            'Unsupported Chain'
           )}
           <span className="break-all truncate text-sm">
             {`${signer._address.substr(0, 10)}...${signer._address.substr(
@@ -78,64 +78,64 @@ const SwapItems: React.FC<IProps> = ({
             )}`}
           </span>
         </div>
-      );
+      )
     } else {
       return (
         <div className="bg-level-1 font-normal p-3 rounded-lg flex justify-between items-center gap-1 border border-[#404040] w-full">
           <span>No Connected Wallet</span>
           <span
-            onClick={() => connectWallet("evm")}
+            onClick={() => connectWallet('evm')}
             className="text-xs text-[#c9cca1] cursor-pointer hover:opacity-45"
           >
             CONNECT
           </span>
         </div>
-      );
+      )
     }
-  };
+  }
 
   const getNetworkBalance = async (network: Network, asset: Token) => {
     try {
-      const provider = new ethers.providers.JsonRpcProvider(network.node);
-      const address = signer?._address;
+      const provider = new ethers.providers.JsonRpcProvider(network.node)
+      const address = signer?._address
 
-      if (!address) return "0";
+      if (!address) return '0'
 
       if (asset.is_native) {
-        const ethBal = await provider.getBalance(signer?._address!);
-        return formatEther(ethBal);
+        const ethBal = await provider.getBalance(signer?._address!)
+        return formatEther(ethBal)
       } else {
         // Get ERC-20 token balance
         const tokenContract = new ethers.Contract(
           asset.contract_address!,
           erc20ABI,
           provider
-        );
-        const tokenBal = await tokenContract.balanceOf(address);
-        const decimals = await tokenContract.decimals();
-        return ethers.utils.formatUnits(tokenBal, decimals);
+        )
+        const tokenBal = await tokenContract.balanceOf(address)
+        const decimals = await tokenContract.decimals()
+        return ethers.utils.formatUnits(tokenBal, decimals)
       }
     } catch (err) {
-      console.log(err);
-      return "0";
+      console.log(err)
+      return '0'
     }
-  };
+  }
 
   useAsyncEffect(async () => {
     try {
-      setIsFetching(true);
+      setIsFetching(true)
       const [_sourceBalance, _destinationBalance] = await Promise.all([
         getNetworkBalance(sourceNetwork, sourceAsset),
         getNetworkBalance(destinationNetwork, destinationAsset),
-      ]);
-      setSourceBalance(_sourceBalance);
-      setDestinationBalance(_destinationBalance);
+      ])
+      setSourceBalance(_sourceBalance)
+      setDestinationBalance(_destinationBalance)
     } catch (err) {
-      console.log(":: balance fetch err", err);
+      console.log(':: balance fetch err', err)
     } finally {
-      setIsFetching(false);
+      setIsFetching(false)
     }
-  }, [signer, chainId]);
+  }, [signer, chainId])
 
   return (
     <div className="flex flex-col gap-4">
@@ -155,7 +155,7 @@ const SwapItems: React.FC<IProps> = ({
                 <p className=" text-sm leading-5">
                   {sourceNetwork.display_name}
                 </p>
-                <p className="text-sm ">{"Network"}</p>
+                <p className="text-sm ">{'Network'}</p>
               </div>
             </div>
             <div className="flex flex-col text-[#85c285]">
@@ -177,7 +177,7 @@ const SwapItems: React.FC<IProps> = ({
               <>
                 <WalletIcon height={20} width={20} />
                 <div className="opacity-80">
-                  {truncateDecimals(Number(sourceBalance), 5)}{" "}
+                  {truncateDecimals(Number(sourceBalance), 5)}{' '}
                   {sourceAsset.asset}
                 </div>
               </>
@@ -205,7 +205,7 @@ const SwapItems: React.FC<IProps> = ({
             </div>
             <div className="flex flex-col text-[#85c285]">
               <p className=" text-sm">
-                {truncateDecimals(Number(sourceAmount) * 0.99, 6)}{" "}
+                {truncateDecimals(Number(sourceAmount) * 0.99, 6)}{' '}
                 {destinationAsset.asset}
               </p>
               <p className=" text-sm flex justify-end">
@@ -222,7 +222,7 @@ const SwapItems: React.FC<IProps> = ({
               <>
                 <WalletIcon height={20} width={20} />
                 <div className="opacity-80">
-                  {truncateDecimals(Number(destinationBalance), 5)}{" "}
+                  {truncateDecimals(Number(destinationBalance), 5)}{' '}
                   {destinationAsset.asset}
                 </div>
               </>
@@ -231,7 +231,7 @@ const SwapItems: React.FC<IProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SwapItems;
+export default SwapItems

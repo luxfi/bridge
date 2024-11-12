@@ -1,9 +1,9 @@
-import React from "react";
-import toast from "react-hot-toast";
-import Web3 from "web3";
-import { useSwitchChain, useChainId } from "wagmi";
-import { useAtom } from "jotai";
-import axios from "axios";
+import React from 'react'
+import toast from 'react-hot-toast'
+import Web3 from 'web3'
+import { useSwitchChain, useChainId } from 'wagmi'
+import { useAtom } from 'jotai'
+import axios from 'axios'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
@@ -11,28 +11,28 @@ import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
-} from "@/store/teleport";
-import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
-import useNotification from "@/hooks/useNotification";
+} from '@/store/teleport'
+import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
+import useNotification from '@/hooks/useNotification'
 
 //hooks
-import { useEthersSigner } from "@/lib/ethersToViem/ethers";
+import { useEthersSigner } from '@/lib/ethersToViem/ethers'
 
-import useWallet from "@/hooks/useWallet";
-import SwapItems from "./SwapItems";
-import shortenAddress from "@/components/utils/ShortenAddress";
-import Gauge from "@/components/gauge";
-import type { Network, Token } from "@/types/teleport";
+import useWallet from '@/hooks/useWallet'
+import SwapItems from './SwapItems'
+import shortenAddress from '@/components/utils/ShortenAddress'
+import Gauge from '@/components/gauge'
+import type { Network, Token } from '@/types/teleport'
 
 interface IProps {
-  className?: string;
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
-  swapId: string;
+  className?: string
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
+  swapId: string
 }
 
 const TeleportProcessor: React.FC<IProps> = ({
@@ -46,51 +46,51 @@ const TeleportProcessor: React.FC<IProps> = ({
   swapId,
 }) => {
   //state
-  const [isMpcSigning, setIsMpcSigning] = React.useState<boolean>(false);
+  const [isMpcSigning, setIsMpcSigning] = React.useState<boolean>(false)
   //atoms
-  const [userTransferTransaction] = useAtom(userTransferTransactionAtom);
-  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
-  const [, setMpcSignature] = useAtom(mpcSignatureAtom);
+  const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
+  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
+  const [, setMpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const signer = useEthersSigner();
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
-  const { connectWallet } = useWallet();
+  const signer = useEthersSigner()
+  const chainId = useChainId()
+  const { switchChain } = useSwitchChain()
+  const { connectWallet } = useWallet()
 
-  const { showNotification } = useNotification();
+  const { showNotification } = useNotification()
 
   const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith("Lux") ? true : false),
+    () => (sourceAsset.name.startsWith('Lux') ? true : false),
     [sourceAsset]
-  );
+  )
 
   React.useEffect(() => {
     if (!signer) {
-      connectWallet("evm");
+      connectWallet('evm')
     } else {
       if (chainId === sourceNetwork?.chain_id) {
-        getMpcSignature();
+        getMpcSignature()
       } else {
         sourceNetwork.chain_id &&
           switchChain &&
-          switchChain({ chainId: sourceNetwork.chain_id });
+          switchChain({ chainId: sourceNetwork.chain_id })
       }
     }
-  }, [swapStatus, chainId, signer]);
+  }, [swapStatus, chainId, signer])
 
   const getMpcSignature = async () => {
     try {
-      setIsMpcSigning(true);
+      setIsMpcSigning(true)
       const msgSignature = await signer?.signMessage(
-        "Sign to prove you are initiator of transaction."
-      );
+        'Sign to prove you are initiator of transaction.'
+      )
       // const toNetworkId = Web3.utils.keccak256(
       //   String(destinationNetwork?.chain_id)
       // );
-      const toNetworkId = destinationNetwork?.chain_id;
+      const toNetworkId = destinationNetwork?.chain_id
       const receiverAddressHash = Web3.utils.keccak256(
         String(destinationAddress)
-      ); //Web3.utils.keccak256(evmToAddress.slice(2));
+      ) //Web3.utils.keccak256(evmToAddress.slice(2));
 
       const signData = {
         txId: userTransferTransaction,
@@ -99,20 +99,20 @@ const TeleportProcessor: React.FC<IProps> = ({
         toTokenAddress: destinationAsset?.contract_address,
         msgSignature: msgSignature,
         receiverAddressHash: receiverAddressHash,
-      };
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/getsig`,
         {
-          method: "POST", // Specify the method (GET is default, so it's optional here)
+          method: 'POST', // Specify the method (GET is default, so it's optional here)
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(signData),
         }
-      );
-      const res = await response.json();
-      console.log("data from mpc oracle network:::", res);
+      )
+      const res = await response.json()
+      console.log('data from mpc oracle network:::', res)
       if (res.status) {
         await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/mpcsign/${swapId}`,
@@ -120,46 +120,48 @@ const TeleportProcessor: React.FC<IProps> = ({
             txHash: res.data.signature,
             amount: sourceAmount,
             from: signer?._address,
-            to: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
+            to: CONTRACTS[
+              Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
+            ].teleporter,
           }
-        );
-        setMpcSignature(res.data.signature);
-        setSwapStatus("user_payout_pending");
+        )
+        setMpcSignature(res.data.signature)
+        setSwapStatus('user_payout_pending')
       } else {
-        const { msg } = res;
-        if (String(msg).includes("InvalidSenderError")) {
+        const { msg } = res
+        if (String(msg).includes('InvalidSenderError')) {
           showNotification(
             "Invalid token sender. Try again using correct sender's account",
-            "warn"
-          );
+            'warn'
+          )
         } else {
           showNotification(
-            "Failed to get signature from MPC oracle network, Please try again",
-            "error"
-          );
+            'Failed to get signature from MPC oracle network, Please try again',
+            'error'
+          )
         }
       }
     } catch (err) {
-      console.log("mpc sign request failed:::", err);
+      console.log('mpc sign request failed:::', err)
     } finally {
-      setIsMpcSigning(false);
+      setIsMpcSigning(false)
     }
-  };
+  }
   const handleGetMpcSignature = () => {
     if (!signer) {
       showNotification(
-        "No connected wallet. Please connect your wallet",
-        "warn"
-      );
-      connectWallet("evm");
+        'No connected wallet. Please connect your wallet',
+        'warn'
+      )
+      connectWallet('evm')
     } else if (chainId !== sourceNetwork.chain_id) {
       sourceNetwork.chain_id &&
         switchChain &&
-        switchChain({ chainId: sourceNetwork.chain_id });
+        switchChain({ chainId: sourceNetwork.chain_id })
     } else {
-      getMpcSignature();
+      getMpcSignature()
     }
-  };
+  }
 
   return (
     <div className={`w-full flex flex-col ${className}`}>
@@ -192,17 +194,17 @@ const TeleportProcessor: React.FC<IProps> = ({
                 </span>
                 <div className="flex flex-col items-center text-sm">
                   <span>
-                    {sourceAsset?.asset}{" "}
-                    {isWithdrawal ? "Burned" : "Transferred"}
+                    {sourceAsset?.asset}{' '}
+                    {isWithdrawal ? 'Burned' : 'Transferred'}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          target={"_blank"}
+                          target={'_blank'}
                           href={sourceNetwork?.transaction_explorer_template?.replace(
-                            "{0}",
+                            '{0}',
                             userTransferTransaction
                           )}
                           className="cursor-pointer"
@@ -271,7 +273,7 @@ const TeleportProcessor: React.FC<IProps> = ({
                                             <path d="M48 48L68 69" stroke="white" strokeWidth="3.15789" strokeLinecap="round" /> */}
                   </svg>
                   <div className="flex items-center gap-3 text-sm">
-                    <span>Signing from MPC Oracle</span>{" "}
+                    <span>Signing from MPC Oracle</span>{' '}
                     <a
                       onClick={handleGetMpcSignature}
                       className="underline font-bold cursor-pointer hover:font-extrabold text-[#77aa63]"
@@ -286,7 +288,7 @@ const TeleportProcessor: React.FC<IProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default TeleportProcessor;
+export default TeleportProcessor

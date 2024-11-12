@@ -1,40 +1,29 @@
-import { useCallback, useState } from "react"
-import Image from "next/image";
-import { ChevronDown } from "lucide-react";
+import { useCallback, useState } from 'react'
+import Image from 'next/image'
+import { ChevronDown } from 'lucide-react'
 
-import TokenSelect from "./TokenSelect";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger,
-
-} from '@hanzo/ui/primitives'
-import type { Token } from "@/types/teleport";
+import TokenSelect from './TokenSelect'
+import { Popover, PopoverContent, PopoverTrigger } from '@hanzo/ui/primitives'
+import type { Token } from '@/types/teleport'
 
 const TokenSelectWrapper: React.FC<{
-  setValue: (value: Token) => void;
-  values: Token[];
-  value?: Token;
-  placeholder?: string;
-  searchHint?: string;
-  disabled?: boolean;
-}> = ({
-  setValue,
-  value,
-  values,
-  placeholder,
-  disabled,
-}) => {
-  const [showModal, setShowModal] = useState(false);
+  setValue: (value: Token) => void
+  values: Token[]
+  value?: Token
+  placeholder?: string
+  searchHint?: string
+  disabled?: boolean
+}> = ({ setValue, value, values, placeholder, disabled }) => {
+  const [showModal, setShowModal] = useState(false)
 
   const handleSelect = useCallback((item: Token) => {
-    if (item.status === "active") {
-      setValue(item);
-      setShowModal(false);
+    if (item.status === 'active') {
+      setValue(item)
+      setShowModal(false)
     }
-  }, []);
+  }, [])
 
-  if (values.length === 0) return <Placeholder placeholder={placeholder} />;
+  if (values.length === 0) return <Placeholder placeholder={placeholder} />
 
   return (
     <Popover open={showModal} onOpenChange={() => setShowModal(!showModal)}>
@@ -87,16 +76,16 @@ const TokenSelectWrapper: React.FC<{
         <TokenSelect setValue={handleSelect} values={values} />
       </PopoverContent>
     </Popover>
-  );
-};
+  )
+}
 
 const Placeholder = ({ placeholder }: { placeholder: string | undefined }) => {
   return (
     <span className="block text-xs md:text-base font-medium text-muted-3 flex-auto items-center">
       {placeholder}
     </span>
-  );
-};
+  )
+}
 
 const LockedAsset = ({ value }: { value: Token }) => {
   return (
@@ -119,7 +108,7 @@ const LockedAsset = ({ value }: { value: Token }) => {
         </span>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default TokenSelectWrapper;
+export default TokenSelectWrapper

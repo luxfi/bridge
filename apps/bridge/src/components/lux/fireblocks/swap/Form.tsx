@@ -1,24 +1,24 @@
-"use client";
-import React from "react";
-import dynamic from "next/dynamic";
-import Image from "next/image";
-import axios from "axios";
-import Modal from "@/components/modal/modal";
-import ResizablePanel from "@/components/ResizablePanel";
-import shortenAddress from "../../../utils/ShortenAddress";
-import { type FC } from "react";
-import { ArrowLeftRight } from "lucide-react";
-import Widget from "../../../Widget";
+'use client'
+import React from 'react'
+import dynamic from 'next/dynamic'
+import Image from 'next/image'
+import axios from 'axios'
+import Modal from '@/components/modal/modal'
+import ResizablePanel from '@/components/ResizablePanel'
+import shortenAddress from '../../../utils/ShortenAddress'
+import { type FC } from 'react'
+import { ArrowLeftRight } from 'lucide-react'
+import Widget from '../../../Widget'
 
-import FromNetworkForm from "./from/NetworkFormField";
-import ToNetworkForm from "./to/NetworkFormField";
-import SwapDetails from "./SwapDetails";
-import type { Token, Network } from "@/types/fireblocks";
-import { SWAP_PAIRS } from "@/components/lux/fireblocks/constants/settings";
-import { useAtom } from "jotai";
+import FromNetworkForm from './from/NetworkFormField'
+import ToNetworkForm from './to/NetworkFormField'
+import SwapDetails from './SwapDetails'
+import type { Token, Network } from '@/types/fireblocks'
+import { SWAP_PAIRS } from '@/components/lux/fireblocks/constants/settings'
+import { useAtom } from 'jotai'
 
-import devNetworks from "@/components/lux/fireblocks/constants/networks.sandbox";
-import mainNetworks from "@/components/lux/fireblocks/constants/networks.mainnets";
+import devNetworks from '@/components/lux/fireblocks/constants/networks.sandbox'
+import mainNetworks from '@/components/lux/fireblocks/constants/networks.mainnets'
 
 import {
   sourceNetworkAtom,
@@ -31,64 +31,63 @@ import {
   swapStatusAtom,
   swapIdAtom,
   timeToExpireAtom,
-} from "@/store/fireblocks";
-import SpinIcon from "@/components/icons/spinIcon";
-import { SwapStatus } from "@/Models/SwapStatus";
+} from '@/store/fireblocks'
+import SpinIcon from '@/components/icons/spinIcon'
+import { SwapStatus } from '@/Models/SwapStatus'
 
 const Address = dynamic(
-  () => import("@/components/lux/fireblocks/share/Address"),
+  () => import('@/components/lux/fireblocks/share/Address'),
   {
     loading: () => <></>,
   }
-);
+)
 
 const Swap: FC = () => {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === "mainnet";
+  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
   const { sourceNetworks, destinationNetworks: dstNetworks } = isMainnet
     ? mainNetworks
-    : devNetworks;
+    : devNetworks
 
-  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
-  const [showAddressModal, setShowAddressModal] =
-    React.useState<boolean>(false);
-  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom);
-  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom);
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false)
+  const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false)
+  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
+  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
   const [destinationNetwork, setDestinationNetwork] = useAtom(
     destinationNetworkAtom
-  );
-  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom);
+  )
+  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
   const [destinationAddress, setDestinationAddress] = useAtom(
     destinationAddressAtom
-  );
-  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom);
-  const [swapId, setSwapId] = useAtom(swapIdAtom);
-  const [, setSwapStatus] = useAtom(swapStatusAtom);
-  const [, setEthPrice] = useAtom(ethPriceAtom);
-  const [, setTimeToExpire] = useAtom(timeToExpireAtom);
+  )
+  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
+  const [swapId, setSwapId] = useAtom(swapIdAtom)
+  const [, setSwapStatus] = useAtom(swapStatusAtom)
+  const [, setEthPrice] = useAtom(ethPriceAtom)
+  const [, setTimeToExpire] = useAtom(timeToExpireAtom)
 
   const [destinationNetworks, setDestinationNetworks] =
-    React.useState<Network[]>(dstNetworks);
+    React.useState<Network[]>(dstNetworks)
 
   React.useEffect(() => {
     sourceNetwork &&
       sourceNetwork.currencies.length > 0 &&
       setSourceAsset(
-        sourceNetwork.currencies.find((c) => c.status === "active")
-      );
-  }, [sourceNetwork]);
+        sourceNetwork.currencies.find((c) => c.status === 'active')
+      )
+  }, [sourceNetwork])
 
   React.useEffect(() => {
-    setSourceNetwork(sourceNetworks.find((n) => n.status === "active"));
-  }, []);
+    setSourceNetwork(sourceNetworks.find((n) => n.status === 'active'))
+  }, [])
 
   React.useEffect(() => {
     if (sourceAsset) {
       const _networks = dstNetworks
         .filter((n: Network) => {
           if (n.currencies.some((c: Token) => SWAP_PAIRS[sourceAsset.asset])) {
-            return true;
+            return true
           } else {
-            return false;
+            return false
           }
         })
         .map((n: Network) => ({
@@ -97,47 +96,47 @@ const Swap: FC = () => {
             ...c,
             status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
               ? c.status
-              : "inactive",
+              : 'inactive',
           })),
-        }));
-      setDestinationNetworks(_networks);
-      setDestinationNetwork(_networks.find((n) => n.status === "active"));
+        }))
+      setDestinationNetworks(_networks)
+      setDestinationNetwork(_networks.find((n) => n.status === 'active'))
     }
-  }, [sourceAsset, sourceNetwork]);
+  }, [sourceAsset, sourceNetwork])
 
   React.useEffect(() => {
     setDestinationAsset(
-      destinationNetwork?.currencies.find((c) => c.status === "active")
-    );
-  }, [destinationNetwork]);
+      destinationNetwork?.currencies.find((c) => c.status === 'active')
+    )
+  }, [destinationNetwork])
 
-  const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false);
+  const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false)
 
   React.useEffect(() => {
     if (sourceAsset) {
       axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
-        setEthPrice(Number(data?.data?.data?.price));
-      });
+        setEthPrice(Number(data?.data?.data?.price))
+      })
     }
-  }, [sourceAsset]);
+  }, [sourceAsset])
 
   const warnningMessage = React.useMemo(() => {
     if (!sourceNetwork) {
-      return "Select Source Network";
+      return 'Select Source Network'
     } else if (!sourceAsset) {
-      return "Select Source Asset";
+      return 'Select Source Asset'
     } else if (!destinationNetwork) {
-      return "Select Destination Network";
+      return 'Select Destination Network'
     } else if (!destinationAsset) {
-      return "Select Destination Asset";
+      return 'Select Destination Asset'
     } else if (!destinationAddress) {
-      return "Input Address";
-    } else if (sourceAmount === "") {
-      return "Enter Token Amount";
+      return 'Input Address'
+    } else if (sourceAmount === '') {
+      return 'Enter Token Amount'
     } else if (Number(sourceAmount) <= 0) {
-      return "Invalid Token Amount";
+      return 'Invalid Token Amount'
     } else {
-      return "Swap Now";
+      return 'Swap Now'
     }
   }, [
     sourceNetwork,
@@ -146,7 +145,7 @@ const Swap: FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
-  ]);
+  ])
 
   const createSwap = async () => {
     try {
@@ -154,35 +153,35 @@ const Swap: FC = () => {
         amount: Number(sourceAmount),
         source_network: sourceNetwork,
         source_asset: sourceAsset?.asset,
-        source_address: "",
+        source_address: '',
         destination_network: destinationNetwork?.internal_name,
         destination_asset: destinationAsset?.asset,
         destination_address: destinationAddress,
         refuel: false,
         use_deposit_address: true,
         use_teleporter: false,
-        app_name: "Bridge",
-      };
+        app_name: 'Bridge',
+      }
       const response = await axios.post(
         `/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
         data
-      );
-      console.log("::fireblocks res:", response.data);
-      setSwapId(response.data?.data?.swap_id);
-      setTimeToExpire(new Date(response.data?.data?.created_date).getTime());
+      )
+      console.log('::fireblocks res:', response.data)
+      setSwapId(response.data?.data?.swap_id)
+      setTimeToExpire(new Date(response.data?.data?.created_date).getTime())
       window.history.pushState(
         {},
-        "",
+        '',
         `/swap/fireblocks/${response.data?.data?.swap_id}`
-      );
-      setSwapStatus(SwapStatus.UserDepositPending);
-      setShowSwapModal(true);
+      )
+      setSwapStatus(SwapStatus.UserDepositPending)
+      setShowSwapModal(true)
     } catch (err) {
-      console.log(err);
+      console.log(err)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleSwap = () => {
     if (
@@ -193,10 +192,10 @@ const Swap: FC = () => {
       destinationAddress &&
       Number(sourceAmount) > 0
     ) {
-      createSwap();
-      setIsSubmitting(true);
+      createSwap()
+      setIsSubmitting(true)
     }
-  };
+  }
 
   return (
     <Widget className="sm:min-h-[504px] max-w-lg">
@@ -211,7 +210,7 @@ const Swap: FC = () => {
               network={sourceNetwork}
               asset={sourceAsset}
               setNetwork={(network: Network) => {
-                setSourceNetwork(network);
+                setSourceNetwork(network)
               }}
               setAsset={(token: Token) => setSourceAsset(token)}
               networks={sourceNetworks}
@@ -240,7 +239,7 @@ const Swap: FC = () => {
             htmlFor="destination_address"
             className="block font-semibold text-xs"
           >
-            {`To ${destinationNetwork?.display_name ?? ""} address`}
+            {`To ${destinationNetwork?.display_name ?? ''} address`}
           </label>
           <AddressButton
             disabled={
@@ -251,11 +250,11 @@ const Swap: FC = () => {
             }
             isPartnerWallet={false}
             openAddressModal={() => setShowAddressModal(true)}
-            partnerImage={"partnerImage"}
+            partnerImage={'partnerImage'}
             address={destinationAddress}
           />
           <Modal
-            header={`To ${destinationNetwork?.display_name ?? ""} address`}
+            header={`To ${destinationNetwork?.display_name ?? ''} address`}
             height="fit"
             show={showAddressModal}
             setShow={setShowAddressModal}
@@ -271,8 +270,8 @@ const Swap: FC = () => {
               }
               address={destinationAddress}
               setAddress={setDestinationAddress}
-              name={"destination_address"}
-              partnerImage={"partnerImage"}
+              name={'destination_address'}
+              partnerImage={'partnerImage'}
               isPartnerWallet={false}
               address_book={[]}
               network={destinationNetwork}
@@ -297,7 +296,7 @@ const Swap: FC = () => {
           {isSubmitting ? (
             <SpinIcon className="animate-spin h-5 w-5" />
           ) : (
-            warnningMessage === "Swap Now" && (
+            warnningMessage === 'Swap Now' && (
               <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
             )
           )}
@@ -319,7 +318,7 @@ const Swap: FC = () => {
             destinationAsset &&
             destinationAddress ? (
               <SwapDetails
-                className="min-h-[450px] justify-center"
+                className="min-h-[450px] justify-center max-w-lg"
                 sourceNetwork={sourceNetwork}
                 sourceAsset={sourceAsset}
                 destinationNetwork={destinationNetwork}
@@ -342,20 +341,20 @@ const Swap: FC = () => {
         </Modal>
       </Widget.Content>
     </Widget>
-  );
-};
+  )
+}
 
 const TruncatedAdrress = ({ address }: { address: string }) => {
-  const shortAddress = shortenAddress(address);
-  return <div className="tracking-wider ">{shortAddress}</div>;
-};
+  const shortAddress = shortenAddress(address)
+  return <div className="tracking-wider ">{shortAddress}</div>
+}
 
 const AddressButton: FC<{
-  openAddressModal: () => void;
-  isPartnerWallet: boolean;
-  partnerImage?: string;
-  disabled: boolean;
-  address: string;
+  openAddressModal: () => void
+  isPartnerWallet: boolean
+  partnerImage?: string
+  disabled: boolean
+  address: string
 }> = ({
   openAddressModal,
   isPartnerWallet,
@@ -390,6 +389,6 @@ const AddressButton: FC<{
       )}
     </div>
   </button>
-);
+)
 
-export default Swap;
+export default Swap
