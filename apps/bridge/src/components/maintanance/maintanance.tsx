@@ -16,7 +16,7 @@ function MaintananceContent(props: PropsWithChildren) {
         boot()
         updateWithProps()
     })
-    
+
     const twitterLogo = <TwitterLogo className=" h-6 w-6" />
     return (
         <div className="flex items-stretch flex-col">
@@ -24,14 +24,14 @@ function MaintananceContent(props: PropsWithChildren) {
                 <div className="flex flex-col justify-center space-y-12 p-10  md:min-h-fit min-h-[400px]">
                     <h1 className="text-xl tracking-tight text-gray-200">
                         <p className="mb-4 ">
-                            We&apos;re upgrading our systems and infrastructure to give you the best experience yet. 
+                            We&apos;re upgrading our systems and infrastructure to give you the best experience yet.
                         </p>
                         <span className="block font-bold text-3xl xl:inline">We&apos;ll be back at 15:00 UTC</span>
                         <p className="mt-4 ">
                             Any pending swaps will be completed after maintenance.
                         </p>
                     </h1>
-                    <SubmitButton onClick={() => window.open('https://twitter.com/layerswap', '_blank')} icon={twitterLogo} isDisabled={false} isSubmitting={false}>Follow for updates</SubmitButton>
+                    <SubmitButton onClick={() => window.open('https://twitter.com/luxdefi', '_blank')} icon={twitterLogo} isDisabled={false} isSubmitting={false}>Follow for updates</SubmitButton>
                 </div>
             </CardContainer>
         </div>
