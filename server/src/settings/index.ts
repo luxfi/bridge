@@ -12,8 +12,6 @@ export const mainnetSettings = {
     exchanges: mainnetExchanges,
     networks: [...mainnetNetworks, ...testnetNetworks]
   },
-  sources: [],
-  destinations: [],
   error: null
 }
 
