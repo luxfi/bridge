@@ -29,7 +29,7 @@ import type { ErrorInfo, PropsWithChildren } from 'react'
 
 const INTERCOM_APP_ID = 'o1kmvctg'
 import '@rainbow-me/rainbowkit/styles.css'
-import { NotificationProvider } from '@/context/notificationProvider'
+import { ToastProvider } from '@/context/toast-provider'
 
 const Contexts: React.FC<
   {
@@ -122,7 +122,7 @@ const Contexts: React.FC<
                   FallbackComponent={ErrorFallback}
                   onError={logErrorToService}
                 >
-                  <NotificationProvider>
+                  <ToastProvider>
                     <JotaiProvider>
                       {/* <TonConnectProvider basePath={''} themeData={themeData}> */}
                       <RainbowKit>
@@ -134,7 +134,7 @@ const Contexts: React.FC<
                       </RainbowKit>
                       {/* </TonConnectProvider> */}
                     </JotaiProvider>
-                  </NotificationProvider>
+                  </ToastProvider>
                 </ErrorBoundary>
               </TooltipProvider>
             </AuthProvider>

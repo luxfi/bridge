@@ -9,9 +9,9 @@ overrides:
   react-dom: 18.3.1
   '@types/react': 18.3.12
   '@types/react-dom': 18.3.1
-  '@luxfi/ui': 5.3.22
+  '@luxfi/ui': 5.3.23
   '@luxfi/data': 1.0.9
-  '@hanzo/auth': 2.5.1
+  '@hanzo/auth': 2.5.2
   '@hanzo/commerce': 7.3.4
   '@hanzo/ui': 4.0.5
   next: 14.2.14
@@ -29,8 +29,8 @@ importers:
         specifier: ^0.15.0
         version: 0.15.0(ukqbwyxi7iesr5fqkx6p53ypwe)
       '@hanzo/auth':
-        specifier: 2.5.1
-        version: 2.5.1(j5jhqg7skdqsxpleiepzx3hafq)
+        specifier: 2.5.2
+        version: 2.5.2(j5jhqg7skdqsxpleiepzx3hafq)
       '@hanzo/ui':
         specifier: 4.0.5
         version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
@@ -47,14 +47,14 @@ importers:
         specifier: 1.4.13
         version: 1.4.13(@babel/core@7.26.0)(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)
       '@luxfi/ui':
-        specifier: 5.3.22
-        version: 5.3.22(v4yvrhyw7pdlw5vtxkab5piq4i)
+        specifier: 5.3.23
+        version: 5.3.23(5uie6ml62xrpmrnaryzd42wqfe)
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
       '@next/mdx':
         specifier: 14.1.0
-        version: 14.1.0(@mdx-js/loader@3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
+        version: 14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
       '@prisma/client':
         specifier: ^5.21.1
         version: 5.21.1(prisma@5.22.0)
@@ -235,7 +235,7 @@ importers:
     devDependencies:
       '@mdx-js/loader':
         specifier: ^3.0.0
-        version: 3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
+        version: 3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       '@mdx-js/react':
         specifier: ^3.0.0
         version: 3.1.0(@types/react@18.3.12)(react@18.3.1)
@@ -350,6 +350,9 @@ importers:
       typescript:
         specifier: 5.6.3
         version: 5.6.3
+      webpack-watch-files-plugin:
+        specifier: ^1.2.1
+        version: 1.2.1(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
 
   apps/explorer:
     dependencies:
@@ -1931,8 +1934,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hanzo/auth@2.5.1':
-    resolution: {integrity: sha512-HxrU6oBSrH8oxC46b1BDB5eWZIHv3nWYtbooxPDoig/D1rs5n+OS4lYiqukO4PQYtIhUvLUuFuQFqtGEqZdUGg==}
+  '@hanzo/auth@2.5.2':
+    resolution: {integrity: sha512-56+a82zFp2olo8utu6Ic/vxJTFASQPuZAfcmQFWxd5QnfO5fVgI+GW8bjqAj+tJANjL4rO0hItSBBg38BdcXag==}
     peerDependencies:
       '@hanzo/ui': 4.0.5
       '@hookform/resolvers': ^3.3.4
@@ -1948,7 +1951,7 @@ packages:
   '@hanzo/commerce@7.3.2':
     resolution: {integrity: sha512-f2c9Tc5zkhWdgyI7tHLK3trF4ObUigk8MkAyc67nUwGPm9c9PkkQLC3CiMEy/fZrIFuvFy580b+aGqEQfC7p6w==}
     peerDependencies:
-      '@hanzo/auth': 2.5.1
+      '@hanzo/auth': 2.5.2
       '@hanzo/ui': 4.0.5
       '@hookform/resolvers': ^3.3.4
       '@radix-ui/react-radio-group': ^1.1.3
@@ -2139,10 +2142,10 @@ packages:
       tailwindcss-animate: ^1.0.6
       tailwindcss-interaction-media: ^0.1.0
 
-  '@luxfi/ui@5.3.22':
-    resolution: {integrity: sha512-wRqno4wZTpt00y6Cu7DbkqmsZQgE3rF1JunvWPLnkFvNTIRWyJpj4OZfkF4k6HlhiAN81tklJfMDv3JDJkFHjA==}
+  '@luxfi/ui@5.3.23':
+    resolution: {integrity: sha512-oc5n+zHz/ztt3KNFJ0IpejnoCUQSKOJyG9jYJzq+ILX2/XodKJ3VYrIdvru/Rmfd8InDamxN8LG1VeGzEjpMnA==}
     peerDependencies:
-      '@hanzo/auth': 2.5.1
+      '@hanzo/auth': 2.5.2
       '@hanzo/commerce': 7.3.4
       '@hanzo/ui': 4.0.5
       '@hookform/resolvers': ^3.3.2
@@ -13177,6 +13180,11 @@ packages:
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
+  webpack-watch-files-plugin@1.2.1:
+    resolution: {integrity: sha512-zgEN+thvzoVXqHivMdxtZVzWKnTA6fgbO1wPYS+uAdNl5ashkisIH07/uwUTusYoM7/XjVmF2qRp5t0QeGMB9Q==}
+    peerDependencies:
+      webpack: ^3 || ^4 || ^5
+
   webpack@5.95.0:
     resolution: {integrity: sha512-2t3XstrKULz41MNMBF+cJ97TyHdyQ8HCt//pqErqDvNjU9YQBnZxIHa11VXsi7F3mb5/aO2tuDxdeTPdU7xu9Q==}
     engines: {node: '>=10.13.0'}
@@ -15437,7 +15445,7 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
-  '@hanzo/auth@2.5.1(j5jhqg7skdqsxpleiepzx3hafq)':
+  '@hanzo/auth@2.5.2(j5jhqg7skdqsxpleiepzx3hafq)':
     dependencies:
       '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
@@ -15454,9 +15462,9 @@ snapshots:
       - encoding
       - supports-color
 
-  '@hanzo/commerce@7.3.2(vn6hy4ez5jlievcypxbs2whxai)':
+  '@hanzo/commerce@7.3.2(3os432l6g33qwob6rnpzqi4ndy)':
     dependencies:
-      '@hanzo/auth': 2.5.1(j5jhqg7skdqsxpleiepzx3hafq)
+      '@hanzo/auth': 2.5.2(j5jhqg7skdqsxpleiepzx3hafq)
       '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       '@radix-ui/react-radio-group': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -15889,10 +15897,10 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@luxfi/ui@5.3.22(v4yvrhyw7pdlw5vtxkab5piq4i)':
+  '@luxfi/ui@5.3.23(5uie6ml62xrpmrnaryzd42wqfe)':
     dependencies:
-      '@hanzo/auth': 2.5.1(j5jhqg7skdqsxpleiepzx3hafq)
-      '@hanzo/commerce': 7.3.2(vn6hy4ez5jlievcypxbs2whxai)
+      '@hanzo/auth': 2.5.2(j5jhqg7skdqsxpleiepzx3hafq)
+      '@hanzo/commerce': 7.3.2(3os432l6g33qwob6rnpzqi4ndy)
       '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       '@next/third-parties': 14.2.16(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
@@ -15939,9 +15947,9 @@ snapshots:
 
   '@magic-sdk/types@15.8.0': {}
 
-  '@mdx-js/loader@3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
+  '@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
     dependencies:
-      '@mdx-js/mdx': 3.1.0(acorn@7.4.1)
+      '@mdx-js/mdx': 3.1.0(acorn@8.14.0)
       source-map: 0.7.4
     optionalDependencies:
       webpack: 5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)
@@ -15955,36 +15963,6 @@ snapshots:
       source-map: 0.7.4
     optionalDependencies:
       webpack: 5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))
-    transitivePeerDependencies:
-      - acorn
-      - supports-color
-
-  '@mdx-js/mdx@3.1.0(acorn@7.4.1)':
-    dependencies:
-      '@types/estree': 1.0.6
-      '@types/estree-jsx': 1.0.5
-      '@types/hast': 3.0.4
-      '@types/mdx': 2.0.13
-      collapse-white-space: 2.1.0
-      devlop: 1.1.0
-      estree-util-is-identifier-name: 3.0.0
-      estree-util-scope: 1.0.0
-      estree-walker: 3.0.3
-      hast-util-to-jsx-runtime: 2.3.2
-      markdown-extensions: 2.0.0
-      recma-build-jsx: 1.0.0
-      recma-jsx: 1.0.0(acorn@7.4.1)
-      recma-stringify: 1.0.0
-      rehype-recma: 1.0.0
-      remark-mdx: 3.1.0
-      remark-parse: 11.0.0
-      remark-rehype: 11.1.1
-      source-map: 0.7.4
-      unified: 11.0.5
-      unist-util-position-from-estree: 2.0.0
-      unist-util-stringify-position: 4.0.0
-      unist-util-visit: 5.0.0
-      vfile: 6.0.3
     transitivePeerDependencies:
       - acorn
       - supports-color
@@ -16291,11 +16269,11 @@ snapshots:
     dependencies:
       glob: 10.3.10
 
-  '@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))':
+  '@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))':
     dependencies:
       source-map: 0.7.4
     optionalDependencies:
-      '@mdx-js/loader': 3.1.0(acorn@7.4.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
+      '@mdx-js/loader': 3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       '@mdx-js/react': 3.1.0(@types/react@18.3.12)(react@18.3.1)
 
   '@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))':
@@ -23669,7 +23647,7 @@ snapshots:
       debug: 4.3.7(supports-color@5.5.0)
       enhanced-resolve: 5.17.1
       eslint: 8.43.0
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
@@ -23688,7 +23666,7 @@ snapshots:
       debug: 4.3.7(supports-color@5.5.0)
       enhanced-resolve: 5.17.1
       eslint: 8.49.0
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.49.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.49.0))(eslint@8.49.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
@@ -23701,7 +23679,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -23712,7 +23690,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.49.0):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.49.0))(eslint@8.49.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -23744,7 +23722,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.43.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
@@ -23773,7 +23751,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.49.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.49.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@6.21.0(eslint@8.49.0)(typescript@5.6.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.49.0))(eslint@8.49.0)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
@@ -28960,16 +28938,6 @@ snapshots:
       estree-util-build-jsx: 3.0.1
       vfile: 6.0.3
 
-  recma-jsx@1.0.0(acorn@7.4.1):
-    dependencies:
-      acorn-jsx: 5.3.2(acorn@7.4.1)
-      estree-util-to-js: 2.0.0
-      recma-parse: 1.0.0
-      recma-stringify: 1.0.0
-      unified: 11.0.5
-    transitivePeerDependencies:
-      - acorn
-
   recma-jsx@1.0.0(acorn@8.14.0):
     dependencies:
       acorn-jsx: 5.3.2(acorn@8.14.0)
@@ -31689,6 +31657,12 @@ snapshots:
   webpack-virtual-modules@0.5.0: {}
 
   webpack-virtual-modules@0.6.2: {}
+
+  webpack-watch-files-plugin@1.2.1(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)):
+    dependencies:
+      glob: 7.2.3
+      lodash: 4.17.21
+      webpack: 5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20)
 
   webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)):
     dependencies:

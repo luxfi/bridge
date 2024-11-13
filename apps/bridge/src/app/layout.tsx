@@ -10,7 +10,6 @@ import { Footer } from '@luxfi/ui'
 import '../styles/globals.css'
 import '../styles/dialog-transition.css'
 import '@rainbow-me/rainbowkit/styles.css'
-import 'react-toastify/dist/ReactToastify.css'
 
 import siteDef from '@/site-def'
 import _metadata from '@/metadata'

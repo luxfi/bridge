@@ -37,8 +37,8 @@ pnpm install (from root or any project subdir)
 datasource db {
   //provider  = "postgresql"
   provider  = "sqlite"
-  url       = env("POSTGRES_URL")
-  directUrl = env("POSTGRES_URL")
+  url       = env("POSTGRESQL_URL")
+  directUrl = env("POSTGRESQL_URL")
 }
 ```
 
@@ -46,7 +46,7 @@ datasource db {
 
   in `.env`
 
-  `POSTGRES_URL=file:./dev.sqlite`
+  `POSTGRESQL_URL=file:./dev.sqlite`
 
 - create the local `sqlite` instance
 
@@ -112,7 +112,7 @@ Set the REPLICAS environment variable to the desired number of replicas before r
 
 pnpm k8s:create-secret
 
-Ensure the POSTGRES_URL environment variable is set with your PostgreSQL connection string.
+Ensure the POSTGRESQL_URL environment variable is set with your PostgreSQL connection string.
 
     •	Restart Deployment:
 
@@ -138,7 +138,7 @@ pnpm format
 
 The server utilizes environment variables for configuration. Create a .env file in the server directory with the following variables:
 
-POSTGRES_URL=your_postgres_connection_string
+POSTGRESQL_URL=your_postgres_connection_string
 GH_USER=your_github_username
 GH_TOKEN=your_github_token
 REPLICAS=number_of_replicas
