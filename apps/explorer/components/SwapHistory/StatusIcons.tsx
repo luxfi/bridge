@@ -4,49 +4,49 @@ export function StatusIcon({ swap, className}: { swap: string | undefined , clas
   switch (swap) {
     case SwapStatus.Failed:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <RedIcon />
           <p>Failed</p>
         </div>
       )
     case SwapStatus.Completed:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <GreenIcon />
           <p>Completed</p>
         </div>
       )
     case SwapStatus.Cancelled:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <GreyIcon />
           <p>Cancelled</p>
         </div>
       )
     case SwapStatus.UserTransferPending:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <YellowIcon />
           <p>Deposite pending</p>
         </div>
       )
     case SwapStatus.UserTransferDelayed:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <YellowIcon />
           <p>Delayed</p>
         </div>
       )
     case SwapStatus.BridgeTransferPending:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <YellowIcon />
           <p>Pending</p>
         </div>
       )
     case SwapStatus.Expired:
       return (
-        <div className={"inline-flex items-center " + className ?? ''} >
+        <div className={"inline-flex items-center " + className} >
           <GreyIcon />
           <p>Expired</p>
         </div>
