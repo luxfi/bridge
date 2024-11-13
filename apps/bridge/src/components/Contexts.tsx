@@ -40,7 +40,7 @@ const Contexts: React.FC<
   const searchParams = useSearchParams()
 
   useAsyncEffect(async() => {
-    const settings = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/networks?version=mainnet`)
+    const settings = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/networks?version=mainnet`)
     console.log("::settings;;;", settings)
   }, [])
 
