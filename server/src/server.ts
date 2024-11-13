@@ -9,6 +9,8 @@ import tokens from "@/routes/tokens"
 import limits from "@/routes/limits"
 import quotes from "@/routes/quotes"
 import rate from "@/routes/rate"
+import networks from "@/routes/networks"
+import exchanges from "@/routes/exchanges"
 
 dotenv.config()
 
@@ -26,6 +28,8 @@ app.use("/api/tokens", tokens)
 app.use("/api/limits", limits)
 app.use("/api/quotes", quotes)
 app.use("/api/rate", rate)
+app.use("/api/networks", networks)
+app.use("/api/exchanges", exchanges)
 
 app.get("/", async (req, res) => {
   res.json(">>> Hello world. We are LUX!!!")
