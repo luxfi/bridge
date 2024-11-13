@@ -7,5 +7,6 @@
     }
   },
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm build"
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev"
 }
