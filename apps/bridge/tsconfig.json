@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.apps.base.json",
   "include": [
-    "src/next-env.d.ts",
+    "next-env.d.ts",
     ".next/types/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx"
