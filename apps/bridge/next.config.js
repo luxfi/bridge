@@ -24,6 +24,7 @@ module.exports = (phase, { defaultConfig }) => {
    * @type {import('next').NextConfig}
    */
   const nextConfig = {
+    basePath: process.env.APP_BASE_PATH || '',
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
     reactStrictMode: true,
     i18n: {
@@ -63,12 +64,9 @@ module.exports = (phase, { defaultConfig }) => {
       removeConsole: false,
     },
     webpack: (config, { isServer, dev }) => {
-
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
-      if (!isServer) {
-        config.resolve.alias['@'] = path.resolve(__dirname + '/src');
-      }
+      config.resolve.alias['@'] = path.resolve(__dirname, 'src');
       let conf = svgrPluginConfig(config)
       if (dev) {
         conf =  watchPluginConfig(conf)
@@ -86,9 +84,6 @@ module.exports = (phase, { defaultConfig }) => {
     ],
   };
 
-  if (process.env.APP_BASE_PATH) {
-    nextConfig.basePath = process.env.APP_BASE_PATH;
-  }
   if (phase === PHASE_PRODUCTION_SERVER) {
     nextConfig.headers = async () => {
       return [
