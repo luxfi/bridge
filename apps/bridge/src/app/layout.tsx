@@ -18,7 +18,7 @@ import Contexts from '@/components/Contexts'
 import Main from '@/components/main'
 
 export const metadata = { ..._metadata }
-// export const viewport = { ...ViewportCode }
+export const viewport = { ...ViewportCode }
 
 const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => (
   <RootLayoutCore siteDef={siteDef} showHeader>
