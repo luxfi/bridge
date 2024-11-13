@@ -185,7 +185,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       ///////////////////////////////////////////////////////////////////
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/payout/${swapId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`,
         {
           txHash: _bridgePayoutTx.hash,
           amount: sourceAmount,
@@ -288,7 +288,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       await _bridgePayoutTx.wait()
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/payout/${swapId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`,
         {
           txHash: _bridgePayoutTx.hash,
           amount: sourceAmount,
