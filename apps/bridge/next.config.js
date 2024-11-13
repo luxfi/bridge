@@ -4,6 +4,7 @@ const withMDX = require("@next/mdx")();
 const { PHASE_PRODUCTION_SERVER } = require("next/constants");
 const path = require("path")
 const svgrPluginConfig = require('./next-conf/svgr.next.config')
+const watchPluginConfig = require('./next-conf/watch.next.config')
 
 
 const securityHeaders = [
@@ -63,13 +64,17 @@ module.exports = (phase, { defaultConfig }) => {
       removeConsole: false,
     },
     reactStrictMode: false,
-    webpack: (config, { isServer }) => {
+    webpack: (config, { isServer, dev }) => {
+
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       if (!isServer) {
         config.resolve.alias['@'] = path.resolve(__dirname + '/src');
       }
       let conf = svgrPluginConfig(config)
+      if (dev) {
+        conf =  watchPluginConfig(conf) 
+      }
       return conf
     },
     productionBrowserSourceMaps: true,
