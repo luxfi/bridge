@@ -24,6 +24,9 @@ module.exports = (phase, { defaultConfig }) => {
    * @type {import('next').NextConfig}
    */
   const nextConfig = {
+    experimental: {
+      outputFileTracingRoot: __dirname,
+    },
     basePath: process.env.APP_BASE_PATH || '',
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
     reactStrictMode: true,
