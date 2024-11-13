@@ -6,6 +6,9 @@ import swaps from "@/routes/swaps"
 import explorer from "@/routes/explorer"
 import settings from "@/routes/settings"
 import tokens from "@/routes/tokens"
+import limits from "@/routes/limits"
+import quotes from "@/routes/quotes"
+import rate from "@/routes/rate"
 
 dotenv.config()
 
@@ -20,6 +23,9 @@ app.use("/api/swaps", swaps)
 app.use("/api/explorer", explorer)
 app.use("/api/settings", settings)
 app.use("/api/tokens", tokens)
+app.use("/api/limits", limits)
+app.use("/api/quotes", quotes)
+app.use("/api/rate", rate)
 
 app.get("/", async (req, res) => {
   res.json(">>> Hello world. We are LUX!!!")

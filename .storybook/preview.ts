@@ -8,7 +8,7 @@ export const parameters = {
 const preview: Preview = {
   loaders: [
     async () => ({
-      settings: await (await fetch(`https://bridge-api.layerswap.io/api/settings?version=sandbox`)).json(),
+      settings: await (await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/settings?version=sandbox`)).json(),
     }),
   ],
   parameters: {
