@@ -102,7 +102,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/getsig`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/getsig`,
         {
           method: 'POST', // Specify the method (GET is default, so it's optional here)
           headers: {
@@ -115,7 +115,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       console.log('data from mpc oracle network:::', res)
       if (res.status) {
         await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/mpcsign/${swapId}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/mpcsign/${swapId}`,
           {
             txHash: res.data.signature,
             amount: sourceAmount,

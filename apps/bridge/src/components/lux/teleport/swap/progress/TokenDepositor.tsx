@@ -154,7 +154,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       )
       await _bridgeTransferTx.wait()
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/transfer/${swapId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/transfer/${swapId}`,
         {
           txHash: _bridgeTransferTx.hash,
           amount: sourceAmount,
@@ -216,7 +216,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       )
       await _bridgeTransferTx.wait()
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/transfer/${swapId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/transfer/${swapId}`,
         {
           txHash: _bridgeTransferTx.hash,
           amount: sourceAmount,
