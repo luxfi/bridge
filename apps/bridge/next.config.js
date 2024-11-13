@@ -26,8 +26,6 @@ module.exports = (phase, { defaultConfig }) => {
   const nextConfig = {
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
     reactStrictMode: true,
-    output: 'standalone',
-    swcMinify: false,
     i18n: {
       locales: ["en"],
       defaultLocale: "en",
