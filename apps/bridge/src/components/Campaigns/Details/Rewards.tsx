@@ -19,8 +19,8 @@ import shortenAddress from "../../utils/ShortenAddress"
 
 const Rewards: React.FC<{
   campaign: Campaign
-}> = ({ 
-  campaign 
+}> = ({
+  campaign
 }) => {
 
     const settings = useSettings()
@@ -65,7 +65,7 @@ const Rewards: React.FC<{
                     <span>Onboarding incentives that are earned by transferring to&nbsp;</span>{network?.display_name}<span>.&nbsp;</span>
                     <a
                         target='_blank'
-                        href="https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards"
+                        href="https://docs.lux.network/"
                         className=" underline hover:no-underline decoration-white cursor-pointer"
                     >Learn more</a>
                 </span>
