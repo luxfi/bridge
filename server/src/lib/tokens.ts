@@ -6,7 +6,7 @@ import axios from "axios";
 export const getTokenPrice = async (token_id: string) => {
   try {
     const headers = {
-      "x-api-key": process.env.NEXT_PUBLIC_COINBASE_API_KEY,
+      "x-api-key": process.env.COINBASE_API_KEY,
       accept: "application/json",
     };
     if (token_id === "LUX") {

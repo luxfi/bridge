@@ -1,7 +1,7 @@
 'use client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useSearchParams } from 'next/navigation'
-
+import axios from 'axios'
 import * as Sentry from '@sentry/nextjs'
 
 import { TooltipProvider } from '@hanzo/ui/primitives'
@@ -30,6 +30,7 @@ import type { ErrorInfo, PropsWithChildren } from 'react'
 const INTERCOM_APP_ID = 'o1kmvctg'
 import '@rainbow-me/rainbowkit/styles.css'
 import { ToastProvider } from '@/context/toast-provider'
+import useAsyncEffect from 'use-async-effect'
 
 const Contexts: React.FC<
   {
@@ -37,6 +38,11 @@ const Contexts: React.FC<
   } & PropsWithChildren
 > = ({ settings, children }) => {
   const searchParams = useSearchParams()
+
+  useAsyncEffect(async() => {
+    const settings = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/networks?version=mainnet`)
+    console.log("::settings;;;", settings)
+  }, [])
 
   // :aa These were was all that getServerSideProps() ever returned.
   // So seems clearest to just do it this way.

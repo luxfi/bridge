@@ -1,15 +1,15 @@
 import { v4 as uuidv4 } from 'uuid'
 import axios, { type AxiosInstance, type Method } from 'axios'
 
-import { type BridgeSettings } from '../Models/BridgeSettings'
-import { SwapStatus } from '../Models/SwapStatus'
 import AppSettings from './AppSettings'
+import BridgeAuthApiClient from './userAuthApiClient'
+import { type BridgeSettings } from '@/Models/BridgeSettings'
+import { type CryptoNetwork } from '@/Models/CryptoNetwork'
+import { type Exchange } from '@/Models/Exchange'
+import { SwapStatus } from '@/Models/SwapStatus'
 import { InitializeInstance } from './axiosInterceptor'
 import { AuthRefreshFailedError } from './Errors/AuthRefreshFailedError'
 import { ApiResponse, EmptyApiResponse } from '../Models/ApiResponse'
-import BridgeAuthApiClient from './userAuthApiClient'
-import { type CryptoNetwork } from '../Models/CryptoNetwork'
-import { type Exchange } from '../Models/Exchange'
 
 export default class BridgeApiClient {
   static apiBaseEndpoint?: string = AppSettings.BridgeApiUri

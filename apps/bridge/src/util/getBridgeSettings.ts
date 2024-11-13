@@ -1,6 +1,6 @@
 import type { BridgeSettings } from '@/Models/BridgeSettings'
-import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 import type { Exchange } from '@/Models/Exchange'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 import BridgeApiClient from '@/lib/BridgeApiClient'
 
 const getBridgeSettings = async (
@@ -31,10 +31,14 @@ const getBridgeSettings = async (
     }
   }
 
-  const apiClient = new BridgeApiClient()
-  const { data } = await apiClient.GetSettingsAsync()
+  // const apiClient = new BridgeApiClient()
+  // const { data } = await apiClient.GetSettingsAsync()
 
-  return data
+  // return data
+  return {
+    networks: [],
+    exchanges: [],
+  }
 }
 
 export default getBridgeSettings
