@@ -78,7 +78,7 @@ const Gauge = ({
                 />
             </svg>
             {showCheckmark && value == 100 ? (
-                <div className="absolute flex opacity-0 animate-gauge_fadeIn">
+                <div className="absolute opacity-80">
                     <Check className="h-5 w-5 text-foreground" strokeWidth={4} aria-hidden="true" />
                 </div>
             ) : null}
