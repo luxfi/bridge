@@ -7,8 +7,5 @@
     }
   },
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm build",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/$1" }
-  ]
+  "buildCommand": "pnpm build"
 }
