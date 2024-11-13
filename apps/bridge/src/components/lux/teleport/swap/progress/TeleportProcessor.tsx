@@ -11,9 +11,9 @@ import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
-} from '@/store/teleport'
-import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
-import useNotification from '@/hooks/useNotification'
+} from "@/store/teleport";
+import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
+import { useNotify } from '@/context/toast-provider';
 
 //hooks
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
@@ -57,7 +57,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
-  const { showNotification } = useNotification()
+  const { notify } = useNotify();
 
   const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith('Lux') ? true : false),
@@ -127,15 +127,17 @@ const TeleportProcessor: React.FC<IProps> = ({
         )
         setMpcSignature(res.data.signature)
         setSwapStatus('user_payout_pending')
-      } else {
+      } 
+      else {
         const { msg } = res
-        if (String(msg).includes('InvalidSenderError')) {
-          showNotification(
-            "Invalid token sender. Try again using correct sender's account",
+        if (String(msg).includes("InvalidSenderError")) {
+          notify(
+            "Invalid token sender. Try again using correct sender's account", // keep double quotes
             'warn'
           )
-        } else {
-          showNotification(
+        } 
+        else {
+          notify(
             'Failed to get signature from MPC oracle network, Please try again',
             'error'
           )
@@ -149,16 +151,18 @@ const TeleportProcessor: React.FC<IProps> = ({
   }
   const handleGetMpcSignature = () => {
     if (!signer) {
-      showNotification(
-        'No connected wallet. Please connect your wallet',
-        'warn'
-      )
-      connectWallet('evm')
-    } else if (chainId !== sourceNetwork.chain_id) {
-      sourceNetwork.chain_id &&
-        switchChain &&
+      notify(
+        "No connected wallet. Please connect your wallet",
+        "warn"
+      );
+      connectWallet("evm")
+    } 
+    else if (chainId !== sourceNetwork.chain_id) {
+      if (sourceNetwork.chain_id && switchChain) {
         switchChain({ chainId: sourceNetwork.chain_id })
-    } else {
+      }
+    } 
+    else {
       getMpcSignature()
     }
   }

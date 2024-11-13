@@ -125,6 +125,7 @@
     "storybook-addon-mock": "^4.3.0",
     "storybook-react-context": "^0.6.0",
     "tailwindcss": "*",
-    "typescript": "*"
+    "typescript": "*",
+    "webpack-watch-files-plugin": "^1.2.1"
   }
 }
