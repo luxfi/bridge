@@ -61,7 +61,7 @@ const CampaignDetails: React.FC<{
                   height='40'
                   width='40'
                   loading='eager'
-                  className='rounded-md object-contain' 
+                  className='rounded-md object-contain'
                 />
               </div>
             )}
@@ -75,7 +75,7 @@ const CampaignDetails: React.FC<{
             ) : (
               <BriefInformation network={network} campaign={campaign} />
             )}
-            <Leaderboard campaign={campaign} />            
+            <Leaderboard campaign={campaign} />
           </div>
       </Widget.Content>
       {!isConnected ? (
@@ -94,9 +94,9 @@ const CampaignDetails: React.FC<{
 const BriefInformation: React.FC<{
   campaign: Campaign,
   network?: Layer
-}> = ({ 
-  campaign, 
-  network 
+}> = ({
+  campaign,
+  network
 }) => (
     <p className="text-muted text-base">
     You can earn $<span>{campaign?.asset}</span>&nbsp;tokens by transferring
@@ -108,7 +108,7 @@ const BriefInformation: React.FC<{
       def={{
         title: "Learn more",
         newTab: true,
-        href: "https://docs.bridge.lux.network/user-docs/layerswap-campaigns/usdop-rewards",
+        href: "https://docs.lux.network",
       }}
       className="inline-flex text-primary underline hover:no-underline"
     />
