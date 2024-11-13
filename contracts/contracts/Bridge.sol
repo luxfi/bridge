@@ -444,18 +444,14 @@ contract Bridge is Ownable, AccessControl {
         // Calculate fee and adjust amount
         uint256 _amount = (tokenAmount_ * 10 ** 18) /
             (10 ** fromTokenDecimals_);
-        uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
-        uint256 _adjustedAmount = _amount - _bridgeFee; // Use a local variable
-        // If correct signer, then payout
-        teleport.token.bridgeMint(payoutAddress, _bridgeFee);
-        teleport.token.bridgeMint(teleport.receiverAddress, _adjustedAmount);
+        teleport.token.bridgeMint(teleport.receiverAddress, _amount);
         // Add new transaction ID mapping
         addMappingStealth(signedTXInfo_);
 
         emit BridgeMinted(
             teleport.receiverAddress,
             toTokenAddress_,
-            _adjustedAmount
+            _amount
         );
         return signer;
     }
