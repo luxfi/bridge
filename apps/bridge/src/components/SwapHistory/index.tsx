@@ -80,7 +80,7 @@ function TransactionsHistory() {
       const {
         data: { data },
       } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps?page=${page}${
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?page=${page}${
           status ? `&status=${status}` : ''
         }&version=${BridgeApiClient.apiVersion}`
       )
