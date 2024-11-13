@@ -11,7 +11,7 @@ interface FireblocksConfig {
 }
 
 export function getFireblocksConfig(): FireblocksConfig {
-  const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === 'true';
+  const isTestnet = process.env.NEXT_PUBLIC_API_VERSION === 'testnet';
 
   return {
     apiKey: isTestnet
