@@ -15,7 +15,6 @@ router.get("/", async (req: Request, res: Response) => {
     const isMainnet = version ? (version === "mainnet") : true
     const settings = isMainnet ? mainnetSettings : testnetSettings;
 
-    console.log("🚀 ~ settings:", settings)
     res.status(200).json({ data: settings })
   } 
   catch (error: any) {

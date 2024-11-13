@@ -8,7 +8,7 @@ export const parameters = {
 const preview: Preview = {
   loaders: [
     async () => ({
-      settings: await (await fetch(`https://api-bridge.lux.network/settings?version=sandbox`)).json(),
+      settings: await (await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/settings?version=sandbox`)).json(),
     }),
   ],
   parameters: {

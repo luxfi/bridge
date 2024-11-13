@@ -25,6 +25,11 @@ spec:
           env:
             - name: PORT
               value: "6000"
+            - name: COINBASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: COINBASE_API_KEY
             - name: POSTGRESQL_URL
               valueFrom:
                 secretKeyRef:

@@ -1,16 +1,16 @@
 'use client';
 
 import React from 'react';
+import AuthWizard from '@/components/Wizard/AuthWizard';
+import getBridgeSettings from '@/util/getBridgeSettings';
 import { redirect } from 'next/navigation';
 import { useSettingsContainer } from '@/context/settings';
 import { FormWizardProvider } from '@/context/formWizardProvider';
 import { AuthStep } from '@/Models/Wizard';
-import AuthWizard from '@/components/Wizard/AuthWizard';
 import { SwapDataProvider } from '@/context/swap';
 import { BridgeAppSettings } from '@/Models/BridgeAppSettings';
-import getBridgeSettings from '@/util/getBridgeSettings';
 
-const AuthPage: React.FC = async () => {
+const AuthPage = async () => {
   try {
     const settings = await getBridgeSettings();
     const settingsContainer = useSettingsContainer();
