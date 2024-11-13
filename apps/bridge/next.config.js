@@ -26,6 +26,7 @@ module.exports = (phase, { defaultConfig }) => {
   const nextConfig = {
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
     reactStrictMode: true,
+    output: 'standalone',
 
     i18n: {
       locales: ["en"],
@@ -63,7 +64,6 @@ module.exports = (phase, { defaultConfig }) => {
     compiler: {
       removeConsole: false,
     },
-    reactStrictMode: false,
     webpack: (config, { isServer, dev }) => {
 
       config.externals.push("pino-pretty", "lokijs", "encoding");
@@ -73,16 +73,16 @@ module.exports = (phase, { defaultConfig }) => {
       }
       let conf = svgrPluginConfig(config)
       if (dev) {
-        conf =  watchPluginConfig(conf) 
+        conf =  watchPluginConfig(conf)
       }
       return conf
     },
     productionBrowserSourceMaps: true,
     // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
     transpilePackages: [
-      '@hanzo/ui', 
-      '@hanzo/auth', 
-      '@hanzo/commerce', 
+      '@hanzo/ui',
+      '@hanzo/auth',
+      '@hanzo/commerce',
       '@luxfi/ui',
       '@luxfi/data'
     ],
