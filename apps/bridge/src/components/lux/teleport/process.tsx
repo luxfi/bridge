@@ -69,7 +69,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       const {
         data: { data },
       } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/swaps/${swapId}?version=mainnet`
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=mainnet`
       )
 
       console.log(data)
