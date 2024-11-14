@@ -14,7 +14,6 @@
   "dependencies": {
     "@headlessui/react": "^1.7.15",
     "@heroicons/react": "^2.0.18",
-    "@luxbridge/explorer": "link:",
     "@luxdefi/ui": "0.2.3",
     "@next/mdx": "14.1.0",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -29,24 +28,24 @@
     "heroicons": "^2.0.18",
     "lucide-react": "^0.307.0",
     "next": "catalog:",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "swr": "^2.2.0",
     "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
     "@mdx-js/react": "^3.0.0",
     "@mdx-js/loader": "^3.0.0",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/mdx": "^2.0.9",
     "autoprefixer": "10.4.16",
     "eslint": "8.43.0",
     "eslint-config-next": "13.4.7",
     "postcss": "8.4.33",
     "postcss-import": "^16.0.0",
-    "tailwindcss": "3.4.1",
+    "tailwindcss": "catalog:",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.3.3"
+    "typescript": "catalog:"
   }
 }
