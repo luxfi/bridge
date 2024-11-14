@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridge-server
+  labels:
+    app: bridge-server
+spec:
+  replicas: 1  # Adjust the initial number of replicas as needed
+  selector:
+    matchLabels:
+      app: bridge-server
+  template:
+    metadata:
+      labels:
+        app: bridge-server
+    spec:
+      hostAliases:
+        - ip: "192.168.1.165"
+          hostnames:
+            - "host-postgres"
+      containers:
+        - name: bridge-server
+          image: ghcr.io/luxfi/bridge/server:latest
+          imagePullPolicy: Always
+          env:
+            - name: PORT
+              value: "6000"
+            - name: COINBASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: COINBASE_API_KEY
+            - name: POSTGRESQL_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: POSTGRESQL_URL
+          ports:
+            - containerPort: 6000
