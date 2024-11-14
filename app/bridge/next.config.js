@@ -25,7 +25,7 @@ module.exports = (phase, { defaultConfig }) => {
    */
   const nextConfig = {
     experimental: {
-      outputFileTracingRoot: __dirname,
+      outputFileTracingRoot: path.join(__dirname, '../../'),
     },
     basePath: process.env.APP_BASE_PATH || '',
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
