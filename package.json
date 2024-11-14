@@ -1,5 +1,5 @@
 {
-  "name": "@luxfi/bridge",
+  "name": "@lux-bridge",
   "version": "1.0.0",
   "author": "Lux Partners Limited <dev@lux.partners> (https://lux.partners)",
   "private": true,
@@ -39,12 +39,10 @@
     "process": "^0.11.10"
   },
   "engines": {
-    "node": ">=18",
-    "pnpm": ">=8"
+    "node": ">=20",
+    "pnpm": ">=9"
   },
   "packageManager": "pnpm@9.10.0",
-
-    "//": "re 'supports-color': https://stackoverflow.com/questions/76591038/module-not-found-esm-packages-supports-color-need-to-be-imported-use-import",
   "pnpm": {
     "overrides": {
       "react": "18.3.1",
@@ -56,11 +54,7 @@
       "@hanzo/auth": "2.5.2",
       "@hanzo/commerce": "7.3.4",
       "@hanzo/ui": "4.0.5",
-      "next": "14.2.14",
-      "react-hook-form": "7.51.4",
-      "tailwindcss": "3.4.3",
-      "typescript": "5.6.3"
-
+      "react-hook-form": "7.51.4"
     },
     "allowedDeprecatedVersions": {
       "request": "*"

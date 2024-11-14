@@ -1,0 +1,38 @@
+{
+  "name": "@luxbridge/settings",
+  "version": "0.1.0",
+  "description": "Library that contains shared bridge settings",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "scope": "@luxfi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luxfi/bridge.git",
+    "directory": "pkg/settings"
+  },
+  "keywords": [
+    "luxdefi",
+    "luxfi",
+    "lux"
+  ],
+  "scripts": {
+    "pub": "npm publish",
+    "build": "tsc",
+    "tc": "tsc",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "@hanzo/auth": "*",
+    "@hanzo/commerce": "*",
+    "@hanzo/ui": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}
