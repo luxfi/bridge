@@ -1,3 +1,20 @@
 packages:
   - 'app/*'
   - 'pkg/*'
+
+catalog:
+  '@hanzo/auth': 2.5.2
+  '@hanzo/commerce': 7.3.4
+  '@hanzo/ui': 4.0.5
+  '@luxfi/ui': 5.3.23
+  '@luxfi/data': 1.0.9
+  '@types/node': 20.14.15
+  '@types/react': 18.3.12
+  '@types/react-dom': 18.3.1
+  'lucide-react': 0.456.0
+  'react-hook-form': 7.51.4
+  next: 14.2.14
+  react: 18.3.1
+  react-dom: 18.3.1
+  tailwindcss: 3.4.14
+  typescript: 5.6.3
