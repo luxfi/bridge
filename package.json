@@ -43,7 +43,6 @@
       "@luxfi/ui": "5.3.23",
       "@types/react": "18.3.12",
       "@types/react-dom": "18.3.1",
-      "next": "14.2.14",
       "react": "18.3.1",
       "react-dom": "18.3.1",
       "react-hook-form": "7.51.4"
