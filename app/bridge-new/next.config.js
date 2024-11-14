@@ -24,7 +24,7 @@ const nextConfig = {
     '@hanzo/auth',
     '@hanzo/commerce',
     '@luxfi/ui',
-    '@luxfi/data'
+    '@luxfi/data',
     '@luxbridge/settings'
   ],
   productionBrowserSourceMaps: true,
