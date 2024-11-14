@@ -58,7 +58,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true} className={`font-sans`}>
       <body lang="en" suppressHydrationWarning={true}>
         <main className="bg-white">
-            {children}
+            sadfasdf
         </main>
         <footer className="py-3 text-center text-slate-500 text-2xl font-[title]">Copyright 2024</footer>
       </body>
