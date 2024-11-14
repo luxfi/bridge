@@ -36,21 +36,18 @@
   "packageManager": "pnpm@9.10.0",
   "pnpm": {
     "overrides": {
-      "react": "18.3.1",
-      "react-dom": "18.3.1",
-      "@types/react": "18.3.12",
-      "@types/react-dom": "18.3.1",
-      "@luxfi/ui": "5.3.23",
-      "@luxfi/data": "1.0.9",
       "@hanzo/auth": "2.5.2",
       "@hanzo/commerce": "7.3.4",
       "@hanzo/ui": "4.0.5",
-      "react-hook-form": "7.51.4"
+      "@luxfi/data": "1.0.9",
+      "@luxfi/ui": "5.3.23",
+      "@types/react": "18.3.12",
+      "@types/react-dom": "18.3.1",
       "next": "14.2.14",
+      "react": "18.3.1",
+      "react-dom": "18.3.1",
+      "react-hook-form": "7.51.4"
     },
-=======
-
-  "pnpm": {
     "allowedDeprecatedVersions": {
       "request": "*"
     }

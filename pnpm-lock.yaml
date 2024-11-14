@@ -4,16 +4,26 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    tailwindcss:
+      specifier: 3.4.14
+      version: 3.4.14
+    typescript:
+      specifier: 5.6.3
+      version: 5.6.3
+
 overrides:
-  react: 18.3.1
-  react-dom: 18.3.1
-  '@types/react': 18.3.12
-  '@types/react-dom': 18.3.1
-  '@luxfi/ui': 5.3.23
-  '@luxfi/data': 1.0.9
   '@hanzo/auth': 2.5.2
   '@hanzo/commerce': 7.3.4
   '@hanzo/ui': 4.0.5
+  '@luxfi/data': 1.0.9
+  '@luxfi/ui': 5.3.23
+  '@types/react': 18.3.12
+  '@types/react-dom': 18.3.1
+  next: 14.2.14
+  react: 18.3.1
+  react-dom: 18.3.1
   react-hook-form: 7.51.4
 
 importers:
@@ -27,10 +37,10 @@ importers:
         version: 0.15.0(4slwefr347uwfp5pdaxwp6hlda)
       '@hanzo/auth':
         specifier: 2.5.2
-        version: 2.5.2(4kich22po4riz5qghowpdnlgka)
+        version: 2.5.2(37rove5j34qs7qprq3lcoxs6ty)
       '@hanzo/ui':
         specifier: 4.0.5
-        version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+        version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@headlessui/react':
         specifier: ^1.7.3
         version: 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -45,7 +55,7 @@ importers:
         version: 1.4.13(@babel/core@7.26.0)(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)
       '@luxfi/ui':
         specifier: 5.3.23
-        version: 5.3.23(yo4tlapfmvyvsykkspbqfpd7ie)
+        version: 5.3.23(dltqwx3hpjpiogwntu3lhiir3a)
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
@@ -60,7 +70,7 @@ importers:
         version: 2.2.0(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(viem@2.21.35(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8))(wagmi@2.12.31(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.59.16)(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(bufferutil@4.0.8)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.6.3)(utf-8-validate@5.0.10)(viem@2.21.35(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))
       '@sentry/nextjs':
         specifier: ^7.80.1
-        version: 7.119.2(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
+        version: 7.119.2(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       '@solana/spl-token':
         specifier: ^0.3.9
         version: 0.3.11(@solana/web3.js@1.66.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
@@ -102,10 +112,10 @@ importers:
         version: 8.1.0(typescript@5.6.3)
       '@tailwindcss/forms':
         specifier: ^0.5.0
-        version: 0.5.9(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
+        version: 0.5.9(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
       '@tailwindcss/typography':
         specifier: ^0.5.2
-        version: 0.5.15(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
+        version: 0.5.15(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
       '@tanstack/react-query':
         specifier: ^5.59.16
         version: 5.59.16(react@18.3.1)
@@ -161,11 +171,11 @@ importers:
         specifier: ^0.5.21
         version: 0.5.22
       next:
-        specifier: '*'
-        version: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 14.2.14
+        version: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-themes:
         specifier: ^0.2.1
-        version: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       pino-pretty:
         specifier: ^11.3.0
         version: 11.3.0
@@ -204,7 +214,7 @@ importers:
         version: 2.2.5(react@18.3.1)
       tailwindcss-animate:
         specifier: ^1.0.5
-        version: 1.0.7(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
+        version: 1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
       ton:
         specifier: ^13.9.0
         version: 13.9.0(ton-core@0.53.0(ton-crypto@3.2.0))(ton-crypto@3.2.0)
@@ -259,7 +269,7 @@ importers:
         version: 7.6.20(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@storybook/nextjs':
         specifier: ^7.4.5
-        version: 7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(esbuild@0.18.20)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
+        version: 7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(esbuild@0.18.20)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       '@storybook/react':
         specifier: ^7.4.5
         version: 7.6.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
@@ -342,10 +352,10 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0(react-dom@18.3.1(react@18.3.1))
       tailwindcss:
-        specifier: '*'
-        version: 3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
+        specifier: 'catalog:'
+        version: 3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
       typescript:
-        specifier: '*'
+        specifier: 'catalog:'
         version: 5.6.3
       webpack-watch-files-plugin:
         specifier: ^1.2.1
@@ -358,13 +368,13 @@ importers:
         version: 0.15.0(gtuvnz3np7j4sjakydnoee7zvq)
       '@hanzo/auth':
         specifier: 2.5.2
-        version: 2.5.2(c5d3cjgeiib6dhprpvumg3qv5e)
+        version: 2.5.2(q6xllm6vfrr73lcr6q432mgbxa)
       '@hanzo/commerce':
         specifier: 7.3.4
-        version: 7.3.4(7v5v76ps3xnmkjmk54xhojzday)
+        version: 7.3.4(jjjedgofg57whbr5oc3f2h3o6i)
       '@hanzo/ui':
         specifier: 4.0.5
-        version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+        version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@headlessui/react':
         specifier: ^1.7.3
         version: 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -379,10 +389,10 @@ importers:
         version: 1.4.13(@babel/core@7.26.0)(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)
       '@luxbridge/settings':
         specifier: '*'
-        version: 0.1.0(@hanzo/auth@2.5.2(c5d3cjgeiib6dhprpvumg3qv5e))(@hanzo/commerce@7.3.4(7v5v76ps3xnmkjmk54xhojzday))(@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.1.0(@hanzo/auth@2.5.2(q6xllm6vfrr73lcr6q432mgbxa))(@hanzo/commerce@7.3.4(jjjedgofg57whbr5oc3f2h3o6i))(@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@luxfi/ui':
         specifier: 5.3.23
-        version: 5.3.23(d4trpkttvioov65kxeugghitee)
+        version: 5.3.23(4g5ahyxvdlh4o2zpsiyewzqoay)
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
@@ -397,7 +407,7 @@ importers:
         version: 2.2.0(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(viem@2.21.35(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8))(wagmi@2.12.31(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.59.16)(@tanstack/react-query@5.59.16(react@18.3.1))(@types/react@18.3.12)(bufferutil@4.0.8)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)(typescript@5.6.3)(utf-8-validate@5.0.10)(viem@2.21.35(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8))(zod@3.23.8))
       '@sentry/nextjs':
         specifier: ^8.38.0
-        version: 8.38.0(@opentelemetry/core@1.27.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.54.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
+        version: 8.38.0(@opentelemetry/core@1.27.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.54.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
       '@solana/spl-token':
         specifier: ^0.4.9
         version: 0.4.9(@solana/web3.js@1.66.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
@@ -495,11 +505,11 @@ importers:
         specifier: ^0.5.21
         version: 0.5.22
       next:
-        specifier: 14.2.3
-        version: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 14.2.14
+        version: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-themes:
         specifier: ^0.2.1
-        version: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       pino-pretty:
         specifier: ^11.3.0
         version: 11.3.0
@@ -596,7 +606,7 @@ importers:
         version: 7.6.20(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@storybook/nextjs':
         specifier: ^7.4.5
-        version: 7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
+        version: 7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
       '@storybook/react':
         specifier: ^7.4.5
         version: 7.6.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
@@ -686,7 +696,7 @@ importers:
         version: 'link:'
       '@luxdefi/ui':
         specifier: 0.2.3
-        version: 0.2.3(@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(next-themes@0.2.1(next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))))(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3)))
+        version: 0.2.3(@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(next-themes@0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))))(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3)))
       '@next/mdx':
         specifier: 14.1.0
         version: 14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
@@ -724,8 +734,8 @@ importers:
         specifier: ^0.307.0
         version: 0.307.0(react@18.3.1)
       next:
-        specifier: 14.1.0
-        version: 14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 14.2.14
+        version: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -868,13 +878,13 @@ importers:
     dependencies:
       '@hanzo/auth':
         specifier: 2.5.2
-        version: 2.5.2(pc7gjuajpgiyzsrns4wv3com2i)
+        version: 2.5.2(425h34evby4xlalgpdplygi2fe)
       '@hanzo/commerce':
         specifier: 7.3.4
-        version: 7.3.4(o5flrtxoe5yo3pd45isd7ghvj4)
+        version: 7.3.4(g3vcndxcwtyw7eskarwba7hz4u)
       '@hanzo/ui':
         specifier: 4.0.5
-        version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)
+        version: 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -2301,7 +2311,7 @@ packages:
       mobx: ^6.12.3
       mobx-react-lite: ^4.0.7
       mobx-utils: ^6.0.8
-      next: ^14.2.16
+      next: 14.2.14
       react: 18.3.1
       react-dom: 18.3.1
       react-hook-form: 7.51.4
@@ -2483,7 +2493,7 @@ packages:
     resolution: {integrity: sha512-vhMBWDRW4RhzigaRNl2WvPME19MAE+S2eqxebjvPQY2USCnuStN4TbvVI+2v6tqD08TTZGaYoeDUBaWeXgzpOA==}
     peerDependencies:
       '@next/mdx': ^14.1.0
-      next: ^14.1.0
+      next: 14.2.14
       next-themes: ^0.2.1
       react: 18.3.1
       react-dom: 18.3.1
@@ -2684,11 +2694,8 @@ packages:
   '@next/bundle-analyzer@13.5.7':
     resolution: {integrity: sha512-BnsDHWci6lVAOgr1xBydY58bGnF10BdmKR80aVe8jPgu+OhglfbcPyucq3vF0dJU981+MRhTle3amCqmt1Pd0w==}
 
-  '@next/env@14.1.0':
-    resolution: {integrity: sha512-Py8zIo+02ht82brwwhTg36iogzFqGLPXlRGKQw5s+qP/kMNc4MAyDeEwBKDijk6zTIbegEgu8Qy7C1LboslQAw==}
-
-  '@next/env@14.2.3':
-    resolution: {integrity: sha512-W7fd7IbkfmeeY2gXrzJYDx8D2lWKbVoTIj1o1ScPHNzvp30s1AuoEFSdr39bC5sjxJaxTtq3OTCZboNp0lNWHA==}
+  '@next/env@14.2.14':
+    resolution: {integrity: sha512-/0hWQfiaD5//LvGNgc8PjvyqV50vGK0cADYzaoOOGN8fxzBn3iAiaq3S0tCRnFBldq0LVveLcxCTi41ZoYgAgg==}
 
   '@next/eslint-plugin-next@13.4.7':
     resolution: {integrity: sha512-ANEPltxzXbyyG7CvqxdY4PmeM5+RyWdAJGufTHnU+LA/i3J6IDV2r8Z4onKwskwKEhwqzz5lMaSYGGXLyHX+mg==}
@@ -2707,110 +2714,56 @@ packages:
       '@mdx-js/react':
         optional: true
 
-  '@next/swc-darwin-arm64@14.1.0':
-    resolution: {integrity: sha512-nUDn7TOGcIeyQni6lZHfzNoo9S0euXnu0jhsbMOmMJUBfgsnESdjN97kM7cBqQxZa8L/bM9om/S5/1dzCrW6wQ==}
+  '@next/swc-darwin-arm64@14.2.14':
+    resolution: {integrity: sha512-bsxbSAUodM1cjYeA4o6y7sp9wslvwjSkWw57t8DtC8Zig8aG8V6r+Yc05/9mDzLKcybb6EN85k1rJDnMKBd9Gw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@next/swc-darwin-arm64@14.2.3':
-    resolution: {integrity: sha512-3pEYo/RaGqPP0YzwnlmPN2puaF2WMLM3apt5jLW2fFdXD9+pqcoTzRk+iZsf8ta7+quAe4Q6Ms0nR0SFGFdS1A==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@next/swc-darwin-x64@14.1.0':
-    resolution: {integrity: sha512-1jgudN5haWxiAl3O1ljUS2GfupPmcftu2RYJqZiMJmmbBT5M1XDffjUtRUzP4W3cBHsrvkfOFdQ71hAreNQP6g==}
+  '@next/swc-darwin-x64@14.2.14':
+    resolution: {integrity: sha512-cC9/I+0+SK5L1k9J8CInahduTVWGMXhQoXFeNvF0uNs3Bt1Ub0Azb8JzTU9vNCr0hnaMqiWu/Z0S1hfKc3+dww==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@14.2.3':
-    resolution: {integrity: sha512-6adp7waE6P1TYFSXpY366xwsOnEXM+y1kgRpjSRVI2CBDOcbRjsJ67Z6EgKIqWIue52d2q/Mx8g9MszARj8IEA==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@next/swc-linux-arm64-gnu@14.1.0':
-    resolution: {integrity: sha512-RHo7Tcj+jllXUbK7xk2NyIDod3YcCPDZxj1WLIYxd709BQ7WuRYl3OWUNG+WUfqeQBds6kvZYlc42NJJTNi4tQ==}
+  '@next/swc-linux-arm64-gnu@14.2.14':
+    resolution: {integrity: sha512-RMLOdA2NU4O7w1PQ3Z9ft3PxD6Htl4uB2TJpocm+4jcllHySPkFaUIFacQ3Jekcg6w+LBaFvjSPthZHiPmiAUg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-gnu@14.2.3':
-    resolution: {integrity: sha512-cuzCE/1G0ZSnTAHJPUT1rPgQx1w5tzSX7POXSLaS7w2nIUJUD+e25QoXD/hMfxbsT9rslEXugWypJMILBj/QsA==}
+  '@next/swc-linux-arm64-musl@14.2.14':
+    resolution: {integrity: sha512-WgLOA4hT9EIP7jhlkPnvz49iSOMdZgDJVvbpb8WWzJv5wBD07M2wdJXLkDYIpZmCFfo/wPqFsFR4JS4V9KkQ2A==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-musl@14.1.0':
-    resolution: {integrity: sha512-v6kP8sHYxjO8RwHmWMJSq7VZP2nYCkRVQ0qolh2l6xroe9QjbgV8siTbduED4u0hlk0+tjS6/Tuy4n5XCp+l6g==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@next/swc-linux-arm64-musl@14.2.3':
-    resolution: {integrity: sha512-0D4/oMM2Y9Ta3nGuCcQN8jjJjmDPYpHX9OJzqk42NZGJocU2MqhBq5tWkJrUQOQY9N+In9xOdymzapM09GeiZw==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@next/swc-linux-x64-gnu@14.1.0':
-    resolution: {integrity: sha512-zJ2pnoFYB1F4vmEVlb/eSe+VH679zT1VdXlZKX+pE66grOgjmKJHKacf82g/sWE4MQ4Rk2FMBCRnX+l6/TVYzQ==}
+  '@next/swc-linux-x64-gnu@14.2.14':
+    resolution: {integrity: sha512-lbn7svjUps1kmCettV/R9oAvEW+eUI0lo0LJNFOXoQM5NGNxloAyFRNByYeZKL3+1bF5YE0h0irIJfzXBq9Y6w==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-gnu@14.2.3':
-    resolution: {integrity: sha512-ENPiNnBNDInBLyUU5ii8PMQh+4XLr4pG51tOp6aJ9xqFQ2iRI6IH0Ds2yJkAzNV1CfyagcyzPfROMViS2wOZ9w==}
+  '@next/swc-linux-x64-musl@14.2.14':
+    resolution: {integrity: sha512-7TcQCvLQ/hKfQRgjxMN4TZ2BRB0P7HwrGAYL+p+m3u3XcKTraUFerVbV3jkNZNwDeQDa8zdxkKkw2els/S5onQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-musl@14.1.0':
-    resolution: {integrity: sha512-rbaIYFt2X9YZBSbH/CwGAjbBG2/MrACCVu2X0+kSykHzHnYH5FjHxwXLkcoJ10cX0aWCEynpu+rP76x0914atg==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-
-  '@next/swc-linux-x64-musl@14.2.3':
-    resolution: {integrity: sha512-BTAbq0LnCbF5MtoM7I/9UeUu/8ZBY0i8SFjUMCbPDOLv+un67e2JgyN4pmgfXBwy/I+RHu8q+k+MCkDN6P9ViQ==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-
-  '@next/swc-win32-arm64-msvc@14.1.0':
-    resolution: {integrity: sha512-o1N5TsYc8f/HpGt39OUQpQ9AKIGApd3QLueu7hXk//2xq5Z9OxmV6sQfNp8C7qYmiOlHYODOGqNNa0e9jvchGQ==}
+  '@next/swc-win32-arm64-msvc@14.2.14':
+    resolution: {integrity: sha512-8i0Ou5XjTLEje0oj0JiI0Xo9L/93ghFtAUYZ24jARSeTMXLUx8yFIdhS55mTExq5Tj4/dC2fJuaT4e3ySvXU1A==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@next/swc-win32-arm64-msvc@14.2.3':
-    resolution: {integrity: sha512-AEHIw/dhAMLNFJFJIJIyOFDzrzI5bAjI9J26gbO5xhAKHYTZ9Or04BesFPXiAYXDNdrwTP2dQceYA4dL1geu8A==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@next/swc-win32-ia32-msvc@14.1.0':
-    resolution: {integrity: sha512-XXIuB1DBRCFwNO6EEzCTMHT5pauwaSj4SWs7CYnME57eaReAKBXCnkUE80p/pAZcewm7hs+vGvNqDPacEXHVkw==}
+  '@next/swc-win32-ia32-msvc@14.2.14':
+    resolution: {integrity: sha512-2u2XcSaDEOj+96eXpyjHjtVPLhkAFw2nlaz83EPeuK4obF+HmtDJHqgR1dZB7Gb6V/d55FL26/lYVd0TwMgcOQ==}
     engines: {node: '>= 10'}
     cpu: [ia32]
     os: [win32]
 
-  '@next/swc-win32-ia32-msvc@14.2.3':
-    resolution: {integrity: sha512-vga40n1q6aYb0CLrM+eEmisfKCR45ixQYXuBXxOOmmoV8sYST9k7E3US32FsY+CkkF7NtzdcebiFT4CHuMSyZw==}
-    engines: {node: '>= 10'}
-    cpu: [ia32]
-    os: [win32]
-
-  '@next/swc-win32-x64-msvc@14.1.0':
-    resolution: {integrity: sha512-9WEbVRRAqJ3YFVqEZIxUqkiO8l1nool1LmNxygr5HWF8AcSYsEpneUDhmjUVJEzO2A04+oPtZdombzzPPkTtgg==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [win32]
-
-  '@next/swc-win32-x64-msvc@14.2.3':
-    resolution: {integrity: sha512-Q1/zm43RWynxrO7lW4ehciQVj+5ePBhOK+/K2P7pLFX3JaJ/IZVC69SHidrmZSOkqz7ECIOhhy7XhAFG4JYyHA==}
+  '@next/swc-win32-x64-msvc@14.2.14':
+    resolution: {integrity: sha512-MZom+OvZ1NZxuRovKt1ApevjiUJTcU2PmdJKL66xUPaJeRywnbGGRWUlaAOwunD6dX+pm83vj979NTC8QXjGWg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -2818,13 +2771,13 @@ packages:
   '@next/third-parties@14.2.16':
     resolution: {integrity: sha512-owdCT5BbGyfdDXkmZ1kjPMRPJ8+WLLJFTJSjMRQOYwq5j5o0L3U47sHi07J0mhgJgX6RmRyLd0OFPHCVfAY3Kw==}
     peerDependencies:
-      next: ^13.0.0 || ^14.0.0
+      next: 14.2.14
       react: 18.3.1
 
   '@next/third-parties@15.0.1':
     resolution: {integrity: sha512-URkJqgF+75uH6JTZ5bXkVNANO5WDXSPV+IM17DluywUMMkqJvot/LhjgnTZ5TM2X0q7rdQmRHeOxQi2bMbynQQ==}
     peerDependencies:
-      next: ^13.0.0 || ^14.0.0 || ^15.0.0
+      next: 14.2.14
       react: 18.3.1
 
   '@noble/ciphers@1.0.0':
@@ -4490,7 +4443,7 @@ packages:
     resolution: {integrity: sha512-lIhWohka8kNeBd31uIgrid27t7C2MVhAz5ZElAvmOuxKJJOKB4ctgC9DYwSs31KX9ep/kR2MqDgN9qM3+cJ0Zw==}
     engines: {node: '>=8'}
     peerDependencies:
-      next: ^10.0.8 || ^11.0 || ^12.0 || ^13.0 || ^14.0
+      next: 14.2.14
       react: 18.3.1
       webpack: '>= 4.0.0'
     peerDependenciesMeta:
@@ -4501,7 +4454,7 @@ packages:
     resolution: {integrity: sha512-axKkeAXbpiO8hQjVtDSLyXYqCN9ptnNHxNmKlYuRTJtwv4hPZ31AIhurEN2y7dUBvXv3QTBv+9kvEkdN8qHvXA==}
     engines: {node: '>=14.18'}
     peerDependencies:
-      next: ^13.2.0 || ^14.0 || ^15.0.0-rc.0
+      next: 14.2.14
 
   '@sentry/node@7.119.2':
     resolution: {integrity: sha512-TPNnqxh+Myooe4jTyRiXrzrM2SH08R4+nrmBls4T7lKp2E5R/3mDSe/YTn5rRcUt1k1hPx1NgO/taG0DoS5cXA==}
@@ -4818,7 +4771,7 @@ packages:
     resolution: {integrity: sha512-FqrV7/K2q998Y0t83QUauQxsifKWAg9CFZoSb64qRuH7IfHkDs5/OgU1ACkg0aTgsEPtFlH+kATQ+8X6MrizHQ==}
     peerDependencies:
       '@splinetool/runtime': '*'
-      next: '>=14.2.0'
+      next: 14.2.14
       react: 18.3.1
       react-dom: 18.3.1
     peerDependenciesMeta:
@@ -5084,7 +5037,7 @@ packages:
     engines: {node: '>=16.0.0'}
     peerDependencies:
       '@next/font': ^13.0.0|| ^14.0.0
-      next: ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0 || ^13.0.0 || ^14.0.0
+      next: 14.2.14
       react: 18.3.1
       react-dom: 18.3.1
       typescript: '*'
@@ -5357,9 +5310,6 @@ packages:
 
   '@swc/helpers@0.5.13':
     resolution: {integrity: sha512-UoKGxQ3r5kYI9dALKJapMmuK+1zWM/H17Z1+iwnNmzcJRnfFuevZs375TA5rW31pu4BS4NoSy1fRsexDXfWn5w==}
-
-  '@swc/helpers@0.5.2':
-    resolution: {integrity: sha512-E4KcWTpoLHqwPHLxidpOqQbcrZVgi0rsmmZXUle1jXmJfuIf/UWpczUJ7MZZ5tlxytgJXyp0w4PGkkeLiuIdZw==}
 
   '@swc/helpers@0.5.5':
     resolution: {integrity: sha512-KGYxvIOXcceOAbEk4bi/dVLEK9z8sZ0uBB3Il5b1rhfClSpcX0yfRO0KmTkqR2cnQDymwLB+25ZyMzICg/cm/A==}
@@ -10946,7 +10896,7 @@ packages:
   next-themes@0.2.1:
     resolution: {integrity: sha512-B+AKNfYNIzh0vqQQKqQItTS8evEouKD7H5Hj3kmuPERwddR2TxvDSFZuTj6T7Jfn1oyeUyJMydPl1Bkxkh0W7A==}
     peerDependencies:
-      next: '*'
+      next: 14.2.14
       react: 18.3.1
       react-dom: 18.3.1
 
@@ -10956,25 +10906,10 @@ packages:
   next-usequerystate@1.20.0:
     resolution: {integrity: sha512-0uXOYkOHXiTwrnBwZ3E6pT2l1HWoqgCxjcJE58TRSbhYjNnpQ9MxzgwoU7z6akQuQodWQffTh+HNLZRwoh1ujQ==}
     peerDependencies:
-      next: '>=13.4 <14.0.2 || ^14.0.3'
+      next: 14.2.14
 
-  next@14.1.0:
-    resolution: {integrity: sha512-wlzrsbfeSU48YQBjZhDzOwhWhGsy+uQycR8bHAOt1LY1bn3zZEcDyHQOEoN3aWzQ8LHCAJ1nqrWCc9XF2+O45Q==}
-    engines: {node: '>=18.17.0'}
-    hasBin: true
-    peerDependencies:
-      '@opentelemetry/api': ^1.1.0
-      react: 18.3.1
-      react-dom: 18.3.1
-      sass: ^1.3.0
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-      sass:
-        optional: true
-
-  next@14.2.3:
-    resolution: {integrity: sha512-dowFkFTR8v79NPJO4QsBUtxv0g9BrS/phluVpMAt2ku7H+cbcBJlopXjkWlwxrk/xGqMemr7JkGPGemPrLLX7A==}
+  next@14.2.14:
+    resolution: {integrity: sha512-Q1coZG17MW0Ly5x76shJ4dkC23woLAhhnDnw+DfTc7EpZSGuWrlsZ3bZaO8t6u1Yu8FVfhkqJE+U8GC7E0GLPQ==}
     engines: {node: '>=18.17.0'}
     hasBin: true
     peerDependencies:
@@ -12927,6 +12862,11 @@ packages:
 
   tailwindcss@3.4.1:
     resolution: {integrity: sha512-qAYmXRfk3ENzuPBakNK0SRrUDipP8NQnEY6772uDhflcQz5EhRdD7JNZxyrFHVQNCwULPBn6FNPp9brpO7ctcA==}
+    engines: {node: '>=14.0.0'}
+    hasBin: true
+
+  tailwindcss@3.4.14:
+    resolution: {integrity: sha512-IcSvOcTRcUtQQ7ILQL5quRDg7Xs93PdJEk1ZLbhhvJc7uj/OAhYOnruEiwnGgBvUtaUAJ8/mhSw1o8L2jCiENA==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -16317,16 +16257,16 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
-  '@hanzo/auth@2.5.2(4kich22po4riz5qghowpdnlgka)':
+  '@hanzo/auth@2.5.2(37rove5j34qs7qprq3lcoxs6ty)':
     dependencies:
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       firebase: 10.12.0(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))
       firebase-admin: 12.7.0
       lucide-react: 0.307.0(react@18.3.1)
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-hook-form: 7.51.4(react@18.3.1)
       zod: 3.23.8
@@ -16334,16 +16274,16 @@ snapshots:
       - encoding
       - supports-color
 
-  '@hanzo/auth@2.5.2(c5d3cjgeiib6dhprpvumg3qv5e)':
+  '@hanzo/auth@2.5.2(425h34evby4xlalgpdplygi2fe)':
     dependencies:
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       firebase: 10.12.0(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))
       firebase-admin: 12.7.0
       lucide-react: 0.344.0(react@18.3.1)
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-hook-form: 7.51.4(react@18.3.1)
       zod: 3.23.8
@@ -16351,16 +16291,16 @@ snapshots:
       - encoding
       - supports-color
 
-  '@hanzo/auth@2.5.2(pc7gjuajpgiyzsrns4wv3com2i)':
+  '@hanzo/auth@2.5.2(q6xllm6vfrr73lcr6q432mgbxa)':
     dependencies:
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       firebase: 10.12.0(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10)))
       firebase-admin: 12.7.0
       lucide-react: 0.344.0(react@18.3.1)
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-hook-form: 7.51.4(react@18.3.1)
       zod: 3.23.8
@@ -16368,10 +16308,10 @@ snapshots:
       - encoding
       - supports-color
 
-  '@hanzo/commerce@7.3.4(7v5v76ps3xnmkjmk54xhojzday)':
+  '@hanzo/commerce@7.3.4(g3vcndxcwtyw7eskarwba7hz4u)':
     dependencies:
-      '@hanzo/auth': 2.5.2(c5d3cjgeiib6dhprpvumg3qv5e)
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/auth': 2.5.2(425h34evby4xlalgpdplygi2fe)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       '@radix-ui/react-radio-group': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ethers: 6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -16380,8 +16320,8 @@ snapshots:
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
       mobx-utils: 6.1.0(mobx@6.13.5)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-usequerystate: 1.20.0(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-usequerystate: 1.20.0(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.51.4(react@18.3.1)
@@ -16393,10 +16333,10 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@hanzo/commerce@7.3.4(o5flrtxoe5yo3pd45isd7ghvj4)':
+  '@hanzo/commerce@7.3.4(jjjedgofg57whbr5oc3f2h3o6i)':
     dependencies:
-      '@hanzo/auth': 2.5.2(pc7gjuajpgiyzsrns4wv3com2i)
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/auth': 2.5.2(q6xllm6vfrr73lcr6q432mgbxa)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       '@radix-ui/react-radio-group': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ethers: 6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -16405,8 +16345,8 @@ snapshots:
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
       mobx-utils: 6.1.0(mobx@6.13.5)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-usequerystate: 1.20.0(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-usequerystate: 1.20.0(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.51.4(react@18.3.1)
@@ -16418,10 +16358,10 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@hanzo/commerce@7.3.4(yotbgsziihfzmr47gdzxai7czm)':
+  '@hanzo/commerce@7.3.4(t4ejvokz5cjii75m6csgknx2ke)':
     dependencies:
-      '@hanzo/auth': 2.5.2(4kich22po4riz5qghowpdnlgka)
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/auth': 2.5.2(37rove5j34qs7qprq3lcoxs6ty)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       '@radix-ui/react-radio-group': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ethers: 6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -16430,8 +16370,8 @@ snapshots:
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
       mobx-utils: 6.1.0(mobx@6.13.5)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-usequerystate: 1.20.0(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-usequerystate: 1.20.0(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.51.4(react@18.3.1)
@@ -16453,11 +16393,11 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)':
+  '@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)':
     dependencies:
       '@hanzo/react-drawer': 0.1.7(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
-      '@next/third-parties': 15.0.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@next/third-parties': 15.0.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-accordion': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-aspect-ratio': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-avatar': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -16481,9 +16421,9 @@ snapshots:
       '@radix-ui/react-toggle': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-toggle-group': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-tooltip': 1.1.3(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.35)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.35)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@splinetool/runtime': 1.9.35
-      '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
+      '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
       class-variance-authority: 0.7.0
       clsx: 2.1.1
       cmdk: 0.2.1(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -16496,8 +16436,8 @@ snapshots:
       lucide-react: 0.307.0(react@18.3.1)
       markdown-to-jsx: 7.5.0(react@18.3.1)
       mobx: 6.13.5
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       postcss-selector-parser: 6.1.2
       react: 18.3.1
       react-day-picker: 8.10.1(date-fns@3.6.0)(react@18.3.1)
@@ -16506,7 +16446,7 @@ snapshots:
       react-intersection-observer: 9.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sonner: 1.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tailwind-merge: 2.5.4
-      tailwindcss-animate: 1.0.7(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
+      tailwindcss-animate: 1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
       tailwindcss-interaction-media: 0.1.0
       validator: 13.12.0
       zod: 3.23.8
@@ -16516,11 +16456,11 @@ snapshots:
       - date-fns
       - tailwindcss
 
-  '@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)':
+  '@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)':
     dependencies:
       '@hanzo/react-drawer': 0.1.7(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
-      '@next/third-parties': 15.0.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@next/third-parties': 15.0.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-accordion': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-aspect-ratio': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-avatar': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -16544,7 +16484,7 @@ snapshots:
       '@radix-ui/react-toggle': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-toggle-group': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-tooltip': 1.1.3(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.35)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.35)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@splinetool/runtime': 1.9.35
       '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))
       class-variance-authority: 0.7.0
@@ -16559,8 +16499,8 @@ snapshots:
       lucide-react: 0.344.0(react@18.3.1)
       markdown-to-jsx: 7.5.0(react@18.3.1)
       mobx: 6.13.5
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       postcss-selector-parser: 6.1.2
       react: 18.3.1
       react-day-picker: 8.10.1(date-fns@3.6.0)(react@18.3.1)
@@ -16579,11 +16519,11 @@ snapshots:
       - date-fns
       - tailwindcss
 
-  '@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)':
+  '@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.23.8)':
     dependencies:
       '@hanzo/react-drawer': 0.1.7(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
-      '@next/third-parties': 15.0.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@next/third-parties': 15.0.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-accordion': 1.2.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-aspect-ratio': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-avatar': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -16607,7 +16547,7 @@ snapshots:
       '@radix-ui/react-toggle': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-toggle-group': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-tooltip': 1.1.3(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.35)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.35)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@splinetool/runtime': 1.9.35
       '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3)))
       class-variance-authority: 0.7.0
@@ -16622,8 +16562,8 @@ snapshots:
       lucide-react: 0.344.0(react@18.3.1)
       markdown-to-jsx: 7.5.0(react@18.3.1)
       mobx: 6.13.5
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       postcss-selector-parser: 6.1.2
       react: 18.3.1
       react-day-picker: 8.10.1(date-fns@3.6.0)(react@18.3.1)
@@ -16944,15 +16884,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@luxbridge/settings@0.1.0(@hanzo/auth@2.5.2(c5d3cjgeiib6dhprpvumg3qv5e))(@hanzo/commerce@7.3.4(7v5v76ps3xnmkjmk54xhojzday))(@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@luxbridge/settings@0.1.0(@hanzo/auth@2.5.2(q6xllm6vfrr73lcr6q432mgbxa))(@hanzo/commerce@7.3.4(jjjedgofg57whbr5oc3f2h3o6i))(@hanzo/ui@4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@hanzo/auth': 2.5.2(c5d3cjgeiib6dhprpvumg3qv5e)
-      '@hanzo/commerce': 7.3.4(7v5v76ps3xnmkjmk54xhojzday)
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/auth': 2.5.2(q6xllm6vfrr73lcr6q432mgbxa)
+      '@hanzo/commerce': 7.3.4(jjjedgofg57whbr5oc3f2h3o6i)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@luxdefi/ui@0.2.3(@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(next-themes@0.2.1(next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))))(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3)))':
+  '@luxdefi/ui@0.2.3(@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(next-themes@0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))))(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3)))':
     dependencies:
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
       '@next/mdx': 14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
@@ -16969,8 +16909,8 @@ snapshots:
       lodash.merge: 4.6.2
       lucide-react: 0.307.0(react@18.3.1)
       markdown-to-jsx: 7.5.0(react@18.3.1)
-      next: 14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       postcss-selector-parser: 6.1.2
       react: 18.3.1
       react-device-detect: 2.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -16987,13 +16927,13 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@luxfi/ui@5.3.23(d4trpkttvioov65kxeugghitee)':
+  '@luxfi/ui@5.3.23(4g5ahyxvdlh4o2zpsiyewzqoay)':
     dependencies:
-      '@hanzo/auth': 2.5.2(c5d3cjgeiib6dhprpvumg3qv5e)
-      '@hanzo/commerce': 7.3.4(7v5v76ps3xnmkjmk54xhojzday)
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/auth': 2.5.2(q6xllm6vfrr73lcr6q432mgbxa)
+      '@hanzo/commerce': 7.3.4(jjjedgofg57whbr5oc3f2h3o6i)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.344.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
-      '@next/third-parties': 14.2.16(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@next/third-parties': 14.2.16(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@types/node': 20.17.1
       '@types/validator': 13.12.2
       cookies-next: 4.3.0
@@ -17004,8 +16944,8 @@ snapshots:
       lucide-react: 0.344.0(react@18.3.1)
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-device-detect: 2.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
@@ -17021,13 +16961,13 @@ snapshots:
       - '@react-native-async-storage/async-storage'
       - embla-carousel
 
-  '@luxfi/ui@5.3.23(yo4tlapfmvyvsykkspbqfpd7ie)':
+  '@luxfi/ui@5.3.23(dltqwx3hpjpiogwntu3lhiir3a)':
     dependencies:
-      '@hanzo/auth': 2.5.2(4kich22po4riz5qghowpdnlgka)
-      '@hanzo/commerce': 7.3.4(yotbgsziihfzmr47gdzxai7czm)
-      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
+      '@hanzo/auth': 2.5.2(37rove5j34qs7qprq3lcoxs6ty)
+      '@hanzo/commerce': 7.3.4(t4ejvokz5cjii75m6csgknx2ke)
+      '@hanzo/ui': 4.0.5(@hookform/resolvers@3.9.0(react-hook-form@7.51.4(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.3.0)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.51.4(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))(validator@13.12.0)(zod@3.23.8)
       '@hookform/resolvers': 3.9.0(react-hook-form@7.51.4(react@18.3.1))
-      '@next/third-parties': 14.2.16(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@next/third-parties': 14.2.16(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@types/node': 20.17.1
       '@types/validator': 13.12.2
       cookies-next: 4.3.0
@@ -17038,8 +16978,8 @@ snapshots:
       lucide-react: 0.307.0(react@18.3.1)
       mobx: 6.13.5
       mobx-react-lite: 4.0.7(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes: 0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-device-detect: 2.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
@@ -17383,9 +17323,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@next/env@14.1.0': {}
-
-  '@next/env@14.2.3': {}
+  '@next/env@14.2.14': {}
 
   '@next/eslint-plugin-next@13.4.7':
     dependencies:
@@ -17409,69 +17347,42 @@ snapshots:
       '@mdx-js/loader': 3.1.0(acorn@8.14.0)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
       '@mdx-js/react': 3.1.0(@types/react@18.3.12)(react@18.3.1)
 
-  '@next/swc-darwin-arm64@14.1.0':
+  '@next/swc-darwin-arm64@14.2.14':
     optional: true
 
-  '@next/swc-darwin-arm64@14.2.3':
+  '@next/swc-darwin-x64@14.2.14':
     optional: true
 
-  '@next/swc-darwin-x64@14.1.0':
+  '@next/swc-linux-arm64-gnu@14.2.14':
     optional: true
 
-  '@next/swc-darwin-x64@14.2.3':
+  '@next/swc-linux-arm64-musl@14.2.14':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@14.1.0':
+  '@next/swc-linux-x64-gnu@14.2.14':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@14.2.3':
+  '@next/swc-linux-x64-musl@14.2.14':
     optional: true
 
-  '@next/swc-linux-arm64-musl@14.1.0':
+  '@next/swc-win32-arm64-msvc@14.2.14':
     optional: true
 
-  '@next/swc-linux-arm64-musl@14.2.3':
+  '@next/swc-win32-ia32-msvc@14.2.14':
     optional: true
 
-  '@next/swc-linux-x64-gnu@14.1.0':
+  '@next/swc-win32-x64-msvc@14.2.14':
     optional: true
 
-  '@next/swc-linux-x64-gnu@14.2.3':
-    optional: true
-
-  '@next/swc-linux-x64-musl@14.1.0':
-    optional: true
-
-  '@next/swc-linux-x64-musl@14.2.3':
-    optional: true
-
-  '@next/swc-win32-arm64-msvc@14.1.0':
-    optional: true
-
-  '@next/swc-win32-arm64-msvc@14.2.3':
-    optional: true
-
-  '@next/swc-win32-ia32-msvc@14.1.0':
-    optional: true
-
-  '@next/swc-win32-ia32-msvc@14.2.3':
-    optional: true
-
-  '@next/swc-win32-x64-msvc@14.1.0':
-    optional: true
-
-  '@next/swc-win32-x64-msvc@14.2.3':
-    optional: true
-
-  '@next/third-parties@14.2.16(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+  '@next/third-parties@14.2.16(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       third-party-capital: 1.0.20
 
-  '@next/third-parties@15.0.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+  '@next/third-parties@15.0.1(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       third-party-capital: 1.0.20
 
@@ -19410,7 +19321,7 @@ snapshots:
       '@sentry/utils': 7.119.2
       localforage: 1.10.0
 
-  '@sentry/nextjs@7.119.2(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
+  '@sentry/nextjs@7.119.2(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
     dependencies:
       '@rollup/plugin-commonjs': 24.0.0(rollup@2.79.2)
       '@sentry/core': 7.119.2
@@ -19422,7 +19333,7 @@ snapshots:
       '@sentry/vercel-edge': 7.119.2
       '@sentry/webpack-plugin': 1.21.0
       chalk: 3.0.0
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       resolve: 1.22.8
       rollup: 2.79.2
@@ -19433,7 +19344,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@sentry/nextjs@8.38.0(@opentelemetry/core@1.27.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.54.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))':
+  '@sentry/nextjs@8.38.0(@opentelemetry/core@1.27.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.54.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.27.0(@opentelemetry/api@1.9.0))(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation-http': 0.53.0(@opentelemetry/api@1.9.0)
@@ -19449,7 +19360,7 @@ snapshots:
       '@sentry/vercel-edge': 8.38.0
       '@sentry/webpack-plugin': 2.22.6(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
       chalk: 3.0.0
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       resolve: 1.22.8
       rollup: 3.29.5
       stacktrace-parser: 0.1.10
@@ -19983,7 +19894,7 @@ snapshots:
       eventemitter3: 5.0.1
       uuid: 9.0.1
 
-  '@splinetool/react-spline@4.0.0(@splinetool/runtime@1.9.35)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@splinetool/react-spline@4.0.0(@splinetool/runtime@1.9.35)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@splinetool/runtime': 1.9.35
       blurhash: 2.0.5
@@ -19993,7 +19904,7 @@ snapshots:
       react-merge-refs: 2.1.1
       thumbhash: 0.1.1
     optionalDependencies:
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   '@splinetool/runtime@1.9.35':
     dependencies:
@@ -20767,7 +20678,7 @@ snapshots:
 
   '@storybook/mdx2-csf@1.1.0': {}
 
-  '@storybook/nextjs@7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(esbuild@0.18.20)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
+  '@storybook/nextjs@7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(esbuild@0.18.20)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))':
     dependencies:
       '@babel/core': 7.26.0
       '@babel/plugin-syntax-bigint': 7.8.3(@babel/core@7.26.0)
@@ -20797,7 +20708,7 @@ snapshots:
       fs-extra: 11.2.0
       image-size: 1.1.1
       loader-utils: 3.3.1
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       node-polyfill-webpack-plugin: 2.0.1(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13))(esbuild@0.18.20))
       pnp-webpack-plugin: 1.7.0(typescript@5.6.3)
       postcss: 8.4.33
@@ -20837,7 +20748,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@storybook/nextjs@7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))':
+  '@storybook/nextjs@7.6.20(@swc/core@1.7.40(@swc/helpers@0.5.13))(@swc/helpers@0.5.13)(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.6.3)(webpack-hot-middleware@2.26.1)(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))':
     dependencies:
       '@babel/core': 7.26.0
       '@babel/plugin-syntax-bigint': 7.8.3(@babel/core@7.26.0)
@@ -20867,7 +20778,7 @@ snapshots:
       fs-extra: 11.2.0
       image-size: 1.1.1
       loader-utils: 3.3.1
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       node-polyfill-webpack-plugin: 2.0.1(webpack@5.95.0(@swc/core@1.7.40(@swc/helpers@0.5.13)))
       pnp-webpack-plugin: 1.7.0(typescript@5.6.3)
       postcss: 8.4.33
@@ -21328,10 +21239,6 @@ snapshots:
       tslib: 2.8.0
     optional: true
 
-  '@swc/helpers@0.5.2':
-    dependencies:
-      tslib: 2.8.0
-
   '@swc/helpers@0.5.5':
     dependencies:
       '@swc/counter': 0.1.3
@@ -21353,14 +21260,31 @@ snapshots:
     dependencies:
       tailwindcss: 3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))
 
+  '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))':
+    dependencies:
+      tailwindcss: 3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
+
   '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))':
     dependencies:
       tailwindcss: 3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
+
+  '@tailwindcss/forms@0.5.9(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))':
+    dependencies:
+      mini-svg-data-uri: 1.4.4
+      tailwindcss: 3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
 
   '@tailwindcss/forms@0.5.9(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))':
     dependencies:
       mini-svg-data-uri: 1.4.4
       tailwindcss: 3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
+
+  '@tailwindcss/typography@0.5.15(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))':
+    dependencies:
+      lodash.castarray: 4.4.0
+      lodash.isplainobject: 4.0.6
+      lodash.merge: 4.6.2
+      postcss-selector-parser: 6.0.10
+      tailwindcss: 3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
 
   '@tailwindcss/typography@0.5.15(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)))':
     dependencies:
@@ -25698,7 +25622,7 @@ snapshots:
       debug: 4.3.7(supports-color@5.5.0)
       enhanced-resolve: 5.17.1
       eslint: 8.43.0
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.8.1
       is-bun-module: 1.2.1
@@ -25730,7 +25654,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -25783,7 +25707,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.43.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0(eslint@8.43.0))(eslint@8.43.0))(eslint@8.43.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.62.0(eslint@8.43.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.3)(eslint@8.43.0)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
@@ -29694,54 +29618,22 @@ snapshots:
       fp-ts: 2.9.3
       monocle-ts: 2.3.13(fp-ts@2.9.3)
 
-  next-themes@0.2.1(next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next-themes@0.2.1(next@14.2.14(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      next: 14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  next-themes@0.2.1(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
   next-tick@1.1.0: {}
 
-  next-usequerystate@1.20.0(next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)):
+  next-usequerystate@1.20.0(next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)):
     dependencies:
       mitt: 3.0.1
-      next: 14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
-  next@14.1.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next@14.2.14(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@next/env': 14.1.0
-      '@swc/helpers': 0.5.2
-      busboy: 1.6.0
-      caniuse-lite: 1.0.30001672
-      graceful-fs: 4.2.11
-      postcss: 8.4.31
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      styled-jsx: 5.1.1(@babel/core@7.26.0)(react@18.3.1)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 14.1.0
-      '@next/swc-darwin-x64': 14.1.0
-      '@next/swc-linux-arm64-gnu': 14.1.0
-      '@next/swc-linux-arm64-musl': 14.1.0
-      '@next/swc-linux-x64-gnu': 14.1.0
-      '@next/swc-linux-x64-musl': 14.1.0
-      '@next/swc-win32-arm64-msvc': 14.1.0
-      '@next/swc-win32-ia32-msvc': 14.1.0
-      '@next/swc-win32-x64-msvc': 14.1.0
-      '@opentelemetry/api': 1.9.0
-    transitivePeerDependencies:
-      - '@babel/core'
-      - babel-plugin-macros
-
-  next@14.2.3(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@next/env': 14.2.3
+      '@next/env': 14.2.14
       '@swc/helpers': 0.5.5
       busboy: 1.6.0
       caniuse-lite: 1.0.30001672
@@ -29751,15 +29643,15 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       styled-jsx: 5.1.1(@babel/core@7.26.0)(react@18.3.1)
     optionalDependencies:
-      '@next/swc-darwin-arm64': 14.2.3
-      '@next/swc-darwin-x64': 14.2.3
-      '@next/swc-linux-arm64-gnu': 14.2.3
-      '@next/swc-linux-arm64-musl': 14.2.3
-      '@next/swc-linux-x64-gnu': 14.2.3
-      '@next/swc-linux-x64-musl': 14.2.3
-      '@next/swc-win32-arm64-msvc': 14.2.3
-      '@next/swc-win32-ia32-msvc': 14.2.3
-      '@next/swc-win32-x64-msvc': 14.2.3
+      '@next/swc-darwin-arm64': 14.2.14
+      '@next/swc-darwin-x64': 14.2.14
+      '@next/swc-linux-arm64-gnu': 14.2.14
+      '@next/swc-linux-arm64-musl': 14.2.14
+      '@next/swc-linux-x64-gnu': 14.2.14
+      '@next/swc-linux-x64-musl': 14.2.14
+      '@next/swc-win32-arm64-msvc': 14.2.14
+      '@next/swc-win32-ia32-msvc': 14.2.14
+      '@next/swc-win32-x64-msvc': 14.2.14
       '@opentelemetry/api': 1.9.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -32159,6 +32051,10 @@ snapshots:
     dependencies:
       tailwindcss: 3.4.1(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))
 
+  tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))):
+    dependencies:
+      tailwindcss: 3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
+
   tailwindcss-animate@1.0.7(tailwindcss@3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))):
     dependencies:
       tailwindcss: 3.4.3(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
@@ -32185,6 +32081,33 @@ snapshots:
       postcss-import: 15.1.0(postcss@8.4.33)
       postcss-js: 4.0.1(postcss@8.4.33)
       postcss-load-config: 4.0.2(postcss@8.4.33)(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@22.8.1)(typescript@5.3.3))
+      postcss-nested: 6.2.0(postcss@8.4.33)
+      postcss-selector-parser: 6.1.2
+      resolve: 1.22.8
+      sucrase: 3.35.0
+    transitivePeerDependencies:
+      - ts-node
+
+  tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3)):
+    dependencies:
+      '@alloc/quick-lru': 5.2.0
+      arg: 5.0.2
+      chokidar: 3.6.0
+      didyoumean: 1.2.2
+      dlv: 1.1.3
+      fast-glob: 3.3.2
+      glob-parent: 6.0.2
+      is-glob: 4.0.3
+      jiti: 1.21.6
+      lilconfig: 2.1.0
+      micromatch: 4.0.8
+      normalize-path: 3.0.0
+      object-hash: 3.0.0
+      picocolors: 1.1.1
+      postcss: 8.4.33
+      postcss-import: 15.1.0(postcss@8.4.33)
+      postcss-js: 4.0.1(postcss@8.4.33)
+      postcss-load-config: 4.0.2(postcss@8.4.33)(ts-node@10.9.2(@swc/core@1.7.40(@swc/helpers@0.5.13))(@types/node@20.17.1)(typescript@5.6.3))
       postcss-nested: 6.2.0(postcss@8.4.33)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.8
