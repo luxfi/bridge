@@ -9,9 +9,7 @@ node_modules/
 # testing
 /coverage
 
-apps/bridge/.next/
-apps/explorer/.next/
-explorer/.next
+apps/*/.next/
 
 # k8 files
 /mpc-nodes/k8s
