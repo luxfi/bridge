@@ -2,12 +2,14 @@ import type { MetaFunction } from '@vercel/remix'
 
 import { ApplyTypography  } from '@hanzo/ui/primitives'
 
-export const meta: MetaFunction = () => {
-  return [
+/*
+export const meta: MetaFunction = () => (
+  [
     { title: 'Lux Bridge App Remixed' },
     { name: 'description', content: 'Welcome to Lux!' },
   ]
-}
+)
+*/
 
 export default function Index() {
   return (

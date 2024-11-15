@@ -6,7 +6,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  type MetaFunction,
 } from '@remix-run/react'
+import type { LinksFunction } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react';
 
 import { BreakpointIndicator } from '@hanzo/ui/primitives'
@@ -16,17 +18,15 @@ import '@luxfi/ui/style/cart-animation.css'
 import '@luxfi/ui/style/checkout-animation.css'
 
 import Main from 'app/components/main'
-import fontPreload from './font-preload';
+import _links from './links';
+import metadata from './metadata';
 
 export const config = { runtime: 'edge' }
 
 const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
-  
-export function links() {
-  return fontPreload
-}
 
-
+export const links: LinksFunction = () => (_links)
+export const meta: MetaFunction = () => (metadata)
 
 const Layout: React.FC<PropsWithChildren> = ({ 
   children 
