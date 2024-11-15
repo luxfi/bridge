@@ -7,6 +7,7 @@ import {
   Scripts,
   ScrollRestoration,
   type MetaFunction,
+  LiveReload
 } from '@remix-run/react'
 import type { LinksFunction } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react';
@@ -31,7 +32,12 @@ export const meta: MetaFunction = () => (metadata)
 const Layout: React.FC<PropsWithChildren> = ({ 
   children 
 })  => (
-  <html lang='en' suppressHydrationWarning className='hanzo-ui-dark-theme' style={{backgroundColor: '#000'}}>
+  <html 
+    lang='en' 
+    suppressHydrationWarning 
+    className='hanzo-ui-dark-theme' 
+    style={{backgroundColor: '#000'}}
+  >
     <head>
       <meta charSet='utf-8' />
       <meta name='viewport' content='width=device-width, initial-scale=1' />
@@ -44,7 +50,7 @@ const Layout: React.FC<PropsWithChildren> = ({
       </Main>
       <ScrollRestoration />
       <Scripts />
-      {/* process.env.NODE_ENV === 'development' && <LiveReload /> */}
+      {process.env.NODE_ENV === 'development' && <LiveReload /> }
       {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
       <Analytics />
     </body>
