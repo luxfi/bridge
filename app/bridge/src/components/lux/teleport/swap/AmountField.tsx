@@ -1,13 +1,16 @@
 'use client'
-import React, { useState } from 'react'
+import React from 'react'
 
-interface IProps {
+const AmountField: React.FC<{
   disabled: boolean
   setValue?: (value: string) => void
   value: string
-}
+}> = ({ 
+  disabled, 
+  setValue, 
+  value 
+}) => {
 
-const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (/^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && setValue) {
       setValue(e.target.value)
@@ -15,48 +18,42 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
   }
 
   return (
-    <>
-      <div className="flex w-full justify-between items-center">
-        <div className="relative w-full">
-          <div className="flex relative w-full">
-            <input
-              pattern={'^[0-9]*[.,]?[0-9]*$'}
-              inputMode="decimal"
-              autoComplete="off"
-              disabled={disabled}
-              placeholder={'0.0'}
-              autoCorrect="off"
-              min={0}
-              max={10000}
-              // onFocus={onFocus}
-              // onBlur={onBlur}
-              type="text"
-              value={value}
-              step={0.01}
-              name={'name'}
-              id={'name'}
-              className="rounded-r-none outline-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-        {/* {
-                    !disabled &&
-                    <div className="flex flex-col justify-center">
-                        <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
-                            <div className="flex">
-                                <SecondaryButton disabled={!false} onClick={handleSetMinAmount} size="xs">
-                                    MIN
-                                </SecondaryButton>
-                                <SecondaryButton disabled={!false} onClick={handleSetMaxAmount} size="xs" className="ml-1.5">
-                                    MAX
-                                </SecondaryButton>
-                            </div>
-                        </div>
-                    </div>
-                } */}
-      </div>
-    </>
+    <div className="relative flex w-full justify-between items-center">
+      <input
+        pattern={'^[0-9]*[.,]?[0-9]*$'}
+        inputMode="decimal"
+        autoComplete="off"
+        disabled={disabled}
+        placeholder={'0.0'}
+        autoCorrect="off"
+        min={0}
+        max={10000}
+        // onFocus={onFocus}
+        // onBlur={onBlur}
+        type="text"
+        value={value}
+        step={0.01}
+        name={'name'}
+        id={'name'}
+        className="rounded-r-none outline-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
+        onChange={handleChange}
+      />
+      {/* {
+                  !disabled &&
+                  <div className="flex flex-col justify-center">
+                      <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
+                          <div className="flex">
+                              <SecondaryButton disabled={!false} onClick={handleSetMinAmount} size="xs">
+                                  MIN
+                              </SecondaryButton>
+                              <SecondaryButton disabled={!false} onClick={handleSetMaxAmount} size="xs" className="ml-1.5">
+                                  MAX
+                              </SecondaryButton>
+                          </div>
+                      </div>
+                  </div>
+              } */}
+    </div>
   )
 }
 

@@ -12,7 +12,7 @@ import {
 import type { LinksFunction } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react';
 
-import { BreakpointIndicator } from '@hanzo/ui/primitives'
+import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
 
 import '@luxfi/ui/style/lux-global-non-next.css'
 import '@luxfi/ui/style/cart-animation.css'
