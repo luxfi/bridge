@@ -14,23 +14,24 @@ import {
 import { Contract } from 'ethers'
 import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
 import { ethers } from 'ethers'
-import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
 //hooks
 import { useAtom } from 'jotai'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
 
+import type { Network, Token } from '@/types/teleport'
 import axios from 'axios'
+import Gauge from '@/components/gauge'
+import SpinIcon from '@/components/icons/spinIcon'
 import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
-import SpinIcon from '@/components/icons/spinIcon'
-import Gauge from '@/components/gauge'
-import type { Network, Token } from '@/types/teleport'
 import { ArrowRight } from 'lucide-react'
+import { parseUnits } from 'ethers/lib/utils'
+import { localeNumber } from '@/lib/utils'
 import { formatUnits, parseEther } from 'viem'
 import { useChainId, useSwitchChain } from 'wagmi'
-import { localeNumber } from '@/lib/utils'
-import { parseUnits } from 'ethers/lib/utils'
+//abis
+import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
 
 interface IProps {
   className?: string
