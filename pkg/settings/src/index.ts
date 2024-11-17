@@ -1,10 +1,9 @@
 // Importing JSON files for mainnet
 import mainnetNetworks from "./mainnet/networks.json"
-// Importing JSON files for testnet
-import testnetExchanges from "./testnet/exchanges.json"
-import testnetNetworks from "./testnet/networks.json"
-// testnets
 import mainnetExchanges from "./mainnet/exchanges.json"
+// Importing JSON files for testnet
+import testnetNetworks from "./testnet/networks.json"
+import testnetExchanges from "./testnet/exchanges.json"
 
 export const mainnetSettings = {
   data: {
