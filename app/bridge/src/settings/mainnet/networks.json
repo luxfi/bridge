@@ -155,7 +155,7 @@
     "is_testnet": false,
     "is_featured": true,
     "average_completion_time": "00:00:07.7777777",
-    "chain_id": "7777",
+    "chain_id": "96369",
     "status": "active",
     "type": "evm",
     "refuel_amount_in_usd": 1,
