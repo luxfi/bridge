@@ -25,9 +25,9 @@ export const MAIN_NETWORKS: NETWORK[] = [
     display_name: "Lux",
     internal_name: "LUX_MAINNET",
     is_testnet: false,
-    chain_id: "7777",
-    teleporter: "0xC58E07f1C07627af94ad77549499b642aeFf0a3C",
-    vault: "0x7C6e3BE7B72805f0f52d788b96695b9d7e59A00c",
+    chain_id: "96369",
+    teleporter: "0x5B562e80A56b600d729371eB14fE3B83298D0642",
+    vault: "0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e",
     node: "https://api.lux.network",
     currencies: [
       {
@@ -68,72 +68,72 @@ export const MAIN_NETWORKS: NETWORK[] = [
       },
       // lux tokens
       {
-        name: "LETH",
-        asset: "LETH",
-        contract_address: "0x2951A9386df11a4EA8ae5A823B94DC257dEb35Cb",
+        name: "LBTC",
+        asset: "LBTC",
+        contract_address: "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LBTC",
-        asset: "LBTC",
-        contract_address: "0xebD1Ee9BCAaeE50085077651c1a2dD452fc6b72e",
+        name: "LETH",
+        asset: "LETH",
+        contract_address: "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
         decimals: 18,
         is_native: false
       },
       {
         name: "LUSD",
         asset: "LUSD",
-        contract_address: "0x42b733cA4b3A8FC0237dBE39A47441cfD525f0F1",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LFTM",
-        asset: "LFTM",
-        contract_address: "0x15BA7dCA26c63029E33C81f7B3978B54Bc0CB08B",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LCELO",
-        asset: "LCELO",
-        contract_address: "0xD257ADA332da217c78959A609e97c71ce5214925",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LPOL",
-        asset: "LPOL",
-        contract_address: "0x9F47CeB09cb88362f0274Bb354a9807Fd976D963",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LSOL",
-        asset: "LSOL",
-        contract_address: "0x372b3B7Cb87A7aE9Cb024861775f01015A71058C",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LTON",
-        asset: "LTON",
-        contract_address: "0xa4AA40ff2F2Cbe4FFcDfa5fF2A466fa7aF3390e5",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LXDAI",
-        asset: "LXDAI",
-        contract_address: "0x0D15251ad56cE56cC22588F6645c20ee7d77aE39",
+        contract_address: "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
         decimals: 18,
         is_native: false
       },
       {
         name: "LBNB",
         asset: "LBNB",
-        contract_address: "0xcf963Fe4E4cE126047147661e6e06e171f366506",
+        contract_address: "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LPOL",
+        asset: "LPOL",
+        contract_address: "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LCELO",
+        asset: "LCELO",
+        contract_address: "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LFTM",
+        asset: "LFTM",
+        contract_address: "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LXDAI",
+        asset: "LXDAI",
+        contract_address: "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LSOL",
+        asset: "LSOL",
+        contract_address: "0x1AF00A2590a834d14F4A8a26D1b03EBbA8cf7961",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LTON",
+        asset: "LTON",
+        contract_address: "0xF5a313885832D4Fc71d1Ef80115197c4479B58C8",
         decimals: 18,
         is_native: false
       }
@@ -973,9 +973,9 @@ export const TEST_NETWORKS: NETWORK[] = [
     display_name: "Lux Testnet",
     internal_name: "LUX_TESTNET",
     is_testnet: true,
-    chain_id: "8888",
-    teleporter: "0x7d462c69057E404a172690E8C5021563382CAa78",
-    vault: "0xD1496b961855c3F554F3F71A653915EEe035c55e",
+    chain_id: "96368",
+    teleporter: "0x5B562e80A56b600d729371eB14fE3B83298D0642",
+    vault: "0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e",
     node: "https://api.lux-test.network",
     currencies: [
       {
@@ -1013,73 +1013,74 @@ export const TEST_NETWORKS: NETWORK[] = [
         decimals: 18,
         is_native: false
       },
-      {
-        name: "LETH",
-        asset: "LETH",
-        contract_address: "0x999Ab39dF1Ae0F0069303B430A52f16FFdaAC69C",
-        decimals: 18,
-        is_native: false
-      },
+      ///// lux tokens /////
       {
         name: "LBTC",
         asset: "LBTC",
-        contract_address: "0xd7bE6F0E47acb95944fcc357a4392cAa5670B9e4",
+        contract_address: "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LSOL",
-        asset: "LSOL",
-        contract_address: "0x4516dcca0EeE9021A1fe6BBe5deE68B501246Cd1",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LTON",
-        asset: "LTON",
-        contract_address: "0xf41380968E9D408a143ddC63322565793d0750f8",
+        name: "LETH",
+        asset: "LETH",
+        contract_address: "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
         decimals: 18,
         is_native: false
       },
       {
         name: "LUSD",
         asset: "LUSD",
-        contract_address: "0xA7EF94FfacA04aA51aCB66Ad93691a10Ce6eAcf4",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LFTM",
-        asset: "LFTM",
-        contract_address: "0xE1276a2F675A1D7F69FC2C78Ca6a39d1D951fD35",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LCELO",
-        asset: "LCELO",
-        contract_address: "0xe0feC703840364714b97272973B8945FD5eB5600",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LPOL",
-        asset: "LPOL",
-        contract_address: "0x305B062C74F92d05de7Cbccd1923f19c7B27eAB1",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "LXDAI",
-        asset: "LXDAI",
-        contract_address: "0xFdAad51cE3C28bfCCC5217AFddCEFc2a3Da6Ab54",
+        contract_address: "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
         decimals: 18,
         is_native: false
       },
       {
         name: "LBNB",
         asset: "LBNB",
-        contract_address: "0x2c04439Dc52080E56882f61B2C4fb059A412fD5b",
+        contract_address: "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LPOL",
+        asset: "LPOL",
+        contract_address: "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LCELO",
+        asset: "LCELO",
+        contract_address: "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LFTM",
+        asset: "LFTM",
+        contract_address: "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LXDAI",
+        asset: "LXDAI",
+        contract_address: "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LSOL",
+        asset: "LSOL",
+        contract_address: "0x1AF00A2590a834d14F4A8a26D1b03EBbA8cf7961",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "LTON",
+        asset: "LTON",
+        contract_address: "0xF5a313885832D4Fc71d1Ef80115197c4479B58C8",
         decimals: 18,
         is_native: false
       }
