@@ -17,6 +17,7 @@ import SpinIcon from "@/components/icons/spinIcon";
 import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/fireblocks";
 import { ArrowRight } from "lucide-react";
+import { truncateDecimals } from "@/components/utils/RoundDecimals";
 
 interface IProps {
   className?: string;
@@ -84,10 +85,9 @@ const PayoutProcessor: React.FC<IProps> = ({
                 <span className="">
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
-                <div className="flex flex-col items-center text-sm">
+                <div className="flex flex-col items-start text-sm">
                   <span>
-                    {sourceAsset?.asset}{" "}
-                    {isWithdrawal ? "burnt" : "transferred"}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
