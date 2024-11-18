@@ -64,7 +64,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [mpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const { address, chainId, signer } = useEthersSigner();
+  const { chainId, signer, isConnecting } = useEthersSigner();
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
@@ -74,22 +74,23 @@ const PayoutProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (!signer || !address) {
-      connectWallet('evm')
+    if (isConnecting) return;
+
+    if (!signer) {
+      notify('Please connect wallet first.', 'info')
+      // connectWallet('evm')
     } else {
       if (isWithdrawal) {
-        if (chainId === destinationNetwork.chain_id) {
+        if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
           withdrawDestinationToken()
         } else {
-          destinationNetwork.chain_id &&
-            switchChain &&
-            switchChain({ chainId: destinationNetwork.chain_id })
+          destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
         }
       } else {
         payoutDestinationToken()
       }
     }
-  }, [swapStatus, chainId, signer, isWithdrawal])
+  }, [signer])
 
   const payoutDestinationToken = async () => {
     const mintData = {
@@ -300,8 +301,7 @@ const PayoutProcessor: React.FC<IProps> = ({
         }
       )
       setSwapStatus('payout_success')
-    } 
-    catch (err) {
+    } catch (err) {
       console.log(err)
       if (String(err).includes('user rejected transaction')) {
         notify('User rejected transaction', 'warn')
@@ -309,8 +309,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       else {
         notify('Failed to run transaction', 'error')
       }
-    } 
-    finally {
+    } finally {
       setIsGettingPayout(false)
     }
   }
@@ -321,10 +320,10 @@ const PayoutProcessor: React.FC<IProps> = ({
         'No connected wallet. Please connect your wallet',
         'error'
       )
-      connectWallet('evm')
+      // connectWallet('evm')
     } else {
       if (isWithdrawal) {
-        if (chainId === destinationNetwork.chain_id) {
+        if (Number(chainId) === Number(destinationNetwork.chain_id)) {
           withdrawDestinationToken()
         } else {
           destinationNetwork.chain_id &&
