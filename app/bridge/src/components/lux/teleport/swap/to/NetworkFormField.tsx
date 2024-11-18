@@ -30,6 +30,11 @@ const NetworkFormField: React.FC<IProps> = ({
 }) => {
   const [amount] = useAtom(sourceAmountAtom)
 
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset?.name?.startsWith("Lux") ? true : false),
+    [sourceAsset]
+  );
+
   return (
     <div className={`p-3`}>
       <label htmlFor={'name'} className="block font-semibold text-xs">
@@ -51,7 +56,7 @@ const NetworkFormField: React.FC<IProps> = ({
         </div>
         <div className="flex justify-between items-center mt-2 pl-3 pr-4">
           <AmountField
-            value={String(truncateDecimals(Number(amount) * 0.99, 6))}
+            value={isWithdrawal ? String(truncateDecimals(Number(amount) * 0.99, 6)) : String(truncateDecimals(Number(amount), 6))}
             disabled={true}
           />
           <TokenSelectWrapper

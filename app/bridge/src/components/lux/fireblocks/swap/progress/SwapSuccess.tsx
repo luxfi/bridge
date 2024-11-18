@@ -8,6 +8,7 @@ import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
 import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/fireblocks";
+import { truncateDecimals } from "@/components/utils/RoundDecimals";
 
 interface IProps {
   className?: string;
@@ -34,6 +35,12 @@ const SwapSuccess: React.FC<IProps> = ({
   const [bridgeMintTransactionHash, setBridgeMintTransactionHash] = useAtom(
     bridgeMintTransactionAtom
   );
+
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset?.name?.startsWith('Lux') ? true : false),
+    [sourceAsset]
+  )
+
   return (
     <div className={`w-full flex flex-col ${className}`}>
       <div className="space-y-5">
@@ -76,7 +83,7 @@ const SwapSuccess: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col text-sm">
-                  <span>Your {destinationAsset?.asset} has been arrived</span>
+                  <span>{isWithdrawal ? String(truncateDecimals(Number(sourceAmount) * 0.99, 6)) : String(truncateDecimals(Number(sourceAmount), 6))} {destinationAsset?.asset} has been arrived</span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(bridgeMintTransactionHash)}
                     <Tooltip>

@@ -137,6 +137,11 @@ const SwapItems: React.FC<IProps> = ({
     }
   }, [signer, chainId])
 
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset?.name?.startsWith("Lux") ? true : false),
+    [sourceAsset]
+  );
+
   return (
     <div className="flex flex-col gap-4">
       {_renderWallet()}
@@ -205,11 +210,11 @@ const SwapItems: React.FC<IProps> = ({
             </div>
             <div className="flex flex-col text-[#85c285]">
               <p className=" text-sm">
-                {truncateDecimals(Number(sourceAmount) * 0.99, 6)}{' '}
+                {isWithdrawal ? truncateDecimals(Number(sourceAmount) * 0.99, 6) : truncateDecimals(Number(sourceAmount), 6)}{' '}
                 {destinationAsset.asset}
               </p>
               <p className=" text-sm flex justify-end">
-                ${truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6)}
+                ${isWithdrawal ? truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6) : truncateDecimals(Number(sourceAmount) * tokenPrice, 6)}
               </p>
             </div>
           </div>
