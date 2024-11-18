@@ -50,7 +50,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   //hooks
-  const { address, chainId, signer } = useEthersSigner();
+  const { chainId, signer, isConnecting } = useEthersSigner();
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
@@ -60,18 +60,18 @@ const UserTokenDepositor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (!signer || !address) {
-      connectWallet('evm')
+    if (isConnecting) return;
+
+    if (!signer) {
+        notify('Please connect wallet first.', 'info')
     } else {
-      if (chainId === sourceNetwork?.chain_id) {
+      if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
         isWithdrawal ? burnToken() : transferToken()
       } else {
-        sourceNetwork.chain_id &&
-          switchChain &&
-          switchChain({ chainId: sourceNetwork.chain_id })
+        sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
       }
     }
-  }, [chainId, signer, isWithdrawal])
+  }, [signer])
 
   const transferToken = async () => {
     try {
@@ -249,12 +249,11 @@ const UserTokenDepositor: React.FC<IProps> = ({
         "No connected wallet. Please connect your wallet",
         "error"
       )
-      connectWallet("evm")
-    } else if (chainId !== sourceNetwork.chain_id) {
-      sourceNetwork.chain_id &&
-        switchChain &&
-        switchChain({ chainId: sourceNetwork.chain_id })
+      // connectWallet("evm")
+    } else if (Number(chainId) !== Number(sourceNetwork.chain_id)) {
+      sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
     } else {
+      console.log("transfer")
       isWithdrawal ? burnToken() : transferToken()
     }
   }
