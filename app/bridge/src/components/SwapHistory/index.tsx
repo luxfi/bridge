@@ -3,30 +3,30 @@ import { useCallback, useRef, useState } from 'react'
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSearchParams, useRouter } from 'next/navigation'
-import useAsyncEffect from 'use-async-effect'
 import axios from 'axios'
-
+import useAsyncEffect from 'use-async-effect'
+import { useNotify } from '@/context/toast-provider'
+import { classNames } from '../utils/classNames'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
+
 
 import BridgeApiClient, {
   type SwapItem,
   SwapStatusInNumbers,
   TransactionType,
 } from '@/lib/BridgeApiClient'
+import Modal from '../modal/modal'
 import SpinIcon from '../icons/spinIcon'
+import StatusIcon from './StatusIcons'
+import AppSettings from '@/lib/AppSettings'
 import SwapDetails from './SwapDetailsComponent'
 import SubmitButton from '../buttons/submitButton'
-import StatusIcon from './StatusIcons'
-import toast from 'react-hot-toast'
 import ToggleButton from '../buttons/toggleButton'
-import Modal from '../modal/modal'
-import AppSettings from '@/lib/AppSettings'
 import HeaderWithMenu from '../HeaderWithMenu'
-import { classNames } from '../utils/classNames'
-import { SwapHistoryComponentSkeleton } from '../Skeletons'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import { truncateDecimals } from '../utils/RoundDecimals'
+import { SwapHistoryComponentSkeleton } from '../Skeletons'
 //networks
 import fireblockNetworksMainnet from '@/components/lux/fireblocks/constants/networks.mainnets'
 import fireblockNetworksTestnet from '@/components/lux/fireblocks/constants/networks.sandbox'
@@ -59,6 +59,8 @@ function TransactionsHistory() {
   const [showToggleButton, setShowToggleButton] = useState(false)
 
   const PAGE_SIZE = 20
+
+  const { notify } = useNotify()
 
   const searchParams = useSearchParams()
   const canGoBackRef = useRef<boolean>(false)
@@ -109,7 +111,7 @@ function TransactionsHistory() {
       const { data, error } = await getSwaps(1)
 
       if (error) {
-        toast.error(error)
+        notify(error, "error")
         setLoading(false)
         return
       }
@@ -128,7 +130,7 @@ function TransactionsHistory() {
       )
 
       if (error) {
-        toast.error(error)
+        notify(error, "error")
         setLoading(false)
         return
       }
@@ -152,7 +154,7 @@ function TransactionsHistory() {
 
       if (error) {
         setLoading(false)
-        toast.error(error)
+        notify(error, "error")
         return
       }
 
@@ -170,7 +172,7 @@ function TransactionsHistory() {
       )
 
       if (error) {
-        toast.error(error)
+        notify(error, "error")
         setLoading(false)
         return
       }
