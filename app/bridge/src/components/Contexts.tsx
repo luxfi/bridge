@@ -20,6 +20,7 @@ import { AuthProvider } from '@/context/authContext'
 import { SettingsProvider } from '@/context/settings'
 import { FeeProvider } from '@/context/feeContext'
 import { JotaiProvider } from '@/context/jotaiContext'
+import { EthersProvider } from '@/context/ethersContext'
 import { type BridgeSettings } from '../Models/BridgeSettings'
 
 import { IntercomProvider } from 'react-use-intercom'
@@ -39,9 +40,11 @@ const Contexts: React.FC<
 > = ({ settings, children }) => {
   const searchParams = useSearchParams()
 
-  useAsyncEffect(async() => {
-    const settings = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/networks?version=mainnet`)
-    console.log("::settings;;;", settings)
+  useAsyncEffect(async () => {
+    const settings = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_API}/api/networks?version=mainnet`
+    )
+    console.log('::settings;;;', settings)
   }, [])
 
   // :aa These were was all that getServerSideProps() ever returned.
@@ -132,11 +135,11 @@ const Contexts: React.FC<
                     <JotaiProvider>
                       {/* <TonConnectProvider basePath={''} themeData={themeData}> */}
                       <RainbowKit>
-                        <Solana>
-                          <FeeProvider>
-                            {children}
-                          </FeeProvider>
-                        </Solana>
+                        <EthersProvider>
+                          <Solana>
+                            <FeeProvider>{children}</FeeProvider>
+                          </Solana>
+                        </EthersProvider>
                       </RainbowKit>
                       {/* </TonConnectProvider> */}
                     </JotaiProvider>
