@@ -178,6 +178,7 @@ const Swap: FC = () => {
       // router.push(`/swap/teleporter/${response.data?.data?.swap_id}`);
     } catch (err) {
       console.log(err)
+    } finally {
       setIsSubmitting(false)
     }
   }

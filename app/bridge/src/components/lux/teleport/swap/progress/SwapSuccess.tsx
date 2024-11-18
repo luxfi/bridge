@@ -1,13 +1,13 @@
-import { useAtom } from 'jotai'
+import React from 'react'
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
-
+import type { Network, Token } from '@/types/teleport'
 import SuccessIcon from '../SuccessIcon'
-import { bridgeMintTransactionAtom } from '@/store/teleport'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import Gauge from '@/components/gauge'
-import type { Network, Token } from '@/types/teleport'
+import { useAtom } from 'jotai'
+import { bridgeMintTransactionAtom, userTransferTransactionAtom } from '@/store/teleport'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
 const SwapSuccess: React.FC<{
   className?: string
@@ -32,6 +32,13 @@ const SwapSuccess: React.FC<{
   const [bridgeMintTransactionHash, setBridgeMintTransactionHash] = useAtom(
     bridgeMintTransactionAtom
   )
+  const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
+
+  const isWithdrawal = React.useMemo(
+    () => (sourceAsset.name.startsWith('Lux') ? true : false),
+    [sourceAsset]
+  )
+
   return (
     <div className={`w-full flex flex-col ${className}`}>
       <div className="space-y-5">
@@ -58,6 +65,52 @@ const SwapSuccess: React.FC<{
                 Swap Success
               </div>
             </div>
+            <div className="flex gap-3 items-center pt-5">
+                <span className="">
+                  <Gauge value={100} size="verySmall" showCheckmark={true} />
+                </span>
+                <div className="flex flex-col items-center text-sm">
+                  <span>
+                    {sourceAsset?.asset}{' '}
+                    {isWithdrawal ? 'burnt' : 'transferred'}
+                  </span>
+                  <div className="underline flex gap-2 items-center">
+                    {shortenAddress(userTransferTransaction)}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          target={'_blank'}
+                          href={sourceNetwork?.transaction_explorer_template?.replace(
+                            '{0}',
+                            userTransferTransaction
+                          )}
+                          className="cursor-pointer"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="lucide lucide-square-arrow-out-up-right"
+                          >
+                            <path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
+                            <path d="m21 3-9 9" />
+                            <path d="M15 3h6v6" />
+                          </svg>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>View Transaction</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+              </div>
             <div className="flex py-5">
               <div className="flex gap-3 items-center">
                 <span className="">
