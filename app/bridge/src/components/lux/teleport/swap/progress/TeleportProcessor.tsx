@@ -53,7 +53,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setMpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const { address, chainId, signer } = useEthersSigner();
+  const { chainId, signer, isConnecting } = useEthersSigner();
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
@@ -65,18 +65,18 @@ const TeleportProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (!signer || !address) {
-      connectWallet('evm')
+    if (isConnecting) return;
+
+    if (!signer) {
+        notify('Please connect wallet first.', 'info')
     } else {
-      if (chainId === sourceNetwork?.chain_id) {
+      if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
         getMpcSignature()
       } else {
-        sourceNetwork.chain_id &&
-          switchChain &&
-          switchChain({ chainId: sourceNetwork.chain_id })
+        sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
       }
     }
-  }, [swapStatus, chainId, signer])
+  }, [signer])
 
   const getMpcSignature = async () => {
     try {
@@ -127,20 +127,12 @@ const TeleportProcessor: React.FC<IProps> = ({
         )
         setMpcSignature(res.data.signature)
         setSwapStatus('user_payout_pending')
-      } 
-      else {
+      } else {
         const { msg } = res
         if (String(msg).includes("InvalidSenderError")) {
-          notify(
-            "Invalid token sender. Try again using correct sender's account", // keep double quotes
-            'warn'
-          )
-        } 
-        else {
-          notify(
-            'Failed to get signature from MPC oracle network, Please try again',
-            'error'
-          )
+          notify("Invalid token sender. Try again using correct sender's account", 'warn')
+        } else {
+          notify('Failed to get signature from MPC oracle network, Please try again', 'error')
         }
       }
     } catch (err) {
@@ -151,18 +143,11 @@ const TeleportProcessor: React.FC<IProps> = ({
   }
   const handleGetMpcSignature = () => {
     if (!signer) {
-      notify(
-        "No connected wallet. Please connect your wallet",
-        "warn"
-      );
-      connectWallet("evm")
-    } 
-    else if (chainId !== sourceNetwork.chain_id) {
-      if (sourceNetwork.chain_id && switchChain) {
-        switchChain({ chainId: sourceNetwork.chain_id })
-      }
-    } 
-    else {
+      notify("No connected wallet. Please connect your wallet", "warn");
+      // connectWallet("evm")
+    } else if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
+      sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
+    } else {
       getMpcSignature()
     }
   }
