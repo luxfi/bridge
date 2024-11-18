@@ -16,7 +16,8 @@ import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
 import { ethers } from 'ethers'
 //hooks
 import { useAtom } from 'jotai'
-import { useEthersSigner } from '@/lib/ethersToViem/ethers'
+import { useSwitchChain } from 'wagmi'
+import { useEthersSigner } from "@/hooks/useEthersSigner";
 
 import type { Network, Token } from '@/types/teleport'
 import axios from 'axios'
@@ -29,7 +30,6 @@ import { ArrowRight } from 'lucide-react'
 import { parseUnits } from 'ethers/lib/utils'
 import { localeNumber } from '@/lib/utils'
 import { formatUnits, parseEther } from 'viem'
-import { useChainId, useSwitchChain } from 'wagmi'
 //abis
 import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
@@ -64,8 +64,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [mpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const chainId = useChainId()
-  const signer = useEthersSigner()
+  const { address, chainId, signer } = useEthersSigner();
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
@@ -75,7 +74,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (!signer) {
+    if (!signer || !address) {
       connectWallet('evm')
     } else {
       if (isWithdrawal) {
