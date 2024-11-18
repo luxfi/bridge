@@ -324,7 +324,7 @@ export const networks: Network[] = [
         withdrawal_fee: 0.1,
         source_base_fee: 0.1,
         destination_base_fee: 0.1,
-        is_native: false,
+        is_native: true,
       },
       {
         name: 'WETH',
