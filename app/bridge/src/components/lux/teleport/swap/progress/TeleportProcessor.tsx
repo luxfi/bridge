@@ -23,6 +23,7 @@ import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import Gauge from '@/components/gauge'
 import type { Network, Token } from '@/types/teleport'
+import { truncateDecimals } from '@/components/utils/RoundDecimals'
 
 interface IProps {
   className?: string
@@ -192,14 +193,13 @@ const TeleportProcessor: React.FC<IProps> = ({
               </div>
             </div>
             <div className="flex flex-col py-5 gap-3">
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-3 items-start">
                 <span className="">
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
-                <div className="flex flex-col items-center text-sm">
+                <div className="flex flex-col items-start text-sm">
                   <span>
-                    {sourceAsset?.asset}{' '}
-                    {isWithdrawal ? 'Burned' : 'Transferred'}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
