@@ -32,6 +32,7 @@ import { formatUnits, parseEther } from 'viem'
 import { useChainId, useSwitchChain } from 'wagmi'
 //abis
 import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
+import { truncateDecimals } from '@/components/utils/RoundDecimals'
 
 interface IProps {
   className?: string
@@ -69,7 +70,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   const { connectWallet } = useWallet()
 
   const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith('Lux') ? true : false),
+    () => (sourceAsset?.name?.startsWith('Lux') ? true : false),
     [sourceAsset]
   )
 
@@ -362,14 +363,13 @@ const PayoutProcessor: React.FC<IProps> = ({
               </div>
             </div>
             <div className="flex flex-col gap-2 py-5">
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-3 items-start">
                 <span className="">
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
-                <div className="flex flex-col items-center text-sm">
+                <div className="flex flex-col items-start text-sm">
                   <span>
-                    {sourceAsset?.asset}{' '}
-                    {isWithdrawal ? 'burnt' : 'transferred'}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}

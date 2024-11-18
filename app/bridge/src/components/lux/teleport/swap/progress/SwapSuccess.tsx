@@ -8,6 +8,7 @@ import Gauge from '@/components/gauge'
 import { useAtom } from 'jotai'
 import { bridgeMintTransactionAtom, userTransferTransactionAtom } from '@/store/teleport'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
+import { truncateDecimals } from '@/components/utils/RoundDecimals'
 
 const SwapSuccess: React.FC<{
   className?: string
@@ -65,14 +66,13 @@ const SwapSuccess: React.FC<{
                 Swap Success
               </div>
             </div>
-            <div className="flex gap-3 items-center pt-5">
+            <div className="flex gap-3 items-start pt-5">
                 <span className="">
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
-                <div className="flex flex-col items-center text-sm">
+                <div className="flex flex-col items-start text-sm">
                   <span>
-                    {sourceAsset?.asset}{' '}
-                    {isWithdrawal ? 'burnt' : 'transferred'}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
@@ -127,7 +127,7 @@ const SwapSuccess: React.FC<{
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col text-sm">
-                  <span>Your {destinationAsset?.asset} has been arrived</span>
+                <span>{isWithdrawal ? String(truncateDecimals(Number(sourceAmount) * 0.99, 6)) : String(truncateDecimals(Number(sourceAmount), 6))} {destinationAsset?.asset} has been arrived</span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(bridgeMintTransactionHash)}
                     <Tooltip>
