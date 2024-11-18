@@ -1,9 +1,9 @@
 export const CONTRACTS = {
-  7777: {
+  96369: {
     name: 'LUX_MAINNET',
-    chain_id: 7777,
-    teleporter: '0xC58E07f1C07627af94ad77549499b642aeFf0a3C',
-    vault: '0x7C6e3BE7B72805f0f52d788b96695b9d7e59A00c',
+    chain_id: 96369,
+    teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
+    vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
   },
   1: {
     name: 'ETHEREUM_MAINNET',
@@ -114,11 +114,11 @@ export const CONTRACTS = {
     teleporter: '0xD293337c79A951C0e93aEb6a5E255097d65b671f',
     vault: '0xe0feC703840364714b97272973B8945FD5eB5600',
   },
-  8888: {
+  96368: {
     name: 'LUX_TESTNET',
-    chain_id: 8888,
-    teleporter: '0x7d462c69057E404a172690E8C5021563382CAa78',
-    vault: '0xD1496b961855c3F554F3F71A653915EEe035c55e',
+    chain_id: 96368,
+    teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
+    vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
   },
 }
 
