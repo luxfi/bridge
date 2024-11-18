@@ -7,9 +7,9 @@ import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
 import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
 import erc20ABI from '@/components/lux/teleport/constants/abi/erc20.json'
 //hooks
-import { useChainId, useSwitchChain } from 'wagmi'
+import { useSwitchChain } from 'wagmi'
 import { useAtom } from 'jotai'
-import { useEthersSigner } from '@/lib/ethersToViem/ethers'
+import { useEthersSigner } from "@/hooks/useEthersSigner";
 import { parseUnits } from 'ethers/lib/utils'
 
 import axios from 'axios'
@@ -50,7 +50,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   //hooks
-  const signer = useEthersSigner()
+  const { address, chainId, signer } = useEthersSigner();
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
@@ -59,11 +59,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
     [sourceAsset]
   )
 
-  //chain id
-  const chainId = useChainId()
-
   React.useEffect(() => {
-    if (!signer) {
+    if (!signer || !address) {
       connectWallet('evm')
     } else {
       if (chainId === sourceNetwork?.chain_id) {
@@ -84,6 +81,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         localeNumber(sourceAmount),
         sourceAsset.decimals
       )
+
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance()
         console.log('::balance checking: ', {
@@ -102,13 +100,12 @@ const UserTokenDepositor: React.FC<IProps> = ({
           erc20ABI,
           signer
         )
+        console.log({erc20Contract, signer})
         // approve
         setUserDepositNotice(`Approving ${sourceAsset.asset}...`)
         const _balance = await erc20Contract.balanceOf(
           signer?._address as string
         )
-
-        console.log(_amount)
 
         console.log('::balance checking: ', {
           balance: Number(_balance),
@@ -120,6 +117,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
           return;
         }
+        console.log(sourceNetwork.chain_id)
 
         if (!sourceNetwork.chain_id) return
         // if allowance is less than amount, approve
@@ -192,7 +190,14 @@ const UserTokenDepositor: React.FC<IProps> = ({
       )
       setUserDepositNotice(`Checking token balance...`)
       const _balance = await erc20Contract.balanceOf(signer?._address as string)
-      if (_balance < _amount) {
+
+      console.log('::balance checking: ', {
+        balance: Number(_balance),
+        required: Number(_amount),
+        gap: Number(_balance) - Number(_amount),
+      })
+
+      if (Number(_balance) < Number(_amount)) {
         notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
         return
       }

@@ -1,7 +1,7 @@
 import React from 'react'
 import toast from 'react-hot-toast'
 import Web3 from 'web3'
-import { useSwitchChain, useChainId } from 'wagmi'
+import { useSwitchChain } from 'wagmi'
 import { useAtom } from 'jotai'
 import axios from 'axios'
 
@@ -16,7 +16,7 @@ import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
 import { useNotify } from '@/context/toast-provider';
 
 //hooks
-import { useEthersSigner } from '@/lib/ethersToViem/ethers'
+import { useEthersSigner } from "@/hooks/useEthersSigner";
 
 import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
@@ -53,8 +53,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setMpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const signer = useEthersSigner()
-  const chainId = useChainId()
+  const { address, chainId, signer } = useEthersSigner();
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
@@ -66,7 +65,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (!signer) {
+    if (!signer || !address) {
       connectWallet('evm')
     } else {
       if (chainId === sourceNetwork?.chain_id) {
