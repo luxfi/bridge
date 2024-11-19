@@ -18,7 +18,7 @@
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
     "@hanzo/auth": "catalog:",
-    "@hanzo/ui": "catalog:",
+    "@hanzo/ui": "file:../../../../hanzoai/react-sdk/pkg/ui",
     "@headlessui/react": "^1.7.3",
     "@imtbl/imx-sdk": "2.1.1",
     "@loopring-web/loopring-sdk": "3.3.5",

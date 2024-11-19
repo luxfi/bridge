@@ -21,6 +21,9 @@
     "@vercel/remix": "^2.11.2",
     "isbot": "^4.4.0",
     "lucide-react": "catalog:",
+    "mobx": "^6.12.3",
+    "mobx-react-lite": "^4.0.7",
+    "mobx-utils": "^6.1.0",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
