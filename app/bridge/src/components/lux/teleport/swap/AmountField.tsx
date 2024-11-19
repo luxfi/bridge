@@ -1,13 +1,15 @@
 'use client'
+import SecondaryButton from '@/components/buttons/secondaryButton'
 import React, { useState } from 'react'
 
 interface IProps {
   disabled: boolean
   setValue?: (value: string) => void
-  value: string
+  value: string,
+  maxValue?: string
 }
 
-const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
+const AmountField: React.FC<IProps> = ({ disabled, value, setValue , maxValue = '0' }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (/^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && setValue) {
       setValue(e.target.value)
@@ -40,21 +42,21 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
             />
           </div>
         </div>
-        {/* {
-                    !disabled &&
-                    <div className="flex flex-col justify-center">
-                        <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
-                            <div className="flex">
-                                <SecondaryButton disabled={!false} onClick={handleSetMinAmount} size="xs">
-                                    MIN
-                                </SecondaryButton>
-                                <SecondaryButton disabled={!false} onClick={handleSetMaxAmount} size="xs" className="ml-1.5">
-                                    MAX
-                                </SecondaryButton>
-                            </div>
-                        </div>
-                    </div>
-                } */}
+        {
+          !disabled &&
+          <div className="flex flex-col justify-center">
+              <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
+                  <div className="flex">
+                      {/* <SecondaryButton disabled={!false} onClick={() => {}} size="xs">
+                          MIN
+                      </SecondaryButton> */}
+                      <SecondaryButton onClick={() => {setValue && setValue(maxValue)}} size="xs" className="ml-1.5">
+                          MAX
+                      </SecondaryButton>
+                  </div>
+              </div>
+          </div>
+        }
       </div>
     </>
   )
