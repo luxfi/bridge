@@ -36,7 +36,7 @@ const NetworkFormField: React.FC<IProps> = ({
   );
 
   return (
-    <div className={`p-3`}>
+    <div className={`p-3 pb-0`}>
       <label htmlFor={'name'} className="block font-semibold text-xs">
         To
       </label>

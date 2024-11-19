@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import axios from 'axios'
 
-import { ArrowLeftRight } from 'lucide-react'
+import { ArrowLeftRight, WalletIcon } from 'lucide-react'
 
 import Modal from '@/components/modal/modal'
 import ResizablePanel from '@/components/ResizablePanel'
@@ -16,10 +16,15 @@ import ToNetworkForm from './to/NetworkFormField'
 import SwapDetails from './SwapDetails'
 import type { Token, Network } from '@/types/teleport'
 import { SWAP_PAIRS } from '@/components/lux/teleport/constants/settings'
-import { useAtom } from 'jotai'
 
 import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
 import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
+
+//hooks
+import useWallet from "@/hooks/useWallet";
+import useAsyncEffect from 'use-async-effect'
+import { useAtom } from 'jotai'
+import { useEthersSigner } from "@/hooks/useEthersSigner";
 
 import {
   sourceNetworkAtom,
@@ -34,6 +39,11 @@ import {
 } from '@/store/teleport'
 import SpinIcon from '@/components/icons/spinIcon'
 import { SwapStatus } from '@/Models/SwapStatus'
+import { Contract, ethers } from 'ethers'
+import { erc20ABI } from '@wagmi/core'
+import { parseUnits } from '@/lib/resolveChain'
+import { formatUnits } from 'ethers/lib/utils'
+import { fetchTokenBalance, formatNumber } from '@/lib/utils'
 
 const Address = dynamic(
   () => import('@/components/lux/teleport/share/Address'),
@@ -50,17 +60,24 @@ const Swap: FC = () => {
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false)
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
-  const [destinationNetwork, setDestinationNetwork] = useAtom(
-    destinationNetworkAtom
-  )
+  //balances
+  const [sourceBalance, setSourceBalance] = React.useState<number>(0)
+  const [isSourceBalanceLoading, setIsSourceBalanceLoading] = React.useState<boolean>(false);
+  const [destinationBalance, setDestinationBalance] = React.useState<number>(0);
+  const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] = React.useState<boolean>(false);
+
+  const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom)
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
-  const [destinationAddress, setDestinationAddress] = useAtom(
-    destinationAddressAtom
-  )
-  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
-  const [swapId, setSwapId] = useAtom(swapIdAtom)
+  const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom)
+
+  const [sourceAmount] = useAtom(sourceAmountAtom)
+  const [, setSwapId] = useAtom(swapIdAtom)
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setEthPrice] = useAtom(ethPriceAtom)
+
+  //hooks
+  const { address, isConnecting } = useEthersSigner();
+  const { connectWallet } = useWallet();
 
   const sourceNetworks = networks
   const [destinationNetworks, setDestinationNetworks] = React.useState<
@@ -122,7 +139,9 @@ const Swap: FC = () => {
   }, [sourceAsset])
 
   const warnningMessage = React.useMemo(() => {
-    if (!sourceNetwork) {
+    if (!address) {
+      return 'Connect Wallet First'
+    } else if (!sourceNetwork) {
       return 'Select Source Network'
     } else if (!sourceAsset) {
       return 'Select Source Asset'
@@ -137,7 +156,7 @@ const Swap: FC = () => {
     } else if (Number(sourceAmount) <= 0) {
       return 'Invalid Token Amount'
     } else {
-      return 'Swap Now'
+      return 'Create Swap'
     }
   }, [
     sourceNetwork,
@@ -146,6 +165,7 @@ const Swap: FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
+    address
   ])
 
   const createSwap = async () => {
@@ -196,38 +216,65 @@ const Swap: FC = () => {
       setIsSubmitting(true)
     }
   }
+  // set source balance
+  useAsyncEffect(async () => {
+    if (address && sourceNetwork && sourceAsset) {
+      setIsSourceBalanceLoading (true);
+      const _balance = await fetchTokenBalance(address, sourceNetwork, sourceAsset)
+      setSourceBalance (_balance)
+      setIsSourceBalanceLoading (false);
+    } else {
+      setSourceBalance (0)
+    }
+  }, [address, sourceNetwork, sourceAsset])
+  // set destination balance
+  useAsyncEffect(async () => {
+    if (address && destinationNetwork && destinationAsset) {
+      setIsDestinationBalanceLoading (true);
+      const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
+      setDestinationBalance (_balance)
+      setIsDestinationBalanceLoading (false);
+  } else {
+    setDestinationBalance (0)
+  }
+  }, [address, destinationNetwork, destinationAsset])
 
   return (
     <Widget className="sm:min-h-[504px] max-w-lg">
       <Widget.Content>
-        <div className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
-          <div className="flex flex-col w-full">
-            <FromNetworkForm
-              disabled={false}
-              network={sourceNetwork}
-              asset={sourceAsset}
-              setNetwork={(network: Network) => {
-                setSourceNetwork(network)
-              }}
-              setAsset={(token: Token) => setSourceAsset(token)}
-              networks={sourceNetworks}
-            />
-          </div>
+        <div className="flex-col relative flex justify-between w-full space-y-0.5 pb-2 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
+          <FromNetworkForm
+            disabled={false}
+            network={sourceNetwork}
+            asset={sourceAsset}
+            setNetwork={(network: Network) => {
+              setSourceNetwork(network)
+            }}
+            maxValue={sourceBalance.toString()}
+            setAsset={(token: Token) => setSourceAsset(token)}
+            networks={sourceNetworks}
+          />
           {/* <div className="py-4 px-4">
             Fee: {1}
             <span className="text-xs"> %</span>
           </div> */}
+          <div className='flex gap-1 justify-end items-end px-4 text-sm text-muted-2'>
+            <span>Balance:</span> 
+            { isSourceBalanceLoading ? <span className="ml-1 h-3 w-12 rounded-sm bg-level-2 animate-pulse" /> : <span>{formatNumber(sourceBalance)} {sourceAsset?.asset}</span> }
+          </div>
 
-          <div className="flex flex-col w-full">
-            <ToNetworkForm
-              disabled={!sourceNetwork}
-              network={destinationNetwork}
-              asset={destinationAsset}
-              sourceAsset={sourceAsset}
-              setNetwork={(network: Network) => setDestinationNetwork(network)}
-              setAsset={(token: Token) => setDestinationAsset(token)}
-              networks={destinationNetworks}
-            />
+          <ToNetworkForm
+            disabled={!sourceNetwork}
+            network={destinationNetwork}
+            asset={destinationAsset}
+            sourceAsset={sourceAsset}
+            setNetwork={(network: Network) => setDestinationNetwork(network)}
+            setAsset={(token: Token) => setDestinationAsset(token)}
+            networks={destinationNetworks}
+          />
+          <div className='flex gap-1 justify-end items-end px-4 text-sm text-muted-2 -mt-3'>
+            <span>Balance:</span> 
+            { isDestinationBalanceLoading ? <span className="ml-1 h-3 w-12 rounded-sm bg-level-2 animate-pulse" /> : <span>{formatNumber(destinationBalance)} {destinationAsset?.asset}</span> }
           </div>
         </div>
 
@@ -276,29 +323,40 @@ const Swap: FC = () => {
           </Modal>
         </div>
 
-        <button
-          onClick={handleSwap}
-          disabled={
-            !sourceNetwork ||
-            !sourceAsset ||
-            !destinationNetwork ||
-            !destinationAsset ||
-            !destinationAddress ||
-            !sourceAmount ||
-            Number(sourceAmount) <= 0 ||
-            isSubmitting
-          }
-          className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
-        >
-          {isSubmitting ? (
-            <SpinIcon className="animate-spin h-5 w-5" />
-          ) : (
-            warnningMessage === 'Swap Now' && (
-              <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
-            )
-          )}
-          <span className="grow">{warnningMessage}</span>
-        </button>
+        {
+          !address ?
+          <button
+            onClick={() => connectWallet("evm")}
+            className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          >
+            { isConnecting ? <SpinIcon className="animate-spin h-5 w-5" /> : <WalletIcon className="h-5 w-5" /> }
+            <span className="grow">Connect Wallet</span>
+          </button> :
+          <button
+            onClick={handleSwap}
+            disabled={
+              !sourceNetwork ||
+              !sourceAsset ||
+              !destinationNetwork ||
+              !destinationAsset ||
+              !destinationAddress ||
+              !sourceAmount ||
+              Number(sourceAmount) <= 0 ||
+              isSubmitting ||
+              !address
+            }
+            className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          >
+            {isSubmitting ? (
+              <SpinIcon className="animate-spin h-5 w-5" />
+            ) : (
+              warnningMessage === 'Create Swap' && (
+                <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
+              )
+            )}
+            <span className="grow">{warnningMessage}</span>
+          </button>
+        }
 
         <Modal
           height="fit"
