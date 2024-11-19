@@ -14,12 +14,13 @@ const NetworkFormField: React.FC<{
   asset?: Token
   setNetwork: (network: Network) => void
   setAsset: (asset: Token) => void
-  disabled: boolean
-}> = ({ networks, network, asset, setNetwork, setAsset, disabled }) => {
+  disabled: boolean,
+  maxValue?: string
+}> = ({ networks, network, asset, setNetwork, setAsset, disabled, maxValue = '0' }) => {
   const [amount, setAmount] = useAtom(sourceAmountAtom)
 
   return (
-    <div className="p-3" id="NETWORK_FORM_FIELD">
+    <div className="p-3 pb-0">
       <label htmlFor={'name'} className="block font-semibold text-xs">
         From
       </label>
@@ -39,6 +40,7 @@ const NetworkFormField: React.FC<{
           <AmountField
             disabled={!network}
             value={amount}
+            maxValue={maxValue}
             setValue={(value: string) => setAmount(value)}
           />
           <TokenSelectWrapper
