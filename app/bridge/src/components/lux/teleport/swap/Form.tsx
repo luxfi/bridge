@@ -149,12 +149,14 @@ const Swap: FC = () => {
       return 'Select Destination Network'
     } else if (!destinationAsset) {
       return 'Select Destination Asset'
-    } else if (!destinationAddress) {
-      return 'Input Address'
     } else if (sourceAmount === '') {
       return 'Enter Token Amount'
     } else if (Number(sourceAmount) <= 0) {
       return 'Invalid Token Amount'
+    } else if (Number(sourceAmount) > Number(sourceBalance)) {
+      return 'Insufficient Token Amount'
+    } else if (!destinationAddress) {
+      return 'Input Destination Address'
     } else {
       return 'Create Swap'
     }
