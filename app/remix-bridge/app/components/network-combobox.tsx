@@ -31,8 +31,8 @@ const NetworkCombobox: React.FC<{
   networks, 
   network, 
   setNetwork,
-  placeholder='',
-  searchHint='',
+  placeholder,
+  searchHint,
   disabled=false,
   buttonClx='',
   popoverClx='',
@@ -43,6 +43,8 @@ const NetworkCombobox: React.FC<{
     adaptor={adaptor}
     initial={network}
     elementSelected={setNetwork}
+    buttonPlaceholder={placeholder}
+    searchPlaceholder={searchHint}
     buttonClx={cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx)}
     popoverClx={cn('font-sans font-medium w-full', popoverClx)}
     disabled={disabled}
