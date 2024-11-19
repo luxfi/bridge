@@ -1,5 +1,9 @@
 import { Web3, HttpProvider } from "web3";
 import { rpc } from "viem/utils";
+import { Contract, ethers } from "ethers";
+import type { Network, Token } from "@/types/teleport";
+import { formatUnits } from "ethers/lib/utils";
+import { erc20ABI } from "@wagmi/core";
 
 /**
  * generate random string
@@ -42,3 +46,40 @@ export const localeNumber = (number: number | string) => {
     useGrouping: false, // Disable commas
   }).format(Number(number));
 };
+
+/**
+ * format provided number
+ * @param value
+ * @returns
+ */
+export const formatNumber = (value: number | string) => {
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 5
+  }).format(Number(value))
+}
+
+/**
+   * get token balance
+   * @param address 
+   * @param network 
+   * @param asset 
+   * @returns 
+   */
+export const fetchTokenBalance = async (address: string, network: Network, asset: Token) => {
+  try {
+    if (asset.is_native) {
+      const provider = new ethers.providers.JsonRpcProvider(network.node)
+      const _balance = await provider.getBalance(address)
+      return Number(formatUnits(_balance, asset.decimals))
+    } else {
+      const provider = new ethers.providers.JsonRpcProvider(network.node)
+      const contract = new Contract(String(asset.contract_address), erc20ABI, provider)
+      const _balance = await contract.balanceOf(address)
+      return Number(formatUnits(_balance, asset.decimals))
+    }
+  } catch (err) {
+    return 0;
+  }
+}
+  
