@@ -208,7 +208,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   const destinationNetworkCurrency = to && toCurrency ? toCurrency : null;
 
   return (
-    <div className={`p-3 ${className}`}>
+    <div className={className}>
       <label htmlFor={name} className="block font-semibold text-xs">
         {label}
       </label>

@@ -11,16 +11,15 @@ import {
 } from '@hanzo/ui/primitives'
 import { type Token } from "@/types/teleport"
 
-interface IProps {
+
+const TokenSelectWrapper: React.FC<{
   setValue: (value: Token) => void
   values: Token[]
   value?: Token
   placeholder?: string
   searchHint?: string
   disabled?: boolean
-}
-
-const TokenSelectWrapper: React.FC<IProps> = ({
+}> = ({
   setValue,
   value,
   values,

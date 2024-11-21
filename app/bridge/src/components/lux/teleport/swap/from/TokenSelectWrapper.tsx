@@ -13,7 +13,14 @@ const TokenSelectWrapper: React.FC<{
   placeholder?: string
   searchHint?: string
   disabled?: boolean
-}> = ({ setValue, value, values, placeholder, disabled }) => {
+}> = ({ 
+  setValue, 
+  value, 
+  values, 
+  placeholder, 
+  disabled 
+}) => {
+
   const [showModal, setShowModal] = useState(false)
 
   const handleSelect = useCallback((item: Token) => {

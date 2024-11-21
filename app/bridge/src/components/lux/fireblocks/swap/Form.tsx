@@ -1,13 +1,15 @@
 'use client'
-import React from 'react'
+import React, { type FC }from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import axios from 'axios'
+import { ArrowLeftRight } from 'lucide-react'
+import useAsyncEffect from 'use-async-effect'
+import { useAtom } from 'jotai'
+
 import Modal from '@/components/modal/modal'
 import ResizablePanel from '@/components/ResizablePanel'
 import shortenAddress from '../../../utils/ShortenAddress'
-import { type FC } from 'react'
-import { ArrowLeftRight } from 'lucide-react'
 import Widget from '../../../Widget'
 
 import FromNetworkForm from './from/NetworkFormField'
@@ -15,7 +17,8 @@ import ToNetworkForm from './to/NetworkFormField'
 import SwapDetails from './SwapDetails'
 import type { Token, Network } from '@/types/fireblocks'
 import { SWAP_PAIRS } from '@/components/lux/fireblocks/constants/settings'
-import { useAtom } from 'jotai'
+import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { fetchTokenBalance } from '@/lib/utils'
 
 import devNetworks from '@/components/lux/fireblocks/constants/networks.sandbox'
 import mainNetworks from '@/components/lux/fireblocks/constants/networks.mainnets'
@@ -52,6 +55,12 @@ const Swap: FC = () => {
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false)
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
+
+  const [sourceBalance, setSourceBalance] = React.useState<number>(0)
+  const [isSourceBalanceLoading, setIsSourceBalanceLoading] = React.useState<boolean>(false);
+  const [destinationBalance, setDestinationBalance] = React.useState<number>(0);
+  const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] = React.useState<boolean>(false);
+
   const [destinationNetwork, setDestinationNetwork] = useAtom(
     destinationNetworkAtom
   )
@@ -67,6 +76,8 @@ const Swap: FC = () => {
 
   const [destinationNetworks, setDestinationNetworks] =
     React.useState<Network[]>(dstNetworks)
+
+  const { address, isConnecting } = useEthersSigner();
 
   React.useEffect(() => {
     sourceNetwork &&
@@ -120,8 +131,11 @@ const Swap: FC = () => {
     }
   }, [sourceAsset])
 
-  const warnningMessage = React.useMemo(() => {
-    if (!sourceNetwork) {
+  const warningMessage = React.useMemo(() => {
+    if (!address) {
+      return 'Connect Wallet First'
+    }
+    else if (!sourceNetwork) {
       return 'Select Source Network'
     } else if (!sourceAsset) {
       return 'Select Source Asset'
@@ -145,6 +159,7 @@ const Swap: FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
+    address
   ])
 
   const createSwap = async () => {
@@ -197,27 +212,50 @@ const Swap: FC = () => {
     }
   }
 
+  // set source balance
+  useAsyncEffect(async () => {
+    if (address && sourceNetwork && sourceAsset) {
+      setIsSourceBalanceLoading (true);
+      const _balance = await fetchTokenBalance(address, sourceNetwork, sourceAsset)
+      setSourceBalance (_balance)
+      setIsSourceBalanceLoading (false);
+    } else {
+      setSourceBalance (0)
+    }
+  }, [address, sourceNetwork, sourceAsset])
+  useAsyncEffect(async () => {
+    if (address && destinationNetwork && destinationAsset) {
+      setIsDestinationBalanceLoading (true);
+      const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
+      setDestinationBalance (_balance)
+      setIsDestinationBalanceLoading (false);
+  } else {
+    setDestinationBalance (0)
+  }
+  }, [address, destinationNetwork, destinationAsset])
+
   return (
     <Widget className="sm:min-h-[504px] max-w-lg">
       <Widget.Content>
         <div
           id="WIDGET_CONTENT"
-          className="flex-col relative flex justify-between w-full space-y-0.5 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden"
+          className="flex-col relative flex justify-between w-full mb-3.5 leading-4 overflow-hidden"
         >
-          <div className="flex flex-col w-full">
-            <FromNetworkForm
-              disabled={false}
-              network={sourceNetwork}
-              asset={sourceAsset}
-              setNetwork={(network: Network) => {
-                setSourceNetwork(network)
-              }}
-              setAsset={(token: Token) => setSourceAsset(token)}
-              networks={sourceNetworks}
-            />
-          </div>
-          <div className="py-4 px-4">
-            Fee: {1}
+          <FromNetworkForm
+            disabled={false}
+            network={sourceNetwork}
+            asset={sourceAsset}
+            setNetwork={(network: Network) => {
+              setSourceNetwork(network)
+            }}
+            maxValue={sourceBalance.toString()}
+            setAsset={(token: Token) => setSourceAsset(token)}
+            networks={sourceNetworks}
+            balance={sourceBalance}
+            balanceLoading={isSourceBalanceLoading}
+          />
+          <div className="py-4">
+            <span className="text-md">Fee: {1}</span>
             <span className="text-xs"> %</span>
           </div>
 
@@ -230,6 +268,8 @@ const Swap: FC = () => {
               setNetwork={(network: Network) => setDestinationNetwork(network)}
               setAsset={(token: Token) => setDestinationAsset(token)}
               networks={destinationNetworks}
+              balance={destinationBalance}
+              balanceLoading={isDestinationBalanceLoading}
             />
           </div>
         </div>
@@ -296,11 +336,11 @@ const Swap: FC = () => {
           {isSubmitting ? (
             <SpinIcon className="animate-spin h-5 w-5" />
           ) : (
-            warnningMessage === 'Swap Now' && (
+            warningMessage === 'Swap Now' && (
               <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
             )
           )}
-          <span className="grow">{warnningMessage}</span>
+          <span className="grow">{warningMessage}</span>
         </button>
 
         <Modal
