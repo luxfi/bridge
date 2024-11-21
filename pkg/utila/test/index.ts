@@ -1,4 +1,4 @@
-import { createGrpcClient, serviceAccountAuthStrategy } from "@luxfi/utila";
+import { createGrpcClient, serviceAccountAuthStrategy } from "@/index";
 import { readFile } from "fs/promises";
 import path from "path";
 import os from "os";
