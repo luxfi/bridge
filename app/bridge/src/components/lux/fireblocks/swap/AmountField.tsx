@@ -40,21 +40,6 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
             />
           </div>
         </div>
-        {/* {
-                    !disabled &&
-                    <div className="flex flex-col justify-center">
-                        <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
-                            <div className="flex">
-                                <SecondaryButton disabled={!false} onClick={handleSetMinAmount} size="xs">
-                                    MIN
-                                </SecondaryButton>
-                                <SecondaryButton disabled={!false} onClick={handleSetMaxAmount} size="xs" className="ml-1.5">
-                                    MAX
-                                </SecondaryButton>
-                            </div>
-                        </div>
-                    </div>
-                } */}
       </div>
     </>
   );

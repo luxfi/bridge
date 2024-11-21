@@ -45,10 +45,7 @@ const CommandSelect: React.FC<{
                   onSelect={() => {
                     setNetwork(n)
                   }}
-                  className={cn([
-                    n?.status == 'active' ? 'opacity-100' : 'opacity-50',
-                    'hover:!bg-[#1F1F1F] aria-selected:!bg-[#1F1F1F] cursor-pointer',
-                  ])}
+                  className={n?.status == 'active' ? 'opacity-100' : 'opacity-50'}
                 >
                   <SelectItem network={n} />
                 </CommandItem>
@@ -61,7 +58,7 @@ const CommandSelect: React.FC<{
           )}
         </CommandWrapper>
       ) : (
-        <></>
+        null
       )}
     </Modal>
   )
