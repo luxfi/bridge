@@ -11,7 +11,7 @@ export interface SwapButtonProps {
   className?: string
   children?: React.ReactNode
 }
-
+  // :aa TODO Factor this out!  It recreates the ButtonVariants in @hanzo/ui/primitives/Button (shadcn)
 const SwapButton: React.FC<SwapButtonProps> = (props) => {
   const swapIcon = <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />;
 
