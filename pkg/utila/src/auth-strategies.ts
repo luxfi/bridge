@@ -1,4 +1,4 @@
-import { Interceptor } from '@connectrpc/connect';
+import type { Interceptor } from '@connectrpc/connect';
 import * as jwt from 'jsonwebtoken';
 
 export function serviceAccountAuthStrategy({
