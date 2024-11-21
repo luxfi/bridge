@@ -29,6 +29,7 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 .vercel
+.nx
 
 # Moving to yarn
 package-lock.json
