@@ -30,6 +30,7 @@ yarn-error.log*
 .env.production.local
 .vercel
 .nx
+pkg/utila/dist
 
 # Moving to yarn
 package-lock.json
