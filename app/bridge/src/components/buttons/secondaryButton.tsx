@@ -10,9 +10,11 @@ type SecondaryButtonProps = {
     children?: React.ReactNode
 }
 
+  // :aa TODO Factor this out!  It recreates the ButtonVariants in @hanzo/ui/primitives/Button (shadcn)
+
 const SecondaryButton: React.FC<SecondaryButtonProps> = ({ size = 'md', onClick, children, className, disabled }) => {
 
-    let defaultStyle = 'rounded-md duration-200 break-keep transition hover:bg-level-1 border border-[#404040] hover:border-[#404040] font-semibold shadow-sm cursor-pointer ' + className
+    let defaultStyle = 'rounded-md duration-200 break-keep transition hover:bg-level-1 border border-muted-3 hover:border-muted-1 font-semibold shadow-sm cursor-pointer ' + className
 
     switch (size) {
         case 'xs':
