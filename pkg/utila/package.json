@@ -1,0 +1,20 @@
+{
+  "name": "@luxfi/utila",
+  "version": "3.0.0",
+  "dependencies": {
+    "@bufbuild/buf": "1.46.0",
+    "@bufbuild/protobuf": "2.2.2",
+    "@connectrpc/connect": "2.0.0-beta.1",
+    "@connectrpc/connect-node": "2.0.0-beta.1",
+    "@nx/rollup": "^20.1.2",
+    "jsonwebtoken": "9.0.2",
+    "tslib": "2.3.0",
+    "viem": "2.16.0"
+  },
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "nx": "20.1.2"
+  }
+}
