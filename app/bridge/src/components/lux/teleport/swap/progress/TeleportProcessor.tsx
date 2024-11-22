@@ -59,9 +59,13 @@ const TeleportProcessor: React.FC<IProps> = ({
 
   const { notify } = useNotify();
 
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith('Lux') ? true : false),
+  const toBurn = React.useMemo(
+    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
     [sourceAsset]
+  )
+  const toMint = React.useMemo(
+    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    [destinationAsset]
   )
 
   React.useEffect(() => {
@@ -183,7 +187,7 @@ const TeleportProcessor: React.FC<IProps> = ({
                 </span>
                 <div className="flex flex-col items-start text-sm">
                   <span>
-                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${toBurn ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
