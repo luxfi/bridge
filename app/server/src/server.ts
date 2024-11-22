@@ -11,6 +11,7 @@ import quotes from "@/routes/quotes"
 import rate from "@/routes/rate"
 import networks from "@/routes/networks"
 import exchanges from "@/routes/exchanges"
+import utila from "@/routes/utila"
 
 dotenv.config()
 
@@ -30,6 +31,7 @@ app.use("/api/quotes", quotes)
 app.use("/api/rate", rate)
 app.use("/api/networks", networks)
 app.use("/api/exchanges", exchanges)
+app.use("/api/utila", utila)
 
 app.get("/", async (req, res) => {
   res.json(">>> Hello world. We are LUX!!!")

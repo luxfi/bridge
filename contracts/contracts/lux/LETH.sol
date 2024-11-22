@@ -13,7 +13,7 @@ pragma solidity ^0.8.19;
     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝    ╚══════╝   ╚═╝   ╚═╝  ╚═╝
  */
 
-import "./ERC20B.sol";
+import "../ERC20B.sol";
 
 contract LuxETH is ERC20B {
     string public constant _name = "Lux ETH";

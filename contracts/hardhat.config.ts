@@ -12,6 +12,8 @@ const HOLESKY_RPC: string = process.env.HOLESKY_RPC!;
 const BSC_TESTNET_RPC: string = process.env.BSC_TESTNET_RPC!;
 const LUX_MAINNET_RPC: string = process.env.LUX_MAINNET_RPC!;
 const LUX_TESTNET_RPC: string = process.env.LUX_TESTNET_RPC!;
+const ZOO_MAINNET_RPC: string = process.env.ZOO_MAINNET_RPC!;
+const ZOO_TESTNET_RPC: string = process.env.ZOO_TESTNET_RPC!;
 const MAINNET_RPC: string = process.env.MAINNET_RPC!;
 
 const BSC_MAINNET_RPC = process.env.BSC_MAINNET_RPC!;
@@ -68,6 +70,10 @@ const config: HardhatUserConfig = {
       url: LUX_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
+    zoo: {
+      url: ZOO_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
     //////////////////////// testnet ////////////////////
     sepolia: {
       url: SEPOLIA_RPC,
@@ -87,6 +93,10 @@ const config: HardhatUserConfig = {
     },
     luxTestnet: {
       url: LUX_TESTNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    zooTestnet: {
+      url: ZOO_TESTNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
   },
@@ -121,6 +131,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api-explore.lux-test.network",
           browserURL: "https://explore.lux-test.network",
+        },
+      },
+      {
+        network: "zoo",
+        chainId: 200200,
+        urls: {
+          apiURL: "https://api-explore.zoo.network",
+          browserURL: "https://explore.zoo.network",
+        },
+      },
+      {
+        network: "zooTestnet",
+        chainId: 200201,
+        urls: {
+          apiURL: "https://api-explore.zoo-test.network",
+          browserURL: "https://explore.zoo-test.network",
         },
       },
     ],
