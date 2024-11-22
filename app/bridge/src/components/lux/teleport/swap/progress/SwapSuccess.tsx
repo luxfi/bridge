@@ -35,9 +35,14 @@ const SwapSuccess: React.FC<{
   )
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
 
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith('Lux') ? true : false),
+  const toBurn = React.useMemo(
+    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
     [sourceAsset]
+  )
+
+  const toMint = React.useMemo(
+    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    [destinationAsset]
   )
 
   return (
@@ -72,7 +77,7 @@ const SwapSuccess: React.FC<{
                 </span>
                 <div className="flex flex-col items-start text-sm">
                   <span>
-                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${toBurn ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
@@ -127,7 +132,7 @@ const SwapSuccess: React.FC<{
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col text-sm">
-                <span>{isWithdrawal ? String(truncateDecimals(Number(sourceAmount) * 0.99, 6)) : String(truncateDecimals(Number(sourceAmount), 6))} {destinationAsset?.asset} has been arrived</span>
+                <span>{toMint ? String(truncateDecimals(Number(sourceAmount), 6)) : String(truncateDecimals(Number(sourceAmount) * 0.99, 6))} {destinationAsset?.asset} has been arrived</span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(bridgeMintTransactionHash)}
                     <Tooltip>
