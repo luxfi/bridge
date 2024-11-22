@@ -232,9 +232,9 @@ const Swap: FC = () => {
       const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
       setDestinationBalance (_balance)
       setIsDestinationBalanceLoading (false);
-  } else {
-    setDestinationBalance (0)
-  }
+    } else {
+      setDestinationBalance (0)
+    }
   }, [address, destinationNetwork, destinationAsset])
 
   return (
