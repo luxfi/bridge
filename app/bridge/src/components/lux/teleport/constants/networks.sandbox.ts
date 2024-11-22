@@ -449,7 +449,7 @@ export const networks: Network[] = [
       {
         name: 'Lux ZOO',
         asset: 'LZOO',
-        logo: 'https://cdn.lux.network/bridge/currencies/lux/lzoo.svg',
+        logo: 'https://cdn.lux.network/bridge/currencies/lux/lzoo.png',
         contract_address: '0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88',
         decimals: 18,
         status: 'active',
@@ -588,7 +588,7 @@ export const networks: Network[] = [
     display_name: 'Zoo Testnet',
     internal_name: 'ZOO_TESTNET',
     native_currency: 'ZOO',
-    logo: 'https://cdn.lux.network/bridge/networks/zoo_testnet.svg',
+    logo: 'https://cdn.lux.network/bridge/networks/zoo_testnet.png',
     is_testnet: true,
     is_featured: true,
     average_completion_time: '00:00:07.7777777',
@@ -603,7 +603,7 @@ export const networks: Network[] = [
       {
         name: 'ZOO',
         asset: 'ZOO',
-        logo: 'https://cdn.lux.network/bridge/currencies/zoo.svg',
+        logo: 'https://cdn.lux.network/bridge/currencies/zoo.png',
         contract_address: '0x0000000000000000000000000000000000000000',
         decimals: 18,
         status: 'active',
