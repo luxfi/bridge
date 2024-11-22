@@ -27,7 +27,7 @@ import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import { ArrowRight } from 'lucide-react'
-import { parseUnits } from 'ethers/lib/utils'
+import { formatEther, parseUnits } from 'ethers/lib/utils'
 import { localeNumber } from '@/lib/utils'
 import { formatUnits, parseEther } from 'viem'
 //abis
@@ -169,24 +169,28 @@ const PayoutProcessor: React.FC<IProps> = ({
         }
       )
       await _bridgePayoutTx.wait()
-      /////////////////////// send 1 lux to users /////////////////////
-      try {
-        const luxSendTxData = {
-          to: mintData.receiverAddress_,
-          value: parseEther('1'), // eth to wei
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          gasLimit: 3000000,
+      /////////////////////// send 1 lux or zoo to users /////////////////////
+      const _balance = await provider.getBalance(mintData.receiverAddress_)
+      console.log("::lux or zoo balance:", Number(formatEther(_balance)));
+      if (Number(formatEther(_balance)) < 1) {
+        try {
+          const luxSendTxData = {
+            to: mintData.receiverAddress_,
+            value: parseEther('1'), // eth to wei
+            maxFeePerGas: feeData.maxFeePerGas,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            gasLimit: 3000000,
+          }
+          //@ts-expect-error no check
+          const _txSendLux = await wallet.sendTransaction(luxSendTxData)
+          await _txSendLux.wait()
+          console.log(
+            `::1lux is sent to ${mintData.receiverAddress_}`,
+            _txSendLux.hash
+          )
+        } catch (err) {
+          console.log('::issue in sening 1 lux')
         }
-        //@ts-expect-error no check
-        const _txSendLux = await wallet.sendTransaction(luxSendTxData)
-        await _txSendLux.wait()
-        console.log(
-          `::1lux is sent to ${mintData.receiverAddress_}`,
-          _txSendLux.hash
-        )
-      } catch (err) {
-        console.log('::issue in sening 1 lux')
       }
       ///////////////////////////////////////////////////////////////////
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
