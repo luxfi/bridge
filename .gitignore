@@ -29,6 +29,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 .vercel
+.nx
+pkg/utila/dist
+.rollup.cache/
 
 # Moving to yarn
 package-lock.json

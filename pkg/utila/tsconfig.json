@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.apps.base.json",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    },
+    "typeRoots": ["node_modules/@types"]
+  }
+}

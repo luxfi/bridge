@@ -52,7 +52,7 @@ const Widget = ({
         {!hideMenu && (
           <HeaderWithMenu goBack={(canGoBackRef.current) ? goBack : undefined} />
         )}
-        <div className='w-full h-full px-6 pb-6 flex flex-col justify-between'>
+        <div className='w-full h-full px-6 pb-6 mt-3 flex flex-col justify-between'>
           {children}
         </div>
         <div id='modal_portal_root' />

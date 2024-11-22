@@ -1,4 +1,4 @@
-/*
+
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react"
 import { Address } from "@ton/core"
 import KnownInternalNames from "../../knownIds"
@@ -49,4 +49,3 @@ function useTON(): WalletProvider {
 }
 
 export default useTON
-*/

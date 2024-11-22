@@ -10,6 +10,7 @@ interface ExploreButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   iconSize?: number
   iconClassName?: string
 }
+  // :aa TODO Factor this out!  It recreates the ButtonVariants in @hanzo/ui/primitives/Button (shadcn)
 
 const ExploreButton: React.FC<ExploreButtonProps> = forwardRef<HTMLAnchorElement, ExploreButtonProps>(function co({ className, children, iconSize, iconClassName, ...rest }, ref) {
 
