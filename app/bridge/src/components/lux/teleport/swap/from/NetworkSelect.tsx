@@ -35,7 +35,7 @@ const CommandSelect: React.FC<{
         <CommandWrapper>
           <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
           {networks && networks.length > 0 ? (
-            <CommandList>
+            <CommandList className='max-h-full'>
               <CommandEmpty>No results found.</CommandEmpty>
               {networks.map((n: Network) => (
                 <CommandItem
