@@ -5,6 +5,12 @@ export const CONTRACTS = {
     teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
     vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
   },
+  200200: {
+    name: 'ZOO_MAINNET',
+    chain_id: 200200,
+    teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
+    vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
+  },
   1: {
     name: 'ETHEREUM_MAINNET',
     chain_id: 1,
@@ -117,6 +123,12 @@ export const CONTRACTS = {
   96368: {
     name: 'LUX_TESTNET',
     chain_id: 96368,
+    teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
+    vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
+  },
+  200201: {
+    name: 'ZOO_TESTNET',
+    chain_id: 200201,
     teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
     vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
   },
