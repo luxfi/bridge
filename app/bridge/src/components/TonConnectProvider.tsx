@@ -1,4 +1,4 @@
-/*
+
 import { THEME, TonConnectUIProvider } from '@tonconnect/ui-react'
 import { type ThemeData } from '../Models/Theme'
 import type { PropsWithChildren } from 'react'
@@ -70,4 +70,3 @@ const TonConnectProvider: React.FC<{
 }
 
 export default TonConnectProvider
-*/
