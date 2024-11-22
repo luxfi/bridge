@@ -1,11 +1,12 @@
 import React, { type PropsWithChildren } from 'react'
+import dynamic from "next/dynamic"
 
 import {
   RootLayout as RootLayoutCore,
   viewport as ViewportCode,
 } from '@luxfi/ui/root-layout'
 
-import { Footer } from '@luxfi/ui'
+import { Footer, Header } from '@luxfi/ui'
 
 import '../styles/globals.css'
 import '../styles/dialog-transition.css'
@@ -20,9 +21,18 @@ import Main from '@/components/main'
 export const metadata = { ..._metadata }
 // export const viewport = { ...ViewportCode }
 
+const ConnectedWallets = dynamic(
+  () => import("../components/ConnectedWallets").then((comp) => (comp.ConnectedWallets)), 
+  { loading: () => (null) }
+)
+
+
 const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => (
-  <RootLayoutCore siteDef={siteDef} showHeader>
+  <RootLayoutCore siteDef={siteDef} showHeader={false}>
     <Contexts>
+      <Header siteDef={siteDef} logoVariant='logo-only'>
+        <ConnectedWallets connectButtonVariant='primary'><span>Connect Wallet</span></ ConnectedWallets >
+      </Header>
       <Main>{children}</Main>
     </Contexts>
     <Footer siteDef={siteDef} />

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react"
+import { useState, type PropsWithChildren } from "react"
 import { Plus } from "lucide-react"
 
 import { 
@@ -18,7 +18,12 @@ import ConnectButton from "./buttons/connectButton"
 import AddressIcon from "./AddressIcon"
 import { type Wallet } from "../stores/walletStore"
 
-const WalletsHeader = () => {
+const ConnectedWallets: React.FC<{
+  connectButtonVariant?: 'outline' | 'primary'
+} & PropsWithChildren> = ({
+  children,
+  connectButtonVariant='outline'
+}) => {
 
   const { wallets } = useWallet()
   const [openDialog, setOpenDialog] = useState<boolean>(false)
@@ -41,12 +46,16 @@ const WalletsHeader = () => {
   return (
     <ConnectButton>
       <Button
-        variant='outline'
+        variant={connectButtonVariant}
         size='square'
         aria-label='Connect wallet'
-        className="text-muted-2 p-0 flex items-center justify-center"
+        className={
+          'flex items-center justify-center ' + 
+          (connectButtonVariant === 'outline' ? 'text-muted-2 p-0 ' : 'pl-3 pr-4 gap-2 font-semibold')
+        }
       >
-        <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" />
+        <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" /> 
+        {children}
       </Button>
     </ConnectButton>
   )
@@ -184,6 +193,6 @@ const ConnectedWalletsDialog = ({ openDialog, setOpenDialog }: { openDialog: boo
 export {
   ConnectedWalletsDialog as default,
   WalletsMenu,
-  WalletsHeader
+  ConnectedWallets
 }
 
