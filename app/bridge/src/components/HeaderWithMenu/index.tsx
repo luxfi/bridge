@@ -13,8 +13,8 @@ import { useAtom } from "jotai"
 import { useTelepoterAtom } from "@/store/teleport"
 import type React from "react"
 
-const WalletsHeader = dynamic(
-  () => import("../ConnectedWallets").then((comp) => (comp.WalletsHeader)), 
+const ConnectWallets = dynamic(
+  () => import("../ConnectedWallets").then((comp) => (comp.ConnectedWallets)), 
   { loading: () => (null) }
 )
 
@@ -69,7 +69,7 @@ const HeaderWithMenu: React.FC<{
       </div>
 
       <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
-        <WalletsHeader />
+        <ConnectWallets />
         {/* <ChatButton /> */}
         <BridgeMenu />
       </div>
