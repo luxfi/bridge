@@ -23,6 +23,6 @@
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "build:test": "rollup -c rollup.test.config.js",
-    "test": "node dist/test/index.js"
+    "test": "pnpm build:test && node dist/test/index.js"
   }
 }
