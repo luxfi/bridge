@@ -8,13 +8,13 @@ const filePath = path.join(
   ".config",
   "utila",
   "credentials",
-  "netanelprod@vault-76ce849bc0f8.utilaserviceaccount.io",
+  "lux-bridge@vault-11b8bd854f3e.utilaserviceaccount.io",
   "private_key.pem"
 );
 
 export const client = createGrpcClient({
   authStrategy: serviceAccountAuthStrategy({
-    email: "netanelprod@vault-76ce849bc0f8.utilaserviceaccount.io",
+    email: "lux-bridge@vault-11b8bd854f3e.utilaserviceaccount.io",
     privateKey: () =>
       readFile(filePath, {
         encoding: "utf-8",
