@@ -1,0 +1,28 @@
+{
+  "name": "@luxfi/utila",
+  "version": "3.0.0",
+  "dependencies": {
+    "@bufbuild/buf": "1.46.0",
+    "@bufbuild/protobuf": "2.2.2",
+    "@connectrpc/connect": "2.0.0-beta.1",
+    "@connectrpc/connect-node": "2.0.0-beta.1",
+    "jsonwebtoken": "9.0.2",
+    "tslib": "2.3.0",
+    "viem": "2.16.0"
+  },
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.esm.js",
+  "typings": "./dist/index.cjs.d.ts",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "@types/jsonwebtoken": "^9.0.7",
+    "rollup": "^4.27.3"
+  },
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "build:test": "rollup -c rollup.test.config.js",
+    "test": "pnpm build:test && node dist/test/index.js"
+  }
+}

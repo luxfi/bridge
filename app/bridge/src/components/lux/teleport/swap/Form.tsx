@@ -137,7 +137,7 @@ const Swap: FC = () => {
     }
   }, [sourceAsset])
 
-  const warnningMessage = React.useMemo(() => {
+  const warningMessage = React.useMemo(() => {
     if (!address) {
       return 'Connect Wallet First'
     } else if (!sourceNetwork) {
@@ -243,7 +243,10 @@ const Swap: FC = () => {
   return (
     <Widget className="sm:min-h-[504px] max-w-lg">
       <Widget.Content>
-        <div className="flex-col relative flex justify-between w-full space-y-0.5 pb-2 mb-3.5 leading-4 border border-[#404040] rounded-t-xl overflow-hidden">
+        <div 
+          id="WIDGET_CONTENT"
+          className="flex-col relative flex justify-between w-full mb-3.5 leading-4 overflow-hidden"
+        >
           <FromNetworkForm
             disabled={false}
             network={sourceNetwork}
@@ -254,16 +257,10 @@ const Swap: FC = () => {
             maxValue={sourceBalance.toString()}
             setAsset={(token: Token) => setSourceAsset(token)}
             networks={sourceNetworks}
+            balance={sourceBalance}
+            balanceLoading={isSourceBalanceLoading}
+            
           />
-          {/* <div className="py-4 px-4">
-            Fee: {1}
-            <span className="text-xs"> %</span>
-          </div> */}
-          <div className='flex gap-1 justify-end items-end px-4 text-sm text-muted-2'>
-            <span>Balance:</span> 
-            { isSourceBalanceLoading ? <span className="ml-1 h-3 w-12 rounded-sm bg-level-2 animate-pulse" /> : <span>{formatNumber(sourceBalance)} {sourceAsset?.asset}</span> }
-          </div>
-
           <ToNetworkForm
             disabled={!sourceNetwork}
             network={destinationNetwork}
@@ -272,11 +269,9 @@ const Swap: FC = () => {
             setNetwork={(network: Network) => setDestinationNetwork(network)}
             setAsset={(token: Token) => setDestinationAsset(token)}
             networks={destinationNetworks}
+            balance={destinationBalance}
+            balanceLoading={isDestinationBalanceLoading}
           />
-          <div className='flex gap-1 justify-end items-end px-4 text-sm text-muted-2 -mt-3'>
-            <span>Balance:</span> 
-            { isDestinationBalanceLoading ? <span className="ml-1 h-3 w-12 rounded-sm bg-level-2 animate-pulse" /> : <span>{formatNumber(destinationBalance)} {destinationAsset?.asset}</span> }
-          </div>
         </div>
 
         <div className="w-full !-mb-3 leading-4">
@@ -351,11 +346,11 @@ const Swap: FC = () => {
             {isSubmitting ? (
               <SpinIcon className="animate-spin h-5 w-5" />
             ) : (
-              warnningMessage === 'Create Swap' && (
+              warningMessage === 'Create Swap' && (
                 <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
               )
             )}
-            <span className="grow">{warnningMessage}</span>
+            <span className="grow">{warningMessage}</span>
           </button>
         }
 
