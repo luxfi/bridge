@@ -31,6 +31,7 @@ yarn-error.log*
 .vercel
 .nx
 pkg/utila/dist
+.rollup.cache/
 
 # Moving to yarn
 package-lock.json
