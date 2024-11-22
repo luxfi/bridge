@@ -34,7 +34,7 @@ const TokenSelect: React.FC<{
                     height="40"
                     width="40"
                     loading="eager"
-                    className="rounded-md object-contain"
+                    className="rounded-full object-contain"
                   />
                 )}
               </div>

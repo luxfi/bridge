@@ -489,6 +489,9 @@ importers:
       express-validator:
         specifier: ^7.2.0
         version: 7.2.0
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.2
       module-alias:
         specifier: ^2.2.3
         version: 2.2.3
@@ -502,6 +505,9 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.7
       '@types/multicoin-address-validator':
         specifier: ^0.5.3
         version: 0.5.3

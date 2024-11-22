@@ -52,6 +52,11 @@ const SwapItems: React.FC<IProps> = ({
   const chainId = useChainId()
   const signer = useEthersSigner()
 
+  const toMint = React.useMemo(
+    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    [destinationAsset]
+  )
+
   const _network = networks.find((n) => n.chain_id === chainId)
 
   const _renderWallet = () => {
@@ -137,11 +142,6 @@ const SwapItems: React.FC<IProps> = ({
     }
   }, [signer, chainId])
 
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset?.name?.startsWith("Lux") ? true : false),
-    [sourceAsset]
-  );
-
   return (
     <div className="flex flex-col gap-4">
       {_renderWallet()}
@@ -175,9 +175,7 @@ const SwapItems: React.FC<IProps> = ({
 
           <div className="flex items-end gap-1 justify-end text-xs">
             {isFetching || !signer ? (
-              <span className="px-2">
-                <MoveIcon />
-              </span>
+              <span className="ml-1 h-3 w-16 rounded-sm bg-level-3 animate-pulse" />
             ) : (
               <>
                 <WalletIcon height={20} width={20} />
@@ -210,19 +208,17 @@ const SwapItems: React.FC<IProps> = ({
             </div>
             <div className="flex flex-col text-[#85c285]">
               <p className=" text-sm">
-                {isWithdrawal ? truncateDecimals(Number(sourceAmount) * 0.99, 6) : truncateDecimals(Number(sourceAmount), 6)}{' '}
+                {toMint ? truncateDecimals(Number(sourceAmount), 6) : truncateDecimals(Number(sourceAmount) * 0.99, 6)}{' '}
                 {destinationAsset.asset}
               </p>
               <p className=" text-sm flex justify-end">
-                ${isWithdrawal ? truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6) : truncateDecimals(Number(sourceAmount) * tokenPrice, 6)}
+                ${toMint ? truncateDecimals(Number(sourceAmount) * tokenPrice, 6) : truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6)}
               </p>
             </div>
           </div>
           <div className="flex items-end gap-1 justify-end text-xs">
             {isFetching || !signer ? (
-              <span className="px-2">
-                <MoveIcon />
-              </span>
+              <span className="ml-1 h-3 w-16 rounded-sm bg-level-3 animate-pulse" />
             ) : (
               <>
                 <WalletIcon height={20} width={20} />

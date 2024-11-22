@@ -27,7 +27,7 @@ import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import { ArrowRight } from 'lucide-react'
-import { parseUnits } from 'ethers/lib/utils'
+import { formatEther, parseUnits } from 'ethers/lib/utils'
 import { localeNumber } from '@/lib/utils'
 import { formatUnits, parseEther } from 'viem'
 //abis
@@ -68,9 +68,13 @@ const PayoutProcessor: React.FC<IProps> = ({
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset?.name?.startsWith('Lux') ? true : false),
+  const toBurn = React.useMemo(
+    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
     [sourceAsset]
+  )
+  const toMint = React.useMemo(
+    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    [destinationAsset]
   )
 
   React.useEffect(() => {
@@ -80,19 +84,19 @@ const PayoutProcessor: React.FC<IProps> = ({
       notify('Please connect wallet first.', 'info')
       // connectWallet('evm')
     } else {
-      if (isWithdrawal) {
+      if (toMint) {
+        mintDestinationToken()
+      } else {
         if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
           withdrawDestinationToken()
         } else {
           destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
         }
-      } else {
-        payoutDestinationToken()
       }
     }
   }, [signer])
 
-  const payoutDestinationToken = async () => {
+  const mintDestinationToken = async () => {
     const mintData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
@@ -165,24 +169,28 @@ const PayoutProcessor: React.FC<IProps> = ({
         }
       )
       await _bridgePayoutTx.wait()
-      /////////////////////// send 1 lux to users /////////////////////
-      try {
-        const luxSendTxData = {
-          to: mintData.receiverAddress_,
-          value: parseEther('1'), // eth to wei
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          gasLimit: 3000000,
+      /////////////////////// send 1 lux or zoo to users /////////////////////
+      const _balance = await provider.getBalance(mintData.receiverAddress_)
+      console.log("::lux or zoo balance:", Number(formatEther(_balance)));
+      if (Number(formatEther(_balance)) < 1) {
+        try {
+          const luxSendTxData = {
+            to: mintData.receiverAddress_,
+            value: parseEther('1'), // eth to wei
+            maxFeePerGas: feeData.maxFeePerGas,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            gasLimit: 3000000,
+          }
+          //@ts-expect-error no check
+          const _txSendLux = await wallet.sendTransaction(luxSendTxData)
+          await _txSendLux.wait()
+          console.log(
+            `::1lux is sent to ${mintData.receiverAddress_}`,
+            _txSendLux.hash
+          )
+        } catch (err) {
+          console.log('::issue in sening 1 lux')
         }
-        //@ts-expect-error no check
-        const _txSendLux = await wallet.sendTransaction(luxSendTxData)
-        await _txSendLux.wait()
-        console.log(
-          `::1lux is sent to ${mintData.receiverAddress_}`,
-          _txSendLux.hash
-        )
-      } catch (err) {
-        console.log('::issue in sening 1 lux')
       }
       ///////////////////////////////////////////////////////////////////
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
@@ -322,7 +330,9 @@ const PayoutProcessor: React.FC<IProps> = ({
       )
       // connectWallet('evm')
     } else {
-      if (isWithdrawal) {
+      if (toMint) {
+        mintDestinationToken()
+      } else {
         if (Number(chainId) === Number(destinationNetwork.chain_id)) {
           withdrawDestinationToken()
         } else {
@@ -330,8 +340,6 @@ const PayoutProcessor: React.FC<IProps> = ({
             switchChain &&
             switchChain({ chainId: destinationNetwork.chain_id })
         }
-      } else {
-        payoutDestinationToken()
       }
     }
   }
@@ -356,7 +364,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                 <Gauge value={60} size="medium" />
               </span>
               <div className="mt-2">
-                {isWithdrawal ? 'Withdraw' : 'Get'} Your{' '}
+                {toMint ? 'Mint' : 'Withdraw'} Your{' '}
                 {destinationAsset.asset}
               </div>
             </div>
@@ -367,7 +375,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                 </span>
                 <div className="flex flex-col items-start text-sm">
                   <span>
-                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${isWithdrawal ? 'burnt' : 'transferred'}`}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${toBurn ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
@@ -426,7 +434,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                 <ArrowRight />
               )}
               <span className="grow">
-                {isWithdrawal ? `Withdraw Your ${destinationAsset?.asset}` : `Get Your ${destinationAsset?.asset}`}
+                {toMint ? `Mint Your ${destinationAsset?.asset}` : `Withdraw Your ${destinationAsset?.asset}`}
               </span>
             </button>
           </div>

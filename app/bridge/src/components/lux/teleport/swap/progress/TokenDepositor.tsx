@@ -1,6 +1,6 @@
 import React from 'react'
 import { swapStatusAtom, userTransferTransactionAtom } from '@/store/teleport'
-import { ArrowRight, Router } from 'lucide-react'
+import { ArrowRight, Router, Wallet2Icon } from 'lucide-react'
 import { Contract } from 'ethers'
 import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
 
@@ -43,8 +43,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
 }) => {
   const { notify } = useNotify()
   //state
-  const [isTokenTransferring, setIsTokenTransferring] =
-    React.useState<boolean>(false)
+  const [isTokenTransferring, setIsTokenTransferring] = React.useState<boolean>(false)
   const [userDepositNotice, setUserDepositNotice] = React.useState<string>('')
   //atoms
   const [, setSwapStatus] = useAtom(swapStatusAtom)
@@ -54,8 +53,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith('Lux') ? true : false),
+  const toBurn = React.useMemo(
+    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
     [sourceAsset]
   )
 
@@ -66,7 +65,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         notify('Please connect wallet first.', 'info')
     } else {
       if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
-        isWithdrawal ? burnToken() : transferToken()
+        toBurn ? burnToken() : transferToken()
       } else {
         sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
       }
@@ -253,8 +252,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
     } else if (Number(chainId) !== Number(sourceNetwork.chain_id)) {
       sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
     } else {
-      console.log("transfer")
-      isWithdrawal ? burnToken() : transferToken()
+      toBurn ? burnToken() : transferToken()
     }
   }
 
@@ -271,24 +269,35 @@ const UserTokenDepositor: React.FC<IProps> = ({
             sourceAmount={sourceAmount}
           />
         </div>
-        <button
-          disabled={isTokenTransferring}
-          onClick={handleTokenTransfer}
-          className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
-        >
-          {isTokenTransferring ? (
-            <SpinIcon className="animate-spin h-5 w-5" />
-          ) : (
-            <ArrowRight />
-          )}
-          {isTokenTransferring ? (
-            <span className="grow">{userDepositNotice}</span>
-          ) : (
-            <span className="grow">
-              {isWithdrawal ? 'Burn' : 'Transfer'} {sourceAsset.asset}
-            </span>
-          )}
-        </button>
+        {
+          !signer ?
+          <button
+            onClick={() => connectWallet('evm')}
+            className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          >
+            <Wallet2Icon className="h-5 w-5" />
+            <span className="grow">Connect Wallet</span>
+          </button> :
+          <button
+            disabled={isTokenTransferring}
+            onClick={handleTokenTransfer}
+            className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+          >
+            {isTokenTransferring ? (
+              <SpinIcon className="animate-spin h-5 w-5" />
+            ) : (
+              <ArrowRight />
+            )}
+            {isTokenTransferring ? (
+              <span className="grow">{userDepositNotice}</span>
+            ) : (
+              <span className="grow">
+                {toBurn ? 'Burn' : 'Transfer'} {sourceAsset.asset}
+              </span>
+            )}
+          </button>
+        }
+        
       </div>
     </div>
   )
