@@ -9,11 +9,11 @@ export const getTokenPrice = async (token_id: string) => {
       "x-api-key": process.env.NEXT_PUBLIC_COINBASE_API_KEY,
       accept: "application/json",
     };
-    if (token_id === "LUX") {
+    if (token_id === 'LUX' || token_id === 'ZOO') {
       return 0.0011;
-    } else if (token_id === "LUSD") {
+    } else if (token_id.includes('USD')) {
       return 1.0;
-    } else if (token_id.startsWith("L")) {
+    } else if (token_id.startsWith("L") || token_id.startsWith("Z")) {
       token_id = token_id.substr(1);
       const {
         data: { data },
