@@ -5,7 +5,7 @@ import Image from 'next/image'
 import axios from 'axios'
 
 import { ArrowLeftRight, WalletIcon } from 'lucide-react'
-
+import { useRouter } from 'next/navigation'
 import Modal from '@/components/modal/modal'
 import ResizablePanel from '@/components/ResizablePanel'
 import shortenAddress from '../../../utils/ShortenAddress'
@@ -39,11 +39,7 @@ import {
 } from '@/store/teleport'
 import SpinIcon from '@/components/icons/spinIcon'
 import { SwapStatus } from '@/Models/SwapStatus'
-import { Contract, ethers } from 'ethers'
-import { erc20ABI } from '@wagmi/core'
-import { parseUnits } from '@/lib/resolveChain'
-import { formatUnits } from 'ethers/lib/utils'
-import { fetchTokenBalance, formatNumber } from '@/lib/utils'
+import { fetchTokenBalance } from '@/lib/utils'
 
 const Address = dynamic(
   () => import('@/components/lux/teleport/share/Address'),
@@ -76,8 +72,9 @@ const Swap: FC = () => {
   const [, setEthPrice] = useAtom(ethPriceAtom)
 
   //hooks
-  const { address, isConnecting } = useEthersSigner();
-  const { connectWallet } = useWallet();
+  const router = useRouter()
+  const { address, isConnecting } = useEthersSigner()
+  const { connectWallet } = useWallet()
 
   const sourceNetworks = networks
   const [destinationNetworks, setDestinationNetworks] = React.useState<
@@ -97,29 +94,28 @@ const Swap: FC = () => {
   }, [sourceNetwork])
 
   React.useEffect(() => {
-    if (sourceAsset) {
-      const _networks = networks
-        .filter(
-          (n: Network) =>
-            n.currencies.some((c: Token) =>
-              SWAP_PAIRS[sourceAsset.asset]
-                ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
-                : false
-            ) && n.is_testnet === sourceNetwork?.is_testnet
-        )
-        .map((n: Network) => ({
-          ...n,
-          currencies: n.currencies.map((c: Token) => ({
-            ...c,
-            status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-              ? c.status
-              : 'inactive',
-          })),
-        }))
+    if (!sourceAsset) return
+    const _networks = networks
+      .filter(
+        (n: Network) =>
+          n.currencies.some((c: Token) =>
+            SWAP_PAIRS[sourceAsset.asset]
+              ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
+              : false
+          ) && n.is_testnet === sourceNetwork?.is_testnet
+      )
+      .map((n: Network) => ({
+        ...n,
+        currencies: n.currencies.map((c: Token) => ({
+          ...c,
+          status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
+            ? c.status
+            : 'inactive',
+        })),
+      }))
 
-      setDestinationNetworks(_networks)
-      setDestinationNetwork(_networks.find((n) => n.status === 'active'))
-    }
+    setDestinationNetworks(_networks)
+    setDestinationNetwork(_networks.find((n) => n.status === 'active'))
   }, [sourceAsset, sourceNetwork])
 
   React.useEffect(() => {
@@ -189,15 +185,15 @@ const Swap: FC = () => {
         `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=mainnet`,
         data
       )
-      setSwapId(response.data?.data?.swap_id)
+      // setSwapId(response.data?.data?.swap_id)
       window.history.pushState(
         {},
         '',
         `/swap/teleporter/${response.data?.data?.swap_id}`
       )
       setSwapStatus(SwapStatus.UserTransferPending)
-      setShowSwapModal(true)
-      // router.push(`/swap/teleporter/${response.data?.data?.swap_id}`);
+      // setShowSwapModal(true)
+      router.push(`/swap/teleporter/${response.data?.data?.swap_id}`);
     } catch (err) {
       console.log(err)
     } finally {
