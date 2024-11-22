@@ -13,11 +13,11 @@ pragma solidity ^0.8.19;
     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚═════╝ 
  */
 
-import "./ERC20B.sol";
+import "../ERC20B.sol";
 
-contract LuxSOL is ERC20B {
-    string public constant _name = "Lux Solana";
-    string public constant _symbol = "LSOL";
+contract LuxBNB is ERC20B {
+    string public constant _name = "Lux BNB";
+    string public constant _symbol = "LBNB";
 
     constructor() ERC20B(_name, _symbol) {}
 
