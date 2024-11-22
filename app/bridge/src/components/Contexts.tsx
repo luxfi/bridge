@@ -8,7 +8,7 @@ import { TooltipProvider } from '@hanzo/ui/primitives'
 
 import ErrorFallback from './ErrorFallback'
 import ColorSchema from './ColorSchema'
-// import TonConnectProvider from './TonConnectProvider'
+import TonConnectProvider from './TonConnectProvider'
 import QueryProvider from '../context/query'
 import RainbowKit from './RainbowKit'
 import Solana from './SolanaProvider'
@@ -133,7 +133,7 @@ const Contexts: React.FC<
                 >
                   <ToastProvider>
                     <JotaiProvider>
-                      {/* <TonConnectProvider basePath={''} themeData={themeData}> */}
+                      <TonConnectProvider basePath={''} themeData={themeData}> 
                       <RainbowKit>
                         <EthersProvider>
                           <Solana>
@@ -141,7 +141,7 @@ const Contexts: React.FC<
                           </Solana>
                         </EthersProvider>
                       </RainbowKit>
-                      {/* </TonConnectProvider> */}
+                      </TonConnectProvider>
                     </JotaiProvider>
                   </ToastProvider>
                 </ErrorBoundary>
