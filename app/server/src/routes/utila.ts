@@ -22,6 +22,21 @@ yj92azWBq1RbGHY+9/POguMCAwEAAQ==
 -----END PUBLIC KEY-----
 `;
 
+// Helper to log errors
+function logError(context: string, error: unknown): void {
+  if (error instanceof Error) {
+    console.error(`[${context}] Error: ${error.message}\nStack: ${error.stack}`);
+  } else {
+    console.error(`[${context}] Unexpected error:`, error);
+  }
+}
+
+// Centralized error handler
+function handleError(res: Response, context: string, error: unknown): void {
+  logError(context, error);
+  res.status(500).json({ error: "An internal server error occurred" });
+}
+
 // Generate a JWT token
 function generateToken(): string {
   const options: jwt.SignOptions = {
@@ -35,8 +50,7 @@ function generateToken(): string {
     console.log("Generated Token:", token);
     return token;
   } catch (error) {
-    console.error("Error generating token:", error);
-    throw error;
+    throw error; // Let the error be handled by the centralized handler
   }
 }
 
@@ -60,8 +74,7 @@ function verifyUtilaSignature(req: Request, res: Response, next: Function) {
       console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Neatly formatted payload
       next();
     } catch (error) {
-      console.error("Error processing webhook:", error.message);
-      res.status(401).json({ error: error.message });
+      handleError(res, "Webhook Signature Verification", error);
     }
   });
 }
@@ -82,7 +95,7 @@ function verifySignature(signatureBase64: string, data: string, publicKey: strin
       signatureBuffer
     );
   } catch (error) {
-    console.error("Signature verification failed:", error.message);
+    logError("Signature Verification", error);
     return false;
   }
 }
@@ -93,8 +106,7 @@ router.get("/api/utila", async (req: Request, res: Response) => {
     const token = generateToken();
     res.status(200).json({ token });
   } catch (error) {
-    console.error("Error in token generation route:", error.message);
-    res.status(500).json({ error: "Token generation failed" });
+    handleError(res, "Token Generation Route", error);
   }
 });
 
@@ -124,8 +136,7 @@ router.post("/utila/webhook", verifyUtilaSignature, async (req: Request, res: Re
 
     res.status(200).send("Webhook received successfully");
   } catch (error) {
-    console.error("Error processing webhook event:", error.message);
-    res.status(500).json({ error: "Failed to process webhook event" });
+    handleError(res, "Webhook Processing", error);
   }
 });
 
