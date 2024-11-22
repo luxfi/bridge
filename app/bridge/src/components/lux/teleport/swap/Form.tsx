@@ -97,29 +97,28 @@ const Swap: FC = () => {
   }, [sourceNetwork])
 
   React.useEffect(() => {
-    if (sourceAsset) {
-      const _networks = networks
-        .filter(
-          (n: Network) =>
-            n.currencies.some((c: Token) =>
-              SWAP_PAIRS[sourceAsset.asset]
-                ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
-                : false
-            ) && n.is_testnet === sourceNetwork?.is_testnet
-        )
-        .map((n: Network) => ({
-          ...n,
-          currencies: n.currencies.map((c: Token) => ({
-            ...c,
-            status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-              ? c.status
-              : 'inactive',
-          })),
-        }))
+    if (!sourceAsset) return
+    const _networks = networks
+      .filter(
+        (n: Network) =>
+          n.currencies.some((c: Token) =>
+            SWAP_PAIRS[sourceAsset.asset]
+              ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
+              : false
+          ) && n.is_testnet === sourceNetwork?.is_testnet
+      )
+      .map((n: Network) => ({
+        ...n,
+        currencies: n.currencies.map((c: Token) => ({
+          ...c,
+          status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
+            ? c.status
+            : 'inactive',
+        })),
+      }))
 
-      setDestinationNetworks(_networks)
-      setDestinationNetwork(_networks.find((n) => n.status === 'active'))
-    }
+    setDestinationNetworks(_networks)
+    setDestinationNetwork(_networks.find((n) => n.status === 'active'))
   }, [sourceAsset, sourceNetwork])
 
   React.useEffect(() => {
