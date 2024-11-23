@@ -53,28 +53,49 @@ export const client = createGrpcClient({
     };
 
     // Step 3: Create wallets for BTC, TON, and SOL deposits
+    const walletsToArchive = [];
     const btcWallet = await createNewWallet(
       targetVault.name,
       "networks/bitcoin-mainnet",
       `btc-deposit-${Date.now()}`
     );
+    walletsToArchive.push(btcWallet);
+
     const tonWallet = await createNewWallet(
       targetVault.name,
       "networks/ton-mainnet",
       `ton-deposit-${Date.now()}`
     );
+    walletsToArchive.push(tonWallet);
+
     const solWallet = await createNewWallet(
       targetVault.name,
       "networks/solana-mainnet",
       `sol-deposit-${Date.now()}`
     );
+    walletsToArchive.push(solWallet);
 
     // Step 4: Log details for each created wallet
     console.log("BTC Wallet Details:", btcWallet);
     console.log("TON Wallet Details:", tonWallet);
     console.log("SOL Wallet Details:", solWallet);
 
-    console.log("All wallets created successfully!");
+    // Step 5: Archive all created wallets
+    console.log("Archiving all created wallets...");
+    for (const wallet of walletsToArchive) {
+      try {
+        console.log(`Archiving Wallet: ${wallet.displayName} (${wallet.name})`);
+        await client.archiveWallet({
+          name: wallet.name,
+          allowMissing: true,
+        });
+        console.log(`Wallet archived: ${wallet.displayName}`);
+      } catch (archiveError) {
+        console.error(`Failed to archive wallet: ${wallet.displayName}`, archiveError);
+      }
+    }
+
+    console.log("All wallets created and archived successfully!");
   } catch (error) {
     console.error("Error encountered:");
     console.error("Message:", error.message);
