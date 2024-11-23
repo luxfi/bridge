@@ -109,7 +109,7 @@ function verifySignature(signatureBase64: string, data: string, publicKey: strin
 }
 
 // Public route to generate a token
-router.get("/token", async (req: Request, res: Response) => {
+router.get("/api/utila", async (req: Request, res: Response) => {
   try {
     const token = generateToken();
     res.status(200).json({ token });
@@ -118,42 +118,12 @@ router.get("/token", async (req: Request, res: Response) => {
   }
 });
 
-/**
- * Get utila's balance
- * @route /api/utila/balances
- */
-router.get("/balances", async (req: Request, res: Response) => {
-  try {
-    const { balances } = await client.queryBalances({
-      parent: `vaults/${process.env.VAULT_ID}`,
-    })
-    res.status(200).json({ balances: balances });
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
-
-/**
- * Get utila's balance
- * @route /api/utila/networks
- */
-router.get("/wallets", async (req: Request, res: Response) => {
-  try {
-    const networks = await client.getWalletAddress({
-      name: `vaults/${process.env.VAULT_ID}`,
-    })
-    res.status(200).json(networks);
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
-
 // Webhook route to handle events
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
   const eventType = req.body.type;
 
   try {
-    console.log(`Processing event: ${eventType}`);
+    console.log(`Processing ${eventType}:\n${req}`);
     switch (eventType) {
       case "TRANSACTION_CREATED":
         console.log("Transaction Created:", JSON.stringify(req.body, null, 2));
