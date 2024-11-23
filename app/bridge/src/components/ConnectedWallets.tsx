@@ -17,12 +17,17 @@ import useWallet from "../hooks/useWallet"
 import ConnectButton from "./buttons/connectButton"
 import AddressIcon from "./AddressIcon"
 import { type Wallet } from "../stores/walletStore"
+import { cn } from '@hanzo/ui/util'
 
 const ConnectedWallets: React.FC<{
   connectButtonVariant?: 'outline' | 'primary'
+  showWalletIcon?: boolean
+  connectButtonClx?: string
 } & PropsWithChildren> = ({
   children,
-  connectButtonVariant='outline'
+  connectButtonVariant='outline',
+  showWalletIcon=true,
+  connectButtonClx=''
 }) => {
 
   const { wallets } = useWallet()
@@ -49,12 +54,13 @@ const ConnectedWallets: React.FC<{
         variant={connectButtonVariant}
         size='square'
         aria-label='Connect wallet'
-        className={
-          'flex items-center justify-center ' + 
-          (connectButtonVariant === 'outline' ? 'text-muted-2 p-0 ' : 'pl-3 pr-4 gap-2 font-semibold')
-        }
+        className={cn(
+          'flex items-center justify-center',
+          'text-muted-2 p-0 ',
+          connectButtonClx 
+        )}
       >
-        <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" /> 
+        {showWalletIcon && <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" /> }
         {children}
       </Button>
     </ConnectButton>
