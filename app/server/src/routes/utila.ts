@@ -100,22 +100,12 @@ function verifySignature(signatureBase64: string, data: string, publicKey: strin
   }
 }
 
-// Public route to generate a token
-router.get("/api/utila", async (req: Request, res: Response) => {
-  try {
-    const token = generateToken();
-    res.status(200).json({ token });
-  } catch (error) {
-    handleError(res, "Token Generation Route", error);
-  }
-});
-
 // Webhook route to handle events
-router.post("/utila/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
+router.post("/webhook/utila", verifyUtilaSignature, async (req: Request, res: Response) => {
   const eventType = req.body.type;
 
   try {
-    console.log(`Processing event: ${eventType}`);
+    console.log(`Processing ${eventType}:\n${req}`);
     switch (eventType) {
       case "TRANSACTION_CREATED":
         console.log("Transaction Created:", JSON.stringify(req.body, null, 2));
