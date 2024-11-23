@@ -107,7 +107,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
-      vault_: 'true',
+      vault_: toMint ? 'false' : 'true',
     }
 
     console.log('data for bridge mint::', mintData)
@@ -345,7 +345,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   }
 
   return (
-    <div className={`w-full flex flex-col ${className}`}>
+    <div className={`flex flex-col ${className}`}>
       <div className="space-y-5">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems
