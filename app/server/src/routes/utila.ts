@@ -101,7 +101,7 @@ function verifySignature(signatureBase64: string, data: string, publicKey: strin
 }
 
 // Webhook route to handle events
-router.post("/webhook/utila", verifyUtilaSignature, async (req: Request, res: Response) => {
+router.post("/utila/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
   const eventType = req.body.type;
 
   try {
