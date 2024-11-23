@@ -272,7 +272,7 @@ const Swap: FC = () => {
           />
         </div>
     
-        <div className="w-full xs:mb-3 md:!-mb-3 leading-4">
+        <div className="w-full xs:mb-3 leading-4">
           <label
             htmlFor="destination_address"
             className="block font-semibold text-xs"
