@@ -47,7 +47,7 @@ const HeaderWithMenu: React.FC<{
 
   return (
     <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between" >
-    {true ? (
+    {goBack ? (
       <IconButton
         onClick={goBack}
         aria-label="Go back"
@@ -64,10 +64,11 @@ const HeaderWithMenu: React.FC<{
       </div>      
     )}
 
-      <div className='justify-self-center self-center col-start-2 col-span-3 mx-auto overflow-hidden md:hidden'>
+    {/*
+      <div className='justify-center self-center col-start-2 col-span-3 mx-auto overflow-hidden '>
         <GoHomeButton />
       </div>
-
+    */}
       <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
         <ConnectWallets />
         {/* <ChatButton /> */}
