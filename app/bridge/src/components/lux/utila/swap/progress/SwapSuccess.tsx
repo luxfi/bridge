@@ -1,12 +1,12 @@
 import React from "react";
 import SuccessIcon from "../SuccessIcon";
-import { bridgeMintTransactionAtom } from "@/store/fireblocks";
+import { bridgeMintTransactionAtom } from "@/store/utila";
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 //hooks
 import Gauge from "@/components/gauge";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 import { useAtom } from "jotai";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
 

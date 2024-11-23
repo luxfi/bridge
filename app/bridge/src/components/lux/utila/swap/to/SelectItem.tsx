@@ -1,5 +1,5 @@
 import React from "react";
-import { type Network } from "@/types/fireblocks";
+import { type Network } from "@/types/utila";
 import Image from "next/image";
 
 interface IProps {

@@ -3,9 +3,11 @@ import React, { type FC }from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import axios from 'axios'
-import { ArrowLeftRight } from 'lucide-react'
+//hooks
 import useAsyncEffect from 'use-async-effect'
 import { useAtom } from 'jotai'
+
+import { ArrowLeftRight } from 'lucide-react'
 
 import Modal from '@/components/modal/modal'
 import ResizablePanel from '@/components/ResizablePanel'
@@ -15,13 +17,13 @@ import Widget from '../../../Widget'
 import FromNetworkForm from './from/NetworkFormField'
 import ToNetworkForm from './to/NetworkFormField'
 import SwapDetails from './SwapDetails'
-import type { Token, Network } from '@/types/fireblocks'
-import { SWAP_PAIRS } from '@/components/lux/fireblocks/constants/settings'
+import type { Token, Network } from '@/types/utila'
+import { SWAP_PAIRS } from '@/components/lux/utila/constants/settings'
 import { useEthersSigner } from "@/hooks/useEthersSigner";
 import { fetchTokenBalance } from '@/lib/utils'
 
-import devNetworks from '@/components/lux/fireblocks/constants/networks.sandbox'
-import mainNetworks from '@/components/lux/fireblocks/constants/networks.mainnets'
+import devNetworks from '@/components/lux/utila/constants/networks.sandbox'
+import mainNetworks from '@/components/lux/utila/constants/networks.mainnets'
 
 import {
   sourceNetworkAtom,
@@ -34,12 +36,12 @@ import {
   swapStatusAtom,
   swapIdAtom,
   timeToExpireAtom,
-} from '@/store/fireblocks'
+} from '@/store/utila'
 import SpinIcon from '@/components/icons/spinIcon'
 import { SwapStatus } from '@/Models/SwapStatus'
 
 const Address = dynamic(
-  () => import('@/components/lux/fireblocks/share/Address'),
+  () => import('@/components/lux/utila/share/Address'),
   {
     loading: () => <></>,
   }
@@ -181,13 +183,13 @@ const Swap: FC = () => {
         `/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
         data
       )
-      console.log('::fireblocks res:', response.data)
+      console.log('::utila res:', response.data)
       setSwapId(response.data?.data?.swap_id)
       setTimeToExpire(new Date(response.data?.data?.created_date).getTime())
       window.history.pushState(
         {},
         '',
-        `/swap/fireblocks/${response.data?.data?.swap_id}`
+        `/swap/utila/${response.data?.data?.swap_id}`
       )
       setSwapStatus(SwapStatus.UserDepositPending)
       setShowSwapModal(true)

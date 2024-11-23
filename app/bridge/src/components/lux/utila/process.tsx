@@ -5,8 +5,8 @@ import ResizablePanel from '../../ResizablePanel'
 import axios from 'axios'
 import SwapDetails from './swap/SwapDetails'
 import ConnectNetwork from '@/components/ConnectNetwork'
-import mainNetworks from '@/components/lux/fireblocks/constants/networks.mainnets'
-import devNetworks from '@/components/lux/fireblocks/constants/networks.sandbox'
+import mainNetworks from '@/components/lux/utila/constants/networks.mainnets'
+import devNetworks from '@/components/lux/utila/constants/networks.sandbox'
 import Widget from '@/components/Widget'
 import {
   sourceNetworkAtom,
@@ -22,9 +22,9 @@ import {
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
   timeToExpireAtom,
-} from '@/store/fireblocks'
+} from '@/store/utila'
 import { useAtom } from 'jotai'
-import type { Network, Token } from '@/types/fireblocks'
+import type { Network, Token } from '@/types/utila'
 
 type NetworkToConnect = {
   DisplayName: string
@@ -75,7 +75,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
         `/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
       )
       // set time to expire
-      console.log('::swap data for fireblocks: ', data)
+      console.log('::swap data for utila: ', data)
       setTimeToExpire(new Date(data.created_date).getTime())
       const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network
