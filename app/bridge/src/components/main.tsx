@@ -11,7 +11,7 @@ const Main: React.FC<{
   className='',
   children 
 }) => (
-  <main className={cn('flex flex-col items-center overflow-hidden relative mt-[44px] md:mt-[80px]', className)}>
+  <main className={cn('flex flex-col items-center overflow-hidden relative md:mt-[80px]', className)}>
     <Toaster />
     {process.env.NEXT_PUBLIC_IN_MAINTANANCE === 'true' ? (
       <MaintananceContent />
