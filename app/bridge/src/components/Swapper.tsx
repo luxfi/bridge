@@ -10,7 +10,7 @@ const Swapper: React.FC = () => {
   const [useTeleporter, _] = useAtom(useTelepoterAtom)
 
   return (
-    <div className="sm:py-20">
+    <div className="xs:w-full md:w-auto md:py-20">
       {useTeleporter ? <Teleporter /> : <SwapFireblock />}
     </div>
   )

@@ -173,7 +173,7 @@ const VerifyEmailCode: React.FC<{
                             </div>
                             :
                             <Widget>
-                                <Widget.Content center={true}>
+                                <Widget.Content >
                                     <MailOpen className='w-16 h-16 mt-auto text-secondary self-center' />
                                     <div className='text-center mt-5'>
                                         <p className='text-lg'><span>Please enter the 6 digit code sent to&nbsp</span><span className='font-medium '>{tempEmail}</span></p>

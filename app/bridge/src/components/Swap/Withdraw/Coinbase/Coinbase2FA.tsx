@@ -152,7 +152,7 @@ const Coinbase2FA: React.FC<Props> = ({ onSuccess, footerStickiness = true }) =>
         >
             {({ isValid, isSubmitting, errors, handleChange }) => (
                 <Form className='flex flex-col jutsify-center  h-full '>
-                    <Widget.Content center>
+                    <Widget.Content>
                         <div className="w-full flex-col justify-between flex h-full">
                             <ScanFace className='w-12 h-12 md:w-16 md:h-16 mt-auto text-primary self-center' />
                             <div className='text-center md:mt-5 md:mb-8'>

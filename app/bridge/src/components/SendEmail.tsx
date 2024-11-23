@@ -124,7 +124,7 @@ const SendEmail: React.FC<{
           </Disclosure>
         ) : (
           <div>
-              <Widget.Content center={true}>
+              <Widget.Content>
                   <User className='w-16 h-16 text-secondary self-center mt-auto' />
                   <div>
                       <p className='mb-6 mt-2 pt-2 text-2xl font-bold  leading-6 text-center font-roboto'>
