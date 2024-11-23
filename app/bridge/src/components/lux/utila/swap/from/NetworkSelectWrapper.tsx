@@ -2,7 +2,7 @@
 import React, { useCallback, useState } from 'react'
 import Image from 'next/image'
 import NetworkSelect from './NetworkSelect'
-import { type Network } from '@/types/fireblocks';
+import type { Network, Token } from '@/types/utila';
 import { ChevronDown } from 'lucide-react'
 
 type NetworkSelectWrapperProps = {

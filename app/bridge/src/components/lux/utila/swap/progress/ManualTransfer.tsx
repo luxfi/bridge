@@ -9,7 +9,7 @@ import shortenAddress from "@/components/utils/ShortenAddress";
 import { isValidAddress } from "@/lib/addressValidator";
 import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
 import { useFee } from "@/context/feeContext";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 
 interface IProps {
   className?: string;

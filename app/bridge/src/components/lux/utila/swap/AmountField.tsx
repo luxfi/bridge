@@ -35,7 +35,7 @@ const AmountField: React.FC<IProps> = ({ disabled, setValue, value }) => {
               step={0.01}
               name={"name"}
               id={"name"}
-              className="rounded-r-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
+              className="rounded-r-none outline-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
               onChange={handleChange}
             />
           </div>

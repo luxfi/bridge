@@ -4,7 +4,7 @@ import {
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
-} from "@/store/fireblocks";
+} from "@/store/utila";
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 //hooks
 import useWallet from "@/hooks/useWallet";
@@ -15,7 +15,7 @@ import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import SpinIcon from "@/components/icons/spinIcon";
 import Gauge from "@/components/gauge";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 import { ArrowRight } from "lucide-react";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
 

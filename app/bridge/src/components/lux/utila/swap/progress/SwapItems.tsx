@@ -2,9 +2,9 @@ import React from "react";
 import Image from "next/image";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
-import { ethPriceAtom } from "@/store/fireblocks";
+import { ethPriceAtom } from "@/store/utila";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 
 interface IProps {
   sourceNetwork: Network;

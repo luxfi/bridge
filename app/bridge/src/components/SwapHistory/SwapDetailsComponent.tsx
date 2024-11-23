@@ -10,8 +10,8 @@ import { ExternalLink } from 'lucide-react'
 import { type FC } from 'react'
 import { type SwapItem, TransactionType } from '../../lib/BridgeApiClient'
 //networks
-import fireblockNetworksMainnet from '@/components/lux/fireblocks/constants/networks.mainnets'
-import fireblockNetworksTestnet from '@/components/lux/fireblocks/constants/networks.sandbox'
+import fireblockNetworksMainnet from '@/components/lux/utila/constants/networks.mainnets'
+import fireblockNetworksTestnet from '@/components/lux/utila/constants/networks.sandbox'
 import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
 import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
 

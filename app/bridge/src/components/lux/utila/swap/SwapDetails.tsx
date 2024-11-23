@@ -1,5 +1,5 @@
 import React from "react";
-import { swapStatusAtom, swapIdAtom } from "@/store/fireblocks";
+import { swapStatusAtom, swapIdAtom } from "@/store/utila";
 //hooks
 import { useAtom } from "jotai";
 //types
@@ -8,7 +8,7 @@ import TeleportProcessor from "./progress/TeleportProcessor";
 import PayoutProcessor from "./progress/PayoutProcessor";
 import SwapSuccess from "./progress/SwapSuccess";
 import { SwapStatus } from "@/Models/SwapStatus";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 
 interface IProps {
   className?: string;

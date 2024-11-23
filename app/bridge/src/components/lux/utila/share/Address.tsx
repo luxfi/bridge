@@ -2,7 +2,7 @@
 import { type Partner } from "@/Models/Partner";
 import { type AddressBookItem } from "@/lib/BridgeApiClient";
 import { isValidAddress } from "@/lib/addressValidator";
-import { type Network } from "@/types/fireblocks";
+import { type Network } from "@/types/utila";
 import React, { type ChangeEvent, type FC, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from 'next/image';
 import KnownInternalNames from "@/lib/knownIds";
