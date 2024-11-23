@@ -1,124 +1,111 @@
 import { Router, Request, Response } from "express";
 import { createVerify, constants } from "crypto";
 import { createGrpcClient, createHttpClient, serviceAccountAuthStrategy } from '@luxfi/utila';
-import jwt from "jsonwebtoken";
+import { handleError, verifyUtilaSignature } from "@/lib/utilas";
 
 const router: Router = Router();
 
-// Utila Public Key
-const utilaPublicKey = `
------BEGIN PUBLIC KEY-----
-MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAulI1XPGRDFcymdf2zXvD
-spfdTXA1g0NOavZ50+AtcQP7f+KTpXoO1bkr6x9dO2Jq8FHImRT1sbhKhcNXT4WC
-dLSa/2Zh60QE3tp9d51o1XDSnzRMwcGbFyJ7C30DVpVEIwqD2Z5GRlzXinqIeVdY
-GOubuVol/wOAynS32DX+6y2PiqbYj7P84csBOgpNT27Mc6InEqKb7LWQtU8LPttx
-tfyceOPXE5G4h+UujPsPG6WN5MHHVbP9r6oneEF3knbfL3hCJRjwV9HfTtG6JyYr
-25Dy6SOCphrlEZi8IGcKxL6fEMetDGGVCjm7XfHyt6fYoUonD9lZsvbSyUsRwf/1
-+x77F2LxtzQyvMJR9jD16WUyzm+fUBSVQixxKnKSrVkeLqkmGboDTY5kw3doSVTP
-zcGDzWkzqC3lgwRLnSg4J+koQY+yo9jYBbFdSp+/PfVmp9NEaBuCV63mp/85VWIh
-1FRYe6lEdGZWdmIcbDvNYU/Cui/yGZoID7+sJJq/rWN0Qxx/0skEaT/083+iYLVA
-QNLvWtmQfgNKPm6GeQknRUEWyWUJtq6ANeP/8hGVM1G/edOdLn+KfhXZvw41O5z1
-uKHEqHIV+NaCNnFbDj924bJhA/fWNKxYv7/Nm44Wy1nXlgqdHiFkSqtjUBPmzE/n
-yj92azWBq1RbGHY+9/POguMCAwEAAQ==
------END PUBLIC KEY-----
-`;
-
+/**
+ * utila grpc client
+ */
 const client = createGrpcClient({
   authStrategy: serviceAccountAuthStrategy({
     email: process.env.SERVICE_ACCOUNT_EMAIL as string,
     privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string,
   }),
-}).version("v1alpha2");;
+}).version("v1alpha2");
 
 
-// Helper to log errors
-function logError(context: string, error: unknown): void {
-  if (error instanceof Error) {
-    console.error(`[${context}] Error: ${error.message}\nStack: ${error.stack}`);
-  } else {
-    console.error(`[${context}] Unexpected error:`, error);
-  }
-}
+// router.get("/token", async (req: Request, res: Response) => {
+//   try {
+//     const token = generateToken();
+//     res.status(200).json({ token });
+//   } catch (error) {
+//     handleError(res, "Token Generation Route", error);
+//   }
+// });
 
-// Centralized error handler
-function handleError(res: Response, context: string, error: unknown): void {
-  logError(context, error);
-  res.status(500).json({ error: "An internal server error occurred" });
-}
-
-// Generate a JWT token
-function generateToken(): string {
-  const options: jwt.SignOptions = {
-    subject: process.env.SERVICE_ACCOUNT_EMAIL,
-    audience: "https://api.utila.io/",
-    expiresIn: "1h",
-    algorithm: "RS256",
-  };
+/**
+ * Get utila's balance
+ * @route /v1/utila/balances
+ */
+router.get("/balances", async (req: Request, res: Response) => {
   try {
-    const token = jwt.sign({}, process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string, options);
-    return token;
+    const { balances } = await client.queryBalances({
+      parent: `vaults/${process.env.VAULT_ID}`,
+    })
+    res.status(200).json({ balances });
   } catch (error) {
-    throw error; // Let the error be handled by the centralized handler
-  }
-}
-
-// Middleware to verify the webhook signature
-function verifyUtilaSignature(req: Request, res: Response, next: Function) {
-  let rawData = "";
-
-  req.on("data", (chunk) => {
-    rawData += chunk;
-  });
-
-  req.on("end", () => {
-    try {
-      const signature = req.headers["x-utila-signature"] as string;
-
-      if (!signature || !verifySignature(signature, rawData, utilaPublicKey)) {
-        throw new Error("Signature verification failed");
-      }
-
-      req.body = JSON.parse(rawData);
-      console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Neatly formatted payload
-      next();
-    } catch (error) {
-      handleError(res, "Webhook Signature Verification", error);
-    }
-  });
-}
-
-// Function to verify the signature
-function verifySignature(signatureBase64: string, data: string, publicKey: string): boolean {
-  try {
-    const signatureBuffer = Buffer.from(signatureBase64, "base64");
-    const verifier = createVerify("RSA-SHA512");
-    verifier.update(data);
-
-    return verifier.verify(
-      {
-        key: publicKey,
-        padding: constants.RSA_PKCS1_PSS_PADDING,
-        saltLength: constants.RSA_PSS_SALTLEN_DIGEST,
-      },
-      signatureBuffer
-    );
-  } catch (error) {
-    logError("Signature Verification", error);
-    return false;
-  }
-}
-
-// Public route to generate a token
-router.get("/api/utila", async (req: Request, res: Response) => {
-  try {
-    const token = generateToken();
-    res.status(200).json({ token });
-  } catch (error) {
-    handleError(res, "Token Generation Route", error);
+    handleError(res, "Failed to fetch balances:", error);
   }
 });
 
-// Webhook route to handle events
+/**
+ * Get utila's balance
+ * @route /v1/utila/networks
+ */
+router.get("/networks", async (req: Request, res: Response) => {
+  try {
+    const networks = await client.listNetworks({
+      pageSize: 1
+    })
+    res.status(200).json(networks);
+  } catch (error) {
+    handleError(res, "Failed to fetch balances:", error);
+  }
+});
+
+/**
+ * Get utila's network
+ * @route /v1/utila/network/bitcoin-mainnet
+ */
+router.get("/network/:network", async (req: Request, res: Response) => {
+  const { network } = req.params;
+  try {
+    const response = await client.getNetwork({
+      name: network
+    })
+    res.status(200).json({network: response});
+  } catch (error) {
+    handleError(res, "Failed to fetch balances:", error);
+  }
+});
+
+/**
+ * Get utila's balance
+ * @route /v1/utila/wallets
+ */
+router.get("/wallets", async (req: Request, res: Response) => {
+  try {
+    const wallets = await client.listWallets({
+      parent: `vaults/${process.env.VAULT_ID}`
+    })
+    res.status(200).json(wallets);
+  } catch (error) {
+    handleError(res, "Failed to fetch balances:", error);
+  }
+});
+
+/**
+ * Get utila's balance
+ * @route /v1/utila/assets/native.solana-mainnet
+ */
+router.get("/assets/:asset", async (req: Request, res: Response) => {
+  const { asset } = req.params;
+  try {
+    const assets = await client.getAsset({
+      name: asset
+    })
+    res.status(200).json(assets);
+  } catch (error) {
+    handleError(res, "Failed to fetch balances:", error);
+  }
+});
+
+/**
+ * // Webhook route to handle events
+ * @route /v1/utila/webhook
+ */
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
   const eventType = req.body.type;
 
