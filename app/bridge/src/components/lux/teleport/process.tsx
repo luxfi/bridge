@@ -142,7 +142,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
             destinationNetwork &&
             destinationAsset &&
             destinationAddress ? (
-              <div className="min-h-[450px] max-w-lg justify-center items-center flex">
+              <div className="min-h-[450px] w-full justify-center items-center flex">
                 <SwapDetails
                   sourceNetwork={sourceNetwork}
                   sourceAsset={sourceAsset}
@@ -150,17 +150,18 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
                   destinationAsset={destinationAsset}
                   destinationAddress={destinationAddress}
                   sourceAmount={sourceAmount}
+                  className='w-full'
                 />
               </div>
             ) : (
-              <div className="w-full h-[430px]">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
+              <div className="min-h-[450px] w-full justify-center items-center flex">
+                <div className="animate-pulse w-full flex space-x-4">
+                    <div className="flex-1 space-y-6 py-1">
+                      <div className="h-32 bg-level-3 rounded-lg"></div>
+                      <div className="h-40 bg-level-3 rounded-lg"></div>
+                      <div className="h-12 bg-level-3 rounded-lg"></div>
+                    </div>
                   </div>
-                </div>
               </div>
             )}
           </ResizablePanel>

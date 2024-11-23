@@ -46,8 +46,8 @@ const SwapSuccess: React.FC<{
   )
 
   return (
-    <div className={`w-full flex flex-col ${className}`}>
-      <div className="space-y-5">
+    <div className={`flex flex-col ${className}`}>
+      <div className="space-y-5 w-full">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems
             sourceNetwork={sourceNetwork}
