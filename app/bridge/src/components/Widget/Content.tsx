@@ -1,18 +1,15 @@
+import { cn } from '@hanzo/ui/util'
 import type { PropsWithChildren } from 'react'
 
 const Content: React.FC<{
-    center?: boolean,
+  className?: string
 } & PropsWithChildren> = ({ 
   children, 
-  center 
+  className=''
 }) => (
-  center ? (
-    <div className='flex flex-col justify-center items-center grow w-full'>
-        {children}
-    </div>
-  ) : (
-    <div className='space-y-9 py-3'>{children}</div>
-  )
+  <div className={cn('flex flex-col justify-center items-center grow w-full', className)}>
+    {children}
+  </div>
 )
 
 export default Content

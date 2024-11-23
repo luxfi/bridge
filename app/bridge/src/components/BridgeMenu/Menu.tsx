@@ -3,6 +3,7 @@ import type { PropsWithChildren, ReactNode } from "react"
 import { ChevronRight, ExternalLink } from "lucide-react"
 
 import LinkWrapper from "../LinkWrapper"
+import { cn } from '@hanzo/ui/util'
 
 function Menu ({ children }: PropsWithChildren)  {
   return (
@@ -65,13 +66,19 @@ const Item: React.FC<{
   )
 )
 
-const Footer: React.FC<PropsWithChildren> = ({ children }) => (
-  <div className={
-      'text-muted bg-background text-base border-t border-[#404040] ' + 
-    'sticky inset-x-0 bottom-0 z-30 ' + 
-    'shadow-widget-footer px-6 pt-4 w-full ' +
-    'flex flex-row justify-center'
-}>
+const Footer: React.FC<{
+  className?: string
+} & PropsWithChildren> = ({ 
+  className='',
+  children 
+}) => (
+  <div className={cn(
+    'text-muted bg-background text-base ', 
+    'sticky inset-x-0 bottom-0 ',
+    'w-full ',
+    'flex justify-center',
+    className
+  )}>
     {children}
   </div>
 )

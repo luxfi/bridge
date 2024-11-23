@@ -40,6 +40,7 @@ import {
 import SpinIcon from '@/components/icons/spinIcon'
 import { SwapStatus } from '@/Models/SwapStatus'
 import { fetchTokenBalance } from '@/lib/utils'
+import { Button } from '@hanzo/ui/primitives'
 
 const Address = dynamic(
   () => import('@/components/lux/teleport/share/Address'),
@@ -270,8 +271,8 @@ const Swap: FC = () => {
             balanceLoading={isDestinationBalanceLoading}
           />
         </div>
-
-        <div className="w-full !-mb-3 leading-4">
+    
+        <div className="w-full xs:mb-3 md:!-mb-3 leading-4">
           <label
             htmlFor="destination_address"
             className="block font-semibold text-xs"
@@ -315,16 +316,16 @@ const Swap: FC = () => {
             />
           </Modal>
         </div>
-
-        {
-          !address ?
-          <button
+        {!address ? (
+          <Button
             onClick={() => connectWallet("evm")}
-            className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
+            variant='primary'
+            className={'flex gap-2 justify-between xs:w-full md:w-auto' /* "border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated" */ }
           >
             { isConnecting ? <SpinIcon className="animate-spin h-5 w-5" /> : <WalletIcon className="h-5 w-5" /> }
             <span className="grow">Connect Wallet</span>
-          </button> :
+          </Button> 
+        ) : (
           <button
             onClick={handleSwap}
             disabled={
@@ -349,13 +350,13 @@ const Swap: FC = () => {
             )}
             <span className="grow">{warningMessage}</span>
           </button>
-        }
+        )}
 
         <Modal
           height="fit"
           show={showSwapModal}
           setShow={setShowSwapModal}
-          header={`Complete the swap`}
+          header='Complete the swap'
           onClose={() => setShowSwapModal(false)}
         >
           <ResizablePanel>
