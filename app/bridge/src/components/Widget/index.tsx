@@ -40,7 +40,7 @@ const Widget = ({
 
   return (
     <div id='WIDGET_OUTER' className='flex flex-col content-center items-center justify-center'>
-      <div id='WIDGET' className={'text-foreground rounded-lg w-full sm:overflow-hidden relative border ' + className}>
+      <div id='WIDGET' className={'text-foreground md:rounded-lg w-full sm:overflow-hidden relative md:border ' + className}>
         {sandbox && (
           <div className='relative'>
             <div className='h-1 bg-secondary' />

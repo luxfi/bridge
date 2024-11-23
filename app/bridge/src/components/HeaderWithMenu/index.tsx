@@ -46,8 +46,8 @@ const HeaderWithMenu: React.FC<{
   )
 
   return (
-    <div className="w-full grid grid-cols-5 px-6 mt-3 items-center justify-center" >
-    {goBack ? (
+    <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between" >
+    {true ? (
       <IconButton
         onClick={goBack}
         aria-label="Go back"
