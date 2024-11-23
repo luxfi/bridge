@@ -11,9 +11,9 @@ import CommandWrapper from '@/components/shadcn/command-wrapper'
 
 import Modal from '@/components/modal/modal'
 import useWindowDimensions from '@/hooks/useWindowDimensions'
-import SelectItem from '@/components/lux/fireblocks/swap/to/SelectItem'
+import SelectItem from '@/components/lux/utila/swap/to/SelectItem'
 import SpinIcon from '@/components/icons/spinIcon'
-import { type Network } from '@/types/fireblocks'
+import { type Network } from '@/types/utila'
 
 interface IProps {
   show: boolean

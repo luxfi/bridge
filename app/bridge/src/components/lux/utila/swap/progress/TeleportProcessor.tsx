@@ -5,8 +5,8 @@ import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
-} from "@/store/fireblocks";
-//import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
+} from "@/store/utila";
+//import { CONTRACTS } from "@/components/lux/utila/constants/settings";
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
 //hooks
@@ -18,7 +18,7 @@ import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import Gauge from "@/components/gauge";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 
 interface IProps {
   className?: string;

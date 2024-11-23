@@ -7,7 +7,7 @@ import {
 } from '@hanzo/ui/primitives'
 import CommandWrapper from '@/components/shadcn/command-wrapper'
 
-import type { Token } from '@/types/fireblocks'
+import type { Token } from '@/types/utila'
 
 interface IProps {
   values: Token[]

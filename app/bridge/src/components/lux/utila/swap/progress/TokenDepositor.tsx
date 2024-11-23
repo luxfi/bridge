@@ -4,14 +4,14 @@ import {
   swapStatusAtom,
   timeToExpireAtom,
   userTransferTransactionAtom,
-} from "@/store/fireblocks";
+} from "@/store/utila";
 import { ArrowRight, Router } from "lucide-react";
 import { Contract } from "ethers";
-import { CONTRACTS } from "@/components/lux/fireblocks/constants/settings";
+import { CONTRACTS } from "@/components/lux/utila/constants/settings";
 import Gauge from "@/components/gauge";
 
-import teleporterABI from "@/components/lux/fireblocks/constants/abi/bridge.json";
-import erc20ABI from "@/components/lux/fireblocks/constants/abi/erc20.json";
+import teleporterABI from "@/components/lux/utila/constants/abi/bridge.json";
+import erc20ABI from "@/components/lux/utila/constants/abi/erc20.json";
 //hooks
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
@@ -19,7 +19,7 @@ import { parseUnits } from "ethers/lib/utils";
 import axios from "axios";
 import useWallet from "@/hooks/useWallet";
 import SwapItems from "./SwapItems";
-import type { Network, Token } from "@/types/fireblocks";
+import type { Network, Token } from "@/types/utila";
 import ManualTransfer from "./ManualTransfer";
 
 interface IProps {

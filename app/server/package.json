@@ -49,6 +49,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@luxfi/utila": "^3.0.0",
     "@prisma/client": "^5.22.0",
     "@solana/addresses": "2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e",
     "axios": "^1.7.4",

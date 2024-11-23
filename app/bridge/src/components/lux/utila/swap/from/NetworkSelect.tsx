@@ -13,7 +13,7 @@ import Modal from '@/components/modal/modal'
 
 import useWindowDimensions from '@/hooks/useWindowDimensions'
 import SpinIcon from '@/components/icons/spinIcon'
-import type { Network } from '@/types/fireblocks'
+import type { Network } from '@/types/utila'
 import SelectItem from './SelectItem'
 
 interface IProps {
