@@ -431,7 +431,7 @@ export const networks: Network[] = [
       {
         name: 'ZOO',
         asset: 'ZOO',
-        logo: 'https://cdn.lux.network/bridge/currencies/svg.svg',
+        logo: 'https://cdn.lux.network/bridge/currencies/zoo.svg',
         contract_address: '0x0000000000000000000000000000000000000000',
         decimals: 18,
         status: 'active',

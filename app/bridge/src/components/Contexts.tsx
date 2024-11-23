@@ -120,6 +120,7 @@ const Contexts: React.FC<
   }
 
   return (
+      <RainbowKit>
     <SWRConfig value={{ revalidateOnFocus: false }}>
       <IntercomProvider appId={INTERCOM_APP_ID} initializeDelay={2500}>
         {themeData && <ColorSchema themeData={themeData} />}
@@ -134,13 +135,11 @@ const Contexts: React.FC<
                   <ToastProvider>
                     <JotaiProvider>
                       <TonConnectProvider basePath={''} themeData={themeData}> 
-                      <RainbowKit>
-                        <EthersProvider>
-                          <Solana>
-                            <FeeProvider>{children}</FeeProvider>
-                          </Solana>
-                        </EthersProvider>
-                      </RainbowKit>
+                          <EthersProvider>
+                            <Solana>
+                              <FeeProvider>{children}</FeeProvider>
+                            </Solana>
+                          </EthersProvider>
                       </TonConnectProvider>
                     </JotaiProvider>
                   </ToastProvider>
@@ -151,6 +150,7 @@ const Contexts: React.FC<
         </QueryProvider>
       </IntercomProvider>
     </SWRConfig>
+                        </RainbowKit>
   )
 }
 
