@@ -29,7 +29,7 @@ module.exports = (phase, { defaultConfig }) => {
     },
     basePath: process.env.APP_BASE_PATH || '',
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-    reactStrictMode: true,
+    reactStrictMode: false,
     i18n: {
       locales: ["en"],
       defaultLocale: "en",
