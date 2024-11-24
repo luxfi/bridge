@@ -20,14 +20,14 @@ import { ArrowRight } from "lucide-react";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
 
 interface IProps {
-  className?: string;
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
-  swapId: string;
+  className?: string
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
+  swapId: string
 }
 
 const PayoutProcessor: React.FC<IProps> = ({

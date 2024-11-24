@@ -1,7 +1,8 @@
 import { Router, Request, Response } from "express";
 import { createVerify, constants } from "crypto";
 import { createGrpcClient, createHttpClient, serviceAccountAuthStrategy } from '@luxfi/utila';
-import { handleError, verifyUtilaSignature } from "@/lib/utilas";
+import { createNewWalletForDeposit, handleError, verifyUtilaSignature } from "@/lib/utilas";
+import { serializedData } from "@/lib/utils";
 
 const router: Router = Router();
 
@@ -15,16 +16,6 @@ const client = createGrpcClient({
   }),
 }).version("v1alpha2");
 
-
-// router.get("/token", async (req: Request, res: Response) => {
-//   try {
-//     const token = generateToken();
-//     res.status(200).json({ token });
-//   } catch (error) {
-//     handleError(res, "Token Generation Route", error);
-//   }
-// });
-
 /**
  * Get utila's balance
  * @route /v1/utila/balances
@@ -32,71 +23,9 @@ const client = createGrpcClient({
 router.get("/balances", async (req: Request, res: Response) => {
   try {
     const { balances } = await client.queryBalances({
-      parent: `vaults/${process.env.VAULT_ID}`,
+      parent: `vaults/11b8bd854f3e`,
     })
     res.status(200).json({ balances });
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
-
-/**
- * Get utila's balance
- * @route /v1/utila/networks
- */
-router.get("/networks", async (req: Request, res: Response) => {
-  try {
-    const networks = await client.listNetworks({
-      pageSize: 1
-    })
-    res.status(200).json(networks);
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
-
-/**
- * Get utila's network
- * @route /v1/utila/network/bitcoin-mainnet
- */
-router.get("/network/:network", async (req: Request, res: Response) => {
-  const { network } = req.params;
-  try {
-    const response = await client.getNetwork({
-      name: network
-    })
-    res.status(200).json({network: response});
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
-
-/**
- * Get utila's balance
- * @route /v1/utila/wallets
- */
-router.get("/wallets", async (req: Request, res: Response) => {
-  try {
-    const wallets = await client.listWallets({
-      parent: `vaults/${process.env.VAULT_ID}`
-    })
-    res.status(200).json(wallets);
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
-
-/**
- * Get utila's balance
- * @route /v1/utila/assets/native.solana-mainnet
- */
-router.get("/assets/:asset", async (req: Request, res: Response) => {
-  const { asset } = req.params;
-  try {
-    const assets = await client.getAsset({
-      name: asset
-    })
-    res.status(200).json(assets);
   } catch (error) {
     handleError(res, "Failed to fetch balances:", error);
   }

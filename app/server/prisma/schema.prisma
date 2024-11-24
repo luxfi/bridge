@@ -108,8 +108,7 @@ model Swap {
   fail_reason              String?
   metadata_sequence_number Int?
 
-  deposit_address_id Int?
-  deposit_address    DepositAddress? @relation(fields: [deposit_address_id], references: [id])
+  deposit_address    String?
 
   quotes          Quote?
   deposit_actions DepositAction[]
@@ -156,17 +155,6 @@ model Quote {
   total_fee           Float
   total_fee_in_usd    Float
   swap                Swap   @relation(fields: [swap_id], references: [id])
-}
-
-model DepositAddress {
-  id      Int     @id @default(autoincrement())
-  type    String
-  address String
-  memo    String?
-  Swap    Swap[]
-
-  @@index([type])
-  @@index([address])
 }
 
 model RpcNode {

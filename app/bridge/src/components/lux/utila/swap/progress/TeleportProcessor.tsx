@@ -21,14 +21,14 @@ import Gauge from "@/components/gauge";
 import type { Network, Token } from "@/types/utila";
 
 interface IProps {
-  className?: string;
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
-  swapId: string;
+  className?: string
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
+  swapId: string
 }
 
 const TeleportProcessor: React.FC<IProps> = ({
