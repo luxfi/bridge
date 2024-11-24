@@ -1,36 +1,7 @@
 import { Router, Request, Response } from "express";
-import { createVerify, constants } from "crypto";
-import { createGrpcClient, createHttpClient, serviceAccountAuthStrategy } from '@luxfi/utila';
-import { createNewWalletForDeposit, handleError, verifyUtilaSignature } from "@/lib/utilas";
-import { serializedData } from "@/lib/utils";
+import { handleError, verifyUtilaSignature } from "@/lib/utilas";
 
 const router: Router = Router();
-
-/**
- * utila grpc client
- */
-const client = createGrpcClient({
-  authStrategy: serviceAccountAuthStrategy({
-    email: process.env.SERVICE_ACCOUNT_EMAIL as string,
-    privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string,
-  }),
-}).version("v1alpha2");
-
-/**
- * Get utila's balance
- * @route /v1/utila/balances
- */
-router.get("/balances", async (req: Request, res: Response) => {
-  try {
-    console.log(process.env, process.env.SERVICE_ACCOUNT_PRIVATE_KEY, process.env.SERVICE_ACCOUNT_EMAIL)
-    const { balances } = await client.queryBalances({
-      parent: `vaults/11b8bd854f3e`,
-    })
-    res.status(200).json({ balances });
-  } catch (error) {
-    handleError(res, "Failed to fetch balances:", error);
-  }
-});
 
 /**
  * // Webhook route to handle events
