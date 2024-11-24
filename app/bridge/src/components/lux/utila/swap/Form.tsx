@@ -4,20 +4,17 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import axios from 'axios'
 //hooks
-import useAsyncEffect from 'use-async-effect'
 import { useRouter } from 'next/navigation'
 import { useAtom } from 'jotai'
 
 import { ArrowLeftRight } from 'lucide-react'
 
 import Modal from '@/components/modal/modal'
-import ResizablePanel from '@/components/ResizablePanel'
-import shortenAddress from '../../../utils/ShortenAddress'
-import Widget from '../../../Widget'
+import shortenAddress from '@/components/utils/ShortenAddress'
+import Widget from '@/components/Widget/index'
 
 import FromNetworkForm from './from/NetworkFormField'
 import ToNetworkForm from './to/NetworkFormField'
-import SwapDetails from './SwapDetails'
 import type { Token, Network } from '@/types/utila'
 import { SWAP_PAIRS } from '@/components/lux/utila/constants/settings'
 import { useEthersSigner } from "@/hooks/useEthersSigner";
@@ -101,15 +98,7 @@ const Swap: FC = () => {
 
   React.useEffect(() => {
     if (sourceAsset) {
-      const _networks = dstNetworks
-        .filter((n: Network) => {
-          if (n.currencies.some((c: Token) => SWAP_PAIRS[sourceAsset.asset])) {
-            return true
-          } else {
-            return false
-          }
-        })
-        .map((n: Network) => ({
+      const _networks = dstNetworks.map((n: Network) => ({
           ...n,
           currencies: n.currencies.map((c: Token) => ({
             ...c,
@@ -347,43 +336,6 @@ const Swap: FC = () => {
           )}
           <span className="grow">{warningMessage}</span>
         </button>
-
-        <Modal
-          height="fit"
-          show={showSwapModal}
-          setShow={setShowSwapModal}
-          header={`Complete the swap`}
-          onClose={() => setShowSwapModal(false)}
-        >
-          <ResizablePanel>
-            {sourceNetwork &&
-            sourceAsset &&
-            sourceAmount &&
-            destinationNetwork &&
-            destinationAsset &&
-            destinationAddress ? (
-              <SwapDetails
-                className="min-h-[450px] justify-center max-w-lg"
-                sourceNetwork={sourceNetwork}
-                sourceAsset={sourceAsset}
-                destinationNetwork={destinationNetwork}
-                destinationAsset={destinationAsset}
-                destinationAddress={destinationAddress}
-                sourceAmount={sourceAmount}
-              />
-            ) : (
-              <div className="w-full h-[430px]">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </ResizablePanel>
-        </Modal>
       </Widget.Content>
     </Widget>
   )
