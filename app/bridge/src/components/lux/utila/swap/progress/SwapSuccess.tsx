@@ -11,14 +11,14 @@ import { useAtom } from "jotai";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
 
 interface IProps {
-  className?: string;
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
-  swapId: string;
+  className?: string
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
+  swapId: string
 }
 
 const SwapSuccess: React.FC<IProps> = ({
