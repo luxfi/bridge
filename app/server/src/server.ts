@@ -31,7 +31,7 @@ app.use("/api/quotes", quotes)
 app.use("/api/rate", rate)
 app.use("/api/networks", networks)
 app.use("/api/exchanges", exchanges)
-app.use("/api/utila", utila)
+app.use("/v1/utila", utila)
 
 app.get("/", async (req, res) => {
   res.json(">>> Hello world. We are LUX!!!")

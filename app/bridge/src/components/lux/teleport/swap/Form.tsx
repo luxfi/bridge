@@ -183,7 +183,7 @@ const Swap: FC = () => {
         app_name: 'Bridge',
       }
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=mainnet`,
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
         data
       )
       // setSwapId(response.data?.data?.swap_id)
