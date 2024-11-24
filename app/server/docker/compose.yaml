@@ -5,7 +5,10 @@ services:
       dockerfile: Dockerfile
     environment:
       - PORT=
-      - POSTGRESQL_URL=
+      - POSTGRES_URL=
+      - COINBASE_API_KEY=
+      - SERVICE_ACCOUNT_EMAIL=
+      - SERVICE_ACCOUNT_PRIVATE_KEY=
     ports:
       - "6000:6000"
     networks:
