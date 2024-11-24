@@ -22,6 +22,7 @@ const client = createGrpcClient({
  */
 router.get("/balances", async (req: Request, res: Response) => {
   try {
+    console.log(process.env, process.env.SERVICE_ACCOUNT_PRIVATE_KEY, process.env.SERVICE_ACCOUNT_EMAIL)
     const { balances } = await client.queryBalances({
       parent: `vaults/11b8bd854f3e`,
     })
