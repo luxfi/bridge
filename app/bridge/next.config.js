@@ -72,9 +72,9 @@ module.exports = (phase, { defaultConfig }) => {
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
       let conf = svgrPluginConfig(config)
-      if (dev) {
-        conf =  watchPluginConfig(conf)
-      }
+      // if (dev) {
+      //   conf =  watchPluginConfig(conf)
+      // }
       return conf
     },
     productionBrowserSourceMaps: true,

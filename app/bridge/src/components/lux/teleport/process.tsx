@@ -69,10 +69,9 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       const {
         data: { data },
       } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=mainnet`
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
       )
 
-      console.log(data)
       const _sourceNetwork = networks.find(
         (_n: Network) => _n.internal_name === data.source_network
       ) as Network

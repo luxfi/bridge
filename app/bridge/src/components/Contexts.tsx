@@ -39,14 +39,6 @@ const Contexts: React.FC<
   } & PropsWithChildren
 > = ({ settings, children }) => {
   const searchParams = useSearchParams()
-
-  useAsyncEffect(async () => {
-    const settings = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_API}/api/networks?version=mainnet`
-    )
-    console.log('::settings;;;', settings)
-  }, [])
-
   // :aa These were was all that getServerSideProps() ever returned.
   // So seems clearest to just do it this way.
   const _settings = settings ?? {
@@ -120,7 +112,6 @@ const Contexts: React.FC<
   }
 
   return (
-      <RainbowKit>
     <SWRConfig value={{ revalidateOnFocus: false }}>
       <IntercomProvider appId={INTERCOM_APP_ID} initializeDelay={2500}>
         {themeData && <ColorSchema themeData={themeData} />}
@@ -135,11 +126,13 @@ const Contexts: React.FC<
                   <ToastProvider>
                     <JotaiProvider>
                       <TonConnectProvider basePath={''} themeData={themeData}> 
+                        <RainbowKit>
                           <EthersProvider>
                             <Solana>
                               <FeeProvider>{children}</FeeProvider>
                             </Solana>
                           </EthersProvider>
+                        </RainbowKit>
                       </TonConnectProvider>
                     </JotaiProvider>
                   </ToastProvider>
@@ -150,7 +143,6 @@ const Contexts: React.FC<
         </QueryProvider>
       </IntercomProvider>
     </SWRConfig>
-                        </RainbowKit>
   )
 }
 
