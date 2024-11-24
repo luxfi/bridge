@@ -28,8 +28,8 @@ import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import { truncateDecimals } from '../utils/RoundDecimals'
 import { SwapHistoryComponentSkeleton } from '../Skeletons'
 //networks
-import fireblockNetworksMainnet from '@/components/lux/fireblocks/constants/networks.mainnets'
-import fireblockNetworksTestnet from '@/components/lux/fireblocks/constants/networks.sandbox'
+import fireblockNetworksMainnet from '@/components/lux/utila/constants/networks.mainnets'
+import fireblockNetworksTestnet from '@/components/lux/utila/constants/networks.sandbox'
 import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
 import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
 
@@ -398,9 +398,11 @@ function TransactionsHistory() {
                           text_align="center"
                           onClick={() => {
                             router.push(
-                              (selectedSwap?.use_teleporter
-                                ? `/swap/teleporter/${selectedSwap.id}`
-                                : `/swap/${selectedSwap.id}`) + paramString
+                              (
+                                selectedSwap?.use_teleporter
+                                  ? `/swap/teleporter/${selectedSwap.id}`
+                                  : `/swap/utila/${selectedSwap.id}`
+                              ) + paramString
                             )
                           }}
                           isDisabled={false}

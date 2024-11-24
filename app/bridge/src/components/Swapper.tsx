@@ -4,7 +4,7 @@ import { useAtom } from 'jotai'
 
 import { useTelepoterAtom } from '@/store/teleport'
 import Teleporter from '@/components/lux/teleport/swap/Form'
-import SwapFireblock from '@/components/lux/fireblocks/swap/Form'
+import SwapFireblock from '@/components/lux/utila/swap/Form'
 
 const Swapper: React.FC = () => {
   const [useTeleporter, _] = useAtom(useTelepoterAtom)
