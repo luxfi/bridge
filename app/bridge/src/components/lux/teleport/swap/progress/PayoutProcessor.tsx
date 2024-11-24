@@ -107,7 +107,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
-      vault_: toMint ? 'false' : 'true',
+      vault_: toBurn ? 'false' : 'true',
     }
 
     console.log('data for bridge mint::', mintData)
