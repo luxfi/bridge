@@ -53,3 +53,13 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
     return isAddress(address)
   }
 }
+/**
+ * 
+ * @param data 
+ * @returns 
+ */
+export const serializedData = (data: any) => {
+  return JSON.stringify(data, (key, value) =>
+    typeof value === 'bigint' ? value.toString() : value
+  );
+}

@@ -119,7 +119,7 @@ const sourceNetworks: Network[] = [
     is_featured: false,
     average_completion_time: "00:04:39.5276290",
     chain_id: null,
-    status: "active",
+    status: "inactive",
     type: "cardano",
     refuel_amount_in_usd: 1,
     transaction_explorer_template: "https://cardanoscan.io/tx/{0}",

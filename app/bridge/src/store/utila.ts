@@ -15,3 +15,5 @@ export const userTransferTransactionAtom = atom<string>("");
 export const bridgeMintTransactionAtom = atom<string>("");
 export const mpcSignatureAtom = atom<string>("");
 export const useTelepoterAtom = atom<boolean>(true);
+
+export const depositAddressAtom = atom<undefined|string>(undefined);

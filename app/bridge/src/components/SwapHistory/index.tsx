@@ -398,9 +398,11 @@ function TransactionsHistory() {
                           text_align="center"
                           onClick={() => {
                             router.push(
-                              (selectedSwap?.use_teleporter
-                                ? `/swap/teleporter/${selectedSwap.id}`
-                                : `/swap/${selectedSwap.id}`) + paramString
+                              (
+                                selectedSwap?.use_teleporter
+                                  ? `/swap/teleporter/${selectedSwap.id}`
+                                  : `/swap/utila/${selectedSwap.id}`
+                              ) + paramString
                             )
                           }}
                           isDisabled={false}

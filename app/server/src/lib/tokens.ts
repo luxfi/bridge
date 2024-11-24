@@ -11,9 +11,11 @@ export const getTokenPrice = async (token_id: string) => {
     };
     if (token_id === "LUX") {
       return 0.0011;
-    } else if (token_id === "LUSD") {
+    } else if (token_id === "ZOO") {
+      return 0.000021;
+    } else if (token_id === "LUSD" || token_id === 'ZUSD') {
       return 1.0;
-    } else if (token_id.startsWith("L")) {
+    } else if (token_id.startsWith("L") || token_id.startsWith("Z")) {
       token_id = token_id.substr(1);
       const {
         data: { data },

@@ -1,7 +1,19 @@
 import { Router, Request, Response } from "express";
 import { createVerify, constants } from "crypto";
-import { createGrpcClient, createHttpClient, serviceAccountAuthStrategy } from '@luxfi/utila';
+import { createGrpcClient, serviceAccountAuthStrategy } from '@luxfi/utila';
 import jwt from "jsonwebtoken";
+import { UTILA_NETWORKS } from "@/config/constants";
+import { error } from "console";
+
+/**
+ * utila grpc client
+ */
+const client = createGrpcClient({
+  authStrategy: serviceAccountAuthStrategy({
+    email: process.env.SERVICE_ACCOUNT_EMAIL as string,
+    privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string,
+  }),
+}).version("v1alpha2");
 
 export const utilaPublicKey = `
 -----BEGIN PUBLIC KEY-----
@@ -82,6 +94,7 @@ export const verifyUtilaSignature = (req: Request, res: Response, next: Function
   req.on("end", () => {
     try {
       const signature = req.headers["x-utila-signature"] as string;
+      console.log("::utila signature", signature, "::end::")
 
       if (!signature || !verifySignature(signature, rawData, utilaPublicKey)) {
         throw new Error("Signature verification failed");
@@ -109,5 +122,83 @@ export const generateToken = (): string => {
     return token;
   } catch (error) {
     throw error; // Let the error be handled by the centralized handler
+  }
+}
+/**
+ * Create New Wallet address
+ * @param vaultName 
+ * @param network 
+ * @param displayName 
+ * @returns 
+ */
+export const _createNewWallet = async (vaultName: string, network: string, displayName: string) => {
+  const payload = {
+    parent: vaultName,
+    wallet: {
+      displayName: displayName,
+      networks: [network],
+    }
+  };
+
+  const walletResponse = await client.createWallet(payload);
+  console.log(`${displayName} Wallet Created:`, walletResponse?.wallet?.name);
+
+  const { walletAddresses } = await client.listWalletAddresses({
+    parent: walletResponse?.wallet?.name,
+  })
+
+  return {
+    ...walletResponse.wallet,
+    addresses: walletAddresses || []
+  };
+};
+
+/**
+ * Create New Wallet address
+ * @param name BITCOIN_MAINNET
+ * @returns 
+ */
+export const createNewWalletForDeposit = async (name: string) => {
+  try {
+
+    const network = UTILA_NETWORKS[name];
+    if (!network) throw `Unrecognized network - ${name}`
+    
+    const vaultsResponse = await client.listVaults({});
+    const vaults = vaultsResponse.vaults || [];
+    if (vaults.length === 0) throw new Error("No vaults found");
+    const targetVault = vaults[0];
+
+    const wallet = await _createNewWallet(
+      targetVault.name,
+      network.name,
+      `${network.name}-${Date.now()}`
+    );
+    if (wallet.addresses.length === 0) throw "No wallet address found"
+    return Promise.resolve(wallet)
+  } catch (error) {
+    console.log("::error while creating new wallet", error)
+    return Promise.reject(error)
+  }
+};
+/**
+ * archive utila wallet because no deposit for expiration time
+ * @param name 
+ */
+export const archiveWalletForExpire = async (name: string) => {
+  try {
+    console.log(name)
+    const { balances } = await client.queryBalances({
+      parent: name
+    })
+    if (balances?.length === 0) { // if there is no deposit
+      await client.archiveWallet({
+        name: name,
+        allowMissing: true
+      })
+      console.log("::archived:", name)
+    }
+  } catch (err) {
+    console.log("::error while archiving wallet for expire", error)
   }
 }

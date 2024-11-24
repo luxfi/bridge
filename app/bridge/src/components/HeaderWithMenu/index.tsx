@@ -1,20 +1,23 @@
 'use client'
-import { useIntercom } from "react-use-intercom"
-import { useAuthState } from "../../context/authContext"
-import IconButton from "../buttons/iconButton"
-import GoHomeButton from "../utils/GoHome"
+import { useIntercom } from 'react-use-intercom'
+import { useAuthState } from '../../context/authContext'
+import IconButton from '../buttons/iconButton'
+import ToggleButton from '../buttons/toggleButton'
+import GoHomeButton from '../utils/GoHome'
+import ChatIcon from '../icons/ChatIcon'
+import dynamic from 'next/dynamic'
+import BridgeMenu from '../BridgeMenu'
+import { cn } from '@hanzo/ui/util'
 import { ArrowLeft } from 'lucide-react'
-import ChatIcon from "../icons/ChatIcon"
-import dynamic from "next/dynamic"
-import BridgeMenu from "../BridgeMenu"
-import { Button } from "@hanzo/ui/primitives"
-import ToggleButton from "../buttons/toggleButton"
-import { useAtom } from "jotai"
-import { useTelepoterAtom } from "@/store/teleport"
-import type React from "react"
+import { Button } from '@hanzo/ui/primitives'
+//hoosk
+import { useAtom } from 'jotai'
+import { usePathname } from 'next/navigation'
+import { useTelepoterAtom } from '@/store/teleport'
+import type React from 'react'
 
 const ConnectWallets = dynamic(
-  () => import("../ConnectedWallets").then((comp) => (comp.ConnectedWallets)), 
+  () => import('../ConnectedWallets').then((comp) => (comp.ConnectedWallets)), 
   { loading: () => (null) }
 )
 
@@ -23,11 +26,13 @@ const HeaderWithMenu: React.FC<{
 }> = ({ 
   goBack 
 }) => {
-
-  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom);
+  // hooks
   const { email, userId } = useAuthState()
   const { boot, show, update } = useIntercom()
+  const pathname = usePathname()
+  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom);
   const updateWithProps = () => { update({ email: email, userId: userId }) }
+
 
   const ChatButton: React.FC = () => (
     <Button
@@ -39,26 +44,30 @@ const HeaderWithMenu: React.FC<{
         updateWithProps()
       }}
       aria-label='Open chat'
-      className="text-muted-2 hidden md:inline-block"
+      className='text-muted-2 hidden md:inline-block'
     >
-      <ChatIcon className="h-6 w-6" strokeWidth="1.5" />
+      <ChatIcon className='h-6 w-6' strokeWidth='1.5' />
     </Button>
   )
 
   return (
-    <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between" >
+    <div className='w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between' >
     {goBack ? (
       <IconButton
         onClick={goBack}
-        aria-label="Go back"
-        icon={<ArrowLeft strokeWidth="3" />}
+        aria-label='Go back'
+        icon={<ArrowLeft strokeWidth='3' />}
       />
     ) : (
-      <div className='flex items-center gap-2'>
+      <div className={cn(
+          'flex items-center gap-2', 
+          pathname !== '/' ? 'hidden' : ''
+        )}
+      >
         <ToggleButton
           value={useTeleporter}
           onChange={(b: boolean) => { setUseTeleporter(b) }}
-          name="Teleport"
+          name='Teleport'
         />
         Teleport
       </div>      
@@ -69,7 +78,7 @@ const HeaderWithMenu: React.FC<{
         <GoHomeButton />
       </div>
     */}
-      <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
+      <div className='col-start-5 justify-self-end self-center flex items-center gap-3'>
         <ConnectWallets />
         {/* <ChatButton /> */}
         <BridgeMenu />

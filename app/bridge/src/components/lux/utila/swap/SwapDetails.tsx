@@ -1,14 +1,15 @@
-import React from "react";
-import { swapStatusAtom, swapIdAtom } from "@/store/utila";
+import React from 'react'
+import { swapStatusAtom, swapIdAtom } from '@/store/utila'
 //hooks
-import { useAtom } from "jotai";
+import { useAtom } from 'jotai'
 //types
-import UserTokenDepositor from "./progress/TokenDepositor";
-import TeleportProcessor from "./progress/TeleportProcessor";
-import PayoutProcessor from "./progress/PayoutProcessor";
-import SwapSuccess from "./progress/SwapSuccess";
-import { SwapStatus } from "@/Models/SwapStatus";
-import type { Network, Token } from "@/types/utila";
+import UserTokenDepositor from './progress/TokenDepositor'
+import TeleportProcessor from './progress/TeleportProcessor'
+import PayoutProcessor from './progress/PayoutProcessor'
+import SwapSuccess from './progress/SwapSuccess'
+import SwapExpired from './progress/SwapExpired'
+import { SwapStatus } from '@/Models/SwapStatus'
+import type { Network, Token } from '@/types/utila'
 
 interface IProps {
   className?: string;
@@ -18,6 +19,7 @@ interface IProps {
   destinationAsset: Token;
   destinationAddress: string;
   sourceAmount: string;
+  getSwapById: (swapId: string) => void
 }
 
 const SwapDetails: React.FC<IProps> = ({
@@ -28,6 +30,7 @@ const SwapDetails: React.FC<IProps> = ({
   destinationAddress,
   sourceAmount,
   className,
+  getSwapById
 }) => {
   //atoms
   const [swapStatus] = useAtom(swapStatusAtom);
@@ -43,10 +46,11 @@ const SwapDetails: React.FC<IProps> = ({
         destinationAddress={destinationAddress}
         sourceAmount={sourceAmount}
         swapId={swapId}
+        getSwapById={getSwapById}
         className={className}
       />
     );
-  } else if (swapStatus === "teleport_processing_pending") {
+  } else if (swapStatus === SwapStatus.TeleportProcessPending) {
     return (
       <TeleportProcessor
         sourceNetwork={sourceNetwork}
@@ -59,7 +63,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     );
-  } else if (swapStatus === "user_payout_pending") {
+  } else if (swapStatus === SwapStatus.UserPayoutPending) {
     return (
       <PayoutProcessor
         sourceNetwork={sourceNetwork}
@@ -72,9 +76,22 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     );
-  } else if (swapStatus === "payout_success") {
+  } else if (swapStatus === SwapStatus.PayoutSuccess) {
     return (
       <SwapSuccess
+        sourceNetwork={sourceNetwork}
+        sourceAsset={sourceAsset}
+        destinationNetwork={destinationNetwork}
+        destinationAsset={destinationAsset}
+        destinationAddress={destinationAddress}
+        sourceAmount={sourceAmount}
+        swapId={swapId}
+        className={className}
+      />
+    );
+  } else if (swapStatus === SwapStatus.Expired) {
+    return (
+      <SwapExpired
         sourceNetwork={sourceNetwork}
         sourceAsset={sourceAsset}
         destinationNetwork={destinationNetwork}

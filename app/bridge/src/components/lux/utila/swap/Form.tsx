@@ -5,6 +5,7 @@ import Image from 'next/image'
 import axios from 'axios'
 //hooks
 import useAsyncEffect from 'use-async-effect'
+import { useRouter } from 'next/navigation'
 import { useAtom } from 'jotai'
 
 import { ArrowLeftRight } from 'lucide-react'
@@ -39,6 +40,8 @@ import {
 } from '@/store/utila'
 import SpinIcon from '@/components/icons/spinIcon'
 import { SwapStatus } from '@/Models/SwapStatus'
+import { useNotify } from '@/context/toast-provider'
+import { useServerAPI } from '@/hooks/useServerAPI'
 
 const Address = dynamic(
   () => import('@/components/lux/utila/share/Address'),
@@ -71,7 +74,7 @@ const Swap: FC = () => {
     destinationAddressAtom
   )
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
-  const [swapId, setSwapId] = useAtom(swapIdAtom)
+  const [, setSwapId] = useAtom(swapIdAtom)
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setEthPrice] = useAtom(ethPriceAtom)
   const [, setTimeToExpire] = useAtom(timeToExpireAtom)
@@ -79,7 +82,10 @@ const Swap: FC = () => {
   const [destinationNetworks, setDestinationNetworks] =
     React.useState<Network[]>(dstNetworks)
 
-  const { address, isConnecting } = useEthersSigner();
+  const router = useRouter ()
+  const { notify } = useNotify ()
+  const { serverAPI } = useServerAPI ()
+
 
   React.useEffect(() => {
     sourceNetwork &&
@@ -134,10 +140,7 @@ const Swap: FC = () => {
   }, [sourceAsset])
 
   const warningMessage = React.useMemo(() => {
-    if (!address) {
-      return 'Connect Wallet First'
-    }
-    else if (!sourceNetwork) {
+    if (!sourceNetwork) {
       return 'Select Source Network'
     } else if (!sourceAsset) {
       return 'Select Source Asset'
@@ -149,10 +152,8 @@ const Swap: FC = () => {
       return 'Input Address'
     } else if (sourceAmount === '') {
       return 'Enter Token Amount'
-    } else if (Number(sourceAmount) <= 0) {
-      return 'Invalid Token Amount'
     } else {
-      return 'Swap Now'
+      return 'Create Swap'
     }
   }, [
     sourceNetwork,
@@ -161,14 +162,13 @@ const Swap: FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
-    address
   ])
 
   const createSwap = async () => {
     try {
       const data = {
         amount: Number(sourceAmount),
-        source_network: sourceNetwork,
+        source_network: sourceNetwork?.internal_name,
         source_asset: sourceAsset?.asset,
         source_address: '',
         destination_network: destinationNetwork?.internal_name,
@@ -179,20 +179,23 @@ const Swap: FC = () => {
         use_teleporter: false,
         app_name: 'Bridge',
       }
-      const response = await axios.post(
-        `/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
+
+      const response = await serverAPI.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
         data
       )
+
       console.log('::utila res:', response.data)
       setSwapId(response.data?.data?.swap_id)
       setTimeToExpire(new Date(response.data?.data?.created_date).getTime())
-      window.history.pushState(
-        {},
-        '',
-        `/swap/utila/${response.data?.data?.swap_id}`
-      )
-      setSwapStatus(SwapStatus.UserDepositPending)
-      setShowSwapModal(true)
+      // window.history.pushState(
+      //   {},
+      //   '',
+      //   `/swap/utila/${response.data?.data?.swap_id}`
+      // )
+      // setSwapStatus(SwapStatus.UserDepositPending)
+      // setShowSwapModal(true)
+      router.push(`/swap/utila/${response.data?.data?.swap_id}`)
     } catch (err) {
       console.log(err)
     } finally {
@@ -215,26 +218,26 @@ const Swap: FC = () => {
   }
 
   // set source balance
-  useAsyncEffect(async () => {
-    if (address && sourceNetwork && sourceAsset) {
-      setIsSourceBalanceLoading (true);
-      const _balance = await fetchTokenBalance(address, sourceNetwork, sourceAsset)
-      setSourceBalance (_balance)
-      setIsSourceBalanceLoading (false);
-    } else {
-      setSourceBalance (0)
-    }
-  }, [address, sourceNetwork, sourceAsset])
-  useAsyncEffect(async () => {
-    if (address && destinationNetwork && destinationAsset) {
-      setIsDestinationBalanceLoading (true);
-      const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
-      setDestinationBalance (_balance)
-      setIsDestinationBalanceLoading (false);
-  } else {
-    setDestinationBalance (0)
-  }
-  }, [address, destinationNetwork, destinationAsset])
+  // useAsyncEffect(async () => {
+  //   if (sourceNetwork && sourceAsset) {
+  //     setIsSourceBalanceLoading (true);
+  //     const _balance = await fetchTokenBalance(address, sourceNetwork, sourceAsset)
+  //     setSourceBalance (_balance)
+  //     setIsSourceBalanceLoading (false);
+  //   } else {
+  //     setSourceBalance (0)
+  //   }
+  // }, [sourceNetwork, sourceAsset])
+  // useAsyncEffect(async () => {
+  //   if (address && destinationNetwork && destinationAsset) {
+  //     setIsDestinationBalanceLoading (true);
+  //     const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
+  //     setDestinationBalance (_balance)
+  //     setIsDestinationBalanceLoading (false);
+  // } else {
+  //   setDestinationBalance (0)
+  // }
+  // }, [address, destinationNetwork, destinationAsset])
 
   return (
     <Widget className="sm:min-h-[504px] max-w-lg">
@@ -338,7 +341,7 @@ const Swap: FC = () => {
           {isSubmitting ? (
             <SpinIcon className="animate-spin h-5 w-5" />
           ) : (
-            warningMessage === 'Swap Now' && (
+            warningMessage === 'Create Swap' && (
               <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
             )
           )}

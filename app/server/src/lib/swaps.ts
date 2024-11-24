@@ -3,6 +3,7 @@ import { isValidAddress } from "@/lib/utils"
 import { statusMapping, SwapStatus } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"
+import { archiveWalletForExpire, createNewWalletForDeposit } from "./utilas"
 
 export interface SwapData {
   amount: number
@@ -16,6 +17,7 @@ export interface SwapData {
   destination_address: string
   refuel: boolean
   use_deposit_address: boolean
+  deposit_address?: string
   use_teleporter: boolean
   [property: string]: any
 }
@@ -37,7 +39,21 @@ export type UpdateSwapData = {
  * @returns swap result
  */
 export async function handleSwapCreation(data: SwapData) {
-  const { amount, source_network, source_exchange, source_asset, source_address, destination_network, destination_exchange, destination_asset, destination_address, refuel, use_deposit_address, use_teleporter } = data
+  
+  const { 
+    amount, 
+    source_network, 
+    source_exchange, 
+    source_asset, 
+    source_address, 
+    destination_network, 
+    destination_exchange, 
+    destination_asset, 
+    destination_address, 
+    refuel, 
+    use_deposit_address, 
+    use_teleporter 
+  } = data
 
   try {
     // source network
@@ -67,16 +83,12 @@ export async function handleSwapCreation(data: SwapData) {
         asset: destination_asset
       }
     })
-    // deposit address
-    const deposit = use_teleporter
-      ? undefined
-      : await prisma.depositAddress.create({
-          data: {
-            type: source_network.type,
-            address: source_network.deposit_address.address,
-            memo: source_network.deposit_address.memo
-          }
-        })
+
+    let deposit_address = ''
+    if (use_deposit_address) { // in the case of using utila mpc wallet
+      const wallet = await createNewWalletForDeposit(source_network);
+      deposit_address = `${wallet.name}###${wallet.addresses[0].address}`
+    }
 
     const swap = await prisma.swap.create({
       data: {
@@ -91,8 +103,8 @@ export async function handleSwapCreation(data: SwapData) {
         destination_address,
         refuel,
         use_deposit_address,
+        deposit_address,
         use_teleporter,
-        deposit_address_id: deposit?.id,
         status: use_teleporter ? SwapStatus.UserTransferPending : SwapStatus.UserDepositPending,
         quotes: {}
       }
@@ -156,7 +168,7 @@ export async function handleSwapCreation(data: SwapData) {
         source_asset,
         destination_network,
         destination_asset,
-        deposit_address: deposit
+        deposit_address
       },
       quote: { ...quote },
       refuel: null,
@@ -164,9 +176,8 @@ export async function handleSwapCreation(data: SwapData) {
     }
     return result
   } catch (error: any) {
-    console.log(error)
     //catchPrismaKnowError(error)
-    throw new Error(`Error creating swap and related entities: ${error?.message}`)
+    throw new Error(`Error creating swap and related entities: ${String(error)}`)
   }
 }
 
@@ -213,7 +224,6 @@ export async function handlerGetSwap(id: string) {
         destination_asset: true,
         deposit_actions: true,
         quotes: true,
-        deposit_address: true,
         transactions: {
           include: {
             currency: true,
@@ -277,7 +287,6 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
         destination_asset: true,
         deposit_actions: true,
         quotes: true,
-        deposit_address: true,
         transactions: {
           include: {
             currency: true,
@@ -337,7 +346,6 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
         destination_asset: true,
         deposit_actions: true,
         quotes: true,
-        deposit_address: true,
         transactions: {
           include: {
             currency: true,
@@ -351,6 +359,31 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
     return {
       ...swap
     }
+  } catch (error: any) {
+    console.log(error)
+    //catchPrismaKnowError(error)
+    throw new Error(`Error getting swap: ${error?.message}`)
+  }
+}
+/**
+ * make swap expire if there is no deposit for 72h
+ * @param id 
+ * @returns 
+ */
+export async function handlerSwapExpire(id: string) {
+  try {
+    const swap = await prisma.swap.findUnique({
+      where: { id }
+    })
+    if (!swap) throw { message: "No swap found for swapId" }
+    const wallet = swap.deposit_address?.split("#")?.[0]
+    archiveWalletForExpire (wallet as string)
+    await prisma.swap.update({
+      where: { id },
+      data: {
+        status: SwapStatus.Expired
+      }
+    })
   } catch (error: any) {
     console.log(error)
     //catchPrismaKnowError(error)
@@ -397,7 +430,6 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
         destination_asset: true,
         deposit_actions: true,
         quotes: true,
-        deposit_address: true,
         transactions: {
           include: {
             currency: true,
@@ -436,7 +468,6 @@ export async function handlerGetSwaps(address: string, isDeleted: boolean | unde
         destination_network: true,
         destination_asset: true,
         deposit_actions: true,
-        deposit_address: true,
         quotes: true,
         transactions: {
           include: {
@@ -523,7 +554,6 @@ export async function handlerGetExplorer(status: string[]) {
         destination_asset: true,
         deposit_actions: true,
         quotes: true,
-        deposit_address: true,
         transactions: {
           include: {
             currency: true,

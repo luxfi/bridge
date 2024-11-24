@@ -2,24 +2,26 @@
 import React from "react";
 import Image from "next/image";
 
-import { useSwapDataState } from "@/context/swap";
-import BackgroundField from "@/components/backgroundField";
+import type { Network, Token } from "@/types/utila";
 import SubmitButton from "@/components/buttons/submitButton";
 import shortenAddress from "@/components/utils/ShortenAddress";
-import { isValidAddress } from "@/lib/addressValidator";
-import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
+import BackgroundField from "@/components/backgroundField";
+
 import { useFee } from "@/context/feeContext";
-import type { Network, Token } from "@/types/utila";
+import { isValidAddress } from "@/lib/addressValidator";
+import { useSwapDataState } from "@/context/swap";
+import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
 
 interface IProps {
-  className?: string;
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
-  swapId: string;
+  className?: string
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
+  swapId: string
+  depositAddress?: string
 }
 
 const ManualTransfer: React.FC<IProps> = ({
@@ -31,6 +33,7 @@ const ManualTransfer: React.FC<IProps> = ({
   sourceAmount,
   className,
   swapId,
+  depositAddress
 }) => {
   const { swap } = useSwapDataState();
   const hintsStore = useSwapDepositHintClicked();
@@ -50,13 +53,13 @@ const ManualTransfer: React.FC<IProps> = ({
             Copiable={true}
             QRable={true}
             header={"Deposit address"}
-            toCopy={sourceNetwork?.deposit_address?.address}
+            toCopy={depositAddress}
             withoutBorder
           >
             <div>
-              {sourceNetwork.deposit_address ? (
+              {depositAddress ? (
                 <p className="break-all">
-                  {sourceNetwork.deposit_address.address}
+                  {depositAddress}
                 </p>
               ) : (
                 <div className="bg-gray-500 w-full h-5 animate-pulse rounded-md" />

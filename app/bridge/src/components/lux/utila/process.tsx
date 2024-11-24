@@ -1,10 +1,11 @@
 'use client'
 import React from 'react'
-import Modal from '../../modal/modal'
-import ResizablePanel from '../../ResizablePanel'
 import axios from 'axios'
+import Modal from '../../modal/modal'
 import SwapDetails from './swap/SwapDetails'
+import ResizablePanel from '../../ResizablePanel'
 import ConnectNetwork from '@/components/ConnectNetwork'
+// networks
 import mainNetworks from '@/components/lux/utila/constants/networks.mainnets'
 import devNetworks from '@/components/lux/utila/constants/networks.sandbox'
 import Widget from '@/components/Widget'
@@ -22,9 +23,11 @@ import {
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
   timeToExpireAtom,
+  depositAddressAtom,
 } from '@/store/utila'
 import { useAtom } from 'jotai'
 import type { Network, Token } from '@/types/utila'
+import { SwapStatus } from '@/Models/SwapStatus'
 
 type NetworkToConnect = {
   DisplayName: string
@@ -33,9 +36,10 @@ type NetworkToConnect = {
 
 interface IProps {
   swapId?: string
+  className?: string
 }
 
-const Form: React.FC<IProps> = ({ swapId }) => {
+const Form: React.FC<IProps> = ({ swapId, className }) => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
   const { sourceNetworks, destinationNetworks } = isMainnet
     ? mainNetworks
@@ -51,13 +55,33 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     destinationAddressAtom
   )
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
-  const [, setSwapStatus] = useAtom(swapStatusAtom)
+  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setEthPrice] = useAtom(ethPriceAtom)
   const [, setSwapId] = useAtom(swapIdAtom)
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
-  const [, setMpcSignature] = useAtom(mpcSignatureAtom)
   const [, setTimeToExpire] = useAtom(timeToExpireAtom)
+  const [depositAddress, setDepositAddress] = useAtom(depositAddressAtom)
+
+  // timerRef
+  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  React.useEffect(() => {
+    if (!swapId) return
+    
+    if (swapStatus === SwapStatus.UserDepositPending) {
+      timerRef.current = setInterval(async () => {
+        getSwapByIdForDepositChecking (swapId)
+      }, 10 * 1000);
+    } else {
+      timerRef.current && clearInterval(timerRef.current);
+    }
+   
+    return () => {
+      timerRef.current && clearInterval(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [swapStatus, swapId]);
 
   React.useEffect(() => {
     if (sourceAsset) {
@@ -67,16 +91,37 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     }
   }, [sourceAsset])
 
+  const getSwapByIdForDepositChecking = async (swapId: string) => {
+    try {
+      const {
+        data: { data },
+      } = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
+      )
+
+      setSwapStatus(data.status)
+      
+      const userTransferTransaction = data?.transactions?.find((t: any) => t.status === 'user_transfer')?.transaction_hash
+      setUserTransferTransaction(userTransferTransaction ?? '')
+      const payoutTransaction = data?.transactions?.find((t: any) => t.status === 'payout')?.transaction_hash
+      setBridgeMintTransactionHash(payoutTransaction ?? '')
+
+      console.log("::swap data fetched")
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   const getSwapById = async (swapId: string) => {
     try {
       const {
         data: { data },
       } = await axios.get(
-        `/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
       )
       // set time to expire
-      console.log('::swap data for utila: ', data)
-      setTimeToExpire(new Date(data.created_date).getTime())
+      setTimeToExpire(new Date(data.created_date).getTime() + 72 * 3600 * 1000)
+      // setTimeToExpire(new Date().getTime() + 30*1000) // now + 100
       const _sourceNetwork = sourceNetworks.find(
         (_n: Network) => _n.internal_name === data.source_network
       ) as Network
@@ -99,20 +144,19 @@ const Form: React.FC<IProps> = ({ swapId }) => {
       setSourceAmount(data.requested_amount)
       setSwapStatus(data.status)
       setSwapId(data.id)
+      setDepositAddress(data.deposit_address.split('###')?.[1])
       setDestinationAddress(data.destination_address)
 
       const userTransferTransaction = data?.transactions?.find(
         (t: any) => t.status === 'user_transfer'
       )?.transaction_hash
       setUserTransferTransaction(userTransferTransaction ?? '')
-      const mpcSignTransaction = data?.transactions?.find(
-        (t: any) => t.status === 'mpc_sign'
-      )?.transaction_hash
-      setMpcSignature(mpcSignTransaction ?? '')
       const payoutTransaction = data?.transactions?.find(
         (t: any) => t.status === 'payout'
       )?.transaction_hash
       setBridgeMintTransactionHash(payoutTransaction ?? '')
+
+      console.log("::swap data fetched")
     } catch (err) {
       console.log(err)
     }
@@ -122,8 +166,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
     swapId && getSwapById(swapId)
   }, [swapId])
 
-  const [showConnectNetworkModal, setShowConnectNetworkModal] =
-    React.useState<boolean>(false)
+  const [showConnectNetworkModal, setShowConnectNetworkModal] = React.useState<boolean>(false)
   const [networkToConnect] = React.useState<NetworkToConnect>()
 
   return (
@@ -140,7 +183,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
         />
       </Modal>
 
-      <Widget className="sm:min-h-[504px] max-w-lg">
+      <Widget className={`sm:min-h-[504px] max-w-lg ${className}`}>
         <Widget.Content>
           <ResizablePanel>
             {sourceNetwork &&
@@ -149,7 +192,7 @@ const Form: React.FC<IProps> = ({ swapId }) => {
             destinationNetwork &&
             destinationAsset &&
             destinationAddress ? (
-              <div className="min-h-[450px] justify-center items-center flex">
+              <div className="min-h-[450px] w-full justify-center items-center flex">
                 <SwapDetails
                   sourceNetwork={sourceNetwork}
                   sourceAsset={sourceAsset}
@@ -157,17 +200,18 @@ const Form: React.FC<IProps> = ({ swapId }) => {
                   destinationAsset={destinationAsset}
                   destinationAddress={destinationAddress}
                   sourceAmount={sourceAmount}
+                  getSwapById={getSwapById}
                 />
               </div>
             ) : (
-              <div className="w-full h-[430px]">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
+              <div className="min-h-[450px] w-full justify-center items-center flex">
+                <div className="animate-pulse w-full flex space-x-4">
+                    <div className="flex-1 space-y-6 py-1">
+                      <div className="h-32 bg-level-3 rounded-lg"></div>
+                      <div className="h-40 bg-level-3 rounded-lg"></div>
+                      <div className="h-12 bg-level-3 rounded-lg"></div>
+                    </div>
                   </div>
-                </div>
               </div>
             )}
           </ResizablePanel>

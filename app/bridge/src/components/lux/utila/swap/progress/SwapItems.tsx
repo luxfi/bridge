@@ -7,12 +7,12 @@ import { truncateDecimals } from "@/components/utils/RoundDecimals";
 import type { Network, Token } from "@/types/utila";
 
 interface IProps {
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
-  destinationAddress: string;
-  sourceAmount: string;
+  sourceNetwork: Network
+  sourceAsset: Token
+  destinationNetwork: Network
+  destinationAsset: Token
+  destinationAddress: string
+  sourceAmount: string
 }
 
 const SwapItems: React.FC<IProps> = ({
