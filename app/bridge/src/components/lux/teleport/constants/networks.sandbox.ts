@@ -516,7 +516,7 @@ export const networks: Network[] = [
       {
         name: 'Zoo LUX',
         asset: 'ZLUX',
-        logo: 'https://cdn.lux.network/bridge/currencies/zoo/zlux.png',
+        logo: 'https://cdn.lux.network/bridge/currencies/zoo/zlux.svg',
         contract_address: '0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88',
         decimals: 18,
         status: 'active',

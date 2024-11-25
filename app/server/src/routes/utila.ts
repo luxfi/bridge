@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { verifyUtilaSignature } from "@/lib/utila";
 import logger from "@/logger";
+import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila";
 
 const router: Router = Router();
 
@@ -9,36 +10,39 @@ const router: Router = Router();
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
  */
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
-  logger.info("Received a POST request to /v1/utila/webhook", {
-    headers: req.headers,
-    body: req.body,
-  });
+  logger.info(">> Received a POST request to /v1/utila/webhook");
+  // logger.info("Received a POST request to /v1/utila/webhook", {
+  //   headers: req.headers,
+  //   body: req.body,
+  // });
 
   try {
     const eventType = req.body.type;
 
-    logger.info(`Processing event type: ${eventType}`);
+    logger.info(`>> Processing event type: [${eventType}]`);
 
     switch (eventType) {
-      case "TRANSACTION_CREATED":
-        logger.info("Transaction Created", { eventData: req.body });
+      case "TRANSACTION_CREATED": {
+        await handleTransactionCreated (req.body)
         break;
+      }
 
-      case "TRANSACTION_STATE_UPDATED":
-        logger.info("Transaction State Updated", { eventData: req.body });
+      case "TRANSACTION_STATE_UPDATED": {
+        await handleTransactionStateUpdated (req.body)
         break;
-
+      }
+        
       case "WALLET_CREATED":
-        logger.info("Wallet Created", { eventData: req.body });
+        // logger.info("Wallet Created", { eventData: req.body });
         break;
 
       case "WALLET_ADDRESS_CREATED":
-        logger.info("Wallet Address Created", { eventData: req.body });
+        // logger.info("Wallet Address Created", { eventData: req.body });
         break;
 
       default:
-        logger.warn("Unknown event type received", { eventData: req.body });
-        return res.status(400).json({ error: "Unknown event type" });
+        // logger.warn("Unknown event type received", { eventData: req.body });
+        // return res.status(400).json({ error: "Unknown event type" });
     }
 
     res.status(200).json({ message: "Webhook received successfully" });

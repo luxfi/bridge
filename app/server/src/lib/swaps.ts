@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma"
 import { isValidAddress } from "@/lib/utils"
-import { statusMapping, SwapStatus } from "@/models/SwapStatus"
+import { statusMapping, SwapStatus, UtilaTransactionStateMapping } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"
 import { archiveWalletForExpire, createNewWalletForDeposit } from "./utila"
+import { UTILA_NETWORKS } from "@/config/constants"
+import logger from "@/logger"
 
 export interface SwapData {
   amount: number
@@ -118,20 +120,20 @@ export async function handleSwapCreation(data: SwapData) {
       }
     })
     // deposit actions
-    const depositAction = await prisma.depositAction.create({
-      data: {
-        type: use_teleporter ? "bridge_transfer" : "manual_deposit",
-        to_address: destination_address,
-        amount,
-        order_number: 0,
-        amount_in_base_units: "331000000000000",
-        network_id: Number(sourceNetwork?.id),
-        currency_id: Number(sourceCurrency?.id),
-        fee_currency_id: Number(nativeCurrency?.id),
-        call_data: null,
-        swap_id: swap.id
-      }
-    })
+    // const depositAction = await prisma.depositAction.create({
+    //   data: {
+    //     type: use_teleporter ? "bridge_transfer" : "manual_deposit",
+    //     to_address: destination_address,
+    //     amount,
+    //     order_number: 0,
+    //     amount_in_base_units: "331000000000000",
+    //     network_id: Number(sourceNetwork?.id),
+    //     currency_id: Number(sourceCurrency?.id),
+    //     fee_currency_id: Number(nativeCurrency?.id),
+    //     call_data: null,
+    //     swap_id: swap.id
+    //   }
+    // })
 
     // estimate swap rate
     const [sourcePrice, destinationPrice] = await Promise.all([getTokenPrice(source_asset), getTokenPrice(destination_asset)])
@@ -153,14 +155,14 @@ export async function handleSwapCreation(data: SwapData) {
     })
 
     const result = {
-      depositActions: [
-        {
-          ...depositAction,
-          network: sourceNetwork,
-          currency: sourceCurrency,
-          feeCurrency: nativeCurrency
-        }
-      ],
+      // depositActions: [
+      //   {
+      //     ...depositAction,
+      //     network: sourceNetwork,
+      //     currency: sourceCurrency,
+      //     feeCurrency: nativeCurrency
+      //   }
+      // ],
       swap_id: swap.id,
       swap: {
         ...swap,
@@ -250,19 +252,33 @@ export async function handlerGetSwap(id: string) {
 
 export async function handlerUpdateUserTransferAction(id: string, txHash: string, amount: number, from: string, to: string) {
   try {
+    let swap = await prisma.swap.findUnique({
+      where: { id },
+    })
+
     const transaction = await prisma.transaction.create({
       data: {
-        status: "user_transfer",
         type: TransactionType.Input,
+        status: "user_transfer",
         from: from,
         to: to,
+        amount: amount,
         transaction_hash: txHash,
         confirmations: 2,
         max_confirmations: 2,
-        amount: amount,
         swap: {
           connect: {
             id: id
+          }
+        },
+        network: {
+          connect: {
+            id: swap?.source_network_id
+          }
+        },
+        currency: {
+          connect: {
+            id: swap?.source_asset_id
           }
         }
       }
@@ -278,66 +294,7 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
         }
       }
     })
-    const swap = await prisma.swap.findUnique({
-      where: { id },
-      include: {
-        source_network: true,
-        source_asset: true,
-        destination_network: true,
-        destination_asset: true,
-        deposit_actions: true,
-        quotes: true,
-        transactions: {
-          include: {
-            currency: true,
-            network: {
-              include: { currencies: false }
-            }
-          }
-        }
-      }
-    })
-    return {
-      ...swap
-    }
-  } catch (error: any) {
-    console.log(error)
-    //catchPrismaKnowError(error)
-    throw new Error(`Error getting swap: ${error?.message}`)
-  }
-}
-
-export async function handlerUpdatePayoutAction(id: string, txHash: string, amount: number, from: string, to: string) {
-  try {
-    const transaction = await prisma.transaction.create({
-      data: {
-        status: "payout",
-        type: TransactionType.Output,
-        from: from,
-        to: to,
-        transaction_hash: txHash,
-        confirmations: 2,
-        max_confirmations: 2,
-        amount: amount,
-        swap: {
-          connect: {
-            id: id
-          }
-        }
-      }
-    })
-    await prisma.swap.update({
-      where: { id },
-      data: {
-        status: "payout_success",
-        transactions: {
-          connect: {
-            id: transaction.id // Connect the new transaction to the swap
-          }
-        }
-      }
-    })
-    const swap = await prisma.swap.findUnique({
+    swap = await prisma.swap.findUnique({
       where: { id },
       include: {
         source_network: true,
@@ -366,6 +323,169 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
   }
 }
 /**
+ * 
+ * @param id ]
+ * @param txHash 
+ * @param amount 
+ * @param from 
+ * @param to 
+ * @returns 
+ */
+export async function handlerUpdatePayoutAction(id: string, txHash: string, amount: number, from: string, to: string) {
+  try {
+    let swap = await prisma.swap.findUnique({
+      where: { id }
+    })
+    const transaction = await prisma.transaction.create({
+      data: {
+        status: "payout",
+        type: TransactionType.Output,
+        from: from,
+        to: to,
+        amount: amount,
+        transaction_hash: txHash,
+        confirmations: 2,
+        max_confirmations: 2,
+        swap: {
+          connect: {
+            id: id
+          }
+        },
+        network: {
+          connect: {
+            id: swap?.destination_network_id
+          }
+        },
+        currency: {
+          connect: {
+            id: swap?.destination_asset_id
+          }
+        }
+      }
+    })
+    await prisma.swap.update({
+      where: { id },
+      data: {
+        status: "payout_success",
+        transactions: {
+          connect: {
+            id: transaction.id // Connect the new transaction to the swap
+          }
+        }
+      }
+    })
+    swap = await prisma.swap.findUnique({
+      where: { id },
+      include: {
+        source_network: true,
+        source_asset: true,
+        destination_network: true,
+        destination_asset: true,
+        deposit_actions: true,
+        quotes: true,
+        transactions: {
+          include: {
+            currency: true,
+            network: {
+              include: { currencies: false }
+            }
+          }
+        }
+      }
+    })
+    return {
+      ...swap
+    }
+  } catch (error: any) {
+    console.log(error)
+    //catchPrismaKnowError(error)
+    throw new Error(`Error getting swap: ${error?.message}`)
+  }
+}
+/**
+ * 
+ * @param state 
+ * @param hash 
+ * @param amount 
+ * @param asset 
+ * @param sourceAddress 
+ * @param destinationAddress 
+ * @returns 
+ */
+export async function handlerDepositAction (state: number, hash: string, amount: number, asset: string, sourceAddress: string, destinationAddress: string) {
+  console.log({
+    sourceAddress,
+    destinationAddress,
+    amount,
+    hash,
+    status: UtilaTransactionStateMapping[state]
+  })
+  const swap = await prisma.swap.findFirst({
+    where: {
+      deposit_address: {
+        endsWith: destinationAddress
+      }
+    },
+    include: {
+      deposit_actions: true,
+      source_network: true,
+      source_asset: true
+    }
+  })
+
+  if (!swap) throw "There is no swap for this Tx"
+  // check if action already exists
+  const depositActions = swap.deposit_actions;
+  const _depositAction = depositActions.find(d => d.transaction_hash === hash)
+  // checking Utila network
+  const utilaNetwork = UTILA_NETWORKS [swap.source_network.internal_name as string]
+  if (!utilaNetwork) throw "Unrecognized Utila Network"
+  // checking network and asset match
+  if (utilaNetwork.assets [swap.source_asset.asset as string] !== asset) throw "Unrecognized Token Deposit"
+  // if deposit action exists, update it else create new one
+  if (_depositAction) {
+    await prisma.depositAction.updateMany({
+      where: {
+        transaction_hash: hash
+      },
+      data: {
+        status: UtilaTransactionStateMapping[state],
+        confirmations: state === 13 ? 10 : 0,
+        max_confirmations: 10,
+      }
+    })
+    logger.info(`>> Updated Deposit Action for Swap [${swap.id}]`)
+  } else {
+    await prisma.depositAction.create({
+      data: {
+        status: UtilaTransactionStateMapping[state],
+        from: sourceAddress,
+        to: destinationAddress,
+        amount: amount,
+        transaction_hash: hash,
+        confirmations: state === 13 ? 10 : 0,
+        max_confirmations: 10,
+        swap: {
+          connect: {
+            id: swap.id
+          }
+        },
+        network: {
+          connect: {
+            id: swap?.source_network_id
+          }
+        },
+        currency: {
+          connect: {
+            id: swap?.destination_network_id
+          }
+        }
+      }
+    })
+    logger.info(`>> Created Deposit Action for Swap [${swap.id}]`)
+  }
+}
+/**
  * make swap expire if there is no deposit for 72h
  * @param id
  * @returns
@@ -387,25 +507,38 @@ export async function handlerSwapExpire(id: string) {
   } catch (error: any) {
     console.log(error)
     //catchPrismaKnowError(error)
-    throw new Error(`Error getting swap: ${error?.message}`)
+    throw new Error(`Error Getting Swap: ${error?.message}`)
   }
 }
 
 export async function handlerUpdateMpcSignAction(id: string, txHash: string, amount: number, from: string, to: string) {
   try {
+    let swap = await prisma.swap.findUnique({
+      where: { id }
+    })
     const transaction = await prisma.transaction.create({
       data: {
         status: "mpc_sign",
         type: TransactionType.Input,
         from: from,
         to: to,
+        amount: amount,
         transaction_hash: txHash,
         confirmations: 2,
         max_confirmations: 2,
-        amount: amount,
         swap: {
           connect: {
             id: id
+          }
+        },
+        network: {
+          connect: {
+            id: swap?.source_network_id
+          }
+        },
+        currency: {
+          connect: {
+            id: swap?.source_asset_id
           }
         }
       }
@@ -421,7 +554,7 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
         }
       }
     })
-    const swap = await prisma.swap.findUnique({
+    swap = await prisma.swap.findUnique({
       where: { id },
       include: {
         source_network: true,
@@ -496,8 +629,6 @@ export async function handlerGetSwaps(address: string, isDeleted: boolean | unde
 export async function handlerGetHasBySwaps(address: string) {
   try {
     const isadd = isValidAddress(address)
-    console.log("🚀 ~ handlerGetHasBySwaps ~ isadd:", isadd)
-
     if (isadd) {
       return await handlerGetSwaps(address, false)
     } else {
@@ -521,9 +652,6 @@ export async function handlerGetHasBySwaps(address: string) {
           }
         }
       })
-      console.timeEnd()
-      console.log(transaction)
-
       return [{ ...transaction.swap }]
     }
   } catch (error: any) {
@@ -576,81 +704,6 @@ export async function handlerGetExplorer(status: string[]) {
   } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
-  }
-}
-
-export async function handlerUpdateSwaps(swapData: { id: string }) {
-  try {
-    await prisma.swap.updateMany({
-      where: { id: swapData.id },
-      data: { ...swapData }
-    })
-    return "success"
-  } catch (error: any) {
-    //catchPrismaKnowError(error)
-    throw new Error(`Error deleting swaps: ${error?.message}`)
-  }
-}
-
-export async function handlerUpdateSwap(swapData: UpdateSwapData) {
-  try {
-    if (swapData.add_input_tx) {
-      await prisma.transaction.create({
-        data: {
-          status: "completed",
-          type: TransactionType.Input,
-          from: swapData.form,
-          to: swapData.to,
-          transaction_hash: swapData.add_input_tx,
-          confirmations: 2,
-          max_confirmations: 2,
-          amount: Number(swapData.amount),
-          swap: {
-            connect: {
-              id: swapData.id
-            }
-          }
-        }
-      })
-
-      await prisma.swap.update({
-        where: { id: swapData.id },
-        data: {
-          status: SwapStatus.BridgeTransferPending
-        }
-      })
-      return "success"
-    } else if (swapData.add_output_tx) {
-      await prisma.transaction.create({
-        data: {
-          status: "completed",
-          type: TransactionType.Output,
-          from: swapData.form,
-          to: swapData.to,
-          transaction_hash: swapData.add_output_tx,
-          confirmations: 2,
-          max_confirmations: 2,
-          amount: Number(swapData.amount),
-          swap: {
-            connect: {
-              id: swapData.id
-            }
-          }
-        }
-      })
-      await prisma.swap.update({
-        where: { id: swapData.id },
-        data: {
-          status: SwapStatus.Completed
-        }
-      })
-      return "success"
-    } else {
-      return "failed"
-    }
-  } catch (error: any) {
-    //catchPrismaKnowError(error)
-    throw new Error(`Error deleting swaps: ${error?.message}`)
   }
 }
 
