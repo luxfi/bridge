@@ -85,6 +85,8 @@ export const verifyUtilaSignature = (
   res: Response,
   next: NextFunction
 ): void => {
+  const signature = req.headers["x-utila-signature"] as string;
+
   // Log all incoming request details
   logger.info("Incoming webhook request", {
     method: req.method,
@@ -92,28 +94,49 @@ export const verifyUtilaSignature = (
     headers: req.headers,
   });
 
-  const signature = req.headers["x-utila-signature"] as string;
-
   if (!signature) {
-    logger.warn("Missing x-utila-signature header");
-    return next(); // Skip verification if the header is missing
+    logger.warn("Missing x-utila-signature header", {
+      headers: req.headers,
+    });
+    res.status(200).send("Event received, but signature missing");
+    return next(); // Skip signature verification, but allow further processing
   }
 
   try {
+    if (!(req.body instanceof Buffer)) {
+      logger.error("Request body is not a Buffer. Ensure express.raw() middleware is used.", {
+        headers: req.headers,
+      });
+      res.status(200).send("Event received, but request body misconfigured");
+      return next(); // Allow further processing
+    }
+
     const rawData = req.body.toString("utf8"); // Convert Buffer to string
 
+    logger.info("Webhook payload received", {
+      rawPayload: rawData,
+    });
+
     if (!verifySignature(signature, rawData, utilaPublicKey)) {
-      logger.warn("Signature verification failed", { signature, rawData });
-      res.status(401).send("Invalid signature");
-      return
+      logger.warn("Signature verification failed", {
+        signature,
+        rawPayload: rawData,
+      });
+      res.status(200).send("Event received, but signature verification failed");
+      return next(); // Allow further processing despite the invalid signature
     }
 
     logger.info("Webhook signature verified successfully");
     req.body = JSON.parse(rawData); // Parse raw JSON body
+    res.status(200).send("Event received and verified");
     next(); // Continue to the next middleware
   } catch (error) {
-    logger.error("Error during signature verification", { error });
-    res.status(400).json({ error: "Invalid JSON payload or signature" });
+    logger.error("Error during signature verification", {
+      error,
+      headers: req.headers,
+    });
+    res.status(200).send("Event received, but an error occurred during processing");
+    next(); // Allow further processing despite the error
   }
 };
 
