@@ -49,6 +49,7 @@ try {
   app.use("/api/networks", networks);
   app.use("/api/exchanges", exchanges);
   app.use("/v1/utila", utila);
+  app.use("/webhook/utila", utila); // for backwards compat
 
   // Root endpoint
   app.get("/", (req: Request, res: Response) => {
