@@ -41,21 +41,7 @@ export type UpdateSwapData = {
  * @returns swap result
  */
 export async function handleSwapCreation(data: SwapData) {
-
-  const {
-    amount,
-    source_network,
-    source_exchange,
-    source_asset,
-    source_address,
-    destination_network,
-    destination_exchange,
-    destination_asset,
-    destination_address,
-    refuel,
-    use_deposit_address,
-    use_teleporter
-  } = data
+  const { amount, source_network, source_exchange, source_asset, source_address, destination_network, destination_exchange, destination_asset, destination_address, refuel, use_deposit_address, use_teleporter } = data
 
   try {
     // source network
@@ -86,9 +72,10 @@ export async function handleSwapCreation(data: SwapData) {
       }
     })
 
-    let deposit_address = ''
-    if (use_deposit_address) { // in the case of using utila mpc wallet
-      const wallet = await createNewWalletForDeposit(source_network);
+    let deposit_address = ""
+    if (use_deposit_address) {
+      // in the case of using utila mpc wallet
+      const wallet = await createNewWalletForDeposit(source_network)
       deposit_address = `${wallet.name}###${wallet.addresses[0].address}`
     }
 
@@ -253,7 +240,7 @@ export async function handlerGetSwap(id: string) {
 export async function handlerUpdateUserTransferAction(id: string, txHash: string, amount: number, from: string, to: string) {
   try {
     let swap = await prisma.swap.findUnique({
-      where: { id },
+      where: { id }
     })
 
     const transaction = await prisma.transaction.create({
@@ -323,13 +310,13 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
   }
 }
 /**
- * 
+ *
  * @param id ]
- * @param txHash 
- * @param amount 
- * @param from 
- * @param to 
- * @returns 
+ * @param txHash
+ * @param amount
+ * @param from
+ * @param to
+ * @returns
  */
 export async function handlerUpdatePayoutAction(id: string, txHash: string, amount: number, from: string, to: string) {
   try {
@@ -403,22 +390,23 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
   }
 }
 /**
- * 
- * @param state 
- * @param hash 
- * @param amount 
- * @param asset 
- * @param sourceAddress 
- * @param destinationAddress 
- * @returns 
+ *
+ * @param state
+ * @param hash
+ * @param amount
+ * @param asset
+ * @param sourceAddress
+ * @param destinationAddress
+ * @returns
  */
-export async function handlerDepositAction (state: number, hash: string, amount: number, asset: string, sourceAddress: string, destinationAddress: string) {
+export async function handlerDepositAction(state: number, hash: string, amount: number, asset: string, sourceAddress: string, destinationAddress: string, type: string) {
   console.log({
     sourceAddress,
     destinationAddress,
     amount,
     hash,
-    status: UtilaTransactionStateMapping[state]
+    status: UtilaTransactionStateMapping[state],
+    type
   })
   const swap = await prisma.swap.findFirst({
     where: {
@@ -435,13 +423,13 @@ export async function handlerDepositAction (state: number, hash: string, amount:
 
   if (!swap) throw "There is no swap for this Tx"
   // check if action already exists
-  const depositActions = swap.deposit_actions;
+  const depositActions = swap.deposit_actions
   const _depositAction = depositActions.find((d: any) => d.transaction_hash === hash)
   // checking Utila network
-  const utilaNetwork = UTILA_NETWORKS [swap.source_network.internal_name as string]
+  const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
   if (!utilaNetwork) throw "Unrecognized Utila Network"
   // checking network and asset match
-  if (utilaNetwork.assets [swap.source_asset.asset as string] !== asset) throw "Unrecognized Token Deposit"
+  if (utilaNetwork.assets[swap.source_asset.asset as string] !== asset) throw "Unrecognized Token Deposit"
   // if deposit action exists, update it else create new one
   if (_depositAction) {
     await prisma.depositAction.updateMany({
@@ -451,10 +439,10 @@ export async function handlerDepositAction (state: number, hash: string, amount:
       data: {
         status: UtilaTransactionStateMapping[state],
         confirmations: state === 13 ? 10 : 0,
-        max_confirmations: 10,
+        max_confirmations: 10
       }
     })
-    logger.info(`>> Updated Deposit Action for Swap [${swap.id}]`)
+    console.log(`>> Successfully Updated Deposit Action for Swap [${swap.id}]`)
   } else {
     await prisma.depositAction.create({
       data: {
@@ -482,7 +470,7 @@ export async function handlerDepositAction (state: number, hash: string, amount:
         }
       }
     })
-    logger.info(`>> Created Deposit Action for Swap [${swap.id}]`)
+    console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
   }
 }
 /**
@@ -497,7 +485,7 @@ export async function handlerSwapExpire(id: string) {
     })
     if (!swap) throw { message: "No swap found for swapId" }
     const wallet = swap.deposit_address?.split("#")?.[0]
-    archiveWalletForExpire (wallet as string)
+    archiveWalletForExpire(wallet as string)
     await prisma.swap.update({
       where: { id },
       data: {

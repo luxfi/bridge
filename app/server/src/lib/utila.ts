@@ -93,60 +93,27 @@ export const verifyUtilaSignature = (
   try {
     const signature = req.headers["x-utila-signature"] as string;
     // Log all incoming request details
-    logger.info(">> Incoming webhook request", {
+    logger.info (">> Incoming webhook request")
+    console.log ({
       signature,
-      payload: req.body
+      body: req.body
     })
 
     if (!signature) {
-      logger.warn("Missing x-utila-signature header");
-      throw new Error("Missing x-utila-signature header");
+      console.error(">> Missing x-utila-signature Header")
+      throw new Error("Missing x-utila-signature header")
     }
 
     const rawData = JSON.stringify(req.body)
     if (!verifySignature(signature, rawData, utilaPublicKey)) {
-      logger.warn(">> Signature verification failed", {
-        signature,
-        rawPayload: rawData,
-      });
-      return next() // Allow further processing despite the invalid signature
+      console.error(">> Signature Verification Failed")
+      throw new Error("Signature verification failed")
     }
-    logger.info("Webhook signature verified successfully")
+    console.info(">> Webhook signature verified successfully")
     next ()
   } catch (err: any) {
     res.status(401).send({ error: err?.message })
   }
-
-  // try {
-  //   if (!(req.body instanceof Buffer)) {
-  //     logger.warn(">> Request body is not a Buffer. Ensure express.raw() middleware is used.");
-  //     return next(); // Allow further processing
-  //   }
-
-  //   const rawData = req.body.toString("utf8"); // Convert Buffer to string
-
-  //   logger.info("Webhook payload received", {
-  //     rawPayload: rawData,
-  //   });
-
-  //   if (!verifySignature(signature, rawData, utilaPublicKey)) {
-  //     logger.warn("Signature verification failed", {
-  //       signature,
-  //       rawPayload: rawData,
-  //     });
-  //     return next(); // Allow further processing despite the invalid signature
-  //   }
-
-  //   logger.info("Webhook signature verified successfully");
-  //   req.body = JSON.parse(rawData); // Parse raw JSON body
-  //   next(); // Continue to the next middleware
-  // } catch (error) {
-  //   logger.warn("Error during signature verification", {
-  //     error,
-  //     // headers: req.headers,
-  //   });
-  //   next(); // Allow further processing despite the error
-  // }
 };
 
 /**
@@ -234,7 +201,7 @@ export const archiveWalletForExpire = async (name: string) => {
 
 export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATED) => {
   try {
-    logger.info(">> New Transaction Created");
+    console.info(">> Processing for TRANSACTION_CREATED");
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
@@ -251,16 +218,17 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
       Number(amount),
       asset,
       sourceAddress?.value as string,
-      destinationAddress?.value as string
+      destinationAddress?.value as string,
+      "TRANSACTION_CREATED"
     )
   } catch (err) {
-    console.log(">> Error Parsing Webhook for Tx Creation", err)
+    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED", err)
   }
 }
 
 export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_STATE_UPDATED) => {
   try {
-    logger.info(">> Transaction State Updated");
+    console.info(">> Processing for TRANSACTION_STATE_UPDATED");
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
@@ -277,9 +245,10 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
       Number(amount),
       asset,
       sourceAddress?.value as string,
-      destinationAddress?.value as string
+      destinationAddress?.value as string,
+      "TRANSACTION_STATE_UPDATED"
     )
   } catch (err) {
-    console.log(">> Error Parsing Webhook for Tx State Update", err)
+    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED", err)
   }
 }
