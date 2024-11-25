@@ -1,10 +1,32 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { createVerify, constants } from "crypto";
 import { createGrpcClient, serviceAccountAuthStrategy } from "@luxfi/utila";
 import jwt from "jsonwebtoken";
 import { UTILA_NETWORKS } from "@/config/constants";
 import logger from "@/logger";
 
+/**
+ * Ensure required environment variables are set
+ */
+const validateEnv = (): void => {
+  const requiredEnvVars = [
+    "SERVICE_ACCOUNT_EMAIL",
+    "SERVICE_ACCOUNT_PRIVATE_KEY",
+  ];
+  let missingVars: string[] = [];
+  requiredEnvVars.forEach((key) => {
+    if (!process.env[key]) missingVars.push(key);
+  });
+
+  if (missingVars.length > 0) {
+    logger.warn(
+      `Utila integration is missing the following environment variables: ${missingVars.join(
+        ", "
+      )}`
+    );
+  }
+};
+validateEnv();
 /**
  * utila grpc client
  */
@@ -33,49 +55,7 @@ yj92azWBq1RbGHY+9/POguMCAwEAAQ==
 `;
 
 /**
- * Middleware to verify the webhook signature
- */
-export const verifyUtilaSignature = (req: Request, res: Response, next: Function) => {
-  let rawData = "";
-
-  req.on("data", (chunk) => {
-    rawData += chunk;
-  });
-
-  req.on("end", () => {
-    try {
-      const signature = req.headers["x-utila-signature"] as string;
-      logger.info("Verifying webhook signature", { signature });
-
-      if (!signature || !verifySignature(signature, rawData, utilaPublicKey)) {
-        logger.warn("Signature verification failed", { signature, body: rawData });
-        return res.status(401).send("Invalid signature");
-      }
-
-      logger.info("Webhook signature verified successfully");
-      req.body = JSON.parse(rawData); // Parse the raw data
-      logger.debug("Parsed webhook payload", req.body);
-      next(); // Pass control to the next handler
-    } catch (error) {
-      logger.error("Error during signature verification", {
-        error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : null,
-      });
-      res.status(400).json({ error: "Invalid JSON payload or signature" });
-    }
-  });
-
-  req.on("error", (error) => {
-    logger.error("Request error during signature verification", {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : null,
-    });
-    res.status(400).json({ error: "Request processing error" });
-  });
-};
-
-/**
- * Helper function to verify the signature
+ * Verify the signature of incoming requests
  */
 function verifySignature(signatureBase64: string, data: string, publicKey: string): boolean {
   try {
@@ -92,13 +72,43 @@ function verifySignature(signatureBase64: string, data: string, publicKey: strin
       signatureBuffer
     );
   } catch (error) {
-    logger.error("Error during signature verification", {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : null,
-    });
+    logger.error("Error during signature verification", { error });
     return false;
   }
 }
+
+/**
+ * Middleware to verify the webhook signature
+ */
+export const verifyUtilaSignature = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const signature = req.headers["x-utila-signature"] as string;
+
+  if (!signature) {
+    logger.warn("Missing x-utila-signature header");
+    return next(); // Skip verification if the header is missing
+  }
+
+  try {
+    const rawData = req.body.toString("utf8"); // Convert Buffer to string
+
+    if (!verifySignature(signature, rawData, utilaPublicKey)) {
+      logger.warn("Signature verification failed", { signature, rawData });
+      res.status(401).send("Invalid signature");
+      return
+    }
+
+    logger.info("Webhook signature verified successfully");
+    req.body = JSON.parse(rawData); // Parse raw JSON body
+    next(); // Continue to the next middleware
+  } catch (error) {
+    logger.error("Error during signature verification", { error });
+    res.status(400).json({ error: "Invalid JSON payload or signature" });
+  }
+};
 
 /**
  * Generate a JWT token
@@ -110,15 +120,75 @@ export const generateToken = (): string => {
     expiresIn: "1h",
     algorithm: "RS256",
   };
+
   try {
-    const token = jwt.sign({}, process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string, options);
-    logger.info("JWT token generated successfully");
-    return token;
+    return jwt.sign({}, process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string, options);
   } catch (error) {
-    logger.error("Error generating JWT token", {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : null,
-    });
+    logger.error("Error generating JWT token", { error });
     throw error;
+  }
+};
+
+/**
+ * Create a new wallet for deposit
+ */
+export const createNewWalletForDeposit = async (name: string) => {
+  try {
+    const network = UTILA_NETWORKS[name];
+    if (!network) throw new Error(`Unrecognized network - ${name}`);
+
+    const { vaults } = await client.listVaults({});
+    if (!vaults || vaults.length === 0) throw new Error("No vaults found");
+
+    const wallet = await _createNewWallet(
+      vaults[0].name,
+      network.name,
+      `${network.name}-${Date.now()}`
+    );
+
+    if (!wallet.addresses.length) throw new Error("No wallet address found");
+
+    return wallet;
+  } catch (error) {
+    logger.error("Error creating wallet for deposit", { error });
+    throw error;
+  }
+};
+
+/**
+ * Helper to create a new wallet
+ */
+const _createNewWallet = async (vaultName: string, network: string, displayName: string) => {
+  const payload = {
+    parent: vaultName,
+    wallet: {
+      displayName,
+      networks: [network],
+    },
+  };
+
+  const walletResponse = await client.createWallet(payload);
+  const { walletAddresses } = await client.listWalletAddresses({
+    parent: walletResponse?.wallet?.name,
+  });
+
+  return {
+    ...walletResponse.wallet,
+    addresses: walletAddresses || [],
+  };
+};
+
+/**
+ * Archive a wallet if expired without deposits
+ */
+export const archiveWalletForExpire = async (name: string) => {
+  try {
+    const { balances } = await client.queryBalances({ parent: name });
+    if (!balances.length) {
+      await client.archiveWallet({ name, allowMissing: true });
+      logger.info("Archived wallet successfully", { name });
+    }
+  } catch (error) {
+    logger.error("Error archiving expired wallet", { error });
   }
 };
