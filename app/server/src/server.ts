@@ -76,7 +76,7 @@ try {
   });
 
   // Use raw body for /v1/utila webhook
-  app.use("/v1/utila", express.raw({ type: "*/*", limit: "10mb" }));
+  // app.use("/v1/utila", );
 
   // Add all routes
   app.use("/api/swaps", swaps);

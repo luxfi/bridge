@@ -77,7 +77,7 @@ function verifySignature(signatureBase64: string, data: string, publicKey: strin
       signatureBuffer
     );
   } catch (error) {
-    logger.error("Error during signature verification", { error });
+    logger.error(">> Error during signature verification", { error });
     return false;
   }
 }
@@ -90,54 +90,63 @@ export const verifyUtilaSignature = (
   res: Response,
   next: NextFunction
 ): void => {
-  const signature = req.headers["x-utila-signature"] as string;
-
-  // Log all incoming request details
-  // logger.info("Incoming webhook request", {
-  //   method: req.method,
-  //   url: req.originalUrl,
-  //   headers: req.headers,
-  // });
-
-  if (!signature) {
-    logger.warn("Missing x-utila-signature header", {
-      headers: req.headers,
-    });
-    return next(); // Skip signature verification, but allow further processing
-  }
-
   try {
-    if (!(req.body instanceof Buffer)) {
-      logger.warn("Request body is not a Buffer. Ensure express.raw() middleware is used.", {
-        headers: req.headers,
-      });
-      return next(); // Allow further processing
+    const signature = req.headers["x-utila-signature"] as string;
+    // Log all incoming request details
+    logger.info(">> Incoming webhook request", {
+      signature,
+      payload: req.body
+    })
+
+    if (!signature) {
+      logger.warn("Missing x-utila-signature header");
+      throw new Error("Missing x-utila-signature header");
     }
 
-    const rawData = req.body.toString("utf8"); // Convert Buffer to string
-
-    logger.info("Webhook payload received", {
-      rawPayload: rawData,
-    });
-
+    const rawData = JSON.stringify(req.body)
     if (!verifySignature(signature, rawData, utilaPublicKey)) {
-      logger.warn("Signature verification failed", {
+      logger.warn(">> Signature verification failed", {
         signature,
         rawPayload: rawData,
       });
-      return next(); // Allow further processing despite the invalid signature
+      return next() // Allow further processing despite the invalid signature
     }
-
-    logger.info("Webhook signature verified successfully");
-    req.body = JSON.parse(rawData); // Parse raw JSON body
-    next(); // Continue to the next middleware
-  } catch (error) {
-    logger.warn("Error during signature verification", {
-      error,
-      headers: req.headers,
-    });
-    next(); // Allow further processing despite the error
+    logger.info("Webhook signature verified successfully")
+    next ()
+  } catch (err: any) {
+    res.status(401).send({ error: err?.message })
   }
+
+  // try {
+  //   if (!(req.body instanceof Buffer)) {
+  //     logger.warn(">> Request body is not a Buffer. Ensure express.raw() middleware is used.");
+  //     return next(); // Allow further processing
+  //   }
+
+  //   const rawData = req.body.toString("utf8"); // Convert Buffer to string
+
+  //   logger.info("Webhook payload received", {
+  //     rawPayload: rawData,
+  //   });
+
+  //   if (!verifySignature(signature, rawData, utilaPublicKey)) {
+  //     logger.warn("Signature verification failed", {
+  //       signature,
+  //       rawPayload: rawData,
+  //     });
+  //     return next(); // Allow further processing despite the invalid signature
+  //   }
+
+  //   logger.info("Webhook signature verified successfully");
+  //   req.body = JSON.parse(rawData); // Parse raw JSON body
+  //   next(); // Continue to the next middleware
+  // } catch (error) {
+  //   logger.warn("Error during signature verification", {
+  //     error,
+  //     // headers: req.headers,
+  //   });
+  //   next(); // Allow further processing despite the error
+  // }
 };
 
 /**
