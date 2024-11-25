@@ -47,6 +47,13 @@ try {
     next();
   });
 
+  app.use(
+    express.raw({
+      type: "*/*", // Handle all content types
+      limit: "10mb", // Optional payload size limit
+    })
+  );
+
   // Add all routes
   app.use("/api/swaps", swaps);
   app.use("/api/explorer", explorer);
