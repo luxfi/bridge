@@ -26,13 +26,30 @@ try {
 
   logger.info("Server initialization started...");
 
+  // Behind Proxy
+  app.set('trust proxy', true);
+
+
+  // Middleware to assign a unique ID to each request
+  const REQUEST_ID = Symbol('requestId');
+  app.use((req, res, next) => {
+    (req as any)[REQUEST_ID] = uuidv4();
+    next();
+  });
+
   // Middleware
   app.use(cors());
   app.use(express.urlencoded({ extended: true }));
 
+  morgan.token('referrer', (req) => req.headers['referer'] || '-');
+  morgan.token('origin', (req) => req.headers['origin'] || '-');
+  morgan.token('device', (req) => req.headers['user-agent'] || '-');
+
+  const customFormat = ':remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"';
+
   // HTTP request logging
   app.use(
-    morgan("combined", {
+    morgan(customFormat, {
       stream: {
         write: (message: string) => logger.http(message.trim()),
       },
