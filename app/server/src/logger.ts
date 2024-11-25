@@ -4,8 +4,12 @@ import { createLogger, format, transports } from "winston";
 const { combine, timestamp, printf, colorize, errors } = format;
 
 // Create a custom log format
-const logFormat = printf(({ level, message, timestamp, stack }) => {
-  return `${timestamp} [${level}]: ${stack || message}`;
+const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
+  let log = `${timestamp} [${level}]: ${stack || message}`;
+  if (Object.keys(meta).length > 0) {
+    log += `\n${JSON.stringify(meta, null, 2)}`;
+  }
+  return log;
 });
 
 // Create a Winston logger
@@ -19,23 +23,26 @@ const logger = createLogger({
   ),
   transports: [
     new transports.Console(), // Log to the console
-    new transports.File({ filename: "logs/app.log", level: "info" }), // Log info and above to app.log
-    new transports.File({ filename: "logs/errors.log", level: "error" }), // Log errors to errors.log
+    // Comment out file transports if you don't want to log to files
+    // new transports.File({ filename: "logs/app.log", level: "info" }),
+    // new transports.File({ filename: "logs/errors.log", level: "error" }),
   ],
   exceptionHandlers: [
-    new transports.File({ filename: "logs/exceptions.log" }), // Log uncaught exceptions
+    // Comment out exception handlers if not logging to files
+    // new transports.File({ filename: "logs/exceptions.log" }),
   ],
   rejectionHandlers: [
-    new transports.File({ filename: "logs/rejections.log" }), // Log unhandled promise rejections
+    // Comment out rejection handlers if not logging to files
+    // new transports.File({ filename: "logs/rejections.log" }),
   ],
 });
 
-// Ensure logs directory exists
-import fs from "fs";
-import path from "path";
-const logsDir = path.join(__dirname, "logs");
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
-}
+// Remove logs directory creation if not logging to files
+// import fs from "fs";
+// import path from "path";
+// const logsDir = path.join(__dirname, "logs");
+// if (!fs.existsSync(logsDir)) {
+//   fs.mkdirSync(logsDir);
+// }
 
 export default logger;
