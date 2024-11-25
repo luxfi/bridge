@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { handleError, verifyUtilaSignature } from "@/lib/utila";
+import { verifyUtilaSignature } from "@/lib/utila";
 import logger from "@/logger";
 
 const router: Router = Router();
@@ -9,46 +9,52 @@ const router: Router = Router();
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
  */
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
-  const eventType = req.body.type;
-
   logger.info("Received a POST request to /webhook", {
     headers: req.headers,
     body: req.body,
   });
 
   try {
+    const eventType = req.body.type;
+
     logger.info(`Processing event type: ${eventType}`);
 
     switch (eventType) {
       case "TRANSACTION_CREATED":
-        logger.info("Transaction Created", req.body);
+        logger.info("Transaction Created", { eventData: req.body });
         break;
 
       case "TRANSACTION_STATE_UPDATED":
-        logger.info("Transaction State Updated", req.body);
+        logger.info("Transaction State Updated", { eventData: req.body });
         break;
 
       case "WALLET_CREATED":
-        logger.info("Wallet Created", req.body);
+        logger.info("Wallet Created", { eventData: req.body });
         break;
 
       case "WALLET_ADDRESS_CREATED":
-        logger.info("Wallet Address Created", req.body);
+        logger.info("Wallet Address Created", { eventData: req.body });
         break;
 
       default:
-        logger.warn("Unknown event type received", req.body);
-        res.status(400).send("Unknown event type");
-        return;
+        logger.warn("Unknown event type received", { eventData: req.body });
+        return res.status(400).json({ error: "Unknown event type" });
     }
 
-    res.status(200).send("Webhook received successfully");
+    res.status(200).json({ message: "Webhook received successfully" });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorStack = error instanceof Error ? error.stack : null;
+
     logger.error("Error processing webhook", {
-      message: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : null,
+      message: errorMessage,
+      stack: errorStack,
     });
-    handleError(res, "Webhook Processing", error);
+
+    res.status(500).json({
+      error: "Internal Server Error",
+      details: errorMessage,
+    });
   }
 });
 
@@ -57,7 +63,7 @@ router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response
  */
 router.all("/webhook", (req: Request, res: Response) => {
   logger.warn(`Unsupported method ${req.method} on /webhook`);
-  res.status(405).send("Method Not Allowed");
+  res.status(405).json({ error: "Method Not Allowed" });
 });
 
 export default router;
