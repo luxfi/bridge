@@ -3,7 +3,7 @@ import { isValidAddress } from "@/lib/utils"
 import { statusMapping, SwapStatus } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"
-import { archiveWalletForExpire, createNewWalletForDeposit } from "./utilas"
+import { archiveWalletForExpire, createNewWalletForDeposit } from "./utila"
 
 export interface SwapData {
   amount: number
@@ -39,20 +39,20 @@ export type UpdateSwapData = {
  * @returns swap result
  */
 export async function handleSwapCreation(data: SwapData) {
-  
-  const { 
-    amount, 
-    source_network, 
-    source_exchange, 
-    source_asset, 
-    source_address, 
-    destination_network, 
-    destination_exchange, 
-    destination_asset, 
-    destination_address, 
-    refuel, 
-    use_deposit_address, 
-    use_teleporter 
+
+  const {
+    amount,
+    source_network,
+    source_exchange,
+    source_asset,
+    source_address,
+    destination_network,
+    destination_exchange,
+    destination_asset,
+    destination_address,
+    refuel,
+    use_deposit_address,
+    use_teleporter
   } = data
 
   try {
@@ -367,8 +367,8 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
 }
 /**
  * make swap expire if there is no deposit for 72h
- * @param id 
- * @returns 
+ * @param id
+ * @returns
  */
 export async function handlerSwapExpire(id: string) {
   try {

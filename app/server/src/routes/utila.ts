@@ -1,78 +1,59 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
+import { handleError, verifyUtilaSignature } from "@/lib/utila";
 import logger from "@/logger";
 
 const router: Router = Router();
 
 /**
- * Middleware for signature verification.
- * Replace the logic inside with your actual implementation.
+ * Webhook route to handle events
+ * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
  */
-const verifyUtilaSignature = (req: Request, res: Response, next: NextFunction) => {
+router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
+  const eventType = req.body.type;
+
+  logger.info("Received a POST request to /webhook", {
+    headers: req.headers,
+    body: req.body,
+  });
+
   try {
-    logger.info("Verifying signature...");
-    // Add your signature verification logic here
-    // If the signature is invalid, throw an error or respond with 401
-    next(); // Proceed if valid
-  } catch (error) {
-    logger.error("Signature verification failed", { error });
-    res.status(401).send("Invalid signature");
-  }
-};
+    logger.info(`Processing event type: ${eventType}`);
 
-/**
- * Webhook route to handle events.
- * @route POST /v1/utila/webhook
- */
-router.post(
-  "/webhook",
-  verifyUtilaSignature,
-  async (req: Request, res: Response) => {
-    logger.info("Received a POST request to /v1/utila/webhook", {
-      headers: req.headers,
-      body: req.body,
-    });
+    switch (eventType) {
+      case "TRANSACTION_CREATED":
+        logger.info("Transaction Created", req.body);
+        break;
 
-    const { type } = req.body;
+      case "TRANSACTION_STATE_UPDATED":
+        logger.info("Transaction State Updated", req.body);
+        break;
 
-    try {
-      logger.info(`Processing event type: ${type}`);
+      case "WALLET_CREATED":
+        logger.info("Wallet Created", req.body);
+        break;
 
-      switch (type) {
-        case "TRANSACTION_CREATED":
-          logger.info("Transaction Created:", req.body);
-          break;
+      case "WALLET_ADDRESS_CREATED":
+        logger.info("Wallet Address Created", req.body);
+        break;
 
-        case "TRANSACTION_STATE_UPDATED":
-          logger.info("Transaction State Updated:", req.body);
-          break;
-
-        case "WALLET_CREATED":
-          logger.info("Wallet Created:", req.body);
-          break;
-
-        case "WALLET_ADDRESS_CREATED":
-          logger.info("Wallet Address Created:", req.body);
-          break;
-
-        default:
-          logger.warn("Unknown event type received", req.body);
-          res.status(400).send("Unknown event type");
-          return;
-      }
-
-      res.status(200).send("Webhook processed successfully");
-    } catch (error) {
-      logger.error("Error processing webhook", {
-        message: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : null,
-      });
-      res.status(500).send("Internal Server Error");
+      default:
+        logger.warn("Unknown event type received", req.body);
+        res.status(400).send("Unknown event type");
+        return;
     }
+
+    res.status(200).send("Webhook received successfully");
+  } catch (error) {
+    logger.error("Error processing webhook", {
+      message: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : null,
+    });
+    handleError(res, "Webhook Processing", error);
   }
-);
+});
 
 /**
- * Fallback route for undefined HTTP methods on /webhook
+ * Catch-all for unsupported methods on /webhook
  */
 router.all("/webhook", (req: Request, res: Response) => {
   logger.warn(`Unsupported method ${req.method} on /webhook`);
