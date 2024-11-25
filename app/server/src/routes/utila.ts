@@ -9,7 +9,7 @@ const router: Router = Router();
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
  */
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
-  logger.info("Received a POST request to /webhook", {
+  logger.info("Received a POST request to /v1/utila/webhook", {
     headers: req.headers,
     body: req.body,
   });
