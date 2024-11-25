@@ -1,48 +1,71 @@
-import { createLogger, format, transports } from "winston";
+import winston, { createLogger, format, transports } from "winston";
+import { Request } from "express";
 
-// Define custom formats
-const { combine, timestamp, printf, colorize, errors } = format;
+// Define custom log levels
+const customLevels = {
+  levels: {
+    error: 0,
+    warn: 1,
+    info: 2,
+    http: 3, // For HTTP logs
+    verbose: 4,
+    debug: 5,
+    silly: 6,
+  },
+  colors: {
+    error: "red",
+    warn: "yellow",
+    info: "green",
+    http: "magenta",
+    verbose: "cyan",
+    debug: "blue",
+    silly: "gray",
+  },
+};
+
+// Add colors to Winston
+winston.addColors(customLevels.colors);
 
 // Create a custom log format
-const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
-  let log = `${timestamp} [${level}]: ${stack || message}`;
+const logFormat = format.printf(({ level, message, timestamp, stack, ...meta }) => {
+  let log = `${timestamp} [${level}] : ${stack || message}`;
   if (Object.keys(meta).length > 0) {
-    log += `\n${JSON.stringify(meta, null, 2)}`;
+    log += ` ${JSON.stringify(meta)}`;
   }
   return log;
 });
 
 // Create a Winston logger
 const logger = createLogger({
-  level: process.env.LOG_LEVEL || "debug", // Default log level
-  format: combine(
-    colorize(), // Add colors to log levels
-    timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), // Add timestamps
-    errors({ stack: true }), // Include stack trace for errors
+  levels: customLevels.levels,
+  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === "production" ? "info" : "debug"), // Adjust log level based on environment
+  format: format.combine(
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), // Add timestamps
+    format.errors({ stack: true }), // Include stack trace for errors
+    format.splat(), // Enable string interpolation
     logFormat // Apply custom format
   ),
   transports: [
-    new transports.Console(), // Log to the console
-    // Comment out file transports if you don't want to log to files
+    new transports.Console({
+      format: format.combine(
+        format.colorize({ all: true }), // Colorize all logs
+        logFormat
+      ),
+    }),
+    // Uncomment and configure file transports if needed
     // new transports.File({ filename: "logs/app.log", level: "info" }),
     // new transports.File({ filename: "logs/errors.log", level: "error" }),
   ],
   exceptionHandlers: [
-    // Comment out exception handlers if not logging to files
+    // Uncomment and configure if logging exceptions to files
     // new transports.File({ filename: "logs/exceptions.log" }),
   ],
   rejectionHandlers: [
-    // Comment out rejection handlers if not logging to files
+    // Uncomment and configure if logging rejections to files
     // new transports.File({ filename: "logs/rejections.log" }),
   ],
+  exitOnError: false, // Do not exit on handled exceptions
 });
 
-// Remove logs directory creation if not logging to files
-// import fs from "fs";
-// import path from "path";
-// const logsDir = path.join(__dirname, "logs");
-// if (!fs.existsSync(logsDir)) {
-//   fs.mkdirSync(logsDir);
-// }
-
+// Export the logger
 export default logger;
