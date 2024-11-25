@@ -1,9 +1,14 @@
-import { Router, Request, Response, NextFunction } from "express";
-import { createVerify, constants } from "crypto";
-import { createGrpcClient, serviceAccountAuthStrategy } from "@luxfi/utila";
 import jwt from "jsonwebtoken";
-import { UTILA_NETWORKS } from "@/config/constants";
 import logger from "@/logger";
+import { UTILA_NETWORKS } from "@/config/constants";
+import { createVerify, constants } from "crypto";
+import { Request, Response, NextFunction } from "express";
+import { createGrpcClient, serviceAccountAuthStrategy } from "@luxfi/utila";
+import { UTILA_TRANSACTION_CREATED, UTILA_TRANSACTION_STATE_UPDATED } from "@/types/utila"
+import { serializedData } from "./utils";
+import { prisma } from "./prisma";
+import { error } from "console";
+import { handlerDepositAction } from "./swaps";
 
 /**
  * Ensure required environment variables are set
@@ -88,11 +93,11 @@ export const verifyUtilaSignature = (
   const signature = req.headers["x-utila-signature"] as string;
 
   // Log all incoming request details
-  logger.info("Incoming webhook request", {
-    method: req.method,
-    url: req.originalUrl,
-    headers: req.headers,
-  });
+  // logger.info("Incoming webhook request", {
+  //   method: req.method,
+  //   url: req.originalUrl,
+  //   headers: req.headers,
+  // });
 
   if (!signature) {
     logger.warn("Missing x-utila-signature header", {
@@ -217,3 +222,55 @@ export const archiveWalletForExpire = async (name: string) => {
     logger.error("Error archiving expired wallet", { error });
   }
 };
+
+export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATED) => {
+  try {
+    logger.info(">> New Transaction Created");
+    const { transaction } = await client.getTransaction({
+      name: payload.resource
+    })
+    if (!transaction) throw "No transaction"
+    const transfers = transaction.transfers || []
+    if (transfers.length === 0) throw "No transfers" 
+
+    const { state, hash } = transaction
+    const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
+
+    await handlerDepositAction (
+      state,
+      hash as string,
+      Number(amount),
+      asset,
+      sourceAddress?.value as string,
+      destinationAddress?.value as string
+    )
+  } catch (err) {
+    console.log(">> Error Parsing Webhook for Tx Creation", err)
+  }
+}
+
+export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_STATE_UPDATED) => {
+  try {
+    logger.info(">> Transaction State Updated");
+    const { transaction } = await client.getTransaction({
+      name: payload.resource
+    })
+    if (!transaction) throw "No transaction"
+    const transfers = transaction.transfers || []
+    if (transfers.length === 0) throw "No transfers"
+
+    const { state, hash } = transaction
+    const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
+
+    await handlerDepositAction (
+      state,
+      hash as string,
+      Number(amount),
+      asset,
+      sourceAddress?.value as string,
+      destinationAddress?.value as string
+    )
+  } catch (err) {
+    console.log(">> Error Parsing Webhook for Tx State Update", err)
+  }
+}
