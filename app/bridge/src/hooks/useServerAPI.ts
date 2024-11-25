@@ -13,7 +13,11 @@ export const useServerAPI = () => {
     (res) => res,
     (err) => {
       console.log("::axios error:", err)
-      notify(String(err?.response?.data?.error), 'error')
+      if (String(err).includes('Network Error')) {
+        notify('Network Conenction Error. Please check your internet connection', 'error')
+      } else {
+        notify(String(err?.response?.data?.error), 'error')
+      }
       return Promise.reject(err);
     }
   );
