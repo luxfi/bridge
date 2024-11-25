@@ -14,9 +14,9 @@ import tokens from "@/routes/tokens";
 import limits from "@/routes/limits";
 import quotes from "@/routes/quotes";
 import rate from "@/routes/rate";
+import utila from "@/routes/utila";
 import networks from "@/routes/networks";
 import exchanges from "@/routes/exchanges";
-import utila from "@/routes/utila";
 
 try {
   dotenv.config();
@@ -24,7 +24,7 @@ try {
   const app: Express = express();
   const port: number = process.env.PORT ? Number(process.env.PORT) : 5000;
 
-  logger.info("Server initialization started...");
+  logger.info(">> Server Initialization Started");
 
   // Behind Proxy
   app.set('trust proxy', true);
@@ -49,22 +49,22 @@ try {
   morgan.token('device', (req) => req.headers['user-agent'] || '-');
   morgan.token('id',     (req) => (req as any)[REQUEST_ID] || '-');
 
-  const customFormat = ':id :remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"';
-
+  
   // HTTP request logging
-  app.use(
-    morgan(customFormat, {
-      stream: {
-        write: (message: string) => logger.http(message.trim()),
-      },
-    })
-  );
+  // const customFormat = ':id :remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"';
+  // app.use(
+  //   morgan(customFormat, {
+  //     stream: {
+  //       write: (message: string) => logger.http(message.trim()),
+  //     },
+  //   })
+  // );
 
-  app.use((req, res, next) => {
-    logger.info('Request Headers:', req.headers);
-    logger.info('Request Body:', req.body);
-    next();
-  });
+  // app.use((req, res, next) => {
+  //   logger.info('Request Headers:', req.headers);
+  //   logger.info('Request Body:', req.body);
+  //   next();
+  // });
 
   // Backwards compatibility for legacy webhook paths
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -116,7 +116,7 @@ try {
 
   // Start the server
   app.listen(port, () => {
-    logger.info(`Server is running on port ${port}`);
+    logger.info(`>> Server Is Running On Port ${port}`);
   });
 } catch (error) {
   // Catch any initialization errors
