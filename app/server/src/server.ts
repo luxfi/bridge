@@ -39,6 +39,12 @@ try {
     })
   );
 
+  app.use((req, res, next) => {
+    logger.info('Request Headers:', req.headers);
+    logger.info('Request Body:', req.body);
+    next();
+  });
+
   // Backwards compatibility for legacy webhook paths
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.method === "POST" && req.path === "/webhook/utila") {
