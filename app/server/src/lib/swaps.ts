@@ -436,7 +436,7 @@ export async function handlerDepositAction (state: number, hash: string, amount:
   if (!swap) throw "There is no swap for this Tx"
   // check if action already exists
   const depositActions = swap.deposit_actions;
-  const _depositAction = depositActions.find(d => d.transaction_hash === hash)
+  const _depositAction = depositActions.find((d: any) => d.transaction_hash === hash)
   // checking Utila network
   const utilaNetwork = UTILA_NETWORKS [swap.source_network.internal_name as string]
   if (!utilaNetwork) throw "Unrecognized Utila Network"
