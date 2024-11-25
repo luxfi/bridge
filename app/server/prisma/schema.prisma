@@ -53,7 +53,6 @@ model Currency {
   is_native                   Boolean?
   listing_date                DateTime        @default(now())
   deposit_action_currency     DepositAction[] @relation("DepositActionCurrency")
-  deposit_action_fee_currency DepositAction[] @relation("DepositActionFeeCurrency")
   transaction                 Transaction[]
   network_id                  Int
   network                     Network         @relation(fields: [network_id], references: [id])
@@ -66,23 +65,29 @@ model Currency {
 }
 
 model DepositAction {
-  id                   Int      @id @default(autoincrement())
-  type                 String?  @default("transfer")
-  to_address           String?
-  amount               Float?
-  order_number         Int?
-  amount_in_base_units String?
+  id                Int       @id @default(autoincrement())
+  type              String?   @default("transfer")
+  status            String
+  from              String
+  to                String
+  amount            Float
+  transaction_hash  String
+  max_confirmations Int
+  confirmations     Int
+  created_date      DateTime  @default(now())
+  timestamp         DateTime  @default(now())
+
   network_id           Int
   network              Network  @relation(fields: [network_id], references: [id])
   currency_id          Int
   currency             Currency @relation("DepositActionCurrency", fields: [currency_id], references: [id])
-  fee_currency_id      Int
-  fee_currency         Currency @relation("DepositActionFeeCurrency", fields: [fee_currency_id], references: [id])
-  call_data            String?
-  swap_id              String   @unique @map("swap_id")
+  swap_id              String
   swap                 Swap     @relation(fields: [swap_id], references: [id])
 
   @@index([swap_id])
+  @@index([transaction_hash])
+  @@index([currency_id])
+  @@index([network_id])
 }
 
 model Swap {
@@ -119,25 +124,25 @@ model Swap {
 
 model Transaction {
   id                Int       @id @default(autoincrement())
+  type              String?   @default("transfer")
+  status            String
   from              String
   to                String
+  amount            Float
+  transaction_hash  String
+  max_confirmations Int
+  confirmations     Int
   created_date      DateTime  @default(now())
   timestamp         DateTime  @default(now())
-  transaction_hash  String
-  confirmations     Int
-  max_confirmations Int
-  amount            Float
-  type              String
-  status            String
-  network_id        Int?
-  network           Network?  @relation(fields: [network_id], references: [id])
-  currency_id       Int?
-  currency          Currency? @relation(fields: [currency_id], references: [id])
-  swap_id           String?
-  swap              Swap?     @relation(fields: [swap_id], references: [id])
+  
+  network_id        Int
+  network           Network  @relation(fields: [network_id], references: [id])
+  currency_id       Int
+  currency          Currency @relation(fields: [currency_id], references: [id])
+  swap_id           String
+  swap              Swap     @relation(fields: [swap_id], references: [id])
 
   @@index([swap_id])
-  @@index([status])
   @@index([transaction_hash])
   @@index([currency_id])
   @@index([network_id])

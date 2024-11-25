@@ -1,8 +1,6 @@
 import KnownInternalNames from "@/config/constants"
 import WAValidator from "multicoin-address-validator"
 import { isAddress } from "ethers"
-// https://www.npmjs.com/package/@solana/addresses/v/2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-
 import { isAddress as isSolanoAddress } from "@solana/addresses"
 
 export function isValidAddress(address?: string, network?: { internal_name: string } | null): boolean {

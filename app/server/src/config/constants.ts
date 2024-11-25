@@ -179,6 +179,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "bip122:000000000019d6689c085ae165831e93",
         namespace: "bip122",
         reference: "000000000019d6689c085ae165831e93"
+    },
+    assets: {
+      "BTC": "assets/native.bitcoin-mainnet"
     }
   },
   'BITCOIN_TESTNET': {
@@ -193,6 +196,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "bip122:000000000933ea01ad0ee984209779ba",
         namespace: "bip122",
         reference: "000000000933ea01ad0ee984209779ba"
+    },
+    assets: {
+      "BTC": "assets/native.bitcoin-testnet"
     }
   },
   'ETHEREUM_MAINNET': {
@@ -207,6 +213,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:1",
         namespace: "eip155",
         reference: "1"
+    },
+    assets: {
+      "ETH": "assets/native.ethereum-mainnet"
     }
   },
   'ETHEREUM_GOERLI': {
@@ -221,6 +230,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:5",
         namespace: "eip155",
         reference: "5"
+    },
+    assets: {
+      "ETH": "assets/native.ethereum-testnet-goerli"
     }
   },
   'ETHEREUM_SEPOLIA': {
@@ -235,6 +247,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:11155111",
         namespace: "eip155",
         reference: "11155111"
+    },
+    assets: {
+      "ETH": "assets/native.ethereum-testnet-sepolia"
     }
   },
   'OPTIMISM_MAINNET': {
@@ -249,6 +264,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:10",
         namespace: "eip155",
         reference: "10"
+    },
+    assets: {
+      "ETH": "assets/native.optimism-mainnet",
     }
   },
   'OPTIMISM_GOERLI': {
@@ -263,7 +281,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:420",
         namespace: "eip155",
         reference: "420"
-    }
+    },
+    assets: {}
   },
   'POLYGON_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -277,7 +296,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:137",
         namespace: "eip155",
         reference: "137"
-    }
+    },
+    assets: {}
   },
   'POLYGON_MUMBAI': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -291,7 +311,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:80001",
         namespace: "eip155",
         reference: "80001"
-    }
+    },
+    assets: {}
   },
   'POLYGON_AMOY': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -305,7 +326,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:80002",
         namespace: "eip155",
         reference: "80002"
-    }
+    },
+    assets: {}
   },
   'ARBITRUM_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -319,7 +341,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:42161",
         namespace: "eip155",
         reference: "42161"
-    }
+    },
+    assets: {}
   },
   'ARBITRUM_TESTNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -333,7 +356,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:421613",
         namespace: "eip155",
         reference: "421613"
-    }
+    },
+    assets: {}
   },
   'AVAX_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -347,7 +371,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:43114",
         namespace: "eip155",
         reference: "43114"
-    }
+    },
+    assets: {}
   },
   'AVAX_TESTNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -361,7 +386,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:43113",
         namespace: "eip155",
         reference: "43113"
-    }
+    },
+    assets: {}
   },
   'BSC_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -375,7 +401,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:56",
         namespace: "eip155",
         reference: "56"
-    }
+    },
+    assets: {}
   },
   'BSC_TESTNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -389,6 +416,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:97",
         namespace: "eip155",
         reference: "97"
+    },
+    assets: {
+      "BNB": "assets/native.bnb-smart-chain-testnet",
     }
   },
   'FUSE_MAINNET': {
@@ -403,7 +433,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:122",
         namespace: "eip155",
         reference: "122"
-    }
+    },
+    assets: {}
   },
   'FUSE_TESTNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -417,7 +448,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:123",
         namespace: "eip155",
         reference: "123"
-    }
+    },
+    assets: {}
   },
   'BASE_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -431,7 +463,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:8453",
         namespace: "eip155",
         reference: "8453"
-    }
+    },
+    assets: {}
   },
   'BASE_GOERLI': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -445,7 +478,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:84531",
         namespace: "eip155",
         reference: "84531"
-    }
+    },
+    assets: {}
   },
   'TRON_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -459,6 +493,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "tron:0x2b6653dc",
         namespace: "tron",
         reference: "0x2b6653dc"
+    },
+    assets: {
+      "TRX": "assets/native.tron-mainnet"
     }
   },
   'TRON_TESTNET': {
@@ -473,6 +510,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "tron:0x94a9059e",
         namespace: "tron",
         reference: "0x94a9059e"
+    },
+    assets: {
+      "TRX": "assets/native.tron-testnet-shasta"
     }
   },
   'SOLANA_MAINNET': {
@@ -487,6 +527,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
         namespace: "solana",
         reference: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+    },
+    assets: {
+      "SOL": "assets/native.solana-mainnet"
     }
   },
   'SOLANA_DEVNET': {
@@ -501,6 +544,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
         namespace: "solana",
         reference: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+    },
+    assets: {
+      "SOL": "assets/native.solana-devnet"
     }
   },
   'COSMOSHUB_MAINNET': {
@@ -515,7 +561,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "cosmos:cosmoshub-4",
         namespace: "cosmos",
         reference: "cosmoshub-4"
-    }
+    },
+    assets: {}
   },
   'OSMOSIS_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -529,7 +576,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "cosmos:osmosis-1",
         namespace: "cosmos",
         reference: "osmosis-1"
-    }
+    },
+    assets: {}
   },
   'INJECTIVE_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -543,7 +591,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "cosmos:injective-1",
         namespace: "cosmos",
         reference: "injective-1"
-    }
+    },
+    assets: {}
   },
   'ROOTSTOCK_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -557,7 +606,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:30",
         namespace: "eip155",
         reference: "30"
-    }
+    },
+    assets: {}
   },
   'TON_MAINNET': {
     $typeName: "utila.api.v1alpha2.Network",
@@ -571,6 +621,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "ton:-239",
         namespace: "ton",
         reference: "-239"
+    },
+    assets: {
+      "TON": "assets/native.ton-mainnet",
     }
   },
   'BLAST_MAINNET': {
@@ -585,6 +638,7 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         chainId: "eip155:81457",
         namespace: "eip155",
         reference: "81457"
-    }
+    },
+    assets: {}
   }
 }
