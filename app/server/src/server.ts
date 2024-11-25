@@ -29,7 +29,6 @@ try {
   // Behind Proxy
   app.set('trust proxy', true);
 
-
   // Middleware to assign a unique ID to each request
   const REQUEST_ID = Symbol('requestId');
   app.use((req, res, next) => {
@@ -41,11 +40,16 @@ try {
   app.use(cors());
   app.use(express.urlencoded({ extended: true }));
 
+  // Add body-parsing middleware before your logging middleware
+  app.use(express.json()); // Parses incoming JSON requests and puts the parsed data in req.body
+  app.use(express.urlencoded({ extended: true })); // Parses URL-encoded bodies
+
   morgan.token('referrer', (req) => req.headers['referer'] || '-');
   morgan.token('origin', (req) => req.headers['origin'] || '-');
   morgan.token('device', (req) => req.headers['user-agent'] || '-');
+  morgan.token('id',     (req) => (req as any)[REQUEST_ID] || '-');
 
-  const customFormat = ':remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"';
+  const customFormat = ':id :remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"';
 
   // HTTP request logging
   app.use(
@@ -73,9 +77,6 @@ try {
 
   // Use raw body for /v1/utila webhook
   app.use("/v1/utila", express.raw({ type: "*/*", limit: "10mb" }));
-
-  // Use JSON body parsing for other routes
-  app.use(express.json());
 
   // Add all routes
   app.use("/api/swaps", swaps);
