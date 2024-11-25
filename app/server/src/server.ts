@@ -38,6 +38,15 @@ try {
     })
   );
 
+  // For backwards compat
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method === "POST" && req.path === "/webhook/utila") {
+      logger.info(`Rewriting request path: ${req.path} -> /v1/utila/webhook`);
+      req.url = "/v1/utila/webhook"; // Rewrite the request path
+    }
+    next();
+  });
+
   // Add all routes
   app.use("/api/swaps", swaps);
   app.use("/api/explorer", explorer);
@@ -49,15 +58,6 @@ try {
   app.use("/api/networks", networks);
   app.use("/api/exchanges", exchanges);
   app.use("/v1/utila", utila);
-
-  // for backwards compat
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.method === "POST" && req.path === "/webhook/utila") {
-      logger.info(`Rewriting request path: ${req.path} -> /v1/utila/webhook`);
-      req.url = "/v1/utila/webhook"; // Rewrite the request path
-    }
-    next();
-  });
 
   // Root endpoint
   app.get("/", (req: Request, res: Response) => {
