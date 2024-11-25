@@ -85,6 +85,13 @@ export const verifyUtilaSignature = (
   res: Response,
   next: NextFunction
 ): void => {
+  // Log all incoming request details
+  logger.info("Incoming webhook request", {
+    method: req.method,
+    url: req.originalUrl,
+    headers: req.headers,
+  });
+
   const signature = req.headers["x-utila-signature"] as string;
 
   if (!signature) {
