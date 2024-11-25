@@ -10,7 +10,7 @@ const router: Router = Router();
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
  */
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
-  logger.info(">> Received a POST request to /v1/utila/webhook");
+  console.info(">> Received a POST request to /v1/utila/webhook");
   // logger.info("Received a POST request to /v1/utila/webhook", {
   //   headers: req.headers,
   //   body: req.body,
@@ -19,7 +19,7 @@ router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response
   try {
     const eventType = req.body.type;
 
-    logger.info(`>> Processing event type: [${eventType}]`);
+    console.info(`>> Processing event Type - [${eventType}]`);
 
     switch (eventType) {
       case "TRANSACTION_CREATED": {
@@ -50,7 +50,7 @@ router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     const errorStack = error instanceof Error ? error.stack : null;
 
-    logger.error("Error processing webhook", {
+    console.error("Error processing webhook", {
       message: errorMessage,
       stack: errorStack,
     });
