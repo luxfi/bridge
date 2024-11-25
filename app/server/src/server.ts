@@ -2,9 +2,11 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
+import { v4 as uuidv4 } from "uuid";
+
+import logger from "@/logger"; // Import Winston logger
 
 // Routers
-import logger from "@/logger"; // Import Winston logger
 import swaps from "@/routes/swaps";
 import explorer from "@/routes/explorer";
 import settings from "@/routes/settings";
@@ -22,14 +24,13 @@ try {
   const app: Express = express();
   const port: number = process.env.PORT ? Number(process.env.PORT) : 5000;
 
-  console.log("Starting server initialization...");
   logger.info("Server initialization started...");
 
   // Middleware
-  app.use(express.json());
   app.use(cors());
   app.use(express.urlencoded({ extended: true }));
 
+  // HTTP request logging
   app.use(
     morgan("combined", {
       stream: {
@@ -38,7 +39,7 @@ try {
     })
   );
 
-  // For backwards compat
+  // Backwards compatibility for legacy webhook paths
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.method === "POST" && req.path === "/webhook/utila") {
       logger.info(`Rewriting request path: ${req.path} -> /v1/utila/webhook`);
@@ -47,12 +48,11 @@ try {
     next();
   });
 
-  app.use(
-    express.raw({
-      type: "*/*", // Handle all content types
-      limit: "10mb", // Optional payload size limit
-    })
-  );
+  // Use raw body for /v1/utila webhook
+  app.use("/v1/utila", express.raw({ type: "*/*", limit: "10mb" }));
+
+  // Use JSON body parsing for other routes
+  app.use(express.json());
 
   // Add all routes
   app.use("/api/swaps", swaps);
@@ -80,22 +80,22 @@ try {
 
   // Global error handling middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const requestId = uuidv4();
     if (err instanceof Error) {
-      logger.error(`Error: ${err.message}`, { stack: err.stack });
-      res.status(500).json({ error: err.message, stack: err.stack });
+      logger.error(`Error: ${err.message}`, { stack: err.stack, requestId });
+      res.status(500).json({ error: err.message, stack: err.stack, requestId });
     } else {
-      logger.error(`Unknown Error: ${err}`);
-      res.status(500).json({ error: "Internal Server Error" });
+      logger.error(`Unknown Error: ${err}`, { requestId });
+      res.status(500).json({ error: "Internal Server Error", requestId });
     }
   });
 
+  // Start the server
   app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
     logger.info(`Server is running on port ${port}`);
   });
 } catch (error) {
   // Catch any initialization errors
-  console.error("Fatal startup error:", error);
   if (error instanceof Error) {
     logger.error("Fatal startup error", { message: error.message, stack: error.stack });
   } else {
