@@ -98,16 +98,14 @@ export const verifyUtilaSignature = (
     logger.warn("Missing x-utila-signature header", {
       headers: req.headers,
     });
-    res.status(200).send("Event received, but signature missing");
     return next(); // Skip signature verification, but allow further processing
   }
 
   try {
     if (!(req.body instanceof Buffer)) {
-      logger.error("Request body is not a Buffer. Ensure express.raw() middleware is used.", {
+      logger.warn("Request body is not a Buffer. Ensure express.raw() middleware is used.", {
         headers: req.headers,
       });
-      res.status(200).send("Event received, but request body misconfigured");
       return next(); // Allow further processing
     }
 
@@ -122,20 +120,17 @@ export const verifyUtilaSignature = (
         signature,
         rawPayload: rawData,
       });
-      res.status(200).send("Event received, but signature verification failed");
       return next(); // Allow further processing despite the invalid signature
     }
 
     logger.info("Webhook signature verified successfully");
     req.body = JSON.parse(rawData); // Parse raw JSON body
-    res.status(200).send("Event received and verified");
     next(); // Continue to the next middleware
   } catch (error) {
-    logger.error("Error during signature verification", {
+    logger.warn("Error during signature verification", {
       error,
       headers: req.headers,
     });
-    res.status(200).send("Event received, but an error occurred during processing");
     next(); // Allow further processing despite the error
   }
 };
