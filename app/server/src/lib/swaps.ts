@@ -3,9 +3,10 @@ import { isValidAddress } from "@/lib/utils"
 import { statusMapping, SwapStatus, UtilaTransactionStateMapping } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"
-import { archiveWalletForExpire, createNewWalletForDeposit } from "./utila"
+import { archiveWalletForExpire, client, createNewWalletForDeposit } from "./utila"
 import { UTILA_NETWORKS } from "@/config/constants"
 import logger from "@/logger"
+import { Wallet } from "ethers"
 
 export interface SwapData {
   amount: number
@@ -389,6 +390,40 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
     throw new Error(`Error getting swap: ${error?.message}`)
   }
 }
+
+/**
+ * 
+ * @param param0 
+ * @returns 
+ */
+export async function checkDepositAction ({
+  asset,
+  wallet,
+  swapId,
+  requestedAmount
+}: {
+  asset: string,
+  wallet: string,
+  swapId: string,
+  requestedAmount: number
+}) {
+  try {
+    const { walletBalances } = await client.queryWalletBalances({
+      parent: wallet,
+      filter: `asset("${asset}")`
+    })
+    const balance = walletBalances.filter((b: any) => b.asset === asset).reduce((sum: number, b: any) => sum + Number(b.value), 0)
+    if (balance >= requestedAmount) { //if deposited amount is lager than needed
+      console.log(`>> Deposit for swap [${balance}, ${requestedAmount}]`)
+      return true
+    } else {
+      return false
+    }
+  } catch (err: any) {
+    console.error(">> Error while checking Deposit Action", err?.message)
+    return false
+  }
+}
 /**
  *
  * @param state
@@ -399,7 +434,17 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
  * @param destinationAddress
  * @returns
  */
-export async function handlerDepositAction(state: number, hash: string, amount: number, asset: string, sourceAddress: string, destinationAddress: string, created: Date, type: string) {
+export async function handlerDepositAction(
+  state: number, 
+  hash: string, 
+  amount: number, 
+  asset: string, 
+  sourceAddress: string, 
+  destinationAddress: string, 
+  created: Date, 
+  vault: string, 
+  type: string
+) {
   console.log({
     sourceAddress,
     destinationAddress,
@@ -430,7 +475,9 @@ export async function handlerDepositAction(state: number, hash: string, amount: 
   const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
   if (!utilaNetwork) throw "Unrecognized Utila Network"
   // checking network and asset match
-  if (utilaNetwork.assets[swap.source_asset.asset as string] !== asset) throw "Unrecognized Token Deposit"
+  const _wallet = swap.deposit_address?.split('###')?.[0] as string
+  const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
+  if (_asset !== asset) throw "Unrecognized Token Deposit"
   // if deposit action exists, update it else create new one
   if (_depositAction) {
     await prisma.depositAction.updateMany({
@@ -475,6 +522,76 @@ export async function handlerDepositAction(state: number, hash: string, amount: 
     })
     console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
   }
+
+  const confirmed = await checkDepositAction ({
+    asset: _asset,
+    wallet: _wallet,
+    swapId: swap.id,
+    requestedAmount: Number(swap.requested_amount)
+  })
+
+  if (confirmed) {
+    await prisma.swap.update({
+      where: { id: swap.id },
+      data: {
+        status: SwapStatus.BridgeTransferPending
+      }
+    })
+    console.log(`>> Deposit Completed for swap [${swap.id}]`)
+  }
+}
+/**
+ * handler after deposit is checked
+ */
+export async function handlerUtilaPayoutAction(swapId: string) {
+  try {
+    const swap = await prisma.swap.findUnique({
+      where: {
+        id: swapId
+      },
+      include: {
+        source_network: true,
+        source_asset: true
+      }
+    })
+    if (!swap) throw new Error("No swap found for this id")
+
+    // checking Utila network
+    const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
+    if (!utilaNetwork) throw "Unrecognized Utila Network"
+    const _wallet = swap?.deposit_address?.split('###')?.[0] as string
+    const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
+
+
+    const confirmed = await checkDepositAction ({
+      asset: _asset,
+      wallet: _wallet,
+      swapId: swap.id,
+      requestedAmount: Number(swap.requested_amount)
+    })
+  
+    if (confirmed) {
+      await prisma.swap.update({
+        where: { id: swap.id },
+        data: {
+          status: SwapStatus.BridgeTransferPending
+        }
+      })
+      console.log(`>> Minting PayoutToken for this Swap [${swap.id}]`)
+
+      return {
+        status: 'success',
+        msg: ''
+      }
+    } else {
+      return {
+        status: '',
+        msg: 'deposit not completed yet'
+      }
+    }
+  } catch (err) {
+    throw err
+  }
 }
 /**
  * make swap expire if there is no deposit for 72h
@@ -501,7 +618,15 @@ export async function handlerSwapExpire(id: string) {
     throw new Error(`Error Getting Swap: ${error?.message}`)
   }
 }
-
+/**
+ * 
+ * @param id 
+ * @param txHash 
+ * @param amount 
+ * @param from 
+ * @param to 
+ * @returns 
+ */
 export async function handlerUpdateMpcSignAction(id: string, txHash: string, amount: number, from: string, to: string) {
   try {
     let swap = await prisma.swap.findUnique({
@@ -573,7 +698,13 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
     throw new Error(`Error getting swap: ${error?.message}`)
   }
 }
-
+/**
+ * 
+ * @param address 
+ * @param isDeleted 
+ * @param isMainnet 
+ * @returns 
+ */
 export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false) {
   try {
     const swaps = await prisma.swap.findMany({
@@ -616,7 +747,11 @@ export async function handlerGetSwaps(address: string, isDeleted: boolean | unde
     throw new Error(`Error getting swap: ${error?.message}`)
   }
 }
-
+/**
+ * 
+ * @param address 
+ * @returns 
+ */
 export async function handlerGetHasBySwaps(address: string) {
   try {
     const isadd = isValidAddress(address)

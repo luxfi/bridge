@@ -1,14 +1,11 @@
 import jwt from "jsonwebtoken";
 import logger from "@/logger";
 import { UTILA_NETWORKS } from "@/config/constants";
+import { handlerDepositAction } from "./swaps";
 import { createVerify, constants } from "crypto";
 import { Request, Response, NextFunction } from "express";
 import { createGrpcClient, serviceAccountAuthStrategy } from "@luxfi/utila";
 import { UTILA_TRANSACTION_CREATED, UTILA_TRANSACTION_STATE_UPDATED } from "@/types/utila"
-import { serializedData } from "./utils";
-import { prisma } from "./prisma";
-import { error } from "console";
-import { handlerDepositAction } from "./swaps";
 
 /**
  * Ensure required environment variables are set
@@ -35,7 +32,7 @@ validateEnv();
 /**
  * utila grpc client
  */
-const client = createGrpcClient({
+export const client = createGrpcClient({
   authStrategy: serviceAccountAuthStrategy({
     email: process.env.SERVICE_ACCOUNT_EMAIL as string,
     privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string,
@@ -198,7 +195,10 @@ export const archiveWalletForExpire = async (name: string) => {
     logger.error("Error archiving expired wallet", { error });
   }
 };
-
+/**
+ * 
+ * @param payload 
+ */
 export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATED) => {
   try {
     console.info(">> Processing for TRANSACTION_CREATED");
@@ -220,13 +220,18 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
       sourceAddress?.value as string,
       destinationAddress?.value as string,
       new Date(createTime ? Number(createTime.seconds) * 1000 : new Date()),
+      payload.vault,
       "TRANSACTION_CREATED"
     )
+
   } catch (err) {
     console.error(">> Error Parsing Webhook for TRANSACTION_CREATED", err)
   }
 }
-
+/**
+ * 
+ * @param payload 
+ */
 export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_STATE_UPDATED) => {
   try {
     console.info(">> Processing for TRANSACTION_STATE_UPDATED");
@@ -236,8 +241,6 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
     if (!transaction) throw "No transaction"
     const transfers = transaction.transfers || []
     if (transfers.length === 0) throw "No transfers"
-
-    console.log(transaction)
 
     const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
@@ -250,6 +253,7 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
       sourceAddress?.value as string,
       destinationAddress?.value as string,
       new Date(createTime ? Number(createTime.seconds) * 1000 : new Date()),
+      payload.vault,
       "TRANSACTION_STATE_UPDATED"
     )
   } catch (err) {
