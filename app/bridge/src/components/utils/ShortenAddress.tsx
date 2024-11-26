@@ -1,4 +1,4 @@
-function shortenAddress(address: string) {
+function shortenAddress(address: string, length: number = 5) {
     if (address?.startsWith('ronin:')) {
         var stringAddress = address.replace('ronin:', '')
         return `ronin:${InnerShortenAddress(stringAddress)}`
@@ -12,7 +12,7 @@ function shortenAddress(address: string) {
     function InnerShortenAddress(address: string) {
         if (address?.length < 13)
             return address;
-        return `${address?.substring(0, 5)}...${address?.substring(address?.length - 4, address?.length)}`
+        return `${address?.substring(0, length)}...${address?.substr(address?.length - length, address?.length)}`
     }
 }
 
@@ -27,8 +27,17 @@ const shortenEmail = (email: string = '', maxNameLenght:number = 14) => {
     return maskedEmail;
 }
 
+const capitalizeFirstCharacter = (text: string) => {
+    if (text.length === 0) {
+        return ''
+    } else {
+        return text.substring(0, 1).toUpperCase() + text.substring(1, text.length).toLowerCase()
+    }
+}
+
 export {
   shortenAddress as default,
-  shortenEmail  
+  shortenEmail,
+  capitalizeFirstCharacter 
 }
 

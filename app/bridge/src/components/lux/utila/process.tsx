@@ -24,6 +24,7 @@ import {
   userTransferTransactionAtom,
   timeToExpireAtom,
   depositAddressAtom,
+  depositActionsAtom
 } from '@/store/utila'
 import { useAtom } from 'jotai'
 import type { Network, Token } from '@/types/utila'
@@ -61,7 +62,8 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
   const [, setTimeToExpire] = useAtom(timeToExpireAtom)
-  const [depositAddress, setDepositAddress] = useAtom(depositAddressAtom)
+  const [, setDepositAddress] = useAtom(depositAddressAtom)
+  const [, setDepositActions] = useAtom(depositActionsAtom)
 
   // timerRef
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
@@ -100,7 +102,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       )
 
       setSwapStatus(data.status)
-      
+      setDepositActions(data.deposit_actions)
       const userTransferTransaction = data?.transactions?.find((t: any) => t.status === 'user_transfer')?.transaction_hash
       setUserTransferTransaction(userTransferTransaction ?? '')
       const payoutTransaction = data?.transactions?.find((t: any) => t.status === 'payout')?.transaction_hash
@@ -135,8 +137,6 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
         (c: Token) => c.asset === data.destination_asset
       )
 
-      console.log('::swap data:', data)
-
       setSourceNetwork(_sourceNetwork)
       setSourceAsset(_sourceAsset)
       setDestinationNetwork(_destinationNetwork)
@@ -145,6 +145,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       setSwapStatus(data.status)
       setSwapId(data.id)
       setDepositAddress(data.deposit_address.split('###')?.[1])
+      setDepositActions(data.deposit_actions)
       setDestinationAddress(data.destination_address)
 
       const userTransferTransaction = data?.transactions?.find(
