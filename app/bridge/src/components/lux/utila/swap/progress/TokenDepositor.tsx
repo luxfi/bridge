@@ -15,7 +15,6 @@ import SwapItems from "./SwapItems";
 import { useAtom } from "jotai";
 import { useEthersSigner } from "@/lib/ethersToViem/ethers";
 import { useServerAPI } from "@/hooks/useServerAPI";
-import { swap } from "formik";
 
 interface IProps {
   className?: string
@@ -125,6 +124,10 @@ const UserTokenDepositor: React.FC<IProps> = ({
             </div>
           </div>
         </div>
+
+        {
+
+        }
         
         <ManualTransfer
           sourceNetwork={sourceNetwork}

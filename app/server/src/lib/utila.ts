@@ -209,7 +209,7 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
     const transfers = transaction.transfers || []
     if (transfers.length === 0) throw "No transfers" 
 
-    const { state, hash } = transaction
+    const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
 
     await handlerDepositAction (
@@ -219,6 +219,7 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
       asset,
       sourceAddress?.value as string,
       destinationAddress?.value as string,
+      new Date(createTime ? Number(createTime.seconds) * 1000 : new Date()),
       "TRANSACTION_CREATED"
     )
   } catch (err) {
@@ -236,7 +237,9 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
     const transfers = transaction.transfers || []
     if (transfers.length === 0) throw "No transfers"
 
-    const { state, hash } = transaction
+    console.log(transaction)
+
+    const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
 
     await handlerDepositAction (
@@ -246,6 +249,7 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
       asset,
       sourceAddress?.value as string,
       destinationAddress?.value as string,
+      new Date(createTime ? Number(createTime.seconds) * 1000 : new Date()),
       "TRANSACTION_STATE_UPDATED"
     )
   } catch (err) {
