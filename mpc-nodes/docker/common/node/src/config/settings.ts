@@ -143,6 +143,13 @@ export const MAIN_NETWORKS: NETWORK[] = [
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
+      },
+      {
+        name: "LADA",
+        asset: "LADA",
+        contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
       }
     ]
   },
@@ -266,6 +273,13 @@ export const MAIN_NETWORKS: NETWORK[] = [
         name: "ZTON",
         asset: "ZTON",
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "ZADA",
+        asset: "ZADA",
+        contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
         decimals: 18,
         is_native: false
       }
@@ -1223,6 +1237,13 @@ export const TEST_NETWORKS: NETWORK[] = [
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
+      },
+      {
+        name: "LADA",
+        asset: "LADA",
+        contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
       }
     ]
   },
@@ -1348,6 +1369,13 @@ export const TEST_NETWORKS: NETWORK[] = [
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
+      },
+      {
+        name: "ZADA",
+        asset: "ZADA",
+        contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
       }
     ]
   }
@@ -1367,6 +1395,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   LXDAI: ['XDAI', 'ZXDAI'],
   LSOL: ['ZSOL'],
   LTON: ['ZTON'],
+  LADA: ['ZADA'],
   
   // Zoo tokens
   ZOO: ['LZOO'],
@@ -1381,6 +1410,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZXDAI: ['XDAI', 'LXDAI'],
   ZSOL: ['LSOL'],
   ZTON: ['LTON'],
+  ZADA: ['LADA'],
 
   // Evm tokens
   ETH: ['LETH', 'ZETH'],

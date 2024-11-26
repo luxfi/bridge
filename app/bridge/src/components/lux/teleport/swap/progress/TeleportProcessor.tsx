@@ -149,7 +149,7 @@ const TeleportProcessor: React.FC<IProps> = ({
     if (!signer) {
       notify("No connected wallet. Please connect your wallet", "warn");
       // connectWallet("evm")
-    } else if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
+    } else if (Number(chainId) !== Number(sourceNetwork?.chain_id)) {
       sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
     } else {
       getMpcSignature()
@@ -157,7 +157,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   }
 
   return (
-    <div className={`w-full flex flex-col ${className}`}>
+    <div className={`flex flex-col ${className}`}>
       <div className="space-y-5">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems

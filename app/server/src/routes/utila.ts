@@ -1,143 +1,84 @@
 import { Router, Request, Response } from "express";
-import { createVerify, constants } from "crypto";
-import jwt from "jsonwebtoken";
+import { verifyUtilaSignature } from "@/lib/utila";
+import logger from "@/logger";
+import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila";
+import { handlerUtilaPayoutAction } from "@/lib/swaps";
 
 const router: Router = Router();
 
-// Utila Public Key
-const utilaPublicKey = `
------BEGIN PUBLIC KEY-----
-MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAulI1XPGRDFcymdf2zXvD
-spfdTXA1g0NOavZ50+AtcQP7f+KTpXoO1bkr6x9dO2Jq8FHImRT1sbhKhcNXT4WC
-dLSa/2Zh60QE3tp9d51o1XDSnzRMwcGbFyJ7C30DVpVEIwqD2Z5GRlzXinqIeVdY
-GOubuVol/wOAynS32DX+6y2PiqbYj7P84csBOgpNT27Mc6InEqKb7LWQtU8LPttx
-tfyceOPXE5G4h+UujPsPG6WN5MHHVbP9r6oneEF3knbfL3hCJRjwV9HfTtG6JyYr
-25Dy6SOCphrlEZi8IGcKxL6fEMetDGGVCjm7XfHyt6fYoUonD9lZsvbSyUsRwf/1
-+x77F2LxtzQyvMJR9jD16WUyzm+fUBSVQixxKnKSrVkeLqkmGboDTY5kw3doSVTP
-zcGDzWkzqC3lgwRLnSg4J+koQY+yo9jYBbFdSp+/PfVmp9NEaBuCV63mp/85VWIh
-1FRYe6lEdGZWdmIcbDvNYU/Cui/yGZoID7+sJJq/rWN0Qxx/0skEaT/083+iYLVA
-QNLvWtmQfgNKPm6GeQknRUEWyWUJtq6ANeP/8hGVM1G/edOdLn+KfhXZvw41O5z1
-uKHEqHIV+NaCNnFbDj924bJhA/fWNKxYv7/Nm44Wy1nXlgqdHiFkSqtjUBPmzE/n
-yj92azWBq1RbGHY+9/POguMCAwEAAQ==
------END PUBLIC KEY-----
-`;
-
-// Helper to log errors
-function logError(context: string, error: unknown): void {
-  if (error instanceof Error) {
-    console.error(`[${context}] Error: ${error.message}\nStack: ${error.stack}`);
-  } else {
-    console.error(`[${context}] Unexpected error:`, error);
-  }
-}
-
-// Centralized error handler
-function handleError(res: Response, context: string, error: unknown): void {
-  logError(context, error);
-  res.status(500).json({ error: "An internal server error occurred" });
-}
-
-// Generate a JWT token
-function generateToken(): string {
-  const options: jwt.SignOptions = {
-    subject: process.env.SERVICE_ACCOUNT_EMAIL,
-    audience: "https://api.utila.io/",
-    expiresIn: "1h",
-    algorithm: "RS256",
-  };
+router.get("/payout/:swapId", async (req: Request, res: Response) => {
   try {
-    const token = jwt.sign({}, process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string, options);
-    console.log("Generated Token:", token);
-    return token;
-  } catch (error) {
-    throw error; // Let the error be handled by the centralized handler
+    const swapId = req.params.swapId
+    const data = await handlerUtilaPayoutAction (swapId)
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(400).json(err)
   }
-}
+})
 
-// Middleware to verify the webhook signature
-function verifyUtilaSignature(req: Request, res: Response, next: Function) {
-  let rawData = "";
+/**
+ * Webhook route to handle events
+ * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
+ */
+router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
+  console.info(">> Received a POST request to /v1/utila/webhook");
+  // logger.info("Received a POST request to /v1/utila/webhook", {
+  //   headers: req.headers,
+  //   body: req.body,
+  // });
 
-  req.on("data", (chunk) => {
-    rawData += chunk;
-  });
+  try {
+    const eventType = req.body.type;
 
-  req.on("end", () => {
-    try {
-      const signature = req.headers["x-utila-signature"] as string;
+    console.info(`>> Processing event Type - [${eventType}]`);
 
-      if (!signature || !verifySignature(signature, rawData, utilaPublicKey)) {
-        throw new Error("Signature verification failed");
+    switch (eventType) {
+      case "TRANSACTION_CREATED": {
+        await handleTransactionCreated (req.body)
+        break;
       }
 
-      req.body = JSON.parse(rawData);
-      console.log("Received Payload:", JSON.stringify(req.body, null, 2)); // Neatly formatted payload
-      next();
-    } catch (error) {
-      handleError(res, "Webhook Signature Verification", error);
+      case "TRANSACTION_STATE_UPDATED": {
+        await handleTransactionStateUpdated (req.body)
+        break;
+      }
+        
+      case "WALLET_CREATED":
+        // logger.info("Wallet Created", { eventData: req.body });
+        break;
+
+      case "WALLET_ADDRESS_CREATED":
+        // logger.info("Wallet Address Created", { eventData: req.body });
+        break;
+
+      default:
+        // logger.warn("Unknown event type received", { eventData: req.body });
+        // return res.status(400).json({ error: "Unknown event type" });
     }
-  });
-}
 
-// Function to verify the signature
-function verifySignature(signatureBase64: string, data: string, publicKey: string): boolean {
-  try {
-    const signatureBuffer = Buffer.from(signatureBase64, "base64");
-    const verifier = createVerify("RSA-SHA512");
-    verifier.update(data);
-
-    return verifier.verify(
-      {
-        key: publicKey,
-        padding: constants.RSA_PKCS1_PSS_PADDING,
-        saltLength: constants.RSA_PSS_SALTLEN_DIGEST,
-      },
-      signatureBuffer
-    );
+    res.status(200).json({ message: "Webhook received successfully" });
   } catch (error) {
-    logError("Signature Verification", error);
-    return false;
-  }
-}
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorStack = error instanceof Error ? error.stack : null;
 
-// Public route to generate a token
-router.get("/api/utila", async (req: Request, res: Response) => {
-  try {
-    const token = generateToken();
-    res.status(200).json({ token });
-  } catch (error) {
-    handleError(res, "Token Generation Route", error);
+    console.error("Error processing webhook", {
+      message: errorMessage,
+      stack: errorStack,
+    });
+
+    res.status(500).json({
+      error: "Internal Server Error",
+      details: errorMessage,
+    });
   }
 });
 
-// Webhook route to handle events
-router.post("/utila/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
-  const eventType = req.body.type;
-
-  try {
-    console.log(`Processing event: ${eventType}`);
-    switch (eventType) {
-      case "TRANSACTION_CREATED":
-        console.log("Transaction Created:", JSON.stringify(req.body, null, 2));
-        break;
-      case "TRANSACTION_STATE_UPDATED":
-        console.log("Transaction State Updated:", JSON.stringify(req.body, null, 2));
-        break;
-      case "WALLET_CREATED":
-        console.log("Wallet Created:", JSON.stringify(req.body, null, 2));
-        break;
-      case "WALLET_ADDRESS_CREATED":
-        console.log("Wallet Address Created:", JSON.stringify(req.body, null, 2));
-        break;
-      default:
-        console.warn("Unknown event type:", JSON.stringify(req.body, null, 2));
-        break;
-    }
-
-    res.status(200).send("Webhook received successfully");
-  } catch (error) {
-    handleError(res, "Webhook Processing", error);
-  }
+/**
+ * Catch-all for unsupported methods on /webhook
+ */
+router.all("/webhook", (req: Request, res: Response) => {
+  logger.warn(`Unsupported method ${req.method} on /webhook`);
+  res.status(405).json({ error: "Method Not Allowed" });
 });
 
 export default router;

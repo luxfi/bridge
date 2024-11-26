@@ -79,24 +79,24 @@ const PayoutProcessor: React.FC<IProps> = ({
 
   React.useEffect(() => {
     if (isConnecting) return;
+    if (isGettingPayout) return
+    if (!signer) return notify('Please connect wallet first.', 'info')
+    // connectWallet('evm')
 
-    if (!signer) {
-      notify('Please connect wallet first.', 'info')
-      // connectWallet('evm')
+
+    if (toMint) {
+      mintDestinationToken()
     } else {
-      if (toMint) {
-        mintDestinationToken()
+      if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
+        withdrawDestinationToken()
       } else {
-        if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
-          withdrawDestinationToken()
-        } else {
-          destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
-        }
+        destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
       }
     }
   }, [signer])
 
   const mintDestinationToken = async () => {
+
     const mintData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
@@ -107,7 +107,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
-      vault_: 'true',
+      vault_: toBurn ? 'false' : 'true',
     }
 
     console.log('data for bridge mint::', mintData)
@@ -220,6 +220,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   }
 
   const withdrawDestinationToken = async () => {
+    
     const withdrawData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
@@ -323,29 +324,24 @@ const PayoutProcessor: React.FC<IProps> = ({
   }
 
   const handlePayoutDestinationToken = () => {
-    if (!signer) {
-      notify(
-        'No connected wallet. Please connect your wallet',
-        'error'
-      )
-      // connectWallet('evm')
+    if (isConnecting) return;
+    if (isGettingPayout) return
+    if (!signer) return notify('Please connect wallet first.', 'info')
+    // connectWallet('evm')
+
+    if (toMint) {
+      mintDestinationToken()
     } else {
-      if (toMint) {
-        mintDestinationToken()
+      if (Number(chainId) === Number(destinationNetwork.chain_id)) {
+        withdrawDestinationToken()
       } else {
-        if (Number(chainId) === Number(destinationNetwork.chain_id)) {
-          withdrawDestinationToken()
-        } else {
-          destinationNetwork.chain_id &&
-            switchChain &&
-            switchChain({ chainId: destinationNetwork.chain_id })
-        }
+        destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
       }
     }
   }
 
   return (
-    <div className={`w-full flex flex-col ${className}`}>
+    <div className={`flex flex-col ${className}`}>
       <div className="space-y-5">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems

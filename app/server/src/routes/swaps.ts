@@ -1,6 +1,6 @@
 import { getSigFromMpcOracleNetwork } from "@/lib/mpc"
 import { Router, Request, Response } from "express"
-import { handleSwapCreation, handlerGetSwap, handlerGetSwaps, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction } from "@/lib/swaps"
+import { handleSwapCreation, handlerGetSwap, handlerGetSwaps, handlerSwapExpire, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction } from "@/lib/swaps"
 
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
@@ -13,7 +13,6 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const isDeleted = (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) || undefined
     const isMainnet = req.query?.version === "mainnet"
-    console.log({ isDeleted, isMainnet })
     const result = await handlerGetSwaps(req.query.address as string, isDeleted, isMainnet)
     res.status(200).json({ data: result })
   } catch (error: any) {
@@ -26,7 +25,6 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/:swapId", async (req: Request, res: Response) => {
   try {
     const swapId = req.params.swapId
-    console.log({ swapId })
     const result = await handlerGetSwap(swapId as string)
     res.status(200).json({ data: result })
   } catch (error: any) {
@@ -160,6 +158,22 @@ router.post(
     } catch (err) {
       console.log(err)
       res.status(500).json("error in generating from mpc oracle network...")
+    }
+  }
+)
+
+// route: /api/swaps/expire/:id
+// description: update payout action
+// method: PUT and it's public
+router.put(
+  "/expire/:swapId",
+  async (req: Request, res: Response) => {
+    try {
+      const swapId = req.params.swapId
+      await handlerSwapExpire(swapId as string)
+      res.status(200).json({ status: 'success' })
+    } catch (error: any) {
+      res.status(500).json({ error: error?.message })
     }
   }
 )

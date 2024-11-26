@@ -29,7 +29,7 @@ module.exports = (phase, { defaultConfig }) => {
     },
     basePath: process.env.APP_BASE_PATH || '',
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-    reactStrictMode: true,
+    reactStrictMode: false,
     i18n: {
       locales: ["en"],
       defaultLocale: "en",
@@ -72,9 +72,9 @@ module.exports = (phase, { defaultConfig }) => {
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
       let conf = svgrPluginConfig(config)
-      if (dev) {
-        conf =  watchPluginConfig(conf)
-      }
+      // if (dev) {
+      //   conf =  watchPluginConfig(conf)
+      // }
       return conf
     },
     productionBrowserSourceMaps: true,
