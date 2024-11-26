@@ -1016,7 +1016,7 @@
     "created_date": "2023-05-01T15:13:15.929+00:00"
   },
   {
-    "display_name": "Solana",
+    "display_name": "Solana Testnet",
     "internal_name": "SOLANA_TESTNET",
     "native_currency": "SOL",
     "is_testnet": true,
@@ -1060,7 +1060,7 @@
     "created_date": "2023-02-21T13:04:25.293958+00:00"
   },
   {
-    "display_name": "Solana",
+    "display_name": "Solana Devnet",
     "internal_name": "SOLANA_DEVNET",
     "native_currency": "SOL",
     "is_testnet": true,

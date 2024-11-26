@@ -14,7 +14,7 @@ function ResizablePanel({
   return (
     <motion.div
       animate={{ height: height || "auto" }}
-      className="relative overflow-hidden"
+      className="relative overflow-hidden w-full"
     >
       <AnimatePresence initial={false}>
         {/* <motion.div

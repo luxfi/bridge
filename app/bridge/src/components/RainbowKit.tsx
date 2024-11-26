@@ -10,9 +10,9 @@ import {
   type AvatarComponent,
   type DisclaimerComponent,
 } from '@rainbow-me/rainbowkit'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
 import { NetworkType } from '@/Models/CryptoNetwork'
+import { WagmiProvider } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import {
   metaMaskWallet,
@@ -66,6 +66,7 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     //@ts-expect-error "ignore chain type"
     chains: chains,
     ssr: true,
+    autoConnect: true, // Automatically reconnect the wallet
   })
 
   return (
