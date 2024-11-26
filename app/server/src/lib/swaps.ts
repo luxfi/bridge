@@ -399,13 +399,14 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
  * @param destinationAddress
  * @returns
  */
-export async function handlerDepositAction(state: number, hash: string, amount: number, asset: string, sourceAddress: string, destinationAddress: string, type: string) {
+export async function handlerDepositAction(state: number, hash: string, amount: number, asset: string, sourceAddress: string, destinationAddress: string, created: Date, type: string) {
   console.log({
     sourceAddress,
     destinationAddress,
     amount,
     hash,
     status: UtilaTransactionStateMapping[state],
+    created,
     type
   })
   const swap = await prisma.swap.findFirst({
@@ -439,7 +440,8 @@ export async function handlerDepositAction(state: number, hash: string, amount: 
       data: {
         status: UtilaTransactionStateMapping[state],
         confirmations: state === 13 ? 10 : 0,
-        max_confirmations: 10
+        max_confirmations: 10,
+        created_date: created
       }
     })
     console.log(`>> Successfully Updated Deposit Action for Swap [${swap.id}]`)
@@ -453,6 +455,7 @@ export async function handlerDepositAction(state: number, hash: string, amount: 
         transaction_hash: hash,
         confirmations: state === 13 ? 10 : 0,
         max_confirmations: 10,
+        created_date: created,
         swap: {
           connect: {
             id: swap.id
