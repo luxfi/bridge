@@ -4,6 +4,7 @@ import { Plus } from "lucide-react"
 
 import { 
   Button, 
+  buttonVariants, 
   Dialog, 
   DialogContent, 
   DialogFooter, 
@@ -18,16 +19,19 @@ import ConnectButton from "./buttons/connectButton"
 import AddressIcon from "./AddressIcon"
 import { type Wallet } from "../stores/walletStore"
 import { cn } from '@hanzo/ui/util'
+import { type VariantProps } from "class-variance-authority"
 
 const ConnectedWallets: React.FC<{
   connectButtonVariant?: 'outline' | 'primary'
   showWalletIcon?: boolean
+  buttonSize?: VariantProps<typeof buttonVariants>['size'] 
   connectButtonClx?: string
 } & PropsWithChildren> = ({
   children,
   connectButtonVariant='outline',
   showWalletIcon=true,
-  connectButtonClx=''
+  connectButtonClx='',
+  buttonSize='square'
 }) => {
 
   const { wallets } = useWallet()
@@ -52,7 +56,7 @@ const ConnectedWallets: React.FC<{
     <ConnectButton>
       <Button
         variant={connectButtonVariant}
-        size='square'
+        size={buttonSize}
         aria-label='Connect wallet'
         className={cn(
           'flex items-center justify-center',
