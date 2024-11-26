@@ -2,8 +2,19 @@ import { Router, Request, Response } from "express";
 import { verifyUtilaSignature } from "@/lib/utila";
 import logger from "@/logger";
 import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila";
+import { handlerUtilaPayoutAction } from "@/lib/swaps";
 
 const router: Router = Router();
+
+router.get("/payout/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    const data = await handlerUtilaPayoutAction (swapId)
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(400).json(err)
+  }
+})
 
 /**
  * Webhook route to handle events
