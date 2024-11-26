@@ -5,6 +5,8 @@ import type { LinkDef } from '@hanzo/ui/types'
 import { cn } from '@hanzo/ui/util'
 import { Logo, type LogoVariant } from '@luxfi/ui'
 
+import ConnectButton from './connect-button'
+
 
 const DesktopHeader: React.FC<{
   currentAs: string | undefined
@@ -39,6 +41,7 @@ const DesktopHeader: React.FC<{
           <div className='flex w-full gap-4 items-center justify-center'>
           </div>
           <div className='flex items-center'>
+            <ConnectButton />
             {children}
           </div>
         </div>
