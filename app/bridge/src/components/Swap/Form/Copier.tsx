@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import { BookCopy, Check } from 'lucide-react'
+import { Copy, Check } from 'lucide-react'
 
 const ClipboardCopier = ({ text, size }: { text: string, size?: number }) => {
 
@@ -50,8 +50,8 @@ const ClipboardCopier = ({ text, size }: { text: string, size?: number }) => {
 
     return (
         isCopied ?
-            <Check size={20} className='cursor-pointer hover:opacity-50'/> :
-            <BookCopy size={20} onClick={handleCopy} className='cursor-pointer hover:opacity-50'/>
+            <Check width={size} height={size} className='cursor-pointer hover:opacity-50'/> :
+            <Copy width={size} height={size} onClick={handleCopy} className='cursor-pointer hover:opacity-50'/>
     )
 }
 

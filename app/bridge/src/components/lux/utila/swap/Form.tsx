@@ -36,7 +36,6 @@ import {
   timeToExpireAtom,
 } from '@/store/utila'
 import SpinIcon from '@/components/icons/spinIcon'
-import { SwapStatus } from '@/Models/SwapStatus'
 import { useNotify } from '@/context/toast-provider'
 import { useServerAPI } from '@/hooks/useServerAPI'
 
