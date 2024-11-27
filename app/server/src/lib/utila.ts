@@ -230,7 +230,8 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
     )
 
   } catch (error: any) {
-    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED", error)
+    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED")
+    console.log(error)
     throw error
   }
 }
@@ -267,7 +268,8 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
       "TRANSACTION_STATE_UPDATED"
     )
   } catch (error: any) {
-    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED", error)
+    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED")
+    console.log(error)
     throw error
   }
 }
