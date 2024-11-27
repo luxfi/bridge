@@ -205,9 +205,13 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
-    if (!transaction) throw "No transaction"
+    if (!transaction) {
+      throw new Error("No Transaction")
+    }
     const transfers = transaction.transfers || []
-    if (transfers.length === 0) throw "No transfers" 
+    if (transfers.length === 0) {
+      throw new Error("No Token Transfers")
+    }
 
     const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
@@ -224,8 +228,9 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
       "TRANSACTION_CREATED"
     )
 
-  } catch (err) {
-    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED", err)
+  } catch (error: any) {
+    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED", error)
+    throw error
   }
 }
 /**
@@ -238,9 +243,13 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
-    if (!transaction) throw "No transaction"
+    if (!transaction) {
+      throw new Error("No Transaction")
+    }
     const transfers = transaction.transfers || []
-    if (transfers.length === 0) throw "No transfers"
+    if (transfers.length === 0) {
+      throw new Error("No Token Transfers")
+    }
 
     const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
@@ -256,7 +265,8 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
       payload.vault,
       "TRANSACTION_STATE_UPDATED"
     )
-  } catch (err) {
-    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED", err)
+  } catch (error: any) {
+    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED", error)
+    throw error
   }
 }
