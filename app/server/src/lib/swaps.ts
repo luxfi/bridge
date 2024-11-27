@@ -5,8 +5,8 @@ import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"
 import { archiveWalletForExpire, client, createNewWalletForDeposit } from "./utila"
 import { UTILA_NETWORKS } from "@/config/constants"
-import logger from "@/logger"
-import { Wallet } from "ethers"
+import ERC20B_ABI from '@/constants/ERC20B.json'
+import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from "ethers"
 
 export interface SwapData {
   amount: number
@@ -107,21 +107,6 @@ export async function handleSwapCreation(data: SwapData) {
         is_native: true
       }
     })
-    // deposit actions
-    // const depositAction = await prisma.depositAction.create({
-    //   data: {
-    //     type: use_teleporter ? "bridge_transfer" : "manual_deposit",
-    //     to_address: destination_address,
-    //     amount,
-    //     order_number: 0,
-    //     amount_in_base_units: "331000000000000",
-    //     network_id: Number(sourceNetwork?.id),
-    //     currency_id: Number(sourceCurrency?.id),
-    //     fee_currency_id: Number(nativeCurrency?.id),
-    //     call_data: null,
-    //     swap_id: swap.id
-    //   }
-    // })
 
     // estimate swap rate
     const [sourcePrice, destinationPrice] = await Promise.all([getTokenPrice(source_asset), getTokenPrice(destination_asset)])
@@ -143,14 +128,6 @@ export async function handleSwapCreation(data: SwapData) {
     })
 
     const result = {
-      // depositActions: [
-      //   {
-      //     ...depositAction,
-      //     network: sourceNetwork,
-      //     currency: sourceCurrency,
-      //     feeCurrency: nativeCurrency
-      //   }
-      // ],
       swap_id: swap.id,
       swap: {
         ...swap,
@@ -274,7 +251,7 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
     await prisma.swap.update({
       where: { id },
       data: {
-        status: "teleport_processing_pending",
+        status: SwapStatus.TeleportProcessPending,
         transactions: {
           connect: {
             id: transaction.id // Connect the new transaction to the swap
@@ -354,7 +331,7 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
     await prisma.swap.update({
       where: { id },
       data: {
-        status: "payout_success",
+        status: SwapStatus.PayoutSuccess,
         transactions: {
           connect: {
             id: transaction.id // Connect the new transaction to the swap
@@ -399,12 +376,10 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
 export async function checkDepositAction ({
   asset,
   wallet,
-  swapId,
   requestedAmount
 }: {
   asset: string,
   wallet: string,
-  swapId: string,
   requestedAmount: number
 }) {
   try {
@@ -467,17 +442,23 @@ export async function handlerDepositAction(
     }
   })
 
-  if (!swap) throw "There is no swap for this Tx"
+  if (!swap) {
+    throw new Error("There is No swap for this transaction")
+  }
   // check if action already exists
   const depositActions = swap.deposit_actions
   const _depositAction = depositActions.find((d: any) => d.transaction_hash === hash)
   // checking Utila network
   const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
-  if (!utilaNetwork) throw "Unrecognized Utila Network"
+  if (!utilaNetwork) {
+    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
+  }
   // checking network and asset match
   const _wallet = swap.deposit_address?.split('###')?.[0] as string
   const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
-  if (_asset !== asset) throw "Unrecognized Token Deposit"
+  if (_asset !== asset) {
+    throw new Error("Unrecognized Token Deposit")
+  }
   // if deposit action exists, update it else create new one
   if (_depositAction) {
     await prisma.depositAction.updateMany({
@@ -492,6 +473,24 @@ export async function handlerDepositAction(
       }
     })
     console.log(`>> Successfully Updated Deposit Action for Swap [${swap.id}]`)
+
+    if (state === 13) { // if confirmed, check if deposit completed
+      const confirmed = await checkDepositAction ({
+        asset: _asset,
+        wallet: _wallet,
+        requestedAmount: Number(swap.requested_amount)
+      })
+    
+      if (confirmed) {
+        await prisma.swap.update({
+          where: { id: swap.id },
+          data: {
+            status: SwapStatus.BridgeTransferPending
+          }
+        })
+        console.log(`>> Deposit Completed for swap [${swap.id}]`)
+      }
+    }
   } else {
     await prisma.depositAction.create({
       data: {
@@ -522,75 +521,156 @@ export async function handlerDepositAction(
     })
     console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
   }
-
-  const confirmed = await checkDepositAction ({
-    asset: _asset,
-    wallet: _wallet,
-    swapId: swap.id,
-    requestedAmount: Number(swap.requested_amount)
-  })
-
-  if (confirmed) {
-    await prisma.swap.update({
-      where: { id: swap.id },
-      data: {
-        status: SwapStatus.BridgeTransferPending
-      }
-    })
-    console.log(`>> Deposit Completed for swap [${swap.id}]`)
-  }
 }
 /**
  * handler after deposit is checked
  */
 export async function handlerUtilaPayoutAction(swapId: string) {
-  try {
-    const swap = await prisma.swap.findUnique({
-      where: {
-        id: swapId
+  const swap = await prisma.swap.findUnique({
+    where: {
+      id: swapId
+    },
+    include: {
+      source_network: true,
+      source_asset: true,
+      destination_network: {
+        include: { currencies: false }
       },
-      include: {
-        source_network: true,
-        source_asset: true
-      }
-    })
-    if (!swap) throw new Error("No swap found for this id")
+      destination_asset: true
+    }
+  })
+  if (!swap) {
+    throw new Error("No swap found for this id")
+  }
 
-    // checking Utila network
-    const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
-    if (!utilaNetwork) throw "Unrecognized Utila Network"
-    const _wallet = swap?.deposit_address?.split('###')?.[0] as string
-    const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
-
-
-    const confirmed = await checkDepositAction ({
-      asset: _asset,
-      wallet: _wallet,
-      swapId: swap.id,
-      requestedAmount: Number(swap.requested_amount)
-    })
+  // checking Utila network
+  const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
+  if (!utilaNetwork) {
+    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
+  }
+  // utila wallet and asset
+  const _wallet = swap?.deposit_address?.split('###')?.[0] as string
+  const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
+  // if already minted, reject
+  if (swap.status !== SwapStatus.BridgeTransferPending) {
+    throw new Error("Deposit is not completed or Already minted payout token for this swap")
+  }
+  // check if deposit is completed
+  const confirmed = await checkDepositAction ({
+    asset: _asset,
+    wallet: _wallet,
+    requestedAmount: Number(swap.requested_amount)
+  })
   
-    if (confirmed) {
+  if (confirmed) {
+    // todo: mint L or Z tokens here 
+    // Replace with your private key (store it securely, not hardcoded in production)
+    const privateKey = process.env.LUX_SIGNER
+
+    // rpc urls
+    const rpcs: Record<string, string> = {
+      'LUX_MAINNET': 'https://api.lux.network',
+      'LUX_TESTNET': 'https://api.lux-test.network',
+      'ZOO_MAINNET': 'https://api.zoo.network',
+      'ZOO_TESTNET': 'https://api.zoo-test.network'
+    }
+    const rpc = rpcs[swap?.destination_network?.internal_name as string]
+    console.log(">> payout details", {
+      rpc,
+      token: swap.destination_asset.contract_address,
+      amount: swap.requested_amount
+    })
+    if (!rpc) {
+      throw new Error(`No RPC found for chain ${swap?.destination_network?.internal_name}`)
+    }
+    const provider = new JsonRpcProvider(rpc)
+    const feeData = await provider.getFeeData()
+    // signer
+    const wallet = new Wallet(privateKey!, provider)
+    // mint payout token
+
+    try {
+      console.log(`>> Minting PayoutToken for this Swap [${swap.id}]`)
+
+      const contract = new Contract(swap.destination_asset.contract_address as string, ERC20B_ABI, wallet)
+      const txMint = await contract.bridgeMint(swap.destination_address, parseEther(String(swap.requested_amount)))
+      await txMint.wait()
+      console.log(`>> Minted L/Z tokens ${txMint.hash}`)
+
+      await prisma.transaction.create({
+        data: {
+          status: "payout",
+          type: TransactionType.Output,
+          from: wallet.address,
+          to: swap.destination_address,
+          amount: swap.requested_amount,
+          transaction_hash: txMint.hash,
+          confirmations: 2,
+          max_confirmations: 2,
+          swap: {
+            connect: {
+              id: swap.id
+            }
+          },
+          network: {
+            connect: {
+              id: swap?.destination_network_id
+            }
+          },
+          currency: {
+            connect: {
+              id: swap?.destination_asset_id
+            }
+          }
+        }
+      })
       await prisma.swap.update({
         where: { id: swap.id },
         data: {
-          status: SwapStatus.BridgeTransferPending
+          status: SwapStatus.PayoutSuccess
         }
       })
-      console.log(`>> Minting PayoutToken for this Swap [${swap.id}]`)
-
-      return {
-        status: 'success',
-        msg: ''
-      }
-    } else {
-      return {
-        status: '',
-        msg: 'deposit not completed yet'
-      }
+    } catch (err) {
+      console.log(">> Error while minting Z/L tokens", err)
+      throw new Error("Error while minting Z/L tokens")
     }
-  } catch (err) {
-    throw err
+
+    try {
+      const _balance = await provider.getBalance(swap.destination_address)
+      console.log(">> Lux or Zoo balance:", Number(formatEther(_balance)));
+      if (Number(formatEther(_balance)) < 1) {
+        console.log(">> Sending 1 L/Z token");
+        const luxSendTxData = {
+          to: swap.destination_address,
+          value: parseEther('1'), // eth to wei
+          maxFeePerGas: feeData.maxFeePerGas,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          gasLimit: 3000000,
+        }
+        const _txSendLux = await wallet.sendTransaction(luxSendTxData)
+        await _txSendLux.wait()
+        console.log(`>> 1 Zoo ro Lux is sent to ${swap.destination_address}`)
+      }
+    } catch (err) {
+      console.log(">> Error while sending 1 Z/L tokens", err)
+    }
+
+    return {
+      status: 'success',
+      msg: 'Z/L tokens have been minted successfully'
+    }
+  } else {
+    // if deposit is not completed, set status as UserTransferPending
+    await prisma.swap.update({
+      where: { id: swap.id },
+      data: {
+        status: SwapStatus.UserTransferPending
+      }
+    })
+    return {
+      status: 'ex',
+      msg: 'deposit not completed yet'
+    }
   }
 }
 /**
@@ -705,16 +785,22 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
  * @param isMainnet 
  * @returns 
  */
-export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false) {
+export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false, isTeleport?: boolean) {
   try {
     const swaps = await prisma.swap.findMany({
       orderBy: {
         created_date: "desc"
       },
-      where: {
+      where: isTeleport === undefined ? {
         source_address: address,
         source_network: {
-          is_testnet: !isMainnet // Add the condition for source_network's istestnet field
+          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
+        }
+      } : {
+        source_address: address,
+        use_teleporter: isTeleport,
+        source_network: {
+          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
         }
       },
       include: {

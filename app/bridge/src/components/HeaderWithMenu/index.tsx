@@ -1,4 +1,5 @@
 'use client'
+import type React from 'react'
 import { useIntercom } from 'react-use-intercom'
 import { useAuthState } from '../../context/authContext'
 import IconButton from '../buttons/iconButton'
@@ -10,11 +11,9 @@ import BridgeMenu from '../BridgeMenu'
 import { cn } from '@hanzo/ui/util'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@hanzo/ui/primitives'
-//hoosk
-import { useAtom } from 'jotai'
+//hooks
+import { useRouter, useSearchParams } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { useTelepoterAtom } from '@/store/teleport'
-import type React from 'react'
 
 const ConnectWallets = dynamic(
   () => import('../ConnectedWallets').then((comp) => (comp.ConnectedWallets)), 
@@ -30,8 +29,15 @@ const HeaderWithMenu: React.FC<{
   const { email, userId } = useAuthState()
   const { boot, show, update } = useIntercom()
   const pathname = usePathname()
-  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom);
+  const router = useRouter()
+  
   const updateWithProps = () => { update({ email: email, userId: userId }) }
+  
+  const useTeleporter = useSearchParams().get('teleport') === 'true' ? true : false
+
+  const handleBridgeTypeChange = (value: boolean) => {
+    router.push(`${pathname}?teleport=${value}`)
+  }
 
 
   const ChatButton: React.FC = () => (
@@ -66,7 +72,7 @@ const HeaderWithMenu: React.FC<{
       >
         <ToggleButton
           value={useTeleporter}
-          onChange={(b: boolean) => { setUseTeleporter(b) }}
+          onChange={handleBridgeTypeChange}
           name='Teleport'
         />
         Teleport

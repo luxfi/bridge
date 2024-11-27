@@ -13,7 +13,8 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const isDeleted = (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) || undefined
     const isMainnet = req.query?.version === "mainnet"
-    const result = await handlerGetSwaps(req.query.address as string, isDeleted, isMainnet)
+    const isTeleport = req.query?.teleport ? (req.query?.teleport === "true" ? true : false) : undefined
+    const result = await handlerGetSwaps(req.query.address as string, isDeleted, isMainnet, isTeleport)
     res.status(200).json({ data: result })
   } catch (error: any) {
     res.status(500).json({ error: error?.message })
@@ -165,17 +166,14 @@ router.post(
 // route: /api/swaps/expire/:id
 // description: update payout action
 // method: PUT and it's public
-router.put(
-  "/expire/:swapId",
-  async (req: Request, res: Response) => {
-    try {
-      const swapId = req.params.swapId
-      await handlerSwapExpire(swapId as string)
-      res.status(200).json({ status: 'success' })
-    } catch (error: any) {
-      res.status(500).json({ error: error?.message })
-    }
+router.put("/expire/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    await handlerSwapExpire(swapId as string)
+    res.status(200).json({ status: "success" })
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message })
   }
-)
+})
 
 export default router

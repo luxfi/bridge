@@ -62,6 +62,10 @@ const config: HardhatUserConfig = {
       url: AVAX_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
+    arbitrum: {
+      url: ARBITRUM_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
     optimism: {
       url: OPTIMISM_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
@@ -113,8 +117,9 @@ const config: HardhatUserConfig = {
       polygon: process.env.POLYGONSCAN_API_KEY!,
       mainnet: process.env.ETHERSCAN_API_KEY!,
       base: process.env.BASESCAN_API_KEY!,
-      avax: process.env.ARBISCAN_API_KEY!,
-      optimisticEthereum: process.env.OPTIMISMSCAN_API_KEY!
+      avax: process.env.AVAXSCAN_API_KEY!,
+      optimisticEthereum: process.env.OPTIMISMSCAN_API_KEY!,
+      arbitrumOne: process.env.ARBISCAN_API_KEY!
     },
     customChains: [
       {

@@ -3,13 +3,13 @@ import { swapStatusAtom, swapIdAtom } from '@/store/utila'
 //hooks
 import { useAtom } from 'jotai'
 //types
+import type { Network, Token } from '@/types/utila'
+//components
 import UserTokenDepositor from './progress/TokenDepositor'
-import TeleportProcessor from './progress/TeleportProcessor'
-import PayoutProcessor from './progress/PayoutProcessor'
 import SwapSuccess from './progress/SwapSuccess'
 import SwapExpired from './progress/SwapExpired'
 import { SwapStatus } from '@/Models/SwapStatus'
-import type { Network, Token } from '@/types/utila'
+import BridgeProcessor from './progress/BridgeProcessor'
 
 interface IProps {
   className?: string;
@@ -35,6 +35,7 @@ const SwapDetails: React.FC<IProps> = ({
   //atoms
   const [swapStatus] = useAtom(swapStatusAtom);
   const [swapId] = useAtom(swapIdAtom);
+  console.log(swapStatus)
   //chain id
   if (swapStatus === SwapStatus.UserDepositPending) {
     return (
@@ -50,9 +51,9 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     );
-  } else if (swapStatus === SwapStatus.TeleportProcessPending) {
+  } else if (swapStatus === SwapStatus.BridgeTransferPending) {
     return (
-      <TeleportProcessor
+      <BridgeProcessor
         sourceNetwork={sourceNetwork}
         sourceAsset={sourceAsset}
         destinationNetwork={destinationNetwork}
@@ -60,19 +61,7 @@ const SwapDetails: React.FC<IProps> = ({
         destinationAddress={destinationAddress}
         sourceAmount={sourceAmount}
         swapId={swapId}
-        className={className}
-      />
-    );
-  } else if (swapStatus === SwapStatus.UserPayoutPending) {
-    return (
-      <PayoutProcessor
-        sourceNetwork={sourceNetwork}
-        sourceAsset={sourceAsset}
-        destinationNetwork={destinationNetwork}
-        destinationAsset={destinationAsset}
-        destinationAddress={destinationAddress}
-        sourceAmount={sourceAmount}
-        swapId={swapId}
+        getSwapById={getSwapById}
         className={className}
       />
     );
