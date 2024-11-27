@@ -32,8 +32,8 @@ export const CONTRACTS = {
   42161: {
     name: 'ARBITRUM_MAINNET',
     chain_id: 42161,
-    teleporter: '',
-    vault: '',
+    teleporter: '0xA60429080752484044e529012aA46e1D691f50Ab',
+    vault: '0xE6e3E18F86d5C35ec1E24c0be8672c8AA9989258',
   },
   42220: {
     name: 'CELO_MAINNET',

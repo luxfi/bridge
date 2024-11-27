@@ -424,12 +424,12 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   },
   {
-    display_name: "Arbitrum",
+    display_name: "Arbitrum One",
     internal_name: "ARBITRUM_MAINNET",
     is_testnet: false,
     chain_id: "42161",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xA60429080752484044e529012aA46e1D691f50Ab",
+    vault: "0xE6e3E18F86d5C35ec1E24c0be8672c8AA9989258",
     node: `https://lb.drpc.org/ogrpc?network=arbitrum&dkey=${DRPC_KEY}`,
     currencies: [
       {
