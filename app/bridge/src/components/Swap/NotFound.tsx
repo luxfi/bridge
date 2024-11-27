@@ -7,7 +7,7 @@ import { Home, MessageSquare } from 'lucide-react'
 import MessageComponent from '../MessageComponent'
 import SubmitButton, { DoubleLineText } from '../buttons/submitButton'
 import GoHomeButton from '../utils/GoHome'
-import { useAuthState } from '../../context/authContext'
+import { useAuthState } from '../../context/auth-provider'
 
 const NotFound: React.FC = () => {
 

@@ -1,7 +1,7 @@
 'use client'
 import { useIntercom } from "react-use-intercom"
 
-import { useAuthState } from "../context/authContext"
+import { useAuthState } from "../context/auth-provider"
 
 const ContactSupport: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     const { email, userId } = useAuthState()

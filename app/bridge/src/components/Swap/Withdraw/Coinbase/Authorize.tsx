@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 
 
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 import { useSwapDataState } from '@/context/swap'
 import { useInterval } from '@/hooks/useInterval'
 import { CalculateMinimalAuthorizeAmount } from '@/lib/fees'

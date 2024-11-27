@@ -14,7 +14,7 @@ import '@rainbow-me/rainbowkit/styles.css'
 import siteDef from '@/site-def'
 import _metadata from '@/metadata'
 
-import Contexts from '@/components/Contexts'
+import Contexts from '@/context'
 import Main from '@/components/main'
 import Header from '@/components/header'
 

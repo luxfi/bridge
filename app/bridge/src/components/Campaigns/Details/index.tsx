@@ -8,7 +8,7 @@ import useSWR from 'swr'
 
 import { LinkElement } from '@hanzo/ui/primitives'
 
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
 import { type ApiResponse } from '@/Models/ApiResponse'
 import { type Layer } from '@/Models/Layer'

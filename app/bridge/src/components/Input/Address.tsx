@@ -10,7 +10,7 @@ import { type AddressBookItem } from "@/lib/BridgeApiClient";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import { useSwapDataUpdate } from "@/context/swap";
 import KnownInternalNames from "@/lib/knownIds";
-import { useSettings } from "@/context/settings";
+import { useSettings } from "@/context/settings-provider";
 import { isValidAddress } from "@/lib/addressValidator";
 import { type Partner } from "@/Models/Partner";
 import shortenAddress from "../utils/ShortenAddress";

@@ -13,7 +13,7 @@ import {
   ChangeNetworkButton,
   ConnectWalletButton,
 } from "./WalletTransfer/buttons";
-import { useSettings } from "../../../../context/settings";
+import { useSettings } from "../../../../context/settings-provider";
 import { type TransactionReceipt } from "zksync/build/types";
 import { useChainId } from "wagmi";
 

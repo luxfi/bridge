@@ -16,7 +16,7 @@ import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
 import { useNotify } from '@/context/toast-provider';
 
 //hooks
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from "@/context/ethers-provider";
 
 import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'

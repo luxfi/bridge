@@ -7,7 +7,7 @@ import SubmitButton from "@/components/buttons/submitButton";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import BackgroundField from "@/components/backgroundField";
 
-import { useFee } from "@/context/feeContext";
+import { useFee } from "@/context/fee-provider";
 import { isValidAddress } from "@/lib/addressValidator";
 import { useSwapDataState } from "@/context/swap";
 import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";

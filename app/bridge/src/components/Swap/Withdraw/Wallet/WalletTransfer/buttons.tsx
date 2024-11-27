@@ -8,7 +8,7 @@ import { type ActionData } from "./sharedTypes";
 import SubmitButton from "../../../../buttons/submitButton";
 import useWallet from "../../../../../hooks/useWallet";
 import { useSwapDataState } from "../../../../../context/swap";
-import { useSettings } from "../../../../../context/settings";
+import { useSettings } from "../../../../../context/settings-provider";
 
 export const ConnectWalletButton: React.FC = () => {
     const { swap } = useSwapDataState()

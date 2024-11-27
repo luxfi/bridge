@@ -3,7 +3,7 @@ import Image from "next/image";
 import useSWR from 'swr'
 
 import { type Layer } from "@/Models/Layer";
-import { useSettings } from "@/context/settings";
+import { useSettings } from "@/context/settings-provider";
 import { truncateDecimals } from "../../utils/RoundDecimals";
 import shortenAddress, { shortenEmail } from "../../utils/ShortenAddress";
 import BridgeApiClient from "@/lib/BridgeApiClient";

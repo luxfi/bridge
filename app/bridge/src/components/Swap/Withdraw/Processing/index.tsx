@@ -1,6 +1,6 @@
 'use client'
 import { useSwapDataState } from '@/context/swap';
-import { useSettings } from '@/context/settings';
+import { useSettings } from '@/context/settings-provider';
 import Processing from './Processing';
 
 const Component: React.FC = () => {

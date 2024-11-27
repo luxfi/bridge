@@ -7,7 +7,7 @@ import { Trophy } from "lucide-react"
 import useSWR from "swr"
 import { useAccount } from "wagmi"
 
-import { useSettings } from "@/context/settings"
+import { useSettings } from "@/context/settings-provider"
 import BridgeApiClient, { type Campaign, type Leaderboard, type Reward } from "@/lib/BridgeApiClient"
 import { ApiResponse } from "@/Models/ApiResponse"
 

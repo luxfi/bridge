@@ -8,7 +8,7 @@ import { useAccount } from "wagmi"
 import { Progress } from "@hanzo/ui/primitives";
 
 
-import { useSettings } from "@/context/settings"
+import { useSettings } from "@/context/settings-provider"
 import BackgroundField from "../../backgroundField";
 import type { Campaign, Reward, RewardPayout } from "@/lib/BridgeApiClient"
 import BridgeApiClient from "@/lib/BridgeApiClient"

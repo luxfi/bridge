@@ -9,7 +9,7 @@ import erc20ABI from '@/components/lux/teleport/constants/abi/erc20.json'
 //hooks
 import { useSwitchChain } from 'wagmi'
 import { useAtom } from 'jotai'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from "@/context/ethers-provider";
 import { parseUnits } from 'ethers/lib/utils'
 
 import axios from 'axios'

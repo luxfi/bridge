@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@hanzo/ui/primitives'
 
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 import { type SwapFormValues } from '../DTOs/SwapFormValues'
 import { SelectMenuItem } from '../Select/Shared/Props/selectMenuItem'
 import { ApiResponse } from '@/Models/ApiResponse'

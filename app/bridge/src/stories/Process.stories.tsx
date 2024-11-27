@@ -10,7 +10,7 @@ import {
   SwapDataStateContext,
   SwapDataUpdateContext,
 } from "../context/swap";
-import { SettingsContext } from "../context/settings";
+import { SettingsContext } from "../context/settings-provider";
 // import { WagmiConfig, configureChains, createConfig } from "wagmi";
 // import { publicProvider } from "wagmi/providers/public";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
@@ -39,10 +39,10 @@ import {
   AuthDataUpdateContext,
   AuthStateContext,
   UserType,
-} from "../context/authContext";
+} from "../context/auth-provider";
 import { IntercomProvider } from "react-use-intercom";
 import { THEME_COLORS } from "../Models/Theme";
-import RainbowKitComponent from "../components/RainbowKit";
+import RainbowKitComponent from "../context/connect-provider";
 import SwapDetails from "../components/Swap";
 import SwapMockFunctions from "./Mocks/context/SwapDataUpdate";
 import AuthMockFunctions from "./Mocks/context/AuthDataUpdate";

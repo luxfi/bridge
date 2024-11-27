@@ -9,7 +9,7 @@ import { useSwapDataState, useSwapDataUpdate } from '../../../../context/swap';
 import BridgeApiClient, { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
 import { LSAPIKnownErrorCode } from '../../../../Models/ApiError';
 import toast from 'react-hot-toast';
-import { useSettings } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings-provider';
 import { TimerProvider, useTimerState } from '../../../../context/timerContext';
 import { useSwapTransactionStore } from '../../../../stores/swapTransactionStore';
 const TIMER_SECONDS = 120

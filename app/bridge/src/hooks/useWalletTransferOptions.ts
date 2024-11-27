@@ -1,4 +1,4 @@
-import { useSettings } from "../context/settings"
+import { useSettings } from "../context/settings-provider"
 import { useSwapDataState } from "../context/swap"
 import { NetworkType } from "../Models/CryptoNetwork"
 import useWallet from "./useWallet"
