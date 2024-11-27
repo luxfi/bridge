@@ -78,8 +78,6 @@ function TransactionsHistory() {
     }
   }, [paramString])
 
-
-
   const getSwaps = async (page?: number, status?: string | number) => {
     try {
       const {
@@ -89,7 +87,7 @@ function TransactionsHistory() {
           !showAllSwaps ? `page=${page}` : ''
         }${
           status ? `&status=${status}` : ''
-        }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}`
+        }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}&pageSize=${PAGE_SIZE}`
       )
       return {
         data: data,
@@ -108,35 +106,43 @@ function TransactionsHistory() {
     if (Number(data?.length) > 0) setShowToggleButton(true)
   }, [])
 
+  const fetchInitialSwaps = async () => {
+    const { data, error } = await getSwaps(
+      1,
+      SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
+    )
+    if (error) {
+      notify(error, 'error')
+      throw ''
+    }
+    setSwaps(data)
+    setPage(1)
+    if (Number(data?.length) < PAGE_SIZE) {
+      setIsLastPage(true)
+    } else {
+      setIsLastPage(false)
+    }
+  }
+
+  const fetchAllSwaps = async () => {
+    const { data, error } = await getSwaps()
+    if (error) {
+      notify(error, 'error')
+      throw ''
+    }
+
+    setSwaps(data)
+    setPage(1)
+    setIsLastPage(true)
+  }
+
   useAsyncEffect(async () => {
     try {
       setLoading(true)
       if (!showAllSwaps) {
-        const { data, error } = await getSwaps(
-          1,
-          SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
-        )
-        if (error) {
-          notify(error, 'error')
-          throw ""
-        }
-        setSwaps(data)
-        setPage(1)
-        if (Number(data?.length) < PAGE_SIZE) {
-          setIsLastPage(true)
-        } else {
-          setIsLastPage(false)
-        }
+        fetchInitialSwaps()
       } else {
-        const { data, error } = await getSwaps()
-        if (error) {
-          notify(error, 'error')
-          throw ""
-        }
-        
-        setSwaps(data)
-        setPage(1)
-        setIsLastPage(true)
+        fetchAllSwaps()
       }
     } catch (err) {
       //
@@ -145,8 +151,12 @@ function TransactionsHistory() {
     }
   }, [showAllSwaps])
 
-  useEffect(() => {
-    setShowAllSwaps (false)
+  useAsyncEffect(async () => {
+    if (showAllSwaps) {
+      setShowAllSwaps(false)
+    } else {
+      fetchInitialSwaps()
+    }
   }, [useTeleporter])
 
   const handleLoadMore = async () => {
@@ -161,7 +171,7 @@ function TransactionsHistory() {
 
       if (error) {
         notify(error, 'error')
-        throw ""
+        throw ''
       }
 
       setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
@@ -169,10 +179,6 @@ function TransactionsHistory() {
       if (Number(data?.length) < PAGE_SIZE) {
         setIsLastPage(true)
       }
-      // setSwaps(data)
-      // setPage(1)
-      // setIsLastPage(true)
-      // setLoading(false)
     } catch (err) {
       //
     } finally {
