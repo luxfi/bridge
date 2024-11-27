@@ -785,49 +785,129 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
  * @param isMainnet 
  * @returns 
  */
-export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false, isTeleport?: boolean) {
+export async function handlerGetSwaps(isDeleted?: boolean, isMainnet? : boolean, isTeleport?: boolean, page?: number) {
+  console.log({ isTeleport, page, isMainnet })
   try {
-    const swaps = await prisma.swap.findMany({
-      orderBy: {
-        created_date: "desc"
-      },
-      where: isTeleport === undefined ? {
-        source_address: address,
-        source_network: {
-          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
-        }
-      } : {
-        source_address: address,
-        use_teleporter: isTeleport,
-        source_network: {
-          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
-        }
-      },
-      include: {
-        source_network: true,
-        source_asset: true,
-        destination_network: true,
-        destination_asset: true,
-        deposit_actions: true,
-        quotes: true,
-        transactions: {
-          include: {
-            currency: true,
-            network: {
-              include: { currencies: false }
+    if (page) {
+      const pageSize = 2
+      const swaps = await prisma.swap.findMany({
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: {
+          created_date: "desc"
+        },
+        where: {
+          use_teleporter: isTeleport,
+          source_network: {
+            is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
+          }
+        },
+        include: {
+          source_network: true,
+          source_asset: true,
+          destination_network: true,
+          destination_asset: true,
+          deposit_actions: true,
+          quotes: true,
+          transactions: {
+            include: {
+              currency: true,
+              network: {
+                include: { currencies: false }
+              }
             }
           }
         }
-      }
-    })
+      })
+  
+      return swaps.map((s: any) => ({
+        ...s,
+        source_network: s?.source_network?.internal_name,
+        source_asset: s?.source_asset?.asset,
+        destination_network: s?.destination_network?.internal_name,
+        destination_asset: s?.destination_asset?.asset
+      }))
+    } else {
+      const swaps = await prisma.swap.findMany({
+        orderBy: {
+          created_date: "desc"
+        },
+        where: {
+          use_teleporter: isTeleport,
+          source_network: {
+            is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
+          }
+        },
+        include: {
+          source_network: true,
+          source_asset: true,
+          destination_network: true,
+          destination_asset: true,
+          deposit_actions: true,
+          quotes: true,
+          transactions: {
+            include: {
+              currency: true,
+              network: {
+                include: { currencies: false }
+              }
+            }
+          }
+        }
+      })
+  
+      return swaps.map((s: any) => ({
+        ...s,
+        source_network: s?.source_network?.internal_name,
+        source_asset: s?.source_asset?.asset,
+        destination_network: s?.destination_network?.internal_name,
+        destination_asset: s?.destination_asset?.asset
+      }))
+    }
 
-    return swaps.map((s: any) => ({
-      ...s,
-      source_network: s?.source_network?.internal_name,
-      source_asset: s?.source_asset?.asset,
-      destination_network: s?.destination_network?.internal_name,
-      destination_asset: s?.destination_asset?.asset
-    }))
+  } catch (error: any) {
+    //catchPrismaKnowError(error)
+    throw new Error(`Error getting swap: ${error?.message}`)
+  }
+}
+/**
+ * 
+ * @param address 
+ * @returns 
+ */
+export async function handlerGetSwapsByAddress(address: string) {
+  try {
+      const swaps = await prisma.swap.findMany({
+        orderBy: {
+          created_date: "desc"
+        },
+        where: {
+          source_address: address
+        },
+        include: {
+          source_network: true,
+          source_asset: true,
+          destination_network: true,
+          destination_asset: true,
+          deposit_actions: true,
+          quotes: true,
+          transactions: {
+            include: {
+              currency: true,
+              network: {
+                include: { currencies: false }
+              }
+            }
+          }
+        }
+      })
+      return swaps.map((s: any) => ({
+        ...s,
+        source_network: s?.source_network?.internal_name,
+        source_asset: s?.source_asset?.asset,
+        destination_network: s?.destination_network?.internal_name,
+        destination_asset: s?.destination_asset?.asset
+      }))
   } catch (error: any) {
     //catchPrismaKnowError(error)
     throw new Error(`Error getting swap: ${error?.message}`)
@@ -842,7 +922,7 @@ export async function handlerGetHasBySwaps(address: string) {
   try {
     const isadd = isValidAddress(address)
     if (isadd) {
-      return await handlerGetSwaps(address, false)
+      return await handlerGetSwapsByAddress(address)
     } else {
       console.time()
       const transaction = await prisma.transaction.findFirstOrThrow({
