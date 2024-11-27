@@ -7,7 +7,7 @@ import NumericInput from "./NumericInput";
 import SecondaryButton from "../buttons/secondaryButton";
 import { useBalancesState, useBalancesUpdate } from "@/context/balances";
 import { truncateDecimals } from "../utils/RoundDecimals";
-import { useFee } from "@/context/feeContext";
+import { useFee } from "@/context/fee-provider";
 import useWallet from "@/hooks/useWallet";
 import useBalance from "@/hooks/useBalance";
 

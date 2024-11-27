@@ -7,7 +7,7 @@ import { Gift } from 'lucide-react'
 import { ApiResponse } from '@/Models/ApiResponse'
 import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
 import { type Layer } from '@/Models/Layer'
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 
 import SpinIcon from '../icons/spinIcon'
 import LinkWrapper from '../LinkWrapper'

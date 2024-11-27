@@ -17,7 +17,7 @@ import { ethers } from 'ethers'
 //hooks
 import { useAtom } from 'jotai'
 import { useSwitchChain } from 'wagmi'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from "@/context/ethers-provider";
 
 import type { Network, Token } from '@/types/teleport'
 import axios from 'axios'

@@ -1,7 +1,7 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
 
-import { useSettingsContainer } from '@/context/settings'
+import { useSettingsContainer } from '@/context/settings-provider'
 
 import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
 import SwapProcess from '@/components/lux/teleport/process'

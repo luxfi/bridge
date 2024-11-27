@@ -3,7 +3,7 @@ import { useCallback, useEffect } from "react"
 import Image from 'next/image';
 import { ArrowLeftRight } from "lucide-react"
 
-import { useSettings } from "@/context/settings";
+import { useSettings } from "@/context/settings-provider";
 import { useSwapDataState } from "@/context/swap";
 import KnownInternalNames from "@/lib/knownIds";
 import BackgroundField from "../../backgroundField";
@@ -12,7 +12,7 @@ import SubmitButton from "../../buttons/submitButton";
 import shortenAddress from "../../utils/ShortenAddress";
 import { isValidAddress } from "@/lib/addressValidator";
 import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
-import { useFee } from "@/context/feeContext";
+import { useFee } from "@/context/fee-provider";
 import { type Layer } from "@/Models/Layer";
 import { type Exchange } from "@/Models/Exchange";
 

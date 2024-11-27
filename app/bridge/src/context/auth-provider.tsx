@@ -26,7 +26,9 @@ export type UpdateInterface = {
     setUserType: (value: UserType) => void
 }
 
-export function AuthProvider({ children }: PropsWithChildren) {
+const AuthProvider: React.FC<PropsWithChildren> = ({ 
+  children 
+}) => {
 
     const [email, setEmail] = React.useState<string | undefined>()
     const [tempEmail, setTempEmail] = React.useState<string | undefined>()
@@ -127,3 +129,6 @@ export enum UserType {
     GuestUser = 'guest',
     AuthenticatedUser = 'main'
 }
+
+export default AuthProvider
+

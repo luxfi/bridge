@@ -4,7 +4,7 @@ import React from 'react';
 import AuthWizard from '@/components/Wizard/AuthWizard';
 import getBridgeSettings from '@/util/getBridgeSettings';
 import { redirect } from 'next/navigation';
-import { useSettingsContainer } from '@/context/settings';
+import { useSettingsContainer } from '@/context/settings-provider';
 import { FormWizardProvider } from '@/context/formWizardProvider';
 import { AuthStep } from '@/Models/Wizard';
 import { SwapDataProvider } from '@/context/swap';

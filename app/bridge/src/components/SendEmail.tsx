@@ -6,7 +6,7 @@ import { Album, ChevronDown, Mail, ScrollText, User } from 'lucide-react'
 import { Field, Form, Formik, type FieldProps, type FormikErrors } from 'formik'
 import toast from 'react-hot-toast'
 
-import { useAuthDataUpdate, useAuthState } from '../context/authContext'
+import { useAuthDataUpdate, useAuthState } from '../context/auth-provider'
 import { useTimerState } from '../context/timerContext'
 import TokenService from '../lib/TokenService'
 import BridgeAuthApiClient from '../lib/userAuthApiClient'

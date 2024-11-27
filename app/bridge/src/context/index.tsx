@@ -1,37 +1,36 @@
 'use client'
+import type { ErrorInfo, PropsWithChildren } from 'react'
+import { IntercomProvider } from 'react-use-intercom'
+import { SWRConfig } from 'swr'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useSearchParams } from 'next/navigation'
-import axios from 'axios'
 import * as Sentry from '@sentry/nextjs'
+import { Provider as JotaiProvider } from "jotai";
 
 import { TooltipProvider } from '@hanzo/ui/primitives'
 
-import ErrorFallback from './ErrorFallback'
-import ColorSchema from './ColorSchema'
-import TonConnectProvider from './TonConnectProvider'
-import QueryProvider from '../context/query'
-import RainbowKit from './RainbowKit'
-import Solana from './SolanaProvider'
-import { BridgeAppSettings } from '../Models/BridgeAppSettings'
+import ErrorFallback from '../components/ErrorFallback'
+import ColorSchema from '../components/ColorSchema'
+import TonConnectProvider from '../components/TonConnectProvider'
+
+import Solana from '../components/SolanaProvider'
 import { SendErrorMessage } from '../lib/telegram'
 import { QueryParams } from '../Models/QueryParams'
-import { THEME_COLORS, type ThemeData } from '../Models/Theme'
-import { AuthProvider } from '@/context/authContext'
-import { SettingsProvider } from '@/context/settings'
-import { FeeProvider } from '@/context/feeContext'
-import { JotaiProvider } from '@/context/jotaiContext'
-import { EthersProvider } from '@/context/ethersContext'
+import { THEME_COLORS } from '../Models/Theme'
+import { BridgeAppSettings } from '../Models/BridgeAppSettings'
 import { type BridgeSettings } from '../Models/BridgeSettings'
 
-import { IntercomProvider } from 'react-use-intercom'
-import { SWRConfig } from 'swr'
+import QueryProvider from './query'
+import ConnectProvider from './connect-provider'
+import AuthProvider from './auth-provider'
+import SettingsProvider from './settings-provider'
+import FeeProvider from './fee-provider'
+import EthersProvider from './ethers-provider'
 
-import type { ErrorInfo, PropsWithChildren } from 'react'
 
 const INTERCOM_APP_ID = 'o1kmvctg'
 import '@rainbow-me/rainbowkit/styles.css'
 import { ToastProvider } from '@/context/toast-provider'
-import useAsyncEffect from 'use-async-effect'
 
 const Contexts: React.FC<
   {
@@ -126,13 +125,13 @@ const Contexts: React.FC<
                   <ToastProvider>
                     <JotaiProvider>
                       <TonConnectProvider basePath={''} themeData={themeData}> 
-                        <RainbowKit>
+                        <ConnectProvider>
                           <EthersProvider>
                             <Solana>
                               <FeeProvider>{children}</FeeProvider>
                             </Solana>
                           </EthersProvider>
-                        </RainbowKit>
+                        </ConnectProvider>
                       </TonConnectProvider>
                     </JotaiProvider>
                   </ToastProvider>

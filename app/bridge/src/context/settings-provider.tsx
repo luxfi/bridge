@@ -54,8 +54,8 @@ const useSettingsContainer = (): SettingsContainer | null => {
 }
 
 export {
-  SettingsProvider,
+  SettingsProvider as default,
   useSettings,
   useSettingsContainer,
-  SettingsContext 
+  SettingsContext // for storybook
 }

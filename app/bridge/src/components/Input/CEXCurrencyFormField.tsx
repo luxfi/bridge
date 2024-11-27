@@ -2,7 +2,7 @@
 import { useCallback, useEffect } from "react";
 import { useFormikContext } from "formik";
 
-import { useSettings } from "@/context/settings";
+import { useSettings } from "@/context/settings-provider";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import { SelectMenuItem, type ISelectMenuItem } from "../Select/Shared/Props/selectMenuItem";
 import PopoverSelectWrapper from "../Select/Popover/PopoverSelectWrapper";

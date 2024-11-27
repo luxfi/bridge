@@ -2,7 +2,7 @@
 import BridgeApiClient from '../lib/BridgeApiClient';
 import useSWR from 'swr';
 import { ApiResponse } from '../Models/ApiResponse';
-import { createContext, useState, useContext, useEffect, type PropsWithChildren } from 'react'
+import React, { createContext, useState, useContext, useEffect, type PropsWithChildren } from 'react'
 import type { SwapFormValues } from '../components/DTOs/SwapFormValues';
 
 const FeeStateContext = createContext<ContextType | null>(null);
@@ -28,7 +28,9 @@ export type Fee = {
     manualReceiveAmount: number | undefined
 }
 
-export function FeeProvider({ children }: PropsWithChildren) {
+const FeeProvider: React.FC<PropsWithChildren> = ({ 
+  children 
+}) => {
 
     const [values, setValues] = useState<SwapFormValues>()
     const { fromCurrency, toCurrency, from, to, toExchange, amount, fromExchange, currencyGroup } = values || {}
@@ -105,3 +107,5 @@ export function useFee() {
 
     return data;
 }
+
+export default FeeProvider

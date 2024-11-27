@@ -5,7 +5,7 @@ import SubmitButton from '../../../buttons/submitButton';
 import { useSwapDataState } from '../../../../context/swap';
 import toast from 'react-hot-toast';
 import { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
-import { useSettings } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings-provider';
 import WarningMessage from '../../../WarningMessage';
 import GuideLink from '../../../guideLink';
 import useWallet from '../../../../hooks/useWallet';

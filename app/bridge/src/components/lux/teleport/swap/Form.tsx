@@ -24,7 +24,7 @@ import { networks as mainNetworks } from '@/components/lux/teleport/constants/ne
 import useWallet from "@/hooks/useWallet";
 import useAsyncEffect from 'use-async-effect'
 import { useAtom } from 'jotai'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from "@/context/ethers-provider";
 
 import {
   sourceNetworkAtom,
