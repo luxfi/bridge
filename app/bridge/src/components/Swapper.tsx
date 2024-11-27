@@ -1,13 +1,13 @@
 'use client'
 import React from 'react'
-import { useAtom } from 'jotai'
+import { useSearchParams } from 'next/navigation'
 
-import { useTelepoterAtom } from '@/store/teleport'
 import Teleporter from '@/components/lux/teleport/swap/Form'
 import SwapFireblock from '@/components/lux/utila/swap/Form'
 
 const Swapper: React.FC = () => {
-  const [useTeleporter, _] = useAtom(useTelepoterAtom)
+  
+  const useTeleporter = useSearchParams().get('teleport') === 'true' ? true : false
 
   return (
     <div className="xs:w-full md:w-auto md:py-20">
