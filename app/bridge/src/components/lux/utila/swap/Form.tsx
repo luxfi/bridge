@@ -247,10 +247,10 @@ const Swap: FC = () => {
             balance={sourceBalance}
             balanceLoading={isSourceBalanceLoading}
           />
-          <div className="py-4">
+          {/* <div className="py-4">
             <span className="text-md">Fee: {1}</span>
             <span className="text-xs"> %</span>
-          </div>
+          </div> */}
 
           <div className="flex flex-col w-full">
             <ToNetworkForm
