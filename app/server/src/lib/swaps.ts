@@ -442,17 +442,23 @@ export async function handlerDepositAction(
     }
   })
 
-  if (!swap) throw "There is no swap for this Tx"
+  if (!swap) {
+    throw new Error("There is No swap for this transaction")
+  }
   // check if action already exists
   const depositActions = swap.deposit_actions
   const _depositAction = depositActions.find((d: any) => d.transaction_hash === hash)
   // checking Utila network
   const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
-  if (!utilaNetwork) throw "Unrecognized Utila Network"
+  if (!utilaNetwork) {
+    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
+  }
   // checking network and asset match
   const _wallet = swap.deposit_address?.split('###')?.[0] as string
   const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
-  if (_asset !== asset) throw "Unrecognized Token Deposit"
+  if (_asset !== asset) {
+    throw new Error("Unrecognized Token Deposit")
+  }
   // if deposit action exists, update it else create new one
   if (_depositAction) {
     await prisma.depositAction.updateMany({
@@ -467,6 +473,24 @@ export async function handlerDepositAction(
       }
     })
     console.log(`>> Successfully Updated Deposit Action for Swap [${swap.id}]`)
+
+    if (state === 13) { // if confirmed, check if deposit completed
+      const confirmed = await checkDepositAction ({
+        asset: _asset,
+        wallet: _wallet,
+        requestedAmount: Number(swap.requested_amount)
+      })
+    
+      if (confirmed) {
+        await prisma.swap.update({
+          where: { id: swap.id },
+          data: {
+            status: SwapStatus.BridgeTransferPending
+          }
+        })
+        console.log(`>> Deposit Completed for swap [${swap.id}]`)
+      }
+    }
   } else {
     await prisma.depositAction.create({
       data: {
@@ -497,22 +521,6 @@ export async function handlerDepositAction(
     })
     console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
   }
-
-  const confirmed = await checkDepositAction ({
-    asset: _asset,
-    wallet: _wallet,
-    requestedAmount: Number(swap.requested_amount)
-  })
-
-  if (confirmed) {
-    await prisma.swap.update({
-      where: { id: swap.id },
-      data: {
-        status: SwapStatus.BridgeTransferPending
-      }
-    })
-    console.log(`>> Deposit Completed for swap [${swap.id}]`)
-  }
 }
 /**
  * handler after deposit is checked
@@ -531,18 +539,20 @@ export async function handlerUtilaPayoutAction(swapId: string) {
       destination_asset: true
     }
   })
-  if (!swap) throw new Error("No swap found for this id")
+  if (!swap) {
+    throw new Error("No swap found for this id")
+  }
 
   // checking Utila network
   const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
   if (!utilaNetwork) {
-    throw new Error("Unrecognized Utila Network")
+    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
   }
   const _wallet = swap?.deposit_address?.split('###')?.[0] as string
   const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
   // if already minted, reject
   if (swap.status !== SwapStatus.BridgeTransferPending) {
-    throw new Error("Already Minted Payout Tokens for this Swap")
+    throw new Error("Deposit is not completed or Already minted payout token for this swap")
   }
   // check if deposit is completed
   const confirmed = await checkDepositAction ({
