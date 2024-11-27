@@ -789,7 +789,7 @@ export async function handlerGetSwaps(isDeleted?: boolean, isMainnet? : boolean,
   console.log({ isTeleport, page, isMainnet })
   try {
     if (page) {
-      const pageSize = 2
+      const pageSize = 20
       const swaps = await prisma.swap.findMany({
         skip: (page - 1) * pageSize,
         take: pageSize,
