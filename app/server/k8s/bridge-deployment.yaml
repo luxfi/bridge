@@ -35,6 +35,11 @@ spec:
                 secretKeyRef:
                   name: bridge-server-secret
                   key: POSTGRES_URL
+            - name: LUX_SIGNER
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: LUX_SIGNER
             - name: SERVICE_ACCOUNT_EMAIL
               valueFrom:
                 secretKeyRef:
@@ -45,10 +50,5 @@ spec:
                 secretKeyRef:
                   name: bridge-server-secret
                   key: SERVICE_ACCOUNT_PRIVATE_KEY
-            - name: LUX_SIGNER
-              valueFrom:
-                secretKeyRef:
-                  name: bridge-server-secret
-                  key: LUX_SIGNER
           ports:
             - containerPort: 6000
