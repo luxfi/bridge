@@ -141,7 +141,7 @@ The server utilizes environment variables for configuration. Create a .env file 
 POSTGRESQL_URL=your_postgres_connection_string
 GH_USER=your_github_username
 GH_TOKEN=your_github_token
-LUX_SIGNER=
 REPLICAS=number_of_replicas
+LUX_SIGNER=
 
 Ensure that sensitive information is kept secure and not committed to version control.
