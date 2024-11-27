@@ -23,8 +23,11 @@ router.get("/", async (req: Request, res: Response) => {
     // page
     const _page = req.query?.page
     const page = _page ? (isNaN(Number(_page)) ? 0 : Number(Number(_page))) : undefined
+    // pageSize
+    const _pageSize = req.query?.pageSize
+    const pageSize = _pageSize ? (isNaN(Number(_pageSize)) ? 0 : Number(Number(_pageSize))) : undefined
 
-    const result = await handlerGetSwaps(isDeleted, isMainnet, isTeleport, page)
+    const result = await handlerGetSwaps(isDeleted, isMainnet, isTeleport, page, pageSize)
     res.status(200).json({ data: result })
   } catch (error: any) {
     res.status(500).json({ error: error?.message })
