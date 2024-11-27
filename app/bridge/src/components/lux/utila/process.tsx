@@ -74,7 +74,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
     if (swapStatus === SwapStatus.UserDepositPending) {
       timerRef.current = setInterval(async () => {
         getSwapByIdForDepositChecking (swapId)
-      }, 10 * 1000);
+      }, 5 * 1000);
     } else {
       timerRef.current && clearInterval(timerRef.current);
     }
