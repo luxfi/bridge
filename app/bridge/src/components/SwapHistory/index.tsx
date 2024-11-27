@@ -57,7 +57,7 @@ function TransactionsHistory() {
   const [showAllSwaps, setShowAllSwaps] = useState(false)
   const [showToggleButton, setShowToggleButton] = useState(false)
 
-  const PAGE_SIZE = 2
+  const PAGE_SIZE = 20
 
   const { notify } = useNotify()
 
