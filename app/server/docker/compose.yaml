@@ -7,6 +7,7 @@ services:
       - PORT=
       - POSTGRES_URL=
       - COINBASE_API_KEY=
+      - LUX_SIGNER=
       - SERVICE_ACCOUNT_EMAIL=
       - SERVICE_ACCOUNT_PRIVATE_KEY=
     ports:

@@ -89,12 +89,13 @@ export const verifyUtilaSignature = (
 ): void => {
   try {
     const signature = req.headers["x-utila-signature"] as string;
+    const eventType = req?.body?.type
     // Log all incoming request details
-    logger.info (">> Incoming webhook request")
-    console.log ({
-      signature,
-      body: req.body
-    })
+    logger.info (`>> Incoming webhook request [${eventType}]`)
+    // console.log ({
+    //   signature,
+    //   body: req.body
+    // })
 
     if (!signature) {
       console.error(">> Missing x-utila-signature Header")
@@ -109,7 +110,7 @@ export const verifyUtilaSignature = (
     console.info(">> Webhook signature verified successfully")
     next ()
   } catch (err: any) {
-    res.status(401).send({ error: err?.message })
+    res.status(401).send(err?.message)
   }
 };
 
@@ -201,13 +202,17 @@ export const archiveWalletForExpire = async (name: string) => {
  */
 export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATED) => {
   try {
-    console.info(">> Processing for TRANSACTION_CREATED");
+    console.info(">> Processing for [TRANSACTION_CREATED]");
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
-    if (!transaction) throw "No transaction"
+    if (!transaction) {
+      throw new Error("No Transaction")
+    }
     const transfers = transaction.transfers || []
-    if (transfers.length === 0) throw "No transfers" 
+    if (transfers.length === 0) {
+      throw new Error("No Token Transfers")
+    }
 
     const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
@@ -224,8 +229,10 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
       "TRANSACTION_CREATED"
     )
 
-  } catch (err) {
-    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED", err)
+  } catch (error: any) {
+    console.error(">> Error Parsing Webhook for TRANSACTION_CREATED")
+    console.log(error)
+    throw error
   }
 }
 /**
@@ -234,13 +241,17 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
  */
 export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_STATE_UPDATED) => {
   try {
-    console.info(">> Processing for TRANSACTION_STATE_UPDATED");
+    console.info(">> Processing for [TRANSACTION_STATE_UPDATED]");
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
-    if (!transaction) throw "No transaction"
+    if (!transaction) {
+      throw new Error("No Transaction")
+    }
     const transfers = transaction.transfers || []
-    if (transfers.length === 0) throw "No transfers"
+    if (transfers.length === 0) {
+      throw new Error("No Token Transfers")
+    }
 
     const { state, hash, createTime } = transaction
     const { amount, asset, sourceAddress, destinationAddress } = transfers [0];
@@ -256,7 +267,9 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
       payload.vault,
       "TRANSACTION_STATE_UPDATED"
     )
-  } catch (err) {
-    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED", err)
+  } catch (error: any) {
+    console.error(">> Error Parsing Webhook for TRANSACTION_STATE_UPDATED")
+    console.log(error)
+    throw error
   }
 }

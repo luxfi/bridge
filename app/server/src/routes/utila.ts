@@ -11,8 +11,10 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
     const swapId = req.params.swapId
     const data = await handlerUtilaPayoutAction (swapId)
     res.status(200).json(data)
-  } catch (err) {
-    res.status(400).json(err)
+  } catch (err: any) {
+    res.status(500).send({
+      error: err?.message
+    })
   }
 })
 
@@ -21,17 +23,14 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
  */
 router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response) => {
-  console.info(">> Received a POST request to /v1/utila/webhook");
+  const eventType = req.body.type
+  console.info(`>> Received a POST request to /v1/utila/webhook - [${eventType}]`)
   // logger.info("Received a POST request to /v1/utila/webhook", {
   //   headers: req.headers,
   //   body: req.body,
   // });
 
   try {
-    const eventType = req.body.type;
-
-    console.info(`>> Processing event Type - [${eventType}]`);
-
     switch (eventType) {
       case "TRANSACTION_CREATED": {
         await handleTransactionCreated (req.body)
