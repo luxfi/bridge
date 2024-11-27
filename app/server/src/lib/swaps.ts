@@ -548,6 +548,7 @@ export async function handlerUtilaPayoutAction(swapId: string) {
   if (!utilaNetwork) {
     throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
   }
+  // utila wallet and asset
   const _wallet = swap?.deposit_address?.split('###')?.[0] as string
   const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
   // if already minted, reject
