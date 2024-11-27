@@ -17,8 +17,6 @@ import SwapItems from './SwapItems'
 import { useAtom } from 'jotai'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
 import { useServerAPI } from '@/hooks/useServerAPI'
-import { it } from 'node:test'
-import { time } from 'node:console'
 import { formatNumber } from '@/lib/utils'
 interface IProps {
   className?: string
