@@ -11,8 +11,10 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
     const swapId = req.params.swapId
     const data = await handlerUtilaPayoutAction (swapId)
     res.status(200).json(data)
-  } catch (err) {
-    res.status(400).json(err)
+  } catch (err: any) {
+    res.status(500).send({
+      error: err?.message
+    })
   }
 })
 

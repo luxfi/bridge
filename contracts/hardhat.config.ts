@@ -62,6 +62,10 @@ const config: HardhatUserConfig = {
       url: AVAX_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
+    arbitrum: {
+      url: ARBITRUM_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
     optimism: {
       url: OPTIMISM_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],

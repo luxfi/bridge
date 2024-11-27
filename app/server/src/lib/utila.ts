@@ -109,7 +109,7 @@ export const verifyUtilaSignature = (
     console.info(">> Webhook signature verified successfully")
     next ()
   } catch (err: any) {
-    res.status(401).send({ error: err?.message })
+    res.status(401).send(err?.message)
   }
 };
 

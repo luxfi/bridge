@@ -15,8 +15,10 @@ export const useServerAPI = () => {
       console.log("::axios error:", err)
       if (String(err).includes('Network Error')) {
         notify('Network Conenction Error. Please check your internet connection', 'error')
-      } else {
+      } else if (err.response) {
         notify(String(err?.response?.data?.error), 'error')
+      } else {
+        notify('Failed to run request. Please contract with support team', 'error')
       }
       return Promise.reject(err);
     }

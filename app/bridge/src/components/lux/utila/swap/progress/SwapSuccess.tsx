@@ -1,14 +1,23 @@
-import React from "react";
-import SuccessIcon from "../SuccessIcon";
-import { bridgeMintTransactionAtom } from "@/store/utila";
+import React from "react"
+import SuccessIcon from "../SuccessIcon"
+import { bridgeMintTransactionAtom } from "@/store/utila"
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 //hooks
-import Gauge from "@/components/gauge";
-import SwapItems from "./SwapItems";
-import shortenAddress from "@/components/utils/ShortenAddress";
-import type { Network, Token } from "@/types/utila";
-import { useAtom } from "jotai";
-import { truncateDecimals } from "@/components/utils/RoundDecimals";
+import Gauge from "@/components/gauge"
+import SwapItems from "./SwapItems"
+import shortenAddress from "@/components/utils/ShortenAddress"
+import type { DepositAction, Network, Token } from "@/types/utila"
+import { useAtom } from "jotai"
+import { truncateDecimals } from "@/components/utils/RoundDecimals"
+
+import {
+  depositAddressAtom,
+  swapStatusAtom,
+  timeToExpireAtom,
+  userTransferTransactionAtom,
+  depositActionsAtom,
+} from '@/store/utila'
+import DepositActionItem from "../../share/DepositActionItem"
 
 interface IProps {
   className?: string
@@ -29,17 +38,18 @@ const SwapSuccess: React.FC<IProps> = ({
   destinationAddress,
   sourceAmount,
   className,
-  swapId,
 }) => {
   //atoms
   const [bridgeMintTransactionHash, setBridgeMintTransactionHash] = useAtom(
     bridgeMintTransactionAtom
-  );
+  )
 
   const isWithdrawal = React.useMemo(
     () => (sourceAsset?.name?.startsWith('Lux') ? true : false),
     [sourceAsset]
   )
+
+  const [depositActions] = useAtom(depositActionsAtom)
 
   return (
     <div className={`w-full flex flex-col ${className}`}>
@@ -67,14 +77,24 @@ const SwapSuccess: React.FC<IProps> = ({
                 Swap Success
               </div>
             </div>
-            <div className="flex py-5">
+            <div className="flex flex-col py-5">
               <div className="flex gap-3 items-center">
                 <span className="">
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>Teleporter has confirmed your Deposit</span>
+                  <span>Lux Bridge confirmed your Deposit</span>
                 </div>
+              </div>
+              <div className="flex flex-col px-10 gap-1">
+                {depositActions.map((item: DepositAction) => (
+                  <DepositActionItem
+                    key={'deposit_action_' + item.id}
+                    data={item}
+                    network={sourceNetwork}
+                    asset={sourceAsset}
+                  />
+                ))}
               </div>
             </div>
             <div className="flex mb-3">
@@ -126,7 +146,7 @@ const SwapSuccess: React.FC<IProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SwapSuccess;
+export default SwapSuccess

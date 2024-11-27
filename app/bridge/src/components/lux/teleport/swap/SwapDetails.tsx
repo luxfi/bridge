@@ -47,7 +47,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     )
-  } else if (swapStatus === 'teleport_processing_pending') {
+  } else if (swapStatus === SwapStatus.TeleportProcessPending) {
     return (
       <TeleportProcessor
         sourceNetwork={sourceNetwork}
@@ -60,7 +60,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     )
-  } else if (swapStatus === 'user_payout_pending') {
+  } else if (swapStatus === SwapStatus.UserPayoutPending) {
     return (
       <PayoutProcessor
         sourceNetwork={sourceNetwork}
@@ -73,7 +73,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     )
-  } else if (swapStatus === 'payout_success') {
+  } else if (swapStatus === SwapStatus.PayoutSuccess) {
     return (
       <SwapSuccess
         sourceNetwork={sourceNetwork}

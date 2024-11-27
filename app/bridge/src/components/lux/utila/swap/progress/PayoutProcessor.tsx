@@ -1,23 +1,23 @@
-import React from "react";
+import React from "react"
 import {
   swapStatusAtom,
   mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
-} from "@/store/utila";
+} from "@/store/utila"
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 //hooks
-import useWallet from "@/hooks/useWallet";
-import { useAtom } from "jotai";
-import { useEthersSigner } from "@/lib/ethersToViem/ethers";
+import useWallet from "@/hooks/useWallet"
+import { useAtom } from "jotai"
+import { useEthersSigner } from "@/lib/ethersToViem/ethers"
 
-import SwapItems from "./SwapItems";
-import shortenAddress from "@/components/utils/ShortenAddress";
-import SpinIcon from "@/components/icons/spinIcon";
-import Gauge from "@/components/gauge";
-import type { Network, Token } from "@/types/utila";
-import { ArrowRight } from "lucide-react";
-import { truncateDecimals } from "@/components/utils/RoundDecimals";
+import SwapItems from "./SwapItems"
+import shortenAddress from "@/components/utils/ShortenAddress"
+import SpinIcon from "@/components/icons/spinIcon"
+import Gauge from "@/components/gauge"
+import type { Network, Token } from "@/types/utila"
+import { ArrowRight } from "lucide-react"
+import { truncateDecimals } from "@/components/utils/RoundDecimals"
 
 interface IProps {
   className?: string
@@ -41,20 +41,20 @@ const PayoutProcessor: React.FC<IProps> = ({
   swapId,
 }) => {
   //state
-  const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false);
+  const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false)
   //atoms
-  const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom);
-  const [userTransferTransaction] = useAtom(userTransferTransactionAtom);
-  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom);
-  const [mpcSignature] = useAtom(mpcSignatureAtom);
+  const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
+  const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
+  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
+  const [mpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const signer = useEthersSigner();
-  const { connectWallet } = useWallet();
+  const signer = useEthersSigner()
+  const { connectWallet } = useWallet()
 
   const isWithdrawal = React.useMemo(
     () => (sourceAsset.name.startsWith("Lux") ? true : false),
     [sourceAsset]
-  );
+  )
 
   return (
     <div className={`w-full flex flex-col ${className}`}>
@@ -156,7 +156,7 @@ const PayoutProcessor: React.FC<IProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PayoutProcessor;
+export default PayoutProcessor
