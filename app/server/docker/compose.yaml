@@ -9,6 +9,7 @@ services:
       - COINBASE_API_KEY=
       - SERVICE_ACCOUNT_EMAIL=
       - SERVICE_ACCOUNT_PRIVATE_KEY=
+      - LUX_SIGNER=
     ports:
       - "6000:6000"
     networks:
