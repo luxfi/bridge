@@ -63,7 +63,7 @@ const BridgeProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    // handlePayOut ()
+    handlePayOut ()
   }, [])
 
   const handlePayOut = async () => {
