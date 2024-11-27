@@ -297,7 +297,9 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
         namespace: "eip155",
         reference: "137"
     },
-    assets: {}
+    assets: {
+      "POL": "assets/native.polygon-mainnet"
+    }
   },
   'POLYGON_MUMBAI': {
     $typeName: "utila.api.v1alpha2.Network",
