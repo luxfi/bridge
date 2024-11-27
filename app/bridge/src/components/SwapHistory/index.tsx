@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,7 +9,6 @@ import { useNotify } from '@/context/toast-provider'
 import { classNames } from '../utils/classNames'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
-
 
 import BridgeApiClient, {
   type SwapItem,
@@ -48,7 +47,7 @@ function TransactionsHistory() {
     ? teleportNetworksMainnet
     : teleportNetworksTestnet
 
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const [isLastPage, setIsLastPage] = useState(false)
   const [swaps, setSwaps] = useState<SwapItem[]>()
   const [loading, setLoading] = useState(false)
@@ -58,11 +57,10 @@ function TransactionsHistory() {
   const [showAllSwaps, setShowAllSwaps] = useState(false)
   const [showToggleButton, setShowToggleButton] = useState(false)
 
-  
-  const PAGE_SIZE = 20
-  
+  const PAGE_SIZE = 2
+
   const { notify } = useNotify()
-  
+
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const canGoBackRef = useRef<boolean>(false)
@@ -80,12 +78,16 @@ function TransactionsHistory() {
     }
   }, [paramString])
 
-  const getSwaps = async (page: number, status?: string | number) => {
+
+
+  const getSwaps = async (page?: number, status?: string | number) => {
     try {
       const {
         data: { data },
       } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?page=${page}${
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?${
+          !showAllSwaps ? `page=${page}` : ''
+        }${
           status ? `&status=${status}` : ''
         }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}`
       )
@@ -107,77 +109,59 @@ function TransactionsHistory() {
   }, [])
 
   useAsyncEffect(async () => {
-    setIsLastPage(false)
-    setLoading(true)
-
-    if (showAllSwaps) {
-      const { data, error } = await getSwaps(1)
-
-      if (error) {
-        notify(error, "error")
-        setLoading(false)
-        return
-      }
-
-      setSwaps(data)
-      setPage(1)
-      if (Number(data?.length) < PAGE_SIZE) {
+    try {
+      setLoading(true)
+      if (!showAllSwaps) {
+        const { data, error } = await getSwaps(
+          1,
+          SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
+        )
+        if (error) {
+          notify(error, 'error')
+          throw ""
+        }
+        setSwaps(data)
+        setPage(1)
+        if (Number(data?.length) < PAGE_SIZE) {
+          setIsLastPage(true)
+        } else {
+          setIsLastPage(false)
+        }
+      } else {
+        const { data, error } = await getSwaps()
+        if (error) {
+          notify(error, 'error')
+          throw ""
+        }
+        
+        setSwaps(data)
+        setPage(1)
         setIsLastPage(true)
       }
-
-      setLoading(false)
-    } else {
-      const { data, error } = await getSwaps(
-        1,
-        SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
-      )
-
-      if (error) {
-        notify(error, "error")
-        setLoading(false)
-        return
-      }
-
-      setSwaps(data)
-      setPage(1)
-      if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true)
-      }
+    } catch (err) {
+      //
+    } finally {
       setLoading(false)
     }
-  }, [paramString, showAllSwaps, useTeleporter])
+  }, [showAllSwaps])
 
-  const handleLoadMore = useCallback(async () => {
-    //TODO refactor page change
-    const nextPage = page + 1
-    setLoading(true)
+  useEffect(() => {
+    setShowAllSwaps (false)
+  }, [useTeleporter])
 
-    if (showAllSwaps) {
-      const { data, error } = await getSwaps(nextPage)
-
-      if (error) {
-        setLoading(false)
-        notify(error, "error")
-        return
-      }
-
-      setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
-      setPage(nextPage)
-      if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true)
-      }
-
-      setLoading(false)
-    } else {
+  const handleLoadMore = async () => {
+    if (showAllSwaps) return
+    try {
+      setLoading(true)
+      const nextPage = page + 1
       const { data, error } = await getSwaps(
         nextPage,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
       )
 
       if (error) {
-        notify(error, "error")
-        setLoading(false)
-        return
+        notify(error, 'error')
+        throw ""
       }
 
       setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
@@ -185,10 +169,16 @@ function TransactionsHistory() {
       if (Number(data?.length) < PAGE_SIZE) {
         setIsLastPage(true)
       }
-
+      // setSwaps(data)
+      // setPage(1)
+      // setIsLastPage(true)
+      // setLoading(false)
+    } catch (err) {
+      //
+    } finally {
       setLoading(false)
     }
-  }, [page, setSwaps])
+  }
 
   const handleopenSwapDetails = (swap: SwapItem) => {
     setSelectedSwap(swap)
@@ -206,37 +196,37 @@ function TransactionsHistory() {
   return (
     <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
       <HeaderWithMenu goBack={goBack} />
+      <div className="flex justify-between px-6 pt-5">
+        <div className="flex justify-end mb-2">
+          <div className="flex space-x-2">
+            <ToggleButton
+              value={useTeleporter}
+              onChange={handleBridgeTypeChange}
+              name="Teleport"
+            />
+            <p className="flex items-center text-xs md:text-sm font-medium">
+              Teleport
+            </p>
+          </div>
+        </div>
+        {showToggleButton && Number(swaps?.length) > 0 && !loading && (
+          <div className="flex justify-end mb-2">
+            <div className="flex space-x-2">
+              <p className="flex items-center text-xs md:text-sm font-medium">
+                Show all swaps
+              </p>
+              <ToggleButton
+                onChange={handleToggleChange}
+                value={showAllSwaps}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       {page == 0 && loading ? (
         <SwapHistoryComponentSkeleton />
       ) : (
         <>
-          <div className='flex justify-between px-6 pt-5'>
-            <div className="flex justify-end mb-2">
-              <div className="flex space-x-2">
-                <ToggleButton
-                  value={useTeleporter}
-                  onChange={handleBridgeTypeChange}
-                  name='Teleport'
-                />
-                <p className="flex items-center text-xs md:text-sm font-medium">
-                  Teleport
-                </p>
-              </div>
-            </div>
-            {showToggleButton && Number(swaps?.length) > 0 && (
-              <div className="flex justify-end mb-2">
-                <div className="flex space-x-2">
-                  <p className="flex items-center text-xs md:text-sm font-medium">
-                    Show all swaps
-                  </p>
-                  <ToggleButton
-                    onChange={handleToggleChange}
-                    value={showAllSwaps}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
           {Number(swaps?.length) > 0 ? (
             <div className="w-full flex flex-col justify-between h-full px-6 space-y-5">
               <div>
