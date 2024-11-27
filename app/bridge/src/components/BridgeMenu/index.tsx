@@ -54,6 +54,7 @@ const BridgeMenu: React.FC = () => {
   const path = usePathname()
   const searchParams = useSearchParams()
   const paramsString = searchParams.toString()
+  const useTeleporter = searchParams.get('teleport') === 'true' ? true : false
   const router = useRouter()
 
   useEffect(() => {
@@ -112,7 +113,7 @@ const BridgeMenu: React.FC = () => {
               )}
               {path != '/transactions' && (
                 <Menu.Item
-                  pathname="/transactions"
+                  pathname={`/transactions`}
                   icon={<ScrollText className="h-5 w-5" />}
                 >
                   Transfers
@@ -120,7 +121,7 @@ const BridgeMenu: React.FC = () => {
               )}
               {!embedded && path != '/campaigns' && (
                 <Menu.Item
-                  pathname="/campaigns"
+                  pathname={`/campaigns`}
                   icon={<Gift className="h-5 w-5" />}
                 >
                   Campaigns

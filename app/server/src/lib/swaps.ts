@@ -785,16 +785,22 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
  * @param isMainnet 
  * @returns 
  */
-export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false) {
+export async function handlerGetSwaps(address: string, isDeleted: boolean | undefined, isMainnet: boolean = false, isTeleport?: boolean) {
   try {
     const swaps = await prisma.swap.findMany({
       orderBy: {
         created_date: "desc"
       },
-      where: {
+      where: isTeleport === undefined ? {
         source_address: address,
         source_network: {
-          is_testnet: !isMainnet // Add the condition for source_network's istestnet field
+          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
+        }
+      } : {
+        source_address: address,
+        use_teleporter: isTeleport,
+        source_network: {
+          is_testnet: !isMainnet, // Add the condition for source_network's istestnet field
         }
       },
       include: {
