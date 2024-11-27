@@ -1,6 +1,6 @@
 'use client'
 import { ApiResponse } from "../../../../Models/ApiResponse"
-import { useSettings } from "../../../../context/settings"
+import { useSettings } from "../../../../context/settings-provider"
 import { useSwapDataState } from "../../../../context/swap"
 import KnownInternalNames from "../../../../lib/knownIds"
 import BridgeApiClient, { type DepositAddress } from "../../../../lib/BridgeApiClient"
@@ -11,7 +11,7 @@ import TransferFromWallet from "./WalletTransfer"
 import ZkSyncWalletWithdrawStep from "./ZKsyncWalletWithdraw"
 import { type Layer } from "../../../../Models/Layer"
 import useWalletTransferOptions from "../../../../hooks/useWalletTransferOptions"
-import { useFee } from "../../../../context/feeContext"
+import { useFee } from "../../../../context/fee-provider"
 
 //TODO have separate components for evm and none_evm as others are sweepless anyway
 const WalletTransfer: React.FC = () => {

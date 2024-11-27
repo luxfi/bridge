@@ -2,11 +2,11 @@
 import { useEffect } from "react"
 import useSWR from "swr"
 
-import { useSettings } from "@/context/settings"
+import { useSettings } from "@/context/settings-provider"
 import { useSwapDataState } from "@/context/swap"
 import Summary from "./Summary"
 import BridgeApiClient, { TransactionType } from "@/lib/BridgeApiClient"
-import { useFee } from "@/context/feeContext"
+import { useFee } from "@/context/fee-provider"
 import { ApiResponse } from "@/Models/ApiResponse"
 
 const SwapSummary: React.FC = () => {

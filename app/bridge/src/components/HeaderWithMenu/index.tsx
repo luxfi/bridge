@@ -1,7 +1,7 @@
 'use client'
 import type React from 'react'
 import { useIntercom } from 'react-use-intercom'
-import { useAuthState } from '../../context/authContext'
+import { useAuthState } from '../../context/auth-provider'
 import IconButton from '../buttons/iconButton'
 import ToggleButton from '../buttons/toggleButton'
 import GoHomeButton from '../utils/GoHome'

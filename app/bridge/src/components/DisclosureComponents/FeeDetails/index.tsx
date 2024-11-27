@@ -3,8 +3,8 @@
 import { type SwapFormValues } from '../../DTOs/SwapFormValues';
 import ReceiveAmounts from './ReceiveAmounts';
 import DetailedEstimates from './DetailedEstimates';
-import { useFee } from '@/context/feeContext';
-import { useSettings } from '@/context/settings';
+import { useFee } from '@/context/fee-provider';
+import { useSettings } from '@/context/settings-provider';
 import RefuelToggle from './Refuel';
 //import CEXNetworkFormField from '../../Input/CEXNetworkFormField';
 import FeeDetails from './FeeDetailsComponent';

@@ -10,7 +10,7 @@ import {
 } from "../../lib/BridgeApiClient";
 import { SwapStatus } from "../../Models/SwapStatus";
 import GasDetails from "../gasDetails";
-import { useSettings } from "../../context/settings";
+import { useSettings } from "../../context/settings-provider";
 
 type Props = {
   type: "widget" | "contained";

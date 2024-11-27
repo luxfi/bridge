@@ -34,7 +34,7 @@ import {
   useAuthDataUpdate,
   useAuthState,
   UserType,
-} from '@/context/authContext'
+} from '@/context/auth-provider'
 
 const WalletsMenu = dynamic(
   () => import('../ConnectedWallets').then((comp) => comp.WalletsMenu),

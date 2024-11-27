@@ -2,7 +2,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useDisconnect } from "wagmi";
 import { useAccount } from "wagmi";
 import { NetworkType } from "../../../Models/CryptoNetwork";
-import { useSettings } from "../../../context/settings";
+import { useSettings } from "../../../context/settings-provider";
 import { type WalletProvider } from "../../../hooks/useWallet";
 import KnownInternalNames from "../../knownIds";
 import { ResolveEVMWalletIcon } from "./resolveEVMIcon";

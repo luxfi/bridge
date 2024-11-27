@@ -17,7 +17,7 @@ import FromNetworkForm from './from/NetworkFormField'
 import ToNetworkForm from './to/NetworkFormField'
 import type { Token, Network } from '@/types/utila'
 import { SWAP_PAIRS } from '@/components/lux/utila/constants/settings'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from "@/context/ethers-provider";
 import { fetchTokenBalance } from '@/lib/utils'
 
 import devNetworks from '@/components/lux/utila/constants/networks.sandbox'

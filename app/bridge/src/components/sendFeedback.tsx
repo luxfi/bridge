@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { Form, Formik, type FormikErrors } from 'formik';
 import toast from 'react-hot-toast';
 import { useIntercom } from 'react-use-intercom';
-import { useAuthState } from '../context/authContext';
+import { useAuthState } from '../context/auth-provider';
 import { SendFeedbackMessage } from '../lib/telegram';
 import SubmitButton from './buttons/submitButton';
 

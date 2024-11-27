@@ -2,7 +2,7 @@
 import { useCallback } from 'react'
 import { ExternalLink, Home } from 'lucide-react'
 
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 import { useSwapDataState } from '@/context/swap'
 import MessageComponent from '../../MessageComponent'
 import Widget from '../../Widget'

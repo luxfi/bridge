@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { useFormikContext } from "formik";
 import useSWR from "swr";
 
-import { useSettings } from "@/context/settings";
+import { useSettings } from "@/context/settings-provider";
 import { type SwapFormValues } from "../DTOs/SwapFormValues";
 import {
   type ISelectMenuItem,
@@ -25,7 +25,7 @@ import { type Exchange } from "@/Models/Exchange";
 import CurrencyGroupFormField from "./CEXCurrencyFormField";
 import AmountField from "./Amount";
 import { Refuel } from "../DisclosureComponents/FeeDetails/ReceiveAmounts";
-import { useFee } from "@/context/feeContext";
+import { useFee } from "@/context/fee-provider";
 
 type SwapDirection = "from" | "to";
 type Props = {

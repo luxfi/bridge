@@ -17,7 +17,7 @@ import BridgeApiClient, {
   type SwapTransaction,
   WithdrawType,
 } from '../lib/BridgeApiClient'
-import { useSettings } from './settings'
+import { useSettings } from './settings-provider'
 import { QueryParams } from '../Models/QueryParams'
 import useSWR, { type KeyedMutator } from 'swr'
 import { ApiResponse } from '../Models/ApiResponse'

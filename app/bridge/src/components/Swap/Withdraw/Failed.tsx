@@ -2,7 +2,7 @@
 import { useCallback, useEffect } from 'react'
 import { useSwapDataState } from '../../../context/swap';
 import { useIntercom } from 'react-use-intercom';
-import { useAuthState } from '../../../context/authContext';
+import { useAuthState } from '../../../context/auth-provider';
 import { SwapStatus } from '../../../Models/SwapStatus';
 import { type SwapItem } from '../../../lib/BridgeApiClient';
 //import { TrackEvent } from '../../../pages/_document';

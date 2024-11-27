@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, type PropsWithChildren } from "react";
 import { useIntercom } from "react-use-intercom";
-import { useAuthState } from "../../context/authContext";
+import { useAuthState } from "../../context/auth-provider";
 import SubmitButton from "../buttons/submitButton";
 import CardContainer from "../cardContainer";
 import BridgeLogo from "../icons/BridgeLogo";

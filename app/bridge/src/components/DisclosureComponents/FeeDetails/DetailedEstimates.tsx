@@ -9,7 +9,7 @@ import { truncateDecimals } from "../../utils/RoundDecimals";
 import AverageCompletionTime from "../../Common/AverageCompletionTime";
 import { useBalancesState } from "@/context/balances";
 import { type SwapFormValues } from "../../DTOs/SwapFormValues";
-import { type Fee, useFee } from "@/context/feeContext";
+import { type Fee, useFee } from "@/context/fee-provider";
 
 const DetailedEstimates: React.FC<{
   networks: Layer[]

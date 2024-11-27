@@ -1,4 +1,4 @@
-import { useSettings } from "../../../context/settings"
+import { useSettings } from "../../../context/settings-provider"
 import type { Balance, BalanceProps, BalanceProvider, GasProps } from "../../../Models/Balance"
 import { NetworkType } from "../../../Models/CryptoNetwork"
 import NetworkSettings, { GasCalculation } from "../../NetworkSettings"

@@ -1,4 +1,4 @@
-import { type AuthData } from "../context/authContext";
+import { type AuthData } from "../context/auth-provider";
 import { checkStorageIsAvailable } from "../util/storageAvailable";
 
 class TokenService {

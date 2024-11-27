@@ -4,7 +4,7 @@ import { MailOpen } from 'lucide-react'
 import { Form, Formik, type FormikErrors } from 'formik'
 import toast from 'react-hot-toast'
 
-import { useAuthDataUpdate, useAuthState, UserType } from '@/context/authContext'
+import { useAuthDataUpdate, useAuthState, UserType } from '@/context/auth-provider'
 import { useTimerState } from '@/context/timerContext'
 import BridgeApiClient from '@/lib/BridgeApiClient'
 import BridgeAuthApiClient from '@/lib/userAuthApiClient'

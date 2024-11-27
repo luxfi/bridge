@@ -3,7 +3,7 @@ import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import WalletTransfer from "./Wallet";
 import ManualTransfer from "./ManualTransfer";
 import FiatTransfer from "./FiatTransfer";
-import { useSettings } from "@/context/settings";
+import { useSettings } from "@/context/settings-provider";
 import { useSwapDataState, useSwapDataUpdate } from "@/context/swap";
 import KnownInternalNames from "@/lib/knownIds";
 import { type Tab, TabHeader } from "../../Tabs/Index";

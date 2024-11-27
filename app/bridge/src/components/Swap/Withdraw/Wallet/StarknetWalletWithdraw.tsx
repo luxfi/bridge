@@ -5,12 +5,12 @@ import SubmitButton from '../../../buttons/submitButton';
 import { useSwapDataState } from '../../../../context/swap';
 import toast from 'react-hot-toast';
 import { PublishedSwapTransactionStatus } from '../../../../lib/BridgeApiClient';
-import { useSettings } from '../../../../context/settings';
+import { useSettings } from '../../../../context/settings-provider';
 import WarningMessage from '../../../WarningMessage';
 import { Contract, type BigNumberish, cairo } from 'starknet';
 import Erc20Abi from "../../../../lib/abis/ERC20.json"
 import WatchDogAbi from "../../../../lib/abis/LSWATCHDOG.json"
-import { useAuthState } from '../../../../context/authContext';
+import { useAuthState } from '../../../../context/auth-provider';
 import KnownInternalNames from '../../../../lib/knownIds';
 import { parseUnits } from 'viem'
 import useWallet from '../../../../hooks/useWallet';

@@ -7,7 +7,7 @@ import useWallet from "../hooks/useWallet"
 import WarningMessage from "./WarningMessage"
 import { type SwapFormValues } from "./DTOs/SwapFormValues"
 import { truncateDecimals } from "./utils/RoundDecimals"
-import { useFee } from "../context/feeContext"
+import { useFee } from "../context/fee-provider"
 import type { Balance, Gas } from "../Models/Balance"
 
 const ReserveGasNote = ({ onSubmit }: { onSubmit: (walletBalance: Balance, networkGas: Gas) => void }) => {

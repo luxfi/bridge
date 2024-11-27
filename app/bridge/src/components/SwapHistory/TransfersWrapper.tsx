@@ -1,6 +1,6 @@
 'use client'
 import TransactionsHistory from './index'
-import { useAuthState, UserType } from '@/context/authContext'
+import { useAuthState, UserType } from '@/context/auth-provider'
 import { FormWizardProvider } from '@/context/formWizardProvider'
 import { TimerProvider } from '@/context/timerContext'
 import { AuthStep } from '@/Models/Wizard'

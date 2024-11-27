@@ -5,7 +5,7 @@ import { SwapDataProvider } from '@/context/swap'
 import { TimerProvider } from '@/context/timerContext'
 import SwapWithdrawal from '@/components/SwapWithdrawal'
 import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
-import { useSettingsContainer } from '@/context/settings'
+import { useSettingsContainer } from '@/context/settings-provider'
 import getBridgeSettings from '@/util/getBridgeSettings'
 
 const SwapDetails: React.FC<{ 

@@ -14,7 +14,7 @@ import { SwapStatus } from '@/Models/SwapStatus'
 import { SwapFailReasons } from '@/Models/RangeError'
 import Gauge from '../../../gauge'
 import { Progress, type ProgressStates, ProgressStatus, type StatusStep } from './types'
-import { useFee } from '@/context/feeContext'
+import { useFee } from '@/context/fee-provider'
 import { useSwapTransactionStore } from '@/stores/swapTransactionStore'
 import Failed from '../Failed'
 
