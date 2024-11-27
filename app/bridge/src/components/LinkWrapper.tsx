@@ -3,6 +3,7 @@ import Link, { type LinkProps } from 'next/link'
 
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import type { PropsWithChildren } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 const LinkWrapper: React.FC<
   Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> & 
@@ -14,10 +15,15 @@ const LinkWrapper: React.FC<
   href,
   ...rest
 }) => {
-  
+
   const pathname = typeof href === 'object' ? href.pathname : href
   const query = (typeof href === 'object' && typeof href.query === 'object') ? href.query : {}
   const sp = new URLSearchParams(query as Record<string, string>)
+
+  // check if current type is teleport
+  const searchParams = useSearchParams()
+  const useTeleporter = searchParams.get('teleport') === 'true' ? true : false
+  sp.append('teleport', String(useTeleporter))
   
   return (
     <Link
@@ -27,7 +33,7 @@ const LinkWrapper: React.FC<
         query: resolvePersistentQueryParams(sp).toString() 
       }}
     >
-        {children}
+      {children}
     </Link>
   )
 }

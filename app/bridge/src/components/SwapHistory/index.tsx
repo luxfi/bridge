@@ -7,7 +7,7 @@ import axios from 'axios'
 import useAsyncEffect from 'use-async-effect'
 import { useNotify } from '@/context/toast-provider'
 import { classNames } from '../utils/classNames'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
 
 
@@ -58,13 +58,16 @@ function TransactionsHistory() {
   const [showAllSwaps, setShowAllSwaps] = useState(false)
   const [showToggleButton, setShowToggleButton] = useState(false)
 
+  
   const PAGE_SIZE = 20
-
+  
   const { notify } = useNotify()
-
+  
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const canGoBackRef = useRef<boolean>(false)
   const paramString = resolvePersistentQueryParams(searchParams).toString()
+  const useTeleporter = searchParams.get('teleport') === 'true' ? true : false
 
   const goBack = useCallback(() => {
     canGoBackRef.current = !!(
@@ -84,7 +87,7 @@ function TransactionsHistory() {
       } = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?page=${page}${
           status ? `&status=${status}` : ''
-        }&version=${BridgeApiClient.apiVersion}`
+        }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}`
       )
       return {
         data: data,
@@ -142,7 +145,7 @@ function TransactionsHistory() {
       }
       setLoading(false)
     }
-  }, [paramString, showAllSwaps])
+  }, [paramString, showAllSwaps, useTeleporter])
 
   const handleLoadMore = useCallback(async () => {
     //TODO refactor page change
@@ -196,6 +199,10 @@ function TransactionsHistory() {
     setShowAllSwaps(value)
   }
 
+  const handleBridgeTypeChange = (value: boolean) => {
+    router.push(`${pathname}?teleport=${value}`)
+  }
+
   return (
     <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
       <HeaderWithMenu goBack={goBack} />
@@ -203,22 +210,36 @@ function TransactionsHistory() {
         <SwapHistoryComponentSkeleton />
       ) : (
         <>
+          <div className='flex justify-between px-6 pt-5'>
+            <div className="flex justify-end mb-2">
+              <div className="flex space-x-2">
+                <ToggleButton
+                  value={useTeleporter}
+                  onChange={handleBridgeTypeChange}
+                  name='Teleport'
+                />
+                <p className="flex items-center text-xs md:text-sm font-medium">
+                  Teleport
+                </p>
+              </div>
+            </div>
+            {showToggleButton && Number(swaps?.length) > 0 && (
+              <div className="flex justify-end mb-2">
+                <div className="flex space-x-2">
+                  <p className="flex items-center text-xs md:text-sm font-medium">
+                    Show all swaps
+                  </p>
+                  <ToggleButton
+                    onChange={handleToggleChange}
+                    value={showAllSwaps}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           {Number(swaps?.length) > 0 ? (
             <div className="w-full flex flex-col justify-between h-full px-6 space-y-5">
-              <div className="mt-4">
-                {showToggleButton && (
-                  <div className="flex justify-end mb-2">
-                    <div className="flex space-x-2">
-                      <p className="flex items-center text-xs md:text-sm font-medium">
-                        Show all swaps
-                      </p>
-                      <ToggleButton
-                        onChange={handleToggleChange}
-                        value={showAllSwaps}
-                      />
-                    </div>
-                  </div>
-                )}
+              <div>
                 <div className="max-h-[450px] styled-scroll overflow-y-auto ">
                   <table className="w-full divide-y divide-[#404040]">
                     <thead className="text-foreground">
@@ -398,11 +419,9 @@ function TransactionsHistory() {
                           text_align="center"
                           onClick={() => {
                             router.push(
-                              (
-                                selectedSwap?.use_teleporter
-                                  ? `/swap/teleporter/${selectedSwap.id}`
-                                  : `/swap/utila/${selectedSwap.id}`
-                              ) + paramString
+                              selectedSwap?.use_teleporter
+                                ? `/swap/teleporter/${selectedSwap.id}`
+                                : `/swap/utila/${selectedSwap.id}`
                             )
                           }}
                           isDisabled={false}
