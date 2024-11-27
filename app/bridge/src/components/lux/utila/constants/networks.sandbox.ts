@@ -126,10 +126,8 @@ const sourceNetworks: Network[] = [
       address: "",
     },
     refuel_amount_in_usd: 1,
-    transaction_explorer_template:
-      "https://explorer.solana.com/?cluster=devnet/tx/{0}",
-    account_explorer_template:
-      "https://explorer.solana.com/?cluster=devnet/address/{0}",
+    transaction_explorer_template: "https://explorer.solana.com/?cluster=devnet/tx/{0}",
+    account_explorer_template: "https://explorer.solana.com/?cluster=devnet/address/{0}",
     node: "https://api.devnet.solana.com",
     currencies: [
       {
