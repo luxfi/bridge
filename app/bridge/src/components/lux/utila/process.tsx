@@ -144,7 +144,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       setSourceAmount(data.requested_amount)
       setSwapStatus(data.status)
       setSwapId(data.id)
-      setDepositAddress(data.deposit_address.split('###')?.[1])
+      setDepositAddress(data?.deposit_address?.split('###')?.[1])
       setDepositActions(data.deposit_actions)
       setDestinationAddress(data.destination_address)
 
