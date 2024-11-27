@@ -3,12 +3,12 @@ import { swapStatusAtom, swapIdAtom } from '@/store/utila'
 //hooks
 import { useAtom } from 'jotai'
 //types
+import type { Network, Token } from '@/types/utila'
+//components
 import UserTokenDepositor from './progress/TokenDepositor'
-import PayoutProcessor from './progress/PayoutProcessor'
 import SwapSuccess from './progress/SwapSuccess'
 import SwapExpired from './progress/SwapExpired'
 import { SwapStatus } from '@/Models/SwapStatus'
-import type { Network, Token } from '@/types/utila'
 import BridgeProcessor from './progress/BridgeProcessor'
 
 interface IProps {
@@ -62,19 +62,6 @@ const SwapDetails: React.FC<IProps> = ({
         sourceAmount={sourceAmount}
         swapId={swapId}
         getSwapById={getSwapById}
-        className={className}
-      />
-    );
-  } else if (swapStatus === SwapStatus.UserPayoutPending) {
-    return (
-      <PayoutProcessor
-        sourceNetwork={sourceNetwork}
-        sourceAsset={sourceAsset}
-        destinationNetwork={destinationNetwork}
-        destinationAsset={destinationAsset}
-        destinationAddress={destinationAddress}
-        sourceAmount={sourceAmount}
-        swapId={swapId}
         className={className}
       />
     );
