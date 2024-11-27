@@ -89,12 +89,13 @@ export const verifyUtilaSignature = (
 ): void => {
   try {
     const signature = req.headers["x-utila-signature"] as string;
+    const eventType = req?.body?.type
     // Log all incoming request details
-    logger.info (">> Incoming webhook request")
-    console.log ({
-      signature,
-      body: req.body
-    })
+    logger.info (`>> Incoming webhook request [${eventType}]`)
+    // console.log ({
+    //   signature,
+    //   body: req.body
+    // })
 
     if (!signature) {
       console.error(">> Missing x-utila-signature Header")
@@ -201,7 +202,7 @@ export const archiveWalletForExpire = async (name: string) => {
  */
 export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATED) => {
   try {
-    console.info(">> Processing for TRANSACTION_CREATED");
+    console.info(">> Processing for [TRANSACTION_CREATED]");
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })
@@ -239,7 +240,7 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
  */
 export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_STATE_UPDATED) => {
   try {
-    console.info(">> Processing for TRANSACTION_STATE_UPDATED");
+    console.info(">> Processing for [TRANSACTION_STATE_UPDATED]");
     const { transaction } = await client.getTransaction({
       name: payload.resource
     })

@@ -8,7 +8,6 @@ import SpinIcon from "@/components/icons/spinIcon"
 import { ArrowRight } from "lucide-react"
 //hooks
 import type { DepositAction, Network, Token } from '@/types/utila'
-import useAsyncEffect from 'use-async-effect'
 import SwapItems from './SwapItems'
 import { useAtom } from 'jotai'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
