@@ -23,7 +23,7 @@ export const testnetSettings = {
     currencies: [],
     discovery: {},
     exchanges: testnetExchanges,
-    networks: testnetNetworks,
+    networks: [...mainnetNetworks, ...testnetNetworks],
   },
   sources: [],
   destinations: [],

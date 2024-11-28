@@ -339,8 +339,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         },
@@ -350,8 +350,8 @@ export const Settings: BridgeSettings = {
           "decimals": 6,
           "is_refuel_enabled": true,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -396,8 +396,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -433,8 +433,8 @@ export const Settings: BridgeSettings = {
           "decimals": 6,
           "price_in_usd": 18,
           "is_refuel_enabled": false,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         },
@@ -444,8 +444,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -484,8 +484,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         },
@@ -495,8 +495,8 @@ export const Settings: BridgeSettings = {
           "decimals": 6,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -532,8 +532,8 @@ export const Settings: BridgeSettings = {
           "is_refuel_enabled": false,
           "decimals": 18,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -563,8 +563,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -594,8 +594,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -627,8 +627,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -659,8 +659,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         },
@@ -670,8 +670,8 @@ export const Settings: BridgeSettings = {
           "decimals": 6,
           "is_refuel_enabled": true,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -703,8 +703,8 @@ export const Settings: BridgeSettings = {
           "decimals": 6,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }
@@ -737,8 +737,8 @@ export const Settings: BridgeSettings = {
           "decimals": 6,
           "is_refuel_enabled": true,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         },
@@ -748,8 +748,8 @@ export const Settings: BridgeSettings = {
           "decimals": 18,
           "is_refuel_enabled": false,
           "price_in_usd": 18,
-          "availableInDestination": true,
-          "availableInSource": true,
+          "is_withdrawal_enabled": true,
+          "is_deposit_enabled": true,
           "is_native": true,
           "precision": 18
         }

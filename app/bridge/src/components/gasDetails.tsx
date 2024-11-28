@@ -1,21 +1,21 @@
-"use client";
-import { type NetworkCurrency } from "../Models/CryptoNetwork";
-import { type Layer } from "../Models/Layer";
-import { useBalancesState } from "../context/balances";
+"use client"
+import { type CryptoNetwork, type NetworkCurrency } from "../Models/CryptoNetwork"
+import { type Layer } from "../Models/Layer"
+import { useBalancesState } from "../context/balances"
 
 const GasDetails = ({
   network,
   currency,
 }: {
-  network: Layer;
-  currency: NetworkCurrency;
+  network: CryptoNetwork
+  currency: NetworkCurrency
 }) => {
-  const { gases } = useBalancesState();
+  const { gases } = useBalancesState()
   const networkGas = gases?.[network?.internal_name]?.find(
     (g) => g?.token === currency?.asset
-  );
+  )
 
-  if (!networkGas?.gasDetails) return <></>;
+  if (!networkGas?.gasDetails) return <></>
 
   return (
     <div className="grid grid-cols-1 gap-2 px-3 py-2 rounded-lg border-2 border-[#404040] bg-level-1 mt-2 w-[350px] fixed top-0 left-2">
@@ -42,7 +42,7 @@ const GasDetails = ({
         </span>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GasDetails;
+export default GasDetails

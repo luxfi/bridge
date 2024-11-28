@@ -94,9 +94,9 @@ const CurrencyFormField: React.FC<{
 
   const filteredCurrencies = currencies?.filter((currency) => {
     if (direction === "from") {
-      return currency.availableInSource;
+      return currency.is_deposit_enabled;
     } else {
-      return currency.availableInDestination;
+      return currency.is_withdrawal_enabled;
     }
   });
 
