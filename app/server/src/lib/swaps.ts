@@ -786,7 +786,6 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
  * @returns 
  */
 export async function handlerGetSwaps(isDeleted?: boolean, isMainnet? : boolean, isTeleport?: boolean, page?: number, pageSize: number = 20) {
-  console.log(pageSize)
   try {
     if (page) {
       const swaps = await prisma.swap.findMany({

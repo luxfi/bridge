@@ -29,10 +29,10 @@ const SwapDetails: FC<Props> = ({ type }) => {
   const storedWalletTransaction =
     storedWalletTransactions.swapTransactions?.[swap?.id || ""];
 
-  const sourceNetwork = settings.layers.find(
+  const sourceNetwork = settings.networks.find(
     (l) => l.internal_name === swap?.source_network
   );
-  const currency = sourceNetwork?.assets.find(
+  const currency = sourceNetwork?.currencies.find(
     (c) => c.asset === swap?.source_asset
   );
 

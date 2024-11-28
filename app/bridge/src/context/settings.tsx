@@ -1,12 +1,9 @@
 "use client"
 
 import { 
-  type Context, 
-  type MutableRefObject, 
   type PropsWithChildren, 
   createContext, 
   useContext, 
-  useRef
 } from "react"
 
 import { BridgeAppSettings } from "@/Models/BridgeAppSettings"
@@ -42,14 +39,10 @@ const useSettings = (): BridgeAppSettings => {
 }
 
 const useSettingsContainer = (): SettingsContainer | null => {
-
   const container = useContext<SettingsContainer | null>(SettingsContext)
-
-  // console.log("::app settings:", Object.keys(data))
   if (container === undefined) {
     throw new Error("useSettings must be used within a SettingsProvider")
   }
-
   return container
 }
 

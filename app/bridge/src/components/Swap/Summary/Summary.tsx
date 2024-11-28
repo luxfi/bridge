@@ -2,7 +2,6 @@
 import Image from "next/image";
 import useSWR from 'swr'
 
-import { type Layer } from "@/Models/Layer";
 import { useSettings } from "@/context/settings";
 import { truncateDecimals } from "../../utils/RoundDecimals";
 import shortenAddress, { shortenEmail } from "../../utils/ShortenAddress";
@@ -12,14 +11,14 @@ import { type Partner } from "@/Models/Partner";
 import KnownInternalNames from "@/lib/knownIds";
 import useWallet from "@/hooks/useWallet";
 import { useQueryState } from "@/context/query";
-import { type NetworkCurrency } from "@/Models/CryptoNetwork";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 import { type Exchange } from "@/Models/Exchange";
 
 type SwapInfoProps = {
     sourceAsset: NetworkCurrency,
     destinationAsset: NetworkCurrency,
-    source: Layer | Exchange | undefined,
-    destination: Layer | Exchange | undefined;
+    source: CryptoNetwork | Exchange | undefined,
+    destination: CryptoNetwork | Exchange | undefined;
     requestedAmount?: number;
     receiveAmount?: number;
     destinationAddress: string;
@@ -44,7 +43,7 @@ const Summary: React.FC<SwapInfoProps> = ({
     exchange_account_connected,
     exchange_account_name
 }) => {
-    const { resolveImgSrc, layers } = useSettings()
+    const { resolveImgSrc, networks } = useSettings()
     const { getWithdrawalProvider: getProvider } = useWallet()
     // const provider = useMemo(() => {
     //     return from && getProvider(from)
