@@ -76,7 +76,7 @@ const AmountField = forwardRef(function AmountField(_, ref: any) {
         values.to && fetchBalance(values.to);
     }, [values.to, values.destination_address, wallet?.address])
 
-    const contract_address = values?.from?.assets.find(a => a.asset === values?.fromCurrency?.asset)?.contract_address
+    const contract_address = values?.from?.currencies.find(a => a.asset === values?.fromCurrency?.asset)?.contract_address
 
     useEffect(() => {
         wallet?.address && values.from && values.fromCurrency && fetchGas(values.from, values.fromCurrency, values.destination_address || wallet.address)
