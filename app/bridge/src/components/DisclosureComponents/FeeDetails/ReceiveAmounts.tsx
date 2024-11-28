@@ -1,4 +1,3 @@
-import { type Layer } from "@/Models/Layer";
 import { GetDefaultAsset } from "@/util/settingsHelper";
 import { CaluclateRefuelAmount } from "@/lib/fees";
 import { truncateDecimals } from "../../utils/RoundDecimals";

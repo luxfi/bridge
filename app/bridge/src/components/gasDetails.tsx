@@ -1,6 +1,5 @@
 "use client"
 import { type CryptoNetwork, type NetworkCurrency } from "../Models/CryptoNetwork"
-import { type Layer } from "../Models/Layer"
 import { useBalancesState } from "../context/balances"
 
 const GasDetails = ({

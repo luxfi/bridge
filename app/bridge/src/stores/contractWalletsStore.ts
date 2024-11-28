@@ -1,13 +1,12 @@
 import resolveChain from '../lib/resolveChain';
 import { create } from 'zustand'
 import { createPublicClient, http } from 'viem';
-import { NetworkType } from '../Models/CryptoNetwork';
+import { NetworkType, type CryptoNetwork } from '../Models/CryptoNetwork';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { type Layer } from '../Models/Layer';
 
 interface WalletState {
     contractWallets: ContractWallet[];
-    checkContractWallet: (address: string | undefined, network: Layer | undefined) => ContractWallet | null;
+    checkContractWallet: (address: string | undefined, network: CryptoNetwork | undefined) => ContractWallet | null;
 }
 
 export type ContractWallet = {

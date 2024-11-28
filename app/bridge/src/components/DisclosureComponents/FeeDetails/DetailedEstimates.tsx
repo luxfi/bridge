@@ -3,8 +3,7 @@
 import { Clock9, Fuel } from "lucide-react";
 import { useFormikContext } from "formik";
 
-import { type NetworkCurrency } from "@/Models/CryptoNetwork";
-import { type Layer } from "@/Models/Layer";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 import { truncateDecimals } from "../../utils/RoundDecimals";
 import AverageCompletionTime from "../../Common/AverageCompletionTime";
 import { useBalancesState } from "@/context/balances";
@@ -12,9 +11,9 @@ import { type SwapFormValues } from "../../DTOs/SwapFormValues";
 import { type Fee, useFee } from "@/context/feeContext";
 
 const DetailedEstimates: React.FC<{
-  networks: Layer[]
-  source?: Layer | null,
-  destination?: Layer | null,
+  networks: CryptoNetwork[]
+  source?: CryptoNetwork | null,
+  destination?: CryptoNetwork | null,
   selected_currency?: NetworkCurrency | null,
 }> = ({
   source,
@@ -53,7 +52,7 @@ const DetailedEstimates: React.FC<{
 }
 
 const NetworkGas: React.FC<{
-    network: Layer,
+    network: CryptoNetwork,
     selected_currency: NetworkCurrency,
 }> = ({ 
   selected_currency, 
@@ -66,7 +65,7 @@ const NetworkGas: React.FC<{
 
     if (!networkGas) return null
 
-    const source_native_currnecy = network.assets.find(a => a.is_native)
+    const source_native_currnecy = network.currencies.find(a => a.is_native)
 
     const estimatedGas = (networkGas && source_native_currnecy) ?
         truncateDecimals(networkGas, source_native_currnecy?.precision)
@@ -76,14 +75,14 @@ const NetworkGas: React.FC<{
       <div className="flex flex-row items-center gap-2 w-fit px-1">
           <Fuel className="h-4 w-4" />
           <div className="text-right flex items-center gap-1">
-              {isGasLoading ? <div className='h-[10px] w-10 bg-gray-500 rounded-sm animate-pulse' /> : estimatedGas} <span>{network?.assets.find(a => a.is_native)?.asset ?? selected_currency.asset}</span>
+              {isGasLoading ? <div className='h-[10px] w-10 bg-gray-500 rounded-sm animate-pulse' /> : estimatedGas} <span>{network?.currencies.find(a => a.is_native)?.asset ?? selected_currency.asset}</span>
           </div>
       </div>
     )
 }
 
 const EstimatedArrival: React.FC<{
-    destination?: Layer | null,
+    destination?: CryptoNetwork | null,
     currency?: NetworkCurrency | null,
     fee: Fee
 }> = ({ 
