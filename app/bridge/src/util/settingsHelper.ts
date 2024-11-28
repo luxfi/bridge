@@ -7,11 +7,11 @@ export function GetDefaultAsset(layer: CryptoNetwork, asset: string): NetworkCur
         ?.find(a => a.asset === asset)
 }
 
-export function FilterSourceLayers(layers: CryptoNetwork[], destination?: CryptoNetwork | null, lockedCurrency?: NetworkCurrency | null): CryptoNetwork[] {
+export function FilterSourceLayers(networks: CryptoNetwork[], destination?: CryptoNetwork | null, lockedCurrency?: NetworkCurrency | null): CryptoNetwork[] {
     const IsAvailableForSomeLayer = (asset: string, source: CryptoNetwork) =>
-        layers.some(l => IsAvailableForLayer(asset, source, l))
+        networks.some(l => IsAvailableForLayer(asset, source, l))
 
-    const filteredLayers = layers.filter(l => {
+    const filteredLayers = networks.filter(l => {
         const isAvailable = destination?.internal_name !== l.internal_name
 
         const layerHasAvailableL2 = l.currencies?.some(l2Asset =>
@@ -50,12 +50,12 @@ const IsAvailableForLayer = (asset: string, source: CryptoNetwork, destination: 
     return sourceASsetIsAvailable && destinationAssetIsAvailable
 }
 
-export function FilterDestinationLayers(layers: CryptoNetwork[], source?: CryptoNetwork | null, lockedCurrency?: NetworkCurrency | null): CryptoNetwork[] {
+export function FilterDestinationLayers(networks: CryptoNetwork[], source?: CryptoNetwork | null, lockedCurrency?: NetworkCurrency | null): CryptoNetwork[] {
 
     const IsAvailableForSomeLayer = (asset: string, destination: CryptoNetwork) =>
-        layers.some(l => IsAvailableForLayer(asset, l, destination))
+        networks.some(l => IsAvailableForLayer(asset, l, destination))
 
-    const filteredLayers = layers.filter(l => {
+    const filteredLayers = networks.filter(l => {
         const isAvailable = source?.internal_name !== l.internal_name;
 
         const layerHasAvailableL2 = l.currencies?.some(l2Asset =>

@@ -10,7 +10,6 @@ import {
   SelectMenuItem,
 } from "../Select/Shared/Props/selectMenuItem"
 // types
-import { type Layer } from "@/Models/Layer"
 import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork"
 import { type Exchange } from "@/Models/Exchange"
 // comps
@@ -76,7 +75,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   } = values
   const { lockFrom, lockTo } = useQueryState()
 
-  const { resolveImgSrc, networks, exchanges } = useSettings()
+  const { networks, exchanges } = useSettings()
 
   let placeholder = ""
   let searchHint = ""
@@ -147,7 +146,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     menuItems = GenerateMenuItems(
       filteredLayers,
       toExchange ? [] : exchanges,
-      resolveImgSrc,
       direction,
       !!(from && lockFrom)
     )
@@ -167,7 +165,6 @@ const NetworkFormField = forwardRef(function NetworkFormField(
     menuItems = GenerateMenuItems(
       filteredLayers,
       fromExchange ? [] : filteredExchanges, // cex -> net
-      resolveImgSrc,
       direction,
       !!(to && lockTo)
     )
@@ -182,7 +179,7 @@ const NetworkFormField = forwardRef(function NetworkFormField(
   )
 
   const handleSelect = useCallback(
-    (item: SelectMenuItem<Layer | Exchange>) => {
+    (item: SelectMenuItem<CryptoNetwork | Exchange>) => {
       if (item.type === "cex") {
         setFieldValue(`${name}Exchange`, item.baseObject, true)
         setFieldValue(name, null, true)
@@ -279,9 +276,8 @@ function groupByType(values: ISelectMenuItem[]) {
 }
 
 function GenerateMenuItems(
-  layers: CryptoNetwork[],
+  networks: CryptoNetwork[],
   exchanges: Exchange[],
-  resolveImgSrc: (item: CryptoNetwork | Exchange | NetworkCurrency) => string,
   direction: SwapDirection,
   lock: boolean
 ): SelectMenuItem<CryptoNetwork | Exchange>[] {
@@ -296,7 +292,7 @@ function GenerateMenuItems(
     }
   }
 
-  const mappedLayers = layers
+  const mappedLayers = networks
     .map((l) => {
       let orderProp: keyof NetworkSettings | keyof ExchangeSettings =
         direction == "from" ? "OrderInSource" : "OrderInDestination"
@@ -306,7 +302,7 @@ function GenerateMenuItems(
         id: l.internal_name,
         name: l.display_name,
         order: order || 100,
-        imgSrc: resolveImgSrc && resolveImgSrc(l),
+        imgSrc: l?.logo || '',
         isAvailable: layerIsAvailable(),
         type: "layer",
         group: getGroupName(l, "layer"),
@@ -326,7 +322,7 @@ function GenerateMenuItems(
         id: e.internal_name,
         name: e.display_name,
         order: order || 100,
-        imgSrc: resolveImgSrc && resolveImgSrc(e),
+        imgSrc: e?.img_url ?? '',
         isAvailable: layerIsAvailable(),
         type: "cex",
         group: getGroupName(e, "cex"),

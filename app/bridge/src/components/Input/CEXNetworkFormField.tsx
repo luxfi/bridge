@@ -34,7 +34,7 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
   const name = direction
 
   const { from, to, fromCurrency, toCurrency } = values
-  const { layers, resolveImgSrc } = useSettings()
+  const { networks } = useSettings()
 
   const filterWith = direction === 'from' ? to : from
   const filterWithAsset =
@@ -80,10 +80,10 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
   const handleSelect = useCallback(
     (item: SelectMenuItem<{ network: string, asset: string }>) => {
       // if (!item) return
-      // const layer = layers.find(
+      // const layer = networks.find(
       //   (l) => l.internal_name === item.baseObject.network
       // )
-      // const currency = layer?.assets.find(
+      // const currency = layer?.currencies.find(
       //   (a) => a.asset === item.baseObject.asset
       // )
       // setFieldValue(name, layer, true)
@@ -129,10 +129,10 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
             <SelectGroup>
               <SelectLabel className=''>Networks</SelectLabel>
               {menuItems?.map((route, index) => {
-                const network = layers.find(
+                const network = networks.find(
                   (l) => l.internal_name === route.baseObject.network
                 )
-                const currency = network?.assets.find(
+                const currency = network?.currencies.find(
                   (a) => a.asset === route.baseObject.asset
                 )
 
@@ -142,7 +142,7 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
                       <div className='inline-flex items-center gap-1 w-full'>
                         <div className='flex-shrink-0 h-5 w-5 relative'>
                           <Image
-                            src={resolveImgSrc(network)}
+                            src={network?.logo ?? ''}
                             alt='Network Logo'
                             height='40'
                             width='40'
@@ -155,7 +155,7 @@ const CEXNetworkFormField = forwardRef(function CEXNetworkFormField(
                       <div className='inline-flex items-center gap-1'>
                         <div className='flex-shrink-0 h-5 w-5 relative'>
                           <Image
-                            src={resolveImgSrc(currency)}
+                            src={currency?.logo ?? ''}
                             alt='Token Logo'
                             height='40'
                             width='40'

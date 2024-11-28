@@ -11,7 +11,7 @@ export class BridgeAppSettings {
 
 
   constructor(settings: BridgeSettings | any) {
-    // this.layers = BridgeAppSettings.ResolveLayers(
+    // this.networks = BridgeAppSettings.ResolveLayers(
     //   settings.networks,
     //   settings.sourceRoutes,
     //   settings.destinationRoutes

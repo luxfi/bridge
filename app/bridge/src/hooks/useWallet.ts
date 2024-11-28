@@ -1,5 +1,4 @@
 import toast from "react-hot-toast";
-import { type Layer } from "../Models/Layer";
 import BridgeApiClient, { type SwapItem } from "../lib/BridgeApiClient";
 import { type Wallet } from "../stores/walletStore";
 // import useTON from "../lib/wallets/ton/useTON";

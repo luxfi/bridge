@@ -1,6 +1,5 @@
 import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 import { type Exchange } from "@/Models/Exchange";
-import { type Layer } from "@/Models/Layer";
 import { type AssetGroup } from "../Input/CEXCurrencyFormField";
 
 export type SwapFormValues = {

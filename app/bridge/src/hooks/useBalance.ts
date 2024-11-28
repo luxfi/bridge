@@ -1,4 +1,3 @@
-import { type Layer } from "../Models/Layer"
 import useEVMBalance from "../lib/balances/evm/useEVMBalance"
 import useLoopringBalance from "../lib/balances/loopring/useLoopringBalance"
 import useOptimismBalance from "../lib/balances/evm/optimism/useOptimismBalance"
@@ -8,7 +7,7 @@ import useSolanaBalance from "../lib/balances/solana/useSolanaBalance"
 import { type BalanceProvider } from "../Models/Balance"
 import useWallet from "./useWallet"
 import { useBalancesState, useBalancesUpdate } from "../context/balances"
-import { type NetworkCurrency } from "../Models/CryptoNetwork"
+import { type CryptoNetwork, type NetworkCurrency } from "../Models/CryptoNetwork"
 
 
 export default function useBalanceProvider() {
@@ -33,7 +32,7 @@ export default function useBalanceProvider() {
 
     const { getAutofillProvider } = useWallet()
 
-    const fetchBalance = async (network: Layer) => {
+    const fetchBalance = async (network: CryptoNetwork) => {
         const provider = getAutofillProvider(network)
         const wallet = provider?.getConnectedWallet()
 
@@ -59,14 +58,14 @@ export default function useBalanceProvider() {
         }
     }
 
-    const fetchGas = async (network: Layer, currency: NetworkCurrency, userDestinationAddress: string) => {
+    const fetchGas = async (network: CryptoNetwork, currency: NetworkCurrency, userDestinationAddress: string) => {
 
         if (!network) {
             return
         }
 
 
-        const destination_address = network?.managed_accounts?.[0]?.address as `0x${string}`
+        const destination_address = network?.managed_accounts?.[0] as `0x${string}`
         const gas = gases[network.internal_name]?.find(g => g?.token === currency?.asset)
         const isGasOutDated = !gas || new Date().getTime() - (new Date(gas.request_time).getTime() || 0) > 10000
 
@@ -98,7 +97,7 @@ export default function useBalanceProvider() {
         }
     }
 
-    const getBalanceProvider = (network: Layer) => {
+    const getBalanceProvider = (network: CryptoNetwork) => {
         const provider = BalanceProviders.find(provider => provider.supportedNetworks.includes(network.internal_name))
         return provider
     }

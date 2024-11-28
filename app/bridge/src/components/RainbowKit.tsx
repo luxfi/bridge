@@ -27,11 +27,16 @@ import {
 import { type Chain } from 'viem'
 import { type Config } from 'wagmi'
 import { getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { useSettings } from '@/context/settings'
 
 const { wallets } = getDefaultWallets()
 const queryClient = new QueryClient()
 
 const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
+
+  const { networks } = useSettings ()
+  console.log("rainbow chains", Object.keys(networks))
+
   const CustomAvatar: AvatarComponent = ({ address, ensImage, size }) => (
     <Image
       src={'/favicon.svg'}

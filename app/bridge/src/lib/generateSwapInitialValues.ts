@@ -7,19 +7,19 @@ import { type SwapItem } from "./BridgeApiClient";
 
 export function generateSwapInitialValues(settings: BridgeAppSettings, queryParams: QueryParams): SwapFormValues {
     const { destAddress, amount, asset, from, to, lockAsset } = queryParams
-    const { layers, getExchangeAsset } = settings || {}
+    const { networks, getExchangeAsset } = settings || {}
 
-    const lockedCurrency = lockAsset ? layers.find(l => l.internal_name === to)?.assets?.find(c => c?.asset?.toUpperCase() === asset?.toUpperCase()) : undefined
-    const sourceLayer = layers.find(l => l.internal_name.toUpperCase() === from?.toUpperCase())
-    const destinationLayer = layers.find(l => l.internal_name.toUpperCase() === to?.toUpperCase())
+    const lockedCurrency = lockAsset ? networks.find(l => l.internal_name === to)?.currencies?.find(c => c?.asset?.toUpperCase() === asset?.toUpperCase()) : undefined
+    const sourceLayer = networks.find(l => l.internal_name.toUpperCase() === from?.toUpperCase())
+    const destinationLayer = networks.find(l => l.internal_name.toUpperCase() === to?.toUpperCase())
 
-    const sourceItems = FilterSourceLayers(layers, destinationLayer, lockedCurrency)
-    const destinationItems = FilterDestinationLayers(layers, sourceLayer, lockedCurrency)
+    const sourceItems = FilterSourceLayers(networks, destinationLayer, lockedCurrency)
+    const destinationItems = FilterDestinationLayers(networks, sourceLayer, lockedCurrency)
 
     const initialSource = sourceLayer ? sourceItems.find(i => i == sourceLayer) : undefined
     const initialDestination = destinationLayer ? destinationItems.find(i => i === destinationLayer) : undefined
 
-    const filteredCurrencies = lockedCurrency ? [lockedCurrency] : layers.find(l => l.internal_name === to)?.assets
+    const filteredCurrencies = lockedCurrency ? [lockedCurrency] : networks.find(l => l.internal_name === to)?.currencies
 
     let initialAddress =
         destAddress && initialDestination && isValidAddress(destAddress, destinationLayer) ? destAddress : "";
@@ -53,14 +53,14 @@ export function generateSwapInitialValuesFromSwap(swap: SwapItem, settings: Brid
         refuel
     } = swap
 
-    const { layers, exchanges, getExchangeAsset } = settings || {}
+    const { networks, exchanges, getExchangeAsset } = settings || {}
 
-    const from = layers.find(n => n.internal_name === source_network);
+    const from = networks.find(n => n.internal_name === source_network);
     const fromExchange = exchanges.find(e => e.internal_name === source_exchange);
-    const fromCurrency = from ? from?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset (layers, fromExchange, source_asset)
-    const to = layers?.find(l => l.internal_name === destination_network);
+    const fromCurrency = from ? from?.currencies?.find(currency => currency?.asset === source_asset) : getExchangeAsset (networks, fromExchange, source_asset)
+    const to = networks?.find(l => l.internal_name === destination_network);
     const toExchange = exchanges?.find(l => l.internal_name === destination_exchange);
-    const toCurrency = to ? to?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (layers, fromExchange, destination_asset)
+    const toCurrency = to ? to?.currencies?.find(currency => currency?.asset === destination_asset) : getExchangeAsset (networks, fromExchange, destination_asset)
     
     
     const result: SwapFormValues = {
