@@ -1,7 +1,6 @@
 'use client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useSearchParams } from 'next/navigation'
-import axios from 'axios'
 import * as Sentry from '@sentry/nextjs'
 
 import { TooltipProvider } from '@hanzo/ui/primitives'
@@ -29,13 +28,12 @@ import { SWRConfig } from 'swr'
 import type { ErrorInfo, PropsWithChildren } from 'react'
 
 const INTERCOM_APP_ID = 'o1kmvctg'
-import '@rainbow-me/rainbowkit/styles.css'
 import { ToastProvider } from '@/context/toast-provider'
-import useAsyncEffect from 'use-async-effect'
+import '@rainbow-me/rainbowkit/styles.css'
 
 const Contexts: React.FC<
   {
-    settings?: BridgeSettings
+    settings: BridgeSettings
   } & PropsWithChildren
 > = ({ settings, children }) => {
   const searchParams = useSearchParams()
@@ -125,7 +123,7 @@ const Contexts: React.FC<
                 >
                   <ToastProvider>
                     <JotaiProvider>
-                      <TonConnectProvider basePath={''} themeData={themeData}> 
+                      <TonConnectProvider basePath={''} themeData={themeData}>
                         <RainbowKit>
                           <EthersProvider>
                             <Solana>
