@@ -1071,6 +1071,7 @@
       {
         "name": "CELO",
         "asset": "CELO",
+        "logo": "https://cdn.lux.network/bridge/currencies/celo.svg",
         "contract_address": "0x0000000000000000000000000000000000000000",
         "decimals": 18,
         "status": "inactive",
@@ -1393,6 +1394,7 @@
       {
         "name": "xDAI",
         "asset": "xDAI",
+        "logo": "https://cdn.lux.network/bridge/currencies/xdai.png",
         "contract_address": "0x0000000000000000000000000000000000000000",
         "decimals": 18,
         "status": "inactive",
@@ -1604,6 +1606,7 @@
       {
         "name": "FTM",
         "asset": "FTM",
+        "logo": "https://cdn.lux.network/bridge/currencies/ftm.svg",
         "contract_address": "0x0000000000000000000000000000000000000000",
         "decimals": 18,
         "status": "inactive",
@@ -2068,6 +2071,7 @@
   {
     "display_name": "Bitcoin",
     "internal_name": "BITCOIN_MAINNET",
+    "logo": "https://cdn.lux.network/bridge/networks/bitcoin_mainnet.png",
     "native_currency": "BTC",
     "is_testnet": false,
     "is_featured": true,
@@ -2081,6 +2085,7 @@
       {
         "name": "BTC",
         "asset": "BTC",
+        "logo": "https://cdn.lux.network/bridge/currencies/btc.png",
         "contract_address": null,
         "decimals": 8,
         "status": "active",
@@ -2102,6 +2107,7 @@
   {
     "display_name": "Cardano",
     "internal_name": "CARDANO_MAINNET",
+    "logo": "https://cdn.lux.network/bridge/networks/cardano_mainnet.png",
     "native_currency": "ADA",
     "is_testnet": false,
     "is_featured": true,
@@ -2115,6 +2121,7 @@
       {
         "name": "ADA",
         "asset": "ADA",
+        "logo": "https://cdn.lux.network/bridge/currencies/ada.svg",
         "contract_address": null,
         "decimals": 8,
         "status": "inactive",
@@ -2136,6 +2143,7 @@
   {
     "display_name": "Solana",
     "internal_name": "SOLANA_MAINNET",
+    "logo": "https://cdn.lux.network/bridge/networks/solana_mainnet.png",
     "native_currency": "SOL",
     "is_testnet": false,
     "is_featured": true,
@@ -2149,6 +2157,7 @@
       {
         "name": "SOL",
         "asset": "SOL",
+        "logo": "https://cdn.lux.network/bridge/currencies/sol.png",
         "contract_address": null,
         "decimals": 9,
         "status": "active",
