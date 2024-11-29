@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -16,37 +16,23 @@ import BridgeApiClient, {
   TransactionType,
 } from '@/lib/BridgeApiClient'
 import Modal from '../modal/modal'
-import SpinIcon from '../icons/spinIcon'
-import StatusIcon from './StatusIcons'
+import SpinIcon from '@/components/icons/spinIcon'
+import StatusIcon from '@/components/SwapHistory/StatusIcons'
 import AppSettings from '@/lib/AppSettings'
-import SwapDetails from './SwapDetailsComponent'
-import SubmitButton from '../buttons/submitButton'
-import ToggleButton from '../buttons/toggleButton'
-import HeaderWithMenu from '../HeaderWithMenu'
+import SwapDetails from '@/components/SwapHistory/SwapDetailsComponent'
+import SubmitButton from '@/components/buttons/submitButton'
+import ToggleButton from '@/components/buttons/toggleButton'
+import HeaderWithMenu from '@/components/HeaderWithMenu'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
-import { truncateDecimals } from '../utils/RoundDecimals'
-import { SwapHistoryComponentSkeleton } from '../Skeletons'
+import { SwapHistoryComponentSkeleton } from '@/components/Skeletons'
+// types
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 //networks
-import fireblockNetworksMainnet from '@/components/lux/utila/constants/networks.mainnets'
-import fireblockNetworksTestnet from '@/components/lux/utila/constants/networks.sandbox'
-import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
-import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
+import { formatLongNumber } from '@/lib/utils'
+import { useSettings } from '@/context/settings'
 
 function TransactionsHistory() {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const networksFireblock = isMainnet
-    ? [
-        ...fireblockNetworksMainnet.sourceNetworks,
-        ...fireblockNetworksMainnet.destinationNetworks,
-      ]
-    : [
-        ...fireblockNetworksTestnet.sourceNetworks,
-        ...fireblockNetworksTestnet.destinationNetworks,
-      ]
-  const networksTeleport = isMainnet
-    ? teleportNetworksMainnet
-    : teleportNetworksTestnet
-
+  const { networks } = useSettings()
   const [page, setPage] = useState(1)
   const [isLastPage, setIsLastPage] = useState(false)
   const [swaps, setSwaps] = useState<SwapItem[]>()
@@ -262,14 +248,13 @@ function TransactionsHistory() {
                     </thead>
                     <tbody>
                       {swaps?.map((swap, index) => {
-                        const networks = swap.use_teleporter
-                          ? networksTeleport
-                          : networksFireblock
                         const sourceNetwork = networks.find(
-                          (n) => n.internal_name === swap.source_network
+                          (n: CryptoNetwork) =>
+                            n.internal_name === swap.source_network
                         )
                         const destinationNetwork = networks.find(
-                          (n) => n.internal_name === swap.destination_network
+                          (n: CryptoNetwork) =>
+                            n.internal_name === swap.destination_network
                         )
 
                         const sourceAsset = sourceNetwork?.currencies.find(
@@ -277,7 +262,8 @@ function TransactionsHistory() {
                         )
                         const destinationAsset =
                           destinationNetwork?.currencies.find(
-                            (c) => c.asset === swap.destination_asset
+                            (c: NetworkCurrency) =>
+                              c.asset === swap.destination_asset
                           )
                         const output_transaction = swap.transactions.find(
                           (t) => t.type === TransactionType.Output
@@ -298,7 +284,6 @@ function TransactionsHistory() {
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
                                   {sourceAsset?.logo && (
                                     <Image
-                                      // src={resolveNetworkImage(swap.source_asset)}
                                       src={sourceAsset.logo}
                                       alt="From Logo"
                                       height="60"
@@ -352,18 +337,14 @@ function TransactionsHistory() {
                                   {swap?.status == 'completed' ? (
                                     <span className="ml-1 md:ml-0">
                                       {output_transaction
-                                        ? truncateDecimals(
-                                            output_transaction?.amount,
-                                            5
+                                        ? formatLongNumber(
+                                            output_transaction?.amount
                                           )
                                         : '-'}
                                     </span>
                                   ) : (
                                     <span>
-                                      {truncateDecimals(
-                                        swap.requested_amount,
-                                        5
-                                      )}
+                                      {formatLongNumber(swap.requested_amount)}
                                     </span>
                                   )}
                                   <span className="ml-1">
