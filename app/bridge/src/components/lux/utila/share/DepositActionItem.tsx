@@ -36,7 +36,7 @@ const DepositActionItem: React.FC<{
         target="_blank"
         className="cursor-pointer hover:underline hover:opacity-70"
       >
-        {shortenAddress(value, 15)}
+        {shortenAddress(value, 10)}
       </a>
       <ClipboardCopier text={value} size={16} />
     </div>
@@ -68,7 +68,7 @@ const DepositActionItem: React.FC<{
       </div>
       <div
         className={cn(
-          'px-6 py-2 opacity-80 text-sm overflow-hidden',
+          'pl-6 py-2 opacity-80 text-sm overflow-hidden',
           open ? '' : 'hidden'
         )}
       >
