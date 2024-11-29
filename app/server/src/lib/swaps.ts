@@ -414,13 +414,14 @@ export async function handlerDepositAction(
   hash: string, 
   amount: number, 
   asset: string, 
-  sourceAddress: string, 
+  sourceAddress?: string, 
   destinationAddress: string, 
   created: Date, 
   vault: string, 
   type: string
 ) {
   console.log({
+    asset,
     sourceAddress,
     destinationAddress,
     amount,
@@ -495,7 +496,7 @@ export async function handlerDepositAction(
     await prisma.depositAction.create({
       data: {
         status: UtilaTransactionStateMapping[state],
-        from: sourceAddress,
+        from: sourceAddress ?? 'unknown sender...',
         to: destinationAddress,
         amount: amount,
         transaction_hash: hash,
@@ -786,7 +787,6 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
  * @returns 
  */
 export async function handlerGetSwaps(isDeleted?: boolean, isMainnet? : boolean, isTeleport?: boolean, page?: number, pageSize: number = 20) {
-  console.log(pageSize)
   try {
     if (page) {
       const swaps = await prisma.swap.findMany({

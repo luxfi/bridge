@@ -32,15 +32,15 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
   const signer = useEthersSigner();
   const chainId = useChainId();
 
-  const { layers } = useSettings();
+  const { networks } = useSettings();
   const { source_network: source_network_internal_name } = swap || {};
-  const source_network = layers.find(
+  const source_network = networks.find(
     (n) => n.internal_name === source_network_internal_name
   );
-  const source_layer = layers.find(
+  const source_layer = networks.find(
     (l) => l.internal_name === source_network_internal_name
   );
-  const source_currency = source_network?.assets?.find(
+  const source_currency = source_network?.currencies?.find(
     (c) =>
       c.asset.toLocaleUpperCase() === swap?.source_asset.toLocaleUpperCase()
   );
@@ -48,7 +48,7 @@ const ZkSyncWalletWithdrawStep: FC<Props> = ({ depositAddress, amount }) => {
     swap?.source_network?.split("_")?.[1]?.toLowerCase() == "mainnet"
       ? "mainnet"
       : "goerli";
-  const l1Network = layers.find(
+  const l1Network = networks.find(
     (n) => n.internal_name === source_network?.metadata?.L1Network
   );
 
