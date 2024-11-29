@@ -1,6 +1,5 @@
 import { GetDefaultAsset } from "../util/settingsHelper";
-import { type NetworkCurrency } from "../Models/CryptoNetwork";
-import { type Layer } from "../Models/Layer";
+import { type CryptoNetwork, type NetworkCurrency } from "../Models/CryptoNetwork";
 
 export function CalculateMinimalAuthorizeAmount(usd_price: number, amount: number) {
     return Math.ceil((usd_price * amount) + (usd_price * amount * 0.02))
@@ -11,7 +10,7 @@ type RefuelCalcResult = {
 }
 type CaluclateRefuelArgs = {
     currency?: NetworkCurrency | null,
-    to?: Layer | null,
+    to?: CryptoNetwork | null,
     refuelEnabled?: boolean,
 }
 
@@ -20,16 +19,18 @@ export function CaluclateRefuelAmount(args: CaluclateRefuelArgs): RefuelCalcResu
     const refuelNetwork = ResolveRefuelNetwork(args)
     if (!refuelNetwork)
         return res
-    const nativeAsset = args.to?.assets?.find(c => c.is_native)
+    const nativeAsset = args.to?.currencies?.find(c => c.is_native)
     if (!nativeAsset || !args.currency)
         return res
-    const refuel_amount_in_usd = Number(refuelNetwork.refuel_amount_in_usd)
-    res.refuelAmountInSelectedCurrency = refuel_amount_in_usd / args?.currency.price_in_usd || 0;
-    res.refuelAmountInNativeCurrency = (refuel_amount_in_usd / nativeAsset.price_in_usd) || 0
+    // const refuel_amount_in_usd = Number(refuelNetwork.refuel_amount_in_usd)
+    // res.refuelAmountInSelectedCurrency = refuel_amount_in_usd / args?.currency.price_in_usd || 0;
+    // res.refuelAmountInNativeCurrency = (refuel_amount_in_usd / nativeAsset.price_in_usd) || 0
+    res.refuelAmountInSelectedCurrency = 0;
+    res.refuelAmountInNativeCurrency = 0
     return res;
 }
 
-function ResolveRefuelNetwork(args: CaluclateRefuelArgs): Layer | undefined |null {
+function ResolveRefuelNetwork(args: CaluclateRefuelArgs): CryptoNetwork | undefined |null {
     const { currency, to, refuelEnabled } = args
 
     if (!currency || !to || !refuelEnabled)
@@ -37,12 +38,12 @@ function ResolveRefuelNetwork(args: CaluclateRefuelArgs): Layer | undefined |nul
     const destinationNetwork = to
 
     const destinationNetworkCurrency = GetDefaultAsset(to, currency?.asset)
-    const destinationNetworkNativeAsset = to.assets?.find(c => c.is_native);
+    const destinationNetworkNativeAsset = to.currencies?.find(c => c.is_native);
 
     if (!destinationNetworkCurrency || !destinationNetworkNativeAsset)
         return
 
-    if (destinationNetworkCurrency.is_refuel_enabled && Number(destinationNetwork?.refuel_amount_in_usd) > 0 && currency.price_in_usd > 0 && destinationNetworkNativeAsset.price_in_usd > 0) {
+    if (destinationNetworkCurrency.is_refuel_enabled && currency.price_in_usd > 0 && destinationNetworkNativeAsset.price_in_usd > 0) {
         return destinationNetwork
     }
 }

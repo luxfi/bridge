@@ -24,7 +24,7 @@ const Rewards: React.FC<{
 }) => {
 
     const settings = useSettings()
-    const { resolveImgSrc, layers } = settings
+    const { networks } = settings
     const { address } = useAccount();
     const apiClient = new BridgeApiClient()
 
@@ -38,7 +38,7 @@ const Rewards: React.FC<{
     const payouts = payoutsData?.data || []
     const totalBudget = campaign.total_budget
 
-    const network = layers.find(n => n.internal_name === campaign.network)
+    const network = networks.find(n => n.internal_name === campaign.network)
     const rewards = rewardsData?.data
     const campaignEndDate = new Date(campaign.end_date)
     const now = new Date()
@@ -54,7 +54,7 @@ const Rewards: React.FC<{
     const campaignIsEnded = (campaignEndDate.getTime() - now.getTime()) < 0 || campaign.status !== 'active'
 
     const DistributedAmount = ((campaign.distributed_amount / campaign.total_budget) * 100)
-    const usdc_price = network?.assets?.find(c => c.asset === campaign.asset)?.price_in_usd
+    const usdc_price = network?.currencies?.find(c => c.asset === campaign.asset)?.price_in_usd
     const total_amount = rewards?.user_reward.total_amount
     const total_in_usd = (total_amount && usdc_price) ? (usdc_price * total_amount).toFixed(2) : null
 
@@ -77,7 +77,7 @@ const Rewards: React.FC<{
                             <div className="flex items-center space-x-1">
                                 <div className="h-5 w-5 relative">
                                     <Image
-                                        src={resolveImgSrc(campaign)}
+                                        src={network?.logo ?? ''}
                                         alt="Project Logo"
                                         height="40"
                                         width="40"
@@ -102,7 +102,7 @@ const Rewards: React.FC<{
                         <div className="flex items-center space-x-1">
                             <div className="h-5 w-5 relative">
                                 <Image
-                                    src={resolveImgSrc(campaign)}
+                                    src={network?.logo ?? ''}
                                     alt="Project Logo"
                                     height="40"
                                     width="40"

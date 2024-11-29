@@ -38,13 +38,13 @@ const StarknetWalletWithdrawStep: React.FC<Props> = ({ depositAddress, amount })
 
     const { userId } = useAuthState()
     const { swap } = useSwapDataState()
-    const { layers } = useSettings()
+    const { networks } = useSettings()
 
     const { setSwapTransaction } = useSwapTransactionStore();
     const { source_network: source_network_internal_name } = swap || {}
-    const source_network = layers.find(n => n.internal_name === source_network_internal_name)
-    const source_layer = layers.find(n => n.internal_name === source_network_internal_name)
-    const sourceCurrency = source_network?.assets.find(c => c.asset?.toLowerCase() === swap?.source_asset?.toLowerCase())
+    const source_network = networks.find(n => n.internal_name === source_network_internal_name)
+    const source_layer = networks.find(n => n.internal_name === source_network_internal_name)
+    const sourceCurrency = source_network?.currencies.find(c => c.asset?.toLowerCase() === swap?.source_asset?.toLowerCase())
     const sourceChainId = source_network?.chain_id
 
     const provider = useMemo(() => {

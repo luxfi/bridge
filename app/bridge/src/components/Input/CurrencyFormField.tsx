@@ -10,11 +10,10 @@ import { SelectMenuItem, type ISelectMenuItem } from "../Select/Shared/Props/sel
 import PopoverSelectWrapper from "../Select/Popover/PopoverSelectWrapper";
 import CurrencySettings from "@/lib/CurrencySettings";
 import { SortingByAvailability } from "@/lib/sorting";
-import { type Layer } from "@/Models/Layer";
 import { useBalancesState } from "@/context/balances";
 import { truncateDecimals } from "../utils/RoundDecimals";
 import { useQueryState } from "@/context/query";
-import { type NetworkCurrency } from "@/Models/CryptoNetwork";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 import BridgeApiClient from "@/lib/BridgeApiClient";
 import { ApiResponse } from "@/Models/ApiResponse";
 import useWallet from "@/hooks/useWallet";
@@ -30,16 +29,15 @@ const CurrencyFormField: React.FC<{
   const { to, fromCurrency, toCurrency, from, currencyGroup } = values;
 
   const [allRoutes, setAllRoutes] = useState<string[]>([]);
-  const { resolveImgSrc } = useSettings();
   const name = direction === "from" ? "fromCurrency" : "toCurrency";
   const query = useQueryState();
   const { balances, isBalanceLoading } = useBalancesState();
   const lockedCurrency = query?.lockAsset
-    ? from?.assets?.find(
+    ? from?.currencies?.find(
       (c) => c?.asset?.toUpperCase() === query?.asset?.toUpperCase()
     )
     : undefined;
-  const assets = direction === "from" ? from?.assets : to?.assets;
+  const assets = direction === "from" ? from?.currencies : to?.currencies;
   const { getAutofillProvider: getProvider } = useWallet();
   const provider = useMemo(() => {
     return from && getProvider(from);
@@ -94,15 +92,14 @@ const CurrencyFormField: React.FC<{
 
   const filteredCurrencies = currencies?.filter((currency) => {
     if (direction === "from") {
-      return currency.availableInSource;
+      return currency.is_deposit_enabled;
     } else {
-      return currency.availableInDestination;
+      return currency.is_withdrawal_enabled;
     }
   });
 
   const currencyMenuItems = GenerateCurrencyMenuItems(
     currencies!,
-    resolveImgSrc,
     values,
     direction === "from" ? sourceRoutes?.data : destinationRoutes?.data,
     lockedCurrency,
@@ -225,7 +222,6 @@ const CurrencyFormField: React.FC<{
 
 export function GenerateCurrencyMenuItems(
   currencies: NetworkCurrency[],
-  resolveImgSrc: (item: Layer | NetworkCurrency) => string,
   values: SwapFormValues,
   routes?: { network: string; asset: string }[],
   lockedCurrency?: NetworkCurrency,
@@ -275,7 +271,7 @@ export function GenerateCurrencyMenuItems(
         id: c.asset,
         name: displayName || "-",
         order: CurrencySettings.KnownSettings[c.asset]?.Order ?? 5,
-        imgSrc: resolveImgSrc && resolveImgSrc(c),
+        imgSrc: c.logo ?? '',
         isAvailable: currencyIsAvailable(c),
         details: `${formatted_balance_amount}`,
         type: "currency",

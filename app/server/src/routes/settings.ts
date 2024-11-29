@@ -15,12 +15,11 @@ router.get("/", async (req: Request, res: Response) => {
     const isMainnet = version ? (version === "mainnet") : true
     const settings = isMainnet ? mainnetSettings : testnetSettings;
 
-    res.status(200).json({ data: settings })
+    res.status(200).json({ ...settings.data })
   } 
   catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })
-
 
 export default router

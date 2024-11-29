@@ -13,15 +13,15 @@ import shortenAddress from "../../utils/ShortenAddress";
 import { isValidAddress } from "@/lib/addressValidator";
 import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
 import { useFee } from "@/context/feeContext";
-import { type Layer } from "@/Models/Layer";
 import { type Exchange } from "@/Models/Exchange";
+import type { CryptoNetwork } from "@/Models/CryptoNetwork";
 
-const getExchangeNetwork = (layers: Layer[], exchange?: Exchange, asset?: string): string | undefined => {
+const getExchangeNetwork = (networks: CryptoNetwork[], exchange?: Exchange, asset?: string): string | undefined => {
     if (!exchange || !asset) {
         return undefined;
     } else {
         const currency = exchange?.currencies?.find(c => c.asset === asset);
-        const layer = layers.find(n => n.internal_name === currency?.network);
+        const layer = networks.find(n => n.internal_name === currency?.network);
         return layer?.internal_name
     }
 }
@@ -36,10 +36,10 @@ const ManualTransfer: React.FC = () => {
         source_asset
     } = swap || {}
 
-    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettings()
-    const sourceLayer = layers.find(n => n.internal_name === source_network)
+    const { networks, exchanges, getExchangeAsset } = useSettings()
+    const sourceLayer = networks.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
-    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
+    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(networks, sourceExchange, source_asset);
    
     const handleCloseNote = useCallback(async () => {
         if (swap)
@@ -73,7 +73,7 @@ const ManualTransfer: React.FC = () => {
 
 const TransferInvoice = () => {
 
-    const { layers, exchanges, resolveImgSrc, getExchangeAsset } = useSettings()
+    const { networks, exchanges, getExchangeAsset } = useSettings()
     const { swap } = useSwapDataState()
     const { valuesChanger, minAllowedAmount } = useFee()
 
@@ -87,14 +87,14 @@ const TransferInvoice = () => {
         deposit_address
     } = swap || {}
 
-    const sourceLayer = layers.find(n => n.internal_name === source_network)
+    const sourceLayer = networks.find(n => n.internal_name === source_network)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange)
-    const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset(layers, sourceExchange, source_asset)
-    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(layers, sourceExchange, source_asset);
+    const sourceAsset = sourceLayer ? sourceLayer?.currencies?.find(currency => currency?.asset === source_asset) : getExchangeAsset(networks, sourceExchange, source_asset)
+    const source_network_internal_name = sourceLayer?.internal_name ?? getExchangeNetwork(networks, sourceExchange, source_asset);
 
-    const destinationLayer = layers?.find(l => l.internal_name === destination_network)
+    const destinationLayer = networks?.find(l => l.internal_name === destination_network)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange)
-    const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
+    const destinationAsset = destinationLayer ? destinationLayer?.currencies?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(networks, destinationExchange, destination_asset)
     const depositAddress = deposit_address?.address;
 
     console.log("TransferInvoice => ", {
@@ -192,7 +192,7 @@ const TransferInvoice = () => {
                         {
                             sourceAsset &&
                             <Image
-                                src={resolveImgSrc({ asset: sourceAsset?.asset })}
+                                src={sourceAsset?.logo ?? ''}
                                 alt="From Logo"
                                 height="60"
                                 width="60"
@@ -217,15 +217,15 @@ const TransferInvoice = () => {
 }
 
 // const ExchangeNetworkPicker: React.FC<{ onChange: (network: NetworkCurrency) => void }> = ({ onChange }) => {
-//     const { layers, resolveImgSrc } = useSettings()
+//     const { networks, resolveImgSrc } = useSettings()
 //     const { swap } = useSwapDataState()
 //     const {
 //         source_exchange: source_exchange_internal_name,
 //         destination_network,
 //         source_asset } = swap || {}
-//     const source_exchange = layers.find(n => n.internal_name === source_exchange_internal_name)
+//     const source_exchange = networks.find(n => n.internal_name === source_exchange_internal_name)
 
-//     const exchangeAssets = source_exchange?.assets?.filter(a => a.asset === source_asset && a.network_internal_name !== destination_network && a.network?.status !== "inactive")
+//     const exchangeAssets = source_exchange?.currencies?.filter(a => a.asset === source_asset && a.network_internal_name !== destination_network && a.network?.status !== "inactive")
 //     const defaultSourceNetwork = exchangeAssets?.find(sn => sn.is_default) || exchangeAssets?.[0]
 
 //     const handleChangeSelectedNetwork = useCallback((n: string) => {

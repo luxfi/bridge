@@ -1,14 +1,13 @@
-import { type Layer } from "@/Models/Layer";
 import { GetDefaultAsset } from "@/util/settingsHelper";
 import { CaluclateRefuelAmount } from "@/lib/fees";
 import { truncateDecimals } from "../../utils/RoundDecimals";
-import { type NetworkCurrency } from "@/Models/CryptoNetwork";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 
 
 const ReceiveAmounts: React.FC<{
   receive_amount?: number;
   currency?: NetworkCurrency | null;
-  to: Layer | undefined | null;
+  to: CryptoNetwork | undefined | null;
   refuel: boolean
 }> = ({ 
   receive_amount, 
@@ -51,7 +50,7 @@ const ReceiveAmounts: React.FC<{
 
 const Refuel: React.FC<{
   currency?: NetworkCurrency | null;
-  to?: Layer | null;
+  to?: CryptoNetwork | null;
   refuel: boolean
 }> = ({ 
   to, 
@@ -59,7 +58,7 @@ const Refuel: React.FC<{
   refuel 
 }) => {
 
-    const destination_native_asset = to?.assets.find(c => c.is_native)
+    const destination_native_asset = to?.currencies.find(c => c.is_native)
     const refuelCalculations = CaluclateRefuelAmount({
         refuelEnabled: refuel,
         currency,

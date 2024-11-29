@@ -18,10 +18,10 @@ import SubmitButton from '../../../buttons/submitButton'
 import Carousel, { CarouselItem, type CarouselRef } from '../../../Carousel'
 import { FirstScreen, FourthScreen, LastScreen, SecondScreen, ThirdScreen } from './ConnectGuideScreens'
 import KnownInternalNames from '@/lib/knownIds'
-import { type Layer } from '@/Models/Layer'
 import IconButton from '../../../buttons/iconButton'
 import { useCoinbaseStore } from './CoinbaseStore'
 import Widget from '../../../Widget'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 
 const Authorize: React.FC<{
@@ -37,7 +37,7 @@ const Authorize: React.FC<{
 }) => {
 
     const { swap } = useSwapDataState()
-    const { layers } = useSettings()
+    const { networks } = useSettings()
     
     const params = useSearchParams()
     const paramsString = params.toString()
@@ -53,8 +53,8 @@ const Authorize: React.FC<{
     const exchange_internal_name = swap?.source_exchange
     const asset_name = swap?.source_asset
 
-    const exchange = layers.find(e => e.internal_name?.toLowerCase() === exchange_internal_name?.toLowerCase()) as Layer
-    const currency = exchange?.assets.find(c => asset_name?.toLocaleUpperCase() === c.asset?.toLocaleUpperCase())
+    const exchange = networks.find(e => e.internal_name?.toLowerCase() === exchange_internal_name?.toLowerCase()) as CryptoNetwork
+    const currency = exchange?.currencies.find(c => asset_name?.toLocaleUpperCase() === c.asset?.toLocaleUpperCase())
 
     const oauthProviders = {} as any //TODO config oauth_providers
     const coinbaseOauthProvider = oauthProviders?.find((p: any) => (p.provider === KnownInternalNames.Exchanges.Coinbase))

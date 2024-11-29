@@ -24,10 +24,10 @@ import Widget from "../../Widget";
 const Withdraw: FC = () => {
   const { swap } = useSwapDataState();
   const { setWithdrawType } = useSwapDataUpdate();
-  const { layers } = useSettings();
+  const { networks } = useSettings();
   const { appName, signature } = useQueryState();
   const source_internal_name = swap?.source_exchange ?? swap?.source_network;
-  const source = layers.find((n) => n.internal_name === source_internal_name);
+  const source = networks.find((n) => n.internal_name === source_internal_name);
 
   const sourceIsStarknet =
     swap?.source_network?.toUpperCase() ===
@@ -51,7 +51,7 @@ const Withdraw: FC = () => {
     swap?.source_exchange?.toUpperCase() ===
     KnownInternalNames.Exchanges.Coinbase?.toUpperCase();
 
-  const source_layer = layers.find(
+  const source_layer = networks.find(
     (n) => n.internal_name === swap?.source_network
   );
   const sourceNetworkType = source_layer?.type;
@@ -176,7 +176,7 @@ const Withdraw: FC = () => {
 const WalletTransferContent: FC = () => {
   const { openAccountModal } = useAccountModal();
   const { getWithdrawalProvider: getProvider, disconnectWallet } = useWallet();
-  const { layers, resolveImgSrc } = useSettings();
+  const { networks } = useSettings();
   const { swap } = useSwapDataState();
   const [isLoading, setIsloading] = useState(false);
   const { mutateSwap } = useSwapDataUpdate();
@@ -186,13 +186,13 @@ const WalletTransferContent: FC = () => {
     source_exchange: source_exchange_internal_name,
   } = swap || {};
 
-  const source_network = layers.find(
+  const source_network = networks.find(
     (n) => n.internal_name === source_network_internal_name
   );
-  const source_exchange = layers.find(
+  const source_exchange = networks.find(
     (n) => n.internal_name === source_exchange_internal_name
   );
-  const source_layer = layers.find(
+  const source_layer = networks.find(
     (n) => n.internal_name === swap?.source_network
   );
 
@@ -264,7 +264,7 @@ const WalletTransferContent: FC = () => {
           {source_exchange && (
             <Image
               className="w-6 h-6 rounded-full p-0"
-              src={resolveImgSrc(source_exchange)}
+              src={source_exchange?.logo ?? ''}
               alt={accountAddress}
               width={25}
               height={25}
