@@ -474,24 +474,6 @@ export async function handlerDepositAction(
       }
     })
     console.log(`>> Successfully Updated Deposit Action for Swap [${swap.id}]`)
-
-    if (state === 13) { // if confirmed, check if deposit completed
-      const confirmed = await checkDepositAction ({
-        asset: _asset,
-        wallet: _wallet,
-        requestedAmount: Number(swap.requested_amount)
-      })
-    
-      if (confirmed) {
-        await prisma.swap.update({
-          where: { id: swap.id },
-          data: {
-            status: SwapStatus.BridgeTransferPending
-          }
-        })
-        console.log(`>> Deposit Completed for swap [${swap.id}]`)
-      }
-    }
   } else {
     await prisma.depositAction.create({
       data: {
@@ -520,6 +502,24 @@ export async function handlerDepositAction(
         }
       }
     })
+    // if confirmed, check whether deposit is completed
+    if (state === 13) { // if confirmed, check if deposit completed
+      const confirmed = await checkDepositAction ({
+        asset: _asset,
+        wallet: _wallet,
+        requestedAmount: Number(swap.requested_amount)
+      })
+    
+      if (confirmed) {
+        await prisma.swap.update({
+          where: { id: swap.id },
+          data: {
+            status: SwapStatus.BridgeTransferPending
+          }
+        })
+        console.log(`>> Deposit Completed for swap [${swap.id}]`)
+      }
+    }
     console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
   }
 }
