@@ -15,7 +15,7 @@ import BridgeApiClient, {
   SwapStatusInNumbers,
   TransactionType,
 } from '@/lib/BridgeApiClient'
-import Modal from '../modal/modal'
+import Modal from '@/components/modal/modal'
 import SpinIcon from '@/components/icons/spinIcon'
 import StatusIcon from '@/components/SwapHistory/StatusIcons'
 import AppSettings from '@/lib/AppSettings'
