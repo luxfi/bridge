@@ -414,7 +414,7 @@ export async function handlerDepositAction(
   hash: string, 
   amount: number, 
   asset: string, 
-  sourceAddress?: string, 
+  sourceAddress: string | undefined, 
   destinationAddress: string, 
   created: Date, 
   vault: string, 
