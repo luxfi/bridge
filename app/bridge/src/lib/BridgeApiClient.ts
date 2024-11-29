@@ -78,12 +78,15 @@ export default class BridgeApiClient {
       .then((res) => res.data)
   }
 
-  async GetSettingsAsync(): Promise<ApiResponse<BridgeSettings>> {
-    return await axios
-      .get(
+  async GetSettingsAsync(): Promise<BridgeSettings | undefined> {
+    try {
+      const { data } = await axios.get(
         `${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`
       )
-      .then((res) => res.data)
+      return data
+    } catch (err: any) {
+      return undefined
+    }
   }
 
   async GetLSNetworksAsync(): Promise<ApiResponse<CryptoNetwork[]>> {

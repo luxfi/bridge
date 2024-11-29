@@ -13,11 +13,11 @@ import AppSettings from '@/lib/AppSettings'
 import { useQueryState } from '@/context/query'
 
 const Success: React.FC = () => {
-  const { layers } = useSettings()
+  const { networks } = useSettings()
   const { swap } = useSwapDataState()
   const { externalId } = useQueryState()
   const { destination_network: destination_network_internal_name } = swap || {}
-  const destination_network = layers.find(n => n.internal_name === destination_network_internal_name)
+  const destination_network = networks.find(n => n.internal_name === destination_network_internal_name)
   const transaction_explorer_template = destination_network?.transaction_explorer_template
   const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
 
