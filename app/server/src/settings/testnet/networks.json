@@ -606,6 +606,7 @@
   {
     "display_name": "Zoo Testnet",
     "internal_name": "ZOO_TESTNET",
+    "logo": "https://cdn.lux.network/bridge/networks/zoo_mainnet.svg",
     "native_currency": "ZOO",
     "is_testnet": true,
     "is_featured": true,
