@@ -2,8 +2,6 @@
 import React from 'react'
 import Image from 'next/image'
 import resolveChain from '@/lib/resolveChain'
-import mainnets from '@/settings/mainnet/networks.json'
-import testnets from '@/settings/testnet/networks.json'
 import {
   RainbowKitProvider,
   darkTheme,
@@ -35,7 +33,6 @@ const queryClient = new QueryClient()
 const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { networks } = useSettings ()
-  console.log("rainbow chains", Object.keys(networks))
 
   const CustomAvatar: AvatarComponent = ({ address, ensImage, size }) => (
     <Image
@@ -52,11 +49,13 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
   )
   const isChain = (c: Chain | undefined): c is Chain => c != undefined
 
-  const chains = [...mainnets, ...testnets]
+  const chains = networks
     .filter((n) => n.type === NetworkType.EVM)
     .sort((a, b) => Number(a.chain_id) - Number(b.chain_id))
     .map(resolveChain)
     .filter(isChain)
+
+  console.log("::rainbow chains", chains[0])
 
   const config: Config = getDefaultConfig({
     appName: 'Lux Bridge',
