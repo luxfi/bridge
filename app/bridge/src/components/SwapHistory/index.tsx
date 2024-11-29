@@ -16,15 +16,15 @@ import BridgeApiClient, {
   TransactionType,
 } from '@/lib/BridgeApiClient'
 import Modal from '../modal/modal'
-import SpinIcon from '../icons/spinIcon'
-import StatusIcon from './StatusIcons'
+import SpinIcon from '@/components/icons/spinIcon'
+import StatusIcon from '@/components/SwapHistory/StatusIcons'
 import AppSettings from '@/lib/AppSettings'
-import SwapDetails from './SwapDetailsComponent'
-import SubmitButton from '../buttons/submitButton'
-import ToggleButton from '../buttons/toggleButton'
-import HeaderWithMenu from '../HeaderWithMenu'
+import SwapDetails from '@/components/SwapHistory/SwapDetailsComponent'
+import SubmitButton from '@/components/buttons/submitButton'
+import ToggleButton from '@/components/buttons/toggleButton'
+import HeaderWithMenu from '@/components/HeaderWithMenu'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
-import { SwapHistoryComponentSkeleton } from '../Skeletons'
+import { SwapHistoryComponentSkeleton } from '@/components/Skeletons'
 // types
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 //networks
