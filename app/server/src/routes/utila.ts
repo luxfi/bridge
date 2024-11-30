@@ -18,6 +18,17 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
   }
 })
 
+router.get("/deposit/check/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    const data = await handlerUtilaPayoutAction (swapId)
+    res.status(200).json(data)
+  } catch (err: any) {
+    res.status(500).send({
+      error: err?.message
+    })
+  }
+})
 /**
  * Webhook route to handle events
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
