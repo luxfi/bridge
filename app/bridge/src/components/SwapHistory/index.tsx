@@ -252,7 +252,6 @@ function TransactionsHistory() {
                           (n: CryptoNetwork) =>
                             n.internal_name === swap.source_network
                         )
-                        console.log(sourceNetwork)
                         const destinationNetwork = networks.find(
                           (n: CryptoNetwork) =>
                             n.internal_name === swap.destination_network
