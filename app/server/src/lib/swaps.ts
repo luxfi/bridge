@@ -524,19 +524,13 @@ export async function handlerDepositAction(
   console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
 }
 /**
- *
- * @param state
- * @param hash
- * @param amount
- * @param asset
- * @param sourceAddress
- * @param destinationAddress
- * @returns
+ * 
+ * @param swapId 
  */
 export async function handlerCheckDeposit(
   swapId: string
 ) {
-  const swap = await prisma.swap.findFirst({
+  const swap = await prisma.swap.findUnique({
     where: {
       id: swapId
     },
@@ -577,8 +571,9 @@ export async function handlerCheckDeposit(
       }
     })
     console.log(`>> Deposit Completed for swap [${swap.id}]`)
+  } else {
+    throw new Error(`Deposit is not confirmed yet for this swap`)
   }
-  console.log(`>> Successfully Created Deposit Action for Swap [${swap.id}]`)
 }
 /**
  * handler after deposit is checked
