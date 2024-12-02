@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { type Layer } from "../Models/Layer";
 import BridgeApiClient, { type SwapItem } from "../lib/BridgeApiClient";
 import { type Wallet } from "../stores/walletStore";
-// import useTON from "../lib/wallets/ton/useTON";
+import useTON from "../lib/wallets/ton/useTON";
 import useEVM from "../lib/wallets/evm/useEVM";
 //import useStarknet from "../lib/wallets/starknet/useStarknet";
 import useImmutableX from "../lib/wallets/immutableX/useIMX";
@@ -21,7 +21,7 @@ export type WalletProvider = {
 
 function useWallet() {
   const WalletProviders: WalletProvider[] = [
-    // useTON(),
+    useTON(),
     useEVM(),
     //useStarknet(),
     useImmutableX(),

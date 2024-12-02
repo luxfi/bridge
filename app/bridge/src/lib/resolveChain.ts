@@ -1,11 +1,12 @@
-import { resolveNetworkImage } from "@/util";
+//import { resolveNetworkImage } from "@/util";
 import { SendErrorMessage } from "./telegram";
 import { localeNumber } from "./utils";
 import { parseUnits as ethersParseUnits } from "ethers/lib/utils";
+import { type Chain } from 'viem'
 
 export default function resolveChain(
   network: any
-): (Chain & RainbowKitChain) | undefined {
+): Chain | undefined {
   const nativeCurrency = network.currencies.find((c: any) => c.is_native);
   const blockExplorersBaseURL = new URL(network.transaction_explorer_template)
     .origin;
@@ -20,16 +21,16 @@ export default function resolveChain(
     return;
   }
 
-  const res: Chain & RainbowKitChain = {
+  const res: Chain = {
     id: Number(network.chain_id),
     name: network.display_name,
-    network: network.internal_name,
+    //network: network.internal_name,
     nativeCurrency: {
       name: nativeCurrency.asset,
       symbol: nativeCurrency.asset,
       decimals: nativeCurrency.decimals,
     },
-    iconUrl: resolveNetworkImage(network.internal_name),
+    //iconUrl: resolveNetworkImage(network.internal_name),
     rpcUrls: {
       default: {
         http: network.nodes.map((n: any) => n?.url),
@@ -66,17 +67,19 @@ export default function resolveChain(
   return res;
 }
 
+/*
 type Chain<
   formatters extends ChainFormatters | undefined = ChainFormatters | undefined
 > = ChainConstants & ChainConfig<formatters>;
-
+*/
+/*
 type RainbowKitChain = {
   id: number;
   name?: string;
   iconUrl?: string | (() => Promise<string>) | null;
   iconBackground?: string;
 } & Chain;
-
+*/
 /**
  * Multiplies a string representation of a number by a given exponent of base 10 (10exponent).
  *
