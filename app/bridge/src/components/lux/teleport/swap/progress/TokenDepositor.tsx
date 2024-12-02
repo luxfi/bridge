@@ -184,7 +184,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const burnToken = async () => {
     try {
       setIsTokenTransferring(true)
-      const _amount = parseUnits(String(sourceAmount), localeNumber(sourceAmount, sourceAsset.decimals))
+      const _amount = parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals)
 
       const erc20Contract = new Contract(
         sourceAsset?.contract_address as string,
