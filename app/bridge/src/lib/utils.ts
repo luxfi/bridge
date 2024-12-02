@@ -39,10 +39,10 @@ const _getWeb3 = async (rpcList: string[]) => {
  * @param number
  * @returns
  */
-export const localeNumber = (number: number | string) => {
+export const localeNumber = (number: number | string, decials: number = 18) => {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 18,
+    maximumFractionDigits: decials,
     useGrouping: false, // Disable commas
   }).format(Number(number))
 }
