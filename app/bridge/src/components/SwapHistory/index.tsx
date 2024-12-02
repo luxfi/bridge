@@ -10,45 +10,30 @@ import { classNames } from '../utils/classNames'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
 
-
 import BridgeApiClient, {
   type SwapItem,
   SwapStatusInNumbers,
   TransactionType,
 } from '@/lib/BridgeApiClient'
-import Modal from '../modal/modal'
-import SpinIcon from '../icons/spinIcon'
-import StatusIcon from './StatusIcons'
+import Modal from '@/components/modal/modal'
+import SpinIcon from '@/components/icons/spinIcon'
+import StatusIcon from '@/components/SwapHistory/StatusIcons'
 import AppSettings from '@/lib/AppSettings'
-import SwapDetails from './SwapDetailsComponent'
-import SubmitButton from '../buttons/submitButton'
-import ToggleButton from '../buttons/toggleButton'
-import HeaderWithMenu from '../HeaderWithMenu'
+import SwapDetails from '@/components/SwapHistory/SwapDetailsComponent'
+import SubmitButton from '@/components/buttons/submitButton'
+import ToggleButton from '@/components/buttons/toggleButton'
+import HeaderWithMenu from '@/components/HeaderWithMenu'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
-import { truncateDecimals } from '../utils/RoundDecimals'
-import { SwapHistoryComponentSkeleton } from '../Skeletons'
+import { SwapHistoryComponentSkeleton } from '@/components/Skeletons'
+// types
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 //networks
-import fireblockNetworksMainnet from '@/components/lux/utila/constants/networks.mainnets'
-import fireblockNetworksTestnet from '@/components/lux/utila/constants/networks.sandbox'
-import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
-import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
+import { formatLongNumber } from '@/lib/utils'
+import { useSettings } from '@/context/settings'
 
 function TransactionsHistory() {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const networksFireblock = isMainnet
-    ? [
-        ...fireblockNetworksMainnet.sourceNetworks,
-        ...fireblockNetworksMainnet.destinationNetworks,
-      ]
-    : [
-        ...fireblockNetworksTestnet.sourceNetworks,
-        ...fireblockNetworksTestnet.destinationNetworks,
-      ]
-  const networksTeleport = isMainnet
-    ? teleportNetworksMainnet
-    : teleportNetworksTestnet
-
-  const [page, setPage] = useState(0)
+  const { networks } = useSettings()
+  const [page, setPage] = useState(1)
   const [isLastPage, setIsLastPage] = useState(false)
   const [swaps, setSwaps] = useState<SwapItem[]>()
   const [loading, setLoading] = useState(false)
@@ -58,11 +43,10 @@ function TransactionsHistory() {
   const [showAllSwaps, setShowAllSwaps] = useState(false)
   const [showToggleButton, setShowToggleButton] = useState(false)
 
-  
   const PAGE_SIZE = 20
-  
+
   const { notify } = useNotify()
-  
+
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const canGoBackRef = useRef<boolean>(false)
@@ -80,14 +64,16 @@ function TransactionsHistory() {
     }
   }, [paramString])
 
-  const getSwaps = async (page: number, status?: string | number) => {
+  const getSwaps = async (page?: number, status?: string | number) => {
     try {
       const {
         data: { data },
       } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?page=${page}${
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?${
+          !showAllSwaps ? `page=${page}` : ''
+        }${
           status ? `&status=${status}` : ''
-        }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}`
+        }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}&pageSize=${PAGE_SIZE}`
       )
       return {
         data: data,
@@ -106,78 +92,72 @@ function TransactionsHistory() {
     if (Number(data?.length) > 0) setShowToggleButton(true)
   }, [])
 
-  useAsyncEffect(async () => {
-    setIsLastPage(false)
-    setLoading(true)
-
-    if (showAllSwaps) {
-      const { data, error } = await getSwaps(1)
-
-      if (error) {
-        notify(error, "error")
-        setLoading(false)
-        return
-      }
-
-      setSwaps(data)
-      setPage(1)
-      if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true)
-      }
-
-      setLoading(false)
+  const fetchInitialSwaps = async () => {
+    const { data, error } = await getSwaps(
+      1,
+      SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
+    )
+    if (error) {
+      notify(error, 'error')
+      throw ''
+    }
+    setSwaps(data)
+    setPage(1)
+    if (Number(data?.length) < PAGE_SIZE) {
+      setIsLastPage(true)
     } else {
-      const { data, error } = await getSwaps(
-        1,
-        SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
-      )
+      setIsLastPage(false)
+    }
+  }
 
-      if (error) {
-        notify(error, "error")
-        setLoading(false)
-        return
-      }
+  const fetchAllSwaps = async () => {
+    const { data, error } = await getSwaps()
+    if (error) {
+      notify(error, 'error')
+      throw ''
+    }
 
-      setSwaps(data)
-      setPage(1)
-      if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true)
+    setSwaps(data)
+    setPage(1)
+    setIsLastPage(true)
+  }
+
+  useAsyncEffect(async () => {
+    try {
+      setLoading(true)
+      if (!showAllSwaps) {
+        fetchInitialSwaps()
+      } else {
+        fetchAllSwaps()
       }
+    } catch (err) {
+      //
+    } finally {
       setLoading(false)
     }
-  }, [paramString, showAllSwaps, useTeleporter])
+  }, [showAllSwaps])
 
-  const handleLoadMore = useCallback(async () => {
-    //TODO refactor page change
-    const nextPage = page + 1
-    setLoading(true)
-
+  useAsyncEffect(async () => {
     if (showAllSwaps) {
-      const { data, error } = await getSwaps(nextPage)
-
-      if (error) {
-        setLoading(false)
-        notify(error, "error")
-        return
-      }
-
-      setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
-      setPage(nextPage)
-      if (Number(data?.length) < PAGE_SIZE) {
-        setIsLastPage(true)
-      }
-
-      setLoading(false)
+      setShowAllSwaps(false)
     } else {
+      fetchInitialSwaps()
+    }
+  }, [useTeleporter])
+
+  const handleLoadMore = async () => {
+    if (showAllSwaps) return
+    try {
+      setLoading(true)
+      const nextPage = page + 1
       const { data, error } = await getSwaps(
         nextPage,
         SwapStatusInNumbers.SwapsWithoutCancelledAndExpired
       )
 
       if (error) {
-        notify(error, "error")
-        setLoading(false)
-        return
+        notify(error, 'error')
+        throw ''
       }
 
       setSwaps((old) => [...(old ? old : []), ...(data ? data : [])])
@@ -185,10 +165,12 @@ function TransactionsHistory() {
       if (Number(data?.length) < PAGE_SIZE) {
         setIsLastPage(true)
       }
-
+    } catch (err) {
+      //
+    } finally {
       setLoading(false)
     }
-  }, [page, setSwaps])
+  }
 
   const handleopenSwapDetails = (swap: SwapItem) => {
     setSelectedSwap(swap)
@@ -206,37 +188,37 @@ function TransactionsHistory() {
   return (
     <div className="bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
       <HeaderWithMenu goBack={goBack} />
+      <div className="flex justify-between px-6 pt-5">
+        <div className="flex justify-end mb-2">
+          <div className="flex space-x-2">
+            <ToggleButton
+              value={useTeleporter}
+              onChange={handleBridgeTypeChange}
+              name="Teleport"
+            />
+            <p className="flex items-center text-xs md:text-sm font-medium">
+              Teleport
+            </p>
+          </div>
+        </div>
+        {showToggleButton && Number(swaps?.length) > 0 && !loading && (
+          <div className="flex justify-end mb-2">
+            <div className="flex space-x-2">
+              <p className="flex items-center text-xs md:text-sm font-medium">
+                Show all swaps
+              </p>
+              <ToggleButton
+                onChange={handleToggleChange}
+                value={showAllSwaps}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       {page == 0 && loading ? (
         <SwapHistoryComponentSkeleton />
       ) : (
         <>
-          <div className='flex justify-between px-6 pt-5'>
-            <div className="flex justify-end mb-2">
-              <div className="flex space-x-2">
-                <ToggleButton
-                  value={useTeleporter}
-                  onChange={handleBridgeTypeChange}
-                  name='Teleport'
-                />
-                <p className="flex items-center text-xs md:text-sm font-medium">
-                  Teleport
-                </p>
-              </div>
-            </div>
-            {showToggleButton && Number(swaps?.length) > 0 && (
-              <div className="flex justify-end mb-2">
-                <div className="flex space-x-2">
-                  <p className="flex items-center text-xs md:text-sm font-medium">
-                    Show all swaps
-                  </p>
-                  <ToggleButton
-                    onChange={handleToggleChange}
-                    value={showAllSwaps}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
           {Number(swaps?.length) > 0 ? (
             <div className="w-full flex flex-col justify-between h-full px-6 space-y-5">
               <div>
@@ -266,23 +248,15 @@ function TransactionsHistory() {
                     </thead>
                     <tbody>
                       {swaps?.map((swap, index) => {
-                        const networks = swap.use_teleporter
-                          ? networksTeleport
-                          : networksFireblock
                         const sourceNetwork = networks.find(
-                          (n) => n.internal_name === swap.source_network
+                          (n: CryptoNetwork) =>
+                            n.internal_name === swap.source_network
                         )
                         const destinationNetwork = networks.find(
-                          (n) => n.internal_name === swap.destination_network
+                          (n: CryptoNetwork) =>
+                            n.internal_name === swap.destination_network
                         )
 
-                        const sourceAsset = sourceNetwork?.currencies.find(
-                          (c) => c.asset === swap.source_asset
-                        )
-                        const destinationAsset =
-                          destinationNetwork?.currencies.find(
-                            (c) => c.asset === swap.destination_asset
-                          )
                         const output_transaction = swap.transactions.find(
                           (t) => t.type === TransactionType.Output
                         )
@@ -300,10 +274,9 @@ function TransactionsHistory() {
                             >
                               <div className=" flex items-center">
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
-                                  {sourceAsset?.logo && (
+                                  {sourceNetwork?.logo && (
                                     <Image
-                                      // src={resolveNetworkImage(swap.source_asset)}
-                                      src={sourceAsset.logo}
+                                      src={sourceNetwork.logo}
                                       alt="From Logo"
                                       height="60"
                                       width="60"
@@ -313,10 +286,10 @@ function TransactionsHistory() {
                                 </div>
                                 <ArrowRight className="h-4 w-4 mx-2" />
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
-                                  {destinationAsset?.logo && (
+                                  {destinationNetwork?.logo && (
                                     <Image
                                       // src={resolveNetworkImage(swap.destination_asset)}
-                                      src={destinationAsset.logo}
+                                      src={destinationNetwork.logo}
                                       alt="To Logo"
                                       height="70"
                                       width="70"
@@ -356,18 +329,14 @@ function TransactionsHistory() {
                                   {swap?.status == 'completed' ? (
                                     <span className="ml-1 md:ml-0">
                                       {output_transaction
-                                        ? truncateDecimals(
-                                            output_transaction?.amount,
-                                            5
+                                        ? formatLongNumber(
+                                            output_transaction?.amount
                                           )
                                         : '-'}
                                     </span>
                                   ) : (
                                     <span>
-                                      {truncateDecimals(
-                                        swap.requested_amount,
-                                        5
-                                      )}
+                                      {formatLongNumber(swap.requested_amount)}
                                     </span>
                                   )}
                                   <span className="ml-1">

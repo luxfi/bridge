@@ -6,8 +6,8 @@ import type { Balance, BalanceProps, BalanceProvider, GasProps } from "../../../
 export default function useOptimismBalance(): BalanceProvider {
     const name = 'optimism'
 
-    const { layers } = useSettings()
-    const supportedNetworks = layers.filter(l => l.type === NetworkType.EVM && NetworkSettings.KnownSettings[l.internal_name]?.GasCalculationType === GasCalculation.OptimismType).map(l => l.internal_name)
+    const { networks } = useSettings()
+    const supportedNetworks = networks.filter(l => l.type === NetworkType.EVM && NetworkSettings.KnownSettings[l.internal_name]?.GasCalculationType === GasCalculation.OptimismType).map(l => l.internal_name)
 
     const getBalance = async ({ layer, address }: BalanceProps) => {
 
@@ -32,7 +32,7 @@ export default function useOptimismBalance(): BalanceProvider {
             const erc20BalancesContractRes = await getErc20Balances({
                 address: address,
                 chainId: Number(layer?.chain_id),
-                assets: layer.assets,
+                assets: layer.currencies,
                 publicClient,
                 hasMulticall: !!layer.metadata?.multicall3
             });
@@ -62,13 +62,13 @@ export default function useOptimismBalance(): BalanceProvider {
             return
         }
         const chainId = Number(layer?.chain_id)
-        const nativeToken = layer?.assets.find(a => a.is_native)
+        const nativeToken = layer?.currencies.find(a => a.is_native)
 
         if (!nativeToken || !chainId || !layer)
             return
 
-        const contract_address = layer?.assets?.find(a => a?.asset === currency?.asset)?.contract_address as `0x${string}`
-        const destination_address = layer?.managed_accounts?.[0]?.address as `0x${string}`
+        const contract_address = layer?.currencies?.find(a => a?.asset === currency?.asset)?.contract_address as `0x${string}`
+        const destination_address = layer?.managed_accounts?.[0] as `0x${string}`
 
         try {
             const { createPublicClient, http } = await import("viem")

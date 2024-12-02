@@ -19,7 +19,7 @@ const FeeDetailsComponent: React.FC<{ values: SwapFormValues }> = ({
   const { toCurrency, from, to, refuel, fromExchange, toExchange } = values || {};
   const { fee } = useFee()
   const currency = toCurrency
-  const { layers } = useSettings()
+  const { networks } = useSettings()
   const query = useQueryState();
 
   return (<>
@@ -30,7 +30,7 @@ const FeeDetailsComponent: React.FC<{ values: SwapFormValues }> = ({
                 <CEXNetworkFormField direction={fromExchange ? 'from' : 'to'} />
             </FeeDetails.Item>
         } */}
-        {to && toCurrency && to.assets.find(a => a.asset === toCurrency.asset)?.is_refuel_enabled && !query?.hideRefuel &&
+        {to && toCurrency && to.currencies.find(a => a.asset === toCurrency.asset)?.is_refuel_enabled && !query?.hideRefuel &&
           <FeeDetails.Item>
               <RefuelToggle />
           </FeeDetails.Item>
@@ -38,7 +38,7 @@ const FeeDetailsComponent: React.FC<{ values: SwapFormValues }> = ({
         {from && to &&
           <FeeDetails.Item>
               <DetailedEstimates
-                  networks={layers}
+                  networks={networks}
                   selected_currency={currency}
                   source={from}
                   destination={to}

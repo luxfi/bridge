@@ -1,14 +1,13 @@
 import { type Wallet } from "../stores/walletStore"
-import { type NetworkCurrency } from "./CryptoNetwork"
-import { type Layer } from "./Layer"
+import { type CryptoNetwork, type NetworkCurrency } from "./CryptoNetwork"
 
 export type BalanceProps = {
-    layer: Layer,
+    layer: CryptoNetwork,
     address: string
 }
 
 export type GasProps = {
-    layer: Layer,
+    layer: CryptoNetwork,
     currency: NetworkCurrency,
     address?: `0x${string}`,
     userDestinationAddress?: string,

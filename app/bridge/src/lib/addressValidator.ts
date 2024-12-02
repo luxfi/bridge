@@ -2,7 +2,6 @@ import { keccak256 } from "js-sha3";
 import KnownInternalNames from "./knownIds";
 import { validateAndParseAddress } from "./starkNetAddressValidator";
 import { PublicKey } from '@solana/web3.js'
-import type { Layer } from "../Models/Layer";
 import WAValidator from 'multicoin-address-validator';
 
 export function isValidAddress(address?: string, network?: { internal_name: string } | null): boolean {

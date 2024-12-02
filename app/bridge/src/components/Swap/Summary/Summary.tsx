@@ -2,7 +2,6 @@
 import Image from "next/image";
 import useSWR from 'swr'
 
-import { type Layer } from "@/Models/Layer";
 import { useSettings } from "@/context/settings-provider";
 import { truncateDecimals } from "../../utils/RoundDecimals";
 import shortenAddress, { shortenEmail } from "../../utils/ShortenAddress";
@@ -12,14 +11,14 @@ import { type Partner } from "@/Models/Partner";
 import KnownInternalNames from "@/lib/knownIds";
 import useWallet from "@/hooks/useWallet";
 import { useQueryState } from "@/context/query";
-import { type NetworkCurrency } from "@/Models/CryptoNetwork";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 import { type Exchange } from "@/Models/Exchange";
 
 type SwapInfoProps = {
     sourceAsset: NetworkCurrency,
     destinationAsset: NetworkCurrency,
-    source: Layer | Exchange | undefined,
-    destination: Layer | Exchange | undefined;
+    source: CryptoNetwork | Exchange | undefined,
+    destination: CryptoNetwork | Exchange | undefined;
     requestedAmount?: number;
     receiveAmount?: number;
     destinationAddress: string;
@@ -44,7 +43,7 @@ const Summary: React.FC<SwapInfoProps> = ({
     exchange_account_connected,
     exchange_account_name
 }) => {
-    const { resolveImgSrc, layers } = useSettings()
+    const { networks } = useSettings()
     const { getWithdrawalProvider: getProvider } = useWallet()
     // const provider = useMemo(() => {
     //     return from && getProvider(from)
@@ -73,7 +72,7 @@ const Summary: React.FC<SwapInfoProps> = ({
 
     const requestedAmountInUsd = (Number(sourceAssetPriceData?.data?.price) * Number(requestedAmount)).toFixed(2)
     const receiveAmountInUsd = (Number(destinationAssetPriceData?.data?.price) * Number(receiveAmount)).toFixed(2)
-    // const nativeCurrency = refuelAmount && from.assets.find(c => c.is_native)
+    // const nativeCurrency = refuelAmount && from.currencies.find(c => c.is_native)
 
     // const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?
     //     truncateDecimals(refuelAmount, nativeCurrency?.precision) : null
@@ -110,7 +109,7 @@ const Summary: React.FC<SwapInfoProps> = ({
             <div className="font-normal flex flex-col w-full relative z-10 space-y-4">
                 <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3">
-                        {source && <Image src={resolveImgSrc(source)} alt={source.display_name} width={32} height={32} className="rounded-full" />}
+                        {source && <Image src={source?.display_name ?? ''} alt={source.display_name} width={32} height={32} className="rounded-full" />}
                         <div>
                             <p className=" text-sm leading-5">{source?.display_name}</p>
                             {
@@ -126,7 +125,7 @@ const Summary: React.FC<SwapInfoProps> = ({
                 </div>
                 <div className="flex items-center justify-between  w-full ">
                     <div className="flex items-center gap-3">
-                        {destination && <Image src={resolveImgSrc(destination)} alt={destination.display_name} width={32} height={32} className="rounded-full" />}
+                        {destination && <Image src={destination?.display_name ?? ''} alt={destination.display_name} width={32} height={32} className="rounded-full" />}
                         <div>
                             <p className=" text-sm leading-5">{destination?.display_name}</p>
                             <p className="text-sm ">{shortenAddress(destAddress as string)}</p>

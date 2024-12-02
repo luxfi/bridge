@@ -111,7 +111,7 @@ const BridgeProcessor: React.FC<IProps> = ({
           </div>
         }
 
-        <div className="flex flex-col px-2 gap-1">
+        <div className="flex flex-col pl-2 gap-1">
           {depositActions.map((item: DepositAction) => (
             <DepositActionItem
               key={'deposit_action_' + item.id}

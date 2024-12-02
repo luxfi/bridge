@@ -1,20 +1,19 @@
 import { Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { type Layer } from "../../../Models/Layer";
 import { createAssociatedTokenAccountInstruction, createTransferInstruction, getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
-import { type NetworkCurrency } from "../../../Models/CryptoNetwork";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 
-const transactionBuilder = async (layer: Layer, currency: NetworkCurrency, walletPublicKey: PublicKey) => {
-    if (!layer.assets) return
+const transactionBuilder = async (layer: CryptoNetwork, currency: NetworkCurrency, walletPublicKey: PublicKey) => {
+    if (!layer.currencies) return
 
     const connection = new Connection(
-        `${layer.nodes[0].url}`,
+        `${layer.nodes[0]}`,
         "confirmed"
     );
 
-    const asset = layer?.assets?.find(a => currency.asset === a.asset)
+    const asset = layer?.currencies?.find(a => currency.asset === a.asset)
 
     const sourceToken = new PublicKey(asset?.contract_address!);
-    const recipientAddress = new PublicKey(layer.managed_accounts[0].address!);
+    const recipientAddress = new PublicKey(layer.managed_accounts[0]!);
 
     const transactionInstructions: TransactionInstruction[] = [];
     const associatedTokenFrom = await getAssociatedTokenAddress(

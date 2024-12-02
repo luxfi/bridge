@@ -9,19 +9,18 @@ import StarknetWalletWithdrawStep from "./StarknetWalletWithdraw"
 import useSWR from 'swr'
 import TransferFromWallet from "./WalletTransfer"
 import ZkSyncWalletWithdrawStep from "./ZKsyncWalletWithdraw"
-import { type Layer } from "../../../../Models/Layer"
 import useWalletTransferOptions from "../../../../hooks/useWalletTransferOptions"
 import { useFee } from "../../../../context/fee-provider"
 
 //TODO have separate components for evm and none_evm as others are sweepless anyway
 const WalletTransfer: React.FC = () => {
     const { swap } = useSwapDataState()
-    const { layers } = useSettings()
+    const { networks } = useSettings()
     const { minAllowedAmount } = useFee()
 
     const { source_network: source_network_internal_name } = swap || {}
-    const source_layer = layers.find(n => n.internal_name === source_network_internal_name)
-    const sourceAsset = source_layer?.assets?.find(c => c?.asset?.toLowerCase() === swap?.source_asset?.toLowerCase())
+    const source_layer = networks.find(n => n.internal_name === source_network_internal_name)
+    const sourceAsset = source_layer?.currencies?.find(c => c?.asset?.toLowerCase() === swap?.source_asset?.toLowerCase())
 
     const sourceIsImmutableX = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ImmutableXMainnet?.toUpperCase() || source_network_internal_name === KnownInternalNames.Networks.ImmutableXGoerli?.toUpperCase()
     const sourceIsZkSync = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ZksyncMainnet?.toUpperCase()
@@ -36,7 +35,7 @@ const WalletTransfer: React.FC = () => {
         data: generatedDeposit
     } = useSWR<ApiResponse<DepositAddress>>(generateDepositParams, ([network]) => client.GenerateDepositAddress(network), { dedupingInterval: 60000 })
 
-    const managedDepositAddress = source_layer?.managed_accounts?.[0]?.address;
+    const managedDepositAddress = source_layer?.managed_accounts?.[0];
     const generatedDepositAddress = generatedDeposit?.data?.address
 
     const depositAddress = isContractWallet?.ready ?
@@ -65,9 +64,9 @@ const WalletTransfer: React.FC = () => {
                 swapId={swap.id}
                 networkDisplayName={source_layer?.display_name}
                 tokenDecimals={sourceAsset?.decimals}
-                tokenContractAddress={sourceAsset.contract_address}
+                tokenContractAddress={sourceAsset.contract_address as `0x${string}`}
                 chainId={sourceChainId}
-                depositAddress={depositAddress}
+                depositAddress={depositAddress as `0x${string}`}
                 userDestinationAddress={swap.destination_address}
                 amount={requested_amount}
             />}

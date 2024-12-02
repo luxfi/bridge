@@ -2,30 +2,29 @@ import { type PublicClient, formatGwei } from "viem";
 import formatAmount from "../../../formatAmount";
 import getEVMGas from "../gas";
 import { type Gas } from "../../../../Models/Balance";
-import type { NetworkCurrency } from "@/Models/CryptoNetwork"
-import type { Layer } from "@/Models/Layer"
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork"
 
 export default class getEthereumGas extends getEVMGas {
 
     constructor(
       publicClient: PublicClient,
       chainId: number,
-      contract_address: `0x${string}`,
-      account: `0x${string}`,
-      from: Layer,
+      contract_address: string,
+      account: string,
+      from: CryptoNetwork,
       currency: NetworkCurrency,
-      destination: `0x${string}`,
+      destination: string,
       nativeToken: NetworkCurrency,
       isSweeplessTx: boolean
     ) {
       super(
         publicClient,
         chainId,
-        contract_address,
-        account,
+        contract_address as `0x${string}`,
+        account as `0x${string}`,
         from,
         currency,
-        destination,
+        destination as `0x${string}`,
         nativeToken,
         isSweeplessTx,
 

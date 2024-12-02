@@ -163,8 +163,8 @@ const PayoutProcessor: React.FC<IProps> = ({
         mintData.signedTXInfo_,
         mintData.vault_,
         {
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          maxFeePerGas: Number(feeData.maxFeePerGas) * 2,
+          maxPriorityFeePerGas: Number(feeData.maxPriorityFeePerGas) * 2,
           gasLimit: 3000000,
         }
       )

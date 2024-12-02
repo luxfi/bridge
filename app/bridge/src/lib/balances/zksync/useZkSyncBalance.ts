@@ -33,18 +33,18 @@ export default function useZkSyncBalance(): BalanceProvider {
 
         let balances: Balance[] = []
 
-        if (!layer.assets) return
+        if (!layer.currencies) return
 
         const { createPublicClient, http } = await import('viem');
         const provider = createPublicClient({
-            transport: http(`${layer.nodes[0].url}jsrpc`)
+            transport: http(`${layer.nodes[0]}jsrpc`)
         })
 
         try {
             const result: CommitedObject = await provider.request({ method: 'account_info' as any, params: [address as `0x${string}`] });
 
-            const zkSyncBalances = layer.assets.map((a) => {
-                const currency = layer?.assets?.find(c => c?.asset == a.asset);
+            const zkSyncBalances = layer.currencies.map((a) => {
+                const currency = layer?.currencies?.find(c => c?.asset == a.asset);
                 const amount = currency && result.committed.balances[currency.asset];
 
                 return ({
@@ -71,16 +71,16 @@ export default function useZkSyncBalance(): BalanceProvider {
     const getGas = async ({ layer, currency, address }: GasProps) => {
 
         let gas: Gas[] = [];
-        if (!layer.assets) return
+        if (!layer.currencies) return
 
         const { createPublicClient, http } = await import('viem');
         const provider = createPublicClient({
-            transport: http(`${layer.nodes[0].url}jsrpc`)
+            transport: http(`${layer.nodes[0]}jsrpc`)
         })
 
         try {
             const result: zkSyncGas = await provider.request({ method: 'get_tx_fee' as any, params: ["Transfer" as any, address as `0x${string}`, currency.asset as any] })
-            const currencyDec = layer?.assets?.find(c => c?.asset == currency.asset)?.decimals;
+            const currencyDec = layer?.currencies?.find(c => c?.asset == currency.asset)?.decimals;
             const formatedGas = formatAmount(result.totalFee, Number(currencyDec))
 
             gas = [{

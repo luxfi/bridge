@@ -6,16 +6,16 @@ import { Gift } from 'lucide-react'
 
 import { ApiResponse } from '@/Models/ApiResponse'
 import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
-import { type Layer } from '@/Models/Layer'
 import { useSettings } from '@/context/settings-provider'
 
 import SpinIcon from '../icons/spinIcon'
 import LinkWrapper from '../LinkWrapper'
 import Widget from '../Widget'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 const Rewards = () => {
 
-    const { layers, resolveImgSrc } = useSettings()
+    const { networks } = useSettings()
     const apiClient = new BridgeApiClient()
     const { data: campaignsData, isLoading } = useSWR<ApiResponse<Campaign[]>>('/campaigns', apiClient.fetcher)
     const campaigns = campaignsData?.data
@@ -37,8 +37,7 @@ const Rewards = () => {
                                             activeCampaigns.map(c =>
                                                 <CampaignItem
                                                     campaign={c}
-                                                    layers={layers}
-                                                    resolveImgSrc={resolveImgSrc}
+                                                    networks={networks}
                                                     key={c.id}
                                                 />)
                                             :
@@ -59,8 +58,7 @@ const Rewards = () => {
                                         {inactiveCampaigns.map(c =>
                                             <CampaignItem
                                                 campaign={c}
-                                                layers={layers}
-                                                resolveImgSrc={resolveImgSrc}
+                                                networks={networks}
                                                 key={c.id}
                                             />)}
                                     </div >
@@ -80,15 +78,13 @@ const Rewards = () => {
 
 const CampaignItem: React.FC<{
     campaign: Campaign,
-    layers: Layer[],
-    resolveImgSrc: (item: Layer) => string
+    networks: CryptoNetwork[]
 }> = ({ 
   campaign, 
-  layers, 
-  resolveImgSrc 
+  networks
 }) => {
 
-    const campaignLayer = layers.find(l => l.internal_name === campaign.network)
+    const campaignLayer = networks.find(l => l.internal_name === campaign.network)
     const campaignDaysLeft = ((new Date(campaign.end_date).getTime() - new Date().getTime()) / 86400000).toFixed()
     const campaignIsActive = IsCampaignActive(campaign)
 
@@ -97,7 +93,7 @@ const CampaignItem: React.FC<{
         <span className='flex items-center gap-1 hover:text-foreground active:scale-90 duration-200 transition-all'>
             <span className='h-5 w-5 relative'>
                 {campaignLayer && <Image
-                    src={resolveImgSrc(campaignLayer)}
+                    src={campaignLayer.logo ?? ''}
                     alt='Project Logo'
                     height='40'
                     width='40'
