@@ -974,7 +974,7 @@ export const networks: Network[] = [
     refuel_amount_in_usd: 0.5,
     transaction_explorer_template: "https://bscscan.com/tx/{0}",
     account_explorer_template: "https://bscscan.com/address/{0}",
-    node: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+    node: "https://bsc-dataseed.binance.org",
     currencies: [
       {
         name: "BNB",
