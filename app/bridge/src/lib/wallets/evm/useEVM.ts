@@ -2,19 +2,20 @@
 import { useEffect, useRef } from "react";
 
 import { createModal } from "@rabby-wallet/rabbykit";
-import { useAccount, useConfig, useConnect, useDisconnect} from "wagmi";
+import { useAccount, useConfig, useDisconnect} from "wagmi";
 
 import { NetworkType } from "../../../Models/CryptoNetwork";
-import { useSettings } from "../../../context/settings-provider";
 import { type WalletProvider } from "../../../hooks/useWallet";
 import KnownInternalNames from "../../knownIds";
 import { ResolveEVMWalletIcon } from "./resolveEVMIcon";
+import { useSettings } from "../../../context/settings-provider"
 
 const name = "evm";
 
   // cf: @luxfi/luxkit:examples/next-wagmi/src/components/Connect.tsx
 export default function useEVM(): WalletProvider {
 
+  const { networks } = useSettings()
   const account = useAccount();
   const { disconnect } = useDisconnect();
 
@@ -32,15 +33,14 @@ export default function useEVM(): WalletProvider {
   }, [config]);
 
 
-  const { layers } = useSettings();
   const withdrawalSupportedNetworks = [
-    ...layers
+    ...networks
       .filter((layer) => layer.type === NetworkType.EVM)
       .map((l) => l.internal_name),
     KnownInternalNames.Networks.ZksyncMainnet,
-  ];
+  ]
   const autofillSupportedNetworks = [
-    ...withdrawalSupportedNetworks,
+    // ...withdrawalSupportedNetworks,
     KnownInternalNames.Networks.ImmutableXMainnet,
     KnownInternalNames.Networks.ImmutableXGoerli,
     KnownInternalNames.Networks.BrineMainnet,
@@ -57,9 +57,9 @@ export default function useEVM(): WalletProvider {
         connector: account.connector?.id,
         providerName: name,
         icon: ResolveEVMWalletIcon({ connector: account.connector }),
-      };
+      }
     }
-  };
+  }
 
   return {
     getConnectedWallet: getWallet,
@@ -68,5 +68,5 @@ export default function useEVM(): WalletProvider {
     autofillSupportedNetworks,
     withdrawalSupportedNetworks,
     name,
-  };
+  }
 }

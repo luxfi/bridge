@@ -18,7 +18,6 @@ import Contexts from '@/context'
 import Main from '@/components/main'
 import Header from '@/components/header'
 
-
 export const metadata = { ..._metadata }
 // export const viewport = { ...ViewportCode }
 

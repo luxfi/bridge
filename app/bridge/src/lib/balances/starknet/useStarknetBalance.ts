@@ -22,15 +22,15 @@ export default function useStarknetBalance(): BalanceProvider {
 
         let balances: Balance[] = []
 
-        if (!layer.assets) return
+        if (!layer.currencies) return
 
         const provider = new RpcProvider({
             nodeUrl: layer.nodes[0].url,
         });
 
-        for (let i = 0; i < layer.assets.length; i++) {
+        for (let i = 0; i < layer.currencies.length; i++) {
             try {
-                const asset = layer.assets[i]
+                const asset = layer.currencies[i]
 
                 const erc20 = new Contract(Erc20Abi, asset.contract_address!, provider);
                 const balanceResult = await erc20.balanceOf(address);
@@ -70,11 +70,11 @@ export default function useStarknetBalance(): BalanceProvider {
 
         const { BigNumber } = await import("ethers");
 
-        if (!layer.assets) return
+        if (!layer.currencies) return
 
         const amountToWithdraw = BigNumber.from(1);
-        const contract_address = layer.assets.find(a => a.asset === currency.asset)?.contract_address
-        const asset = layer.assets.find(a => a.asset === currency.asset)
+        const contract_address = layer.currencies.find(a => a.asset === currency.asset)?.contract_address
+        const asset = layer.currencies.find(a => a.asset === currency.asset)
         const FEE_ESTIMATE_MULTIPLIER = BigInt(4);
 
         if (!contract_address || !asset || !wallet) return

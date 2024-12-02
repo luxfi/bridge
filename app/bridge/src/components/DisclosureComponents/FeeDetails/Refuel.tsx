@@ -13,7 +13,7 @@ const RefuelToggle = () => {
         setFieldValue
     } = useFormikContext<SwapFormValues>();
     const { to: destination } = values
-    const destination_native_currency = destination?.assets.find(c => c.is_native)?.asset
+    const destination_native_currency = destination?.currencies.find(c => c.is_native)?.asset
 
     const handleConfirmToggleChange = (value: boolean) => {
         setFieldValue('refuel', value)

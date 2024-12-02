@@ -209,7 +209,7 @@ const sourceNetworks: Network[] = [
     is_featured: true,
     average_completion_time: '00:00:07.7777777',
     chain_id: 137,
-    status: 'active',
+    status: 'inactive',
     type: 'evm',
     deposit_address: {
       address: "",

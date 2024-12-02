@@ -1,5 +1,4 @@
 import toast from "react-hot-toast";
-import { type Layer } from "../Models/Layer";
 import BridgeApiClient, { type SwapItem } from "../lib/BridgeApiClient";
 import { type Wallet } from "../stores/walletStore";
 import useTON from "../lib/wallets/ton/useTON";
@@ -7,6 +6,7 @@ import useEVM from "../lib/wallets/evm/useEVM";
 //import useStarknet from "../lib/wallets/starknet/useStarknet";
 import useImmutableX from "../lib/wallets/immutableX/useIMX";
 import useSolana from "../lib/wallets/solana/useSolana";
+import type { CryptoNetwork } from "@/Models/CryptoNetwork";
 
 export type WalletProvider = {
   connectWallet: (
@@ -68,14 +68,14 @@ function useWallet() {
     return connectedWallets;
   };
 
-  const getWithdrawalProvider = (network: Layer) => {
+  const getWithdrawalProvider = (network: CryptoNetwork) => {
     const provider = WalletProviders.find((provider) =>
       provider.withdrawalSupportedNetworks.includes(network.internal_name)
     );
     return provider;
   };
 
-  const getAutofillProvider = (network: Layer) => {
+  const getAutofillProvider = (network: CryptoNetwork) => {
     const provider = WalletProviders.find((provider) =>
       provider?.autofillSupportedNetworks?.includes(network.internal_name)
     );

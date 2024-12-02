@@ -9,45 +9,27 @@ import { SwapDetailsComponentSkeleton } from '../Skeletons'
 import { ExternalLink } from 'lucide-react'
 import { type FC } from 'react'
 import { type SwapItem, TransactionType } from '../../lib/BridgeApiClient'
-//networks
-import fireblockNetworksMainnet from '@/components/lux/utila/constants/networks.mainnets'
-import fireblockNetworksTestnet from '@/components/lux/utila/constants/networks.sandbox'
-import { networks as teleportNetworksMainnet } from '@/components/lux/teleport/constants/networks.mainnets'
-import { networks as teleportNetworksTestnet } from '@/components/lux/teleport/constants/networks.sandbox'
+import { useSettings } from '@/context/settings'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 type Props = {
   swap: SwapItem
 }
 
 const SwapDetails: FC<Props> = ({ swap }) => {
-  // make networks
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const networksFireblock = isMainnet
-    ? [
-        ...fireblockNetworksMainnet.sourceNetworks,
-        ...fireblockNetworksMainnet.destinationNetworks,
-      ]
-    : [
-        ...fireblockNetworksTestnet.sourceNetworks,
-        ...fireblockNetworksTestnet.destinationNetworks,
-      ]
-  const networksTeleport = isMainnet
-    ? teleportNetworksMainnet
-    : teleportNetworksTestnet
-  const networks = swap.use_teleporter ? networksTeleport : networksFireblock
+  const { networks } = useSettings()
 
   const sourceNetwork = networks.find(
-    (n) => n.internal_name === swap.source_network
+    (n: CryptoNetwork) => n.internal_name === swap.source_network
   )
   const destinationNetwork = networks.find(
-    (n) => n.internal_name === swap.destination_network
+    (n: CryptoNetwork) => n.internal_name === swap.destination_network
   )
-
   const sourceAsset = sourceNetwork?.currencies.find(
-    (c) => c.asset === swap.source_asset
+    (c: NetworkCurrency) => c.asset === swap.source_asset
   )
   const destinationAsset = destinationNetwork?.currencies.find(
-    (c) => c.asset === swap.destination_asset
+    (c: NetworkCurrency) => c.asset === swap.destination_asset
   )
 
   const swapInputTransaction = swap?.transactions?.find(
@@ -124,7 +106,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                 <div className="flex-shrink-0 h-5 w-5 relative">
                   <Image
                     // src={resolveNetworkImage(swap?.destination_network)}
-                    src={destinationNetwork?.logo!}
+                    src={destinationNetwork?.logo ?? ''}
                     alt="Exchange Logo"
                     height="60"
                     width="60"
@@ -252,7 +234,7 @@ const SwapDetails: FC<Props> = ({ swap }) => {
                 <div className="flex justify-between items-baseline">
                   <span className="text-left">Bridge Fee </span>
                   <span className=" font-normal">
-                    {swap?.fee} {sourceAsset?.asset}
+                    {0} {sourceAsset?.asset}
                   </span>
                 </div>
               </>

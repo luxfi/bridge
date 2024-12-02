@@ -1,9 +1,9 @@
-import { Web3, HttpProvider } from "web3";
-import { rpc } from "viem/utils";
-import { Contract, ethers } from "ethers";
-import type { Network, Token } from "@/types/teleport";
-import { formatUnits } from "ethers/lib/utils";
-import { erc20ABI } from "@wagmi/core";
+import { Web3, HttpProvider } from "web3"
+import { rpc } from "viem/utils"
+import { Contract, ethers } from "ethers"
+import type { Network, Token } from "@/types/teleport"
+import { formatUnits } from "ethers/lib/utils"
+import { erc20ABI } from "@wagmi/core"
 
 /**
  * generate random string
@@ -11,28 +11,28 @@ import { erc20ABI } from "@wagmi/core";
  */
 export const generateRandomString = (): string => {
   const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let result = ""
   for (let i = 0; i < 5; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
+    result += characters.charAt(Math.floor(Math.random() * characters.length))
   }
-  return result;
-};
+  return result
+}
 
 const _getWeb3 = async (rpcList: string[]) => {
   for (let i = 0; i < rpcList.length; i++) {
-    const rpcUrl = rpcList[i];
-    console.log(rpcUrl);
-    const web3 = new Web3(new HttpProvider(String(rpcUrl)));
+    const rpcUrl = rpcList[i]
+    console.log(rpcUrl)
+    const web3 = new Web3(new HttpProvider(String(rpcUrl)))
     try {
-      await web3.eth.net.isListening();
-      return Promise.resolve(web3);
+      await web3.eth.net.isListening()
+      return Promise.resolve(web3)
     } catch (err) {
-      console.log("next rpc...");
+      console.log("next rpc...")
     }
   }
-  return Promise.reject("cannot connect");
-};
+  return Promise.reject("cannot connect")
+}
 
 /**
  *
@@ -44,8 +44,8 @@ export const localeNumber = (number: number | string) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 18,
     useGrouping: false, // Disable commas
-  }).format(Number(number));
-};
+  }).format(Number(number))
+}
 
 /**
  * format provided number
@@ -57,6 +57,21 @@ export const formatNumber = (value: number | string) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 5
   }).format(Number(value))
+}
+/**
+ * 
+ * @param num 
+ * @returns 
+ */
+export const formatLongNumber = (num: number | string): string => {
+  const value = isNaN(Number(num)) ? 0 : Number(num)
+  if (value >= 1_000_000) {
+    return (value / 1_000_000).toFixed(1) + 'M'
+  } else if (value >= 1_000) {
+    return (value / 1_000).toFixed(1) + 'K'
+  } else {
+    return formatNumber (value)
+  }
 }
 
 /**
@@ -79,7 +94,7 @@ export const fetchTokenBalance = async (address: string, network: Network, asset
       return Number(formatUnits(_balance, asset.decimals))
     }
   } catch (err) {
-    return 0;
+    return 0
   }
 }
   

@@ -29,12 +29,11 @@ import EthersProvider from './ethers-provider'
 
 
 const INTERCOM_APP_ID = 'o1kmvctg'
-import '@rainbow-me/rainbowkit/styles.css'
 import { ToastProvider } from '@/context/toast-provider'
 
 const Contexts: React.FC<
   {
-    settings?: BridgeSettings
+    settings: BridgeSettings
   } & PropsWithChildren
 > = ({ settings, children }) => {
   const searchParams = useSearchParams()

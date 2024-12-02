@@ -30,8 +30,8 @@ const Processing: React.FC<{
     const storedWalletTransactions = useSwapTransactionStore()
     const { fee } = useFee()
 
-    const source_network = settings.layers?.find(e => e.internal_name === swap.source_network)
-    const destination_layer = settings.layers?.find(e => e.internal_name === swap.destination_network)
+    const source_network = settings.networks?.find(e => e.internal_name === swap.source_network)
+    const destination_layer = settings.networks?.find(e => e.internal_name === swap.destination_network)
 
     const input_tx_explorer = source_network?.transaction_explorer_template
     const output_tx_explorer = destination_layer?.transaction_explorer_template
@@ -46,7 +46,7 @@ const Processing: React.FC<{
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
     const swapRefuelTransaction = swap?.transactions?.find(t => t.type === TransactionType.Refuel)
 
-    const nativeCurrency = destination_layer?.assets?.find(c => c.asset === destination_layer?.assets.find(a => a.is_native)?.asset)
+    const nativeCurrency = destination_layer?.currencies?.find(c => c.asset === destination_layer?.currencies.find(a => a.is_native)?.asset)
     const truncatedRefuelAmount = swapRefuelTransaction?.amount ? truncateDecimals(swapRefuelTransaction?.amount, nativeCurrency?.precision) : null
 
     const progressStatuses = getProgressStatuses(swap, swapStatus)

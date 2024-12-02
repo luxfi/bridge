@@ -11,8 +11,8 @@ export default function useWalletTransferOptions() {
     const { checkContractWallet, contractWallets } = useContractWalletsStore()
     const [isContractWallet, setIsContractWallet] = useState<ContractWallet | null>()
     const { getWithdrawalProvider: getProvider } = useWallet()
-    const { layers } = useSettings()
-    const source_layer = layers.find(n => n.internal_name === swap?.source_network)
+    const { networks } = useSettings()
+    const source_layer = networks.find(n => n.internal_name === swap?.source_network)
     const provider = useMemo(() => {
         return source_layer && getProvider(source_layer)
     }, [source_layer, getProvider])
