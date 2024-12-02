@@ -257,14 +257,6 @@ function TransactionsHistory() {
                             n.internal_name === swap.destination_network
                         )
 
-                        const sourceAsset = sourceNetwork?.currencies.find(
-                          (c) => c.asset === swap.source_asset
-                        )
-                        const destinationAsset =
-                          destinationNetwork?.currencies.find(
-                            (c: NetworkCurrency) =>
-                              c.asset === swap.destination_asset
-                          )
                         const output_transaction = swap.transactions.find(
                           (t) => t.type === TransactionType.Output
                         )
@@ -282,9 +274,9 @@ function TransactionsHistory() {
                             >
                               <div className=" flex items-center">
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
-                                  {sourceAsset?.logo && (
+                                  {sourceNetwork?.logo && (
                                     <Image
-                                      src={sourceAsset.logo}
+                                      src={sourceNetwork.logo}
                                       alt="From Logo"
                                       height="60"
                                       width="60"
@@ -294,10 +286,10 @@ function TransactionsHistory() {
                                 </div>
                                 <ArrowRight className="h-4 w-4 mx-2" />
                                 <div className="flex-shrink-0 h-6 w-6 relative block">
-                                  {destinationAsset?.logo && (
+                                  {destinationNetwork?.logo && (
                                     <Image
                                       // src={resolveNetworkImage(swap.destination_asset)}
-                                      src={destinationAsset.logo}
+                                      src={destinationNetwork.logo}
                                       alt="To Logo"
                                       height="70"
                                       width="70"

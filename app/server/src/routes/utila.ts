@@ -17,7 +17,9 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
     })
   }
 })
-
+/**
+ * to check for non-working users
+ */
 router.get("/deposit-check/:swapId", async (req: Request, res: Response) => {
   try {
     const swapId = req.params.swapId
