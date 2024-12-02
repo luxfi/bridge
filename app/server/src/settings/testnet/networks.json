@@ -1111,7 +1111,7 @@
   {
     "display_name": "Ton",
     "internal_name": "TON_TESTNET",
-    "logo": "https://cdn.lux.network/bridge/networks/ton_mainnet.png",
+    "logo": "https://cdn.lux.network/bridge/networks/ton_mainnet.svg",
     "native_currency": "TON",
     "is_testnet": true,
     "is_featured": false,
