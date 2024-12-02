@@ -27,7 +27,7 @@ const Withdraw: FC = () => {
   const { swap } = useSwapDataState()
   const { setWithdrawType } = useSwapDataUpdate()
   const { appName, signature } = useQueryState()
-  const source_internal_name = swap?.source_exchange ?? swap?.source_network
+  const { networks } = useSettings()
 
   const sourceIsStarknet =
     swap?.source_network?.toUpperCase() ===
