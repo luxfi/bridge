@@ -21,7 +21,7 @@ import { BridgeAppSettings } from '../Models/BridgeAppSettings'
 import { type BridgeSettings } from '../Models/BridgeSettings'
 
 import QueryProvider from './query'
-import ConnectProvider from './connect-provider'
+import WalletProvider from './wallet-provider'
 import AuthProvider from './auth-provider'
 import SettingsProvider from './settings-provider'
 import FeeProvider from './fee-provider'
@@ -125,13 +125,15 @@ const Contexts: React.FC<
                   <ToastProvider>
                     <JotaiProvider>
                       <TonConnectProvider basePath={''} themeData={themeData}> 
-                        <ConnectProvider>
+                        <WalletProvider>
                           <EthersProvider>
                             <Solana>
-                              <FeeProvider>{children}</FeeProvider>
+                              <FeeProvider>
+                                {children}
+                              </FeeProvider>
                             </Solana>
                           </EthersProvider>
-                        </ConnectProvider>
+                        </WalletProvider>
                       </TonConnectProvider>
                     </JotaiProvider>
                   </ToastProvider>

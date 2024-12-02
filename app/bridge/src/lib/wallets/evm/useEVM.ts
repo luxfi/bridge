@@ -1,14 +1,36 @@
-import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useDisconnect } from "wagmi";
-import { useAccount } from "wagmi";
+'use client'
+import { useEffect, useRef } from "react";
+
+import { createModal } from "@rabby-wallet/rabbykit";
+import { useAccount, useConfig, useConnect, useDisconnect} from "wagmi";
+
 import { NetworkType } from "../../../Models/CryptoNetwork";
 import { useSettings } from "../../../context/settings-provider";
 import { type WalletProvider } from "../../../hooks/useWallet";
 import KnownInternalNames from "../../knownIds";
 import { ResolveEVMWalletIcon } from "./resolveEVMIcon";
 
+const name = "evm";
+
+  // cf: @luxfi/luxkit:examples/next-wagmi/src/components/Connect.tsx
 export default function useEVM(): WalletProvider {
+
+  const account = useAccount();
   const { disconnect } = useDisconnect();
+
+  const rabbyKitRef = useRef<ReturnType<typeof createModal>>();
+  const config = useConfig();
+
+  useEffect(() => {
+    if (!rabbyKitRef.current) {
+      rabbyKitRef.current = createModal({
+        showWalletConnect: true,
+        wagmi: config as any,
+        customButtons: [],
+      });
+    }
+  }, [config]);
+
 
   const { layers } = useSettings();
   const withdrawalSupportedNetworks = [
@@ -25,9 +47,8 @@ export default function useEVM(): WalletProvider {
     KnownInternalNames.Networks.LoopringGoerli,
     KnownInternalNames.Networks.LoopringMainnet,
   ];
-  const name = "evm";
-  const account = useAccount();
-  const { openConnectModal } = useConnectModal();
+
+  const openConnectModal = () => {rabbyKitRef.current?.open()}
 
   const getWallet = () => {
     if (account && account.address && account.connector) {
@@ -40,13 +61,9 @@ export default function useEVM(): WalletProvider {
     }
   };
 
-  const connectWallet = () => {
-    return openConnectModal && openConnectModal();
-  };
-
   return {
     getConnectedWallet: getWallet,
-    connectWallet,
+    connectWallet: openConnectModal,
     disconnectWallet: disconnect,
     autofillSupportedNetworks,
     withdrawalSupportedNetworks,
