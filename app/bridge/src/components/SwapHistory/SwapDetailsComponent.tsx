@@ -9,7 +9,7 @@ import { SwapDetailsComponentSkeleton } from '../Skeletons'
 import { ExternalLink } from 'lucide-react'
 import { type FC } from 'react'
 import { type SwapItem, TransactionType } from '../../lib/BridgeApiClient'
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 type Props = {

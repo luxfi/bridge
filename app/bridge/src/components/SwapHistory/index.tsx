@@ -1,20 +1,21 @@
 'use client'
 import { useCallback, useRef, useState } from 'react'
-
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import axios from 'axios'
+import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
 import useAsyncEffect from 'use-async-effect'
+
 import { useNotify } from '@/context/toast-provider'
 import { classNames } from '../utils/classNames'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
 
 import BridgeApiClient, {
   type SwapItem,
   SwapStatusInNumbers,
   TransactionType,
 } from '@/lib/BridgeApiClient'
+
 import Modal from '@/components/modal/modal'
 import SpinIcon from '@/components/icons/spinIcon'
 import StatusIcon from '@/components/SwapHistory/StatusIcons'
@@ -25,11 +26,9 @@ import ToggleButton from '@/components/buttons/toggleButton'
 import HeaderWithMenu from '@/components/HeaderWithMenu'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import { SwapHistoryComponentSkeleton } from '@/components/Skeletons'
-// types
-import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
-//networks
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 import { formatLongNumber } from '@/lib/utils'
-import { useSettings } from '@/context/settings'
+import { useSettings } from '@/context/settings-provider'
 
 function TransactionsHistory() {
   const { networks } = useSettings()

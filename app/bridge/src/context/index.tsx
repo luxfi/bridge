@@ -31,15 +31,12 @@ import EthersProvider from './ethers-provider'
 const INTERCOM_APP_ID = 'o1kmvctg'
 import { ToastProvider } from '@/context/toast-provider'
 
-const Contexts: React.FC<
-  {
-    settings: BridgeSettings
-  } & PropsWithChildren
-> = ({ settings, children }) => {
+const Contexts: React.FC<PropsWithChildren> = ({ children }) => {
+
   const searchParams = useSearchParams()
   // :aa These were was all that getServerSideProps() ever returned.
   // So seems clearest to just do it this way.
-  const _settings = settings ?? {
+  const _settings = {
     networks: [],
     exchanges: [],
     sourceRoutes: [],
