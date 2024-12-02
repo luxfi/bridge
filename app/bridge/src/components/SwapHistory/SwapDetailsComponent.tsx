@@ -25,7 +25,6 @@ const SwapDetails: FC<Props> = ({ swap }) => {
   const destinationNetwork = networks.find(
     (n: CryptoNetwork) => n.internal_name === swap.destination_network
   )
-
   const sourceAsset = sourceNetwork?.currencies.find(
     (c: NetworkCurrency) => c.asset === swap.source_asset
   )
