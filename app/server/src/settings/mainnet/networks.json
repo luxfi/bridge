@@ -2215,7 +2215,7 @@
   {
     "display_name": "Ton",
     "internal_name": "TON_MAINNET",
-    "logo": "https://cdn.lux.network/bridge/networks/ton_mainnet.png",
+    "logo": "https://cdn.lux.network/bridge/networks/ton_mainnet.svg",
     "native_currency": "TON",
     "is_testnet": false,
     "is_featured": true,
