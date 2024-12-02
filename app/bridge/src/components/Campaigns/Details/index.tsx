@@ -1,9 +1,12 @@
 'use client'
 
+import { useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Gift } from 'lucide-react'
 
-import { useAccount } from 'wagmi'
+import { useAccount, useConfig } from "wagmi";
+import { createModal } from "@rabby-wallet/rabbykit";
+
 import useSWR from 'swr'
 
 import { LinkElement } from '@hanzo/ui/primitives'
@@ -13,7 +16,6 @@ import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
 import { type ApiResponse } from '@/Models/ApiResponse'
 import { type Layer } from '@/Models/Layer'
 
-import RainbowKit from '../../Swap/Withdraw/Wallet/RainbowKit'
 import SubmitButton from '../../buttons/submitButton';
 import WalletIcon from '../../icons/WalletIcon';
 import LinkWrapper from '../../LinkWrapper';
@@ -27,6 +29,19 @@ const CampaignDetails: React.FC<{
 }> = ({
   campaign: campaignName
 }) => {
+
+    const rabbyKitRef = useRef<ReturnType<typeof createModal>>();
+    const config = useConfig();
+
+    useEffect(() => {
+      if (!rabbyKitRef.current) {
+        rabbyKitRef.current = createModal({
+          showWalletConnect: true,
+          wagmi: config as any,
+          customButtons: [],
+        });
+      }
+    }, [config]);
 
     const settings = useSettings()
     const { resolveImgSrc, layers } = settings
@@ -80,11 +95,14 @@ const CampaignDetails: React.FC<{
       </Widget.Content>
       {!isConnected ? (
         <Widget.Footer>
-          <RainbowKit>
-            <SubmitButton isDisabled={false} isSubmitting={false} icon={<WalletIcon className='stroke-2 w-6 h-6' />}>
-              Connect a wallet
-            </SubmitButton>
-          </RainbowKit>
+          <SubmitButton 
+            isDisabled={false} 
+            isSubmitting={false} 
+            icon={<WalletIcon className='stroke-2 w-6 h-6' />}
+            onClick={() => { rabbyKitRef.current?.open() }}
+          >
+            Connect a wallet
+          </SubmitButton>
         </Widget.Footer>
       ) : (<></>)}
       </Widget >
