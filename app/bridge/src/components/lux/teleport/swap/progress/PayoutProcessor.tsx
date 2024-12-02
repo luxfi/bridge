@@ -17,12 +17,12 @@ import { ethers } from 'ethers'
 //hooks
 import { useAtom } from 'jotai'
 import { useSwitchChain } from 'wagmi'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from '@/hooks/useEthersSigner'
 
 import type { Network, Token } from '@/types/teleport'
 import axios from 'axios'
 import Gauge from '@/components/gauge'
-import SpinIcon from '@/components/icons/spinIcon'  
+import SpinIcon from '@/components/icons/spinIcon'
 import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
@@ -64,25 +64,31 @@ const PayoutProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [mpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const { chainId, signer, isConnecting } = useEthersSigner();
+  const { chainId, signer, isConnecting } = useEthersSigner()
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
   const toBurn = React.useMemo(
-    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
+    () =>
+      sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')
+        ? true
+        : false,
     [sourceAsset]
   )
   const toMint = React.useMemo(
-    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    () =>
+      destinationAsset.name.startsWith('Lux ') ||
+      destinationAsset.name.startsWith('Zoo ')
+        ? true
+        : false,
     [destinationAsset]
   )
 
   React.useEffect(() => {
-    if (isConnecting) return;
+    if (isConnecting) return
     if (isGettingPayout) return
     if (!signer) return notify('Please connect wallet first.', 'info')
     // connectWallet('evm')
-
 
     if (toMint) {
       mintDestinationToken()
@@ -90,18 +96,19 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
         withdrawDestinationToken()
       } else {
-        destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
+        destinationNetwork.chain_id &&
+          switchChain &&
+          switchChain({ chainId: destinationNetwork.chain_id })
       }
     }
   }, [signer])
 
   const mintDestinationToken = async () => {
-
     const mintData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
       tokenAmount_: parseUnits(
-        localeNumber(sourceAmount),
+        localeNumber(sourceAmount, sourceAsset.decimals),
         sourceAsset.decimals
       ),
       fromTokenDecimals_: sourceAsset?.decimals,
@@ -171,7 +178,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       await _bridgePayoutTx.wait()
       /////////////////////// send 1 lux or zoo to users /////////////////////
       const _balance = await provider.getBalance(mintData.receiverAddress_)
-      console.log("::lux or zoo balance:", Number(formatEther(_balance)));
+      console.log('::lux or zoo balance:', Number(formatEther(_balance)))
       if (Number(formatEther(_balance)) < 1) {
         try {
           const luxSendTxData = {
@@ -208,11 +215,10 @@ const PayoutProcessor: React.FC<IProps> = ({
       setSwapStatus('payout_success')
     } catch (err) {
       console.log(err)
-      if (String(err).includes("user rejected transaction")) {
-        notify('User rejected transaction', "warn")
-      } 
-      else {
-        notify('Failed to run transaction', "error")
+      if (String(err).includes('user rejected transaction')) {
+        notify('User rejected transaction', 'warn')
+      } else {
+        notify('Failed to run transaction', 'error')
       }
     } finally {
       setIsGettingPayout(false)
@@ -220,11 +226,13 @@ const PayoutProcessor: React.FC<IProps> = ({
   }
 
   const withdrawDestinationToken = async () => {
-    
     const withdrawData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(String(sourceAmount), sourceAsset.decimals),
+      tokenAmount_: parseUnits(
+        localeNumber(sourceAmount, sourceAsset.decimals),
+        sourceAsset.decimals
+      ),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
@@ -314,8 +322,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       console.log(err)
       if (String(err).includes('user rejected transaction')) {
         notify('User rejected transaction', 'warn')
-      } 
-      else {
+      } else {
         notify('Failed to run transaction', 'error')
       }
     } finally {
@@ -324,7 +331,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   }
 
   const handlePayoutDestinationToken = () => {
-    if (isConnecting) return;
+    if (isConnecting) return
     if (isGettingPayout) return
     if (!signer) return notify('Please connect wallet first.', 'info')
     // connectWallet('evm')
@@ -335,7 +342,9 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (Number(chainId) === Number(destinationNetwork.chain_id)) {
         withdrawDestinationToken()
       } else {
-        destinationNetwork.chain_id && switchChain && switchChain({ chainId: destinationNetwork.chain_id })
+        destinationNetwork.chain_id &&
+          switchChain &&
+          switchChain({ chainId: destinationNetwork.chain_id })
       }
     }
   }
@@ -360,8 +369,7 @@ const PayoutProcessor: React.FC<IProps> = ({
                 <Gauge value={60} size="medium" />
               </span>
               <div className="mt-2">
-                {toMint ? 'Mint' : 'Withdraw'} Your{' '}
-                {destinationAsset.asset}
+                {toMint ? 'Mint' : 'Withdraw'} Your {destinationAsset.asset}
               </div>
             </div>
             <div className="flex flex-col gap-2 py-5">
@@ -430,7 +438,9 @@ const PayoutProcessor: React.FC<IProps> = ({
                 <ArrowRight />
               )}
               <span className="grow">
-                {toMint ? `Mint Your ${destinationAsset?.asset}` : `Withdraw Your ${destinationAsset?.asset}`}
+                {toMint
+                  ? `Mint Your ${destinationAsset?.asset}`
+                  : `Withdraw Your ${destinationAsset?.asset}`}
               </span>
             </button>
           </div>

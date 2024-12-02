@@ -9,7 +9,7 @@ import erc20ABI from '@/components/lux/teleport/constants/abi/erc20.json'
 //hooks
 import { useSwitchChain } from 'wagmi'
 import { useAtom } from 'jotai'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from '@/hooks/useEthersSigner'
 import { parseUnits } from 'ethers/lib/utils'
 
 import axios from 'axios'
@@ -43,31 +43,37 @@ const UserTokenDepositor: React.FC<IProps> = ({
 }) => {
   const { notify } = useNotify()
   //state
-  const [isTokenTransferring, setIsTokenTransferring] = React.useState<boolean>(false)
+  const [isTokenTransferring, setIsTokenTransferring] =
+    React.useState<boolean>(false)
   const [userDepositNotice, setUserDepositNotice] = React.useState<string>('')
   //atoms
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   //hooks
-  const { chainId, signer, isConnecting } = useEthersSigner();
+  const { chainId, signer, isConnecting } = useEthersSigner()
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
   const toBurn = React.useMemo(
-    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
+    () =>
+      sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')
+        ? true
+        : false,
     [sourceAsset]
   )
 
   React.useEffect(() => {
-    if (isConnecting) return;
+    if (isConnecting) return
 
     if (!signer) {
-        notify('Please connect wallet first.', 'info')
+      notify('Please connect wallet first.', 'info')
     } else {
       if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
         toBurn ? burnToken() : transferToken()
       } else {
-        sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
+        sourceNetwork.chain_id &&
+          switchChain &&
+          switchChain({ chainId: sourceNetwork.chain_id })
       }
     }
   }, [signer])
@@ -75,11 +81,12 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const transferToken = async () => {
     try {
       setIsTokenTransferring(true)
-      console.log(sourceAmount, sourceAsset)
+      console.log(sourceAmount, sourceAsset, localeNumber(sourceAmount, sourceAsset.decimals))
       const _amount = parseUnits(
-        localeNumber(sourceAmount),
+        localeNumber(sourceAmount, sourceAsset.decimals),
         sourceAsset.decimals
       )
+
 
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance()
@@ -90,7 +97,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         })
 
         if (Number(_balance) < Number(_amount)) {
-          notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
+          notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
           return
         }
       } else {
@@ -99,7 +106,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           erc20ABI,
           signer
         )
-        console.log({erc20Contract, signer})
+        console.log({ erc20Contract, signer })
         // approve
         setUserDepositNotice(`Approving ${sourceAsset.asset}...`)
         const _balance = await erc20Contract.balanceOf(
@@ -113,8 +120,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
         })
 
         if (Number(_balance) < Number(_amount)) {
-          notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
-          return;
+          notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
+          return
         }
         console.log(sourceNetwork.chain_id)
 
@@ -162,17 +169,14 @@ const UserTokenDepositor: React.FC<IProps> = ({
       )
       setUserTransferTransaction(_bridgeTransferTx.hash)
       setSwapStatus('teleport_processing_pending')
-    } 
-    catch (err) {
-      console.log(err);
-      if (String(err).includes("user rejected transaction")) {
-        notify(`User rejected transaction`, "warn")
-      } 
-      else {
-        notify(`Failed to run transaction`, "error")
+    } catch (err) {
+      console.log(err)
+      if (String(err).includes('user rejected transaction')) {
+        notify(`User rejected transaction`, 'warn')
+      } else {
+        notify(`Failed to run transaction`, 'error')
       }
-    } 
-    finally {
+    } finally {
       setIsTokenTransferring(false)
     }
   }
@@ -180,7 +184,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const burnToken = async () => {
     try {
       setIsTokenTransferring(true)
-      const _amount = parseUnits(String(sourceAmount), sourceAsset.decimals)
+      const _amount = parseUnits(String(sourceAmount), localeNumber(sourceAmount, sourceAsset.decimals))
 
       const erc20Contract = new Contract(
         sourceAsset?.contract_address as string,
@@ -197,7 +201,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       })
 
       if (Number(_balance) < Number(_amount)) {
-        notify(`Insufficient ${sourceAsset.asset} amount`, "warn")
+        notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
         return
       }
 
@@ -233,10 +237,10 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setSwapStatus('teleport_processing_pending')
     } catch (err) {
       console.log(err)
-      if (String(err).includes("user rejected transaction")) {
-        notify("User rejected transaction", "error")
+      if (String(err).includes('user rejected transaction')) {
+        notify('User rejected transaction', 'error')
       } else {
-        notify("Failed to run transaction", "error")
+        notify('Failed to run transaction', 'error')
       }
     } finally {
       setIsTokenTransferring(false)
@@ -244,13 +248,12 @@ const UserTokenDepositor: React.FC<IProps> = ({
   }
   const handleTokenTransfer = async () => {
     if (!signer) {
-      notify(
-        "No connected wallet. Please connect your wallet",
-        "error"
-      )
+      notify('No connected wallet. Please connect your wallet', 'error')
       // connectWallet("evm")
     } else if (Number(chainId) !== Number(sourceNetwork.chain_id)) {
-      sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
+      sourceNetwork.chain_id &&
+        switchChain &&
+        switchChain({ chainId: sourceNetwork.chain_id })
     } else {
       toBurn ? burnToken() : transferToken()
     }
@@ -269,15 +272,15 @@ const UserTokenDepositor: React.FC<IProps> = ({
             sourceAmount={sourceAmount}
           />
         </div>
-        {
-          !signer ?
+        {!signer ? (
           <button
             onClick={() => connectWallet('evm')}
             className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
           >
             <Wallet2Icon className="h-5 w-5" />
             <span className="grow">Connect Wallet</span>
-          </button> :
+          </button>
+        ) : (
           <button
             disabled={isTokenTransferring}
             onClick={handleTokenTransfer}
@@ -296,8 +299,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
               </span>
             )}
           </button>
-        }
-        
+        )}
       </div>
     </div>
   )
