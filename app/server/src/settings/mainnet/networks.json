@@ -1267,7 +1267,7 @@
     ]
   },
   {
-    "display_name": "BSC",
+    "display_name": "Binance Smart Chain",
     "internal_name": "BSC_MAINNET",
     "logo": "https://cdn.lux.network/bridge/networks/bsc_mainnet.png",
     "native_currency": "BNB",
@@ -1369,12 +1369,8 @@
     "metadata": null,
     "managed_accounts": [],
     "nodes": [
-      "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
-      "https://bsc-mainnet.public.blastapi.io",
-      "https://bsc-dataseed1.bnbchain.org",
-      "https://public.stackup.sh/api/v1/node/bsc-mainnet",
-      "https://bsc-dataseed1.bnbchain.org",
-      "https://bsc-dataseed1.bnbchain.org"
+      "https://bsc-dataseed.binance.org",
+      "https://public.stackup.sh/api/v1/node/bsc-mainnet"
     ]
   },
   {
