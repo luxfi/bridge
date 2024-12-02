@@ -4,16 +4,15 @@ import useSWR from "swr"
 import Image from 'next/image';
 import { motion } from "framer-motion"
 
-import { type Layer } from "@/Models/Layer"
 import BridgeApiClient, { type Campaign } from "@/lib/BridgeApiClient"
 import { ApiResponse } from "@/Models/ApiResponse"
 import { useSettings } from "@/context/settings-provider"
 import { truncateDecimals } from "../../utils/RoundDecimals"
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork"
 import ClickTooltip from "../../Tooltips/ClickTooltip"
-import { type NetworkCurrency } from "@/Models/CryptoNetwork"
 
 const CampaignComponent: React.FC<{
-  destination: Layer,
+  destination: CryptoNetwork,
   fee: number | undefined,
   selected_currency: NetworkCurrency,
 }> = ({
@@ -53,9 +52,9 @@ const CampaignDisplay: React.FC<{
   fee, 
   selected_currency 
 }) => {
-    const { resolveImgSrc, layers } = useSettings()
-    const layer = layers.find(l => l.internal_name === campaign.network)
-    const campaignAsset = layer?.assets.find(c => c?.asset === campaign?.asset)
+    const { networks } = useSettings()
+    const network = networks.find(l => l.internal_name === campaign.network)
+    const campaignAsset = network?.currencies.find(c => c?.asset === campaign?.asset)
     const feeinUsd = fee * selected_currency.price_in_usd
     const reward = truncateDecimals(((feeinUsd * (campaign?.percentage || 0) / 100) / (campaignAsset?.price_in_usd || 1)), (campaignAsset?.precision || 0))
 
@@ -80,7 +79,7 @@ const CampaignDisplay: React.FC<{
                 <span>+</span>
                 <div className="h-5 w-5 relative">
                     <Image
-                        src={resolveImgSrc(campaign)}
+                        src={network?.logo ?? ''}
                         alt="Project Logo"
                         height="40"
                         width="40"

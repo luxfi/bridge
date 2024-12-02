@@ -10,7 +10,7 @@ import { useFee } from "@/context/fee-provider"
 import { ApiResponse } from "@/Models/ApiResponse"
 
 const SwapSummary: React.FC = () => {
-    const { layers, exchanges, getExchangeAsset } = useSettings()
+    const { networks, exchanges, getExchangeAsset } = useSettings()
     const { swap } = useSwapDataState()
 
     const {
@@ -25,13 +25,13 @@ const SwapSummary: React.FC = () => {
     // const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
     const { fee: feeData, valuesChanger, minAllowedAmount } = useFee()
 
-    const sourceLayer = layers.find(n => n.internal_name === source_network_internal_name)
+    const sourceLayer = networks.find(n => n.internal_name === source_network_internal_name)
     const sourceExchange = exchanges.find(e => e.internal_name === source_exchange_internal_name)
-    const sourceAsset = sourceLayer ? sourceLayer?.assets?.find(currency => currency?.asset === source_asset) : getExchangeAsset(layers, sourceExchange, source_asset)
+    const sourceAsset = sourceLayer ? sourceLayer?.currencies?.find(currency => currency?.asset === source_asset) : getExchangeAsset(networks, sourceExchange, source_asset)
 
-    const destinationLayer = layers?.find(l => l.internal_name === destination_network_internal_name)
+    const destinationLayer = networks?.find(l => l.internal_name === destination_network_internal_name)
     const destinationExchange = exchanges?.find(l => l.internal_name === destination_exchange_internal_name)
-    const destinationAsset = destinationLayer ? destinationLayer?.assets?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(layers, destinationExchange, destination_asset)
+    const destinationAsset = destinationLayer ? destinationLayer?.currencies?.find(currency => currency?.asset === destination_asset) : getExchangeAsset(networks, destinationExchange, destination_asset)
 
     const apiClient = new BridgeApiClient()
     const { data: sourceAssetPriceData, isLoading } = useSWR<ApiResponse<{ asset: string, price: number }>>(`/tokens/price/${sourceAsset?.asset}`, apiClient.fetcher);
@@ -80,17 +80,17 @@ const SwapSummary: React.FC = () => {
     }
     const requested_amount = (swapInputTransaction?.amount ?? swap.requested_amount) || undefined
 
-    const destinationNetworkNativeAsset = layers.find(n => n.internal_name === destinationLayer?.internal_name)?.assets.find(a => a.is_native);
-    const refuel_amount_in_usd = Number(destinationLayer?.refuel_amount_in_usd)
+    const destinationNetworkNativeAsset = networks.find(n => n.internal_name === destinationLayer?.internal_name)?.currencies.find(a => a.is_native);
+    // const refuel_amount_in_usd = Number(destinationLayer?.refuel_amount_in_usd)
     const native_usd_price = Number(destinationNetworkNativeAsset?.price_in_usd)
     const currency_usd_price = Number(sourceAssetPriceData?.data?.price)
 
-    const refuelAmountInNativeCurrency = swap?.refuel
-        ? ((swapRefuelTransaction?.amount ??
-            (refuel_amount_in_usd / native_usd_price))) : undefined;
+    // const refuelAmountInNativeCurrency = swap?.refuel
+    //     ? ((swapRefuelTransaction?.amount ??
+    //         (refuel_amount_in_usd / native_usd_price))) : undefined;
 
-    const refuelAmountInSelectedCurrency = swap?.refuel &&
-        (refuel_amount_in_usd / currency_usd_price);
+    // const refuelAmountInSelectedCurrency = swap?.refuel &&
+    //     (refuel_amount_in_usd / currency_usd_price);
 
     // const receive_amount = fee !== undefined ? (swapOutputTransaction?.amount ?? (Number(requested_amount) - fee ?? 0 - Number(refuelAmountInSelectedCurrency))) : undefined
     // const receive_amount = Number(requested_amount) * 0.99 - Number(refuelAmountInSelectedCurrency)
@@ -120,7 +120,7 @@ const SwapSummary: React.FC = () => {
         receiveAmount={lsFee?.data?.manual_receive_amount}
         destinationAddress={swap.destination_address}
         hasRefuel={swap?.refuel}
-        refuelAmount={refuelAmountInNativeCurrency}
+        refuelAmount={0}
         fee={fee}
         exchange_account_connected={swap?.exchange_account_connected}
         exchange_account_name={swap?.exchange_account_name}

@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import React from 'react';
 import AuthWizard from '@/components/Wizard/AuthWizard';
@@ -12,17 +12,18 @@ import { BridgeAppSettings } from '@/Models/BridgeAppSettings';
 
 const AuthPage = async () => {
   try {
-    const settings = await getBridgeSettings();
-    const settingsContainer = useSettingsContainer();
+    const settings = await getBridgeSettings()
+    const settingsContainer = useSettingsContainer()
 
-    if (settings && 'error' in settings && settings.error.startsWith('invalid guid')) {
-      redirect('/');
+    // if (!settings && 'error' in settings && settings.error.startsWith('invalid guid')) {
+    if (!settings) {
+      redirect('/')
     }
 
     if (settingsContainer) {
       settingsContainer.settings = new BridgeAppSettings(
         settings && 'networks' in settings ? settings : {}
-      );
+      )
     }
 
     return (
@@ -31,11 +32,11 @@ const AuthPage = async () => {
           <AuthWizard />
         </FormWizardProvider>
       </SwapDataProvider>
-    );
+    )
   } catch (e) {
-    console.error('Error in AuthPage:', e);
-    return null;
+    console.error('Error in AuthPage:', e)
+    return null
   }
-};
+}
 
-export default AuthPage;
+export default AuthPage

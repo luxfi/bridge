@@ -14,7 +14,6 @@ import { LinkElement } from '@hanzo/ui/primitives'
 import { useSettings } from '@/context/settings-provider'
 import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
 import { type ApiResponse } from '@/Models/ApiResponse'
-import { type Layer } from '@/Models/Layer'
 
 import SubmitButton from '../../buttons/submitButton';
 import WalletIcon from '../../icons/WalletIcon';
@@ -23,6 +22,7 @@ import Widget from '../../Widget';
 import Leaderboard from './Leaderboard'
 import Rewards from './Rewards';
 import SpinIcon from '../../icons/spinIcon'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 const CampaignDetails: React.FC<{
   campaign: string
@@ -44,7 +44,7 @@ const CampaignDetails: React.FC<{
     }, [config]);
 
     const settings = useSettings()
-    const { resolveImgSrc, layers } = settings
+    const { networks } = settings
 
     const { isConnected } = useAccount();
 
@@ -53,7 +53,7 @@ const CampaignDetails: React.FC<{
     const { data: campaignsData, isLoading } = useSWR<ApiResponse<Campaign[]>>('/campaigns', apiClient.fetcher)
     const campaign = campaignsData?.data?.find((c) => (c.name === campaignName))
 
-    const network = layers.find(n => n.internal_name === campaign?.network)
+    const network = networks.find(n => n.internal_name === campaign?.network)
 
     if (isLoading) {
         return <Loading />
@@ -71,7 +71,7 @@ const CampaignDetails: React.FC<{
             {network && (
               <div className='h-7 w-7 relative'>
                 <Image
-                  src={resolveImgSrc(network)}
+                  src={network.logo ?? ''}
                   alt='Project Logo'
                   height='40'
                   width='40'
@@ -111,7 +111,7 @@ const CampaignDetails: React.FC<{
 
 const BriefInformation: React.FC<{
   campaign: Campaign,
-  network?: Layer
+  network?: CryptoNetwork
 }> = ({
   campaign,
   network

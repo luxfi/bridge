@@ -86,7 +86,7 @@ export function SwapDataProvider({
   const _id = (id ?? params.get('swapId')) ?? undefined
 
   const [swapId, setSwapId] = useState<string | undefined>(_id)
-  const { layers, getExchangeNetwork } = useSettings()
+  const { networks, getExchangeNetwork } = useSettings()
 
   const client = new BridgeApiClient()
   const apiVersion = BridgeApiClient.apiVersion
@@ -104,22 +104,22 @@ export function SwapDataProvider({
   )
 
   const [swapTransaction, setSwapTransaction] = useState<SwapTransaction>()
-  const source_exchange = layers.find(
+  const source_exchange = networks.find(
     (n) =>
       n?.internal_name?.toLowerCase() ===
       swapResponse?.data?.source_exchange?.toLowerCase()
   )
 
-  const exchangeAssets = source_exchange?.assets?.filter(
+  const exchangeAssets = source_exchange?.currencies?.filter(
     (a) => a?.asset === swapResponse?.data?.source_asset
   )
-  const source_network = layers.find(
+  const source_network = networks.find(
     (n) =>
       n.internal_name?.toLowerCase() ===
       swapResponse?.data?.source_network?.toLowerCase()
   )
   const defaultSourceNetwork =
-    exchangeAssets?.[0] || source_network?.assets?.[0]
+    exchangeAssets?.[0] || source_network?.currencies?.[0]
   const [selectedAssetNetwork, setSelectedAssetNetwork] = useState<
     NetworkCurrency | undefined
   >(defaultSourceNetwork)
@@ -182,7 +182,7 @@ export function SwapDataProvider({
         source_network:
           from?.internal_name ??
           getExchangeNetwork(
-            layers,
+            networks,
             fromExchange,
             fromCurrency?.asset ?? (currencyGroup?.name as string)
           )?.internal_name,

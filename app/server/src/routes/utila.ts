@@ -1,15 +1,15 @@
-import { Router, Request, Response } from "express";
-import { verifyUtilaSignature } from "@/lib/utila";
-import logger from "@/logger";
-import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila";
-import { handlerUtilaPayoutAction } from "@/lib/swaps";
+import { Router, Request, Response } from "express"
+import { verifyUtilaSignature } from "@/lib/utila"
+import logger from "@/logger"
+import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila"
+import { handlerCheckDeposit, handlerUtilaPayoutAction } from "@/lib/swaps"
 
-const router: Router = Router();
+const router: Router = Router()
 
 router.get("/payout/:swapId", async (req: Request, res: Response) => {
   try {
     const swapId = req.params.swapId
-    const data = await handlerUtilaPayoutAction (swapId)
+    const data = await handlerUtilaPayoutAction(swapId)
     res.status(200).json(data)
   } catch (err: any) {
     res.status(500).send({
@@ -17,7 +17,20 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
     })
   }
 })
-
+/**
+ * to check for non-working users
+ */
+router.get("/deposit-check/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    await handlerCheckDeposit(swapId)
+    res.status(200).json({ msg: 'success' })
+  } catch (err: any) {
+    res.status(500).send({
+      error: err?.message
+    })
+  }
+})
 /**
  * Webhook route to handle events
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)
@@ -33,51 +46,51 @@ router.post("/webhook", verifyUtilaSignature, async (req: Request, res: Response
   try {
     switch (eventType) {
       case "TRANSACTION_CREATED": {
-        await handleTransactionCreated (req.body)
-        break;
+        await handleTransactionCreated(req.body)
+        break
       }
 
       case "TRANSACTION_STATE_UPDATED": {
-        await handleTransactionStateUpdated (req.body)
-        break;
+        await handleTransactionStateUpdated(req.body)
+        break
       }
-        
+
       case "WALLET_CREATED":
         // logger.info("Wallet Created", { eventData: req.body });
-        break;
+        break
 
       case "WALLET_ADDRESS_CREATED":
         // logger.info("Wallet Address Created", { eventData: req.body });
-        break;
+        break
 
       default:
-        // logger.warn("Unknown event type received", { eventData: req.body });
-        // return res.status(400).json({ error: "Unknown event type" });
+      // logger.warn("Unknown event type received", { eventData: req.body });
+      // return res.status(400).json({ error: "Unknown event type" });
     }
 
-    res.status(200).json({ message: "Webhook received successfully" });
+    res.status(200).json({ message: "Webhook received successfully" })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    const errorStack = error instanceof Error ? error.stack : null;
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    const errorStack = error instanceof Error ? error.stack : null
 
     console.error("Error processing webhook", {
       message: errorMessage,
-      stack: errorStack,
-    });
+      stack: errorStack
+    })
 
     res.status(500).json({
       error: "Internal Server Error",
-      details: errorMessage,
-    });
+      details: errorMessage
+    })
   }
-});
+})
 
 /**
  * Catch-all for unsupported methods on /webhook
  */
 router.all("/webhook", (req: Request, res: Response) => {
-  logger.warn(`Unsupported method ${req.method} on /webhook`);
-  res.status(405).json({ error: "Method Not Allowed" });
-});
+  logger.warn(`Unsupported method ${req.method} on /webhook`)
+  res.status(405).json({ error: "Method Not Allowed" })
+})
 
-export default router;
+export default router
