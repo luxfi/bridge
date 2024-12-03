@@ -149,6 +149,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
         signer
       )
 
+      console.log(sourceAsset)
+
       const _bridgeTransferTx = await bridgeContract.vaultDeposit(
         _amount,
         sourceAsset.contract_address,
