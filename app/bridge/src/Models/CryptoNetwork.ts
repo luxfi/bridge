@@ -17,7 +17,7 @@ export type CryptoNetwork = {
     is_testnet: boolean
     is_featured: boolean
     chain_id: string | null | undefined
-    status: string
+    status: 'active' | 'inactive'
     type: NetworkType
     transaction_explorer_template: string
     account_explorer_template: string
