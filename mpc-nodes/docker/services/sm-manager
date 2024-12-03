@@ -17,8 +17,8 @@ WORKDIR /app
 # Copy your project files into the container
 COPY ./common/multiparty_ecdsa .
 
-# Build the project with the nightly toolchain
-RUN cargo build --release --examples
+# Build the project with the nightly toolchain explicitly
+RUN cargo +nightly build --release --examples
 
 # Expose the port (optional)
 EXPOSE 8000
