@@ -954,7 +954,7 @@
       {
         "name": "Zoo AVAX",
         "asset": "ZAVAX",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zavax.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zavax.svg",
         "contract_address": "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
         "decimals": 18,
         "status": "active",
@@ -971,7 +971,7 @@
       {
         "name": "Zoo BLAST",
         "asset": "ZBLAST",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zblast.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zblast.svg",
         "contract_address": "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
         "decimals": 18,
         "status": "active",
@@ -988,7 +988,7 @@
       {
         "name": "Zoo BONK",
         "asset": "ZBONK",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zbonk.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zbonk.svg",
         "contract_address": "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
         "decimals": 18,
         "status": "active",
@@ -1005,7 +1005,7 @@
       {
         "name": "Zoo WIF",
         "asset": "ZWIF",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zwif.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zwif.svg",
         "contract_address": "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
         "decimals": 18,
         "status": "active",
@@ -1022,7 +1022,7 @@
       {
         "name": "Zoo Popcat",
         "asset": "ZPOPCAT",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zpopcat.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zpopcat.svg",
         "contract_address": "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
         "decimals": 18,
         "status": "active",
@@ -1039,7 +1039,7 @@
       {
         "name": "Zoo PNUT",
         "asset": "ZPNUT",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zpnut.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zpnut.svg",
         "contract_address": "0x6d5a2779313faa0CF50882D5338de19352267935",
         "decimals": 18,
         "status": "active",
@@ -1056,7 +1056,7 @@
       {
         "name": "Zoo MEW",
         "asset": "ZMEW",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zmew.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zmew.svg",
         "contract_address": "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
         "decimals": 18,
         "status": "active",
@@ -1073,7 +1073,7 @@
       {
         "name": "Zoo BOME",
         "asset": "ZBOME",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zbome.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zbome.svg",
         "contract_address": "0x1a08b4D4144027f8E262892A78D493dD660D270d",
         "decimals": 18,
         "status": "active",
@@ -1090,7 +1090,7 @@
       {
         "name": "Zoo GIGA",
         "asset": "ZGIGA",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zgiga.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zgiga.svg",
         "contract_address": "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
         "decimals": 18,
         "status": "active",
@@ -1107,7 +1107,7 @@
       {
         "name": "Zoo AI16Z",
         "asset": "ZAI16Z",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zai16z.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zai16z.svg",
         "contract_address": "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
         "decimals": 18,
         "status": "active",
@@ -1124,7 +1124,7 @@
       {
         "name": "Zoo FWOG",
         "asset": "ZFWOG",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zfwog.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zfwog.svg",
         "contract_address": "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
         "decimals": 18,
         "status": "active",
@@ -1141,7 +1141,7 @@
       {
         "name": "Zoo MOODENG",
         "asset": "ZMOODENG",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zmoodeng.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zmoodeng.svg",
         "contract_address": "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
         "decimals": 18,
         "status": "active",
@@ -1158,7 +1158,7 @@
       {
         "name": "Zoo PONKE",
         "asset": "ZPONKE",
-        "logo": "https://cdn.lux.network/bridge/currencies/lux/zponke.svg",
+        "logo": "https://cdn.lux.network/bridge/currencies/zoo/zponke.svg",
         "contract_address": "0x40cbF49487F30082A233A73759cAE283F81113AE",
         "decimals": 18,
         "status": "active",
@@ -2041,6 +2041,7 @@
     "metadata": null,
     "managed_accounts": [],
     "nodes": [
+      "https://avalanche.public-rpc.com",
       "https://api.avax.network/ext/bc/c/rpc"
     ]
   },

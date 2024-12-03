@@ -59,6 +59,7 @@ const NetworkFormField: React.FC<{
           <AmountField
             value={isWithdrawal ? String(truncateDecimals(Number(amount) * 0.99, 6)) : String(truncateDecimals(Number(amount), 6))}
             disabled={true}
+            className='min-w-0'
           />
           <TokenSelectWrapper
             placeholder="Asset"
