@@ -54,6 +54,8 @@ const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
 
   const { networks } = useSettings()
+
+  console.log(networks)
   const filteredNetworks = networks.filter(
     (n: CryptoNetwork) =>
       n.type === NetworkType.EVM &&
