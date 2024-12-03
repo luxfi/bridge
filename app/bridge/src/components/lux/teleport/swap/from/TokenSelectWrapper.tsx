@@ -1,10 +1,18 @@
 import { useCallback, useState } from 'react'
 import Image from 'next/image'
-import { ChevronDown } from 'lucide-react'
-
 import TokenSelect from './TokenSelect'
-import { Popover, PopoverContent, PopoverTrigger } from '@hanzo/ui/primitives'
+import { ChevronDown, Info } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@hanzo/ui/primitives'
+// types
 import type { NetworkCurrency } from '@/Models/CryptoNetwork'
+import { contractAddress } from '@ton/core'
 
 const TokenSelectWrapper: React.FC<{
   setValue: (value: NetworkCurrency) => void
@@ -13,14 +21,7 @@ const TokenSelectWrapper: React.FC<{
   placeholder?: string
   searchHint?: string
   disabled?: boolean
-}> = ({ 
-  setValue, 
-  value, 
-  values, 
-  placeholder, 
-  disabled 
-}) => {
-
+}> = ({ setValue, value, values, placeholder, disabled }) => {
   const [showModal, setShowModal] = useState(false)
 
   const handleSelect = useCallback((item: NetworkCurrency) => {
@@ -54,6 +55,24 @@ const TokenSelectWrapper: React.FC<{
                 )}
               </div>
               <span className="ml-3 block">{value.asset}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info
+                    width={15}
+                    height={15}
+                    className="mx-1 hover:opacity-60 flex-none"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className='flex flex-col items-start'>
+                    <p>Name: {value.name}</p>
+                    <p>Asset: {value.asset}</p>
+                    { value.contract_address && value.contract_address !== '0x0000000000000000000000000000000000000000' && <p>Contract Address: {value.contract_address}</p> }
+                    <p>Decimals: {value.decimals}</p>
+                    <p>Native: {value.is_native ? 'Yes' : 'No'}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </span>
 
             <span className="ml-1 flex items-center pointer-events-none ">

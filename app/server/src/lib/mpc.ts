@@ -3,8 +3,8 @@ const mpc_nodes = [
   // "http://127.0.0.1:6000",
   // "http://127.0.0.1:6000",
   // "https://teleport-0.lux.network",
-  // "https://teleport-1.lux.network"
-  // 'https://teleport.lux.network/node2',
+  // "https://teleport-0.lux.network/"
+  // 'https://teleport-2.lux.network/',
   "http://mpc-node-0:6000",
   "http://mpc-node-1:6000"
   // "http://mpc-node-2:6000"
