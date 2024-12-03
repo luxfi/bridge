@@ -10,10 +10,8 @@ const router: Router = Router()
 // method: GET and it's public
 router.get("/", async (req: Request, res: Response) => {
   try {
-
-    const version = req.params.version
+    const { version } = req.query
     const settings = version === "mainnet" ? mainnetSettings : testnetSettings;
-
     res.status(200).json({ ...settings.data })
   } 
   catch (error: any) {
