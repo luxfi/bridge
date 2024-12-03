@@ -61,8 +61,6 @@ const Swap: FC = () => {
       n.status === 'active'
   )
 
-  console.log(filteredNetworks)
-
   // const networks = isMainnet ? mainNetworks : devNetworks
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false)
@@ -101,7 +99,7 @@ const Swap: FC = () => {
   >([])
 
   React.useEffect(() => {
-    setSourceNetwork(networks.find((n) => n.status === 'active'))
+    setSourceNetwork(filteredNetworks.find((n) => n.status === 'active'))
   }, [])
 
   React.useEffect(() => {
@@ -114,7 +112,7 @@ const Swap: FC = () => {
 
   React.useEffect(() => {
     if (!sourceAsset) return
-    const _networks = networks
+    const _networks = filteredNetworks
       .filter(
         (n: CryptoNetwork) =>
           n.currencies.some((c: NetworkCurrency) =>
