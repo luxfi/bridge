@@ -16,16 +16,16 @@ import axios from 'axios'
 import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import SpinIcon from '@/components/icons/spinIcon'
-import type { Network, Token } from '@/types/teleport'
 import { useNotify } from '@/context/toast-provider'
 import { localeNumber } from '@/lib/utils'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
@@ -73,7 +73,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       } else {
         sourceNetwork.chain_id &&
           switchChain &&
-          switchChain({ chainId: sourceNetwork.chain_id })
+          switchChain({ chainId: Number(sourceNetwork.chain_id) })
       }
     }
   }, [signer])
@@ -129,11 +129,11 @@ const UserTokenDepositor: React.FC<IProps> = ({
         // if allowance is less than amount, approve
         const _allowance = await erc20Contract.allowance(
           signer?._address as string,
-          CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter
+          CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter
         )
         if (_allowance < _amount) {
           const _approveTx = await erc20Contract.approve(
-            CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS]
+            CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
               .teleporter,
             _amount
           )
@@ -144,7 +144,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       if (!sourceNetwork.chain_id) return
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`)
       const bridgeContract = new Contract(
-        CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       )
@@ -163,7 +163,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           txHash: _bridgeTransferTx.hash,
           amount: sourceAmount,
           from: signer?._address,
-          to: CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS]
+          to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
             .teleporter,
         }
       )
@@ -209,7 +209,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`)
 
       const bridgeContract = new Contract(
-        CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter,
         teleporterABI,
         signer
       )
@@ -229,7 +229,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
           txHash: _bridgeTransferTx.hash,
           amount: sourceAmount,
           from: signer?._address,
-          to: CONTRACTS[sourceNetwork.chain_id as keyof typeof CONTRACTS]
+          to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
             .teleporter,
         }
       )
@@ -253,7 +253,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
     } else if (Number(chainId) !== Number(sourceNetwork.chain_id)) {
       sourceNetwork.chain_id &&
         switchChain &&
-        switchChain({ chainId: sourceNetwork.chain_id })
+        switchChain({ chainId: Number(sourceNetwork.chain_id) })
     } else {
       toBurn ? burnToken() : transferToken()
     }

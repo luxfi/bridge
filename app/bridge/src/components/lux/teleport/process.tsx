@@ -6,8 +6,7 @@ import axios from 'axios'
 import SwapDetails from './swap/SwapDetails'
 import ConnectNetwork from '@/components/ConnectNetwork'
 import Widget from '@/components/Widget'
-import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
-import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
+
 import {
   sourceNetworkAtom,
   sourceAssetAtom,
@@ -24,6 +23,8 @@ import {
 } from '@/store/teleport'
 import { useAtom } from 'jotai'
 import type { Network, Token } from '@/types/teleport'
+import { useSettings } from '@/context/settings'
+import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
 
 type NetworkToConnect = {
   DisplayName: string
@@ -36,8 +37,8 @@ interface IProps {
 }
 
 const Form: React.FC<IProps> = ({ swapId, className }) => {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const networks = isMainnet ? mainNetworks : devNetworks
+  const { networks } = useSettings()
+  const filteredNetworks = networks.filter((n: CryptoNetwork) => n.type === NetworkType.EVM)
 
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
@@ -72,17 +73,17 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
         `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
       )
 
-      const _sourceNetwork = networks.find(
-        (_n: Network) => _n.internal_name === data.source_network
-      ) as Network
+      const _sourceNetwork = filteredNetworks.find(
+        (_n: CryptoNetwork) => _n.internal_name === data.source_network
+      ) as CryptoNetwork
       const _sourceAsset = _sourceNetwork?.currencies?.find(
-        (c: Token) => c.asset === data.source_asset
+        (c: NetworkCurrency) => c.asset === data.source_asset
       )
-      const _destinationNetwork = networks.find(
-        (_n: Network) => _n.internal_name === data.destination_network
-      ) as Network
+      const _destinationNetwork = filteredNetworks.find(
+        (_n: CryptoNetwork) => _n.internal_name === data.destination_network
+      ) as CryptoNetwork
       const _destinationAsset = _destinationNetwork?.currencies?.find(
-        (c: Token) => c.asset === data.destination_asset
+        (c: NetworkCurrency) => c.asset === data.destination_asset
       )
       setSourceNetwork(_sourceNetwork)
       setSourceAsset(_sourceAsset)

@@ -4,27 +4,24 @@ import shortenAddress from '@/components/utils/ShortenAddress'
 import { useAtom } from 'jotai'
 import { ethPriceAtom } from '@/store/teleport'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
-import type { Network, Token } from '@/types/teleport'
 import { useChainId } from 'wagmi'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
-import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
-import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
 import { ethers } from 'ethers'
 // import { erc20ABI } from "wagmi";
 import { formatEther } from 'ethers/lib/utils'
-import MoveIcon from './MoveIcon'
 import { WalletIcon } from 'lucide-react'
 import { erc20ABI } from '@wagmi/core'
 import useWallet from '@/hooks/useWallet'
 import useAsyncEffect from 'use-async-effect'
-
-const networks = [...devNetworks, ...mainNetworks]
+// types
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
+import { useSettings } from '@/context/settings'
 
 interface IProps {
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
 }
@@ -37,6 +34,9 @@ const SwapItems: React.FC<IProps> = ({
   destinationAsset,
   sourceAmount,
 }) => {
+
+  const { networks } = useSettings()
+
   const [ethPrice] = useAtom(ethPriceAtom)
   //token price
   const tokenPrice = ethPrice
@@ -57,7 +57,7 @@ const SwapItems: React.FC<IProps> = ({
     [destinationAsset]
   )
 
-  const _network = networks.find((n) => n.chain_id === chainId)
+  const _network = networks.find((n: CryptoNetwork) => Number(n.chain_id) === chainId)
 
   const _renderWallet = () => {
     if (signer) {
@@ -66,7 +66,7 @@ const SwapItems: React.FC<IProps> = ({
           {_network ? (
             <div className="flex items-center gap-2">
               <Image
-                src={_network.logo}
+                src={_network.logo || ''}
                 height={30}
                 width={30}
                 alt="logo"
@@ -99,9 +99,9 @@ const SwapItems: React.FC<IProps> = ({
     }
   }
 
-  const getNetworkBalance = async (network: Network, asset: Token) => {
+  const getNetworkBalance = async (network: CryptoNetwork, asset: NetworkCurrency) => {
     try {
-      const provider = new ethers.providers.JsonRpcProvider(network.node)
+      const provider = new ethers.providers.JsonRpcProvider(network.nodes[0])
       const address = signer?._address
 
       if (!address) return '0'
@@ -150,7 +150,7 @@ const SwapItems: React.FC<IProps> = ({
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               <Image
-                src={sourceAsset.logo}
+                src={sourceAsset.logo || ''}
                 alt={sourceAsset.logo}
                 width={32}
                 height={32}

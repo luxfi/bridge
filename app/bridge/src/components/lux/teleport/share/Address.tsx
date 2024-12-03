@@ -4,12 +4,12 @@ import { type ChangeEvent, useCallback, useEffect, useState } from 'react'
 import { type Partner } from '@/Models/Partner'
 import { type AddressBookItem } from '@/lib/BridgeApiClient'
 import { isValidAddress } from '@/lib/addressValidator'
-import { type Network } from '@/types/teleport'
 import Image from 'next/image'
 import KnownInternalNames from '@/lib/knownIds'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import WalletIcon from '@/components/icons/WalletIcon'
 import useWallet from '@/hooks/useWallet'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 const Address: React.FC<
   {
@@ -26,7 +26,7 @@ const Address: React.FC<
     canFocus?: boolean
     address_book?: AddressBookItem[]
     setAddress: React.Dispatch<React.SetStateAction<string>>
-    network?: Network
+    network?: CryptoNetwork
   } & Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'as' | 'onChange'>
 > = ({
   name,

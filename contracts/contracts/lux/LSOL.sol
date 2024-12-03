@@ -1,9 +1,5 @@
-/**
- *Submitted for verification at basescan.org on 2024-03-20
- */
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
-
+pragma solidity ^0.8.20;
 /*
     ██╗     ██╗   ██╗██╗  ██╗    ███████╗ ██████╗ ██╗     
     ██║     ██║   ██║╚██╗██╔╝    ██╔════╝██╔═══██╗██║     

@@ -4,6 +4,7 @@ import { Contract, ethers } from "ethers"
 import type { Network, Token } from "@/types/teleport"
 import { formatUnits } from "ethers/lib/utils"
 import { erc20ABI } from "@wagmi/core"
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork"
 
 /**
  * generate random string
@@ -81,14 +82,14 @@ export const formatLongNumber = (num: number | string): string => {
    * @param asset 
    * @returns 
    */
-export const fetchTokenBalance = async (address: string, network: Network, asset: Token) => {
+export const fetchTokenBalance = async (address: string, network: CryptoNetwork, asset: NetworkCurrency) => {
   try {
     if (asset.is_native) {
-      const provider = new ethers.providers.JsonRpcProvider(network.node)
+      const provider = new ethers.providers.JsonRpcProvider(network.nodes[0])
       const _balance = await provider.getBalance(address)
       return Number(formatUnits(_balance, asset.decimals))
     } else {
-      const provider = new ethers.providers.JsonRpcProvider(network.node)
+      const provider = new ethers.providers.JsonRpcProvider(network.nodes[0])
       const contract = new Contract(String(asset.contract_address), erc20ABI, provider)
       const _balance = await contract.balanceOf(address)
       return Number(formatUnits(_balance, asset.decimals))
