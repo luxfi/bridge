@@ -2,9 +2,9 @@
 import { useCallback, useState } from 'react'
 import Image from 'next/image'
 import NetworkSelect from './NetworkSelect'
-import type { Network } from '@/types/teleport'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@hanzo/ui/util'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 export default function NetworkSelectWrapper<T>({
   network,
@@ -15,9 +15,9 @@ export default function NetworkSelectWrapper<T>({
   searchHint,
   className,
 }: {
-  network?: Network
-  networks: Network[]
-  setNetwork: (network: Network) => void
+  network?: CryptoNetwork
+  networks: CryptoNetwork[]
+  setNetwork: (network: CryptoNetwork) => void
   placeholder: string
   searchHint: string
   disabled: boolean
@@ -29,7 +29,7 @@ export default function NetworkSelectWrapper<T>({
     setShowModal(true)
   }
 
-  const handleSelect = useCallback((item: Network) => {
+  const handleSelect = useCallback((item: CryptoNetwork) => {
     if (item.status === 'active') {
       setNetwork(item)
       setShowModal(false)
@@ -54,7 +54,7 @@ export default function NetworkSelectWrapper<T>({
           <div className="flex items-center">
             <div className="flex-shrink-0 h-6 w-6 relative">
               <Image
-                src={network.logo}
+                src={network.logo || ''}
                 alt="Project Logo"
                 height="40"
                 width="40"

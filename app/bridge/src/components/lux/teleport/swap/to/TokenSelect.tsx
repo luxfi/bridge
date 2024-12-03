@@ -1,15 +1,14 @@
-import type { Token } from '@/types/teleport'
-
 import React from 'react'
 import Image from 'next/image'
 import CommandWrapper from '@/components/shadcn/command-wrapper'
 
 import { cn } from '@hanzo/ui/util'
 import { CommandItem, CommandList } from '@hanzo/ui/primitives'
+import type { NetworkCurrency } from '@/Models/CryptoNetwork'
 
 const TokenSelect: React.FC<{
-  values: Token[]
-  setValue: (token: Token) => void
+  values: NetworkCurrency[]
+  setValue: (token: NetworkCurrency) => void
 }> = ({ values, setValue }) => (
   <CommandWrapper>
     <CommandList>
@@ -29,7 +28,7 @@ const TokenSelect: React.FC<{
               <div className="flex-shrink-0 h-6 w-6 relative">
                 {item.logo && (
                   <Image
-                    src={item.logo}
+                    src={item.logo || ''}
                     alt="Project Logo"
                     height="40"
                     width="40"
@@ -39,7 +38,7 @@ const TokenSelect: React.FC<{
                 )}
               </div>
               <div className="ml-4 flex items-center gap-3 justify-between w-full">
-                <p className="text-md font-medium">{item.asset}</p>
+                <p className="text-md font-medium">{item.name}</p>
               </div>
             </div>
             <div className="text-xs text-[white]/60">

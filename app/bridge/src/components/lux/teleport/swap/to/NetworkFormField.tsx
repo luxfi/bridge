@@ -7,18 +7,18 @@ import AmountField from '../AmountField'
 import NetworkSelectWrapper from './NetworkSelectWrapper'
 import TokenSelectWrapper from './TokenSelectWrapper'
 
-import type { Network, Token } from '@/types/teleport'
 import { sourceAmountAtom } from '@/store/teleport'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
 import { formatNumber } from '@/lib/utils'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 const NetworkFormField: React.FC<{
-  networks: Network[]
-  network?: Network
-  asset?: Token
-  sourceAsset?: Token
-  setNetwork: (network: Network) => void
-  setAsset: (asset: Token) => void
+  networks: CryptoNetwork[]
+  network?: CryptoNetwork
+  asset?: NetworkCurrency
+  sourceAsset?: NetworkCurrency
+  setNetwork: (network: CryptoNetwork) => void
+  setAsset: (asset: NetworkCurrency) => void
   disabled: boolean
   balance?: number
   balanceLoading: boolean

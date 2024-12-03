@@ -1,8 +1,5 @@
 'use client'
 import type { Dispatch, SetStateAction } from 'react'
-import type { Network } from '@/types/teleport'
-
-import { cn } from '@hanzo/ui/util'
 import Modal from '@/components/modal/modal'
 import SpinIcon from '@/components/icons/spinIcon'
 import SelectItem from './SelectItem'
@@ -15,14 +12,15 @@ import {
   CommandItem,
   CommandList,
 } from '@hanzo/ui/primitives'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 const CommandSelect: React.FC<{
   show: boolean
   setShow: (value: boolean) => void
   searchHint: string
-  networks: Network[]
-  network?: Network
-  setNetwork: (value: Network) => void
+  networks: CryptoNetwork[]
+  network?: CryptoNetwork
+  setNetwork: (value: CryptoNetwork) => void
 }> = ({ networks, network, setNetwork, show, setShow, searchHint }) => {
   const { isDesktop } = useWindowDimensions()
   return (
@@ -37,7 +35,7 @@ const CommandSelect: React.FC<{
           {networks && networks.length > 0 ? (
             <CommandList className='max-h-full'>
               <CommandEmpty>No results found.</CommandEmpty>
-              {networks.map((n: Network) => (
+              {networks.map((n: CryptoNetwork) => (
                 <CommandItem
                   disabled={false}
                   value={n.internal_name}

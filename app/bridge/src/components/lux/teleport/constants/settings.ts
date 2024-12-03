@@ -38,8 +38,8 @@ export const CONTRACTS = {
   42220: {
     name: 'CELO_MAINNET',
     chain_id: 42220,
-    teleporter: '',
-    vault: '',
+    teleporter: '0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95',
+    vault: '0x37d9fB96722ebDDbC8000386564945864675099B',
   },
   8453: {
     name: 'BASE_MAINNET',
@@ -53,15 +53,33 @@ export const CONTRACTS = {
     teleporter: '0xebD1Ee9BCAaeE50085077651c1a2dD452fc6b72e',
     vault: '0xcf963Fe4E4cE126047147661e6e06e171f366506',
   },
-  100: {
-    name: 'GNOSIS_MAINNET',
-    chain_id: 100,
-    teleporter: '',
-    vault: '',
-  },
   43114: {
     name: 'AVAX_MAINNET',
     chain_id: 43114,
+    teleporter: '0x3226bb1d3055685EFC1b0E49718B909a1c6Ce18d',
+    vault: '0x6149D8C44Ec9a4a683d14E494a73B1b11ac331A8',
+  },
+  7777777: {
+    name: 'ZORA_MAINNET',
+    chain_id: 7777777,
+    teleporter: '0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95',
+    vault: '0x37d9fB96722ebDDbC8000386564945864675099B',
+  },
+  81457: {
+    name: 'BLAST_MAINNET',
+    chain_id: 81457,
+    teleporter: '0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95',
+    vault: '0x37d9fB96722ebDDbC8000386564945864675099B',
+  },
+  59144: {
+    name: 'LINEA_MAINNET',
+    chain_id: 59144,
+    teleporter: '0x1e48d32a4f5e9f08db9ae4959163300faf8a6c8e',
+    vault: '0x3226bb1d3055685EFC1b0E49718B909a1c6Ce18d',
+  },
+  100: {
+    name: 'GNOSIS_MAINNET',
+    chain_id: 100,
     teleporter: '',
     vault: '',
   },
@@ -74,24 +92,6 @@ export const CONTRACTS = {
   1313161554: {
     name: 'AURORA_MAINNET',
     chain_id: 1313161554,
-    teleporter: '',
-    vault: '',
-  },
-  7777777: {
-    name: 'ZORA_MAINNET',
-    chain_id: 7777777,
-    teleporter: '',
-    vault: '',
-  },
-  81457: {
-    name: 'BLAST_MAINNET',
-    chain_id: 81457,
-    teleporter: '',
-    vault: '',
-  },
-  59144: {
-    name: 'LINEA_MAINNET',
-    chain_id: 59144,
     teleporter: '',
     vault: '',
   },

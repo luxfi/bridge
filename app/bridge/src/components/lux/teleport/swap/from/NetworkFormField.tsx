@@ -4,18 +4,18 @@ import { useAtom } from 'jotai'
 import AmountField from '../AmountField'
 import NetworkSelectWrapper from './NetworkSelectWrapper'
 
-import type { Network, Token } from '@/types/teleport'
 import TokenSelectWrapper from './TokenSelectWrapper'
 import { sourceAmountAtom } from '@/store/teleport'
 import { Button } from '@hanzo/ui/primitives'
 import { formatNumber } from '@/lib/utils'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 const NetworkFormField: React.FC<{
-  networks: Network[]
-  network?: Network
-  asset?: Token
-  setNetwork: (network: Network) => void
-  setAsset: (asset: Token) => void
+  networks: CryptoNetwork[]
+  network?: CryptoNetwork
+  asset?: NetworkCurrency
+  setNetwork: (network: CryptoNetwork) => void
+  setAsset: (asset: NetworkCurrency) => void
   disabled: boolean,
   maxValue?: string
   balance?: number

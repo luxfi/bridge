@@ -3,19 +3,19 @@ import { swapStatusAtom, swapIdAtom } from '@/store/teleport'
 //hooks
 import { useAtom } from 'jotai'
 //types
-import type { Network, Token } from '@/types/teleport'
 import UserTokenDepositor from './progress/TokenDepositor'
 import TeleportProcessor from './progress/TeleportProcessor'
 import PayoutProcessor from './progress/PayoutProcessor'
 import SwapSuccess from './progress/SwapSuccess'
 import { SwapStatus } from '@/Models/SwapStatus'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
 }

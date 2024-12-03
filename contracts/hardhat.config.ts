@@ -78,6 +78,26 @@ const config: HardhatUserConfig = {
       url: ZOO_MAINNET_RPC,
       accounts: [`0x${PRIVATE_KEY}`],
     },
+    snowtrace: {
+      url: 'https://api.avax.network/ext/bc/C/rpc',
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    blast: {
+      url: BLAST_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    celo: {
+      url: CELO_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    zora: {
+      url: ZORA_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    linea: {
+      url: LINEA_MAINNET_RPC,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
     //////////////////////// testnet ////////////////////
     sepolia: {
       url: SEPOLIA_RPC,
@@ -117,9 +137,10 @@ const config: HardhatUserConfig = {
       polygon: process.env.POLYGONSCAN_API_KEY!,
       mainnet: process.env.ETHERSCAN_API_KEY!,
       base: process.env.BASESCAN_API_KEY!,
-      avax: process.env.AVAXSCAN_API_KEY!,
+      snowtrace: "snowtrace",
       optimisticEthereum: process.env.OPTIMISMSCAN_API_KEY!,
-      arbitrumOne: process.env.ARBISCAN_API_KEY!
+      arbitrumOne: process.env.ARBISCAN_API_KEY!,
+      linea: process.env.LINEASCAN_API_KEY!
     },
     customChains: [
       {
@@ -154,6 +175,22 @@ const config: HardhatUserConfig = {
           browserURL: "https://explore.zoo-test.network",
         },
       },
+      {
+        network: "snowtrace",
+        chainId: 43114,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan",
+          browserURL: "https://avalanche.routescan.io"
+        }
+      },
+      {
+        network: "linea",
+        chainId: 59144,
+        urls: {
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://lineascan.build/"
+        }
+      }
     ],
   },
   sourcify: {

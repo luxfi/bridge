@@ -19,7 +19,6 @@ import { useAtom } from 'jotai'
 import { useSwitchChain } from 'wagmi'
 import { useEthersSigner } from '@/hooks/useEthersSigner'
 
-import type { Network, Token } from '@/types/teleport'
 import axios from 'axios'
 import Gauge from '@/components/gauge'
 import SpinIcon from '@/components/icons/spinIcon'
@@ -33,13 +32,14 @@ import { formatUnits, parseEther } from 'viem'
 //abis
 import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
@@ -60,8 +60,8 @@ const PayoutProcessor: React.FC<IProps> = ({
   const [isGettingPayout, setIsGettingPayout] = React.useState<boolean>(false)
   //atoms
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
+  const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
-  const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [mpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
   const { chainId, signer, isConnecting } = useEthersSigner()
@@ -98,7 +98,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       } else {
         destinationNetwork.chain_id &&
           switchChain &&
-          switchChain({ chainId: destinationNetwork.chain_id })
+          switchChain({ chainId: Number(destinationNetwork.chain_id) })
       }
     }
   }, [signer])
@@ -132,7 +132,7 @@ const PayoutProcessor: React.FC<IProps> = ({
 
       // Set up provider and wallet
       const provider = new ethers.providers.JsonRpcProvider(
-        destinationNetwork.node
+        destinationNetwork.nodes[0]
       )
 
       const feeData = await provider.getFeeData()
@@ -144,7 +144,7 @@ const PayoutProcessor: React.FC<IProps> = ({
 
       const bridgeContract = new Contract(
         CONTRACTS[
-          destinationNetwork.chain_id as keyof typeof CONTRACTS
+          Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS
         ].teleporter,
         teleporterABI,
         wallet
@@ -246,7 +246,7 @@ const PayoutProcessor: React.FC<IProps> = ({
     try {
       const bridgeContract = new Contract(
         CONTRACTS[
-          destinationNetwork.chain_id as keyof typeof CONTRACTS
+          Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS
         ].teleporter,
         teleporterABI,
         signer
@@ -344,7 +344,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       } else {
         destinationNetwork.chain_id &&
           switchChain &&
-          switchChain({ chainId: destinationNetwork.chain_id })
+          switchChain({ chainId: Number(destinationNetwork.chain_id) })
       }
     }
   }

@@ -68,86 +68,177 @@ export const MAIN_NETWORKS: NETWORK[] = [
       },
       // lux tokens
       {
-        name: "LBTC",
+        name: "Lux BTC",
         asset: "LBTC",
         contract_address: "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LETH",
+        name: "Lux ETH",
         asset: "LETH",
         contract_address: "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LUSD",
+        name: "Lux Dollar",
         asset: "LUSD",
         contract_address: "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LZOO",
+        name: "Lux ZOO",
         asset: "LZOO",
         contract_address: "0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LBNB",
+        name: "Lux BNB",
         asset: "LBNB",
         contract_address: "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LPOL",
+        name: "Lux POL",
         asset: "LPOL",
         contract_address: "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LCELO",
+        name: "Lux CELO",
         asset: "LCELO",
         contract_address: "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LFTM",
+        name: "Lux FTM",
         asset: "LFTM",
         contract_address: "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LXDAI",
+        name: "Lux XDAI",
         asset: "LXDAI",
         contract_address: "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LSOL",
+        name: "Lux SOL",
         asset: "LSOL",
         contract_address: "0x26B40f650156C7EbF9e087Dd0dca181Fe87625B7",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LTON",
+        name: "Lux TON",
         asset: "LTON",
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LADA",
+        name: "Lux ADA",
         asset: "LADA",
         contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux AVAX",
+        asset: "LAVAX",
+        contract_address: "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux BLAST",
+        asset: "LBLAST",
+        contract_address: "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux BONK",
+        asset: "LBONK",
+        contract_address: "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux WIF",
+        asset: "LWIF",
+        contract_address: "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux Popcat",
+        asset: "LPOPCAT",
+        contract_address: "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux PNUT",
+        asset: "LPNUT",
+        contract_address: "0x6d5a2779313faa0CF50882D5338de19352267935",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux MEW",
+        asset: "LMEW",
+        contract_address: "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux BOME",
+        asset: "LBOME",
+        contract_address: "0x1a08b4D4144027f8E262892A78D493dD660D270d",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux GIGA",
+        asset: "LGIGA",
+        contract_address: "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux AI16Z",
+        asset: "LAI16Z",
+        contract_address: "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux FWOG",
+        asset: "LFWOG",
+        contract_address: "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux MOODENG",
+        asset: "LMOODENG",
+        contract_address: "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux PONKE",
+        asset: "LPONKE",
+        contract_address: "0x40cbF49487F30082A233A73759cAE283F81113AE",
         decimals: 18,
         is_native: false
       }
@@ -200,86 +291,177 @@ export const MAIN_NETWORKS: NETWORK[] = [
       },
       // lux tokens
       {
-        name: "ZBTC",
+        name: "Zoo BTC",
         asset: "ZBTC",
         contract_address: "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZETH",
+        name: "Zoo ETH",
         asset: "ZETH",
         contract_address: "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZUSD",
+        name: "Zoo Dollar",
         asset: "ZUSD",
         contract_address: "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZLUX",
+        name: "Zoo LUX",
         asset: "ZLUX",
         contract_address: "0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZBNB",
+        name: "Zoo BNB",
         asset: "ZBNB",
         contract_address: "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZPOL",
+        name: "Zoo POL",
         asset: "ZPOL",
         contract_address: "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZCELO",
+        name: "Zoo CELO",
         asset: "ZCELO",
         contract_address: "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZFTM",
+        name: "Zoo FTM",
         asset: "ZFTM",
         contract_address: "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZXDAI",
+        name: "Zoo XDAI",
         asset: "ZXDAI",
         contract_address: "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZSOL",
+        name: "Zoo SOL",
         asset: "ZSOL",
         contract_address: "0x26B40f650156C7EbF9e087Dd0dca181Fe87625B7",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZTON",
+        name: "Zoo TON",
         asset: "ZTON",
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZADA",
+        name: "Zoo ADA",
         asset: "ZADA",
         contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo AVAX",
+        asset: "ZAVAX",
+        contract_address: "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo BLAST",
+        asset: "ZBLAST",
+        contract_address: "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo BONK",
+        asset: "ZBONK",
+        contract_address: "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo WIF",
+        asset: "ZWIF",
+        contract_address: "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo Popcat",
+        asset: "ZPOPCAT",
+        contract_address: "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo PNUT",
+        asset: "ZPNUT",
+        contract_address: "0x6d5a2779313faa0CF50882D5338de19352267935",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo MEW",
+        asset: "ZMEW",
+        contract_address: "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo BOME",
+        asset: "ZBOME",
+        contract_address: "0x1a08b4D4144027f8E262892A78D493dD660D270d",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo GIGA",
+        asset: "ZGIGA",
+        contract_address: "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo AI16Z",
+        asset: "ZAI16Z",
+        contract_address: "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo FWOG",
+        asset: "ZFWOG",
+        contract_address: "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo MOODENG",
+        asset: "ZMOODENG",
+        contract_address: "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo PONKE",
+        asset: "ZPONKE",
+        contract_address: "0x40cbF49487F30082A233A73759cAE283F81113AE",
         decimals: 18,
         is_native: false
       }
@@ -474,8 +656,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "CELO_MAINNET",
     is_testnet: false,
     chain_id: "42220",
-    teleporter: "",
-    vault: "",
+    teleporter: "0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95",
+    vault: "0x37d9fB96722ebDDbC8000386564945864675099B",
     node: `https://lb.drpc.org/ogrpc?network=celo&dkey=${DRPC_KEY}`,
     currencies: [
       {
@@ -502,14 +684,14 @@ export const MAIN_NETWORKS: NETWORK[] = [
       {
         name: "USDC",
         asset: "USDC",
-        contract_address: "0xef4229c8c3250c675f21bcefa42f58efbff6002a",
+        contract_address: "0xef4229c8c3250C675F21BCefa42f58EfbfF6002a",
         decimals: 6,
         is_native: false
       },
       {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0xE4fE50cdD716522A56204352f00AA110F731932d",
+        name: "cUSD",
+        asset: "USDC",
+        contract_address: "0x765de816845861e75a25fca122bb6898b8b1282a",
         decimals: 18,
         is_native: false
       }
@@ -608,6 +790,226 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   },
   {
+    display_name: "Avalanche",
+    internal_name: "AVAX_MAINNET",
+    is_testnet: false,
+    chain_id: "43114",
+    teleporter: "0x3226bb1d3055685EFC1b0E49718B909a1c6Ce18d",
+    vault: "0x6149D8C44Ec9a4a683d14E494a73B1b11ac331A8",
+    node: `https://lb.drpc.org/ogrpc?network=avalanche&dkey=${DRPC_KEY}`,
+    currencies: [
+      {
+        name: "AVAX",
+        asset: "AVAX",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "WETH.e",
+        asset: "WETH",
+        contract_address: "0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "USDT.e",
+        asset: "USDT",
+        contract_address: "0xc7198437980c041c805A1EDcbA50c1Ce5db95118",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "USDC",
+        asset: "USDC",
+        contract_address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "BTC.b",
+        asset: "WBTC",
+        contract_address: "0x152b9d0FdC40C096757F570A51E494bd4b943E50",
+        decimals: 8,
+        is_native: false
+      }
+    ]
+  },
+  {
+    display_name: "Zora",
+    internal_name: "ZORA_MAINNET",
+    is_testnet: false,
+    chain_id: "7777777",
+    teleporter: "0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95",
+    vault: "0x37d9fB96722ebDDbC8000386564945864675099B",
+    node: `https://lb.drpc.org/ogrpc?network=zora&dkey=${DRPC_KEY}`,
+    currencies: [
+      {
+        name: "ETH",
+        asset: "ETH",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "USDzC",
+        asset: "USDC",
+        contract_address: "0xCccCCccc7021b32EBb4e8C08314bD62F7c653EC4",
+        decimals: 6,
+        is_native: false
+      }
+    ]
+  },
+  {
+    display_name: "Blast",
+    internal_name: "BLAST_MAINNET",
+    is_testnet: false,
+    chain_id: "81457",
+    teleporter: "0xbdCE894aEd7d30BA0C0D0B51604ee9d225fc8b95",
+    vault: "0x37d9fB96722ebDDbC8000386564945864675099B",
+    node: `https://lb.drpc.org/ogrpc?network=blast&dkey=${DRPC_KEY}`,
+    currencies: [
+      {
+        name: "ETH",
+        asset: "ETH",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "BLAST",
+        asset: "BLAST",
+        contract_address: "0xb1a5700fA2358173Fe465e6eA4Ff52E36e88E2ad",
+        decimals: 18,
+        is_native: false
+      }
+    ]
+  },
+  {
+    display_name: "Linea",
+    internal_name: "LINEA_MAINNET",
+    is_testnet: false,
+    chain_id: "59144",
+    teleporter: "0x1e48d32a4f5e9f08db9ae4959163300faf8a6c8e",
+    vault: "0x3226bb1d3055685EFC1b0E49718B909a1c6Ce18d",
+    node: `https://lb.drpc.org/ogrpc?network=linea&dkey=${DRPC_KEY}`,
+    currencies: [
+      {
+        name: "ETH",
+        asset: "ETH",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "Wrapped Ether",
+        asset: "WETH",
+        contract_address: "0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "USDT",
+        asset: "USDT",
+        contract_address: "0xa219439258ca9da29e9cc4ce5596924745e12b93",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "USDC.e",
+        asset: "USDC",
+        contract_address: "0x176211869ca2b568f2a7d4ee941e073a821ee1ff",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "Wrapped BTC",
+        asset: "WBTC",
+        contract_address: "0x3aab2285ddcddad8edf438c1bab47e1a9d05a9b4",
+        decimals: 8,
+        is_native: false
+      }
+    ]
+  },
+  {
+    display_name: "Fantom",
+    internal_name: "FANTOM_MAINNET",
+    is_testnet: false,
+    chain_id: "42220",
+    teleporter: "",
+    vault: "",
+    node: `https://lb.drpc.org/ogrpc?network=fantom&dkey=${DRPC_KEY}`,
+    currencies: [
+      {
+        name: "FTM",
+        asset: "FTM",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "USDT",
+        asset: "USDT",
+        contract_address: "0xcc1b99ddac1a33c201a742a1851662e87bc7f22c",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "USDC",
+        asset: "USDC",
+        contract_address: "0x04068da6c83afcfa0e13ba15a6696662335d5b75",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "DAI",
+        asset: "DAI",
+        contract_address: "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",
+        decimals: 18,
+        is_native: false
+      }
+    ]
+  },
+  {
+    display_name: "Aurora",
+    internal_name: "AURORA_MAINNET",
+    is_testnet: false,
+    chain_id: "1313161554",
+    teleporter: "",
+    vault: "",
+    node: `https://lb.drpc.org/ogrpc?network=aurora&dkey=${DRPC_KEY}`,
+    currencies: [
+      {
+        name: "ETH",
+        asset: "ETH",
+        contract_address: "0x0000000000000000000000000000000000000000",
+        decimals: 18,
+        is_native: true
+      },
+      {
+        name: "USDT",
+        asset: "USDT",
+        contract_address: "0x4988a896b1227218e4A686fdE5EabdcAbd91571f",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "USDC",
+        asset: "USDC",
+        contract_address: "0x368ebb46aca6b8d0787c96b2b20bd3cc3f2c45f7",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "DAI",
+        asset: "DAI",
+        contract_address: "0xe3520349f477a5f6eb06107066048508498a291b",
+        decimals: 18,
+        is_native: false
+      }
+    ]
+  },
+  {
     display_name: "Gnosis",
     internal_name: "GNOSIS_MAINNET",
     is_testnet: false,
@@ -653,282 +1055,6 @@ export const MAIN_NETWORKS: NETWORK[] = [
       }
     ]
   },
-  {
-    display_name: "Avalanche",
-    internal_name: "AVAX_MAINNET",
-    is_testnet: false,
-    chain_id: "43114",
-    teleporter: "",
-    vault: "",
-    node: `https://lb.drpc.org/ogrpc?network=avalanche&dkey=${DRPC_KEY}`,
-    currencies: [
-      {
-        name: "ETH",
-        asset: "ETH",
-        contract_address: "0x0000000000000000000000000000000000000000",
-        decimals: 18,
-        is_native: true
-      },
-      {
-        name: "Wrapped Ether",
-        asset: "WETH",
-        contract_address: "0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "USDT",
-        asset: "USDT",
-        contract_address: "0xde3a24028580884448a5397872046a019649b084",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "USDC",
-        asset: "USDC",
-        contract_address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70",
-        decimals: 18,
-        is_native: false
-      }
-    ]
-  },
-  {
-    display_name: "Fantom",
-    internal_name: "FANTOM_MAINNET",
-    is_testnet: false,
-    chain_id: "42220",
-    teleporter: "",
-    vault: "",
-    node: `https://lb.drpc.org/ogrpc?network=fantom&dkey=${DRPC_KEY}`,
-    currencies: [
-      {
-        name: "FTM",
-        asset: "FTM",
-        contract_address: "0x0000000000000000000000000000000000000000",
-        decimals: 18,
-        is_native: true
-      },
-      {
-        name: "Wrapped Ether",
-        asset: "WETH",
-        contract_address: "0x695921034f0387eac4e11620ee91b1b15a6a09fe",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "USDT",
-        asset: "USDT",
-        contract_address: "0xcc1b99ddac1a33c201a742a1851662e87bc7f22c",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "USDC",
-        asset: "USDC",
-        contract_address: "0x04068da6c83afcfa0e13ba15a6696662335d5b75",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",
-        decimals: 18,
-        is_native: false
-      }
-    ]
-  },
-  {
-    display_name: "Aurora",
-    internal_name: "AURORA_MAINNET",
-    is_testnet: false,
-    chain_id: "1313161554",
-    teleporter: "",
-    vault: "",
-    node: `https://lb.drpc.org/ogrpc?network=aurora&dkey=${DRPC_KEY}`,
-    currencies: [
-      {
-        name: "ETH",
-        asset: "ETH",
-        contract_address: "0x0000000000000000000000000000000000000000",
-        decimals: 18,
-        is_native: true
-      },
-      {
-        name: "Wrapped Ether",
-        asset: "WETH",
-        contract_address: "0xC9BdeEd33CD01541e1eeD10f90519d2C06Fe3feB",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "USDT",
-        asset: "USDT",
-        contract_address: "0x4988a896b1227218e4A686fdE5EabdcAbd91571f",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "USDC",
-        asset: "USDC",
-        contract_address: "0x368ebb46aca6b8d0787c96b2b20bd3cc3f2c45f7",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0xe3520349f477a5f6eb06107066048508498a291b",
-        decimals: 18,
-        is_native: false
-      }
-    ]
-  },
-  {
-    display_name: "Zora",
-    internal_name: "ZORA_MAINNET",
-    is_testnet: false,
-    chain_id: "7777777",
-    teleporter: "",
-    vault: "",
-    node: `https://lb.drpc.org/ogrpc?network=zora&dkey=${DRPC_KEY}`,
-    currencies: [
-      {
-        name: "ETH",
-        asset: "ETH",
-        contract_address: "0x0000000000000000000000000000000000000000",
-        decimals: 18,
-        is_native: true
-      },
-      {
-        name: "Wrapped Ether",
-        asset: "WETH",
-        contract_address: "0x4200000000000000000000000000000000000006",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "USDT",
-        asset: "USDT",
-        contract_address: "0x...",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "USDC",
-        asset: "USDC",
-        contract_address: "0x...",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0x...",
-        decimals: 18,
-        is_native: false
-      }
-    ]
-  },
-  {
-    display_name: "Blast",
-    internal_name: "BLAST_MAINNET",
-    is_testnet: false,
-    chain_id: "81457",
-    teleporter: "",
-    vault: "",
-    node: `https://lb.drpc.org/ogrpc?network=blast&dkey=${DRPC_KEY}`,
-    currencies: [
-      {
-        name: "ETH",
-        asset: "ETH",
-        contract_address: "0x0000000000000000000000000000000000000000",
-        decimals: 18,
-        is_native: true
-      },
-      {
-        name: "Wrapped Ether",
-        asset: "WETH",
-        contract_address: "0x4300000000000000000000000000000000000004",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "USDT",
-        asset: "USDT",
-        contract_address: "0x0be9a0e280962213bf85c4f8669359291b2e404a",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "USDC",
-        asset: "USDC",
-        contract_address: "0xcdb5835bdb75c5b3671633d12d7e0db6be5873a5",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0x9C6Fc5bF860A4a012C9De812002dB304AD04F581",
-        decimals: 18,
-        is_native: false
-      }
-    ]
-  },
-  {
-    display_name: "Linea",
-    internal_name: "LINEA_MAINNET",
-    is_testnet: false,
-    chain_id: "59144",
-    teleporter: "",
-    vault: "",
-    node: `https://lb.drpc.org/ogrpc?network=linea&dkey=${DRPC_KEY}`,
-    currencies: [
-      {
-        name: "ETH",
-        asset: "ETH",
-        contract_address: "0x0000000000000000000000000000000000000000",
-        decimals: 18,
-        is_native: true
-      },
-      {
-        name: "Wrapped Ether",
-        asset: "WETH",
-        contract_address: "0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f",
-        decimals: 18,
-        is_native: false
-      },
-      {
-        name: "USDT",
-        asset: "USDT",
-        contract_address: "0xA219439258ca9da29E9Cc4cE5596924745e12B93",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "USDC",
-        asset: "USDC",
-        contract_address: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
-        decimals: 6,
-        is_native: false
-      },
-      {
-        name: "DAI",
-        asset: "DAI",
-        contract_address: "0x4af15ec2a0bd43db75dd04e62faa3b8ef36b00d5",
-        decimals: 18,
-        is_native: false
-      }
-    ]
-  }
 ]
 export const TEST_NETWORKS: NETWORK[] = [
   {
@@ -1162,86 +1288,177 @@ export const TEST_NETWORKS: NETWORK[] = [
       },
       // lux tokens
       {
-        name: "LBTC",
+        name: "Lux BTC",
         asset: "LBTC",
         contract_address: "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LETH",
+        name: "Lux ETH",
         asset: "LETH",
         contract_address: "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LUSD",
+        name: "Lux Dollar",
         asset: "LUSD",
         contract_address: "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LZOO",
+        name: "Lux ZOO",
         asset: "LZOO",
         contract_address: "0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LBNB",
+        name: "Lux BNB",
         asset: "LBNB",
         contract_address: "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LPOL",
+        name: "Lux POL",
         asset: "LPOL",
         contract_address: "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LCELO",
+        name: "Lux CELO",
         asset: "LCELO",
         contract_address: "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LFTM",
+        name: "Lux FTM",
         asset: "LFTM",
         contract_address: "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LXDAI",
-        asset: "LXDAI",
+        name: "Lux XDAI",
+        asset: "Lux XDAI",
         contract_address: "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LSOL",
+        name: "Lux SOL",
         asset: "LSOL",
         contract_address: "0x26B40f650156C7EbF9e087Dd0dca181Fe87625B7",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LTON",
+        name: "Lux TON",
         asset: "LTON",
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
       },
       {
-        name: "LADA",
+        name: "Lux ADA",
         asset: "LADA",
         contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux AVAX",
+        asset: "LAVAX",
+        contract_address: "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux BLAST",
+        asset: "LBLAST",
+        contract_address: "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux BONK",
+        asset: "LBONK",
+        contract_address: "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux WIF",
+        asset: "LWIF",
+        contract_address: "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux Popcat",
+        asset: "LPOPCAT",
+        contract_address: "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux PNUT",
+        asset: "LPNUT",
+        contract_address: "0x6d5a2779313faa0CF50882D5338de19352267935",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux MEW",
+        asset: "LMEW",
+        contract_address: "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux BOME",
+        asset: "LBOME",
+        contract_address: "0x1a08b4D4144027f8E262892A78D493dD660D270d",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux GIGA",
+        asset: "LGIGA",
+        contract_address: "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux AI16Z",
+        asset: "LAI16Z",
+        contract_address: "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux FWOG",
+        asset: "LFWOG",
+        contract_address: "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux MOODENG",
+        asset: "LMOODENG",
+        contract_address: "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux PONKE",
+        asset: "LPONKE",
+        contract_address: "0x40cbF49487F30082A233A73759cAE283F81113AE",
         decimals: 18,
         is_native: false
       }
@@ -1294,86 +1511,177 @@ export const TEST_NETWORKS: NETWORK[] = [
       },
       // lux tokens
       {
-        name: "ZBTC",
+        name: "Zoo BTC",
         asset: "ZBTC",
         contract_address: "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZETH",
+        name: "Zoo ETH",
         asset: "ZETH",
         contract_address: "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZUSD",
+        name: "Zoo Dollar",
         asset: "ZUSD",
         contract_address: "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZLUX",
+        name: "Zoo LUX",
         asset: "ZLUX",
         contract_address: "0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZBNB",
+        name: "Zoo BNB",
         asset: "ZBNB",
         contract_address: "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZPOL",
+        name: "Zoo POL",
         asset: "ZPOL",
         contract_address: "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZCELO",
+        name: "Zoo CELO",
         asset: "ZCELO",
         contract_address: "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZFTM",
+        name: "Zoo FTM",
         asset: "ZFTM",
         contract_address: "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZXDAI",
+        name: "Zoo XDAI",
         asset: "ZXDAI",
         contract_address: "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZSOL",
+        name: "Zoo SOL",
         asset: "ZSOL",
         contract_address: "0x26B40f650156C7EbF9e087Dd0dca181Fe87625B7",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZTON",
+        name: "Zoo TON",
         asset: "ZTON",
         contract_address: "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
         decimals: 18,
         is_native: false
       },
       {
-        name: "ZADA",
+        name: "Zoo ADA",
         asset: "ZADA",
         contract_address: "0x8b34152832b8ab4a3274915675754AA61eC113F0",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo AVAX",
+        asset: "ZAVAX",
+        contract_address: "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo BLAST",
+        asset: "ZBLAST",
+        contract_address: "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo BONK",
+        asset: "ZBONK",
+        contract_address: "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo WIF",
+        asset: "ZWIF",
+        contract_address: "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo Popcat",
+        asset: "ZPOPCAT",
+        contract_address: "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo PNUT",
+        asset: "ZPNUT",
+        contract_address: "0x6d5a2779313faa0CF50882D5338de19352267935",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo MEW",
+        asset: "ZMEW",
+        contract_address: "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo BOME",
+        asset: "ZBOME",
+        contract_address: "0x1a08b4D4144027f8E262892A78D493dD660D270d",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo GIGA",
+        asset: "ZGIGA",
+        contract_address: "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo AI16Z",
+        asset: "ZAI16Z",
+        contract_address: "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo FWOG",
+        asset: "ZFWOG",
+        contract_address: "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo MOODENG",
+        asset: "ZMOODENG",
+        contract_address: "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo PONKE",
+        asset: "ZPONKE",
+        contract_address: "0x40cbF49487F30082A233A73759cAE283F81113AE",
         decimals: 18,
         is_native: false
       }
@@ -1384,8 +1692,8 @@ export const TEST_NETWORKS: NETWORK[] = [
 export const SWAP_PAIRS: Record<string, string[]> = {
   // lux tokens
   LUX: ['ZLUX'],
-  LBTC: ['ZBTC'],
-  LETH: ['ETH', 'ZETH'],
+  LBTC: ['WBTC', 'ZBTC'],
+  LETH: ['ETH', 'WETH', 'ZETH'],
   LUSD: ['USDT', 'USDC', 'DAI', 'ZUSD'],
   LZOO: ['ZOO'],
   LBNB: ['BNB', 'ZBNB'],
@@ -1396,11 +1704,24 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   LSOL: ['ZSOL'],
   LTON: ['ZTON'],
   LADA: ['ZADA'],
+  LAVAX: ['ZAVAX'],
+  LBLAST: ['ZBLAST', 'BLAST'],
+  LBONK: ['ZBONK'],
+  LWIF: ['ZWIF'],
+  LPOPCAT: ['ZPOPCAT'],
+  LPNUT: ['ZPNUT'],
+  LMEW: ['ZMEW'],
+  LBOME: ['ZBOME'],
+  LGIGA: ['ZGIGA'],
+  LAI16Z: ['ZAI16Z'],
+  LFWOG: ['ZFWOG'],
+  LMOODENG: ['ZMOODENG'],
+  LPONKE: ['ZPONKE'],
   
   // Zoo tokens
   ZOO: ['LZOO'],
-  ZBTC: ['LBTC'],
-  ZETH: ['ETH', 'LETH'],
+  ZBTC: ['WBTC', 'LBTC'],
+  ZETH: ['ETH', 'WETH', 'LETH'],
   ZUSD: ['USDT', 'USDC', 'DAI', 'LUSD'],
   ZLUX: ['LUX'],
   ZBNB: ['BNB', 'LBNB'],
@@ -1411,10 +1732,24 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZSOL: ['LSOL'],
   ZTON: ['LTON'],
   ZADA: ['LADA'],
+  ZAVAX: ['LAVAX'],
+  ZBLAST: ['LBLAST', 'BLAST'],
+  ZBONK: ['LBONK'],
+  ZWIF: ['LWIF'],
+  ZPOPCAT: ['LPOPCAT'],
+  ZPNUT: ['LPNUT'],
+  ZMEW: ['LMEW'],
+  ZBOME: ['LBOME'],
+  ZGIGA: ['LGIGA'],
+  ZAI16Z: ['LAI16Z'],
+  ZFWOG: ['LFWOG'],
+  ZMOODENG: ['LMOODENG'],
+  ZPONKE: ['LPONKE'],
 
   // Evm tokens
   ETH: ['LETH', 'ZETH'],
   WETH: ['LETH', 'ZETH'],
+  WBTC: ['LBTC', 'ZBTC'],
   POL: ['LPOL', 'ZPOL'],
   BNB: ['LBNB', 'ZBNB'],
   FTM: ['LFTM', 'ZFTM'],
@@ -1423,4 +1758,6 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   USDC: ['LUSD', 'ZUSD'],
   CELO: ['LCELO', 'ZCELO'],
   XDAI: ['LXDAI', 'ZXDAI'],
+  AVAX: ['LAVAX', 'ZAVAX'],
+  BLAST: ['LBLAST', 'ZBLAST'],
 }

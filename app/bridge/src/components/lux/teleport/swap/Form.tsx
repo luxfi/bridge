@@ -14,17 +14,12 @@ import Widget from '../../../Widget'
 import FromNetworkForm from './from/NetworkFormField'
 import ToNetworkForm from './to/NetworkFormField'
 import SwapDetails from './SwapDetails'
-import type { Token, Network } from '@/types/teleport'
 import { SWAP_PAIRS } from '@/components/lux/teleport/constants/settings'
-
-import { networks as devNetworks } from '@/components/lux/teleport/constants/networks.sandbox'
-import { networks as mainNetworks } from '@/components/lux/teleport/constants/networks.mainnets'
-
 //hooks
-import useWallet from "@/hooks/useWallet";
+import useWallet from '@/hooks/useWallet'
 import useAsyncEffect from 'use-async-effect'
 import { useAtom } from 'jotai'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
+import { useEthersSigner } from '@/hooks/useEthersSigner'
 
 import {
   sourceNetworkAtom,
@@ -41,6 +36,12 @@ import SpinIcon from '@/components/icons/spinIcon'
 import { SwapStatus } from '@/Models/SwapStatus'
 import { fetchTokenBalance } from '@/lib/utils'
 import { Button } from '@hanzo/ui/primitives'
+import { useSettings } from '@/context/settings'
+import {
+  NetworkType,
+  type CryptoNetwork,
+  type NetworkCurrency,
+} from '@/Models/CryptoNetwork'
 
 const Address = dynamic(
   () => import('@/components/lux/teleport/share/Address'),
@@ -51,7 +52,18 @@ const Address = dynamic(
 
 const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const networks = isMainnet ? mainNetworks : devNetworks
+
+  const { networks } = useSettings()
+  const filteredNetworks = networks.filter(
+    (n: CryptoNetwork) =>
+      n.type === NetworkType.EVM &&
+      n.is_testnet === !isMainnet &&
+      n.status === 'active'
+  )
+
+  console.log(filteredNetworks)
+
+  // const networks = isMainnet ? mainNetworks : devNetworks
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false)
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false)
@@ -59,13 +71,19 @@ const Swap: FC = () => {
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
   //balances
   const [sourceBalance, setSourceBalance] = React.useState<number>(0)
-  const [isSourceBalanceLoading, setIsSourceBalanceLoading] = React.useState<boolean>(false);
-  const [destinationBalance, setDestinationBalance] = React.useState<number>(0);
-  const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] = React.useState<boolean>(false);
+  const [isSourceBalanceLoading, setIsSourceBalanceLoading] =
+    React.useState<boolean>(false)
+  const [destinationBalance, setDestinationBalance] = React.useState<number>(0)
+  const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] =
+    React.useState<boolean>(false)
 
-  const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom)
+  const [destinationNetwork, setDestinationNetwork] = useAtom(
+    destinationNetworkAtom
+  )
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
-  const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom)
+  const [destinationAddress, setDestinationAddress] = useAtom(
+    destinationAddressAtom
+  )
 
   const [sourceAmount] = useAtom(sourceAmountAtom)
   const [, setSwapId] = useAtom(swapIdAtom)
@@ -77,9 +95,9 @@ const Swap: FC = () => {
   const { address, isConnecting } = useEthersSigner()
   const { connectWallet } = useWallet()
 
-  const sourceNetworks = networks
+  const sourceNetworks = filteredNetworks
   const [destinationNetworks, setDestinationNetworks] = React.useState<
-    Network[]
+    CryptoNetwork[]
   >([])
 
   React.useEffect(() => {
@@ -98,16 +116,16 @@ const Swap: FC = () => {
     if (!sourceAsset) return
     const _networks = networks
       .filter(
-        (n: Network) =>
-          n.currencies.some((c: Token) =>
+        (n: CryptoNetwork) =>
+          n.currencies.some((c: NetworkCurrency) =>
             SWAP_PAIRS[sourceAsset.asset]
               ? SWAP_PAIRS[sourceAsset.asset].includes(c.asset)
               : false
           ) && n.is_testnet === sourceNetwork?.is_testnet
       )
-      .map((n: Network) => ({
+      .map((n: CryptoNetwork) => ({
         ...n,
-        currencies: n.currencies.map((c: Token) => ({
+        currencies: n.currencies.map((c: NetworkCurrency) => ({
           ...c,
           status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
             ? c.status
@@ -164,7 +182,7 @@ const Swap: FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
-    address
+    address,
   ])
 
   const createSwap = async () => {
@@ -194,7 +212,7 @@ const Swap: FC = () => {
       )
       setSwapStatus(SwapStatus.UserTransferPending)
       // setShowSwapModal(true)
-      router.push(`/swap/teleporter/${response.data?.data?.swap_id}`);
+      router.push(`/swap/teleporter/${response.data?.data?.swap_id}`)
     } catch (err) {
       console.log(err)
     } finally {
@@ -218,30 +236,38 @@ const Swap: FC = () => {
   // set source balance
   useAsyncEffect(async () => {
     if (address && sourceNetwork && sourceAsset) {
-      setIsSourceBalanceLoading (true);
-      const _balance = await fetchTokenBalance(address, sourceNetwork, sourceAsset)
-      setSourceBalance (_balance)
-      setIsSourceBalanceLoading (false);
+      setIsSourceBalanceLoading(true)
+      const _balance = await fetchTokenBalance(
+        address,
+        sourceNetwork,
+        sourceAsset
+      )
+      setSourceBalance(_balance)
+      setIsSourceBalanceLoading(false)
     } else {
-      setSourceBalance (0)
+      setSourceBalance(0)
     }
   }, [address, sourceNetwork, sourceAsset])
   // set destination balance
   useAsyncEffect(async () => {
     if (address && destinationNetwork && destinationAsset) {
-      setIsDestinationBalanceLoading (true);
-      const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
-      setDestinationBalance (_balance)
-      setIsDestinationBalanceLoading (false);
+      setIsDestinationBalanceLoading(true)
+      const _balance = await fetchTokenBalance(
+        address,
+        destinationNetwork,
+        destinationAsset
+      )
+      setDestinationBalance(_balance)
+      setIsDestinationBalanceLoading(false)
     } else {
-      setDestinationBalance (0)
+      setDestinationBalance(0)
     }
   }, [address, destinationNetwork, destinationAsset])
 
   return (
     <Widget className="sm:min-h-[504px] max-w-lg">
       <Widget.Content>
-        <div 
+        <div
           id="WIDGET_CONTENT"
           className="flex-col relative flex justify-between w-full mb-3.5 leading-4 overflow-hidden"
         >
@@ -249,29 +275,30 @@ const Swap: FC = () => {
             disabled={false}
             network={sourceNetwork}
             asset={sourceAsset}
-            setNetwork={(network: Network) => {
+            setNetwork={(network: CryptoNetwork) => {
               setSourceNetwork(network)
             }}
             maxValue={sourceBalance.toString()}
-            setAsset={(token: Token) => setSourceAsset(token)}
+            setAsset={(token: NetworkCurrency) => setSourceAsset(token)}
             networks={sourceNetworks}
             balance={sourceBalance}
             balanceLoading={isSourceBalanceLoading}
-            
           />
           <ToNetworkForm
             disabled={!sourceNetwork}
             network={destinationNetwork}
             asset={destinationAsset}
             sourceAsset={sourceAsset}
-            setNetwork={(network: Network) => setDestinationNetwork(network)}
-            setAsset={(token: Token) => setDestinationAsset(token)}
+            setNetwork={(network: CryptoNetwork) =>
+              setDestinationNetwork(network)
+            }
+            setAsset={(token: NetworkCurrency) => setDestinationAsset(token)}
             networks={destinationNetworks}
             balance={destinationBalance}
             balanceLoading={isDestinationBalanceLoading}
           />
         </div>
-    
+
         <div className="w-full xs:mb-3 leading-4">
           <label
             htmlFor="destination_address"
@@ -318,13 +345,19 @@ const Swap: FC = () => {
         </div>
         {!address ? (
           <Button
-            onClick={() => connectWallet("evm")}
-            variant='primary'
-            className={'flex gap-2 justify-between xs:w-full md:w-auto' /* "border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated" */ }
+            onClick={() => connectWallet('evm')}
+            variant="primary"
+            className={
+              'flex gap-2 justify-between xs:w-full md:w-auto' /* "border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated" */
+            }
           >
-            { isConnecting ? <SpinIcon className="animate-spin h-5 w-5" /> : <WalletIcon className="h-5 w-5" /> }
+            {isConnecting ? (
+              <SpinIcon className="animate-spin h-5 w-5" />
+            ) : (
+              <WalletIcon className="h-5 w-5" />
+            )}
             <span className="grow">Connect Wallet</span>
-          </Button> 
+          </Button>
         ) : (
           <button
             onClick={handleSwap}
@@ -356,7 +389,7 @@ const Swap: FC = () => {
           height="fit"
           show={showSwapModal}
           setShow={setShowSwapModal}
-          header='Complete the swap'
+          header="Complete the swap"
           onClose={() => setShowSwapModal(false)}
         >
           <ResizablePanel>

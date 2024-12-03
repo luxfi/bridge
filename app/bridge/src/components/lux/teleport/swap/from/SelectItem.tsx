@@ -1,15 +1,15 @@
 import React from 'react'
-import type { Network } from '@/types/teleport'
 import Image from 'next/image'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 const SelectItem: React.FC<{
-  network: Network
+  network: CryptoNetwork
 }> = ({ network }) => (
   <div className="flex items-center justify-between w-full">
     <div className="flex items-center">
       <div className="flex-shrink-0 h-6 w-6 relative">
         <Image
-          src={network.logo}
+          src={network.logo || ''}
           alt="Project Logo"
           height="40"
           width="40"

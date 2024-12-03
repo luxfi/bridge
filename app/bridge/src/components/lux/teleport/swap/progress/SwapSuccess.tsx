@@ -1,21 +1,20 @@
 import React from 'react'
-
-import type { Network, Token } from '@/types/teleport'
-import SuccessIcon from '../SuccessIcon'
-import SwapItems from './SwapItems'
-import shortenAddress from '@/components/utils/ShortenAddress'
 import Gauge from '@/components/gauge'
+import SwapItems from './SwapItems'
+import SuccessIcon from '../SuccessIcon'
+import shortenAddress from '@/components/utils/ShortenAddress'
 import { useAtom } from 'jotai'
 import { bridgeMintTransactionAtom, userTransferTransactionAtom } from '@/store/teleport'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 const SwapSuccess: React.FC<{
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
