@@ -4,7 +4,6 @@ import { type Chain, type Address, type Client } from "viem";
 
 import { providers } from "ethers";
 import { useAccount, useWalletClient } from "wagmi";
-import { type UseAccountParameters } from "wagmi";
 
 function clientToSigner(client: any) {
   const { account, chain, transport } = client;
