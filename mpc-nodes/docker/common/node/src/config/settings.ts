@@ -154,91 +154,91 @@ export const MAIN_NETWORKS: NETWORK[] = [
       {
         name: "Lux AVAX",
         asset: "LAVAX",
-        contract_address: "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
+        contract_address: "0x0e4bD0DD67c15dECfBBBdbbE07FC9d51D737693D",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux BLAST",
         asset: "LBLAST",
-        contract_address: "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
+        contract_address: "0x94f49D0F4C62bbE4238F4AaA9200287bea9F2976",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux BONK",
         asset: "LBONK",
-        contract_address: "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
+        contract_address: "0xEf770a556430259d1244F2A1384bd1A672cE9e7F",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux WIF",
         asset: "LWIF",
-        contract_address: "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
+        contract_address: "0xBBd222BD7dADd241366e6c2CbD5979F678598A85",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux Popcat",
         asset: "LPOPCAT",
-        contract_address: "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
+        contract_address: "0x273196F2018D61E31510D1Aa1e6644955880D122",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux PNUT",
         asset: "LPNUT",
-        contract_address: "0x6d5a2779313faa0CF50882D5338de19352267935",
+        contract_address: "0xd8ab3C445d81D78E7DC2d60FeC24f8C7328feF2f",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux MEW",
         asset: "LMEW",
-        contract_address: "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
+        contract_address: "0xe6cd610aD16C8Fe5BCeDFff7dAB2e3d461089261",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux BOME",
         asset: "LBOME",
-        contract_address: "0x1a08b4D4144027f8E262892A78D493dD660D270d",
+        contract_address: "0xDF7740fCC9B244c192CfFF7b6553a3eEee0f4898",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux GIGA",
         asset: "LGIGA",
-        contract_address: "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
+        contract_address: "0xB528C22891B05671b628eC014f4Dd20406AbD0AD",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux AI16Z",
         asset: "LAI16Z",
-        contract_address: "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
+        contract_address: "0x5BD7c0E911f129F1A8AF5aDdF389ae9b13F23Ec8",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux FWOG",
         asset: "LFWOG",
-        contract_address: "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
+        contract_address: "0x0E80A32Eae8e1103aF16BcF3B66C6FEf61d0AF46",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux MOODENG",
         asset: "LMOODENG",
-        contract_address: "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
+        contract_address: "0x3D9C7a3A25561f955372b39D609bB10D1e68b4a7",
         decimals: 18,
         is_native: false
       },
       {
         name: "Lux PONKE",
         asset: "LPONKE",
-        contract_address: "0x40cbF49487F30082A233A73759cAE283F81113AE",
+        contract_address: "0xb33c37c72B06770b2D0A26C38E6CfD9795D0D206",
         decimals: 18,
         is_native: false
       }
@@ -377,91 +377,91 @@ export const MAIN_NETWORKS: NETWORK[] = [
       {
         name: "Zoo AVAX",
         asset: "ZAVAX",
-        contract_address: "0x8fa9C0aeb525AF23b6A2e3f18a7d306280FD8C94",
+        contract_address: "0x0EE4602429bFCEf8aEB1012F448b23532f9855Bd",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo BLAST",
         asset: "ZBLAST",
-        contract_address: "0x86B52f1c726BCCcF1CC517AF4fB2983A9e978078",
+        contract_address: "0x7a56c769C50F2e73CFB70b401409Ad1F1a5000cd",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo BONK",
         asset: "ZBONK",
-        contract_address: "0xEa0Dd891Dd65b472a52cb48EbddA491612c8aE81",
+        contract_address: "0x8a873ad8CfF8ba640D71274d33a85AB1B2d53b62",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo WIF",
         asset: "ZWIF",
-        contract_address: "0x0D15Fb059AE5DBb2826875591C450a2e59bFE9cA",
+        contract_address: "0x4586D49f3a32c3BeCA2e09802e0aB1Da705B011D",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo Popcat",
         asset: "ZPOPCAT",
-        contract_address: "0xE48e3F2F82449c8A5d14E841d0db6544AA933552",
+        contract_address: "0x68Cd9b8Df6E86dA02ef030c2F1e5a3Ad6B6d747F",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo PNUT",
         asset: "ZPNUT",
-        contract_address: "0x6d5a2779313faa0CF50882D5338de19352267935",
+        contract_address: "0x0e4bD0DD67c15dECfBBBdbbE07FC9d51D737693D",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo MEW",
         asset: "ZMEW",
-        contract_address: "0xf4Bf3d21C6F7559FDFc4Eaeeeb76f896884eC3bb",
+        contract_address: "0x94f49D0F4C62bbE4238F4AaA9200287bea9F2976",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo BOME",
         asset: "ZBOME",
-        contract_address: "0x1a08b4D4144027f8E262892A78D493dD660D270d",
+        contract_address: "0xEf770a556430259d1244F2A1384bd1A672cE9e7F",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo GIGA",
         asset: "ZGIGA",
-        contract_address: "0x695249d2624A269bb04B948bb8ABB876b21Fd0B1",
+        contract_address: "0xBBd222BD7dADd241366e6c2CbD5979F678598A85",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo AI16Z",
         asset: "ZAI16Z",
-        contract_address: "0x475b2846FfcfCF66294B5A829ee44dE4aBDdFf12",
+        contract_address: "0x273196F2018D61E31510D1Aa1e6644955880D122",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo FWOG",
         asset: "ZFWOG",
-        contract_address: "0xA83bCcd4542f6d27ad3698f5311265D87910b72a",
+        contract_address: "0xd8ab3C445d81D78E7DC2d60FeC24f8C7328feF2f",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo MOODENG",
         asset: "ZMOODENG",
-        contract_address: "0xf8a40f7209032037C719Ab5EA7Ad12643F258787",
+        contract_address: "0xe6cd610aD16C8Fe5BCeDFff7dAB2e3d461089261",
         decimals: 18,
         is_native: false
       },
       {
         name: "Zoo PONKE",
         asset: "ZPONKE",
-        contract_address: "0x40cbF49487F30082A233A73759cAE283F81113AE",
+        contract_address: "0xDF7740fCC9B244c192CfFF7b6553a3eEee0f4898",
         decimals: 18,
         is_native: false
       }

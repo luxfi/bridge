@@ -63,6 +63,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
+    // console.log(signer?.provider.network.chainId)
     if (isConnecting) return
 
     if (!signer) {
@@ -86,7 +87,6 @@ const UserTokenDepositor: React.FC<IProps> = ({
         localeNumber(sourceAmount, sourceAsset.decimals),
         sourceAsset.decimals
       )
-
 
       if (sourceAsset.is_native) {
         const _balance = await signer?.getBalance()
