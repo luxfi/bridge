@@ -1,14 +1,27 @@
 # Use Rust as the base image
 FROM rust:latest
 
-# Install the necessary dependencies  
-RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/* 
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 
+# Install nightly version of Rust and set it as the default toolchain
+RUN rustup install nightly
+RUN rustup default nightly
+
+# Ensure the nightly toolchain is being used
+RUN rustc --version  # This should print nightly version details
+
+# Set the working directory
 WORKDIR /app
+
+# Copy your project files into the container
 COPY ./common/multiparty_ecdsa .
 
+# Build the project with the nightly toolchain
 RUN cargo build --release --examples
 
+# Expose the port (optional)
 EXPOSE 8000
 
+# Run the built executable (update the path if necessary)
 CMD ["./target/release/examples/gg18_sm_manager"]
