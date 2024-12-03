@@ -12,8 +12,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
 
     const version = req.params.version
-    const isMainnet = version ? (version === "mainnet") : true
-    const settings = isMainnet ? mainnetSettings : testnetSettings;
+    const settings = version === "mainnet" ? mainnetSettings : testnetSettings;
 
     res.status(200).json({ ...settings.data })
   } 
