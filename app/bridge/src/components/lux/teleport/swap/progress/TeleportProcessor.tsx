@@ -22,15 +22,15 @@ import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import Gauge from '@/components/gauge'
-import type { Network, Token } from '@/types/teleport'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
@@ -77,7 +77,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
         getMpcSignature()
       } else {
-        sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
+        sourceNetwork.chain_id && switchChain && switchChain({ chainId: Number(sourceNetwork.chain_id) })
       }
     }
   }, [signer])
@@ -150,7 +150,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       notify("No connected wallet. Please connect your wallet", "warn");
       // connectWallet("evm")
     } else if (Number(chainId) !== Number(sourceNetwork?.chain_id)) {
-      sourceNetwork.chain_id && switchChain && switchChain({ chainId: sourceNetwork.chain_id })
+      sourceNetwork.chain_id && switchChain && switchChain({ chainId: Number(sourceNetwork.chain_id) })
     } else {
       getMpcSignature()
     }
