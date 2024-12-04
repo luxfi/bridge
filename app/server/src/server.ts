@@ -40,20 +40,21 @@ try {
   app.use(cors())
   app.use(express.urlencoded({ extended: true }))
 
-  // Add body-parsing middleware before your logging middleware
+  // Parses incoming JSON requests and puts the parsed data in req.body
   app.use(express.json({
     verify: (req, res, buf) => {
       // Capture the raw request body
       (req as any).rawBody = buf.toString('utf8')
     },
-  })) // Parses incoming JSON requests and puts the parsed data in req.body
-  app.use(express.urlencoded({ extended: true })) // Parses URL-encoded bodies
+  }))
+
+  // Parses URL-encoded bodies
+  app.use(express.urlencoded({ extended: true }))
 
   morgan.token('referrer', (req) => req.headers['referer'] || '-')
   morgan.token('origin', (req) => req.headers['origin'] || '-')
   morgan.token('device', (req) => req.headers['user-agent'] || '-')
   morgan.token('id',     (req) => (req as any)[REQUEST_ID] || '-')
-
 
   // HTTP request logging
   // const customFormat = ':id :remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"'
