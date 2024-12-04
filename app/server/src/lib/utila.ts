@@ -92,10 +92,10 @@ export const verifyUtilaSignature = (
     const eventType = req?.body?.type
     // Log all incoming request details
     logger.info (`>> Incoming webhook request [${eventType}]`)
-    // console.log ({
-    //   signature,
-    //   body: req.body
-    // })
+    console.log ({
+      signature,
+      body: req.body
+    })
 
     if (!signature) {
       console.error(">> Missing x-utila-signature Header")
