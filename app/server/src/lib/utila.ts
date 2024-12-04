@@ -26,8 +26,8 @@ validateEnv()
 export const client = createGrpcClient({
   authStrategy: serviceAccountAuthStrategy({
     email: process.env.SERVICE_ACCOUNT_EMAIL as string,
-    privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string,
-  }),
+    privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string
+  })
 }).version("v1alpha2")
 
 export const utilaPublicKey = `
@@ -49,78 +49,67 @@ yj92azWBq1RbGHY+9/POguMCAwEAAQ==
 
 // Verify the signature of incoming requests
 function verifySignature(signatureBase64: string, data: string, publicKey: string): boolean {
-  let signatureBuffer: Buffer;
+  let signatureBuffer: Buffer
   try {
-    signatureBuffer = Buffer.from(signatureBase64, 'base64');
+    signatureBuffer = Buffer.from(signatureBase64, "base64")
   } catch (error) {
-    logger.error('>> Error converting signature from base64', { error });
-    return false;
+    logger.error(">> Error converting signature from base64", { error })
+    return false
   }
 
-  let verifier;
-  try {
-    verifier = createVerify('RSA-SHA512');
-  } catch (error) {
-    logger.error('>> Error creating verifier', { error });
-    return false;
-  }
-
-  try {
-    verifier.update(data, 'utf8');
-  } catch (error) {
-    logger.error('>> Error updating verifier with data', { error });
-    return false;
-  }
+  let verifier
+  verifier = createVerify("RSA-SHA512")
+  verifier.update(data, "utf8")
 
   try {
     const result = verifier.verify(
       {
-        key: publicKey,
+        key: utilaPublicKey,
         padding: constants.RSA_PKCS1_PSS_PADDING,
-        saltLength: constants.RSA_PSS_SALTLEN_DIGEST,
+        saltLength: constants.RSA_PSS_SALTLEN_DIGEST
       },
       signatureBuffer
-    );
-    return result;
+    )
+    return result
   } catch (error) {
-    logger.error('>> Error verifying signature', { error });
-    return false;
+    logger.error(">> Error verifying signature", { error })
+    return false
   }
 }
 
-
 // Middleware to verify the webhook signature
-export const verifyUtilaSignature = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  try {
+export const verifyUtilaSignature = (req: Request, res: Response, next: NextFunction): void => {
+  let data = ""
+  req.on("data", (chunk) => (data += chunk))
+  req.on("end", () => {
     const signature = req.headers["x-utila-signature"] as string
-    const eventType = req?.body?.type
-    // Log all incoming request details
-    logger.info (`>> Incoming webhook request [${eventType}]`)
-    console.log ({
-      signature,
-      body: req.body
-    })
+    try {
+      const eventType = JSON.parse(data)?.type
+      if (!eventType) {
+        throw "Cannot parse webhook data"
+      }
+      console.info(`>> Processing webhook request for [${eventType}]`)
 
-    if (!signature) {
-      console.error(">> Missing x-utila-signature Header")
-      throw new Error("Missing x-utila-signature header")
-    }
+      if (!signature) {
+        console.error(">> Missing x-utila-signature Header")
+        throw new Error("Missing x-utila-signature header")
+      }
 
-    const rawData = (req as any).rawData
-
-    if (!verifySignature(signature, rawData, utilaPublicKey)) {
+      if (!verifySignature(signature, data, utilaPublicKey)) {
+        throw new Error("Signature verification failed")
+      }
+      console.info(">> Webhook signature verified successfully")
+      req.body = JSON.parse(data)
+      next()
+    } catch (err: any) {
       console.error(">> Signature Verification Failed")
-      throw new Error("Signature verification failed")
+      console.log({
+        signature,
+        data
+      })
+      res.status(401).send(err?.message)
     }
-    console.info(">> Webhook signature verified successfully")
-    next ()
-  } catch (err: any) {
-    res.status(401).send(err?.message)
-  }
+  })
 }
 
 // Generate a JWT token
@@ -129,7 +118,7 @@ export const generateToken = (): string => {
     subject: process.env.SERVICE_ACCOUNT_EMAIL,
     audience: "https://api.utila.io/",
     expiresIn: "1h",
-    algorithm: "RS256",
+    algorithm: "RS256"
   }
 
   try {
@@ -149,11 +138,7 @@ export const createNewWalletForDeposit = async (name: string) => {
     const { vaults } = await client.listVaults({})
     if (!vaults || vaults.length === 0) throw new Error("No vaults found")
 
-    const wallet = await _createNewWallet(
-      vaults[0].name,
-      network.name,
-      `${network.name}-${Date.now()}`
-    )
+    const wallet = await _createNewWallet(vaults[0].name, network.name, `${network.name}-${Date.now()}`)
 
     if (!wallet.addresses.length) throw new Error("No wallet address found")
 
@@ -170,18 +155,18 @@ const _createNewWallet = async (vaultName: string, network: string, displayName:
     parent: vaultName,
     wallet: {
       displayName,
-      networks: [network],
-    },
+      networks: [network]
+    }
   }
 
   const walletResponse = await client.createWallet(payload)
   const { walletAddresses } = await client.listWalletAddresses({
-    parent: walletResponse?.wallet?.name,
+    parent: walletResponse?.wallet?.name
   })
 
   return {
     ...walletResponse.wallet,
-    addresses: walletAddresses || [],
+    addresses: walletAddresses || []
   }
 }
 
@@ -217,9 +202,9 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
     }
 
     const { state, hash, createTime } = transaction
-    const { amount, asset, sourceAddress, destinationAddress } = transfers [0]
+    const { amount, asset, sourceAddress, destinationAddress } = transfers[0]
 
-    await handlerDepositAction (
+    await handlerDepositAction(
       state,
       hash as string,
       Number(amount),
@@ -230,7 +215,6 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
       payload.vault,
       "TRANSACTION_CREATED"
     )
-
   } catch (error: any) {
     console.error(">> Error Parsing Webhook for TRANSACTION_CREATED")
     console.log(error)
@@ -257,9 +241,9 @@ export const handleTransactionStateUpdated = async (payload: UTILA_TRANSACTION_S
     }
 
     const { state, hash, createTime } = transaction
-    const { amount, asset, sourceAddress, destinationAddress } = transfers [0]
+    const { amount, asset, sourceAddress, destinationAddress } = transfers[0]
 
-    await handlerDepositAction (
+    await handlerDepositAction(
       state,
       hash as string,
       Number(amount),
