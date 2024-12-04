@@ -47,32 +47,49 @@ yj92azWBq1RbGHY+9/POguMCAwEAAQ==
 -----END PUBLIC KEY-----
 `
 
-/**
- * Verify the signature of incoming requests
- */
+// Verify the signature of incoming requests
 function verifySignature(signatureBase64: string, data: string, publicKey: string): boolean {
+  let signatureBuffer: Buffer;
   try {
-    const signatureBuffer = Buffer.from(signatureBase64, "base64")
-    const verifier = createVerify("RSA-SHA512")
-    verifier.update(data)
+    signatureBuffer = Buffer.from(signatureBase64, 'base64');
+  } catch (error) {
+    logger.error('>> Error converting signature from base64', { error });
+    return false;
+  }
 
-    return verifier.verify(
+  let verifier;
+  try {
+    verifier = createVerify('RSA-SHA512');
+  } catch (error) {
+    logger.error('>> Error creating verifier', { error });
+    return false;
+  }
+
+  try {
+    verifier.update(data, 'utf8');
+  } catch (error) {
+    logger.error('>> Error updating verifier with data', { error });
+    return false;
+  }
+
+  try {
+    const result = verifier.verify(
       {
         key: publicKey,
         padding: constants.RSA_PKCS1_PSS_PADDING,
         saltLength: constants.RSA_PSS_SALTLEN_DIGEST,
       },
       signatureBuffer
-    )
+    );
+    return result;
   } catch (error) {
-    logger.error(">> Error during signature verification", { error })
-    return false
+    logger.error('>> Error verifying signature', { error });
+    return false;
   }
 }
 
-/**
- * Middleware to verify the webhook signature
- */
+
+// Middleware to verify the webhook signature
 export const verifyUtilaSignature = (
   req: Request,
   res: Response,
@@ -106,9 +123,7 @@ export const verifyUtilaSignature = (
   }
 }
 
-/**
- * Generate a JWT token
- */
+// Generate a JWT token
 export const generateToken = (): string => {
   const options: jwt.SignOptions = {
     subject: process.env.SERVICE_ACCOUNT_EMAIL,
@@ -125,9 +140,7 @@ export const generateToken = (): string => {
   }
 }
 
-/**
- * Create a new wallet for deposit
- */
+// Create a new wallet for deposit
 export const createNewWalletForDeposit = async (name: string) => {
   try {
     const network = UTILA_NETWORKS[name]
@@ -151,9 +164,7 @@ export const createNewWalletForDeposit = async (name: string) => {
   }
 }
 
-/**
- * Helper to create a new wallet
- */
+// Helper to create a new wallet
 const _createNewWallet = async (vaultName: string, network: string, displayName: string) => {
   const payload = {
     parent: vaultName,
@@ -174,9 +185,7 @@ const _createNewWallet = async (vaultName: string, network: string, displayName:
   }
 }
 
-/**
- * Archive a wallet if expired without deposits
- */
+// Archive a wallet if expired without deposits
 export const archiveWalletForExpire = async (name: string) => {
   try {
     const { balances } = await client.queryBalances({ parent: name })
@@ -188,6 +197,7 @@ export const archiveWalletForExpire = async (name: string) => {
     logger.error("Error archiving expired wallet", { error })
   }
 }
+
 /**
  *
  * @param payload
@@ -227,6 +237,7 @@ export const handleTransactionCreated = async (payload: UTILA_TRANSACTION_CREATE
     throw error
   }
 }
+
 /**
  *
  * @param payload
