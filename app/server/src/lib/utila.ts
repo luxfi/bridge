@@ -59,15 +59,21 @@ yj92azWBq1RbGHY+9/POguMCAwEAAQ==
 /**
  * Verify the signature of incoming requests
  */
-function verifySignature(signatureBase64: string, data: string, publicKey: string): boolean {
+function verifySignature(signatureBase64: string, data: string): boolean {
   try {
+
+    console.log({
+      signature: signatureBase64,
+      data
+    })
+
     const signatureBuffer = Buffer.from(signatureBase64, "base64");
     const verifier = createVerify("RSA-SHA512");
     verifier.update(data);
 
     return verifier.verify(
       {
-        key: publicKey,
+        key: utilaPublicKey,
         padding: constants.RSA_PKCS1_PSS_PADDING,
         saltLength: constants.RSA_PSS_SALTLEN_DIGEST,
       },
@@ -92,10 +98,6 @@ export const verifyUtilaSignature = (
     const eventType = req?.body?.type
     // Log all incoming request details
     logger.info (`>> Incoming webhook request [${eventType}]`)
-    console.log ({
-      signature,
-      body: req.body
-    })
 
     if (!signature) {
       console.error(">> Missing x-utila-signature Header")
@@ -103,7 +105,7 @@ export const verifyUtilaSignature = (
     }
 
     const rawData = JSON.stringify(req.body)
-    if (!verifySignature(signature, rawData, utilaPublicKey)) {
+    if (!verifySignature(signature, rawData)) {
       console.error(">> Signature Verification Failed")
       throw new Error("Signature verification failed")
     }
