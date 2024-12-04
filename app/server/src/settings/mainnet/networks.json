@@ -1634,7 +1634,7 @@
         "is_native": true
       },
       {
-        "name": "WETH",
+        "name": "Wrapped Ether",
         "asset": "WETH",
         "logo": "https://cdn.lux.network/bridge/currencies/weth.png",
         "contract_address": "0x4200000000000000000000000000000000000006",
@@ -1652,11 +1652,11 @@
       },
       {
         "name": "Coinbase Wrapped BTC",
-        "asset": "BTC",
+        "asset": "WBTC",
         "logo": "https://cdn.lux.network/bridge/currencies/btc.svg",
         "contract_address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
         "decimals": 8,
-        "status": "inactive",
+        "status": "active",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": true,
         "is_refuel_enabled": false,
