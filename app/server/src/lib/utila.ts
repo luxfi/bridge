@@ -88,7 +88,7 @@ export const verifyUtilaSignature = (req: Request, res: Response, next: NextFunc
       if (!eventType) {
         throw "Cannot parse webhook data"
       }
-      console.info(`>> Processing webhook request for [${eventType}]`)
+      console.info(`>> Signature verifying for [${eventType}]`)
 
       if (!signature) {
         console.error(">> Missing x-utila-signature Header")
