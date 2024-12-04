@@ -1,36 +1,10 @@
-import { Router, Request, Response } from "express"
+import { Router, Request, Response, raw } from "express"
 import { verifyUtilaSignature } from "@/lib/utila"
 import logger from "@/logger"
 import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila"
-import { handlerCheckDeposit, handlerUtilaPayoutAction } from "@/lib/swaps"
+
 
 const router: Router = Router()
-
-router.get("/payout/:swapId", async (req: Request, res: Response) => {
-  try {
-    const swapId = req.params.swapId
-    const data = await handlerUtilaPayoutAction(swapId)
-    res.status(200).json(data)
-  } catch (err: any) {
-    res.status(500).send({
-      error: err?.message
-    })
-  }
-})
-/**
- * to check for non-working users
- */
-router.get("/deposit-check/:swapId", async (req: Request, res: Response) => {
-  try {
-    const swapId = req.params.swapId
-    await handlerCheckDeposit(swapId)
-    res.status(200).json({ msg: 'success' })
-  } catch (err: any) {
-    res.status(500).send({
-      error: err?.message
-    })
-  }
-})
 /**
  * Webhook route to handle events
  * Handles POST requests to /v1/utila/webhook (or /webhook via alias/rewrite)

@@ -69,7 +69,7 @@ const BridgeProcessor: React.FC<IProps> = ({
     if (isLoading) return
     try {
       setIsLoading(true);
-      const { data } = await serverAPI.get(`/v1/utila/payout/${swapId}`)
+      const { data } = await serverAPI.get(`/api/swaps/payout/${swapId}`)
       console.log(data)
       if (data.status === 'success') {
         getSwapById(swapId)
