@@ -40,17 +40,6 @@ try {
   app.use(cors())
   app.use(express.urlencoded({ extended: true }))
 
-  // Parses incoming JSON requests and puts the parsed data in req.body
-  app.use(express.json({
-    verify: (req, res, buf) => {
-      // Capture the raw request body
-      (req as any).rawBody = buf.toString('utf8')
-    },
-  }))
-
-  // Parses URL-encoded bodies
-  app.use(express.urlencoded({ extended: true }))
-
   morgan.token('referrer', (req) => req.headers['referer'] || '-')
   morgan.token('origin', (req) => req.headers['origin'] || '-')
   morgan.token('device', (req) => req.headers['user-agent'] || '-')
@@ -81,6 +70,15 @@ try {
     next()
   })
 
+  // add utila webhook router
+  app.use("/v1/utila", utila)
+  // Parses incoming JSON requests and puts the parsed data in req.body
+  app.use(express.json({
+    verify: (req, res, buf) => {
+      // Capture the raw request body
+      (req as any).rawBody = buf.toString('utf8')
+    },
+  }))
   // Add all routes
   app.use("/api/swaps", swaps)
   app.use("/api/explorer", explorer)
@@ -91,7 +89,6 @@ try {
   app.use("/api/rate", rate)
   app.use("/api/networks", networks)
   app.use("/api/exchanges", exchanges)
-  app.use("/v1/utila", utila)
 
   // Root endpoint
   app.get("/", (req: Request, res: Response) => {
