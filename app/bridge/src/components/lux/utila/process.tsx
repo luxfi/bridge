@@ -192,7 +192,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
         />
       </Modal>
 
-      <Widget className={`sm:min-h-[504px] max-w-lg ${className}`}>
+      <Widget className={`md:min-w-[480px] max-w-lg ${className}`}>
         <Widget.Content>
           <ResizablePanel>
             {sourceNetwork &&
@@ -201,7 +201,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
             destinationNetwork &&
             destinationAsset &&
             destinationAddress ? (
-              <div className="min-h-[450px] w-full justify-center items-center flex">
+              <div className="min-h-[400px] w-full justify-center items-center flex">
                 <SwapDetails
                   sourceNetwork={sourceNetwork}
                   sourceAsset={sourceAsset}
@@ -213,7 +213,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
                 />
               </div>
             ) : (
-              <div className="min-h-[450px] w-full justify-center items-center flex">
+              <div className="min-h-[400px] w-full justify-center items-center flex">
                 <div className="animate-pulse w-full flex space-x-4">
                   <div className="flex-1 space-y-6 py-1">
                     <div className="h-32 bg-level-3 rounded-lg"></div>

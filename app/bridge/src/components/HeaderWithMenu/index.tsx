@@ -57,7 +57,12 @@ const HeaderWithMenu: React.FC<{
   )
 
   return (
-    <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between">
+    <div className="w-full flex flex-row-reverse justify-between items-center pt-3 px-6">
+      <div className="justify-between sm:justify-end sm:w-auto flex flex-row items-center gap-3">
+        {/* <ChatButton /> */}
+        <BridgeMenu />
+        <ConnectWallets className='sm:hidden'/>
+      </div>
       {goBack ? (
         <IconButton
           onClick={goBack}
@@ -67,7 +72,7 @@ const HeaderWithMenu: React.FC<{
       ) : (
         <div
           className={cn(
-            'flex items-center gap-2',
+            'flex grow items-center gap-2',
             pathname !== '/' ? 'hidden' : ''
           )}
         >
@@ -85,11 +90,6 @@ const HeaderWithMenu: React.FC<{
         <GoHomeButton />
       </div>
     */}
-      <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
-        {/* <ConnectWallets /> */}
-        {/* <ChatButton /> */}
-        <BridgeMenu />
-      </div>
     </div>
   )
 }
