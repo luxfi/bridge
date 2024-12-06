@@ -186,7 +186,7 @@ function TransactionsHistory() {
   }
 
   return (
-    <div className="sm:min-w-[480px] bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
+    <div className="min-w-[250px] sm:min-w-[480px] bg-background border border-[#404040] rounded-lg mb-6 w-full text-muted overflow-hidden relative min-h-[620px] max-w-lg">
       <HeaderWithMenu goBack={goBack} />
       <div className="flex justify-between px-6 pt-5">
         <div className="flex justify-end mb-2">
