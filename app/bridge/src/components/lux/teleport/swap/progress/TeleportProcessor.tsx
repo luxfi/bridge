@@ -69,16 +69,12 @@ const TeleportProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (isConnecting) return;
-
-    if (!signer) {
-        notify('Please connect wallet first.', 'info')
+    if (isConnecting || !signer) return
+  
+    if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
+      getMpcSignature()
     } else {
-      if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
-        getMpcSignature()
-      } else {
-        sourceNetwork.chain_id && switchChain && switchChain({ chainId: Number(sourceNetwork.chain_id) })
-      }
+      sourceNetwork.chain_id && switchChain && switchChain({ chainId: Number(sourceNetwork.chain_id) })
     }
   }, [signer])
 
