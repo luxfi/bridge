@@ -31,8 +31,7 @@ const { wallets } = getDefaultWallets()
 const queryClient = new QueryClient()
 
 const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
-
-  const { networks } = useSettings ()
+  const { networks } = useSettings()
 
   const CustomAvatar: AvatarComponent = ({ address, ensImage, size }) => (
     <Image
@@ -70,8 +69,6 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     ssr: true,
     autoConnect: true, // Automatically reconnect the wallet
   })
-
-  console.log('Rainbow provider rendered')
 
   return (
     <WagmiProvider config={config}>
