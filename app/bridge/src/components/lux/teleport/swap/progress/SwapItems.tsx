@@ -34,7 +34,6 @@ const SwapItems: React.FC<IProps> = ({
   destinationAsset,
   sourceAmount,
 }) => {
-
   const { networks } = useSettings()
 
   const [ethPrice] = useAtom(ethPriceAtom)
@@ -53,11 +52,17 @@ const SwapItems: React.FC<IProps> = ({
   const signer = useEthersSigner()
 
   const toMint = React.useMemo(
-    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    () =>
+      destinationAsset.name.startsWith('Lux ') ||
+      destinationAsset.name.startsWith('Zoo ')
+        ? true
+        : false,
     [destinationAsset]
   )
 
-  const _network = networks.find((n: CryptoNetwork) => Number(n.chain_id) === chainId)
+  const _network = networks.find(
+    (n: CryptoNetwork) => Number(n.chain_id) === chainId
+  )
 
   const _renderWallet = () => {
     if (signer) {
@@ -77,27 +82,28 @@ const SwapItems: React.FC<IProps> = ({
           ) : (
             'Unsupported Chain'
           )}
-          <span className="break-all truncate text-sm">
-            {signer._address}
-          </span>
+          <span className="break-all truncate text-sm">{signer._address}</span>
         </div>
       )
     } else {
       return (
         <div className="bg-level-1 font-normal p-3 rounded-lg flex justify-between items-center gap-1 border border-[#404040] w-full">
           <span>No Connected Wallet</span>
-          <span
+          {/* <span
             onClick={() => connectWallet('evm')}
             className="text-xs text-[#c9cca1] cursor-pointer hover:opacity-45"
           >
             CONNECT
-          </span>
+          </span> */}
         </div>
       )
     }
   }
 
-  const getNetworkBalance = async (network: CryptoNetwork, asset: NetworkCurrency) => {
+  const getNetworkBalance = async (
+    network: CryptoNetwork,
+    asset: NetworkCurrency
+  ) => {
     try {
       const provider = new ethers.providers.JsonRpcProvider(network.nodes[0])
       const address = signer?._address
@@ -206,11 +212,19 @@ const SwapItems: React.FC<IProps> = ({
             </div>
             <div className="flex flex-col text-[#85c285]">
               <p className=" text-sm">
-                {toMint ? truncateDecimals(Number(sourceAmount), 6) : truncateDecimals(Number(sourceAmount) * 0.99, 6)}{' '}
+                {toMint
+                  ? truncateDecimals(Number(sourceAmount), 6)
+                  : truncateDecimals(Number(sourceAmount) * 0.99, 6)}{' '}
                 {destinationAsset.asset}
               </p>
               <p className=" text-sm flex justify-end">
-                ${toMint ? truncateDecimals(Number(sourceAmount) * tokenPrice, 6) : truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6)}
+                $
+                {toMint
+                  ? truncateDecimals(Number(sourceAmount) * tokenPrice, 6)
+                  : truncateDecimals(
+                      Number(sourceAmount) * 0.99 * tokenPrice,
+                      6
+                    )}
               </p>
             </div>
           </div>

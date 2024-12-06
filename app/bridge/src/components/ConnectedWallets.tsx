@@ -28,7 +28,7 @@ const ConnectedWallets: React.FC<
   {
     connectButtonVariant?: 'outline' | 'primary'
     showWalletIcon?: boolean
-    connectButtonClx?: string
+    connectButtonClx?: string,
     className?: string
   } & PropsWithChildren
 > = ({
@@ -36,13 +36,12 @@ const ConnectedWallets: React.FC<
   connectButtonVariant = 'outline',
   showWalletIcon = true,
   connectButtonClx = '',
-  className = '',
+  className = ''
 }) => {
   const { wallets } = useWallet()
   const [openDialog, setOpenDialog] = useState<boolean>(false)
   //hooks
   const { chainId, signer, address } = useEthersSigner()
-
   const { networks } = useSettings()
 
   if (address && chainId) {
@@ -50,38 +49,29 @@ const ConnectedWallets: React.FC<
       (n: CryptoNetwork) => Number(n.chain_id) === chainId
     )
     return (
-      <div className={cn('flex gap-2 items-center', className)}>
-        <div className="hidden gap-2 items-center sm:flex">
+      <div className={cn("flex gap-2 items-center", className)}>
+        <div className="flex gap-2 items-center">
           <Image
             src={
               network?.logo ??
               'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
             }
             alt="Project Logo"
-            height="22"
-            width="22"
+            height="27"
+            width="27"
             loading="eager"
-            className="rounded-full object-contain"
+            className="rounded-full object-contain flex-none"
           />
-          <span>{network && network.display_name}</span>
+          <span className='hidden sm:flex'>{network && network.display_name}</span>
         </div>
         <div
           onClick={() => setOpenDialog(true)}
-          className="sm:flex hidden gap-1 items-center cursor-pointer bg-level-2 px-2 py-1 rounded-full"
+          className="flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm"
         >
           <WalletsIcons wallets={wallets} />
           {shortenAddress(address)}
           <ChevronDown className="h-5 w-5" aria-hidden="true" />
         </div>
-        <Button
-          variant="outline"
-          size="square"
-          onClick={() => setOpenDialog(true)}
-          aria-label="Connect wallet"
-          className={'text-muted-2 p-0 flex items-center justify-center sm:hidden'}
-        >
-          <WalletsIcons wallets={wallets} />
-        </Button>
         <ConnectedWalletsDialog
           openDialog={openDialog}
           setOpenDialog={setOpenDialog}
@@ -98,10 +88,7 @@ const ConnectedWallets: React.FC<
           size="square"
           onClick={() => setOpenDialog(true)}
           aria-label="Connect wallet"
-          className={cn(
-            'text-muted-2 p-0 flex items-center justify-center',
-            className
-          )}
+          className="text-muted-2 p-0 flex items-center justify-center"
         >
           <WalletsIcons wallets={wallets} />
         </Button>
@@ -113,6 +100,46 @@ const ConnectedWallets: React.FC<
     )
   }
 
+  // return (
+  //   <div className={cn('flex gap-2 items-center', className)}>
+  //     <div className="hidden gap-2 items-center sm:flex">
+  //       <Image
+  //         src={
+  //           network?.logo ??
+  //           'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
+  //         }
+  //         alt="Project Logo"
+  //         height="22"
+  //         width="22"
+  //         loading="eager"
+  //         className="rounded-full object-contain"
+  //       />
+  //       <span>{network && network.display_name}</span>
+  //     </div>
+  //     <div
+  //       onClick={() => setOpenDialog(true)}
+  //       className="sm:flex hidden gap-1 items-center cursor-pointer bg-level-2 px-2 py-1 rounded-full"
+  //     >
+  //       <WalletsIcons wallets={wallets} />
+  //       {shortenAddress(address)}
+  //       <ChevronDown className="h-5 w-5" aria-hidden="true" />
+  //     </div>
+  //     <Button
+  //       variant="outline"
+  //       size="square"
+  //       onClick={() => setOpenDialog(true)}
+  //       aria-label="Connect wallet"
+  //       className={'text-muted-2 p-0 flex items-center justify-center sm:hidden'}
+  //     >
+  //       <WalletsIcons wallets={wallets} />
+  //     </Button>
+  //     <ConnectedWalletsDialog
+  //       openDialog={openDialog}
+  //       setOpenDialog={setOpenDialog}
+  //     />
+  //   </div>
+  // )
+
   return (
     <ConnectButton>
       <Button
@@ -122,8 +149,7 @@ const ConnectedWallets: React.FC<
         className={cn(
           'flex items-center justify-center',
           'text-muted-2 p-0 ',
-          connectButtonClx,
-          className
+          connectButtonClx
         )}
       >
         {showWalletIcon && (
