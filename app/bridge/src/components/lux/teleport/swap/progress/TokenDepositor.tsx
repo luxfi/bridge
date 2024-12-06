@@ -19,6 +19,7 @@ import SpinIcon from '@/components/icons/spinIcon'
 import { useNotify } from '@/context/toast-provider'
 import { localeNumber } from '@/lib/utils'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
+import { useServerAPI } from '@/hooks/useServerAPI'
 
 interface IProps {
   className?: string
@@ -50,6 +51,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   //hooks
+  const { serverAPI } = useServerAPI()
   const { chainId, signer, isConnecting } = useEthersSigner()
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
@@ -65,7 +67,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   React.useEffect(() => {
     // console.log(signer?.provider.network.chainId)
     if (isConnecting || !signer) return
-    
+
     if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
       toBurn ? burnToken() : transferToken()
     } else {
@@ -162,17 +164,16 @@ const UserTokenDepositor: React.FC<IProps> = ({
         }
       )
       await _bridgeTransferTx.wait()
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/transfer/${swapId}`,
-        {
-          txHash: _bridgeTransferTx.hash,
-          amount: sourceAmount,
-          from: signer?._address,
-          to: CONTRACTS[
-            Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
-          ].teleporter,
-        }
-      )
+
+      console.log('::swapId::sending request to server:', swapId)
+
+      await serverAPI.post(`/api/swaps/transfer/${swapId}`, {
+        txHash: _bridgeTransferTx.hash,
+        amount: sourceAmount,
+        from: signer?._address,
+        to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
+          .teleporter,
+      })
       setUserTransferTransaction(_bridgeTransferTx.hash)
       setSwapStatus('teleport_processing_pending')
     } catch (err) {
@@ -186,8 +187,6 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setIsTokenTransferring(false)
     }
   }
-
-  console.log('swapID==================', { swapId })
 
   const burnToken = async () => {
     try {

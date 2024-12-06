@@ -32,7 +32,7 @@ type NetworkToConnect = {
 }
 
 interface IProps {
-  swapId?: string
+  swapId: string
   className?: string
 }
 
@@ -142,7 +142,8 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
             sourceAmount &&
             destinationNetwork &&
             destinationAsset &&
-            destinationAddress ? (
+            destinationAddress &&
+            swapId ? (
               <div className="min-h-[450px] w-full justify-center items-center flex">
                 <SwapDetails
                   sourceNetwork={sourceNetwork}
@@ -152,6 +153,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
                   destinationAddress={destinationAddress}
                   sourceAmount={sourceAmount}
                   className='w-full'
+                  swapId={swapId}
                 />
               </div>
             ) : (
