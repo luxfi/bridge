@@ -39,7 +39,7 @@ const Widget = ({
   const sandbox = BridgeApiClient.apiVersion === 'sandbox'
 
   return (
-    <div id='WIDGET_OUTER' className='flex flex-col content-center items-center justify-center xs:w-full md:w-auto md:mt-0 mt-20'>
+    <div id='WIDGET_OUTER' className='flex flex-col content-center items-center justify-center xs:w-full md:w-auto'>
       <div id='WIDGET' className={'text-foreground md:rounded-lg w-full sm:overflow-hidden relative md:border ' + className}>
         {sandbox && (
           <div className='relative'>

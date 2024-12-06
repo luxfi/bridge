@@ -1,4 +1,4 @@
-function shortenAddress(address: string, length: number = 5) {
+function shortenAddress(address: string, length: number = 6) {
     if (address?.startsWith('ronin:')) {
         var stringAddress = address.replace('ronin:', '')
         return `ronin:${InnerShortenAddress(stringAddress)}`

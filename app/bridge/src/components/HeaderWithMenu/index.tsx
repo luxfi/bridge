@@ -57,39 +57,41 @@ const HeaderWithMenu: React.FC<{
   )
 
   return (
-    <div className="w-full flex flex-row-reverse justify-between items-center pt-3 px-6">
-      <div className="justify-between sm:justify-end sm:w-auto flex flex-row items-center gap-3">
-        {/* <ChatButton /> */}
-        <BridgeMenu />
-        <ConnectWallets className='sm:hidden'/>
-      </div>
-      {goBack ? (
-        <IconButton
-          onClick={goBack}
-          aria-label="Go back"
-          icon={<ArrowLeft strokeWidth="3" />}
-        />
-      ) : (
-        <div
-          className={cn(
-            'flex grow items-center gap-2',
-            pathname !== '/' ? 'hidden' : ''
-          )}
-        >
-          <ToggleButton
-            value={useTeleporter}
-            onChange={handleBridgeTypeChange}
-            name="Teleport"
+    <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between">
+      <div>
+        {goBack ? (
+          <IconButton
+            onClick={goBack}
+            aria-label="Go back"
+            icon={<ArrowLeft strokeWidth="3" />}
           />
-          Teleport
-        </div>
-      )}
+        ) : (
+          <div
+            className={cn(
+              'flex items-center gap-2',
+              pathname !== '/' ? 'hidden' : ''
+            )}
+          >
+            <ToggleButton
+              value={useTeleporter}
+              onChange={handleBridgeTypeChange}
+              name="Teleport"
+            />
+            Teleport
+          </div>
+        )}
+      </div>
 
       {/*
       <div className='justify-center self-center col-start-2 col-span-3 mx-auto overflow-hidden '>
         <GoHomeButton />
       </div>
     */}
+      <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
+        {/* <ConnectWallets /> */}
+        {/* <ChatButton /> */}
+        <BridgeMenu />
+      </div>
     </div>
   )
 }
