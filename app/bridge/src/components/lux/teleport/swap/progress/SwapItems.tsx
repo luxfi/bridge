@@ -144,7 +144,7 @@ const SwapItems: React.FC<IProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
-      {_renderWallet()}
+      {/* {_renderWallet()} */}
       <div className="bg-level-1 font-normal px-3 py-4 rounded-lg flex flex-col border border-[#404040] w-full relative z-10">
         <div className="font-normal flex flex-col w-full relative z-10 space-y-1">
           <div className="flex items-center justify-between w-full">
