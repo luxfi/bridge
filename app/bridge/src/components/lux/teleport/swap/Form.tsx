@@ -294,7 +294,7 @@ const Swap: FC = () => {
             balanceLoading={isSourceBalanceLoading}
           />
           <div className='flex justify-center items-center -my-7 z-10'>
-            <ArrowUpDown onClick={() => handleExchange()} height={36} width={36} className='p-2 bg-level-1 rounded-md border-2 border-black hover:bg-level-3 cursor-pointer'/>
+            <ArrowUpDown onClick={() => handleExchange()} height={40} width={36} className='p-2 bg-level-1 rounded-md border-2 border-black hover:bg-level-3 cursor-pointer'/>
           </div>
           <ToNetworkForm
             disabled={!sourceNetwork}
