@@ -46,7 +46,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   //state
   const [isTokenTransferring, setIsTokenTransferring] =
     React.useState<boolean>(false)
-  const [userDepositNotice, setUserDepositNotice] = React.useState<string>('')
+  const [userDepositNotice, setUserDepositNotice] = React.useState<string>('Loading...')
   //atoms
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
