@@ -217,7 +217,7 @@
         "is_native": false
       },
       {
-        "name": "Lux BTC",
+        "name": "Liquid BTC",
         "asset": "LBTC",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lbtc.svg",
         "contract_address": "0x1E48D32a4F5e9f08DB9aE4959163300FaF8A6C8e",
@@ -234,7 +234,7 @@
         "is_native": false
       },
       {
-        "name": "Lux ETH",
+        "name": "Liquid ETH",
         "asset": "LETH",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/leth.svg",
         "contract_address": "0x60E0a8167FC13dE89348978860466C9ceC24B9ba",
@@ -251,7 +251,7 @@
         "is_native": false
       },
       {
-        "name": "Lux Dollar",
+        "name": "Liquid Dollar",
         "asset": "LUSD",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lusd.svg",
         "contract_address": "0x848Cff46eb323f323b6Bbe1Df274E40793d7f2c2",
@@ -268,7 +268,7 @@
         "is_native": false
       },
       {
-        "name": "Lux ZOO",
+        "name": "Liquid ZOO",
         "asset": "LZOO",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lzoo.svg",
         "contract_address": "0x5E5290f350352768bD2bfC59c2DA15DD04A7cB88",
@@ -285,7 +285,7 @@
         "is_native": false
       },
       {
-        "name": "Lux BNB",
+        "name": "Liquid BNB",
         "asset": "LBNB",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lbnb.svg",
         "contract_address": "0x6EdcF3645DeF09DB45050638c41157D8B9FEa1cf",
@@ -302,7 +302,7 @@
         "is_native": false
       },
       {
-        "name": "Lux POL",
+        "name": "Liquid POL",
         "asset": "LPOL",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lpol.svg",
         "contract_address": "0x28BfC5DD4B7E15659e41190983e5fE3df1132bB9",
@@ -319,7 +319,7 @@
         "is_native": false
       },
       {
-        "name": "Lux CELO",
+        "name": "Liquid CELO",
         "asset": "LCELO",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lcelo.svg",
         "contract_address": "0x3078847F879A33994cDa2Ec1540ca52b5E0eE2e5",
@@ -336,7 +336,7 @@
         "is_native": false
       },
       {
-        "name": "Lux FTM",
+        "name": "Liquid FTM",
         "asset": "LFTM",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lftm.svg",
         "contract_address": "0x8B982132d639527E8a0eAAD385f97719af8f5e04",
@@ -353,7 +353,7 @@
         "is_native": false
       },
       {
-        "name": "Lux xDAI",
+        "name": "Liquid xDAI",
         "asset": "LXDAI",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lxdai.svg",
         "contract_address": "0x7dfb3cBf7CF9c96fd56e3601FBA50AF45C731211",
@@ -370,7 +370,7 @@
         "is_native": false
       },
       {
-        "name": "Lux SOL",
+        "name": "Liquid SOL",
         "asset": "LSOL",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lsol.svg",
         "contract_address": "0x26B40f650156C7EbF9e087Dd0dca181Fe87625B7",
@@ -387,7 +387,7 @@
         "is_native": false
       },
       {
-        "name": "Lux TON",
+        "name": "Liquid TON",
         "asset": "LTON",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lton.svg",
         "contract_address": "0x3141b94b89691009b950c96e97Bff48e0C543E3C",
@@ -404,7 +404,7 @@
         "is_native": false
       },
       {
-        "name": "Lux ADA",
+        "name": "Liquid ADA",
         "asset": "LADA",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lada.svg",
         "contract_address": "0x8b34152832b8ab4a3274915675754AA61eC113F0",
@@ -421,7 +421,7 @@
         "is_native": false
       },
       {
-        "name": "Lux AVAX",
+        "name": "Liquid AVAX",
         "asset": "LAVAX",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lavax.svg",
         "contract_address": "0x0e4bD0DD67c15dECfBBBdbbE07FC9d51D737693D",
@@ -438,7 +438,7 @@
         "is_native": false
       },
       {
-        "name": "Lux BLAST",
+        "name": "Liquid BLAST",
         "asset": "LBLAST",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lblast.svg",
         "contract_address": "0x94f49D0F4C62bbE4238F4AaA9200287bea9F2976",
@@ -455,7 +455,7 @@
         "is_native": false
       },
       {
-        "name": "Lux BONK",
+        "name": "Liquid BONK",
         "asset": "LBONK",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lbonk.svg",
         "contract_address": "0xEf770a556430259d1244F2A1384bd1A672cE9e7F",
@@ -472,7 +472,7 @@
         "is_native": false
       },
       {
-        "name": "Lux WIF",
+        "name": "Liquid WIF",
         "asset": "LWIF",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lwif.svg",
         "contract_address": "0xBBd222BD7dADd241366e6c2CbD5979F678598A85",
@@ -489,7 +489,7 @@
         "is_native": false
       },
       {
-        "name": "Lux Popcat",
+        "name": "Liquid Popcat",
         "asset": "LPOPCAT",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lpopcat.svg",
         "contract_address": "0x273196F2018D61E31510D1Aa1e6644955880D122",
@@ -506,7 +506,7 @@
         "is_native": false
       },
       {
-        "name": "Lux PNUT",
+        "name": "Liquid PNUT",
         "asset": "LPNUT",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lpnut.svg",
         "contract_address": "0xd8ab3C445d81D78E7DC2d60FeC24f8C7328feF2f",
@@ -523,7 +523,7 @@
         "is_native": false
       },
       {
-        "name": "Lux MEW",
+        "name": "Liquid MEW",
         "asset": "LMEW",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lmew.svg",
         "contract_address": "0xe6cd610aD16C8Fe5BCeDFff7dAB2e3d461089261",
@@ -540,7 +540,7 @@
         "is_native": false
       },
       {
-        "name": "Lux BOME",
+        "name": "Liquid BOME",
         "asset": "LBOME",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lbome.svg",
         "contract_address": "0xDF7740fCC9B244c192CfFF7b6553a3eEee0f4898",
@@ -557,7 +557,7 @@
         "is_native": false
       },
       {
-        "name": "Lux GIGA",
+        "name": "Liquid GIGA",
         "asset": "LGIGA",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lgiga.svg",
         "contract_address": "0xB528C22891B05671b628eC014f4Dd20406AbD0AD",
@@ -574,7 +574,7 @@
         "is_native": false
       },
       {
-        "name": "Lux AI16Z",
+        "name": "Liquid AI16Z",
         "asset": "LAI16Z",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lai16z.svg",
         "contract_address": "0x5BD7c0E911f129F1A8AF5aDdF389ae9b13F23Ec8",
@@ -591,7 +591,7 @@
         "is_native": false
       },
       {
-        "name": "Lux FWOG",
+        "name": "Liquid FWOG",
         "asset": "LFWOG",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lfwog.svg",
         "contract_address": "0x0E80A32Eae8e1103aF16BcF3B66C6FEf61d0AF46",
@@ -608,7 +608,7 @@
         "is_native": false
       },
       {
-        "name": "Lux MOODENG",
+        "name": "Liquid MOODENG",
         "asset": "LMOODENG",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lmoodeng.svg",
         "contract_address": "0x3D9C7a3A25561f955372b39D609bB10D1e68b4a7",
@@ -625,7 +625,7 @@
         "is_native": false
       },
       {
-        "name": "Lux PONKE",
+        "name": "Liquid PONKE",
         "asset": "LPONKE",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lponke.svg",
         "contract_address": "0xb33c37c72B06770b2D0A26C38E6CfD9795D0D206",
