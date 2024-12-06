@@ -58,27 +58,29 @@ const HeaderWithMenu: React.FC<{
 
   return (
     <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between">
-      {goBack ? (
-        <IconButton
-          onClick={goBack}
-          aria-label="Go back"
-          icon={<ArrowLeft strokeWidth="3" />}
-        />
-      ) : (
-        <div
-          className={cn(
-            'flex items-center gap-2',
-            pathname !== '/' ? 'hidden' : ''
-          )}
-        >
-          <ToggleButton
-            value={useTeleporter}
-            onChange={handleBridgeTypeChange}
-            name="Teleport"
+      <div>
+        {goBack ? (
+          <IconButton
+            onClick={goBack}
+            aria-label="Go back"
+            icon={<ArrowLeft strokeWidth="3" />}
           />
-          Teleport
-        </div>
-      )}
+        ) : (
+          <div
+            className={cn(
+              'flex items-center gap-2',
+              pathname !== '/' ? 'hidden' : ''
+            )}
+          >
+            <ToggleButton
+              value={useTeleporter}
+              onChange={handleBridgeTypeChange}
+              name="Teleport"
+            />
+            Teleport
+          </div>
+        )}
+      </div>
 
       {/*
       <div className='justify-center self-center col-start-2 col-span-3 mx-auto overflow-hidden '>
