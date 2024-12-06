@@ -942,7 +942,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
     display_name: "Fantom",
     internal_name: "FANTOM_MAINNET",
     is_testnet: false,
-    chain_id: "42220",
+    chain_id: "250",
     teleporter: "",
     vault: "",
     node: `https://lb.drpc.org/ogrpc?network=fantom&dkey=${DRPC_KEY}`,
