@@ -121,7 +121,7 @@ const Swap: FC = () => {
 
   React.useEffect(() => {
     if (sourceAsset) {
-      axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
+      serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
         setEthPrice(Number(data?.data?.data?.price))
       })
     }

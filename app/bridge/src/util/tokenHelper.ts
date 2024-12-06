@@ -32,7 +32,7 @@ export const getTokenPrice = async (token_id: string) => {
       return Number(data.amount);
     }
   } catch (err) {
-    console.log("::not found token pice in coinbase", token_id);
+    console.log("::not found token price in coinbase", token_id);
     return 1;
   }
 };
