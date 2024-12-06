@@ -154,7 +154,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         signer
       )
 
-      console.log(sourceAsset)
+      console.log("::source_asset:", sourceAsset)
 
       const _bridgeTransferTx = await bridgeContract.vaultDeposit(
         _amount,
@@ -165,7 +165,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       )
       await _bridgeTransferTx.wait()
 
-      console.log('::swapId::sending request to server:', swapId)
+      console.log('::swapId::save deposit to server:', swapId)
 
       await serverAPI.post(`/api/swaps/transfer/${swapId}`, {
         txHash: _bridgeTransferTx.hash,

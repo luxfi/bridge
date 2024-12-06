@@ -33,6 +33,7 @@ import { formatUnits, parseEther } from 'viem'
 import teleporterABI from '@/components/lux/teleport/constants/abi/bridge.json'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
+import { useServerAPI } from '@/hooks/useServerAPI'
 
 interface IProps {
   className?: string
@@ -67,6 +68,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   const { chainId, signer, isConnecting } = useEthersSigner()
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
+  const { serverAPI } = useServerAPI()
 
   const toBurn = React.useMemo(
     () =>
@@ -306,17 +308,15 @@ const PayoutProcessor: React.FC<IProps> = ({
       )
       await _bridgePayoutTx.wait()
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`,
-        {
-          txHash: _bridgePayoutTx.hash,
-          amount: sourceAmount,
-          from: CONTRACTS[
-            Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
-          ].teleporter,
-          to: destinationAddress,
-        }
-      )
+      console.log('::swapId::save mpc signature to server:', swapId)
+      await serverAPI.post(`/api/swaps/payout/${swapId}`, {
+        txHash: _bridgePayoutTx.hash,
+        amount: sourceAmount,
+        from: CONTRACTS[
+          Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
+        ].teleporter,
+        to: destinationAddress,
+      })
       setSwapStatus('payout_success')
     } catch (err) {
       console.log(err)

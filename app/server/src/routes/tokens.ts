@@ -10,8 +10,6 @@ router.get("/price/:token_id", async (req: Request, res: Response) => {
   try {
     const token_id = req.params.token_id
     const price = await getTokenPrice(token_id)
-
-    console.log("🚀 ~ token price", `token: ${token_id}, price: ${price}`)
     res.status(200).json({ data: {
       asset: token_id,
       price
