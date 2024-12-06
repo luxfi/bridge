@@ -43,6 +43,8 @@ export const EthersProvider = ({
 
   const signer = React.useMemo(() => (client ? clientToSigner(client) : undefined), [client]);
 
+  console.log('Web3 provider rendered')
+
   return (
     <Web3Context.Provider
       value={{

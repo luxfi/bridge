@@ -702,7 +702,7 @@ export async function handlerUtilaPayoutAction(swapId: string) {
         }
         const _txSendLux = await wallet.sendTransaction(luxSendTxData)
         await _txSendLux.wait()
-        console.log(`>> 1 Zoo ro Lux is sent to ${swap.destination_address}`)
+        console.log(`>> 1 Zoo or Lux is sent to ${swap.destination_address}`)
       }
     } catch (err) {
       console.log(">> Error while sending 1 Z/L tokens", err)

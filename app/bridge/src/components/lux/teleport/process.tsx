@@ -22,7 +22,7 @@ import {
   userTransferTransactionAtom,
 } from '@/store/teleport'
 import { useAtom } from 'jotai'
-import type { Network, Token } from '@/types/teleport'
+import { useServerAPI } from '@/hooks/useServerAPI'
 import { useSettings } from '@/context/settings'
 import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
 
@@ -56,10 +56,11 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
   const [, setUserTransferTransaction] = useAtom(userTransferTransactionAtom)
   const [, setBridgeMintTransactionHash] = useAtom(bridgeMintTransactionAtom)
   const [, setMpcSignature] = useAtom(mpcSignatureAtom)
+  const { serverAPI } = useServerAPI ()
 
   React.useEffect(() => {
     if (sourceAsset) {
-      axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
+      serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
         setEthPrice(Number(data?.data?.data?.price))
       })
     }
