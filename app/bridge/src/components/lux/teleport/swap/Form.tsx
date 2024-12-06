@@ -183,6 +183,7 @@ const Swap: FC = () => {
     destinationAsset,
     destinationAddress,
     sourceAmount,
+    sourceBalance,
     address,
   ])
 

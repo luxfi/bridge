@@ -17,7 +17,8 @@ interface IProps {
   destinationNetwork: CryptoNetwork
   destinationAsset: NetworkCurrency
   destinationAddress: string
-  sourceAmount: string
+  sourceAmount: string,
+  swapId: string
 }
 
 const SwapDetails: React.FC<IProps> = ({
@@ -28,10 +29,10 @@ const SwapDetails: React.FC<IProps> = ({
   destinationAddress,
   sourceAmount,
   className,
+  swapId
 }) => {
   //atoms
   const [swapStatus] = useAtom(swapStatusAtom)
-  const [swapId] = useAtom(swapIdAtom)
 
   //chain id
   if (swapStatus === SwapStatus.UserTransferPending) {
