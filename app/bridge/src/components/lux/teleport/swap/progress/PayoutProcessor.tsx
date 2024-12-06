@@ -87,11 +87,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (isConnecting) return
-    if (isGettingPayout) return
-    if (!signer) return notify('Please connect wallet first.', 'info')
-    // connectWallet('evm')
-
+    if (isConnecting || isGettingPayout || signer) return
     if (toMint) {
       mintDestinationToken()
     } else {
@@ -336,6 +332,13 @@ const PayoutProcessor: React.FC<IProps> = ({
         )
       }
 
+      // Set up provider and wallet
+      const provider = new ethers.providers.JsonRpcProvider(
+        destinationNetwork.nodes[0]
+      )
+      const feeData = await provider.getFeeData()
+      console.log(feeData)
+
       const _bridgePayoutTx = await bridgeContract.bridgeWithdrawStealth(
         withdrawData.hashedTxId_,
         withdrawData.toTokenAddress_,
@@ -343,7 +346,12 @@ const PayoutProcessor: React.FC<IProps> = ({
         withdrawData.fromTokenDecimals_,
         withdrawData.receiverAddress_,
         withdrawData.signedTXInfo_,
-        withdrawData.vault_
+        withdrawData.vault_,
+        {
+          maxFeePerGas: feeData.maxFeePerGas,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          gasLimit: 3000000,
+        }
       )
       await _bridgePayoutTx.wait()
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
@@ -357,10 +365,10 @@ const PayoutProcessor: React.FC<IProps> = ({
         to: destinationAddress,
       })
       setSwapStatus('payout_success')
-    } catch (err) {
+    } catch (err: any) {
       console.log(err)
-      if (String(err).includes('user rejected transaction')) {
-        notify('User rejected transaction', 'warn')
+      if (err?.message) {
+        notify(err?.message, 'warn')
       } else {
         notify('Failed to run transaction', 'error')
       }
