@@ -79,7 +79,7 @@ const PayoutProcessor: React.FC<IProps> = ({
   )
   const toMint = React.useMemo(
     () =>
-      destinationAsset.name.startsWith('Lux ') ||
+      destinationAsset.name.startsWith('Liquid ') ||
       destinationAsset.name.startsWith('Zoo ')
         ? true
         : false,
@@ -163,6 +163,26 @@ const PayoutProcessor: React.FC<IProps> = ({
       )
       console.log('::signer', _signer)
 
+      const isReplay = await bridgeContract.keyExistsTx(mintData.signedTXInfo_)
+      console.log('::replay:', isReplay)
+      if (isReplay) {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`,
+          {
+            txHash: mintData.receiverAddress_,
+            amount: sourceAmount,
+            from: CONTRACTS[
+              Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
+            ].teleporter,
+            to: destinationAddress,
+          }
+        )
+        setSwapStatus('payout_success')
+        throw new Error(
+          'Duplicated Hash detected. Please contact to support team'
+        )
+      }
+
       const _bridgePayoutTx = await bridgeContract.bridgeMintStealth(
         mintData.hashedTxId_,
         mintData.toTokenAddress_,
@@ -215,10 +235,10 @@ const PayoutProcessor: React.FC<IProps> = ({
         }
       )
       setSwapStatus('payout_success')
-    } catch (err) {
+    } catch (err: any) {
       console.log(err)
-      if (String(err).includes('user rejected transaction')) {
-        notify('User rejected transaction', 'warn')
+      if (err?.message) {
+        notify(err?.message, 'warn')
       } else {
         notify('Failed to run transaction', 'error')
       }
@@ -296,6 +316,25 @@ const PayoutProcessor: React.FC<IProps> = ({
         withdrawData.vault_
       )
       console.log('::signer', _signer)
+
+      const isReplay = await bridgeContract.keyExistsTx(
+        withdrawData.signedTXInfo_
+      )
+      console.log('::replay:', isReplay)
+      if (isReplay) {
+        await serverAPI.post(`/api/swaps/payout/${swapId}`, {
+          txHash: withdrawData.receiverAddress_,
+          amount: sourceAmount,
+          from: CONTRACTS[
+            Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
+          ].teleporter,
+          to: destinationAddress,
+        })
+        setSwapStatus('payout_success')
+        throw new Error(
+          'Duplicated Hash detected. Please contact to support team'
+        )
+      }
 
       const _bridgePayoutTx = await bridgeContract.bridgeWithdrawStealth(
         withdrawData.hashedTxId_,
