@@ -3,7 +3,7 @@ import React from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import Teleporter from '@/components/lux/teleport/swap/Form'
-import SwapFireblock from '@/components/lux/utila/swap/Form'
+import SwapUtila from '@/components/lux/utila/swap/Form'
 
 const Swapper: React.FC = () => {
   
@@ -11,7 +11,7 @@ const Swapper: React.FC = () => {
 
   return (
     <div className="xs:w-full md:w-auto md:py-20">
-      {useTeleporter ? <Teleporter /> : <SwapFireblock />}
+      {useTeleporter ? <Teleporter /> : <SwapUtila />}
     </div>
   )
 }
