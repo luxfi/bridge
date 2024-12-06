@@ -29,7 +29,8 @@ const Header: React.FC<{
 
     return (<>
       <DesktopHeader
-        className={cn(className, 'hidden sm:flex')}
+        // className={cn(className, 'hidden sm:flex')}
+        className='flex'
         links={links}
         currentAs={currentAs}
         noAuth={noAuth}

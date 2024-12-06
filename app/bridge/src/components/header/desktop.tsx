@@ -43,7 +43,7 @@ const DesktopHeader: React.FC<
         <Logo
           size={logoVariant === 'logo-only' ? 'sm' : 'sm'}
           href="/"
-          outerClx="hidden lg:flex"
+          outerClx="flex"
           key="two"
           variant={logoVariant}
         />

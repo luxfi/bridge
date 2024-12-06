@@ -267,7 +267,7 @@ const Swap: FC = () => {
   }, [address, destinationNetwork, destinationAsset])
 
   return (
-    <Widget className="sm:min-h-[504px] max-w-lg">
+    <Widget className="sm:min-h-[504px] max-w-lg mt-20 md:mt-0">
       <Widget.Content>
         <div
           id="WIDGET_CONTENT"
