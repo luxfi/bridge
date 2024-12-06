@@ -5,47 +5,54 @@ import type { LinkDef } from '@hanzo/ui/types'
 import { cn } from '@hanzo/ui/util'
 import { Logo, type LogoVariant } from '@luxfi/ui'
 
-
-const DesktopHeader: React.FC<{
-  currentAs: string | undefined
-  links: LinkDef[]
-  className?: string
-  noAuth?: boolean
-  logoVariant?: LogoVariant
-} & PropsWithChildren> = ({
+const DesktopHeader: React.FC<
+  {
+    currentAs: string | undefined
+    links: LinkDef[]
+    className?: string
+    noAuth?: boolean
+    logoVariant?: LogoVariant
+  } & PropsWithChildren
+> = ({
   links,
   className = '',
-  noAuth=false,
+  noAuth = false,
   children,
-  logoVariant='text-only'
+  logoVariant = 'text-only',
 }) => {
-    const [isMenuOpened, setIsMenuOpen] = React.useState(false);
+  const [isMenuOpened, setIsMenuOpen] = React.useState(false)
 
-    // TODO move 13px into a size class and configure twMerge to recognize say, 'text-size-nav' 
-    // (vs be beat out by 'text-color-nav')
-    return (
-      <header  id='DESKTOP_HEADER' className={cn(
-        'bg-[rgba(0, 0, 0, 0.5)] !backdrop-blur-3xl fixed z-header top-0 left-0 right-0', 
-        className, 
+  // TODO move 13px into a size class and configure twMerge to recognize say, 'text-size-nav'
+  // (vs be beat out by 'text-color-nav')
+  return (
+    <header
+      id="DESKTOP_HEADER"
+      className={cn(
+        'bg-[rgba(0, 0, 0, 0.5)] !backdrop-blur-3xl fixed z-header top-0 left-0 right-0',
+        className,
         isMenuOpened ? ' h-full' : ''
-      )} >
-        {/* md or larger */}
-        <div className={
+      )}
+    >
+      {/* md or larger */}
+      <div
+        className={
           'flex flex-row h-[80px] items-center justify-between ' +
           'mx-[24px] w-full max-w-screen'
-        }>
-          <Logo size={logoVariant === 'logo-only' ? 'sm' : 'sm'} href='/' outerClx='hidden lg:flex' key='two' variant={logoVariant} />
-          {/* md or larger */}
-          <div className='flex w-full gap-4 items-center justify-center'>
-          </div>
-          <div className='flex items-center'>
-            {children}
-          </div>
-        </div>
-      </header>
-    )
-  }
+        }
+      >
+        <Logo
+          size={logoVariant === 'logo-only' ? 'sm' : 'sm'}
+          href="/"
+          outerClx="hidden lg:flex"
+          key="two"
+          variant={logoVariant}
+        />
+        {/* md or larger */}
+        <div className=""></div>
+        <div className="flex items-center">{children}</div>
+      </div>
+    </header>
+  )
+}
 
 export default DesktopHeader
-
-
