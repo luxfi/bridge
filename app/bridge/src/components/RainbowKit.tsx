@@ -55,8 +55,6 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     .map(resolveChain)
     .filter(isChain)
 
-  console.log("::rainbow chains", chains[0])
-
   const config: Config = getDefaultConfig({
     appName: 'Lux Bridge',
     projectId: 'e89228fed40d4c6e9520912214dfd68b',
@@ -72,6 +70,8 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     ssr: true,
     autoConnect: true, // Automatically reconnect the wallet
   })
+
+  console.log('Rainbow provider rendered')
 
   return (
     <WagmiProvider config={config}>

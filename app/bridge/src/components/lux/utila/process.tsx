@@ -24,11 +24,12 @@ import {
   userTransferTransactionAtom,
   timeToExpireAtom,
   depositAddressAtom,
-  depositActionsAtom
+  depositActionsAtom,
 } from '@/store/utila'
 import { useAtom } from 'jotai'
 import type { Network, Token } from '@/types/utila'
 import { SwapStatus } from '@/Models/SwapStatus'
+import { useServerAPI } from '@/hooks/useServerAPI'
 
 type NetworkToConnect = {
   DisplayName: string
@@ -65,29 +66,31 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
   const [, setDepositAddress] = useAtom(depositAddressAtom)
   const [, setDepositActions] = useAtom(depositActionsAtom)
 
+  const { serverAPI } = useServerAPI()
+
   // timerRef
-  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
 
   React.useEffect(() => {
     if (!swapId) return
-    
+
     if (swapStatus === SwapStatus.UserDepositPending) {
       timerRef.current = setInterval(async () => {
-        getSwapByIdForDepositChecking (swapId)
-      }, 10 * 1000);
+        getSwapByIdForDepositChecking(swapId)
+      }, 10 * 1000)
     } else {
-      timerRef.current && clearInterval(timerRef.current);
+      timerRef.current && clearInterval(timerRef.current)
     }
-   
+
     return () => {
-      timerRef.current && clearInterval(timerRef.current);
-    };
+      timerRef.current && clearInterval(timerRef.current)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [swapStatus, swapId]);
+  }, [swapStatus, swapId])
 
   React.useEffect(() => {
     if (sourceAsset) {
-      axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
+      serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
         setEthPrice(Number(data?.data?.data?.price))
       })
     }
@@ -103,12 +106,16 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
 
       setSwapStatus(data.status)
       setDepositActions(data.deposit_actions)
-      const userTransferTransaction = data?.transactions?.find((t: any) => t.status === 'user_transfer')?.transaction_hash
+      const userTransferTransaction = data?.transactions?.find(
+        (t: any) => t.status === 'user_transfer'
+      )?.transaction_hash
       setUserTransferTransaction(userTransferTransaction ?? '')
-      const payoutTransaction = data?.transactions?.find((t: any) => t.status === 'payout')?.transaction_hash
+      const payoutTransaction = data?.transactions?.find(
+        (t: any) => t.status === 'payout'
+      )?.transaction_hash
       setBridgeMintTransactionHash(payoutTransaction ?? '')
 
-      console.log("::swap data fetched")
+      console.log('::swap data fetched')
     } catch (err) {
       console.log(err)
     }
@@ -157,7 +164,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       )?.transaction_hash
       setBridgeMintTransactionHash(payoutTransaction ?? '')
 
-      console.log("::swap data fetched")
+      console.log('::swap data fetched')
     } catch (err) {
       console.log(err)
     }
@@ -167,7 +174,8 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
     swapId && getSwapById(swapId)
   }, [swapId])
 
-  const [showConnectNetworkModal, setShowConnectNetworkModal] = React.useState<boolean>(false)
+  const [showConnectNetworkModal, setShowConnectNetworkModal] =
+    React.useState<boolean>(false)
   const [networkToConnect] = React.useState<NetworkToConnect>()
 
   return (
@@ -207,12 +215,12 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
             ) : (
               <div className="min-h-[450px] w-full justify-center items-center flex">
                 <div className="animate-pulse w-full flex space-x-4">
-                    <div className="flex-1 space-y-6 py-1">
-                      <div className="h-32 bg-level-3 rounded-lg"></div>
-                      <div className="h-40 bg-level-3 rounded-lg"></div>
-                      <div className="h-12 bg-level-3 rounded-lg"></div>
-                    </div>
+                  <div className="flex-1 space-y-6 py-1">
+                    <div className="h-32 bg-level-3 rounded-lg"></div>
+                    <div className="h-40 bg-level-3 rounded-lg"></div>
+                    <div className="h-12 bg-level-3 rounded-lg"></div>
                   </div>
+                </div>
               </div>
             )}
           </ResizablePanel>
