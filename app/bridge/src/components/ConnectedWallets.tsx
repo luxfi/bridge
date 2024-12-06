@@ -37,7 +37,7 @@ const ConnectedWallets: React.FC<
   connectButtonClx = '',
 }) => {
   const { wallets } = useWallet()
-  const [openDialog, setOpenDialog] = useState<boolean>(true)
+  const [openDialog, setOpenDialog] = useState<boolean>(false)
   //hooks
   const { chainId, signer, address } = useEthersSigner()
   // const { chainId, signer, address } = {
