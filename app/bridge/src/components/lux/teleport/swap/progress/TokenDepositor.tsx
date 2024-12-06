@@ -64,25 +64,25 @@ const UserTokenDepositor: React.FC<IProps> = ({
 
   React.useEffect(() => {
     // console.log(signer?.provider.network.chainId)
-    if (isConnecting) return
-
-    if (!signer) {
-      notify('Please connect wallet first.', 'info')
+    if (isConnecting || !signer) return
+    
+    if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
+      toBurn ? burnToken() : transferToken()
     } else {
-      if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
-        toBurn ? burnToken() : transferToken()
-      } else {
-        sourceNetwork.chain_id &&
-          switchChain &&
-          switchChain({ chainId: Number(sourceNetwork.chain_id) })
-      }
+      sourceNetwork.chain_id &&
+        switchChain &&
+        switchChain({ chainId: Number(sourceNetwork.chain_id) })
     }
   }, [signer])
 
   const transferToken = async () => {
     try {
       setIsTokenTransferring(true)
-      console.log(sourceAmount, sourceAsset, localeNumber(sourceAmount, sourceAsset.decimals))
+      console.log(
+        sourceAmount,
+        sourceAsset,
+        localeNumber(sourceAmount, sourceAsset.decimals)
+      )
       const _amount = parseUnits(
         localeNumber(sourceAmount, sourceAsset.decimals),
         sourceAsset.decimals
@@ -129,7 +129,8 @@ const UserTokenDepositor: React.FC<IProps> = ({
         // if allowance is less than amount, approve
         const _allowance = await erc20Contract.allowance(
           signer?._address as string,
-          CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter
+          CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
+            .teleporter
         )
         if (_allowance < _amount) {
           const _approveTx = await erc20Contract.approve(
@@ -144,7 +145,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
       if (!sourceNetwork.chain_id) return
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`)
       const bridgeContract = new Contract(
-        CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[
+          Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
+        ].teleporter,
         teleporterABI,
         signer
       )
@@ -165,8 +168,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
           txHash: _bridgeTransferTx.hash,
           amount: sourceAmount,
           from: signer?._address,
-          to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
-            .teleporter,
+          to: CONTRACTS[
+            Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
+          ].teleporter,
         }
       )
       setUserTransferTransaction(_bridgeTransferTx.hash)
@@ -183,10 +187,15 @@ const UserTokenDepositor: React.FC<IProps> = ({
     }
   }
 
+  console.log('swapID==================', { swapId })
+
   const burnToken = async () => {
     try {
       setIsTokenTransferring(true)
-      const _amount = parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals)
+      const _amount = parseUnits(
+        localeNumber(sourceAmount, sourceAsset.decimals),
+        sourceAsset.decimals
+      )
 
       const erc20Contract = new Contract(
         sourceAsset?.contract_address as string,
@@ -211,7 +220,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`)
 
       const bridgeContract = new Contract(
-        CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter,
+        CONTRACTS[
+          Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
+        ].teleporter,
         teleporterABI,
         signer
       )
@@ -231,8 +242,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
           txHash: _bridgeTransferTx.hash,
           amount: sourceAmount,
           from: signer?._address,
-          to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
-            .teleporter,
+          to: CONTRACTS[
+            Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
+          ].teleporter,
         }
       )
       setUserTransferTransaction(_bridgeTransferTx.hash)
