@@ -86,7 +86,7 @@ const Swap: FC = () => {
   )
 
   const [sourceAmount] = useAtom(sourceAmountAtom)
-  const [, setSwapId] = useAtom(swapIdAtom)
+  const [swapId, setSwapId] = useAtom(swapIdAtom)
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setEthPrice] = useAtom(ethPriceAtom)
 
@@ -387,7 +387,7 @@ const Swap: FC = () => {
           </button>
         )}
 
-        <Modal
+        {/* <Modal
           height="fit"
           show={showSwapModal}
           setShow={setShowSwapModal}
@@ -409,6 +409,7 @@ const Swap: FC = () => {
                 destinationAsset={destinationAsset}
                 destinationAddress={destinationAddress}
                 sourceAmount={sourceAmount}
+                swapId={swapId}
               />
             ) : (
               <div className="w-full h-[430px]">
@@ -422,7 +423,7 @@ const Swap: FC = () => {
               </div>
             )}
           </ResizablePanel>
-        </Modal>
+        </Modal> */}
       </Widget.Content>
     </Widget>
   )
