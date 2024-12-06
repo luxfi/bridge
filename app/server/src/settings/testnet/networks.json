@@ -66,7 +66,7 @@
       },
       {
         "name": "USDC",
-        "asset": "USDT",
+        "asset": "USDC",
         "logo": "https://cdn.lux.network/bridge/currencies/usdc.png",
         "contract_address": "0x299e04DE65090D3C48019893e369A7983124c514",
         "decimals": 6,
@@ -83,7 +83,7 @@
       },
       {
         "name": "DAI",
-        "asset": "USDT",
+        "asset": "DAI",
         "logo": "https://cdn.lux.network/bridge/currencies/dai.png",
         "contract_address": "0x3FADaC51B852273e11Da42Db30714FddA785b8C5",
         "decimals": 18,
@@ -170,7 +170,7 @@
       },
       {
         "name": "USDC",
-        "asset": "USDT",
+        "asset": "USDC",
         "logo": "https://cdn.lux.network/bridge/currencies/usdc.png",
         "contract_address": "0xE49355609F94A4B8a2EfC6FBd077542F8EC90080",
         "decimals": 6,
@@ -187,7 +187,7 @@
       },
       {
         "name": "DAI",
-        "asset": "USDT",
+        "asset": "DAI",
         "logo": "https://cdn.lux.network/bridge/currencies/dai.png",
         "contract_address": "0x568BF299E115D78a1fBa57BafdAe0fD8A26BFb7e",
         "decimals": 18,
@@ -292,7 +292,7 @@
       },
       {
         "name": "DAI",
-        "asset": "USDT",
+        "asset": "DAI",
         "logo": "https://cdn.lux.network/bridge/currencies/dai.png",
         "contract_address": "0x9F47CeB09cb88362f0274Bb354a9807Fd976D963",
         "decimals": 18,
@@ -1437,7 +1437,7 @@
       },
       {
         "name": "USDC",
-        "asset": "USDT",
+        "asset": "USDC",
         "logo": "https://cdn.lux.network/bridge/currencies/usdc.png",
         "contract_address": "0x6a49DbeD52B9Bd9a53E21C3bCb67dc2697cD6697",
         "decimals": 6,
@@ -1454,7 +1454,7 @@
       },
       {
         "name": "DAI",
-        "asset": "USDT",
+        "asset": "DAI",
         "logo": "https://cdn.lux.network/bridge/currencies/dai.png",
         "contract_address": "0x2E8A24dE21105772FD161BF56471A0470A8AF45e",
         "decimals": 18,
