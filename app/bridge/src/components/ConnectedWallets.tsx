@@ -29,22 +29,20 @@ const ConnectedWallets: React.FC<
     connectButtonVariant?: 'outline' | 'primary'
     showWalletIcon?: boolean
     connectButtonClx?: string
+    className?: string
   } & PropsWithChildren
 > = ({
   children,
   connectButtonVariant = 'outline',
   showWalletIcon = true,
   connectButtonClx = '',
+  className = '',
 }) => {
   const { wallets } = useWallet()
   const [openDialog, setOpenDialog] = useState<boolean>(false)
   //hooks
   const { chainId, signer, address } = useEthersSigner()
-  // const { chainId, signer, address } = {
-  //   chainId: 84532,
-  //   signer: undefined,
-  //   address: '0xa684c5721e54B871111CE1F1E206d669a7e7F0a5',
-  // }
+
   const { networks } = useSettings()
 
   if (address && chainId) {
@@ -52,8 +50,8 @@ const ConnectedWallets: React.FC<
       (n: CryptoNetwork) => Number(n.chain_id) === chainId
     )
     return (
-      <div className="flex gap-2 items-center">
-        <div className="flex gap-2 items-center">
+      <div className={cn('flex gap-2 items-center', className)}>
+        <div className="hidden gap-2 items-center sm:flex">
           <Image
             src={
               network?.logo ??
@@ -69,12 +67,21 @@ const ConnectedWallets: React.FC<
         </div>
         <div
           onClick={() => setOpenDialog(true)}
-          className="flex gap-1 items-center cursor-pointer bg-level-2 px-2 py-1 rounded-full"
+          className="sm:flex hidden gap-1 items-center cursor-pointer bg-level-2 px-2 py-1 rounded-full"
         >
           <WalletsIcons wallets={wallets} />
           {shortenAddress(address)}
           <ChevronDown className="h-5 w-5" aria-hidden="true" />
         </div>
+        <Button
+          variant="outline"
+          size="square"
+          onClick={() => setOpenDialog(true)}
+          aria-label="Connect wallet"
+          className={'text-muted-2 p-0 flex items-center justify-center sm:hidden'}
+        >
+          <WalletsIcons wallets={wallets} />
+        </Button>
         <ConnectedWalletsDialog
           openDialog={openDialog}
           setOpenDialog={setOpenDialog}
@@ -82,8 +89,6 @@ const ConnectedWallets: React.FC<
       </div>
     )
   }
-
-  console.log(wallets)
 
   if (wallets.length > 0) {
     return (
@@ -93,7 +98,10 @@ const ConnectedWallets: React.FC<
           size="square"
           onClick={() => setOpenDialog(true)}
           aria-label="Connect wallet"
-          className="text-muted-2 p-0 flex items-center justify-center"
+          className={cn(
+            'text-muted-2 p-0 flex items-center justify-center',
+            className
+          )}
         >
           <WalletsIcons wallets={wallets} />
         </Button>
@@ -114,7 +122,8 @@ const ConnectedWallets: React.FC<
         className={cn(
           'flex items-center justify-center',
           'text-muted-2 p-0 ',
-          connectButtonClx
+          connectButtonClx,
+          className
         )}
       >
         {showWalletIcon && (

@@ -12,7 +12,7 @@ const TransfersWrapper: React.FC = () => {
   return (
     <div className="py-20">
       <TransactionsHistory />
-      {userType && userType != UserType.AuthenticatedUser && (
+      {/* {userType && userType != UserType.AuthenticatedUser && (
         <FormWizardProvider
           initialStep={AuthStep.Email}
           initialLoading={false}
@@ -22,7 +22,7 @@ const TransfersWrapper: React.FC = () => {
             <GuestCard />
           </TimerProvider>
         </FormWizardProvider>
-      )}
+      )} */}
     </div>
   )
 }
