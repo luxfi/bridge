@@ -87,11 +87,12 @@ const PayoutProcessor: React.FC<IProps> = ({
   )
 
   React.useEffect(() => {
-    if (isConnecting || isGettingPayout || signer) return
     if (toMint) {
       mintDestinationToken()
     } else {
-      if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
+      if (isConnecting || isGettingPayout || signer) {
+        //todo;;;
+      } else if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
         withdrawDestinationToken()
       } else {
         destinationNetwork.chain_id &&
