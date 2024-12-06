@@ -88,7 +88,7 @@ const TokenSelectWrapper: React.FC<{
 
 const Placeholder = ({ placeholder }: { placeholder: string | undefined }) => {
   return (
-    <span className="block text-xs md:text-base font-medium text-muted-3 flex-auto items-center">
+    <span className="block text-xs md:text-base font-medium text-muted-3 text-right items-center">
       {placeholder}
     </span>
   )

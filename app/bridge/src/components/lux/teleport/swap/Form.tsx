@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import axios from 'axios'
 
-import { ArrowLeftRight, WalletIcon } from 'lucide-react'
+import { ArrowLeftRight, ArrowUpDown, WalletIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Modal from '@/components/modal/modal'
 import ResizablePanel from '@/components/ResizablePanel'
@@ -266,6 +266,13 @@ const Swap: FC = () => {
     }
   }, [address, destinationNetwork, destinationAsset])
 
+  const handleExchange = () => {
+    if (destinationAsset || destinationNetwork) {
+      setSourceNetwork(destinationNetwork)
+      setSourceAsset(destinationAsset)
+    }
+  }
+
   return (
     <Widget className="sm:min-h-[504px] max-w-lg mt-20 md:mt-0">
       <Widget.Content>
@@ -286,6 +293,9 @@ const Swap: FC = () => {
             balance={sourceBalance}
             balanceLoading={isSourceBalanceLoading}
           />
+          <div className='flex justify-center items-center -my-7 z-10'>
+            <ArrowUpDown onClick={() => handleExchange()} height={36} width={36} className='p-2 bg-level-1 rounded-md border-2 border-black hover:bg-level-3 cursor-pointer'/>
+          </div>
           <ToNetworkForm
             disabled={!sourceNetwork}
             network={destinationNetwork}
