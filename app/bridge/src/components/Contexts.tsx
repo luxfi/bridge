@@ -1,26 +1,21 @@
 'use client'
 import { ErrorBoundary } from 'react-error-boundary'
-import { useSearchParams } from 'next/navigation'
 import * as Sentry from '@sentry/nextjs'
-
 import { TooltipProvider } from '@hanzo/ui/primitives'
-
-import ErrorFallback from './ErrorFallback'
-import ColorSchema from './ColorSchema'
+import ErrorFallback from '@/components/ErrorFallback'
+import ColorSchema from '@/components/ColorSchema'
 import TonConnectProvider from './TonConnectProvider'
-import QueryProvider from '../context/query'
-import RainbowKit from './RainbowKit'
-import Solana from './SolanaProvider'
-import { BridgeAppSettings } from '../Models/BridgeAppSettings'
-import { SendErrorMessage } from '../lib/telegram'
-import { QueryParams } from '../Models/QueryParams'
+import RainbowKit from '@/components/RainbowKit'
+import Solana from '@/components/SolanaProvider'
+import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
+import { SendErrorMessage } from '@/lib/telegram'
 import { THEME_COLORS, type ThemeData } from '../Models/Theme'
 import { AuthProvider } from '@/context/authContext'
 import { SettingsProvider } from '@/context/settings'
 import { FeeProvider } from '@/context/feeContext'
 import { JotaiProvider } from '@/context/jotaiContext'
 import { EthersProvider } from '@/context/ethersContext'
-import { type BridgeSettings } from '../Models/BridgeSettings'
+import { type BridgeSettings } from '@/Models/BridgeSettings'
 
 import { IntercomProvider } from 'react-use-intercom'
 import { SWRConfig } from 'swr'
@@ -36,7 +31,6 @@ const Contexts: React.FC<
     settings: BridgeSettings
   } & PropsWithChildren
 > = ({ settings, children }) => {
-  const searchParams = useSearchParams()
   // :aa These were was all that getServerSideProps() ever returned.
   // So seems clearest to just do it this way.
   const _settings = settings ?? {
@@ -46,48 +40,6 @@ const Contexts: React.FC<
     destinationRoutes: [],
   }
   const themeData = THEME_COLORS.default // :aa TODO
-
-  const query: QueryParams = {
-    ...(searchParams.get('lockAddress') === 'true'
-      ? { lockAddress: true }
-      : {}),
-    ...(searchParams.get('lockNetwork') === 'true'
-      ? { lockNetwork: true }
-      : {}),
-    ...(searchParams.get('lockExchange') === 'true'
-      ? { lockExchange: true }
-      : {}),
-    ...(searchParams.get('hideRefuel') === 'true' ? { hideRefuel: true } : {}),
-    ...(searchParams.get('hideAddress') === 'true'
-      ? { hideAddress: true }
-      : {}),
-    ...(searchParams.get('hideFrom') === 'true' ? { hideFrom: true } : {}),
-    ...(searchParams.get('hideTo') === 'true' ? { hideTo: true } : {}),
-    ...(searchParams.get('lockFrom') === 'true' ? { lockFrom: true } : {}),
-    ...(searchParams.get('lockTo') === 'true' ? { lockTo: true } : {}),
-    ...(searchParams.get('lockAsset') === 'true' ? { lockAsset: true } : {}),
-
-    ...(searchParams.get('lockAddress') === 'false'
-      ? { lockAddress: false }
-      : {}),
-    ...(searchParams.get('lockNetwork') === 'false'
-      ? { lockNetwork: false }
-      : {}),
-    ...(searchParams.get('lockExchange') === 'false'
-      ? { lockExchange: false }
-      : {}),
-    ...(searchParams.get('hideRefuel') === 'false'
-      ? { hideRefuel: false }
-      : {}),
-    ...(searchParams.get('hideAddress') === 'false'
-      ? { hideAddress: false }
-      : {}),
-    ...(searchParams.get('hideFrom') === 'false' ? { hideFrom: false } : {}),
-    ...(searchParams.get('hideTo') === 'false' ? { hideTo: false } : {}),
-    ...(searchParams.get('lockFrom') === 'false' ? { lockFrom: false } : {}),
-    ...(searchParams.get('lockTo') === 'false' ? { lockTo: false } : {}),
-    ...(searchParams.get('lockAsset') === 'false' ? { lockAsset: false } : {}),
-  }
 
   function logErrorToService(error: Error, info: ErrorInfo) {
     const transaction = Sentry.startTransaction({
@@ -113,32 +65,30 @@ const Contexts: React.FC<
     <SWRConfig value={{ revalidateOnFocus: false }}>
       <IntercomProvider appId={INTERCOM_APP_ID} initializeDelay={2500}>
         {themeData && <ColorSchema themeData={themeData} />}
-        <QueryProvider query={query}>
-          <SettingsProvider settings={new BridgeAppSettings(_settings)}>
-            <AuthProvider>
-              <TooltipProvider delayDuration={500}>
-                <ErrorBoundary
-                  FallbackComponent={ErrorFallback}
-                  onError={logErrorToService}
-                >
-                  <ToastProvider>
-                    <JotaiProvider>
-                      <TonConnectProvider basePath={''} themeData={themeData}>
-                        <RainbowKit>
-                          <EthersProvider>
-                            <Solana>
-                              <FeeProvider>{children}</FeeProvider>
-                            </Solana>
-                          </EthersProvider>
-                        </RainbowKit>
-                      </TonConnectProvider>
-                    </JotaiProvider>
-                  </ToastProvider>
-                </ErrorBoundary>
-              </TooltipProvider>
-            </AuthProvider>
-          </SettingsProvider>
-        </QueryProvider>
+        <SettingsProvider settings={new BridgeAppSettings(_settings)}>
+          <AuthProvider>
+            <TooltipProvider delayDuration={500}>
+              <ErrorBoundary
+                FallbackComponent={ErrorFallback}
+                onError={logErrorToService}
+              >
+                <ToastProvider>
+                  <JotaiProvider>
+                    <TonConnectProvider basePath={''} themeData={themeData}>
+                      <RainbowKit>
+                        <EthersProvider>
+                          <Solana>
+                            <FeeProvider>{children}</FeeProvider>
+                          </Solana>
+                        </EthersProvider>
+                      </RainbowKit>
+                    </TonConnectProvider>
+                  </JotaiProvider>
+                </ToastProvider>
+              </ErrorBoundary>
+            </TooltipProvider>
+          </AuthProvider>
+        </SettingsProvider>
       </IntercomProvider>
     </SWRConfig>
   )

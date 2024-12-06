@@ -37,6 +37,7 @@ import { SwapStatus } from '@/Models/SwapStatus'
 import { fetchTokenBalance } from '@/lib/utils'
 import { Button } from '@hanzo/ui/primitives'
 import { useSettings } from '@/context/settings'
+import { useServerAPI } from '@/hooks/useServerAPI'
 import {
   NetworkType,
   type CryptoNetwork,
@@ -55,7 +56,6 @@ const Swap: FC = () => {
 
   const { networks } = useSettings()
 
-  console.log(networks)
   const filteredNetworks = networks.filter(
     (n: CryptoNetwork) =>
       n.type === NetworkType.EVM &&
@@ -91,6 +91,7 @@ const Swap: FC = () => {
   const [, setEthPrice] = useAtom(ethPriceAtom)
 
   //hooks
+  const { serverAPI } = useServerAPI()
   const router = useRouter()
   const { address, isConnecting } = useEthersSigner()
   const { connectWallet } = useWallet()
@@ -147,7 +148,7 @@ const Swap: FC = () => {
 
   React.useEffect(() => {
     if (sourceAsset) {
-      axios.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
+      serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
         setEthPrice(Number(data?.data?.data?.price))
       })
     }
