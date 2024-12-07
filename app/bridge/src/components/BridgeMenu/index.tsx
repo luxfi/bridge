@@ -54,7 +54,7 @@ const BridgeMenu: React.FC = () => {
   const path = usePathname()
   const searchParams = useSearchParams()
   const paramsString = searchParams.toString()
-  const useTeleporter = searchParams.get('teleport') === 'true' ? true : false
+  const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
   const router = useRouter()
 
   useEffect(() => {

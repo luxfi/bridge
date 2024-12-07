@@ -32,9 +32,9 @@ const HeaderWithMenu: React.FC<{
   const updateWithProps = () => {
     update({ email: email, userId: userId })
   }
-
-  const useTeleporter =
-    useSearchParams().get('teleport') === 'true' ? true : false
+  
+  const searchParams = useSearchParams()
+  const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
 
   const handleBridgeTypeChange = (value: boolean) => {
     router.push(`${pathname}?teleport=${value}`)

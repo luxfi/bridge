@@ -5,6 +5,7 @@ import CommandWrapper from '@/components/shadcn/command-wrapper'
 import { cn } from '@hanzo/ui/util'
 import { CommandItem, CommandList } from '@hanzo/ui/primitives'
 import type { NetworkCurrency } from '@/Models/CryptoNetwork'
+import type { Network } from '@/Models/Swap'
 
 const TokenSelect: React.FC<{
   values: NetworkCurrency[]
@@ -12,7 +13,7 @@ const TokenSelect: React.FC<{
 }> = ({ values, setValue }) => (
   <CommandWrapper>
     <CommandList>
-      {values.map((item) => {
+      {values.filter((item: NetworkCurrency) => item.status === 'active').map((item: NetworkCurrency) => {
         return (
           <CommandItem
             className={cn(
