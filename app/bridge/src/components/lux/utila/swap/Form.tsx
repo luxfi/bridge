@@ -183,7 +183,7 @@ const Swap: FC = () => {
       // )
       // setSwapStatus(SwapStatus.UserDepositPending)
       // setShowSwapModal(true)
-      router.push(`/swap/utila/${response.data?.data?.swap_id}`)
+      router.push(`/swap/v2/${response.data?.data?.swap_id}`)
     } catch (err) {
       console.log(err)
     } finally {

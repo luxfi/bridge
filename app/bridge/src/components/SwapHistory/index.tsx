@@ -383,7 +383,7 @@ function TransactionsHistory() {
                         router.push(
                           selectedSwap?.use_teleporter
                             ? `/swap/teleporter/${selectedSwap.id}`
-                            : `/swap/utila/${selectedSwap.id}`
+                            : `/swap/v2/${selectedSwap.id}`
                         )
                       }}
                       isDisabled={false}
