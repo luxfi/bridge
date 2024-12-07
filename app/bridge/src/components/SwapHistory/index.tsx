@@ -51,7 +51,7 @@ function TransactionsHistory() {
   const searchParams = useSearchParams()
   const canGoBackRef = useRef<boolean>(false)
   const paramString = resolvePersistentQueryParams(searchParams).toString()
-  const useTeleporter = searchParams.get('teleport') === 'true' ? true : false
+  const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
 
   const goBack = useCallback(() => {
     canGoBackRef.current = !!(

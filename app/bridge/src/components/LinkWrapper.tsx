@@ -22,7 +22,7 @@ const LinkWrapper: React.FC<
 
   // check if current type is teleport
   const searchParams = useSearchParams()
-  const useTeleporter = searchParams.get('teleport') === 'true' ? true : false
+  const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
   sp.append('teleport', String(useTeleporter))
   
   return (
