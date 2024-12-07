@@ -7,7 +7,7 @@ import SwapUtila from '@/components/lux/utila/swap/Form'
 
 const Swapper: React.FC = () => {
   
-  const useTeleporter = useSearchParams().get('teleport') === 'true' ? true : false
+  const useTeleporter = useSearchParams().get('teleport') === 'false' ? false : true
 
   return (
     <div className="xs:w-full md:w-auto md:py-20">
