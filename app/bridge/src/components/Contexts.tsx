@@ -28,7 +28,7 @@ import '@rainbow-me/rainbowkit/styles.css'
 
 const Contexts: React.FC<
   {
-    settings: BridgeSettings
+    settings?: BridgeSettings
   } & PropsWithChildren
 > = ({ settings, children }) => {
   // :aa These were was all that getServerSideProps() ever returned.

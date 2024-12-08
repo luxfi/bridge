@@ -85,6 +85,7 @@ export default class BridgeApiClient {
       )
       return data
     } catch (err: any) {
+      console.log("GetSettingsAsync() ERROR: ")
       return undefined
     }
   }
