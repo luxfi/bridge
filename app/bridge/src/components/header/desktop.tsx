@@ -5,6 +5,8 @@ import type { LinkDef } from '@hanzo/ui/types'
 import { cn } from '@hanzo/ui/util'
 import { Logo, type LogoVariant } from '@luxfi/ui'
 
+import ConnectButton from './connect-button'
+
 const DesktopHeader: React.FC<
   {
     currentAs: string | undefined
@@ -47,9 +49,10 @@ const DesktopHeader: React.FC<
           key="two"
           variant={logoVariant}
         />
-        {/* md or larger */}
-        <div className=""></div>
-        <div className="flex items-center">{children}</div>
+        <div className="flex items-center">
+          <ConnectButton />
+          {children}
+        </div>
       </div>
     </header>
   )
