@@ -18,7 +18,7 @@ export const useServerAPI = () => {
       } else if (err.response) {
         notify(String(err?.response?.data?.error), 'error')
       } else {
-        notify('Failed to run request. Please contract with support team', 'error')
+        notify('Failed to run request. Please try again later', 'error')
       }
       return Promise.reject(err);
     }

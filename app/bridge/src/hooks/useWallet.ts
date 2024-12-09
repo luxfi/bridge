@@ -76,22 +76,9 @@ function useWallet() {
   };
 
   const getAutofillProvider = (network: CryptoNetwork) => {
+    console.log(WalletProviders)
     const provider = WalletProviders.find((provider) =>
       provider?.autofillSupportedNetworks?.includes(network.internal_name)
-    );
-    return provider;
-  };
-
-  const getWithdrawalProviderWithNetworkName = (network: string) => {
-    const provider = WalletProviders.find((provider) =>
-      provider.withdrawalSupportedNetworks.includes(network)
-    );
-    return provider;
-  };
-
-  const getAutofillProviderWithNetworkName = (network: string) => {
-    const provider = WalletProviders.find((provider) =>
-      provider?.autofillSupportedNetworks?.includes(network)
     );
     return provider;
   };
@@ -101,9 +88,7 @@ function useWallet() {
     connectWallet: handleConnect,
     disconnectWallet: handleDisconnect,
     getWithdrawalProvider,
-    getAutofillProvider,
-    getAutofillProviderWithNetworkName,
-    getWithdrawalProviderWithNetworkName,
+    getAutofillProvider
   };
 }
 

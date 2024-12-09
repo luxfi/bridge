@@ -7,13 +7,11 @@ import axios from 'axios'
 import { ArrowLeftRight, ArrowUpDown, WalletIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Modal from '@/components/modal/modal'
-import ResizablePanel from '@/components/ResizablePanel'
 import shortenAddress from '../../../utils/ShortenAddress'
 import Widget from '../../../Widget'
 
 import FromNetworkForm from './from/NetworkFormField'
 import ToNetworkForm from './to/NetworkFormField'
-import SwapDetails from './SwapDetails'
 import { SWAP_PAIRS } from '@/components/lux/teleport/constants/settings'
 //hooks
 import useWallet from '@/hooks/useWallet'
@@ -86,7 +84,6 @@ const Swap: FC = () => {
   )
 
   const [sourceAmount] = useAtom(sourceAmountAtom)
-  const [swapId, setSwapId] = useAtom(swapIdAtom)
   const [, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setEthPrice] = useAtom(ethPriceAtom)
 
@@ -143,8 +140,6 @@ const Swap: FC = () => {
       destinationNetwork?.currencies.find((c) => c.status === 'active')
     )
   }, [destinationNetwork])
-
-  const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false)
 
   React.useEffect(() => {
     if (sourceAsset) {
@@ -396,44 +391,6 @@ const Swap: FC = () => {
             <span className="grow">{warningMessage}</span>
           </button>
         )}
-
-        {/* <Modal
-          height="fit"
-          show={showSwapModal}
-          setShow={setShowSwapModal}
-          header="Complete the swap"
-          onClose={() => setShowSwapModal(false)}
-        >
-          <ResizablePanel>
-            {sourceNetwork &&
-            sourceAsset &&
-            sourceAmount &&
-            destinationNetwork &&
-            destinationAsset &&
-            destinationAddress ? (
-              <SwapDetails
-                className="min-h-[450px] justify-center max-w-lg"
-                sourceNetwork={sourceNetwork}
-                sourceAsset={sourceAsset}
-                destinationNetwork={destinationNetwork}
-                destinationAsset={destinationAsset}
-                destinationAddress={destinationAddress}
-                sourceAmount={sourceAmount}
-                swapId={swapId}
-              />
-            ) : (
-              <div className="w-full h-[430px]">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="flex-1 space-y-6 py-1">
-                    <div className="h-32 bg-level-1 rounded-lg"></div>
-                    <div className="h-40 bg-level-1 rounded-lg"></div>
-                    <div className="h-12 bg-level-1 rounded-lg"></div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </ResizablePanel>
-        </Modal> */}
       </Widget.Content>
     </Widget>
   )
