@@ -137,7 +137,7 @@ export const CONTRACTS = {
 export const SWAP_PAIRS: Record<string, string[]> = {
   // Lux tokens
   LUX: ['ZLUX'],
-  LBTC: ['WBTC', 'ZBTC'],
+  LBTC: ['WBTC', 'ZBTC', 'cbBTC'],
   LETH: ['ETH', 'WETH', 'ZETH'],
   LUSD: ['USDT', 'USDC', 'DAI', 'ZUSD'],
   LZOO: ['ZOO'],
@@ -192,6 +192,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   // Evm tokens
   ETH: ['LETH', 'ZETH'],
   WETH: ['LETH', 'ZETH'],
+  cbBTC: ['LBTC', 'ZBTC'],
   POL: ['LPOL', 'ZPOL'],
   BNB: ['LBNB', 'ZBNB'],
   FTM: ['LFTM', 'ZFTM'],
