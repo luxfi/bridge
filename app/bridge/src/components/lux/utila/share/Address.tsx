@@ -9,6 +9,7 @@ import KnownInternalNames from "@/lib/knownIds";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import WalletIcon from "@/components/icons/WalletIcon";
 import useWallet from "@/hooks/useWallet";
+import type { CryptoNetwork } from "@/Models/CryptoNetwork";
 
 interface IProps extends Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'as' | 'onChange'> {
     hideLabel?: boolean;
@@ -33,8 +34,9 @@ const Address: FC<IProps> = ({ name, close, disabled, isPartnerWallet, partnerIm
     const [inputValue, setInputValue] = useState<string | undefined>(address)
     const [validInputAddress, setValidInputAddress] = useState<string | undefined>('')
 
-    const { connectWallet, disconnectWallet, getAutofillProvider: getProvider, getAutofillProviderWithNetworkName } = useWallet()
-    const provider = getAutofillProviderWithNetworkName(network?.internal_name ?? "ETHEREUM_MAINNET")
+    const { connectWallet, disconnectWallet, getAutofillProvider: getProvider } = useWallet()
+    //@ts-ignore
+    const provider = getAutofillProviderWithNetworkName(network as CryptoNetwork)
 
     const connectedWallet = provider?.getConnectedWallet()
 

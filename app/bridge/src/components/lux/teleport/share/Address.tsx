@@ -1,5 +1,10 @@
 'use client'
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react'
+import React, {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import { type Partner } from '@/Models/Partner'
 import { type AddressBookItem } from '@/lib/BridgeApiClient'
@@ -46,23 +51,23 @@ const Address: React.FC<
   >('')
 
   const {
+    wallets,
     connectWallet,
     disconnectWallet,
     getAutofillProvider: getProvider,
-    getAutofillProviderWithNetworkName,
   } = useWallet()
-  const provider = getAutofillProviderWithNetworkName(
-    network?.internal_name ?? 'ETHEREUM_MAINNET'
-  )
+
+  const provider = React.useMemo(() => {
+    return network && getProvider(network)
+  }, [network, getProvider])
 
   const connectedWallet = provider?.getConnectedWallet()
 
-  useEffect(() => {
+  const autoFill = () => {
     if (
       isValidAddress(connectedWallet?.address, {
         internal_name: network?.internal_name ?? 'ETHEREUM_MAINNET',
-      }) &&
-      !address
+      })
     ) {
       //TODO move to wallet implementation
       if (
@@ -79,6 +84,10 @@ const Address: React.FC<
       setInputValue(connectedWallet?.address)
       setAddress(connectedWallet?.address ?? '')
     }
+  }
+
+  useEffect(() => {
+    autoFill()
   }, [connectedWallet?.address])
 
   useEffect(() => {
@@ -114,7 +123,15 @@ const Address: React.FC<
     setInputValue('')
   }, [])
 
-  const destinationChainId = network?.chain_id ?? 'ETHEREUM_MAINNET'
+  const autoFillFromWallet = async () => {
+    if (connectedWallet) {
+      autoFill()
+    } else if (provider && !connectedWallet) {
+      connectWallet(provider.name)
+    }
+  }
+
+  const destinationChainId = network?.chain_id ?? '1'
 
   return (
     <div className="w-full flex flex-col justify-between h-full ">
@@ -212,30 +229,30 @@ const Address: React.FC<
               </div>
             </div>
           )}
-          {!disabled &&
-            !inputValue &&
-            destination &&
-            provider &&
-            !connectedWallet && (
-              <div
-                onClick={() => {
-                  connectWallet(provider.name)
-                }}
-                className="min-h-12 text-left cursor-pointer space-x-2 bg-level-1  flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 hover:bg-level-2 hover:shadow-xl"
-              >
-                <div className="flexflex-row items-left bg-level-3 px-2 py-1 rounded-md">
+          {!disabled && destination && (
+            <div
+              onClick={autoFillFromWallet}
+              className="min-h-12 text-left cursor-pointer space-x-2 bg-level-1  flex text-sm rounded-md items-center w-full transform transition duration-200 px-2 py-1.5 hover:bg-level-2 hover:shadow-xl"
+            >
+              <div className="flexflex-row items-left bg-level-3 px-2 py-1 rounded-md">
+                {connectedWallet ? (
+                  <connectedWallet.icon className="flex-shrink-0 h-6 w-6" />
+                ) : (
                   <WalletIcon className="w-6 h-6" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <div className="block text-sm font-medium">
+                  Autofill from wallet
                 </div>
-                <div className="flex flex-col">
-                  <div className="block text-sm font-medium">
-                    Autofill from wallet
-                  </div>
-                  <div className="text-gray-500">
-                    Connect your wallet to fetch the address
-                  </div>
+                <div className="text-gray-500">
+                  {connectedWallet
+                    ? 'Fetch address from your connected wallet'
+                    : 'Connect your wallet to fetch the address'}
                 </div>
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </div>
