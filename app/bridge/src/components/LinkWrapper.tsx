@@ -21,9 +21,9 @@ const LinkWrapper: React.FC<
   const sp = new URLSearchParams(query as Record<string, string>)
 
   // check if current type is teleport
-  const searchParams = useSearchParams()
-  const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
-  sp.append('teleport', String(useTeleporter))
+  // const searchParams = useSearchParams()
+  // const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
+  // sp.append('teleport', String(useTeleporter))
   
   return (
     <Link

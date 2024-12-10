@@ -1,5 +1,4 @@
 import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork"
-import type { Network, Token } from "@/types/teleport"
 import { atom } from "jotai"
 
 export const sourceNetworkAtom = atom<CryptoNetwork | undefined>(undefined)
@@ -14,4 +13,4 @@ export const swapIdAtom = atom<string>("")
 export const userTransferTransactionAtom = atom<string>("")
 export const bridgeMintTransactionAtom = atom<string>("")
 export const mpcSignatureAtom = atom<string>("")
-export const useTelepoterAtom = atom<boolean>(false)
+export const useTelepoterAtom = atom<boolean>(true)
