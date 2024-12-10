@@ -44,8 +44,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
 }) => {
   const { notify } = useNotify()
   //state
-  const [isTokenTransferring, setIsTokenTransferring] =
-    React.useState<boolean>(false)
+  const [isTokenTransferring, setIsTokenTransferring] = React.useState<boolean>(false)
   const [userDepositNotice, setUserDepositNotice] = React.useState<string>('Loading...')
   //atoms
   const [, setSwapStatus] = useAtom(swapStatusAtom)
@@ -56,13 +55,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
-  const toBurn = React.useMemo(
-    () =>
-      sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')
-        ? true
-        : false,
-    [sourceAsset]
-  )
+  const toBurn = React.useMemo(() => (sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ') ? true : false), [sourceAsset])
 
   React.useEffect(() => {
     // console.log(signer?.provider.network.chainId)
@@ -71,98 +64,69 @@ const UserTokenDepositor: React.FC<IProps> = ({
     if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
       toBurn ? burnToken() : transferToken()
     } else {
-      sourceNetwork.chain_id &&
-        switchChain &&
-        switchChain({ chainId: Number(sourceNetwork.chain_id) })
+      sourceNetwork.chain_id && switchChain && switchChain({ chainId: Number(sourceNetwork.chain_id) })
     }
   }, [signer])
 
+  
   const transferToken = async () => {
+    console.log(sourceAmount)
     try {
       setIsTokenTransferring(true)
-      console.log(
-        sourceAmount,
-        sourceAsset,
-        localeNumber(sourceAmount, sourceAsset.decimals)
-      )
-      const _amount = parseUnits(
-        localeNumber(sourceAmount, sourceAsset.decimals),
-        sourceAsset.decimals
-      )
+      console.log(sourceAmount, sourceAsset, localeNumber(sourceAmount, sourceAsset.decimals))
+      const _amount = parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals)
 
-      if (sourceAsset.is_native) {
-        const _balance = await signer?.getBalance()
-        console.log('::balance checking: ', {
-          balance: Number(_balance) ?? 0,
-          required: Number(_amount),
-          gap: Number(_balance) ?? 0 - Number(_amount),
-        })
+      // if (sourceAsset.is_native) {
+      //   const _balance = await signer?.getBalance()
+      //   console.log('::balance checking: ', {
+      //     balance: Number(_balance) ?? 0,
+      //     required: Number(_amount),
+      //     gap: Number(_balance) ?? 0 - Number(_amount),
+      //   })
 
-        if (Number(_balance) < Number(_amount)) {
-          notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
-          return
-        }
-      } else {
-        const erc20Contract = new Contract(
-          sourceAsset?.contract_address as string,
-          erc20ABI,
-          signer
-        )
-        console.log({ erc20Contract, signer })
-        // approve
-        setUserDepositNotice(`Approving ${sourceAsset.asset}...`)
-        const _balance = await erc20Contract.balanceOf(
-          signer?._address as string
-        )
+      //   if (Number(_balance) < Number(_amount)) {
+      //     notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
+      //     return
+      //   }
+      // } else {
+      //   const erc20Contract = new Contract(sourceAsset?.contract_address as string, erc20ABI, signer)
+      //   console.log({ erc20Contract, signer })
+      //   // approve
+      //   setUserDepositNotice(`Approving ${sourceAsset.asset}...`)
+      //   const _balance = await erc20Contract.balanceOf(signer?._address as string)
 
-        console.log('::balance checking: ', {
-          balance: Number(_balance),
-          required: Number(_amount),
-          gap: Number(_balance) - Number(_amount),
-        })
+      //   console.log('::balance checking: ', {
+      //     balance: Number(_balance),
+      //     required: Number(_amount),
+      //     gap: Number(_balance) - Number(_amount),
+      //   })
 
-        if (Number(_balance) < Number(_amount)) {
-          notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
-          return
-        }
-        console.log(sourceNetwork.chain_id)
+      //   if (Number(_balance) < Number(_amount)) {
+      //     notify(`Insufficient ${sourceAsset.asset} amount`, 'warn')
+      //     return
+      //   }
 
-        if (!sourceNetwork.chain_id) return
-        // if allowance is less than amount, approve
-        const _allowance = await erc20Contract.allowance(
-          signer?._address as string,
-          CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
-            .teleporter
-        )
-        if (_allowance < _amount) {
-          const _approveTx = await erc20Contract.approve(
-            CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
-              .teleporter,
-            _amount
-          )
-          await _approveTx.wait()
-        }
-      }
+      //   if (!sourceNetwork.chain_id) return
+      //   // if allowance is less than amount, approve
+      //   const _allowance = await erc20Contract.allowance(
+      //     signer?._address as string,
+      //     CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter
+      //   )
+      //   if (_allowance < _amount) {
+      //     const _approveTx = await erc20Contract.approve(CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, _amount)
+      //     await _approveTx.wait()
+      //   }
+      // }
+
+      console.log("::amount", _amount)
 
       if (!sourceNetwork.chain_id) return
       setUserDepositNotice(`Transfer ${sourceAsset.asset}...`)
-      const bridgeContract = new Contract(
-        CONTRACTS[
-          Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
-        ].teleporter,
-        teleporterABI,
-        signer
-      )
+      const bridgeContract = new Contract(CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, teleporterABI, signer)
 
-      console.log("::source_asset:", sourceAsset)
-
-      const _bridgeTransferTx = await bridgeContract.vaultDeposit(
-        _amount,
-        sourceAsset.contract_address,
-        {
-          value: sourceAsset.is_native ? _amount : 0,
-        }
-      )
+      const _bridgeTransferTx = await bridgeContract.vaultDeposit(_amount, sourceAsset.contract_address, {
+        value: sourceAsset.is_native ? _amount : 0,
+      })
       await _bridgeTransferTx.wait()
 
       console.log('::swapId::save deposit to server:', swapId)
@@ -171,8 +135,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
         txHash: _bridgeTransferTx.hash,
         amount: sourceAmount,
         from: signer?._address,
-        to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS]
-          .teleporter,
+        to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter,
       })
       setUserTransferTransaction(_bridgeTransferTx.hash)
       setSwapStatus('teleport_processing_pending')
@@ -191,16 +154,9 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const burnToken = async () => {
     try {
       setIsTokenTransferring(true)
-      const _amount = parseUnits(
-        localeNumber(sourceAmount, sourceAsset.decimals),
-        sourceAsset.decimals
-      )
+      const _amount = parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals)
 
-      const erc20Contract = new Contract(
-        sourceAsset?.contract_address as string,
-        erc20ABI,
-        signer
-      )
+      const erc20Contract = new Contract(sourceAsset?.contract_address as string, erc20ABI, signer)
       setUserDepositNotice(`Checking token balance...`)
       const _balance = await erc20Contract.balanceOf(signer?._address as string)
 
@@ -218,34 +174,20 @@ const UserTokenDepositor: React.FC<IProps> = ({
       if (!sourceNetwork.chain_id) return
       setUserDepositNotice(`Burning ${sourceAsset.asset}...`)
 
-      const bridgeContract = new Contract(
-        CONTRACTS[
-          Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
-        ].teleporter,
-        teleporterABI,
-        signer
-      )
+      const bridgeContract = new Contract(CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, teleporterABI, signer)
 
       console.log({
         _amount,
         _asset: sourceAsset.contract_address,
       })
-      const _bridgeTransferTx = await bridgeContract.bridgeBurn(
-        _amount,
-        sourceAsset.contract_address
-      )
+      const _bridgeTransferTx = await bridgeContract.bridgeBurn(_amount, sourceAsset.contract_address)
       await _bridgeTransferTx.wait()
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/transfer/${swapId}`,
-        {
-          txHash: _bridgeTransferTx.hash,
-          amount: sourceAmount,
-          from: signer?._address,
-          to: CONTRACTS[
-            Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
-          ].teleporter,
-        }
-      )
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/transfer/${swapId}`, {
+        txHash: _bridgeTransferTx.hash,
+        amount: sourceAmount,
+        from: signer?._address,
+        to: CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter,
+      })
       setUserTransferTransaction(_bridgeTransferTx.hash)
       setSwapStatus('teleport_processing_pending')
     } catch (err) {
@@ -264,9 +206,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       notify('No connected wallet. Please connect your wallet', 'error')
       // connectWallet("evm")
     } else if (Number(chainId) !== Number(sourceNetwork.chain_id)) {
-      sourceNetwork.chain_id &&
-        switchChain &&
-        switchChain({ chainId: Number(sourceNetwork.chain_id) })
+      sourceNetwork.chain_id && switchChain && switchChain({ chainId: Number(sourceNetwork.chain_id) })
     } else {
       toBurn ? burnToken() : transferToken()
     }
@@ -299,11 +239,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
             onClick={handleTokenTransfer}
             className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
           >
-            {isTokenTransferring ? (
-              <SpinIcon className="animate-spin h-5 w-5" />
-            ) : (
-              <ArrowRight />
-            )}
+            {isTokenTransferring ? <SpinIcon className="animate-spin h-5 w-5" /> : <ArrowRight />}
             {isTokenTransferring ? (
               <span className="grow">{userDepositNotice}</span>
             ) : (
