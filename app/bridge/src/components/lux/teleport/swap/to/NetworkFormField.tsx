@@ -7,7 +7,6 @@ import AmountField from '../AmountField'
 import NetworkSelectWrapper from './NetworkSelectWrapper'
 import TokenSelectWrapper from './TokenSelectWrapper'
 
-import { sourceAmountAtom } from '@/store/teleport'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
 import { formatNumber } from '@/lib/utils'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
@@ -19,7 +18,8 @@ const NetworkFormField: React.FC<{
   sourceAsset?: NetworkCurrency
   setNetwork: (network: CryptoNetwork) => void
   setAsset: (asset: NetworkCurrency) => void
-  disabled: boolean
+  disabled: boolean,
+  amount: string,
   balance?: number
   balanceLoading: boolean
 }> = ({
@@ -30,10 +30,10 @@ const NetworkFormField: React.FC<{
   setNetwork,
   setAsset,
   disabled,
+  amount,
   balance, 
   balanceLoading,
 }) => {
-  const [amount] = useAtom(sourceAmountAtom)
 
   const isWithdrawal = React.useMemo(
     () => (sourceAsset?.name?.startsWith("Lux") ? true : false),
@@ -57,7 +57,7 @@ const NetworkFormField: React.FC<{
         />
         <div className="flex justify-between items-center gap-1.5 py-2.5 pl-3 pr-4">
           <AmountField
-            value={isWithdrawal ? String(truncateDecimals(Number(amount) * 0.99, 6)) : String(truncateDecimals(Number(amount), 6))}
+            value={isWithdrawal ? String(truncateDecimals(Number(amount) * 0.99, 10)) : amount}
             disabled={true}
             className='min-w-0'
           />
