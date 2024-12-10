@@ -45,7 +45,7 @@ const SwapItems: React.FC<IProps> = ({ sourceNetwork, sourceAsset, destinationNe
   const signer = useEthersSigner()
 
   const toMint = React.useMemo(
-    () => (destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ') ? true : false),
+    () => (destinationAsset.name.startsWith('Liquid ') || destinationAsset.name.startsWith('Zoo ') ? true : false),
     [destinationAsset]
   )
 
