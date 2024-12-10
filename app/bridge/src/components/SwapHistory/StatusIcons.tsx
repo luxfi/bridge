@@ -62,7 +62,7 @@ export default function StatusIcon({
         <>
           <div className="inline-flex items-center space-x-1">
             <YellowIcon />
-            {!short && <p>Pending</p>}
+            {!short && <p>Awaiting Transfer</p>}
           </div>
         </>
       )
@@ -71,7 +71,7 @@ export default function StatusIcon({
         <>
           <div className="inline-flex items-center space-x-1">
             <YellowIcon />
-            {!short && <p>Pending</p>}
+            {!short && <p>Awaiting Deposit</p>}
           </div>
         </>
       )
