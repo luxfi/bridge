@@ -62,14 +62,14 @@ const TeleportProcessor: React.FC<IProps> = ({
 
   const toBurn = React.useMemo(
     () =>
-      sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')
+      sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ')
         ? true
         : false,
     [sourceAsset]
   )
   const toMint = React.useMemo(
     () =>
-      destinationAsset.name.startsWith('Lux ') ||
+      destinationAsset.name.startsWith('Liquid ') ||
       destinationAsset.name.startsWith('Zoo ')
         ? true
         : false,
@@ -118,7 +118,7 @@ const TeleportProcessor: React.FC<IProps> = ({
         await serverAPI.post(`/api/swaps/mpcsign/${swapId}`, {
           txHash: data.data.signature,
           amount: sourceAmount,
-          from: signer?._address,
+          from: signer?._address + '###' + data.data.mpcSigner,
           to: CONTRACTS[
             Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
           ].teleporter,
