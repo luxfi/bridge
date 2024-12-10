@@ -125,10 +125,20 @@ const Swap: FC = () => {
   const handleFlip = () => {
     setFlipInProgress(true)
 
-    setSourceNetwork(destinationNetwork)
+    const _sourceNetwork = filteredNetworks.find((n: CryptoNetwork) => n.internal_name === destinationNetwork?.internal_name)
+    const _destinationNetwork = filteredNetworks.find((n: CryptoNetwork) => n.internal_name === sourceNetwork?.internal_name)
+
+    setSourceNetwork(_sourceNetwork)
     setSourceAsset(destinationAsset)
 
-    setDestinationNetwork(sourceNetwork)
+    setDestinationNetwork(
+      _destinationNetwork && destinationAsset
+        ? {
+            ..._destinationNetwork,
+            currencies: _destinationNetwork.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[destinationAsset?.asset].includes(c.asset)),
+          }
+        : undefined
+    )
     setDestinationAsset(sourceAsset)
   }
 
