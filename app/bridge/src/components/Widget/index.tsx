@@ -52,7 +52,7 @@ const Widget = ({
           {!hideMenu && <HeaderWithMenu goBack={canGoBackRef.current ? goBack : undefined} />}
           <div className="w-full h-full px-3 md:px-6 pb-6 mt-3 flex flex-col justify-between">{children}</div>
           <div id="modal_portal_root" />
-          <GotoExchange className='md:hidden flex px-3 pb-4'/>
+          <GotoExchange className='md:hidden flex px-3'/>
         </div>
       </div>
       <GotoExchange className='mt-4 mx-auto md:flex hidden'/>

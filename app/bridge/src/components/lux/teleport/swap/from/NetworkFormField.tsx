@@ -5,10 +5,10 @@ import AmountField from '../AmountField'
 import NetworkSelectWrapper from './NetworkSelectWrapper'
 
 import TokenSelectWrapper from './TokenSelectWrapper'
-import { sourceAmountAtom } from '@/store/teleport'
 import { Button } from '@hanzo/ui/primitives'
 import { formatNumber } from '@/lib/utils'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
+import type React from 'react'
 
 const NetworkFormField: React.FC<{
   networks: CryptoNetwork[]
@@ -16,10 +16,12 @@ const NetworkFormField: React.FC<{
   asset?: NetworkCurrency
   setNetwork: (network: CryptoNetwork) => void
   setAsset: (asset: NetworkCurrency) => void
+  amount: string,
+  setAmount: React.Dispatch<React.SetStateAction<string>>
   disabled: boolean,
   maxValue?: string
   balance?: number
-  balanceLoading: boolean
+  balanceLoading: boolean,
 }> = ({ 
   networks, 
   network, 
@@ -30,8 +32,9 @@ const NetworkFormField: React.FC<{
   maxValue = '0',
   balance, 
   balanceLoading,
+  amount,
+  setAmount
 }) => {
-  const [amount, setAmount] = useAtom(sourceAmountAtom)
 
   return (
     <div >
