@@ -37,7 +37,7 @@ const DesktopHeader: React.FC<
       <div
         className={
           'flex flex-row h-[80px] items-center justify-between ' +
-          'mx-[24px] w-full max-w-screen'
+          'mx-3 md:mx-6 w-full max-w-screen'
         }
       >
         <Logo

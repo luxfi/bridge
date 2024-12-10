@@ -63,7 +63,7 @@ const TokenSelectWrapper: React.FC<IProps> = ({
                   />
                 )}
               </div>
-              <span className="ml-3 block">{value.name}</span>
+              <span className="ml-3 block">{value.asset}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info
