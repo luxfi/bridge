@@ -12,13 +12,12 @@ import { cn } from '@hanzo/ui/util'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@hanzo/ui/primitives'
 //hooks
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
+import { useAtom } from 'jotai'
+import { useTelepoterAtom } from '@/store/teleport'
 
-const ConnectWallets = dynamic(
-  () => import('../ConnectedWallets').then((comp) => comp.ConnectedWallets),
-  { loading: () => null }
-)
+const ConnectWallets = dynamic(() => import('../ConnectedWallets').then((comp) => comp.ConnectedWallets), { loading: () => null })
 
 const HeaderWithMenu: React.FC<{
   goBack: (() => void) | undefined
@@ -27,17 +26,15 @@ const HeaderWithMenu: React.FC<{
   const { email, userId } = useAuthState()
   const { boot, show, update } = useIntercom()
   const pathname = usePathname()
-  const router = useRouter()
 
   const updateWithProps = () => {
     update({ email: email, userId: userId })
   }
-  
-  const searchParams = useSearchParams()
-  const useTeleporter = searchParams.get('teleport') === 'false' ? false : true
+
+  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom)
 
   const handleBridgeTypeChange = (value: boolean) => {
-    router.push(`${pathname}?teleport=${value}`)
+    setUseTeleporter(value)
   }
 
   const ChatButton: React.FC = () => (
@@ -57,26 +54,13 @@ const HeaderWithMenu: React.FC<{
   )
 
   return (
-    <div className="w-full xs:flex md:grid md:grid-cols-5 px-6 mt-3 items-center xs:justify-between">
+    <div className="w-full xs:flex md:grid md:grid-cols-5 px-3 md:px-6 mt-3 items-center xs:justify-between">
       <div>
         {goBack ? (
-          <IconButton
-            onClick={goBack}
-            aria-label="Go back"
-            icon={<ArrowLeft strokeWidth="3" />}
-          />
+          <IconButton onClick={goBack} aria-label="Go back" icon={<ArrowLeft strokeWidth="3" />} />
         ) : (
-          <div
-            className={cn(
-              'flex items-center gap-2',
-              pathname !== '/' ? 'hidden' : ''
-            )}
-          >
-            <ToggleButton
-              value={useTeleporter}
-              onChange={handleBridgeTypeChange}
-              name="Teleport"
-            />
+          <div className={cn('flex items-center gap-2', pathname !== '/' ? 'hidden' : '')}>
+            <ToggleButton value={useTeleporter} onChange={handleBridgeTypeChange} name="Teleport" />
             Teleport
           </div>
         )}
