@@ -2,7 +2,6 @@
 import { type Partner } from "@/Models/Partner";
 import { type AddressBookItem } from "@/lib/BridgeApiClient";
 import { isValidAddress } from "@/lib/addressValidator";
-import { type Network } from "@/types/utila";
 import React, { type ChangeEvent, type FC, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from 'next/image';
 import KnownInternalNames from "@/lib/knownIds";
@@ -25,7 +24,7 @@ interface IProps extends Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'as' | 
     canFocus?: boolean,
     address_book?: AddressBookItem[],
     setAddress: React.Dispatch<React.SetStateAction<string>>,
-    network?: Network
+    network?: CryptoNetwork
 }
 
 const Address: FC<IProps> = ({ name, close, disabled, isPartnerWallet, partnerImage, partner, address, setAddress, network }) => {

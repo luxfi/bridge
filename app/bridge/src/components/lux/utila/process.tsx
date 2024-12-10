@@ -19,7 +19,6 @@ import {
   ethPriceAtom,
   swapStatusAtom,
   swapIdAtom,
-  mpcSignatureAtom,
   bridgeMintTransactionAtom,
   userTransferTransactionAtom,
   timeToExpireAtom,
@@ -30,6 +29,9 @@ import { useAtom } from 'jotai'
 import type { Network, Token } from '@/types/utila'
 import { SwapStatus } from '@/Models/SwapStatus'
 import { useServerAPI } from '@/hooks/useServerAPI'
+import { useSettings } from '@/context/settings'
+import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
+import { SWAP_PAIRS } from '../teleport/constants/settings'
 
 type NetworkToConnect = {
   DisplayName: string
@@ -42,20 +44,36 @@ interface IProps {
 }
 
 const Form: React.FC<IProps> = ({ swapId, className }) => {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const { sourceNetworks, destinationNetworks } = isMainnet
-    ? mainNetworks
-    : devNetworks
+  const { networks } = useSettings()
+
+  // const { sourceNetworks, destinationNetworks } = isMainnet
+  //   ? mainNetworks
+  //   : devNetworks
 
   const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
-  const [destinationNetwork, setDestinationNetwork] = useAtom(
-    destinationNetworkAtom
-  )
+  const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom)
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
-  const [destinationAddress, setDestinationAddress] = useAtom(
-    destinationAddressAtom
-  )
+
+
+  const sourceNetworks = networks.filter((c: CryptoNetwork) => c.type !== NetworkType.EVM)
+  console.log("source Networks", sourceNetworks)
+  const destinationNetworks = React.useMemo(() => {
+    if (!sourceAsset) {
+      return []
+    } else {
+      return networks
+        .map((n: CryptoNetwork) => ({
+          ...n,
+          currencies: n.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)),
+        }))
+        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM)
+    }
+  }, [sourceAsset])
+
+
+
+  const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom)
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setEthPrice] = useAtom(ethPriceAtom)
@@ -100,19 +118,13 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
     try {
       const {
         data: { data },
-      } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
-      )
+      } = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`)
 
       setSwapStatus(data.status)
       setDepositActions(data.deposit_actions)
-      const userTransferTransaction = data?.transactions?.find(
-        (t: any) => t.status === 'user_transfer'
-      )?.transaction_hash
+      const userTransferTransaction = data?.transactions?.find((t: any) => t.status === 'user_transfer')?.transaction_hash
       setUserTransferTransaction(userTransferTransaction ?? '')
-      const payoutTransaction = data?.transactions?.find(
-        (t: any) => t.status === 'payout'
-      )?.transaction_hash
+      const payoutTransaction = data?.transactions?.find((t: any) => t.status === 'payout')?.transaction_hash
       setBridgeMintTransactionHash(payoutTransaction ?? '')
 
       console.log('::swap data fetched')
@@ -125,24 +137,14 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
     try {
       const {
         data: { data },
-      } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`
-      )
+      } = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/${swapId}?version=${process.env.NEXT_PUBLIC_API_VERSION}`)
       // set time to expire
       setTimeToExpire(new Date(data.created_date).getTime() + 72 * 3600 * 1000)
       // setTimeToExpire(new Date().getTime() + 30*1000) // now + 100
-      const _sourceNetwork = sourceNetworks.find(
-        (_n: Network) => _n.internal_name === data.source_network
-      ) as Network
-      const _sourceAsset = _sourceNetwork?.currencies?.find(
-        (c: Token) => c.asset === data.source_asset
-      )
-      const _destinationNetwork = destinationNetworks.find(
-        (_n: Network) => _n.internal_name === data.destination_network
-      ) as Network
-      const _destinationAsset = _destinationNetwork?.currencies?.find(
-        (c: Token) => c.asset === data.destination_asset
-      )
+      const _sourceNetwork = sourceNetworks.find((_n: CryptoNetwork) => _n.internal_name === data.source_network)
+      const _sourceAsset = _sourceNetwork?.currencies?.find((c: NetworkCurrency) => c.asset === data.source_asset)
+      const _destinationNetwork = destinationNetworks.find((_n: CryptoNetwork) => _n.internal_name === data.destination_network)
+      const _destinationAsset = _destinationNetwork?.currencies?.find((c: NetworkCurrency) => c.asset === data.destination_asset)
 
       setSourceNetwork(_sourceNetwork)
       setSourceAsset(_sourceAsset)
@@ -155,13 +157,9 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       setDepositActions(data.deposit_actions)
       setDestinationAddress(data.destination_address)
 
-      const userTransferTransaction = data?.transactions?.find(
-        (t: any) => t.status === 'user_transfer'
-      )?.transaction_hash
+      const userTransferTransaction = data?.transactions?.find((t: any) => t.status === 'user_transfer')?.transaction_hash
       setUserTransferTransaction(userTransferTransaction ?? '')
-      const payoutTransaction = data?.transactions?.find(
-        (t: any) => t.status === 'payout'
-      )?.transaction_hash
+      const payoutTransaction = data?.transactions?.find((t: any) => t.status === 'payout')?.transaction_hash
       setBridgeMintTransactionHash(payoutTransaction ?? '')
 
       console.log('::swap data fetched')
@@ -174,33 +172,19 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
     swapId && getSwapById(swapId)
   }, [swapId])
 
-  const [showConnectNetworkModal, setShowConnectNetworkModal] =
-    React.useState<boolean>(false)
+  const [showConnectNetworkModal, setShowConnectNetworkModal] = React.useState<boolean>(false)
   const [networkToConnect] = React.useState<NetworkToConnect>()
 
   return (
     <>
-      <Modal
-        height="fit"
-        show={showConnectNetworkModal}
-        setShow={setShowConnectNetworkModal}
-        header={`Network connect`}
-      >
-        <ConnectNetwork
-          NetworkDisplayName={networkToConnect?.DisplayName as string}
-          AppURL={networkToConnect?.AppURL as string}
-        />
+      <Modal height="fit" show={showConnectNetworkModal} setShow={setShowConnectNetworkModal} header={`Network connect`}>
+        <ConnectNetwork NetworkDisplayName={networkToConnect?.DisplayName as string} AppURL={networkToConnect?.AppURL as string} />
       </Modal>
 
       <Widget className={`md:min-w-[480px] max-w-lg ${className}`}>
         <Widget.Content>
           <ResizablePanel>
-            {sourceNetwork &&
-            sourceAsset &&
-            sourceAmount &&
-            destinationNetwork &&
-            destinationAsset &&
-            destinationAddress ? (
+            {sourceNetwork && sourceAsset && sourceAmount && destinationNetwork && destinationAsset && destinationAddress ? (
               <div className="min-h-[400px] w-full justify-center items-center flex">
                 <SwapDetails
                   sourceNetwork={sourceNetwork}
