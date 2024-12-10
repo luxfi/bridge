@@ -82,12 +82,12 @@ const Swap: FC = () => {
     if (!sourceAsset) {
       return []
     } else {
-      return filteredNetworks
+      return networks
         .map((n: CryptoNetwork) => ({
           ...n,
           currencies: n.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)),
         }))
-        .filter((n: CryptoNetwork) => n.currencies.length > 0)
+        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM)
     }
   }, [sourceAsset])
   // when page is mounted, set source network as first network

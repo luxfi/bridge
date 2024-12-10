@@ -1,12 +1,12 @@
 import { atom } from 'jotai'
-import type { Network, Token } from '@/types/teleport'
 import type { DepositAction } from '@/types/utila'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
-export const sourceNetworkAtom = atom<Network | undefined>(undefined)
+export const sourceNetworkAtom = atom<CryptoNetwork | undefined>(undefined)
 export const timeToExpireAtom = atom<number>(0)
-export const sourceAssetAtom = atom<Token | undefined>(undefined)
-export const destinationNetworkAtom = atom<Network | undefined>(undefined)
-export const destinationAssetAtom = atom<Token | undefined>(undefined)
+export const sourceAssetAtom = atom<NetworkCurrency | undefined>(undefined)
+export const destinationNetworkAtom = atom<CryptoNetwork | undefined>(undefined)
+export const destinationAssetAtom = atom<NetworkCurrency | undefined>(undefined)
 export const destinationAddressAtom = atom<string>('')
 export const sourceAmountAtom = atom<string>('')
 export const ethPriceAtom = atom<number>(0)
