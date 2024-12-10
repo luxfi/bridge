@@ -7,13 +7,12 @@ import {
   CommandList,
 } from '@hanzo/ui/primitives'
 
-
-import { type Token } from '@/types/teleport'
+import type { NetworkCurrency } from '@/Models/CryptoNetwork'
 
 
 const TokenSelect: React.FC<{
-  values: Token[]
-  setValue: (token: Token) => void
+  values: NetworkCurrency[]
+  setValue: (token: NetworkCurrency) => void
 }> = ({ 
   values, 
   setValue 

@@ -10,7 +10,7 @@ import {
 import Gauge from '@/components/gauge'
 import DepositActionItem from '@/components/lux/utila/share/DepositActionItem'
 //hooks
-import type { DepositAction, Network, Token } from '@/types/utila'
+import type { DepositAction } from '@/types/utila'
 import useAsyncEffect from 'use-async-effect'
 import ManualTransfer from './ManualTransfer'
 import SwapItems from './SwapItems'
@@ -18,12 +18,13 @@ import { useAtom } from 'jotai'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
 import { useServerAPI } from '@/hooks/useServerAPI'
 import { formatNumber } from '@/lib/utils'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
