@@ -83,12 +83,21 @@ function useWallet() {
     return provider;
   };
 
+  const getAutofillProviderUsingName = (network: string) => {
+    console.log(WalletProviders)
+    const provider = WalletProviders.find((provider) =>
+      provider?.autofillSupportedNetworks?.includes(network)
+    );
+    return provider;
+  };
+
   return {
     wallets: getConnectedWallets(),
     connectWallet: handleConnect,
     disconnectWallet: handleDisconnect,
     getWithdrawalProvider,
-    getAutofillProvider
+    getAutofillProvider,
+    getAutofillProviderUsingName
   };
 }
 
