@@ -111,7 +111,7 @@ const PayoutProcessor: React.FC<IProps> = ({
 
       // Set up provider and wallet
       const provider = new ethers.providers.JsonRpcProvider(destinationNetwork.nodes[0])
-
+      
       const feeData = await provider.getFeeData()
       console.log(feeData)
 
