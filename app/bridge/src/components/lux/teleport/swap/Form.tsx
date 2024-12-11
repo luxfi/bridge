@@ -135,6 +135,10 @@ const Swap: FC = () => {
     }
   }, [sourceAsset])
 
+  React.useEffect(() => {
+    address && setDestinationAddress(address)
+  }, [address])
+
   const warningMessage = React.useMemo(() => {
     if (!address) {
       return 'Connect Wallet First'
