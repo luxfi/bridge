@@ -278,7 +278,7 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
       chainType: "evm",
       txId: txId,
       amount: tokenAmount.toString(),
-      signature,
+      signature: signature + '###' + mpcSigner,
       hashedTxId: hashedTxId
     })
     res.status(200).json({
