@@ -1,5 +1,5 @@
 import React from 'react'
-import { swapStatusAtom, swapIdAtom } from '@/store/teleport'
+import { swapStatusAtom } from '@/store/teleport'
 //hooks
 import { useAtom } from 'jotai'
 //types
