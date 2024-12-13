@@ -19,19 +19,8 @@ import useAsyncEffect from 'use-async-effect'
 import { useAtom } from 'jotai'
 import { useEthersSigner } from '@/hooks/useEthersSigner'
 
-import {
-  sourceNetworkAtom,
-  sourceAssetAtom,
-  destinationNetworkAtom,
-  destinationAssetAtom,
-  destinationAddressAtom,
-  sourceAmountAtom,
-  ethPriceAtom,
-  swapStatusAtom,
-  swapIdAtom,
-} from '@/store/teleport'
+import { swapStatusAtom } from '@/store/teleport'
 import SpinIcon from '@/components/icons/spinIcon'
-import { SwapStatus } from '@/Models/SwapStatus'
 import { fetchTokenBalance } from '@/lib/utils'
 import { Button } from '@hanzo/ui/primitives'
 import { useSettings } from '@/context/settings'
@@ -44,30 +33,25 @@ const Address = dynamic(() => import('@/components/lux/teleport/share/Address'),
 
 const Swap: FC = () => {
   const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-
   const { networks } = useSettings()
-
   const filteredNetworks = networks.filter((n: CryptoNetwork) => n.type === NetworkType.EVM && n.is_testnet === !isMainnet && n.status === 'active')
-
-  // const networks = isMainnet ? mainNetworks : devNetworks
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false)
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false)
-  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
-  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
+  const [sourceNetwork, setSourceNetwork] = React.useState<CryptoNetwork | undefined>(undefined)
+  const [sourceAsset, setSourceAsset] = React.useState<NetworkCurrency | undefined>(undefined)
   //balances
   const [sourceBalance, setSourceBalance] = React.useState<number>(0)
   const [isSourceBalanceLoading, setIsSourceBalanceLoading] = React.useState<boolean>(false)
   const [destinationBalance, setDestinationBalance] = React.useState<number>(0)
   const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] = React.useState<boolean>(false)
 
-  const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom)
-  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
-  const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom)
+  const [destinationNetwork, setDestinationNetwork] = React.useState<CryptoNetwork | undefined>(undefined)
+  const [destinationAsset, setDestinationAsset] = React.useState<NetworkCurrency | undefined>(undefined)
+  const [destinationAddress, setDestinationAddress] = React.useState<string>('')
+  const [sourceAmount, setSourceAmount] = React.useState<string>('')
 
-  const [sourceAmount] = useAtom(sourceAmountAtom)
-  const [, setSwapStatus] = useAtom(swapStatusAtom)
-  const [, setEthPrice] = useAtom(ethPriceAtom)
+  const [tokenPrice, setTokenPrice] = React.useState<number>(0)
   const [flipInProgress, setFlipInProgress] = React.useState<boolean>(false)
 
   // hooks
@@ -146,10 +130,14 @@ const Swap: FC = () => {
   React.useEffect(() => {
     if (sourceAsset) {
       serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
-        setEthPrice(Number(data?.data?.data?.price))
+        setTokenPrice(Number(data?.data?.data?.price))
       })
     }
   }, [sourceAsset])
+
+  React.useEffect(() => {
+    address && setDestinationAddress(address)
+  }, [address])
 
   const warningMessage = React.useMemo(() => {
     if (!address) {
@@ -190,11 +178,9 @@ const Swap: FC = () => {
         use_teleporter: true,
         app_name: 'Bridge',
       }
+      console.log('::data for swap:', data)
       const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`, data)
-      // setSwapId(response.data?.data?.swap_id)
-      window.history.pushState({}, '', `/swap/teleporter/${response.data?.data?.swap_id}`)
-      setSwapStatus(SwapStatus.UserTransferPending)
-      // setShowSwapModal(true)
+      console.log('::swap creation response:', response.data.data)
       router.push(`/swap/teleporter/${response.data?.data?.swap_id}`)
     } catch (err) {
       console.log(err)
@@ -237,14 +223,16 @@ const Swap: FC = () => {
       <Widget.Content>
         <div id="WIDGET_CONTENT" className="flex-col relative flex justify-between w-full mb-3.5 leading-4 overflow-hidden">
           <FromNetworkForm
+            amount={sourceAmount}
+            setAmount={setSourceAmount}
             disabled={false}
             network={sourceNetwork}
-            asset={sourceAsset}
             setNetwork={(network: CryptoNetwork) => {
               setSourceNetwork(network)
             }}
-            maxValue={sourceBalance.toString()}
+            asset={sourceAsset}
             setAsset={(token: NetworkCurrency) => setSourceAsset(token)}
+            maxValue={sourceBalance.toString()}
             networks={sourceNetworks}
             balance={sourceBalance}
             balanceLoading={isSourceBalanceLoading}
@@ -259,6 +247,7 @@ const Swap: FC = () => {
           </div>
           <ToNetworkForm
             disabled={!sourceNetwork}
+            amount={sourceAmount}
             network={destinationNetwork}
             asset={destinationAsset}
             sourceAsset={sourceAsset}

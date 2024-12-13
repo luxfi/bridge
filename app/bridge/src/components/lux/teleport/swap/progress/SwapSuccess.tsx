@@ -35,12 +35,12 @@ const SwapSuccess: React.FC<{
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
 
   const toBurn = React.useMemo(
-    () => ((sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
+    () => ((sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ')) ? true : false),
     [sourceAsset]
   )
 
   const toMint = React.useMemo(
-    () => ((destinationAsset.name.startsWith('Lux ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
+    () => ((destinationAsset.name.startsWith('Liquid ') || destinationAsset.name.startsWith('Zoo ')) ? true : false),
     [destinationAsset]
   )
 

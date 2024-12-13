@@ -5,12 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
 import { useNotify } from '@/context/toast-provider'
 
-import {
-  swapStatusAtom,
-  mpcSignatureAtom,
-  bridgeMintTransactionAtom,
-  userTransferTransactionAtom,
-} from '@/store/teleport'
+import { swapStatusAtom, mpcSignatureAtom, bridgeMintTransactionAtom, userTransferTransactionAtom } from '@/store/teleport'
 import { Contract } from 'ethers'
 import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
 import { ethers } from 'ethers'
@@ -70,19 +65,9 @@ const PayoutProcessor: React.FC<IProps> = ({
   const { connectWallet } = useWallet()
   const { serverAPI } = useServerAPI()
 
-  const toBurn = React.useMemo(
-    () =>
-      sourceAsset.name.startsWith('Lux ') || sourceAsset.name.startsWith('Zoo ')
-        ? true
-        : false,
-    [sourceAsset]
-  )
+  const toBurn = React.useMemo(() => (sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ') ? true : false), [sourceAsset])
   const toMint = React.useMemo(
-    () =>
-      destinationAsset.name.startsWith('Liquid ') ||
-      destinationAsset.name.startsWith('Zoo ')
-        ? true
-        : false,
+    () => (destinationAsset.name.startsWith('Liquid ') || destinationAsset.name.startsWith('Zoo ') ? true : false),
     [destinationAsset]
   )
 
@@ -90,14 +75,12 @@ const PayoutProcessor: React.FC<IProps> = ({
     if (toMint) {
       mintDestinationToken()
     } else {
-      if (isConnecting || isGettingPayout || signer) {
+      if (isConnecting || isGettingPayout || !signer) {
         //todo;;;
       } else if (Number(chainId) === Number(destinationNetwork?.chain_id)) {
         withdrawDestinationToken()
       } else {
-        destinationNetwork.chain_id &&
-          switchChain &&
-          switchChain({ chainId: Number(destinationNetwork.chain_id) })
+        destinationNetwork.chain_id && switchChain && switchChain({ chainId: Number(destinationNetwork.chain_id) })
       }
     }
   }, [signer])
@@ -106,17 +89,14 @@ const PayoutProcessor: React.FC<IProps> = ({
     const mintData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(
-        localeNumber(sourceAmount, sourceAsset.decimals),
-        sourceAsset.decimals
-      ),
+      tokenAmount_: parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
       vault_: toBurn ? 'false' : 'true',
     }
 
-    console.log('data for bridge mint::', mintData)
+    console.log('data for bridge mint::', { ...mintData, sourceAmount })
 
     try {
       setIsGettingPayout(true)
@@ -130,10 +110,8 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (!destinationNetwork.chain_id) return
 
       // Set up provider and wallet
-      const provider = new ethers.providers.JsonRpcProvider(
-        destinationNetwork.nodes[0]
-      )
-
+      const provider = new ethers.providers.JsonRpcProvider(destinationNetwork.nodes[0])
+      
       const feeData = await provider.getFeeData()
       console.log(feeData)
 
@@ -141,13 +119,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       const privateKey = process.env.NEXT_PUBLIC_LUX_SIGNER
       const wallet = new ethers.Wallet(privateKey!, provider)
 
-      const bridgeContract = new Contract(
-        CONTRACTS[
-          Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS
-        ].teleporter,
-        teleporterABI,
-        wallet
-      )
+      const bridgeContract = new Contract(CONTRACTS[Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, teleporterABI, wallet)
 
       const _signer = await bridgeContract.previewBridgeStealth(
         mintData.hashedTxId_,
@@ -163,21 +135,14 @@ const PayoutProcessor: React.FC<IProps> = ({
       const isReplay = await bridgeContract.keyExistsTx(mintData.signedTXInfo_)
       console.log('::replay:', isReplay)
       if (isReplay) {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`,
-          {
-            txHash: mintData.receiverAddress_,
-            amount: sourceAmount,
-            from: CONTRACTS[
-              Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
-            ].teleporter,
-            to: destinationAddress,
-          }
-        )
+        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`, {
+          txHash: mintData.receiverAddress_,
+          amount: sourceAmount,
+          from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
+          to: destinationAddress,
+        })
         setSwapStatus('payout_success')
-        throw new Error(
-          'Duplicated Hash detected. Please contact to support team'
-        )
+        throw new Error('Duplicated Hash detected. Please contact to support team')
       }
 
       const _bridgePayoutTx = await bridgeContract.bridgeMintStealth(
@@ -210,27 +175,19 @@ const PayoutProcessor: React.FC<IProps> = ({
           //@ts-expect-error no check
           const _txSendLux = await wallet.sendTransaction(luxSendTxData)
           await _txSendLux.wait()
-          console.log(
-            `::1lux is sent to ${mintData.receiverAddress_}`,
-            _txSendLux.hash
-          )
+          console.log(`::1lux is sent to ${mintData.receiverAddress_}`, _txSendLux.hash)
         } catch (err) {
           console.log('::issue in sening 1 lux')
         }
       }
       ///////////////////////////////////////////////////////////////////
       setBridgeMintTransactionHash(_bridgePayoutTx.hash)
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`,
-        {
-          txHash: _bridgePayoutTx.hash,
-          amount: sourceAmount,
-          from: CONTRACTS[
-            Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
-          ].teleporter,
-          to: destinationAddress,
-        }
-      )
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/payout/${swapId}`, {
+        txHash: _bridgePayoutTx.hash,
+        amount: sourceAmount,
+        from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
+        to: destinationAddress,
+      })
       setSwapStatus('payout_success')
     } catch (err: any) {
       console.log(err)
@@ -248,10 +205,7 @@ const PayoutProcessor: React.FC<IProps> = ({
     const withdrawData = {
       hashedTxId_: Web3.utils.keccak256(userTransferTransaction),
       toTokenAddress_: destinationAsset?.contract_address,
-      tokenAmount_: parseUnits(
-        localeNumber(sourceAmount, sourceAsset.decimals),
-        sourceAsset.decimals
-      ),
+      tokenAmount_: parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
       signedTXInfo_: mpcSignature,
@@ -263,28 +217,15 @@ const PayoutProcessor: React.FC<IProps> = ({
     console.log('::data for bridge withdraw:', withdrawData)
     if (!destinationNetwork.chain_id) return
     try {
-      const bridgeContract = new Contract(
-        CONTRACTS[
-          Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS
-        ].teleporter,
-        teleporterABI,
-        signer
-      )
+      const bridgeContract = new Contract(CONTRACTS[Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, teleporterABI, signer)
 
-      const previewVaultWithdraw = await bridgeContract.previewVaultWithdraw(
-        withdrawData.toTokenAddress_
-      )
+      const previewVaultWithdraw = await bridgeContract.previewVaultWithdraw(withdrawData.toTokenAddress_)
       console.log({
-        balance: Number(
-          formatUnits(previewVaultWithdraw, destinationAsset.decimals)
-        ),
+        balance: Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)),
         todo: Number(sourceAmount),
       })
 
-      if (
-        Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) <
-        Number(sourceAmount)
-      ) {
+      if (Number(formatUnits(previewVaultWithdraw, destinationAsset.decimals)) < Number(sourceAmount)) {
         notify(
           `Bridge doesnt have enough balance to withdraw. You can only withdraw ${Number(
             formatUnits(previewVaultWithdraw, destinationAsset.decimals)
@@ -314,29 +255,21 @@ const PayoutProcessor: React.FC<IProps> = ({
       )
       console.log('::signer', _signer)
 
-      const isReplay = await bridgeContract.keyExistsTx(
-        withdrawData.signedTXInfo_
-      )
+      const isReplay = await bridgeContract.keyExistsTx(withdrawData.signedTXInfo_)
       console.log('::replay:', isReplay)
       if (isReplay) {
         await serverAPI.post(`/api/swaps/payout/${swapId}`, {
           txHash: withdrawData.receiverAddress_,
           amount: sourceAmount,
-          from: CONTRACTS[
-            Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
-          ].teleporter,
+          from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
           to: destinationAddress,
         })
         setSwapStatus('payout_success')
-        throw new Error(
-          'Duplicated Hash detected. Please contact to support team'
-        )
+        throw new Error('Duplicated Hash detected. Please contact to support team')
       }
 
       // Set up provider and wallet
-      const provider = new ethers.providers.JsonRpcProvider(
-        destinationNetwork.nodes[0]
-      )
+      const provider = new ethers.providers.JsonRpcProvider(destinationNetwork.nodes[0])
       const feeData = await provider.getFeeData()
       console.log(feeData)
 
@@ -360,9 +293,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       await serverAPI.post(`/api/swaps/payout/${swapId}`, {
         txHash: _bridgePayoutTx.hash,
         amount: sourceAmount,
-        from: CONTRACTS[
-          Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
-        ].teleporter,
+        from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
         to: destinationAddress,
       })
       setSwapStatus('payout_success')
@@ -379,10 +310,8 @@ const PayoutProcessor: React.FC<IProps> = ({
   }
 
   const handlePayoutDestinationToken = () => {
-    if (isConnecting) return
     if (isGettingPayout) return
-    if (!signer) return notify('Please connect wallet first.', 'info')
-    // connectWallet('evm')
+    if (!signer && !toMint) return notify('Please connect wallet first.', 'info')
 
     if (toMint) {
       mintDestinationToken()
@@ -390,9 +319,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       if (Number(chainId) === Number(destinationNetwork.chain_id)) {
         withdrawDestinationToken()
       } else {
-        destinationNetwork.chain_id &&
-          switchChain &&
-          switchChain({ chainId: Number(destinationNetwork.chain_id) })
+        destinationNetwork.chain_id && switchChain && switchChain({ chainId: Number(destinationNetwork.chain_id) })
       }
     }
   }
@@ -426,19 +353,14 @@ const PayoutProcessor: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-start text-sm">
-                  <span>
-                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${toBurn ? 'burnt' : 'transferred'}`}
-                  </span>
+                  <span>{`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${toBurn ? 'burnt' : 'transferred'}`}</span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
                           target={'_blank'}
-                          href={sourceNetwork?.transaction_explorer_template?.replace(
-                            '{0}',
-                            userTransferTransaction
-                          )}
+                          href={sourceNetwork?.transaction_explorer_template?.replace('{0}', userTransferTransaction)}
                           className="cursor-pointer"
                         >
                           <svg
@@ -480,16 +402,8 @@ const PayoutProcessor: React.FC<IProps> = ({
               onClick={handlePayoutDestinationToken}
               className="border border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
             >
-              {isGettingPayout ? (
-                <SpinIcon className="animate-spin h-5 w-5" />
-              ) : (
-                <ArrowRight />
-              )}
-              <span className="grow">
-                {toMint
-                  ? `Mint Your ${destinationAsset?.asset}`
-                  : `Withdraw Your ${destinationAsset?.asset}`}
-              </span>
+              {isGettingPayout ? <SpinIcon className="animate-spin h-5 w-5" /> : <ArrowRight />}
+              <span className="grow">{toMint ? `Mint Your ${destinationAsset?.asset}` : `Withdraw Your ${destinationAsset?.asset}`}</span>
             </button>
           </div>
         </div>

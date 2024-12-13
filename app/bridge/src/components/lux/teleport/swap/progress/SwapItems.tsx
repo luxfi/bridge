@@ -2,7 +2,6 @@ import React from 'react'
 import Image from 'next/image'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import { useAtom } from 'jotai'
-import { ethPriceAtom } from '@/store/teleport'
 import { truncateDecimals } from '@/components/utils/RoundDecimals'
 import { useChainId } from 'wagmi'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
@@ -16,6 +15,7 @@ import useAsyncEffect from 'use-async-effect'
 // types
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 import { useSettings } from '@/context/settings'
+import { useServerAPI } from '@/hooks/useServerAPI'
 
 interface IProps {
   sourceNetwork: CryptoNetwork
@@ -26,25 +26,18 @@ interface IProps {
   sourceAmount: string
 }
 
-const SwapItems: React.FC<IProps> = ({
-  sourceNetwork,
-  sourceAsset,
-  destinationNetwork,
-  destinationAddress,
-  destinationAsset,
-  sourceAmount,
-}) => {
+const SwapItems: React.FC<IProps> = ({ sourceNetwork, sourceAsset, destinationNetwork, destinationAddress, destinationAsset, sourceAmount }) => {
   const { networks } = useSettings()
+  const { serverAPI } = useServerAPI()
 
-  const [ethPrice] = useAtom(ethPriceAtom)
+  
   //token price
-  const tokenPrice = ethPrice
+  const [tokenPrice, setTokenPrice] = React.useState<number>(0)
 
   const { connectWallet } = useWallet()
 
   const [sourceBalance, setSourceBalance] = React.useState<string>('0')
-  const [destinationBalance, setDestinationBalance] =
-    React.useState<string>('0')
+  const [destinationBalance, setDestinationBalance] = React.useState<string>('0')
 
   const [isFetching, setIsFetching] = React.useState<boolean>(true)
 
@@ -52,17 +45,20 @@ const SwapItems: React.FC<IProps> = ({
   const signer = useEthersSigner()
 
   const toMint = React.useMemo(
-    () =>
-      destinationAsset.name.startsWith('Lux ') ||
-      destinationAsset.name.startsWith('Zoo ')
-        ? true
-        : false,
+    () => (destinationAsset.name.startsWith('Liquid ') || destinationAsset.name.startsWith('Zoo ') ? true : false),
     [destinationAsset]
   )
 
-  const _network = networks.find(
-    (n: CryptoNetwork) => Number(n.chain_id) === chainId
-  )
+  const _network = networks.find((n: CryptoNetwork) => Number(n.chain_id) === chainId)
+
+  // get token price
+  React.useEffect(() => {
+    if (sourceAsset) {
+      serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
+        setTokenPrice(Number(data?.data?.data?.price))
+      })
+    }
+  }, [sourceAsset])
 
   const _renderWallet = () => {
     if (signer) {
@@ -70,13 +66,7 @@ const SwapItems: React.FC<IProps> = ({
         <div className="bg-level-1 font-normal p-3 rounded-lg flex flex-col gap-1 border border-[#404040] w-full">
           {_network ? (
             <div className="flex items-center gap-2">
-              <Image
-                src={_network.logo || ''}
-                height={30}
-                width={30}
-                alt="logo"
-                className="rounded-lg border border-[#404040]"
-              />
+              <Image src={_network.logo || ''} height={30} width={30} alt="logo" className="rounded-lg border border-[#404040]" />
               <span>{_network.display_name}</span>
             </div>
           ) : (
@@ -100,10 +90,7 @@ const SwapItems: React.FC<IProps> = ({
     }
   }
 
-  const getNetworkBalance = async (
-    network: CryptoNetwork,
-    asset: NetworkCurrency
-  ) => {
+  const getNetworkBalance = async (network: CryptoNetwork, asset: NetworkCurrency) => {
     try {
       const provider = new ethers.providers.JsonRpcProvider(network.nodes[0])
       const address = signer?._address
@@ -115,11 +102,7 @@ const SwapItems: React.FC<IProps> = ({
         return formatEther(ethBal)
       } else {
         // Get ERC-20 token balance
-        const tokenContract = new ethers.Contract(
-          asset.contract_address!,
-          erc20ABI,
-          provider
-        )
+        const tokenContract = new ethers.Contract(asset.contract_address!, erc20ABI, provider)
         const tokenBal = await tokenContract.balanceOf(address)
         const decimals = await tokenContract.decimals()
         return ethers.utils.formatUnits(tokenBal, decimals)
@@ -153,17 +136,9 @@ const SwapItems: React.FC<IProps> = ({
         <div className="font-normal flex flex-col w-full relative z-10 space-y-1">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <Image
-                src={sourceAsset.logo || ''}
-                alt={sourceAsset.logo}
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
+              <Image src={sourceAsset.logo || ''} alt={sourceAsset.logo} width={32} height={32} className="rounded-full" />
               <div>
-                <p className=" text-sm leading-5">
-                  {sourceNetwork.display_name}
-                </p>
+                <p className=" text-sm leading-5">{sourceNetwork.display_name}</p>
                 <p className="text-sm ">{'Network'}</p>
               </div>
             </div>
@@ -171,9 +146,7 @@ const SwapItems: React.FC<IProps> = ({
               <p className=" text-sm">
                 {truncateDecimals(Number(sourceAmount), 6)} {sourceAsset.asset}
               </p>
-              <p className=" text-sm flex justify-end">
-                ${truncateDecimals(Number(sourceAmount) * tokenPrice, 6)}
-              </p>
+              <p className=" text-sm flex justify-end">${truncateDecimals(Number(sourceAmount) * tokenPrice, 6)}</p>
             </div>
           </div>
 
@@ -184,8 +157,7 @@ const SwapItems: React.FC<IProps> = ({
               <>
                 <WalletIcon height={20} width={20} />
                 <div className="opacity-80">
-                  {truncateDecimals(Number(sourceBalance), 5)}{' '}
-                  {sourceAsset.asset}
+                  {truncateDecimals(Number(sourceBalance), 5)} {sourceAsset.asset}
                 </div>
               </>
             )}
@@ -194,37 +166,18 @@ const SwapItems: React.FC<IProps> = ({
         <div className="font-normal flex flex-col w-full relative z-10 space-y-1 mt-5">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              {
-                <Image
-                  src={destinationAsset.logo}
-                  alt={destinationAsset.logo}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              }
+              {<Image src={destinationAsset.logo} alt={destinationAsset.logo} width={32} height={32} className="rounded-full" />}
               <div>
-                <p className=" text-sm leading-5">
-                  {destinationNetwork.display_name}
-                </p>
+                <p className=" text-sm leading-5">{destinationNetwork.display_name}</p>
                 <p className="text-sm ">{shortenAddress(destinationAddress)}</p>
               </div>
             </div>
             <div className="flex flex-col text-[#85c285]">
               <p className=" text-sm">
-                {toMint
-                  ? truncateDecimals(Number(sourceAmount), 6)
-                  : truncateDecimals(Number(sourceAmount) * 0.99, 6)}{' '}
-                {destinationAsset.asset}
+                {toMint ? truncateDecimals(Number(sourceAmount), 6) : truncateDecimals(Number(sourceAmount) * 0.99, 6)} {destinationAsset.asset}
               </p>
               <p className=" text-sm flex justify-end">
-                $
-                {toMint
-                  ? truncateDecimals(Number(sourceAmount) * tokenPrice, 6)
-                  : truncateDecimals(
-                      Number(sourceAmount) * 0.99 * tokenPrice,
-                      6
-                    )}
+                ${toMint ? truncateDecimals(Number(sourceAmount) * tokenPrice, 6) : truncateDecimals(Number(sourceAmount) * 0.99 * tokenPrice, 6)}
               </p>
             </div>
           </div>
@@ -235,8 +188,7 @@ const SwapItems: React.FC<IProps> = ({
               <>
                 <WalletIcon height={20} width={20} />
                 <div className="opacity-80">
-                  {truncateDecimals(Number(destinationBalance), 5)}{' '}
-                  {destinationAsset.asset}
+                  {truncateDecimals(Number(destinationBalance), 5)} {destinationAsset.asset}
                 </div>
               </>
             )}

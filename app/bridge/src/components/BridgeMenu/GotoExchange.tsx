@@ -9,7 +9,7 @@ interface IProps {
 }
 
 const GotoExchange: React.FC<IProps> = ({ className }) => (
-  <div className={cn(className, 'w-full')}>
+  <div className={cn(className, 'w-full pb-4')}>
     <div
       onClick={() => window.open('https://lux.exchange/#/swap', '_self')}
       className="flex w-full justify-between gap-3 bg-level-1 p-3 rounded-xl hover:opacity-70 cursor-pointer"
