@@ -48,6 +48,7 @@ const SwapView: React.FC<{
           buttonClx='grow'
           popoverClx='w-[350px]'
           popoverAlign='start'
+          label='from'
         />
         <NetworkCombobox
           networks={toNetworks}
@@ -56,6 +57,8 @@ const SwapView: React.FC<{
           buttonClx='grow'
           popoverClx='w-[350px]'
           popoverAlign='end'
+          label='to'
+          rightJustified
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Combobox, type ListAdaptor } from '@hanzo/ui/primitives-common'
+import { Combobox, type ComboboxTriggerProps, type ListAdaptor } from '@hanzo/ui/primitives-common'
 import { cn } from '@hanzo/ui/util'
 
 import type { Token } from '@/domain/types'
@@ -38,7 +38,7 @@ const TokenCombobox: React.FC<{
   popoverClx='',
 }) => (
 
-  <Combobox<Token>
+  <Combobox<Token, ComboboxTriggerProps<Token>>
     elements={tokens}
     adaptor={adaptor}
     initial={token}
