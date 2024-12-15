@@ -57,8 +57,7 @@ const NetworkComboboxTriggerInner = <Network, >({
   </Button>
 )
 
-const NetworkComboboxTrigger = React.forwardRef(NetworkComboboxTriggerInner) as <Network>(props: ComboboxTriggerProps<Network> & { ref?: React.ForwardedRef<HTMLButtonElement> }) => ReturnType<typeof NetworkComboboxTriggerInner>
-
+const NetworkComboboxTrigger = React.forwardRef(NetworkComboboxTriggerInner) as <Network>(props: ComboboxTriggerProps<Network> & { ref?: React.ForwardedRef<HTMLButtonElement> }) => React.ReactNode
 
 const NetworkCombobox: React.FC<{
   networks: Network[]
