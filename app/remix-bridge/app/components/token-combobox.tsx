@@ -43,11 +43,16 @@ const TokenCombobox: React.FC<{
     adaptor={adaptor}
     initial={token}
     elementSelected={setToken}
-    buttonPlaceholder={placeholder}
     searchPlaceholder={searchHint}
-    buttonClx={cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx)}
     popoverClx={cn('font-sans font-medium w-full', popoverClx)}
-    disabled={disabled}
+    triggerProps={{
+      open: false,
+      current: (token ?? null),
+      currentLabel: null,
+      imageUrl: null,
+      buttonClx: cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx),
+      disabled: false  
+    }}
   />
 )
 

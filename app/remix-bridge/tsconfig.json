@@ -25,7 +25,7 @@
     "target": "ES2022",
     "types": [
       "@remix-run/node",
-      "vite/client"
+      "vite/client",
     ]
   },
   "include": [
@@ -35,5 +35,5 @@
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",
     "**/.client/**/*.tsx"
-, "remix.config.js"  ]
+  ]
 }

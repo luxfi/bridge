@@ -28,6 +28,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@originjs/vite-plugin-commonjs": "^1.0.3",
     "@remix-run/dev": "^2.11.2",
     "@remix-run/server-runtime": "^2.11.2",
     "@types/react": "catalog:",

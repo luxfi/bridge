@@ -1,40 +1,63 @@
 import React, { useRef } from 'react'
 
-import DecimalInput from './decimal-input'
+// import DecimalInput from './decimal-input'
 import NetworkCombobox from './network-combobox'
 
-import { networks  } from '@/domain/settings/teleport/networks.mainnets'
 import type { Network } from '@/domain/types'
 
 const SwapView: React.FC<{
   className?: string
+  fromNetworks: Network[]
+  fromInitial?: Network
+  toNetworks: Network[]
+  toInitial?: Network
 }> = ({
-  className=''
+  className='',
+  fromNetworks,
+  fromInitial,
+  toNetworks,
+  toInitial,
 }) => {
 
   const vRef = useRef<string>('')
-  const networkRef = useRef<Network | undefined>(undefined)
+  const fromRef = useRef<Network | undefined>(fromInitial)
+  const toRef = useRef<Network | undefined>(toInitial)
 
   const setValue = (v: string) => {
     console.log("SwapView setValue :", v)
     vRef.current = v
   }
 
-  const setNetwork = (n: Network) => {
-    console.log("SwapView setNetwork :", n.display_name)
-    networkRef.current = n
+  const setFromNetwork = (n: Network) => {
+    console.log("SwapView setFromNetwork :", n.display_name)
+    fromRef.current = n
+  }
+
+  const setToNetwork = (n: Network) => {
+    console.log("SwapView settoNetwork :", n.display_name)
+    toRef.current = n
   }
 
   return (
     <div className={className}>
-      <NetworkCombobox
-        networks={networks}
-        setNetwork={setNetwork}
-        network={networkRef.current}
-        buttonClx='mb-4 w-[400px]'
-        popoverClx='w-[400px]'
-      />
-      <DecimalInput className='fg-foreground bg-background border border-muted-3 w-full px-1' value={vRef.current} setValue={setValue} />
+      <div className='flex w-full gap-2'>
+        <NetworkCombobox
+          networks={fromNetworks}
+          setNetwork={setFromNetwork}
+          network={fromRef.current}
+          buttonClx='grow'
+          popoverClx='w-[350px]'
+          popoverAlign='start'
+        />
+        <NetworkCombobox
+          networks={toNetworks}
+          setNetwork={setToNetwork}
+          network={toRef.current}
+          buttonClx='grow'
+          popoverClx='w-[350px]'
+          popoverAlign='end'
+        />
+      </div>
     </div>
   )
 }

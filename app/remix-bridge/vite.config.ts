@@ -2,9 +2,12 @@ import { vitePlugin as remix } from '@remix-run/dev'
 import { vercelPreset } from '@vercel/remix/vite'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 
 export default defineConfig({
-
+  define: {
+      'process.env': {}
+  },
   plugins: [
     remix({
       future: {
@@ -15,5 +18,9 @@ export default defineConfig({
       presets: [vercelPreset()],
     }),
     tsconfigPaths(),
+    viteCommonjs(),
   ],
+  optimizeDeps: {
+    include: ['react-dom'],
+  },
 })

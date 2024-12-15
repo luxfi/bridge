@@ -1,9 +1,11 @@
 import React from 'react'
 
-import { Combobox, type ListAdaptor } from '@hanzo/ui/primitives-common'
+import { Button, Combobox, type ComboboxTriggerProps, type ListAdaptor } from '@hanzo/ui/primitives-common'
 import { cn } from '@hanzo/ui/util'
 
 import type { Network } from '@/domain/types'
+
+const ICON_SIZE = 32
 
 const adaptor = {
   getValue:   (el: Network): string => (el.internal_name),
@@ -18,24 +20,62 @@ const adaptor = {
 
 } satisfies ListAdaptor<Network>
 
+
+const NetworkComboboxTriggerInner = <Network, >({
+  current,
+  currentLabel,
+  imageUrl,
+  buttonClx,
+  imageClx,
+  imageSize,
+  ...rest
+}: ComboboxTriggerProps<Network>,
+  ref: React.ForwardedRef<HTMLButtonElement>
+) => (
+  <Button
+    ref={ref}
+    {...rest}
+    variant='outline'
+    role='combobox'
+    className={cn('flex justify-start', buttonClx)}
+  >
+    <div className='flex justify-start items-center gap-2'>
+    {current ? (
+      <img
+        src={imageUrl!}
+        alt={currentLabel + ' image'}
+        height={ICON_SIZE}
+        width={ICON_SIZE}
+        loading="eager"
+        className={imageClx}
+      />
+    ) : (
+      <div style={{width: imageSize, height: imageSize}} />
+    )}
+      <span>{ currentLabel ?? '(select)' }</span>
+    </div>
+  </Button>
+)
+
+const NetworkComboboxTrigger = React.forwardRef(NetworkComboboxTriggerInner) as <Network>(props: ComboboxTriggerProps<Network> & { ref?: React.ForwardedRef<HTMLButtonElement> }) => ReturnType<typeof NetworkComboboxTriggerInner>
+
+
 const NetworkCombobox: React.FC<{
   networks: Network[]
   network?: Network
   setNetwork: (network: Network) => void
-  placeholder?: string
   searchHint?: string
-  disabled?: boolean
-  buttonClx?: string 
   popoverClx?: string
+  buttonClx?: string
+  popoverAlign? : "center" | "end" | "start"
 }> = ({
   networks, 
   network, 
   setNetwork,
-  placeholder,
   searchHint,
-  disabled=false,
-  buttonClx='',
   popoverClx='',
+  popoverAlign = 'center', 
+  buttonClx=''
 }) => (
 
   <Combobox<Network>
@@ -43,11 +83,18 @@ const NetworkCombobox: React.FC<{
     adaptor={adaptor}
     initial={network}
     elementSelected={setNetwork}
-    buttonPlaceholder={placeholder}
     searchPlaceholder={searchHint}
-    buttonClx={cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx)}
     popoverClx={cn('font-sans font-medium w-full', popoverClx)}
-    disabled={disabled}
+    popoverAlign={popoverAlign}
+    Trigger={NetworkComboboxTrigger}
+    triggerProps={{
+      open: false,
+      current: (network ?? null),
+      currentLabel: null,
+      imageUrl: null,
+      buttonClx: cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx),
+      disabled: false  
+    }}
   />
 )
 
