@@ -20,8 +20,8 @@ const adaptor = {
 
 const TokenCombobox: React.FC<{
   tokens: Token[]
-  token?: Token
-  setToken: (token: Token) => void
+  token: Token | null
+  setToken: (token: Token | null) => void
   placeholder?: string
   searchHint?: string
   disabled?: boolean
@@ -41,8 +41,8 @@ const TokenCombobox: React.FC<{
   <Combobox<Token, ComboboxTriggerProps<Token>>
     elements={tokens}
     adaptor={adaptor}
-    initial={token}
-    elementSelected={setToken}
+    current={token}
+    setCurrent={setToken}
     searchPlaceholder={searchHint}
     popoverClx={cn('font-sans font-medium w-full', popoverClx)}
     triggerProps={{
@@ -50,8 +50,9 @@ const TokenCombobox: React.FC<{
       current: (token ?? null),
       currentLabel: null,
       imageUrl: null,
+      placeholder,
       buttonClx: cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx),
-      disabled: false  
+      disabled  
     }}
   />
 )

@@ -1,4 +1,4 @@
-import SwapView from '@/components/swap-widget'
+import SwapCard from '@/components/swap-card'
 import { ApplyTypography  } from '@hanzo/ui/primitives-common'
 
 import { networks  } from '@/domain/settings/teleport/networks.mainnets'
@@ -12,8 +12,8 @@ const Index: React.FC = () => (<>
   <ApplyTypography>
     <h3>Lorem ipsum dolor sit amet, consectetur</h3>
   </ApplyTypography>
-  <SwapView 
-    className='flex flex-col justify-start items-center p-6 rounded border border-muted-3 w-[450px] h-[500px]'
+  <SwapCard 
+    className='flex flex-col justify-start items-center p-6 rounded border border-muted-3 w-[500px] h-[530px]'
     fromNetworks={networks}
     fromInitial={fromInitial}
     toNetworks={networks}

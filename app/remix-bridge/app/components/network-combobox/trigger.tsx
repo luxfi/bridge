@@ -28,10 +28,12 @@ const NetworkComboboxTriggerInner = ({
     {...rest}
     variant='outline'
     role='combobox'
-    className={cn('flex justify-start', buttonClx)}
+    className={cn(
+      'flex gap-1.5 rounded-lg h-auto py-1', 
+      rightJustified ? 'justify-start flex-row-reverse' : 'justify-start',
+      buttonClx
+    )}
   >
-    <div className='flex justify-start items-center gap-2'>
-      {label}
     {current ? (
       <img
         src={imageUrl!}
@@ -39,12 +41,17 @@ const NetworkComboboxTriggerInner = ({
         height={imageSize}
         width={imageSize}
         loading="eager"
-        className={imageClx}
+        className={cn('block rounded-md ', imageClx)}
       />
     ) : (
       <div style={{width: imageSize, height: imageSize}} />
     )}
-      <span>{ currentLabel ?? '(select)' }</span>
+    <div className={cn(
+      'flex flex-col gap-0 ',
+      rightJustified ? 'justify-end items-end' : 'justify-start items-start' 
+    )}>
+      <span className='text-sm block text-muted-2'>{label}</span>
+      <span className={cn('block font-semibold', currentLabel ? 'text-foreground' : 'text-muted')}>{ currentLabel ?? '(select)' }</span>
     </div>
   </Button>
 )

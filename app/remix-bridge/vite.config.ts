@@ -22,5 +22,13 @@ export default defineConfig({
   ],
   optimizeDeps: {
     include: ['react-dom'],
+      // Not excluding these seem to:
+      //   a) always force a refresh after initial load  (cf(?): https://github.com/vitejs/vite/discussions/14801)
+      //   b) optimize an old version!
+    exclude: [
+      '@hanzo/ui/primitives-common', 
+      '@hanzo/ui/util', 
+      //'@luxfi/ui/style/lux-global-non-next.css'
+    ]
   },
 })
