@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react'
 
-import type { Network } from '@/domain/types'
+import type { Network, Token } from '@/domain/types'
 
 // import DecimalInput from './decimal-input'
-import NetworkCombobox from '../network-combobox'
-import ReverseButton from './reverse-button'
+import TokenCard from '../token-card'
+import FromToCard from './from-to-card'
+import { cn } from '@hanzo/ui/util'
 
-const SwapView: React.FC<{
+const SwapCard: React.FC<{
   className?: string
   fromNetworks: Network[]
   fromInitial?: Network | null
@@ -20,74 +21,69 @@ const SwapView: React.FC<{
   toInitial,
 }) => {
 
-  const vRef = useRef<string>('')
-  const [_from, _setFrom] = useState<Network | null>(fromInitial ?? null)
-  const [_to, _setTo] = useState<Network | null>(toInitial ?? null)
-  const [_fromNetworks, _setFromNetworks] = useState<Network[]>(fromNetworks)
-  const [_toNetworks, _setToNetworks]  = useState<Network[]>(toNetworks)
-  //const [updateMe, setUpdateMe] = useState<boolean>(false) // allow forced update
+  const _from = useRef<Network | null>(fromInitial ?? null)
+  const _to = useRef<Network | null>(toInitial ?? null)
+  const _fromNetworks = useRef<Network[]>(fromNetworks)
+  const _toNetworks = useRef<Network[]>(toNetworks)
+  const _token = useRef<Token | null>(fromInitial?.currencies![0] ?? null)
+  const _amount = useRef<number>(0)
+  const [triggerUpdate, setTriggerUpdate] = useState<boolean>(false) 
 
-  const setValue = (v: string) => {
-    console.log("SwapView setValue :", v)
-    vRef.current = v
+  const update = () => {setTriggerUpdate((c) => (!c))}
+
+  const setFrom = (v: Network | null) => {
+    _from.current = v
+    update()
+  }
+ 
+  const setTo = (v: Network | null) => {
+    _to.current = v
+    update()
+  }
+ 
+  const setAmount = (n: number) => {
+    _amount.current = n
   }
 
-  const setFromNetwork = (n: Network | null) => {
-    console.log("SwapView setFromNetwork :", n?.display_name)
-    _setFrom(n)
+  const setToken = (t: Token | null) => {
+    _token.current = t
+    update()
   }
 
-  const setToNetwork = (n: Network | null) => {
-    console.log("SwapView settoNetwork :", n?.display_name)
-    _setTo(n)
+  const swapFromAndTo = () => {
+    const tmp = _from.current
+    _from.current = _to.current
+    _to.current = tmp
+    const tmpNetworks = _fromNetworks.current
+    _fromNetworks.current = _toNetworks.current
+    _toNetworks.current = tmpNetworks
+    setTriggerUpdate((c) => (!c))
   }
-
-  const reverse = () => {
-    const tmp = _from
-    //console.log("TMP", tmp)
-    _setFrom(_to)
-    //console.log("TO", _to)
-    _setTo(tmp)
-    const tmpNetworks = _fromNetworks
-    _setFromNetworks(_toNetworks)
-    _setToNetworks(tmpNetworks)
-    //setUpdateMe(!updateMe)
-    
-    console.log("REVERSE")
-  }
-
 
   return (
-    <div className={className}>
-      <div className='flex w-full gap-2 relative'>
-        <NetworkCombobox
-          networks={_fromNetworks}
-          setNetwork={setFromNetwork}
-          network={_from}
-          buttonClx='grow pr-4 overflow-x-hidden'
-          popoverClx='w-[350px]'
-          popoverAlign='start'
-          label='from'
-        />
-        <NetworkCombobox
-          networks={_toNetworks}
-          setNetwork={setToNetwork}
-          network={_to}
-          buttonClx='grow pl-4 overflow-x-hidden'
-          popoverClx='w-[350px]'
-          popoverAlign='end'
-          label='to'
-          rightJustified
-        />
-        <ReverseButton onClick={reverse} className='p-1 h-auto text-muted active:!bg-level-3' style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%,-50%)'
-        }}/>
-      </div>
+    <div className={cn(
+      'flex flex-col justify-start items-center p-6 rounded border border-muted-4', 
+      className
+    )}>
+      <FromToCard 
+        swapFromAndTo={swapFromAndTo}
+        from={_from.current}
+        to={_to.current}
+        fromNetworks={_fromNetworks.current}
+        toNetworks={_toNetworks.current}
+        setFrom={setFrom}
+        setTo={setTo}
+        className='flex w-full gap-2 relative'
+      />
+      <TokenCard 
+        tokens={_from.current?.currencies!}
+        token={_token.current}
+        setToken={setToken}
+        usdValue={1}
+        className='w-full rounded-lg mt-2'
+      />
     </div>
   )
 }
 
-export default SwapView
+export default SwapCard

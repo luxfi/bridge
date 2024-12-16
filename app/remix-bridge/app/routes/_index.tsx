@@ -13,7 +13,7 @@ const Index: React.FC = () => (<>
     <h3>Lorem ipsum dolor sit amet, consectetur</h3>
   </ApplyTypography>
   <SwapCard 
-    className='flex flex-col justify-start items-center p-6 rounded border border-muted-3 w-[500px] h-[530px]'
+    className='w-[500px] h-[530px]'
     fromNetworks={networks}
     fromInitial={fromInitial}
     toNetworks={networks}

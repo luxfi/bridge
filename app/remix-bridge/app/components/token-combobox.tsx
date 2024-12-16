@@ -27,6 +27,7 @@ const TokenCombobox: React.FC<{
   disabled?: boolean
   buttonClx?: string 
   popoverClx?: string
+  popoverAlign? : "center" | "end" | "start"
 }> = ({
   tokens, 
   token, 
@@ -36,22 +37,28 @@ const TokenCombobox: React.FC<{
   disabled=false,
   buttonClx='',
   popoverClx='',
+  popoverAlign = 'center', 
 }) => (
 
   <Combobox<Token, ComboboxTriggerProps<Token>>
     elements={tokens}
-    adaptor={adaptor}
     current={token}
     setCurrent={setToken}
+    adaptor={adaptor}
+    noCheckmark
     searchPlaceholder={searchHint}
     popoverClx={cn('font-sans font-medium w-full', popoverClx)}
+    popoverAlign={popoverAlign}
+    listItemClx='bg-background hover:!bg-level-3'
+    listItemSelectedClx='!bg-level-2'
     triggerProps={{
       open: false,
       current: (token ?? null),
       currentLabel: null,
       imageUrl: null,
       placeholder,
-      buttonClx: cn('font-sans font-medium w-full pl-1.5 pr-2', buttonClx),
+      imageClx: 'rounded',
+      buttonClx: cn('font-sans font-medium w-auto pl-1.5 pr-2', buttonClx),
       disabled  
     }}
   />

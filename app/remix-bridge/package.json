@@ -25,6 +25,7 @@
     "mobx-react-lite": "^4.0.7",
     "mobx-utils": "^6.1.0",
     "react": "catalog:",
+    "react-currency-input-field": "^3.9.0",
     "react-dom": "catalog:"
   },
   "devDependencies": {

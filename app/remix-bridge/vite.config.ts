@@ -6,7 +6,7 @@ import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 
 export default defineConfig({
   define: {
-      'process.env': {}
+    'process.env': {}
   },
   plugins: [
     remix({
@@ -28,7 +28,6 @@ export default defineConfig({
     exclude: [
       '@hanzo/ui/primitives-common', 
       '@hanzo/ui/util', 
-      //'@luxfi/ui/style/lux-global-non-next.css'
     ]
   },
 })
