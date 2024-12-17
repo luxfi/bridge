@@ -13,8 +13,8 @@ const adaptor = {
   valueEquals: (el: Token, v: string): boolean => (
     el.asset.toUpperCase() === v.toUpperCase()
   ),
-  getLabel:  (el: Token): string => (el.name),
-  getImageUrl:  (el: Token): string => (el.logo),
+  getLabel:   (el: Token): string => (el.name),
+  getImageUrl: (el: Token): string => (el.logo),
 
 } satisfies ListAdaptor<Token>
 

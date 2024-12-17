@@ -29,7 +29,6 @@ const TokenCard: React.FC<{
     values?: CurrencyInputOnChangeValues | undefined
   ) => {
     _setAmount(value ? Number(value) : 0)
-    console.log('DEC VALUE: ', formatted)  
   }
 
   return (
