@@ -14,7 +14,7 @@ const HeaderConnectUI: React.FC = () => (
     buttonSize='default'
     connectButtonVariant='outline' 
     showWalletIcon={false}
-    connectButtonClx='pl-3 pr-2 flex rounded-lg relative'
+    connectButtonClx='pl-3 pr-2 flex rounded-lg relative aspect-auto'
   >
     <span className='pr-1.5'>Connect</span>
     <span className='pr-1'>|</span>

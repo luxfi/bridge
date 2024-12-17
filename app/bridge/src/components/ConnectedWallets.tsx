@@ -2,8 +2,11 @@
 import { useState, type PropsWithChildren } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 
+import { type VariantProps } from "class-variance-authority"
+
 import {
   Button,
+  buttonVariants, 
   Dialog,
   DialogContent,
   DialogFooter,
@@ -20,7 +23,6 @@ import { type Wallet } from '../stores/walletStore'
 import { cn } from '@hanzo/ui/util'
 import { useEthersSigner } from '@/hooks/useEthersSigner'
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
 import { useSettings } from '@/context/settings'
 import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
@@ -29,6 +31,7 @@ const ConnectedWallets: React.FC<
     connectButtonVariant?: 'outline' | 'primary'
     showWalletIcon?: boolean
     connectButtonClx?: string,
+    buttonSize?: VariantProps<typeof buttonVariants>['size'], 
     className?: string
   } & PropsWithChildren
 > = ({
@@ -36,17 +39,18 @@ const ConnectedWallets: React.FC<
   connectButtonVariant = 'outline',
   showWalletIcon = true,
   connectButtonClx = '',
+  buttonSize='square',
   className = ''
 }) => {
+
   const { wallets } = useWallet()
   const [openDialog, setOpenDialog] = useState<boolean>(false)
-  //hooks
   const { chainId, signer, address } = useEthersSigner()
   const { networks } = useSettings()
 
   if (address && chainId) {
     const network = networks.find(
-      (n: CryptoNetwork) => Number(n.chain_id) === chainId
+      (n: CryptoNetwork) => (Number(n.chain_id) === chainId)
     )
     return (
       <div className={cn("flex gap-2 items-center", className)}>
@@ -144,7 +148,7 @@ const ConnectedWallets: React.FC<
     <ConnectButton>
       <Button
         variant={connectButtonVariant}
-        size="square"
+        size={buttonSize}
         aria-label="Connect wallet"
         className={cn(
           'flex items-center justify-center',
@@ -307,4 +311,8 @@ const ConnectedWalletsDialog = ({
   )
 }
 
-export { ConnectedWalletsDialog as default, WalletsMenu, ConnectedWallets }
+export { 
+  ConnectedWalletsDialog as default, 
+  WalletsMenu, 
+  ConnectedWallets 
+}
