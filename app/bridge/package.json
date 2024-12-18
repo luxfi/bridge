@@ -1,5 +1,5 @@
 {
-  "name": "@luxbridge/app",
+  "name": "@luxbridge/app-old",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -103,6 +103,7 @@
     "@storybook/testing-library": "^0.2.1",
     "@types/bn.js": "^5.1.0",
     "@types/crypto-js": "^4.1.1",
+    "@types/lodash.merge": "^4.6.9",
     "@types/mdx": "^2.0.9",
     "@types/multicoin-address-validator": "^0.5.3",
     "@types/node": "^20.10.7",
