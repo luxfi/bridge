@@ -7,11 +7,13 @@ import {
   Scripts,
   ScrollRestoration,
   type MetaFunction,
-  LiveReload
+  LiveReload,
+  useLoaderData
 } from '@remix-run/react'
+import { json, type LoaderFunction, redirect } from "@remix-run/node"
+import Contexts from '@/contexts'
 import type { LinksFunction } from '@vercel/remix'
-import { Analytics } from '@vercel/analytics/react';
-
+import { Analytics } from '@vercel/analytics/react'
 import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
 
 import '@luxfi/ui/style/lux-global-non-next.css'
@@ -19,8 +21,9 @@ import '@luxfi/ui/style/cart-animation.css'
 import '@luxfi/ui/style/checkout-animation.css'
 
 import Main from 'app/components/main'
-import _links from './links';
-import metadata from './metadata';
+import _links from './links'
+import metadata from './metadata'
+import getBridgeSettings from './utils/get-bridge-settings'
 
 export const config = { runtime: 'edge' }
 
@@ -29,35 +32,50 @@ const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
 export const links: LinksFunction = () => (_links)
 export const meta: MetaFunction = () => (metadata)
 
+export const loader: LoaderFunction = async () => {
+  const settings = await getBridgeSettings()
+  if (!settings) {
+    return redirect("/") // Redirect if settings are not available
+  }
+  return json({ settings })
+}
+
 const Layout: React.FC<PropsWithChildren> = ({ 
   children 
-})  => (
-  <html 
-    lang='en' 
-    suppressHydrationWarning 
-    className='hanzo-ui-dark-theme' 
-    style={{backgroundColor: '#000'}}
-  >
-    <head>
-      <meta charSet='utf-8' />
-      <meta name='viewport' content='width=device-width, initial-scale=1' />
-      <Meta />
-      <Links />
-    </head>
-    <body className={bodyClasses} >
-      <Main className='gap-4 '>
-        {children}
-      </Main>
-      <ScrollRestoration />
-      <Scripts />
-      {/* https://github.com/remix-run/remix/issues/2958#issuecomment-2188876125
-      process.env.NODE_ENV === 'development' && <LiveReload /> 
-      */}
-      {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
-      <Analytics />
-    </body>
-  </html>
-)
+})  => {
+
+  const { settings } = useLoaderData<typeof loader>()
+  
+  return (
+    <html 
+      lang='en' 
+      suppressHydrationWarning 
+      className='hanzo-ui-dark-theme' 
+      style={{backgroundColor: '#000'}}
+    >
+      <head>
+        <meta charSet='utf-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+        <Meta />
+        <Links />
+      </head>
+      <body className={bodyClasses} >
+        <Contexts settings={settings}>
+          <Main className='gap-4 '>
+            {children}
+          </Main>
+          <ScrollRestoration />
+          <Scripts />
+          {/* https://github.com/remix-run/remix/issues/2958#issuecomment-2188876125
+          process.env.NODE_ENV === 'development' && <LiveReload /> 
+          */}
+          {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
+          <Analytics />
+        </Contexts>
+      </body>
+    </html>
+  )
+}
 
 const App: React.FC = () => (
     <Outlet />
