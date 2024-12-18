@@ -1,16 +1,15 @@
-type ContetProps = {
-    center?: boolean,
-    children?: JSX.Element | JSX.Element[];
-}
-const Content = ({ children, center }: ContetProps) => {
-    return center ?
-        <div className='flex flex-col self-center grow w-full'>
-            <div className='flex self-center grow w-full'>
-                <div className='flex flex-col self-center w-full'>
-                    {children}
-                </div>
-            </div>
-        </div>
-        : <div className='space-y-9 py-3'>{children}</div>
-}
+import { cn } from '@hanzo/ui/util'
+import type { PropsWithChildren } from 'react'
+
+const Content: React.FC<{
+  className?: string
+} & PropsWithChildren> = ({ 
+  children, 
+  className=''
+}) => (
+  <div className={cn('flex flex-col justify-center items-center grow w-full', className)}>
+    {children}
+  </div>
+)
+
 export default Content

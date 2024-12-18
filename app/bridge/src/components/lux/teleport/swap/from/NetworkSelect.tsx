@@ -1,8 +1,5 @@
 'use client'
 import type { Dispatch, SetStateAction } from 'react'
-import type { Network } from '@/types/teleport'
-
-import { cn } from '@hanzo/ui/util'
 import Modal from '@/components/modal/modal'
 import SpinIcon from '@/components/icons/spinIcon'
 import SelectItem from './SelectItem'
@@ -15,14 +12,15 @@ import {
   CommandItem,
   CommandList,
 } from '@hanzo/ui/primitives'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 const CommandSelect: React.FC<{
   show: boolean
   setShow: (value: boolean) => void
   searchHint: string
-  networks: Network[]
-  network?: Network
-  setNetwork: (value: Network) => void
+  networks: CryptoNetwork[]
+  network?: CryptoNetwork
+  setNetwork: (value: CryptoNetwork) => void
 }> = ({ networks, network, setNetwork, show, setShow, searchHint }) => {
   const { isDesktop } = useWindowDimensions()
   return (
@@ -35,9 +33,9 @@ const CommandSelect: React.FC<{
         <CommandWrapper>
           <CommandInput autoFocus={isDesktop} placeholder={searchHint} />
           {networks && networks.length > 0 ? (
-            <CommandList>
+            <CommandList className='max-h-full'>
               <CommandEmpty>No results found.</CommandEmpty>
-              {networks.map((n: Network) => (
+              {networks.map((n: CryptoNetwork) => (
                 <CommandItem
                   disabled={false}
                   value={n.internal_name}
@@ -45,10 +43,7 @@ const CommandSelect: React.FC<{
                   onSelect={() => {
                     setNetwork(n)
                   }}
-                  className={cn([
-                    n?.status == 'active' ? 'opacity-100' : 'opacity-50',
-                    'hover:!bg-[#1F1F1F] aria-selected:!bg-[#1F1F1F] cursor-pointer',
-                  ])}
+                  className={n?.status == 'active' ? 'opacity-100' : 'opacity-50'}
                 >
                   <SelectItem network={n} />
                 </CommandItem>
@@ -61,7 +56,7 @@ const CommandSelect: React.FC<{
           )}
         </CommandWrapper>
       ) : (
-        <></>
+        null
       )}
     </Modal>
   )

@@ -1,19 +1,15 @@
 'use client'
 import React from 'react'
-import { useAtom } from 'jotai'
+import { useSearchParams } from 'next/navigation'
 
-import { useTelepoterAtom } from '@/store/teleport'
 import Teleporter from '@/components/lux/teleport/swap/Form'
-import SwapFireblock from '@/components/lux/fireblocks/swap/Form'
+import SwapUtila from '@/components/lux/utila/swap/Form'
+import { useAtom } from 'jotai'
+import { useTelepoterAtom } from '@/store/teleport'
 
 const Swapper: React.FC = () => {
-  const [useTeleporter, _] = useAtom(useTelepoterAtom)
-
-  return (
-    <div className="py-20">
-      {useTeleporter ? <Teleporter /> : <SwapFireblock />}
-    </div>
-  )
+  const [useTeleporter] = useAtom(useTelepoterAtom)
+  return <div className="xs:w-full md:w-auto md:py-20">{useTeleporter ? <Teleporter /> : <SwapUtila />}</div>
 }
 
 export default Swapper

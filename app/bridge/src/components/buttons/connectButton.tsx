@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useState } from 'react'
+import { type PropsWithChildren, type ReactNode, useState } from 'react'
 
 import {
   Dialog,
@@ -18,59 +18,61 @@ import useWindowDimensions from '../../hooks/useWindowDimensions'
 import { NetworkType } from '../../Models/CryptoNetwork'
 
 import RainbowIcon from '../icons/Wallets/Rainbow'
-//import TON from '../icons/Wallets/TON'
+import TON from '../icons/Wallets/TON'
 import MetaMaskIcon from '../icons/Wallets/MetaMask'
 import WalletConnectIcon from '../icons/Wallets/WalletConnect'
 //import Braavos from '../icons/Wallets/Braavos'
 //import ArgentX from '../icons/Wallets/ArgentX'
 //import Argent from '../icons/Wallets/Argent'
-//import TonKeeper from '../icons/Wallets/TonKeeper'
-//import OpenMask from '../icons/Wallets/OpenMask'
+import TonKeeper from '../icons/Wallets/TonKeeper'
+import OpenMask from '../icons/Wallets/OpenMask'
 import Phantom from '../icons/Wallets/Phantom'
 import Solflare from '../icons/Wallets/Solflare'
 import CoinbaseIcon from '../icons/Wallets/Coinbase'
+import { cn } from '@hanzo/ui/util'
 
-const ConnectButton = ({
+const knownConnectors = [
+  {
+    name: 'EVM',
+    id: 'evm',
+    type: NetworkType.EVM,
+  },
+  // {
+  //   name: 'Starknet',
+  //   id: 'starknet',
+  //   type: NetworkType.Starknet,
+  // },
+  {
+      name: 'TON',
+      id: 'ton',
+      type: NetworkType.TON,
+  },
+  {
+    name: 'Solana',
+    id: 'solana',
+    type: NetworkType.Solana,
+  },
+]
+
+const ConnectButton: React.FC<{
+  className?: string
+  onClose?: () => void
+} & PropsWithChildren> = ({
   children,
   className,
   onClose,
-}: {
-  children: ReactNode
-  className?: string
-  onClose?: () => void
 }) => {
+
   const { connectWallet, wallets } = useWallet()
   const [open, setOpen] = useState<boolean>()
   const { isMobile } = useWindowDimensions()
 
-  const knownConnectors = [
-    {
-      name: 'EVM',
-      id: 'evm',
-      type: NetworkType.EVM,
-    },
-    // {
-    //   name: 'Starknet',
-    //   id: 'starknet',
-    //   type: NetworkType.Starknet,
-    // },
-    // {
-    //   name: 'TON',
-    //   id: 'ton',
-    //   type: NetworkType.TON,
-    // },
-    {
-      name: 'Solana',
-      id: 'solana',
-      type: NetworkType.Solana,
-    },
-  ]
   const filteredConnectors = knownConnectors.filter(
     (c) => !wallets.map((w) => w?.providerName).includes(c.id)
   )
   return isMobile ? (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger aria-label='Connect wallet'>{children}</DialogTrigger>
+      <DialogTrigger asChild aria-label='Connect wallet'>{children}</DialogTrigger>
       <DialogContent className='sm:max-w-[425px] text-muted bg-level-1 border-[#404040]'>
         <DialogHeader>
           <DialogTitle className='text-center'>Link a new wallet</DialogTitle>
@@ -106,10 +108,10 @@ const ConnectButton = ({
   ) : (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        asChild={true}
+        asChild
         aria-label='Connect wallet'
         disabled={filteredConnectors.length == 0}
-        className={`${className} disabled:cursor-not-allowed `}
+        className={cn(className, 'disabled:cursor-not-allowed')}
       >
         {children}
       </PopoverTrigger>
@@ -169,14 +171,14 @@ const ResolveConnectorIcon = ({
     //       <ArgentX className={className} />
     //     </div>
     //   )
-    // case KnownConnectors.TON:
-    //     return (
-    //         <div className='-space-x-2 flex'>
-    //             <TonKeeper className={className} />
-    //             <OpenMask className={className} />
-    //             <TON className={className} />
-    //         </div>
-    //     )
+     case KnownConnectors.TON:
+         return (
+             <div className='-space-x-2 flex'>
+                 <TonKeeper className={className} />
+                 <OpenMask className={className} />
+                 <TON className={className} />
+             </div>
+         )
     case KnownConnectors.Solana:
       return (
         <div className='-space-x-2 flex'>
@@ -194,6 +196,6 @@ const ResolveConnectorIcon = ({
 const KnownConnectors = {
   //Starknet: 'starknet',
   EVM: 'evm',
-  //TON: 'ton',
+  TON: 'ton',
   Solana: 'solana',
 }

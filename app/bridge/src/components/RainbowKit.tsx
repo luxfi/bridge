@@ -2,17 +2,15 @@
 import React from 'react'
 import Image from 'next/image'
 import resolveChain from '@/lib/resolveChain'
-import mainnets from '@/settings/mainnet/networks.json'
-import testnets from '@/settings/testnet/networks.json'
 import {
   RainbowKitProvider,
   darkTheme,
   type AvatarComponent,
   type DisclaimerComponent,
 } from '@rainbow-me/rainbowkit'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
 import { NetworkType } from '@/Models/CryptoNetwork'
+import { WagmiProvider } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import {
   metaMaskWallet,
@@ -27,11 +25,14 @@ import {
 import { type Chain } from 'viem'
 import { type Config } from 'wagmi'
 import { getDefaultWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { useSettings } from '@/context/settings'
 
 const { wallets } = getDefaultWallets()
 const queryClient = new QueryClient()
 
 const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
+  const { networks } = useSettings()
+
   const CustomAvatar: AvatarComponent = ({ address, ensImage, size }) => (
     <Image
       src={'/favicon.svg'}
@@ -47,7 +48,7 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
   )
   const isChain = (c: Chain | undefined): c is Chain => c != undefined
 
-  const chains = [...mainnets, ...testnets]
+  const chains = networks
     .filter((n) => n.type === NetworkType.EVM)
     .sort((a, b) => Number(a.chain_id) - Number(b.chain_id))
     .map(resolveChain)
@@ -66,6 +67,7 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     //@ts-expect-error "ignore chain type"
     chains: chains,
     ssr: true,
+    autoConnect: true, // Automatically reconnect the wallet
   })
 
   return (

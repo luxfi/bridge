@@ -8,9 +8,8 @@ import { SelectMenuItem, type ISelectMenuItem } from "../Select/Shared/Props/sel
 import PopoverSelectWrapper from "../Select/Popover/PopoverSelectWrapper";
 import CurrencySettings from "@/lib/CurrencySettings";
 import { SortingByOrder } from "@/lib/sorting";
-import { type Layer } from "@/Models/Layer";
 import { useQueryState } from "@/context/query";
-import { type NetworkCurrency } from "@/Models/CryptoNetwork";
+import { type CryptoNetwork, type NetworkCurrency } from "@/Models/CryptoNetwork";
 import BridgeApiClient from "@/lib/BridgeApiClient";
 import useSWR from "swr";
 import { ApiResponse } from "@/Models/ApiResponse";
@@ -29,11 +28,8 @@ const CurrencyGroupFormField: React.FC<{
 
     console.log("cex currency form field =====", { to, fromCurrency, toCurrency, from, currencyGroup, fromExchange, toExchange })
 
-    const { resolveImgSrc } = useSettings();
     const name = "currencyGroup";
-
     const query = useQueryState();
-
     const apiClient = new BridgeApiClient();
     const version = BridgeApiClient.apiVersion;
 
@@ -108,7 +104,6 @@ const CurrencyGroupFormField: React.FC<{
 
     const currencyMenuItems = GenerateCurrencyMenuItems(
         filteredCurrencies!,
-        resolveImgSrc,
         direction === "from" ? sourceRoutes?.data : destinationRoutes?.data,
         lockedCurrency,
         from,
@@ -184,11 +179,10 @@ const CurrencyGroupFormField: React.FC<{
 
 export function GenerateCurrencyMenuItems(
     currencies: AssetGroup[],
-    resolveImgSrc: (item: Layer | NetworkCurrency | undefined) => string,
     routes?: { network: string; asset: string }[],
     lockedCurrency?: AssetGroup | undefined,
-    from?: Layer,
-    to?: Layer,
+    from?: CryptoNetwork,
+    to?: CryptoNetwork,
     direction?: string,
     balances?: Balance[]
 ): SelectMenuItem<AssetGroup>[] {

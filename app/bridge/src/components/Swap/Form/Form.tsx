@@ -24,7 +24,6 @@ import Widget from '../../Widget'
 import GasDetails from '../../gasDetails'
 import { useQueryState } from '../../../context/query'
 import { useFee } from '../../../context/feeContext'
-import AmountField from '../../Input/Amount'
 import dynamic from 'next/dynamic'
 import type { Balance, Gas } from '../../../Models/Balance'
 import DetailedEstimates from '../../DisclosureComponents/FeeDetails/DetailedEstimates'
@@ -59,7 +58,7 @@ const SwapForm: React.FC<Props> = ({ partner, isPartnerWallet }) => {
   const { minAllowedAmount, valuesChanger, fee } = useFee()
   const toAsset = values.toCurrency?.asset
   const { authData } = useAuthState()
-  const { layers } = useSettings()
+  const { networks } = useSettings()
 
   const client = new BridgeApiClient()
   // const address_book_endpoint = authData?.access_token
@@ -172,7 +171,7 @@ const SwapForm: React.FC<Props> = ({ partner, isPartnerWallet }) => {
   const [animate, cycle] = useCycle({ rotate: 0 }, { rotate: 180 })
   //TODO always map to toAsset from query
   const lockedCurrency = query?.lockAsset
-    ? values.to?.assets?.find(
+    ? values.to?.currencies?.find(
       (c) => c?.asset?.toUpperCase() === toAsset?.toUpperCase()
     )
     : null

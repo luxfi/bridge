@@ -112,7 +112,7 @@ const BridgeMenu: React.FC = () => {
               )}
               {path != '/transactions' && (
                 <Menu.Item
-                  pathname="/transactions"
+                  pathname={`/transactions`}
                   icon={<ScrollText className="h-5 w-5" />}
                 >
                   Transfers
@@ -120,7 +120,7 @@ const BridgeMenu: React.FC = () => {
               )}
               {!embedded && path != '/campaigns' && (
                 <Menu.Item
-                  pathname="/campaigns"
+                  pathname={`/campaigns`}
                   icon={<Gift className="h-5 w-5" />}
                 >
                   Campaigns
@@ -214,7 +214,7 @@ const BridgeMenu: React.FC = () => {
               ))}
             </div>
             {path != '/auth' && (
-              <Menu.Footer>
+              <Menu.Footer className='xs:border-t-0 md:border-t md:border-muted-2'>
                 {userType == UserType.AuthenticatedUser ? (
                   <div className="gap-4 flex justify-between items-center relative select-none outline-none w-full">
                     <div className="font-normal flex gap-2 items-center">
@@ -242,7 +242,7 @@ const BridgeMenu: React.FC = () => {
                       size: 'default',
                       variant: 'primary',
                     }}
-                    className="font-sans font-semibold"
+                    className="font-sans font-semibold xs:w-full md:w-auto"
                   />
                 )}
               </Menu.Footer>

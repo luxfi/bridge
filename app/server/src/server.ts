@@ -1,7 +1,12 @@
-import express, { Express } from "express"
+import express, { Express, Request, Response, NextFunction } from "express"
 import cors from "cors"
 import dotenv from "dotenv"
-//routers
+import morgan from "morgan"
+import { v4 as uuidv4 } from "uuid"
+
+import logger from "@/logger" // Import Winston logger
+
+// Routers
 import swaps from "@/routes/swaps"
 import explorer from "@/routes/explorer"
 import settings from "@/routes/settings"
@@ -9,32 +14,116 @@ import tokens from "@/routes/tokens"
 import limits from "@/routes/limits"
 import quotes from "@/routes/quotes"
 import rate from "@/routes/rate"
+import utila from "@/routes/utila"
 import networks from "@/routes/networks"
 import exchanges from "@/routes/exchanges"
 
-dotenv.config()
+try {
+  dotenv.config()
 
-const app: Express = express()
-const port: number = process.env.PORT ? Number(process.env.PORT) : 5000
+  const app: Express = express()
+  const port: number = process.env.PORT ? Number(process.env.PORT) : 5000
 
-app.use(express.json())
-app.use(cors())
-app.use(express.urlencoded({ extended: true }))
+  logger.info(">> Server Initialization Started")
 
-app.use("/api/swaps", swaps)
-app.use("/api/explorer", explorer)
-app.use("/api/settings", settings)
-app.use("/api/tokens", tokens)
-app.use("/api/limits", limits)
-app.use("/api/quotes", quotes)
-app.use("/api/rate", rate)
-app.use("/api/networks", networks)
-app.use("/api/exchanges", exchanges)
+  // Behind Proxy
+  app.set('trust proxy', true)
 
-app.get("/", async (req, res) => {
-  res.json(">>> Hello world. We are LUX!!!")
-})
+  // Middleware to assign a unique ID to each request
+  const REQUEST_ID = Symbol('requestId')
+  app.use((req, res, next) => {
+    (req as any)[REQUEST_ID] = uuidv4()
+    next()
+  })
 
-app.listen(port, "0.0.0.0", function () {
-  console.log(`>> Server is Running At: Port ${port}`)
-})
+  // Middleware
+  app.use(cors())
+  app.use(express.urlencoded({ extended: true }))
+
+  morgan.token('referrer', (req) => req.headers['referer'] || '-')
+  morgan.token('origin', (req) => req.headers['origin'] || '-')
+  morgan.token('device', (req) => req.headers['user-agent'] || '-')
+  morgan.token('id',     (req) => (req as any)[REQUEST_ID] || '-')
+
+  // HTTP request logging
+  // const customFormat = ':id :remote-addr - :method :url HTTP/:http-version" :status :res[content-length] ":referrer" "Origin: :origin" "User-Agent: :device"'
+  // app.use(
+  //   morgan(customFormat, {
+  //     stream: {
+  //       write: (message: string) => logger.http(message.trim()),
+  //     },
+  //   })
+  // )
+
+  // app.use((req, res, next) => {
+  //   logger.info('Request Headers:', req.headers)
+  //   logger.info('Request Body:', req.body)
+  //   next()
+  // })
+
+  // Backwards compatibility for legacy webhook paths
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method === "POST" && req.path === "/webhook/utila") {
+      logger.info(`Rewriting request path: ${req.path} -> /v1/utila/webhook`)
+      req.url = "/v1/utila/webhook" // Rewrite the request path
+    }
+    next()
+  })
+
+  // add utila webhook router
+  app.use("/v1/utila", utila)
+  // Parses incoming JSON requests and puts the parsed data in req.body
+  app.use(express.json({
+    verify: (req, res, buf) => {
+      // Capture the raw request body
+      (req as any).rawBody = buf.toString('utf8')
+    },
+  }))
+  // Add all routes
+  app.use("/api/swaps", swaps)
+  app.use("/api/explorer", explorer)
+  app.use("/api/settings", settings)
+  app.use("/api/tokens", tokens)
+  app.use("/api/limits", limits)
+  app.use("/api/quotes", quotes)
+  app.use("/api/rate", rate)
+  app.use("/api/networks", networks)
+  app.use("/api/exchanges", exchanges)
+
+  // Root endpoint
+  app.get("/", (req: Request, res: Response) => {
+    logger.info("Root endpoint accessed")
+    res.send("Hello, Winston Logger!")
+  })
+
+  // Add a 404 handler for unmatched routes
+  app.use((req, res) => {
+    logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`)
+    res.status(404).send("Not Found")
+  })
+
+  // Global error handling middleware
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const requestId = uuidv4()
+    if (err instanceof Error) {
+      logger.error(`Error: ${err.message}`, { stack: err.stack, requestId })
+      res.status(500).json({ error: err.message, stack: err.stack, requestId })
+    } else {
+      logger.error(`Unknown Error: ${err}`, { requestId })
+      res.status(500).json({ error: "Internal Server Error", requestId })
+    }
+  })
+
+  // Start the server
+  app.listen(port, () => {
+    logger.info(`>> Server Is Running On Port ${port}`)
+  })
+} catch (error) {
+  // Catch any initialization errors
+  if (error instanceof Error) {
+    logger.error("Fatal startup error", { message: error.message, stack: error.stack })
+  } else {
+    logger.error("Fatal startup error: Unknown error", { error })
+  }
+  process.exit(1)
+}

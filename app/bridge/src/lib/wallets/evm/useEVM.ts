@@ -1,22 +1,23 @@
-import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useDisconnect } from "wagmi";
-import { useAccount } from "wagmi";
-import { NetworkType } from "../../../Models/CryptoNetwork";
-import { useSettings } from "../../../context/settings";
-import { type WalletProvider } from "../../../hooks/useWallet";
-import KnownInternalNames from "../../knownIds";
-import { ResolveEVMWalletIcon } from "./resolveEVMIcon";
+import { useConnectModal } from "@rainbow-me/rainbowkit"
+import { useDisconnect } from "wagmi"
+import { useAccount } from "wagmi"
+import { NetworkType } from "../../../Models/CryptoNetwork"
+import { useSettings } from "../../../context/settings"
+import { type WalletProvider } from "../../../hooks/useWallet"
+import KnownInternalNames from "../../knownIds"
+import { ResolveEVMWalletIcon } from "./resolveEVMIcon"
 
 export default function useEVM(): WalletProvider {
-  const { disconnect } = useDisconnect();
+  const { disconnect } = useDisconnect()
 
-  const { layers } = useSettings();
+  const { networks } = useSettings()
+
   const withdrawalSupportedNetworks = [
-    ...layers
+    ...networks
       .filter((layer) => layer.type === NetworkType.EVM)
       .map((l) => l.internal_name),
     KnownInternalNames.Networks.ZksyncMainnet,
-  ];
+  ]
   const autofillSupportedNetworks = [
     ...withdrawalSupportedNetworks,
     KnownInternalNames.Networks.ImmutableXMainnet,
@@ -24,10 +25,10 @@ export default function useEVM(): WalletProvider {
     KnownInternalNames.Networks.BrineMainnet,
     KnownInternalNames.Networks.LoopringGoerli,
     KnownInternalNames.Networks.LoopringMainnet,
-  ];
-  const name = "evm";
-  const account = useAccount();
-  const { openConnectModal } = useConnectModal();
+  ]
+  const name = "evm"
+  const account = useAccount()
+  const { openConnectModal } = useConnectModal()
 
   const getWallet = () => {
     if (account && account.address && account.connector) {
@@ -36,13 +37,13 @@ export default function useEVM(): WalletProvider {
         connector: account.connector?.id,
         providerName: name,
         icon: ResolveEVMWalletIcon({ connector: account.connector }),
-      };
+      }
     }
-  };
+  }
 
   const connectWallet = () => {
-    return openConnectModal && openConnectModal();
-  };
+    return openConnectModal && openConnectModal()
+  }
 
   return {
     getConnectedWallet: getWallet,
@@ -51,5 +52,5 @@ export default function useEVM(): WalletProvider {
     autofillSupportedNetworks,
     withdrawalSupportedNetworks,
     name,
-  };
+  }
 }

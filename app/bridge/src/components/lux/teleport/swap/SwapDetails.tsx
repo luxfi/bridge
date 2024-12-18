@@ -1,23 +1,24 @@
 import React from 'react'
-import { swapStatusAtom, swapIdAtom } from '@/store/teleport'
+import { swapStatusAtom } from '@/store/teleport'
 //hooks
 import { useAtom } from 'jotai'
 //types
-import type { Network, Token } from '@/types/teleport'
 import UserTokenDepositor from './progress/TokenDepositor'
 import TeleportProcessor from './progress/TeleportProcessor'
 import PayoutProcessor from './progress/PayoutProcessor'
 import SwapSuccess from './progress/SwapSuccess'
 import { SwapStatus } from '@/Models/SwapStatus'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
-  sourceAmount: string
+  sourceAmount: string,
+  swapId: string
 }
 
 const SwapDetails: React.FC<IProps> = ({
@@ -28,10 +29,10 @@ const SwapDetails: React.FC<IProps> = ({
   destinationAddress,
   sourceAmount,
   className,
+  swapId
 }) => {
   //atoms
   const [swapStatus] = useAtom(swapStatusAtom)
-  const [swapId] = useAtom(swapIdAtom)
 
   //chain id
   if (swapStatus === SwapStatus.UserTransferPending) {
@@ -47,7 +48,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     )
-  } else if (swapStatus === 'teleport_processing_pending') {
+  } else if (swapStatus === SwapStatus.TeleportProcessPending) {
     return (
       <TeleportProcessor
         sourceNetwork={sourceNetwork}
@@ -60,7 +61,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     )
-  } else if (swapStatus === 'user_payout_pending') {
+  } else if (swapStatus === SwapStatus.UserPayoutPending) {
     return (
       <PayoutProcessor
         sourceNetwork={sourceNetwork}
@@ -73,7 +74,7 @@ const SwapDetails: React.FC<IProps> = ({
         className={className}
       />
     )
-  } else if (swapStatus === 'payout_success') {
+  } else if (swapStatus === SwapStatus.PayoutSuccess) {
     return (
       <SwapSuccess
         sourceNetwork={sourceNetwork}

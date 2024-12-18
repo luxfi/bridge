@@ -1,44 +1,52 @@
 'use client'
-import { useIntercom } from "react-use-intercom"
-import { useAuthState } from "../../context/authContext"
-import IconButton from "../buttons/iconButton"
-import GoHomeButton from "../utils/GoHome"
+import type React from 'react'
+import { useIntercom } from 'react-use-intercom'
+import { useAuthState } from '../../context/authContext'
+import IconButton from '../buttons/iconButton'
+import ToggleButton from '../buttons/toggleButton'
+import GoHomeButton from '../utils/GoHome'
+import ChatIcon from '../icons/ChatIcon'
+import dynamic from 'next/dynamic'
+import BridgeMenu from '../BridgeMenu'
+import { cn } from '@hanzo/ui/util'
 import { ArrowLeft } from 'lucide-react'
-import ChatIcon from "../icons/ChatIcon"
-import dynamic from "next/dynamic"
-import BridgeMenu from "../BridgeMenu"
-import { Button } from "@hanzo/ui/primitives"
-import ToggleButton from "../buttons/toggleButton"
-import { useAtom } from "jotai"
-import { useTelepoterAtom } from "@/store/teleport"
-import type React from "react"
+import { Button } from '@hanzo/ui/primitives'
+//hooks
+import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useAtom } from 'jotai'
+import { useTelepoterAtom } from '@/store/teleport'
 
-const WalletsHeader = dynamic(
-  () => import("../ConnectedWallets").then((comp) => (comp.WalletsHeader)), 
-  { loading: () => (null) }
-)
+const ConnectWallets = dynamic(() => import('../ConnectedWallets').then((comp) => comp.ConnectedWallets), { loading: () => null })
 
-const HeaderWithMenu: React.FC<{ 
-  goBack: (() => void) | undefined 
-}> = ({ 
-  goBack 
-}) => {
-
-  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom);
+const HeaderWithMenu: React.FC<{
+  goBack: (() => void) | undefined
+}> = ({ goBack }) => {
+  // hooks
   const { email, userId } = useAuthState()
   const { boot, show, update } = useIntercom()
-  const updateWithProps = () => { update({ email: email, userId: userId }) }
+  const pathname = usePathname()
+
+  const updateWithProps = () => {
+    update({ email: email, userId: userId })
+  }
+
+  const [useTeleporter, setUseTeleporter] = useAtom(useTelepoterAtom)
+
+  const handleBridgeTypeChange = (value: boolean) => {
+    setUseTeleporter(value)
+  }
 
   const ChatButton: React.FC = () => (
     <Button
-      variant='outline'
-      size='square'
+      variant="outline"
+      size="square"
       onClick={() => {
-        boot();
-        show();
+        boot()
+        show()
         updateWithProps()
       }}
-      aria-label='Open chat'
+      aria-label="Open chat"
       className="text-muted-2 hidden md:inline-block"
     >
       <ChatIcon className="h-6 w-6" strokeWidth="1.5" />
@@ -46,30 +54,25 @@ const HeaderWithMenu: React.FC<{
   )
 
   return (
-    <div className="w-full grid grid-cols-5 px-6 mt-3 items-center justify-center" >
-    {goBack ? (
-      <IconButton
-        onClick={goBack}
-        aria-label="Go back"
-        icon={<ArrowLeft strokeWidth="3" />}
-      />
-    ) : (
-      <div className='flex items-center gap-2'>
-        <ToggleButton
-          value={useTeleporter}
-          onChange={(b: boolean) => { setUseTeleporter(b) }}
-          name="Teleport"
-        />
-        Teleport
-      </div>      
-    )}
-
-      <div className='justify-self-center self-center col-start-2 col-span-3 mx-auto overflow-hidden md:hidden'>
-        <GoHomeButton />
+    <div className="w-full xs:flex md:grid md:grid-cols-5 px-3 md:px-6 mt-3 items-center xs:justify-between">
+      <div>
+        {goBack ? (
+          <IconButton onClick={goBack} aria-label="Go back" icon={<ArrowLeft strokeWidth="3" />} />
+        ) : (
+          <div className={cn('flex items-center gap-2', pathname !== '/' ? 'hidden' : '')}>
+            <ToggleButton value={useTeleporter} onChange={handleBridgeTypeChange} name="Teleport" />
+            Teleport
+          </div>
+        )}
       </div>
 
+      {/*
+      <div className='justify-center self-center col-start-2 col-span-3 mx-auto overflow-hidden '>
+        <GoHomeButton />
+      </div>
+    */}
       <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
-        <WalletsHeader />
+        {/* <ConnectWallets /> */}
         {/* <ChatButton /> */}
         <BridgeMenu />
       </div>

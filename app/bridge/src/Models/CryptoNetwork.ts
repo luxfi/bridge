@@ -6,43 +6,48 @@ export enum NetworkType {
     StarkEx = "stark_ex",
     ZkSyncLite = "zk_sync_lite",
     TON = "ton",
-    Bitocoin = "btc"
+    Bitocoin = "btc",
+    Cardano = "cardano",
 }
 
 export type CryptoNetwork = {
-    display_name: string;
-    internal_name: string;
-    transaction_explorer_template: string;
-    account_explorer_template: string;
-    currencies: NetworkCurrency[];
-    refuel_amount_in_usd: number;
-    chain_id: string;
-    type: NetworkType;
-    created_date: string;
-    is_featured: boolean;
-    nodes: NetworkNode[];
-    managed_accounts: ManagedAccount[];
-    metadata: Metadata | null | undefined;
-    img_url?: string
+    display_name: string
+    internal_name: string
+    logo?: string
+    is_testnet: boolean
+    is_featured: boolean
+    chain_id: string | null | undefined
+    status: 'active' | 'inactive'
+    type: NetworkType
+    transaction_explorer_template: string
+    account_explorer_template: string
+    currencies: NetworkCurrency[]
+    metadata: Metadata | null | undefined
+    managed_accounts: string[]
+    nodes: string[]
+    // managed_accounts: ManagedAccount[]
+    // nodes: NetworkNode[]
 }
 
 export type NetworkCurrency = {
-    asset: string;
-    is_refuel_enabled: boolean;
+    name: string
+    asset: string
+    logo: string
+    contract_address: string | null | undefined
+    decimals: number
+    status: string
+    is_deposit_enabled: boolean
+    is_withdrawal_enabled: boolean
+    is_refuel_enabled: boolean
+    precision: number
+    price_in_usd: number
     is_native: boolean
-    //TODO may be plain string
-    contract_address?: `0x${string}` | null;
-    decimals: number;
-    precision: number;
-    price_in_usd: number;
-    availableInSource: boolean;
-    availableInDestination: boolean;
 }
 export type NetworkNode = {
-    url: string;
+    url: string
 }
 export type ManagedAccount = {
-    address: `0x${string}`;
+    address: `0x${string}`
 }
 export type Metadata = {
     multicall3?: {

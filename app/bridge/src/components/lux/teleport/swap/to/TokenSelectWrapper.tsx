@@ -1,16 +1,23 @@
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
-import { ChevronDown } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@hanzo/ui/primitives'
+import { ChevronDown, Info } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@hanzo/ui/primitives'
 
 import TokenSelect from './TokenSelect'
-import type { Token } from '@/types/teleport'
+import type { NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
-  setValue: (value: Token) => void
-  values: Token[]
-  value?: Token
-  sourceAsset?: Token
+  setValue: (value: NetworkCurrency) => void
+  values: NetworkCurrency[]
+  value?: NetworkCurrency
+  sourceAsset?: NetworkCurrency
   placeholder?: string
   searchHint?: string
   disabled?: boolean
@@ -26,7 +33,7 @@ const TokenSelectWrapper: React.FC<IProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false)
 
-  const handleSelect = useCallback((item: Token) => {
+  const handleSelect = useCallback((item: NetworkCurrency) => {
     if (item.status === 'active') {
       setValue(item)
       setShowModal(false)
@@ -47,7 +54,7 @@ const TokenSelectWrapper: React.FC<IProps> = ({
               <div className="flex-shrink-0 h-6 w-6 relative">
                 {value.logo && (
                   <Image
-                    src={value.logo}
+                    src={value.logo || ''}
                     alt="Project Logo"
                     priority
                     height="40"
@@ -57,6 +64,28 @@ const TokenSelectWrapper: React.FC<IProps> = ({
                 )}
               </div>
               <span className="ml-3 block">{value.asset}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info
+                    width={15}
+                    height={15}
+                    className="mx-1 hover:opacity-60 flex-none"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="flex flex-col items-start">
+                    <p>Name: {value.name}</p>
+                    <p>Asset: {value.asset}</p>
+                    {value.contract_address &&
+                      value.contract_address !==
+                        '0x0000000000000000000000000000000000000000' && (
+                        <p>Contract Address: {value.contract_address}</p>
+                      )}
+                    <p>Decimals: {value.decimals}</p>
+                    <p>Native: {value.is_native ? 'Yes' : 'No'}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </span>
 
             <span className="ml-1 flex items-center pointer-events-none ">
@@ -91,13 +120,13 @@ const TokenSelectWrapper: React.FC<IProps> = ({
 
 const Placeholder = ({ placeholder }: { placeholder: string | undefined }) => {
   return (
-    <span className="block text-xs md:text-base font-medium text-muted-3 flex-auto items-center">
+    <span className="block text-xs md:text-base font-medium text-muted-3 text-right items-center">
       {placeholder}
     </span>
   )
 }
 
-const LockedAsset = ({ value }: { value: Token }) => {
+const LockedAsset = ({ value }: { value: NetworkCurrency }) => {
   return (
     <div className="rounded-lg focus-peer:ring-foreground focus-peer:border-muted-1 focus-peer:border focus-peer:ring-1 focus:outline-none disabled:cursor-not-allowed relative grow h-12 flex items-center text-left justify-bottom w-full pl-3 pr-2 py-2 bg-level-1 border border-[#404040] font-semibold align-sub ">
       <div className="w-full border-transparent bg-transparent font-semibold rounded-md">

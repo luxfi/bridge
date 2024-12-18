@@ -37,8 +37,8 @@ pnpm install (from root or any project subdir)
 datasource db {
   //provider  = "postgresql"
   provider  = "sqlite"
-  url       = env("POSTGRESQL_URL")
-  directUrl = env("POSTGRESQL_URL")
+  url       = env("POSTGRES_URL")
+  directUrl = env("POSTGRES_URL")
 }
 ```
 
@@ -142,5 +142,6 @@ POSTGRESQL_URL=your_postgres_connection_string
 GH_USER=your_github_username
 GH_TOKEN=your_github_token
 REPLICAS=number_of_replicas
+LUX_SIGNER=
 
 Ensure that sensitive information is kept secure and not committed to version control.

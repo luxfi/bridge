@@ -133,52 +133,52 @@ const Skeleton: React.FC = () => {
         <div className="animate-pulse flex flex-col items-center justify-between w-full">
             <div className="rounded-md p-4 max-w-sm w-full mx-auto">
                 <div className="animate-pulse flex space-x-4">
-                    <div className="rounded-md bg-slate-700 h-6 w-6"></div>
+                    <div className="rounded-md bg-level-3 h-6 w-6"></div>
                     <div className="space-y-2">
-                        <div className="h-2 w-12 bg-slate-700 rounded"></div>
-                        <div className="h-2 w-40 bg-slate-700 rounded"></div>
+                        <div className="h-2 w-12 bg-level-3 rounded"></div>
+                        <div className="h-2 w-40 bg-level-3 rounded"></div>
                     </div>
                 </div>
             </div>
             <div className="border border-slate-700 grid grid-rows-2 gap-2 rounded-t-md p-4 max-w-sm w-full mx-auto">
                 <div className="grid grid-cols-8 gap-4">
-                    <div className="h-2 bg-slate-700 rounded"></div>
+                    <div className="h-2 bg-level-3 rounded"></div>
                 </div>
                 <div className="grid grid-cols-8 gap-4">
-                    <div className="h-6 bg-slate-700 rounded col-span-2"></div>
-                    <div className="h-4 col-start-6 bg-slate-700 rounded"></div>
-                    <div className="h-4  bg-slate-700 rounded"></div>
-                    <div className="h-4  bg-slate-700 rounded"></div>
+                    <div className="h-6 bg-level-3 rounded col-span-2"></div>
+                    <div className="h-4 col-start-6 bg-level-3 rounded"></div>
+                    <div className="h-4  bg-level-3 rounded"></div>
+                    <div className="h-4  bg-level-3 rounded"></div>
                 </div>
             </div>
             <div className="grid grid-rows-3 gap-2 rounded-md p-4 max-w-sm w-full mx-auto">
                 <div className="grid grid-cols-8 gap-4">
-                    <div className="h-2 bg-slate-700 rounded col-span-2"></div>
+                    <div className="h-2 bg-level-3 rounded col-span-2"></div>
                 </div>
                 <div className="grid grid-cols-8 gap-4">
-                    <div className="h-6 bg-slate-700 rounded col-span-2"></div>
-                    <div className="h-4 col-start-6 col-span-3 bg-slate-700 rounded"></div>
+                    <div className="h-6 bg-level-3 rounded col-span-2"></div>
+                    <div className="h-4 col-start-6 col-span-3 bg-level-3 rounded"></div>
                 </div>
                 <div className="grid grid-cols-7 gap-4">
-                    <div className="h-2 bg-slate-700 rounded"></div>
-                    <div className="h-2 bg-slate-700 rounded"></div>
+                    <div className="h-2 bg-level-3 rounded"></div>
+                    <div className="h-2 bg-level-3 rounded"></div>
                 </div>
             </div>
             <div className="rounded-md p-4 max-w-sm w-full mx-auto">
                 <div className="animate-pulse flex justify-between space-x-4">
                     <div className="space-y-2">
-                        <div className="h-2 w-10 bg-slate-700 rounded"></div>
-                        <div className="h-2 w-6 bg-slate-700 rounded"></div>
+                        <div className="h-2 w-10 bg-level-3 rounded"></div>
+                        <div className="h-2 w-6 bg-level-3 rounded"></div>
                     </div>
                     <div className="space-y-2">
-                        <div className="h-2 w-8 bg-slate-700 rounded"></div>
-                        <div className="h-2 w-8 bg-slate-700 rounded"></div>
+                        <div className="h-2 w-8 bg-level-3 rounded"></div>
+                        <div className="h-2 w-8 bg-level-3 rounded"></div>
                     </div>
                 </div>
             </div>
         </div>
         <div className="animate-pulse grid rounded-md p-4 max-w-sm w-full mx-auto">
-            <div className="h-10 bg-slate-700 rounded col-span-2"></div>
+            <div className="h-10 bg-level-3 rounded col-span-2"></div>
         </div>
     </div>
 }

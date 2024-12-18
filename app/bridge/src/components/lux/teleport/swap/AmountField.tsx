@@ -1,61 +1,69 @@
 'use client'
 import React from 'react'
 
+import { cn } from '@hanzo/ui/util'
+
+const PATTERN = '^[0-9]*[.,]?[0-9]*$'
+
 const AmountField: React.FC<{
   disabled: boolean
   setValue?: (value: string) => void
   value: string
+  className?: string
 }> = ({ 
   disabled, 
-  setValue, 
-  value 
+  value, 
+  setValue,
+  className 
 }) => {
 
+    // No need to retest the pattern as we are blocking all other input via the pattern prop
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (/^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && setValue) {
+    if (setValue) {
       setValue(e.target.value)
     }
   }
 
   return (
-    <div className="relative flex w-full justify-between items-center">
-      <input
-        pattern={'^[0-9]*[.,]?[0-9]*$'}
-        inputMode="decimal"
-        autoComplete="off"
-        disabled={disabled}
-        placeholder={'0.0'}
-        autoCorrect="off"
-        min={0}
-        max={10000}
-        // onFocus={onFocus}
-        // onBlur={onBlur}
-        type="text"
-        value={value}
-        step={0.01}
-        name={'name'}
-        id={'name'}
-        className="rounded-r-none outline-none w-full pl-0.5 p-0 focus:ring-0 disabled:cursor-not-allowed h-hit leading-4 bg-level-1 shadow-sm placeholder:text-muted-3 focus:ring-foreground focus:border-foreground block min-w-0 rounded-lg font-semibold border-0"
-        onChange={handleChange}
-      />
-      {/* {
-                  !disabled &&
-                  <div className="flex flex-col justify-center">
-                      <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
-                          <div className="flex">
-                              <SecondaryButton disabled={!false} onClick={handleSetMinAmount} size="xs">
-                                  MIN
-                              </SecondaryButton>
-                              <SecondaryButton disabled={!false} onClick={handleSetMaxAmount} size="xs" className="ml-1.5">
-                                  MAX
-                              </SecondaryButton>
-                          </div>
-                      </div>
-                  </div>
-              } */}
-    </div>
+    <input
+      pattern={PATTERN}
+      inputMode="decimal"
+      autoComplete="off"
+      disabled={disabled}
+      placeholder={'0.0'}
+      autoCorrect="off"
+      min={0}
+      max={10000}
+      type="text"
+      value={value}
+      step={0.01}
+      name={'name'}
+      id={'name'}
+      className={cn(
+        'outline-none px-1 py-0',
+        'focus:ring-0 disabled:cursor-not-allowed h-hit',
+        'leading-4 bg-level-1', 
+        'placeholder:text-muted-3 focus:ring-foreground', 
+        'block font-semibold ',
+        className
+      )}
+      onChange={handleChange}
+    />
   )
 }
+
+/* !disabled && (
+  <div className="flex flex-col justify-center">
+    <div className="text-xs flex flex-col items-center space-x-1 md:space-x-2 ml-2 md:ml-5 px-2">
+      <div className="flex">
+          <SecondaryButton onClick={() => {setValue && setValue(maxValue)}} size="xs" className="ml-1.5">
+              MAX TOO
+          </SecondaryButton>
+      </div>
+    </div>
+  </div>
+)*/
+
 
 type AmountLabelProps = {
   detailsAvailable: boolean

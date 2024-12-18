@@ -1,19 +1,22 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./src", // Base directory for imports
     "paths": {
-      "@/*": ["./src/*", "./dist/*"]
+      "@/*": ["*"] // Map "@/..." to "./src/..."
     },
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "target": "es6",
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist",
-    "strict": true,
-    "skipLibCheck": true
+    "module": "commonjs", // Required for Node.js
+    "esModuleInterop": true, // Allows default imports for CommonJS modules
+    "target": "es2020", // Use modern ECMAScript features
+    "moduleResolution": "node", // Resolve Node.js modules correctly
+    "resolveJsonModule": true, // Allow JSON imports
+    "sourceMap": true, // Generate source maps for debugging
+    "outDir": "dist", // Output directory
+    "strict": true, // Enable all strict type-checking options
+    "strictNullChecks": true, // Strict null checks
+    "noImplicitAny": true, // Prevent implicit `any` types
+    "skipLibCheck": true, // Skip checking of type definitions
+    "forceConsistentCasingInFileNames": true // Enforce file name case sensitivity
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts"], // Include all TypeScript files in "src"
+  "exclude": ["node_modules", "dist"] // Exclude "node_modules" and compiled files
 }

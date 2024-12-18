@@ -30,10 +30,25 @@ spec:
                 secretKeyRef:
                   name: bridge-server-secret
                   key: COINBASE_API_KEY
-            - name: POSTGRESQL_URL
+            - name: POSTGRES_URL
               valueFrom:
                 secretKeyRef:
                   name: bridge-server-secret
-                  key: POSTGRESQL_URL
+                  key: POSTGRES_URL
+            - name: LUX_SIGNER
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: LUX_SIGNER
+            - name: SERVICE_ACCOUNT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: SERVICE_ACCOUNT_EMAIL
+            - name: SERVICE_ACCOUNT_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-server-secret
+                  key: SERVICE_ACCOUNT_PRIVATE_KEY
           ports:
             - containerPort: 6000

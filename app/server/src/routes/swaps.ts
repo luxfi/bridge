@@ -1,7 +1,6 @@
 import { getSigFromMpcOracleNetwork } from "@/lib/mpc"
 import { Router, Request, Response } from "express"
-import { handleSwapCreation, handlerGetSwap, handlerGetSwaps, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction } from "@/lib/swaps"
-
+import { handleSwapCreation, handlerCheckDeposit, handlerGetSwap, handlerGetSwaps, handlerSwapExpire, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction, handlerUtilaPayoutAction } from "@/lib/swaps"
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
 const router: Router = Router()
@@ -11,10 +10,23 @@ const router: Router = Router()
 // method: GET and it's public
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const isDeleted = (req.query.isDeleted && Boolean(Number(req.query.isDeleted))) || undefined
-    const isMainnet = req.query?.version === "mainnet"
-    console.log({ isDeleted, isMainnet })
-    const result = await handlerGetSwaps(req.query.address as string, isDeleted, isMainnet)
+    //isDeleted
+    const _isDeleted = req.query?.isDeleted
+    const isDeleted = _isDeleted ? _isDeleted === "true" : undefined
+    //isMainnet
+    const _isMainnet = req.query?.version
+    const isMainnet = _isMainnet ? _isMainnet === "mainnet" : undefined
+    // teleport
+    const _isTeleport = req.query?.teleport
+    const isTeleport = _isTeleport ? _isTeleport === "true" : undefined
+    // page
+    const _page = req.query?.page
+    const page = _page ? (isNaN(Number(_page)) ? 0 : Number(Number(_page))) : undefined
+    // pageSize
+    const _pageSize = req.query?.pageSize
+    const pageSize = _pageSize ? (isNaN(Number(_pageSize)) ? 0 : Number(Number(_pageSize))) : undefined
+
+    const result = await handlerGetSwaps(isDeleted, isMainnet, isTeleport, page, pageSize)
     res.status(200).json({ data: result })
   } catch (error: any) {
     res.status(500).json({ error: error?.message })
@@ -26,7 +38,6 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/:swapId", async (req: Request, res: Response) => {
   try {
     const swapId = req.params.swapId
-    console.log({ swapId })
     const result = await handlerGetSwap(swapId as string)
     res.status(200).json({ data: result })
   } catch (error: any) {
@@ -163,5 +174,46 @@ router.post(
     }
   }
 )
+
+// route: /api/swaps/expire/:swapId
+// description: make swap expire if there is no deposit for 72 hours
+// method: PUT and it's public
+router.put("/expire/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    await handlerSwapExpire(swapId as string)
+    res.status(200).json({ status: "success" })
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message })
+  }
+})
+// route: /api/swaps/payout/:swapId
+// description: update payout action
+// method: PUT and it's public
+router.get("/payout/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    const data = await handlerUtilaPayoutAction(swapId)
+    res.status(200).json(data)
+  } catch (err: any) {
+    res.status(500).send({
+      error: err?.message
+    })
+  }
+})
+// route: /api/swaps/deposit-check/:swapId
+// description: deposit check if not working correctly
+// method: PUT and it's public
+router.get("/deposit-check/:swapId", async (req: Request, res: Response) => {
+  try {
+    const swapId = req.params.swapId
+    await handlerCheckDeposit(swapId)
+    res.status(200).json({ msg: "success" })
+  } catch (err: any) {
+    res.status(500).send({
+      error: err?.message
+    })
+  }
+})
 
 export default router

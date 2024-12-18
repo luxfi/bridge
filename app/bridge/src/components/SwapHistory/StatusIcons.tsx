@@ -1,9 +1,7 @@
 import { SwapStatus } from '../../Models/SwapStatus'
 import {
-  type PublishedSwapTransactions,
   type SwapItem,
-  TransactionType,
-} from '../../lib/BridgeApiClient'
+} from '@/lib/BridgeApiClient'
 
 export default function StatusIcon({
   swap,
@@ -60,32 +58,23 @@ export default function StatusIcon({
         </>
       )
     case SwapStatus.UserTransferPending:
-      const data: PublishedSwapTransactions = JSON.parse(
-        localStorage.getItem('swapTransactions') || '{}'
+      return (
+        <>
+          <div className="inline-flex items-center space-x-1">
+            <YellowIcon />
+            {!short && <p>Awaiting Transfer</p>}
+          </div>
+        </>
       )
-      const txForSwap = data.state?.swapTransactions?.[swap.id]
-      if (
-        txForSwap ||
-        swap.transactions.find((t) => t.type === TransactionType.Input)
-      ) {
-        return (
-          <>
-            <div className="inline-flex items-center space-x-1">
-              <PurpleIcon />
-              {!short && <p>Processing</p>}
-            </div>
-          </>
-        )
-      } else {
-        return (
-          <>
-            <div className="inline-flex items-center space-x-1">
-              <YellowIcon />
-              {!short && <p>Pending</p>}
-            </div>
-          </>
-        )
-      }
+    case SwapStatus.UserDepositPending:
+      return (
+        <>
+          <div className="inline-flex items-center space-x-1">
+            <YellowIcon />
+            {!short && <p>Awaiting Deposit</p>}
+          </div>
+        </>
+      )
     case SwapStatus.BridgeTransferPending:
       return (
         <>

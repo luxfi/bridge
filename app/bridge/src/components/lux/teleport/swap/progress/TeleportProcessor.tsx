@@ -1,7 +1,7 @@
 import React from 'react'
 import toast from 'react-hot-toast'
 import Web3 from 'web3'
-import { useSwitchChain, useChainId } from 'wagmi'
+import { useSwitchChain } from 'wagmi'
 import { useAtom } from 'jotai'
 import axios from 'axios'
 
@@ -11,25 +11,27 @@ import {
   swapStatusAtom,
   userTransferTransactionAtom,
   mpcSignatureAtom,
-} from "@/store/teleport";
-import { CONTRACTS } from "@/components/lux/teleport/constants/settings";
-import { useNotify } from '@/context/toast-provider';
+} from '@/store/teleport'
+import { CONTRACTS } from '@/components/lux/teleport/constants/settings'
+import { useNotify } from '@/context/toast-provider'
 
 //hooks
-import { useEthersSigner } from '@/lib/ethersToViem/ethers'
+import { useEthersSigner } from '@/hooks/useEthersSigner'
 
 import useWallet from '@/hooks/useWallet'
 import SwapItems from './SwapItems'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import Gauge from '@/components/gauge'
-import type { Network, Token } from '@/types/teleport'
+import { truncateDecimals } from '@/components/utils/RoundDecimals'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
+import { useServerAPI } from '@/hooks/useServerAPI'
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
@@ -52,31 +54,39 @@ const TeleportProcessor: React.FC<IProps> = ({
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
   const [, setMpcSignature] = useAtom(mpcSignatureAtom)
   //hooks
-  const signer = useEthersSigner()
-  const chainId = useChainId()
+  const { chainId, signer, isConnecting } = useEthersSigner()
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
+  const { serverAPI } = useServerAPI()
+  const { notify } = useNotify()
 
-  const { notify } = useNotify();
-
-  const isWithdrawal = React.useMemo(
-    () => (sourceAsset.name.startsWith('Lux') ? true : false),
+  const toBurn = React.useMemo(
+    () =>
+      sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ')
+        ? true
+        : false,
     [sourceAsset]
+  )
+  const toMint = React.useMemo(
+    () =>
+      destinationAsset.name.startsWith('Liquid ') ||
+      destinationAsset.name.startsWith('Zoo ')
+        ? true
+        : false,
+    [destinationAsset]
   )
 
   React.useEffect(() => {
-    if (!signer) {
-      connectWallet('evm')
+    if (isConnecting || !signer) return
+
+    if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
+      getMpcSignature()
     } else {
-      if (chainId === sourceNetwork?.chain_id) {
-        getMpcSignature()
-      } else {
-        sourceNetwork.chain_id &&
-          switchChain &&
-          switchChain({ chainId: sourceNetwork.chain_id })
-      }
+      sourceNetwork.chain_id &&
+        switchChain &&
+        switchChain({ chainId: Number(sourceNetwork.chain_id) })
     }
-  }, [swapStatus, chainId, signer])
+  }, [signer])
 
   const getMpcSignature = async () => {
     try {
@@ -101,42 +111,28 @@ const TeleportProcessor: React.FC<IProps> = ({
         receiverAddressHash: receiverAddressHash,
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/getsig`,
-        {
-          method: 'POST', // Specify the method (GET is default, so it's optional here)
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(signData),
-        }
-      )
-      const res = await response.json()
-      console.log('data from mpc oracle network:::', res)
-      if (res.status) {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps/mpcsign/${swapId}`,
-          {
-            txHash: res.data.signature,
-            amount: sourceAmount,
-            from: signer?._address,
-            to: CONTRACTS[
-              Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
-            ].teleporter,
-          }
-        )
-        setMpcSignature(res.data.signature)
+      const { data } = await serverAPI.post(`/api/swaps/getsig`, signData)
+      console.log('data from mpc oracle network:::', data)
+      console.log('::swapId::save mpc signature to server:', swapId)
+      if (data.status) {
+        await serverAPI.post(`/api/swaps/mpcsign/${swapId}`, {
+          txHash: data.data.signature,
+          amount: sourceAmount,
+          from: signer?._address + '###' + data.data.mpcSigner,
+          to: CONTRACTS[
+            Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS
+          ].teleporter,
+        })
+        setMpcSignature(data.data.signature)
         setSwapStatus('user_payout_pending')
-      } 
-      else {
-        const { msg } = res
-        if (String(msg).includes("InvalidSenderError")) {
+      } else {
+        const { msg } = data
+        if (String(msg).includes('InvalidSenderError')) {
           notify(
-            "Invalid token sender. Try again using correct sender's account", // keep double quotes
+            "Invalid token sender. Try again using correct sender's account",
             'warn'
           )
-        } 
-        else {
+        } else {
           notify(
             'Failed to get signature from MPC oracle network, Please try again',
             'error'
@@ -151,24 +147,19 @@ const TeleportProcessor: React.FC<IProps> = ({
   }
   const handleGetMpcSignature = () => {
     if (!signer) {
-      notify(
-        "No connected wallet. Please connect your wallet",
-        "warn"
-      );
-      connectWallet("evm")
-    } 
-    else if (chainId !== sourceNetwork.chain_id) {
-      if (sourceNetwork.chain_id && switchChain) {
-        switchChain({ chainId: sourceNetwork.chain_id })
-      }
-    } 
-    else {
+      notify('No connected wallet. Please connect your wallet', 'warn')
+      // connectWallet("evm")
+    } else if (Number(chainId) !== Number(sourceNetwork?.chain_id)) {
+      sourceNetwork.chain_id &&
+        switchChain &&
+        switchChain({ chainId: Number(sourceNetwork.chain_id) })
+    } else {
       getMpcSignature()
     }
   }
 
   return (
-    <div className={`w-full flex flex-col ${className}`}>
+    <div className={`flex flex-col ${className}`}>
       <div className="space-y-5">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems
@@ -192,14 +183,13 @@ const TeleportProcessor: React.FC<IProps> = ({
               </div>
             </div>
             <div className="flex flex-col py-5 gap-3">
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-3 items-start">
                 <span className="">
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
-                <div className="flex flex-col items-center text-sm">
+                <div className="flex flex-col items-start text-sm">
                   <span>
-                    {sourceAsset?.asset}{' '}
-                    {isWithdrawal ? 'Burned' : 'Transferred'}
+                    {`${truncateDecimals(Number(sourceAmount), 6)} ${sourceAsset?.asset} ${toBurn ? 'burnt' : 'transferred'}`}
                   </span>
                   <div className="underline flex gap-2 items-center">
                     {shortenAddress(userTransferTransaction)}
