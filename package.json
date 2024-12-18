@@ -14,12 +14,11 @@
     "swap"
   ],
   "scripts": {
-    "build": "pnpm build:all",
-    "build:all": "pnpm build:app && pnpm build:explorer && pnpm build:sdk",
-    "build:app": "pnpm --filter @luxbridge/app build",
+    "build:all": "pnpm build:bridge && pnpm build:bridge-old && pnpm build:explorer",
+    "build:bridge-old": "pnpm --filter @luxbridge/app-old build",
+    "build:bridge": "pnpm --filter @luxbridge/app build",
     "build:explorer": "pnpm --filter @luxbridge/explorer build",
-    "build:sdk": "pnpm --filter @luxbridge/sdk build",
-    "build:storybook": "pnpm --filter @luxbridge/app build:storybook",
+    "build:storybook": "pnpm --filter @luxbridge/app-old build:storybook",
     "start": "pnpm --filter @luxbridge/app start",
     "dev": "pnpm --filter @luxbridge/app dev",
     "clean:nm": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
@@ -29,7 +28,7 @@
     "node": ">=20",
     "pnpm": ">=9"
   },
-  "packageManager": "pnpm@9.10.0",
+  "packageManager": "pnpm@9.15.0",
   "pnpm": {
     "allowedDeprecatedVersions": {
       "request": "*"
