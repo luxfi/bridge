@@ -26,7 +26,6 @@
   "peerDependencies": {
     "@hanzo/auth": "catalog:",
     "@hanzo/commerce": "catalog:",
-    "@hanzo/ui": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
