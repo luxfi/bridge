@@ -204,8 +204,21 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   XDAI: ['LXDAI', 'ZXDAI'],
   AVAX: ['LAVAX', 'ZAVAX'],
   BLAST: ['LBLAST', 'ZBLAST'],
-  // Utila tokens
+  //// Utila tokens
   BTC: ['LBTC', 'ZBTC'],
-  SOL: ['LSOL', 'ZSOL'],
   TON: ['LTON', 'ZTON'],
+  // Solana tokens
+  SOL: ['LSOL', 'ZSOL'],
+  BONK: ['LBONK', 'ZBONK'],
+  SIXR: ['LSIXR', 'ZSIXR'],
+  WIF: ['LWIF', 'ZWIF'],
+  POPCAT: ['LPOPCAT', 'ZPOPCAT'],
+  PNUT: ['LPNUT', 'ZPNUT'],
+  MEW: ['LMEW', 'ZMEW'],
+  BOME: ['LBOME', 'ZBOME'],
+  GIGA: ['LGIGA', 'ZGIGA'],
+  AI16Z: ['LAI16Z', 'ZAI16Z'],
+  FWOG: ['LFWOG', 'ZFWOG'],
+  MOODENG: ['LMOODENG', 'ZMOODENG'],
+  PONKE: ['LPONKE', 'ZPONKE']
 }
