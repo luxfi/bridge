@@ -532,7 +532,18 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     },
     assets: {
       "SOL": "assets/native.solana-mainnet",
-      "BONK": "assets/bonk.solana-mainnet",
+      "SIXR": "assets/spl-token.solana-mainnet.blabla",
+      "BONK": "assets/spl-token.solana-mainnet.DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "WIF": "assets/spl-token.solana-mainnet.Bpt5okWXXrEk7WmnfaWFSUUrXb74CJjZZUL7NJ2NUx5k",
+      "POPCAT": "assets/spl-token.solana-mainnet.7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
+      "PNUT": "assets/spl-token.solana-mainnet.2qEHjDLDLbuBgRYvsxhc5D6uDWAivNFZGan56P1tpump",
+      "MEW": "assets/spl-token.solana-mainnet.8CBmi9kAWNfQem9sgxBzSBmiUXBgfgVCg5sdstaC4R7m",
+      "BOME": "assets/spl-token.solana-mainnet.ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82",
+      "GIGA": "assets/spl-token.solana-mainnet.63LfDmNb3MQ8mw9MtZ2To9bEA2M71kZUUGq5tiJxcqj9",
+      "AI16Z": "assets/spl-token.solana-mainnet.HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC",
+      "FWOG": "assets/spl-token.solana-mainnet.A8C3xuqscfmyLrte3VmTqrAq8kgMASius9AFNANwpump",
+      "MOODENG": "assets/spl-token.solana-mainnet.ED5nyyWEzpPPiWimP8vYm7sD7TD3LAt3Q3gRTWHzPJBY",
+      "PONKE": "assets/spl-token.solana-mainnet.5z3EqYQo9HiCEs3R84RCDMu2n7anpDMxRhdK8PSWmrRC",
     }
   },
   'SOLANA_DEVNET': {
