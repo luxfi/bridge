@@ -1,0 +1,47 @@
+{
+  "name": "@luxbridge/app",
+  "private": true,
+  "scripts": {
+    "build": "remix vite:build",
+    "dev": "remix vite:dev",
+    "start": "remix-serve ./build/server/index.js",
+    "tc": "tsc",
+    "typecheck": "tsc",
+    "clean": "rm -rf ./node_modules"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "dependencies": {
+    "@hanzo/ui": "catalog:",
+    "@luxfi/ui": "catalog:",
+    "@remix-run/node": "^2.15.1",
+    "@remix-run/react": "^2.15.1",
+    "@remix-run/serve": "^2.15.1",
+    "@vercel/analytics": "^1.4.1",
+    "@vercel/remix": "^2.15.1",
+    "isbot": "^4.4.0",
+    "lucide-react": "catalog:",
+    "mobx": "^6.12.3",
+    "mobx-react-lite": "^4.0.7",
+    "mobx-utils": "^6.1.0",
+    "react": "catalog:",
+    "react-currency-input-field": "^3.9.0",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@originjs/vite-plugin-commonjs": "^1.0.3",
+    "@remix-run/dev": "^2.15.1",
+    "@remix-run/server-runtime": "^2.15.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "5.4.11",
+    "vite-tsconfig-paths": "5.1.2"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
