@@ -6,8 +6,6 @@ import SwapDetails from './swap/SwapDetails'
 import ResizablePanel from '../../ResizablePanel'
 import ConnectNetwork from '@/components/ConnectNetwork'
 // networks
-import mainNetworks from '@/components/lux/utila/constants/networks.mainnets'
-import devNetworks from '@/components/lux/utila/constants/networks.sandbox'
 import Widget from '@/components/Widget'
 import {
   sourceNetworkAtom,
@@ -26,12 +24,10 @@ import {
   depositActionsAtom,
 } from '@/store/utila'
 import { useAtom } from 'jotai'
-import type { Network, Token } from '@/types/utila'
 import { SwapStatus } from '@/Models/SwapStatus'
 import { useServerAPI } from '@/hooks/useServerAPI'
 import { useSettings } from '@/context/settings'
-import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
-import { SWAP_PAIRS } from '../teleport/constants/settings'
+import { type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
 
 type NetworkToConnect = {
   DisplayName: string
@@ -54,24 +50,6 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
   const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
   const [destinationNetwork, setDestinationNetwork] = useAtom(destinationNetworkAtom)
   const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
-
-
-  const sourceNetworks = networks.filter((c: CryptoNetwork) => c.type !== NetworkType.EVM)
-  console.log("source Networks", sourceNetworks)
-  const destinationNetworks = React.useMemo(() => {
-    if (!sourceAsset) {
-      return []
-    } else {
-      return networks
-        .map((n: CryptoNetwork) => ({
-          ...n,
-          currencies: n.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)),
-        }))
-        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM)
-    }
-  }, [sourceAsset])
-
-
 
   const [destinationAddress, setDestinationAddress] = useAtom(destinationAddressAtom)
   const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
@@ -141,9 +119,9 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
       // set time to expire
       setTimeToExpire(new Date(data.created_date).getTime() + 72 * 3600 * 1000)
       // setTimeToExpire(new Date().getTime() + 30*1000) // now + 100
-      const _sourceNetwork = sourceNetworks.find((_n: CryptoNetwork) => _n.internal_name === data.source_network)
+      const _sourceNetwork = networks.find((_n: CryptoNetwork) => _n.internal_name === data.source_network)
       const _sourceAsset = _sourceNetwork?.currencies?.find((c: NetworkCurrency) => c.asset === data.source_asset)
-      const _destinationNetwork = destinationNetworks.find((_n: CryptoNetwork) => _n.internal_name === data.destination_network)
+      const _destinationNetwork = networks.find((_n: CryptoNetwork) => _n.internal_name === data.destination_network)
       const _destinationAsset = _destinationNetwork?.currencies?.find((c: NetworkCurrency) => c.asset === data.destination_asset)
 
       setSourceNetwork(_sourceNetwork)
