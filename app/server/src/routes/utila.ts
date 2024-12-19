@@ -1,5 +1,5 @@
 import { Router, Request, Response, raw } from "express"
-import { verifyUtilaSignature } from "@/lib/utila"
+import { client, verifyUtilaSignature } from "@/lib/utila"
 import logger from "@/logger"
 import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila"
 
@@ -66,5 +66,20 @@ router.all("/webhook", (req: Request, res: Response) => {
   logger.warn(`Unsupported method ${req.method} on /webhook`)
   res.status(405).json({ error: "Method Not Allowed" })
 })
+
+// router.get("/networks", async (req: Request, res: Response) => {
+//   const data = await client.listNetworks({})
+//   res.json(data)
+// })
+// router.get("/asset", async (req: Request, res: Response) => {
+//   try {
+//     const data = await client.getAsset({
+//       name: 'assets/native.solana-mainnet'
+//     })
+//     res.json(data)
+//   } catch (err) {
+//     console.log(err)
+//   }
+// })
 
 export default router

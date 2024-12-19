@@ -1,9 +1,9 @@
 import React from "react";
-import { type Network } from "@/types/utila";
 import Image from "next/image";
+import type { CryptoNetwork } from "@/Models/CryptoNetwork";
 
 interface IProps {
-  network: Network;
+  network: CryptoNetwork;
 }
 
 const SelectItem: React.FC<IProps> = ({ network }) => {
@@ -12,7 +12,7 @@ const SelectItem: React.FC<IProps> = ({ network }) => {
       <div className="flex items-center">
         <div className="flex-shrink-0 h-6 w-6 relative">
           <Image
-            src={network.logo}
+            src={network.logo || ''}
             alt="Project Logo"
             height="40"
             width="40"
