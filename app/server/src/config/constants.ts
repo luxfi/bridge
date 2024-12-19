@@ -532,6 +532,7 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     },
     assets: {
       "SOL": "assets/native.solana-mainnet",
+      "USDC": "assets/spl-token.solana-mainnet.EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "SIXR": "assets/spl-token.solana-mainnet.blabla",
       "BONK": "assets/spl-token.solana-mainnet.DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
       "WIF": "assets/spl-token.solana-mainnet.Bpt5okWXXrEk7WmnfaWFSUUrXb74CJjZZUL7NJ2NUx5k",

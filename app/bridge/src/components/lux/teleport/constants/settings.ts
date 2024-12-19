@@ -162,6 +162,10 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   LFWOG: ['ZFWOG'],
   LMOODENG: ['ZMOODENG'],
   LPONKE: ['ZPONKE'],
+  LNOT: ['ZNOT'],
+  LDOGS: ['ZDOGS'],
+  LMRB: ['ZMRB'],
+  LREDO: ['ZREDO'],
   // Zoo tokens
   ZOO: ['LZOO'],
   ZBTC: ['WBTC', 'LBTC'],
@@ -189,6 +193,10 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZFWOG: ['LFWOG'],
   ZMOODENG: ['LMOODENG'],
   ZPONKE: ['LPONKE'],
+  ZNOT: ['LNOT'],
+  ZDOGS: ['LDOGS'],
+  ZMRB: ['LMRB'],
+  ZREDO: ['LREDO'],
   // Evm tokens
   ETH: ['LETH', 'ZETH'],
   WETH: ['LETH', 'ZETH'],
@@ -220,5 +228,10 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   AI16Z: ['LAI16Z', 'ZAI16Z'],
   FWOG: ['LFWOG', 'ZFWOG'],
   MOODENG: ['LMOODENG', 'ZMOODENG'],
-  PONKE: ['LPONKE', 'ZPONKE']
+  PONKE: ['LPONKE', 'ZPONKE'],
+  // Ton tokens
+  NOT: ['LNOT', 'ZNOT'],
+  DOGS: ['LDOGS', 'ZDOGS'],
+  MRB: ['LMRB', 'ZMRB'],
+  REDO: ['LREDO', 'ZREDO']
 }

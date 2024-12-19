@@ -236,9 +236,30 @@ export const MAIN_NETWORKS: NETWORK[] = [
         is_native: false
       },
       {
-        name: "Lux PONKE",
-        asset: "LPONKE",
-        contract_address: "0xb33c37c72B06770b2D0A26C38E6CfD9795D0D206",
+        name: "Lux NOT",
+        asset: "LNOT",
+        contract_address: "0x79b2A7FA60Ff6f328f6F5eb7Bc332CEFECEa0C93",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux DOGS",
+        asset: "LDOGS",
+        contract_address: "0xC7bDfc60267649C99a86a701Fc3418b7f0C3D043",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux MRB",
+        asset: "LMRB",
+        contract_address: "0x9cb1eDe76970E1d696D5aa6B4f65491478035271",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Lux REDO",
+        asset: "LREDO",
+        contract_address: "0x408E5681E209d37FD52c76cF9ee7EfFA8476cd9a",
         decimals: 18,
         is_native: false
       }
@@ -462,6 +483,34 @@ export const MAIN_NETWORKS: NETWORK[] = [
         name: "Zoo PONKE",
         asset: "ZPONKE",
         contract_address: "0xDF7740fCC9B244c192CfFF7b6553a3eEee0f4898",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo NOT",
+        asset: "ZNOT",
+        contract_address: "0xdfCAdda48DbbA09f5678aE31734193F7CCA7f20d",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo DOGS",
+        asset: "ZDOGS",
+        contract_address: "0x0b0FF795d0A1C162b44CdC35D8f4DCbC2b4B9170",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo MRB",
+        asset: "ZMRB",
+        contract_address: "0x3FfA9267739C04554C1fe640F79651333A2040e1",
+        decimals: 18,
+        is_native: false
+      },
+      {
+        name: "Zoo REDO",
+        asset: "ZREDO",
+        contract_address: "0x137747A15dE042Cd01fCB41a5F3C7391d932750B",
         decimals: 18,
         is_native: false
       }
@@ -1724,6 +1773,10 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   LFWOG: ["ZFWOG"],
   LMOODENG: ["ZMOODENG"],
   LPONKE: ["ZPONKE"],
+  LNOT: ["ZNOT"],
+  LDOGS: ["ZDOGS"],
+  LMRB: ["ZMRB"],
+  LREDO: ["ZREDO"],
 
   // Zoo tokens
   ZOO: ["LZOO"],
@@ -1752,6 +1805,10 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZFWOG: ["LFWOG"],
   ZMOODENG: ["LMOODENG"],
   ZPONKE: ["LPONKE"],
+  ZNOT: ["LNOT"],
+  ZDOGS: ["LDOGS"],
+  ZMRB: ["LMRB"],
+  ZREDO: ["LREDO"],
 
   // Evm tokens
   ETH: ["LETH", "ZETH"],
