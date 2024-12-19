@@ -71,15 +71,16 @@ router.all("/webhook", (req: Request, res: Response) => {
 //   const data = await client.listNetworks({})
 //   res.json(data)
 // })
-// router.get("/asset", async (req: Request, res: Response) => {
-//   try {
-//     const data = await client.getAsset({
-//       name: 'assets/native.solana-mainnet'
-//     })
-//     res.json(data)
-//   } catch (err) {
-//     console.log(err)
-//   }
-// })
+router.post("/assets", async (req: Request, res: Response) => {
+  const { id } = req.body
+  try {
+    const data = await client.getAsset({
+      name: id
+    })
+    res.json(data)
+  } catch (err) {
+    res.json(`[${id}] is not recognized`)
+  }
+})
 
 export default router
