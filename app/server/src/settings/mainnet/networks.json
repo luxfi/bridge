@@ -364,7 +364,7 @@
         "asset": "USDC",
         "logo": "https://cdn.lux.network/bridge/currencies/usdc.png",
         "contract_address": "EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
-        "decimals": 8,
+        "decimals": 6,
         "status": "inactive",
         "is_deposit_enabled": false,
         "is_withdrawal_enabled": true,
