@@ -531,7 +531,7 @@
         "is_native": false
       },
       {
-        "name": "Coinbase Wrapped BTC",
+        "name": "Coinbase BTC",
         "asset": "cbBTC",
         "logo": "https://cdn.lux.network/bridge/currencies/btc.svg",
         "contract_address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
