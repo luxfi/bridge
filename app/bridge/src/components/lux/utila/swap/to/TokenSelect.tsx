@@ -7,11 +7,11 @@ import {
 } from '@hanzo/ui/primitives'
 import CommandWrapper from '@/components/shadcn/command-wrapper'
 
-import type { Token } from '@/types/utila'
+import type { NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
-  values: Token[]
-  setValue: (token: Token) => void
+  values: NetworkCurrency[]
+  setValue: (token: NetworkCurrency) => void
 }
 
 const TokenSelect: React.FC<IProps> = ({ values, setValue }) => (

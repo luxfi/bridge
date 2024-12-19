@@ -1,31 +1,34 @@
 'use client'
 import React, { type FC } from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import axios from 'axios'
-
-import { ArrowLeftRight, ArrowUpDown, WalletIcon } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+//comps
 import Modal from '@/components/modal/modal'
-import shortenAddress from '../../../utils/ShortenAddress'
-import Widget from '../../../Widget'
-
-import FromNetworkForm from './from/NetworkFormField'
-import ToNetworkForm from './to/NetworkFormField'
+import Image from 'next/image'
+import Widget from '@/components/Widget/index'
+import SpinIcon from '@/components/icons/spinIcon'
+import shortenAddress from '@/components/utils/ShortenAddress'
+import FromNetworkForm from '@/components/lux/teleport/swap/from/NetworkFormField'
+import ToNetworkForm from '@/components/lux/teleport/swap/to/NetworkFormField'
+import { Button } from '@hanzo/ui/primitives'
+import { ArrowLeftRight, ArrowUpDown, WalletIcon } from 'lucide-react'
 import { SWAP_PAIRS } from '@/components/lux/teleport/constants/settings'
 //hooks
 import useWallet from '@/hooks/useWallet'
 import useAsyncEffect from 'use-async-effect'
 import { useAtom } from 'jotai'
-import { useEthersSigner } from '@/hooks/useEthersSigner'
-
-import { swapStatusAtom } from '@/store/teleport'
-import SpinIcon from '@/components/icons/spinIcon'
-import { fetchTokenBalance } from '@/lib/utils'
-import { Button } from '@hanzo/ui/primitives'
+import { useRouter } from 'next/navigation'
 import { useSettings } from '@/context/settings'
 import { useServerAPI } from '@/hooks/useServerAPI'
+import { useEthersSigner } from '@/hooks/useEthersSigner'
+//atoms
+import { swapStatusAtom } from '@/store/teleport'
+//types
 import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
+import { SwapStatus } from '@/Models/SwapStatus'
+//utils
+import { fetchTokenBalance } from '@/lib/utils'
+import { getDestinationNetworks, getFirstSourceNetwork } from '@/util/swapsHelper'
 
 const Address = dynamic(() => import('@/components/lux/teleport/share/Address'), {
   loading: () => <></>,
@@ -66,12 +69,12 @@ const Swap: FC = () => {
     if (!sourceAsset) {
       return []
     } else {
-      return filteredNetworks
+      return networks
         .map((n: CryptoNetwork) => ({
           ...n,
           currencies: n.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)),
         }))
-        .filter((n: CryptoNetwork) => n.currencies.length > 0)
+        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM)
     }
   }, [sourceAsset])
   // when page is mounted, set source network as first network
