@@ -639,6 +639,11 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     },
     assets: {
       "TON": "assets/native.ton-mainnet",
+      "USDC": "assets/jetton.ton-mainnet.EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
+      "NOT": "assets/jetton.ton-mainnet.EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT",
+      "DOGS": "assets/jetton.ton-mainnet.EQCvxJy4eG8hyHBFsZ7eePxrRsUQSFE_jpptRAYBmcG_DOGS",
+      "MRB": "assets/jetton.ton-mainnet.EQBtFLv5YbHRVr0PSb6KgmQztRK4N2BQ7alxp6mYOBxa-r18",
+      "REDO": "assets/jetton.ton-mainnet.EQBZ_cafPyDr5KUTs0aNxh0ZTDhkpEZONmLJA2SNGlLm4Cko"
     }
   },
   'BLAST_MAINNET': {

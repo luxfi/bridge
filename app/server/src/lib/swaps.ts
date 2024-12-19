@@ -457,7 +457,7 @@ export async function handlerDepositAction(
   // checking network and asset match
   const _wallet = swap.deposit_address?.split('###')?.[0] as string
   const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
-  if (_asset.toLowerCase() !== asset.toLowerCase()) {
+  if (_asset?.toLowerCase() !== asset.toLowerCase()) {
     throw new Error("Unrecognized Token Deposit")
   }
   // if deposit action exists, update it else create new one
