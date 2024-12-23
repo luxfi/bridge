@@ -1,4 +1,4 @@
-import { UTILA_NETWORK } from "@/types/utila"
+import { UTILA_NETWORK } from "@/models/utila"
 
 export default class KnownInternalNames {
   static Exchanges = class {

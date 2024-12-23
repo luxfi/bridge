@@ -1,4 +1,4 @@
-import KnownInternalNames from "@/config/constants"
+import KnownInternalNames from "@/domain/constants"
 import WAValidator from "multicoin-address-validator"
 import { isAddress } from "ethers"
 import { isAddress as isSolanoAddress } from "@solana/addresses"

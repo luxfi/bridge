@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express"
-import { getTokenPrice } from "@/lib/tokens";
+import { getTokenPrice } from "@/domain/tokens";
 
 const router: Router = Router()
 

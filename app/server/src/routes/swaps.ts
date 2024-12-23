@@ -1,6 +1,6 @@
-import { getSigFromMpcOracleNetwork } from "@/lib/mpc"
+import { getSigFromMpcOracleNetwork } from "@/domain/mpc"
 import { Router, Request, Response } from "express"
-import { handleSwapCreation, handlerCheckDeposit, handlerGetSwap, handlerGetSwaps, handlerSwapExpire, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction, handlerUtilaPayoutAction } from "@/lib/swaps"
+import { handleSwapCreation, handlerCheckDeposit, handlerGetSwap, handlerGetSwaps, handlerSwapExpire, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction, handlerUtilaPayoutAction } from "@/domain/swaps"
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
 const router: Router = Router()
@@ -10,25 +10,24 @@ const router: Router = Router()
 // method: GET and it's public
 router.get("/", async (req: Request, res: Response) => {
   try {
-    //isDeleted
     const _isDeleted = req.query?.isDeleted
     const isDeleted = _isDeleted ? _isDeleted === "true" : undefined
-    //isMainnet
+
     const _isMainnet = req.query?.version
     const isMainnet = _isMainnet ? _isMainnet === "mainnet" : undefined
-    // teleport
+
     const _isTeleport = req.query?.teleport
     const isTeleport = _isTeleport ? _isTeleport === "true" : undefined
-    // page
+
     const _page = req.query?.page
     const page = _page ? (isNaN(Number(_page)) ? 0 : Number(Number(_page))) : undefined
-    // pageSize
     const _pageSize = req.query?.pageSize
     const pageSize = _pageSize ? (isNaN(Number(_pageSize)) ? 0 : Number(Number(_pageSize))) : undefined
 
     const result = await handlerGetSwaps(isDeleted, isMainnet, isTeleport, page, pageSize)
     res.status(200).json({ data: result })
-  } catch (error: any) {
+  } 
+  catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })

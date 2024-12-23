@@ -38,7 +38,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/morgan": "^1.9.9",
     "@types/multicoin-address-validator": "^0.5.3",
-    "@types/node": "^20.17.1",
+    "@types/node": "catalog:",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.2.0",
@@ -48,10 +48,11 @@
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.5.4"
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@luxfi/utila": "^3.0.0",
+    "@luxfi/core": "workspace:*",
     "@prisma/client": "^6.0.0",
     "@solana/addresses": "2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e",
     "axios": "^1.7.4",

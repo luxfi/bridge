@@ -1,16 +1,14 @@
-// Importing JSON files for mainnet
-import mainnetNetworks from './mainnet/networks.json'
-import mainnetExchanges from './mainnet/exchanges.json'
-// Importing JSON files for testnet
-import testnetExchanges from './testnet/exchanges.json'
-import testnetNetworks from './testnet/networks.json'
+import mainnetNetworks from './mainnet/networks'
+import mainnetExchanges from './mainnet/exchanges'
+import testnetExchanges from './testnet/exchanges'
+import testnetNetworks from './testnet/networks'
 
 export const mainnetSettings = {
   data: {
     currencies: [],
     discovery: {},
     exchanges: mainnetExchanges,
-    networks: [...mainnetNetworks],
+    networks: mainnetNetworks,
   },
   sources: [],
   destinations: [],
@@ -23,10 +21,14 @@ export const testnetSettings = {
     currencies: [],
     discovery: {},
     exchanges: testnetExchanges,
-    networks: [...testnetNetworks],
+    networks: testnetNetworks,
   },
   sources: [],
   destinations: [],
   contractAddress: {},
   error: null,
 }
+
+export const getSettings = (version: 'mainnet' | 'testnet') => (
+  (version === "mainnet") ? mainnetSettings : testnetSettings
+)
