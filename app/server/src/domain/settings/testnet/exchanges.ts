@@ -1,4 +1,6 @@
-[
+import { type Exchange } from '@luxfi/core'
+
+export default [
   {
     "display_name": "Kucoin",
     "internal_name": "KUCOIN",
@@ -136,33 +138,39 @@
     "created_date": "2022-07-14T20:23:10.387669+00:00"
   },
   {
-    "display_name": "Lux US",
-    "internal_name": "LUXUSA",
-    "status": "inactive",
+    "display_name": "Lux Exchange",
+    "internal_name": "LX",
+    "status": "active",
     "type": "cex",
     "is_featured": false,
     "currencies": [
       {
         "asset": "USDT",
-        "network": "ETHEREUM_MAINNET",
-        "status": "inactive",
+        "network": "LUX_MAINNET",
+        "status": "active",
         "is_default": true
       },
       {
         "asset": "USDC",
-        "network": "ETHEREUM_MAINNET",
-        "status": "inactive",
+        "network": "LUX_MAINNET",
+        "status": "active",
         "is_default": true
       },
       {
         "asset": "ETH",
-        "network": "ETHEREUM_MAINNET",
-        "status": "inactive",
+        "network": "LUX_MAINNET",
+        "status": "active",
+        "is_default": true
+      },
+      {
+        "asset": "LUX",
+        "network": "LUX_MAINNET",
+        "status": "active",
         "is_default": true
       }
     ],
     "metadata": {},
-    "created_date": "2021-11-03T18:59:10.567873+00:00"
+    "created_date": "2024-01-01T00:00:00.000000+00:00"
   },
   {
     "display_name": "Kraken",
@@ -230,8 +238,8 @@
     "created_date": "2022-04-06T15:12:15.394338+00:00"
   },
   {
-    "display_name": "Lux Finance",
-    "internal_name": "LUXFI",
+    "display_name": "LUX Finance",
+    "internal_name": "LUX",
     "status": "inactive",
     "type": "cex",
     "is_featured": false,
@@ -1287,21 +1295,21 @@
     "is_featured": false,
     "currencies": [
       {
-        "asset": "USDC",
-        "network": "ETHEREUM_MAINNET",
+        "asset": "USDT",
+        "network": "LUX_MAINNET",
         "status": "active",
         "is_default": true
       },
       {
         "asset": "ETH",
-        "network": "ETHEREUM_MAINNET",
+        "network": "LUX_MAINNET",
         "status": "active",
         "is_default": true
       },
       {
         "asset": "USDC",
-        "network": "POLYGON_MAINNET",
-        "status": "inactive",
+        "network": "LUX_MAINNET",
+        "status": "active",
         "is_default": false
       },
       {
@@ -1312,6 +1320,7 @@
       }
     ],
     "metadata": {},
-    "created_date": "2023-07-25T10:03:26.889752+00:00"
+    "created_date": "2024-01-01T00:00:00.000000+00:00"
   }
-]
+] satisfies Exchange[]
+

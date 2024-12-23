@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken"
 import logger from "@/logger"
-import { UTILA_NETWORKS } from "@/config/constants"
+import { UTILA_NETWORKS } from "@/domain/constants"
 import { handlerDepositAction } from "./swaps"
 import { createVerify, constants } from "crypto"
 import { Request, Response, NextFunction } from "express"
 import { createGrpcClient, serviceAccountAuthStrategy } from "@luxfi/utila"
-import { UTILA_TRANSACTION_CREATED, UTILA_TRANSACTION_STATE_UPDATED } from "@/types/utila"
+import { UTILA_TRANSACTION_CREATED, UTILA_TRANSACTION_STATE_UPDATED } from "@/models/utila"
 
 // Ensure required environment variables are set
 const validateEnv = (): void => {

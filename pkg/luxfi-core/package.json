@@ -1,0 +1,36 @@
+{
+  "name": "@luxfi/core",
+  "version": "10.0.0",
+  "description": "core types and shared utilities related blockchain",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "scope": "@luxfi"
+  },
+  "author": "Hanzo AI, Inc.",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luxfi/bridge.git",
+    "directory": "pkg/luxfi-core"
+  },
+  "keywords": [
+    "hanzo",
+    "luxdefi"
+  ],
+  "scripts": {
+    "lat": "npm show @luxfi/core version",
+    "pub": "npm publish",
+    "tc": "tsc"
+  },
+  "exports": {
+    ".": "./types/index.ts"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
