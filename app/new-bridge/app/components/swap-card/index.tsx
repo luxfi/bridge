@@ -1,11 +1,25 @@
 import React, { useRef, useState } from 'react'
 
-import type { Network, Token } from '@/domain/types'
+import { cn } from '@hanzo/ui/util'
 
-// import DecimalInput from './decimal-input'
+import type { Bridge, Network, Token } from '@/domain/types'
+
 import TokenCard from '../token-card'
 import FromToCard from './from-to-card'
-import { cn } from '@hanzo/ui/util'
+import ReceiveCard from '../receive-card'
+
+const FIXTURE = {
+  usdValue: 33455566666,
+  usdFee: 2.4,
+  tokensGas: .045,
+  txnTime: '~5min',
+  tokensAvailable: 1004.334556666,
+  bridge: {
+    name: 'Across',
+    logo: 'https://cdn.lux.network/bridge/currencies/dai.png',
+  } as Bridge
+}
+
 
 const SwapCard: React.FC<{
   className?: string
@@ -79,9 +93,24 @@ const SwapCard: React.FC<{
         tokens={_from.current?.currencies!}
         token={_token.current}
         setToken={setToken}
-        usdValue={1}
+        usdValue={FIXTURE.usdValue}
+        amountChanged={setAmount}
+        tokensAvailable={FIXTURE.tokensAvailable}
         className='w-full rounded-lg mt-2'
       />
+      {_amount.current > 0 && (
+        <ReceiveCard
+          from={_from.current!}
+          to={_to.current!}
+          token={_token.current!}
+          usdValue={FIXTURE.usdValue}
+          usdFee={FIXTURE.usdFee}
+          tokensGas={FIXTURE.tokensGas}
+          bridge={FIXTURE.bridge}
+          txnTime={FIXTURE.txnTime}
+          className=''
+        />
+      )}
     </div>
   )
 }
