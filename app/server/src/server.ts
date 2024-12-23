@@ -6,13 +6,12 @@ import { v4 as uuidv4 } from "uuid"
 
 import logger from "@/logger" // Import Winston logger
 
-// Routers
 import swaps from "@/routes/swaps"
 import explorer from "@/routes/explorer"
 import settings from "@/routes/settings"
 import tokens from "@/routes/tokens"
 import limits from "@/routes/limits"
-import quotes from "@/routes/quotes"
+import quote from "@/routes/quote"
 import rate from "@/routes/rate"
 import utila from "@/routes/utila"
 import networks from "@/routes/networks"
@@ -85,7 +84,7 @@ try {
   app.use("/api/settings", settings)
   app.use("/api/tokens", tokens)
   app.use("/api/limits", limits)
-  app.use("/api/quotes", quotes)
+  app.use("/api/quote", quote)
   app.use("/api/rate", rate)
   app.use("/api/networks", networks)
   app.use("/api/exchanges", exchanges)

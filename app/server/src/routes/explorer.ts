@@ -1,4 +1,4 @@
-import { handlerGetExplorer, handlerGetHasBySwaps } from "@/lib/swaps"
+import { getExplorer, getHasBySwaps } from "@/domain/explorer"
 import { Router, Request, Response } from "express"
 
 const router: Router = Router()
@@ -13,27 +13,24 @@ router.get("/", async (req: Request, res: Response) => {
     // // Get version from query parameter
     // const version = req.query.version
     const statuses: string[] = []
-    const result = await handlerGetExplorer(statuses)
+    const result = await getExplorer(statuses)
     console.log("🚀 ~ result:", result)
     res.status(200).json({ data: result })
   } catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })
-// route: /api/explorer/transaction_has
+// route: /api/explorer/:transaction_has
 // description:
 // method: GET and it's public
 router.get("/:transaction_has", async (req: Request, res: Response) => {
   try {
     const transaction_has = req.params.transaction_has
-    if (transaction_has) {
-      const result = await handlerGetHasBySwaps(transaction_has as string)
-      console.log("🚀 ~ result:", result)
-      res.status(200).json({ data: result })
-    } else {
-      res.status(200).json({ data: [] })
-    }
-  } catch (error: any) {
+    const result = await getHasBySwaps(transaction_has)
+    console.log("🚀 ~ result:", result)
+    res.status(200).json({ data: result })
+  } 
+  catch (error: any) {
     res.status(500).json({ error: error?.message })
   }
 })

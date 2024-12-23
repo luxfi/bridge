@@ -24,6 +24,7 @@ import { useSearchParams } from 'next/navigation'
 import { useSettings } from '@/context/settings'
 import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
+
 const ConnectedWallets: React.FC<
   {
     connectButtonVariant?: 'outline' | 'primary'

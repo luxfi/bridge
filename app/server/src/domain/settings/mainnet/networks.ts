@@ -1,4 +1,6 @@
-[
+import { type Network } from '@luxfi/core'
+
+export default [
   {
     "display_name": "Ethereum",
     "internal_name": "ETHEREUM_MAINNET",
@@ -28,7 +30,6 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
       },
       {
         "name": "WETH",
@@ -45,7 +46,6 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
       },
       {
         "name": "USDT",
@@ -62,7 +62,6 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
       },
       {
         "name": "USDC",
@@ -79,7 +78,6 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
       },
       {
         "name": "DAI",
@@ -96,7 +94,6 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
       }
     ],
     "metadata": null,
@@ -146,7 +143,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -163,7 +160,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -180,7 +177,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -197,7 +194,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -214,7 +211,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid BTC",
@@ -231,7 +228,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid ETH",
@@ -248,7 +245,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid Dollar",
@@ -265,7 +262,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid ZOO",
@@ -282,7 +279,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid BNB",
@@ -299,7 +296,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid POL",
@@ -316,7 +313,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid CELO",
@@ -333,7 +330,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid FTM",
@@ -350,7 +347,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid xDAI",
@@ -367,7 +364,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid SOL",
@@ -384,7 +381,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid TON",
@@ -401,7 +398,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid ADA",
@@ -418,7 +415,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid AVAX",
@@ -435,7 +432,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid BLAST",
@@ -452,7 +449,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid BONK",
@@ -469,7 +466,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid WIF",
@@ -486,7 +483,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid Popcat",
@@ -503,7 +500,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid PNUT",
@@ -520,7 +517,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid MEW",
@@ -537,7 +534,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid BOME",
@@ -554,7 +551,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid GIGA",
@@ -571,7 +568,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid AI16Z",
@@ -588,7 +585,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid FWOG",
@@ -605,7 +602,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid MOODENG",
@@ -622,7 +619,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Liquid PONKE",
@@ -639,7 +636,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -677,7 +674,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -694,7 +691,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -711,7 +708,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -728,7 +725,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -745,7 +742,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo BTC",
@@ -762,7 +759,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo ETH",
@@ -779,7 +776,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo Dollar",
@@ -796,7 +793,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo LUX",
@@ -813,7 +810,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo BNB",
@@ -830,7 +827,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo POL",
@@ -847,7 +844,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo CELO",
@@ -864,7 +861,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo FTM",
@@ -881,7 +878,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo xDAI",
@@ -898,7 +895,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo SOL",
@@ -915,7 +912,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo TON",
@@ -932,7 +929,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo ADA",
@@ -949,7 +946,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo AVAX",
@@ -966,7 +963,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo BLAST",
@@ -983,7 +980,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo BONK",
@@ -1000,7 +997,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo WIF",
@@ -1017,7 +1014,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo Popcat",
@@ -1034,7 +1031,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo PNUT",
@@ -1051,7 +1048,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo MEW",
@@ -1068,7 +1065,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo BOME",
@@ -1085,7 +1082,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo GIGA",
@@ -1102,7 +1099,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo AI16Z",
@@ -1119,7 +1116,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo FWOG",
@@ -1136,7 +1133,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo MOODENG",
@@ -1153,7 +1150,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Zoo PONKE",
@@ -1170,7 +1167,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1208,7 +1205,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -1225,7 +1222,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1242,7 +1239,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1259,7 +1256,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -1276,7 +1273,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1315,7 +1312,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -1332,7 +1329,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1349,7 +1346,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1366,7 +1363,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -1383,7 +1380,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1421,7 +1418,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -1438,7 +1435,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1455,7 +1452,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1472,7 +1469,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -1489,7 +1486,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1525,7 +1522,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -1542,7 +1539,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1559,7 +1556,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1576,7 +1573,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "cUSD",
@@ -1593,7 +1590,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1631,7 +1628,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "Wrapped Ether",
@@ -1648,7 +1645,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "Coinbase Wrapped BTC",
@@ -1665,7 +1662,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1682,7 +1679,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1699,7 +1696,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -1716,7 +1713,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1754,7 +1751,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -1771,7 +1768,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1788,7 +1785,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1805,7 +1802,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -1822,7 +1819,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1861,7 +1858,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -1878,7 +1875,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -1895,7 +1892,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -1912,7 +1909,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -1929,7 +1926,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -1967,7 +1964,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH.e",
@@ -1984,7 +1981,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT.e",
@@ -2001,7 +1998,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -2018,7 +2015,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "BTC.b",
@@ -2035,7 +2032,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2074,7 +2071,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -2091,7 +2088,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -2108,7 +2105,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -2125,7 +2122,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -2142,7 +2139,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2180,7 +2177,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -2197,7 +2194,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -2214,7 +2211,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -2231,7 +2228,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "DAI",
@@ -2248,7 +2245,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2286,7 +2283,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "USDzC",
@@ -2303,7 +2300,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2341,7 +2338,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "BLAST",
@@ -2358,7 +2355,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2396,7 +2393,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -2413,7 +2410,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDT",
@@ -2430,7 +2427,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "USDC.e",
@@ -2447,7 +2444,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       },
       {
         "name": "Wrapped BTC",
@@ -2464,7 +2461,7 @@
         "withdrawal_fee": 0.2,
         "source_base_fee": 1,
         "destination_base_fee": 1,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2502,7 +2499,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       }
     ],
     "metadata": null,
@@ -2538,7 +2535,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       }
     ],
     "metadata": null,
@@ -2574,7 +2571,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -2591,7 +2588,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       },
       {
         "name": "USDC",
@@ -2608,7 +2605,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
@@ -2646,7 +2643,7 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "jUSDC",
@@ -2663,11 +2660,11 @@
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": false
+       
       }
     ],
     "metadata": null,
     "managed_accounts": [],
     "nodes": ["UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"]
   }
-]
+] satisfies Network[]

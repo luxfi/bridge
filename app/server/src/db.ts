@@ -1,10 +1,10 @@
-import { mainnetSettings, testnetSettings } from "@/settings"
-import { prisma } from "@/lib/prisma"
+import { mainnetSettings, testnetSettings } from "@/domain/settings"
+import { prisma } from "@/domain/prisma"
 
 const main = async () => {
   try {
     const networks = [...mainnetSettings.data.networks, ...testnetSettings.data.networks]
-    console.log("::staring update networks data.")
+    console.log("::starting networks data update...")
     let currenciesCount = 0
 
     for (let i = 0; i < networks.length; i++) {
@@ -73,7 +73,7 @@ const main = async () => {
       currenciesCount: currenciesCount
     })
   } catch (error: any) {
-    console.error("Error in updating networks", error)
+    console.error("Error updating networks!", error)
   }
 }
 

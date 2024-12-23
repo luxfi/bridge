@@ -1,7 +1,5 @@
-//import { handlerGetExplorer, handlerGetHasBySwaps } from "@/helpers/swapHelper"
 import { Router, Request, Response } from "express"
-
-import { mainnetSettings, testnetSettings } from "@/settings"
+import { getSettings } from "@/domain/settings"
 
 const router: Router = Router()
 
@@ -11,7 +9,7 @@ const router: Router = Router()
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { version } = req.query
-    const settings = version === "mainnet" ? mainnetSettings : testnetSettings;
+    const settings = getSettings(version as 'mainnet' | 'testnet')
     res.status(200).json({ ...settings.data })
   } 
   catch (error: any) {

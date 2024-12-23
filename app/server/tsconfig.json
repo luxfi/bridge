@@ -4,10 +4,10 @@
     "paths": {
       "@/*": ["*"] // Map "@/..." to "./src/..."
     },
-    "module": "commonjs", // Required for Node.js
-    "esModuleInterop": true, // Allows default imports for CommonJS modules
-    "target": "es2020", // Use modern ECMAScript features
-    "moduleResolution": "node", // Resolve Node.js modules correctly
+    "module": "es2020",       // Required for Node.js
+    "esModuleInterop": true,  // Allows default imports for CommonJS modules
+    "target": "es2020",       // Use modern ECMAScript features
+    "moduleResolution": "bundler", 
     "resolveJsonModule": true, // Allow JSON imports
     "sourceMap": true, // Generate source maps for debugging
     "outDir": "dist", // Output directory

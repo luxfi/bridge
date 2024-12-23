@@ -1,11 +1,11 @@
 import ERC20B_ABI from '@/constants/ERC20B.json'
-import { prisma } from "@/lib/prisma"
-import { isValidAddress } from "@/lib/utils"
+import { prisma } from "@/domain/prisma"
+import { isValidAddress } from "@/domain/utils"
 import { statusMapping, SwapStatus, UtilaTransactionStateMapping } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"
 import { archiveWalletForExpire, client, createNewWalletForDeposit } from "./utila"
-import { UTILA_NETWORKS } from "@/config/constants"
+import { UTILA_NETWORKS } from "@/domain/constants"
 import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from "ethers"
 
 export interface SwapData {

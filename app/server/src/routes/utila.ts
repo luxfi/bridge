@@ -1,7 +1,7 @@
 import { Router, Request, Response, raw } from "express"
-import { verifyUtilaSignature } from "@/lib/utila"
+import { verifyUtilaSignature } from "@/domain/utila"
 import logger from "@/logger"
-import { handleTransactionCreated, handleTransactionStateUpdated } from "@/lib/utila"
+import { handleTransactionCreated, handleTransactionStateUpdated } from "@/domain/utila"
 
 
 const router: Router = Router()
