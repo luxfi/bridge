@@ -45,6 +45,8 @@ const ConnectedWallets: React.FC<
   const { chainId, signer, address } = useEthersSigner()
   const { networks } = useSettings()
 
+  console.log(wallets)
+
   if (address && chainId) {
     const network = networks.find(
       (n: CryptoNetwork) => Number(n.chain_id) === chainId

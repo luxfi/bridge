@@ -35,7 +35,7 @@ export type NetworkCurrency = {
     logo: string
     contract_address: string | null | undefined
     decimals: number
-    status: string
+    status: 'active' | 'inactive'
     is_deposit_enabled: boolean
     is_withdrawal_enabled: boolean
     is_refuel_enabled: boolean

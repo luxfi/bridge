@@ -10,13 +10,14 @@ import SwapSuccess from './progress/SwapSuccess'
 import SwapExpired from './progress/SwapExpired'
 import { SwapStatus } from '@/Models/SwapStatus'
 import BridgeProcessor from './progress/BridgeProcessor'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string;
-  sourceNetwork: Network;
-  sourceAsset: Token;
-  destinationNetwork: Network;
-  destinationAsset: Token;
+  sourceNetwork: CryptoNetwork;
+  sourceAsset: NetworkCurrency;
+  destinationNetwork: CryptoNetwork;
+  destinationAsset: NetworkCurrency;
   destinationAddress: string;
   sourceAmount: string;
   getSwapById: (swapId: string) => void

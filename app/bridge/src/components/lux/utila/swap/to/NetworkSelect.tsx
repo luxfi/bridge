@@ -13,15 +13,15 @@ import Modal from '@/components/modal/modal'
 import useWindowDimensions from '@/hooks/useWindowDimensions'
 import SelectItem from '@/components/lux/utila/swap/to/SelectItem'
 import SpinIcon from '@/components/icons/spinIcon'
-import { type Network } from '@/types/utila'
+import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 
 interface IProps {
   show: boolean
   setShow: (value: boolean) => void
   searchHint: string
-  networks: Network[]
-  network?: Network
-  setNetwork: (value: Network) => void
+  networks: CryptoNetwork[]
+  network?: CryptoNetwork
+  setNetwork: (value: CryptoNetwork) => void
 }
 
 const CommandSelect: React.FC<IProps> = ({
@@ -41,7 +41,7 @@ const CommandSelect: React.FC<IProps> = ({
           {networks ? (
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
-              {networks.map((n: Network) => (
+              {networks.map((n: CryptoNetwork) => (
                 <CommandItem
                   disabled={false}
                   value={n.internal_name}

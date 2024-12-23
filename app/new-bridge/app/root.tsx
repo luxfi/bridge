@@ -10,20 +10,25 @@ import {
   LiveReload,
   useLoaderData
 } from '@remix-run/react'
-import { json, type LoaderFunction, redirect } from "@remix-run/node"
+
 import Contexts from '@/contexts'
-import type { LinksFunction } from '@vercel/remix'
+
+import  { type LinksFunction, type LoaderFunction } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react'
+
 import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
 
-import '@luxfi/ui/style/lux-global-non-next.css'
-import '@luxfi/ui/style/cart-animation.css'
-import '@luxfi/ui/style/checkout-animation.css'
+import '@/style/lux-global-non-next.css'
+import '@/style/cart-animation.css'
+import '@/style/checkout-animation.css'
 
 import Main from 'app/components/main'
-import _links from './links'
-import metadata from './metadata'
 import getBridgeSettings from './utils/get-bridge-settings'
+import Header from 'app/components/header'
+import _links from './links';
+import metadata from './metadata'
+import siteDef from './site-def'
+import { BridgeSettings } from './types/bridge-settings'
 
 export const config = { runtime: 'edge' }
 
@@ -35,17 +40,18 @@ export const meta: MetaFunction = () => (metadata)
 export const loader: LoaderFunction = async () => {
   const settings = await getBridgeSettings()
   if (!settings) {
-    return redirect("/") // Redirect if settings are not available
+    // TODO :aa
+    //return redirect("/") // Redirect if settings are not available
   }
-  return json({ settings })
+  return (settings)
 }
 
 const Layout: React.FC<PropsWithChildren> = ({ 
   children 
 })  => {
-
-  const { settings } = useLoaderData<typeof loader>()
   
+  const settings = useLoaderData() as BridgeSettings
+
   return (
     <html 
       lang='en' 
@@ -60,25 +66,26 @@ const Layout: React.FC<PropsWithChildren> = ({
         <Links />
       </head>
       <body className={bodyClasses} >
-        <Contexts settings={settings}>
+        <Contexts settings={settings } >
+          <Header siteDef={siteDef}/>
           <Main className='gap-4 '>
             {children}
           </Main>
-          <ScrollRestoration />
-          <Scripts />
-          {/* https://github.com/remix-run/remix/issues/2958#issuecomment-2188876125
-          process.env.NODE_ENV === 'development' && <LiveReload /> 
-          */}
-          {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
-          <Analytics />
         </Contexts>
+        <ScrollRestoration />
+        <Scripts />
+        {/* https://github.com/remix-run/remix/issues/2958#issuecomment-2188876125
+        process.env.NODE_ENV === 'development' && <LiveReload /> 
+        */}
+        {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
+        <Analytics />
       </body>
     </html>
   )
 }
 
 const App: React.FC = () => (
-    <Outlet />
+  <Outlet />
 )
 
 

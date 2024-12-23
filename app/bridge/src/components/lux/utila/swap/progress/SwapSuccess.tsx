@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 import Gauge from "@/components/gauge"
 import SwapItems from "./SwapItems"
 import shortenAddress from "@/components/utils/ShortenAddress"
-import type { DepositAction, Network, Token } from "@/types/utila"
+import type { DepositAction } from "@/types/utila"
 import { useAtom } from "jotai"
 import { truncateDecimals } from "@/components/utils/RoundDecimals"
 
@@ -18,13 +18,14 @@ import {
   depositActionsAtom,
 } from '@/store/utila'
 import DepositActionItem from "../../share/DepositActionItem"
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork"
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string

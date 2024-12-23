@@ -1,128 +1,125 @@
 'use client'
-import React, { type FC }from 'react'
+import React, { type FC } from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import axios from 'axios'
-//hooks
-import { useRouter } from 'next/navigation'
-import { useAtom } from 'jotai'
-
-import { ArrowLeftRight } from 'lucide-react'
-
+//comps
 import Modal from '@/components/modal/modal'
-import shortenAddress from '@/components/utils/ShortenAddress'
+import Image from 'next/image'
 import Widget from '@/components/Widget/index'
-
-import FromNetworkForm from './from/NetworkFormField'
-import ToNetworkForm from './to/NetworkFormField'
-import type { Token, Network } from '@/types/utila'
-import { SWAP_PAIRS } from '@/components/lux/utila/constants/settings'
-import { useEthersSigner } from "@/hooks/useEthersSigner";
-import { fetchTokenBalance } from '@/lib/utils'
-
-import devNetworks from '@/components/lux/utila/constants/networks.sandbox'
-import mainNetworks from '@/components/lux/utila/constants/networks.mainnets'
-
-import {
-  sourceNetworkAtom,
-  sourceAssetAtom,
-  destinationNetworkAtom,
-  destinationAssetAtom,
-  destinationAddressAtom,
-  sourceAmountAtom,
-  ethPriceAtom,
-  swapStatusAtom,
-  swapIdAtom,
-  timeToExpireAtom,
-} from '@/store/utila'
 import SpinIcon from '@/components/icons/spinIcon'
-import { useNotify } from '@/context/toast-provider'
+import shortenAddress from '@/components/utils/ShortenAddress'
+import FromNetworkForm from '@/components/lux/teleport/swap/from/NetworkFormField'
+import ToNetworkForm from '@/components/lux/teleport/swap/to/NetworkFormField'
+import { Button } from '@hanzo/ui/primitives'
+import { ArrowLeftRight, ArrowUpDown, WalletIcon } from 'lucide-react'
+//hooks
+import useWallet from '@/hooks/useWallet'
+import useAsyncEffect from 'use-async-effect'
+import { useRouter } from 'next/navigation'
+import { useSettings } from '@/context/settings'
 import { useServerAPI } from '@/hooks/useServerAPI'
+import { useEthersSigner } from '@/hooks/useEthersSigner'
+//types
+import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
+//utils
+import { fetchTokenBalance } from '@/lib/utils'
+import { getDestinationNetworks, getFirstSourceNetwork } from '@/util/swapsHelper'
 
-const Address = dynamic(
-  () => import('@/components/lux/utila/share/Address'),
-  {
-    loading: () => <></>,
-  }
-)
+const Address = dynamic(() => import('@/components/lux/teleport/share/Address'), {
+  loading: () => <></>,
+})
 
 const Swap: FC = () => {
-  const isMainnet = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet'
-  const { sourceNetworks, destinationNetworks: dstNetworks } = isMainnet
-    ? mainNetworks
-    : devNetworks
+  const { networks } = useSettings()
+  const filteredNetworks = networks.filter((n: CryptoNetwork) => n.status === 'active' && n.type !== NetworkType.EVM)
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false)
   const [showAddressModal, setShowAddressModal] = React.useState<boolean>(false)
-  const [sourceNetwork, setSourceNetwork] = useAtom(sourceNetworkAtom)
-  const [sourceAsset, setSourceAsset] = useAtom(sourceAssetAtom)
-
+  const [sourceNetwork, setSourceNetwork] = React.useState<CryptoNetwork | undefined>(undefined)
+  const [sourceAsset, setSourceAsset] = React.useState<NetworkCurrency | undefined>(undefined)
+  //balances
   const [sourceBalance, setSourceBalance] = React.useState<number>(0)
-  const [isSourceBalanceLoading, setIsSourceBalanceLoading] = React.useState<boolean>(false);
-  const [destinationBalance, setDestinationBalance] = React.useState<number>(0);
-  const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] = React.useState<boolean>(false);
+  const [isSourceBalanceLoading, setIsSourceBalanceLoading] = React.useState<boolean>(false)
+  const [destinationBalance, setDestinationBalance] = React.useState<number>(0)
+  const [isDestinationBalanceLoading, setIsDestinationBalanceLoading] = React.useState<boolean>(false)
 
-  const [destinationNetwork, setDestinationNetwork] = useAtom(
-    destinationNetworkAtom
-  )
-  const [destinationAsset, setDestinationAsset] = useAtom(destinationAssetAtom)
-  const [destinationAddress, setDestinationAddress] = useAtom(
-    destinationAddressAtom
-  )
-  const [sourceAmount, setSourceAmount] = useAtom(sourceAmountAtom)
-  const [, setSwapId] = useAtom(swapIdAtom)
-  const [, setSwapStatus] = useAtom(swapStatusAtom)
-  const [, setEthPrice] = useAtom(ethPriceAtom)
-  const [, setTimeToExpire] = useAtom(timeToExpireAtom)
+  const [destinationNetwork, setDestinationNetwork] = React.useState<CryptoNetwork | undefined>(undefined)
+  const [destinationAsset, setDestinationAsset] = React.useState<NetworkCurrency | undefined>(undefined)
+  const [destinationAddress, setDestinationAddress] = React.useState<string>('')
 
-  const [destinationNetworks, setDestinationNetworks] =
-    React.useState<Network[]>(dstNetworks)
+  const [sourceAmount, setSourceAmount] = React.useState<string>('')
+  const [tokenPrice, setTokenPrice] = React.useState<number>(0)
+  const [flipInProgress, setFlipInProgress] = React.useState<boolean>(false)
 
-  const router = useRouter ()
-  const { notify } = useNotify ()
-  const { serverAPI } = useServerAPI ()
+  // hooks
+  const router = useRouter()
+  const { serverAPI } = useServerAPI()
+  const { connectWallet } = useWallet()
+  const { address, isConnecting } = useEthersSigner()
 
-
+  // src & dst networks
+  const sourceNetworks = filteredNetworks
+  const destinationNetworks = React.useMemo(() => getDestinationNetworks(sourceAsset, networks), [sourceAsset])
+  // if page is mounted, set sourceNetwork as first one
   React.useEffect(() => {
-    sourceNetwork &&
-      sourceNetwork.currencies.length > 0 &&
-      setSourceAsset(
-        sourceNetwork.currencies.find((c) => c.status === 'active')
-      )
-  }, [sourceNetwork])
-
-  React.useEffect(() => {
-    setSourceNetwork(sourceNetworks.find((n) => n.status === 'active'))
+    setSourceNetwork(filteredNetworks[0])
   }, [])
-
+  // when sourceNetwork is changed, set source asset as first asset
   React.useEffect(() => {
-    if (sourceAsset) {
-      const _networks = dstNetworks.map((n: Network) => ({
-          ...n,
-          currencies: n.currencies.map((c: Token) => ({
-            ...c,
-            status: SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)
-              ? c.status
-              : 'inactive',
-          })),
-        }))
-      setDestinationNetworks(_networks)
-      setDestinationNetwork(_networks.find((n) => n.status === 'active'))
+    // Prevent triggering useEffect if flip is in progress
+    if (flipInProgress) return
+    if (sourceNetwork) {
+      setSourceAsset(sourceNetwork.currencies.find((c) => c.status === 'active'))
+    } else {
+      setSourceNetwork(filteredNetworks[0])
     }
-  }, [sourceAsset, sourceNetwork])
-
+  }, [sourceNetwork])
+  // set destination network
   React.useEffect(() => {
-    setDestinationAsset(
-      destinationNetwork?.currencies.find((c) => c.status === 'active')
-    )
+    // Prevent triggering useEffect if flip is in progress
+    if (flipInProgress) return
+
+    setDestinationNetwork(destinationNetworks[0])
+  }, [destinationNetworks])
+  // when detination Network is changed, set destination asset as first asset
+  React.useEffect(() => {
+    // Prevent triggering useEffect if flip is in progress
+    if (flipInProgress) return
+
+    setDestinationAsset(destinationNetwork?.currencies.find((c) => c.status === 'active'))
   }, [destinationNetwork])
 
-  const [showSwapModal, setShowSwapModal] = React.useState<boolean>(false)
+  React.useEffect(() => {
+    if (flipInProgress) {
+      setFlipInProgress(false) // Reset the flip flag after state has been updated
+    }
+  }, [sourceNetwork, sourceAsset, destinationNetwork, destinationAsset]) // Dependency array includes all relevant states
 
+  const handleFlip = () => {
+    setFlipInProgress(true)
+
+    const _sourceNetwork = filteredNetworks.find((n: CryptoNetwork) => n.internal_name === destinationNetwork?.internal_name)
+    if (_sourceNetwork) {
+      setSourceNetwork(_sourceNetwork)
+      setSourceAsset(destinationAsset)
+    } else {
+      const { srcNetwork, srcAsset } = getFirstSourceNetwork(sourceNetwork, sourceAsset, networks)
+      setSourceNetwork(srcNetwork)
+      setSourceAsset(srcAsset)
+    }
+
+    const destinationNetworks = getDestinationNetworks(destinationAsset, networks)
+    const _destinationNetwork = destinationNetworks.find((n: CryptoNetwork) => n.internal_name === sourceNetwork?.internal_name)
+
+    setDestinationNetwork(_destinationNetwork)
+    setDestinationAsset(sourceAsset)
+  }
+
+  // get token price
   React.useEffect(() => {
     if (sourceAsset) {
       serverAPI.get(`/api/tokens/price/${sourceAsset.asset}`).then((data) => {
-        setEthPrice(Number(data?.data?.data?.price))
+        setTokenPrice(Number(data?.data?.data?.price))
       })
     }
   }, [sourceAsset])
@@ -136,21 +133,18 @@ const Swap: FC = () => {
       return 'Select Destination Network'
     } else if (!destinationAsset) {
       return 'Select Destination Asset'
-    } else if (!destinationAddress) {
-      return 'Input Address'
     } else if (sourceAmount === '') {
       return 'Enter Token Amount'
+    } else if (Number(sourceAmount) <= 0) {
+      return 'Invalid Token Amount'
+    // } else if (Number(sourceAmount) > Number(sourceBalance)) {
+    //   return 'Insufficient Token Amount'
+    } else if (!destinationAddress) {
+      return 'Input Destination Address'
     } else {
       return 'Create Swap'
     }
-  }, [
-    sourceNetwork,
-    sourceAsset,
-    destinationNetwork,
-    destinationAsset,
-    destinationAddress,
-    sourceAmount,
-  ])
+  }, [sourceNetwork, sourceAsset, destinationNetwork, destinationAsset, destinationAddress, sourceAmount, sourceBalance, address])
 
   const createSwap = async () => {
     try {
@@ -167,22 +161,9 @@ const Swap: FC = () => {
         use_teleporter: false,
         app_name: 'Bridge',
       }
-
-      const response = await serverAPI.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`,
-        data
-      )
-
-      console.log('::utila res:', response.data)
-      setSwapId(response.data?.data?.swap_id)
-      setTimeToExpire(new Date(response.data?.data?.created_date).getTime())
-      // window.history.pushState(
-      //   {},
-      //   '',
-      //   `/swap/utila/${response.data?.data?.swap_id}`
-      // )
-      // setSwapStatus(SwapStatus.UserDepositPending)
-      // setShowSwapModal(true)
+      console.log('::data for swap:', data)
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?version=${process.env.NEXT_PUBLIC_API_VERSION}`, data)
+      console.log('::swap creation response:', response.data.data)
       router.push(`/swap/v2/${response.data?.data?.swap_id}`)
     } catch (err) {
       console.log(err)
@@ -192,95 +173,82 @@ const Swap: FC = () => {
   }
 
   const handleSwap = () => {
-    if (
-      sourceNetwork &&
-      sourceAsset &&
-      destinationNetwork &&
-      destinationNetwork &&
-      destinationAddress &&
-      Number(sourceAmount) > 0
-    ) {
+    if (sourceNetwork && sourceAsset && destinationNetwork && destinationNetwork && destinationAddress && Number(sourceAmount) > 0) {
       createSwap()
       setIsSubmitting(true)
     }
   }
-
   // set source balance
   // useAsyncEffect(async () => {
-  //   if (sourceNetwork && sourceAsset) {
-  //     setIsSourceBalanceLoading (true);
+  //   if (address && sourceNetwork && sourceAsset) {
+  //     setIsSourceBalanceLoading(true)
   //     const _balance = await fetchTokenBalance(address, sourceNetwork, sourceAsset)
-  //     setSourceBalance (_balance)
-  //     setIsSourceBalanceLoading (false);
+  //     setSourceBalance(_balance)
+  //     setIsSourceBalanceLoading(false)
   //   } else {
-  //     setSourceBalance (0)
+  //     setSourceBalance(0)
   //   }
-  // }, [sourceNetwork, sourceAsset])
-  // useAsyncEffect(async () => {
-  //   if (address && destinationNetwork && destinationAsset) {
-  //     setIsDestinationBalanceLoading (true);
-  //     const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
-  //     setDestinationBalance (_balance)
-  //     setIsDestinationBalanceLoading (false);
-  // } else {
-  //   setDestinationBalance (0)
-  // }
-  // }, [address, destinationNetwork, destinationAsset])
+  // }, [address, sourceNetwork, sourceAsset])
+  // set destination balance
+  useAsyncEffect(async () => {
+    if (address && destinationNetwork && destinationAsset) {
+      setIsDestinationBalanceLoading(true)
+      const _balance = await fetchTokenBalance(address, destinationNetwork, destinationAsset)
+      setDestinationBalance(_balance)
+      setIsDestinationBalanceLoading(false)
+    } else {
+      setDestinationBalance(0)
+    }
+  }, [address, destinationNetwork, destinationAsset])
 
   return (
     <Widget className="sm:min-h-[504px] max-w-lg mt-20 md:mt-0">
       <Widget.Content>
-        <div
-          id="WIDGET_CONTENT"
-          className="flex-col relative flex justify-between w-full mb-3.5 leading-4 overflow-hidden"
-        >
+        <div id="WIDGET_CONTENT" className="flex-col relative flex justify-between w-full mb-3.5 leading-4 overflow-hidden">
           <FromNetworkForm
+            amount={sourceAmount}
+            setAmount={setSourceAmount}
             disabled={false}
             network={sourceNetwork}
-            asset={sourceAsset}
-            setNetwork={(network: Network) => {
+            setNetwork={(network: CryptoNetwork) => {
               setSourceNetwork(network)
             }}
+            asset={sourceAsset}
+            setAsset={(token: NetworkCurrency) => setSourceAsset(token)}
             maxValue={sourceBalance.toString()}
-            setAsset={(token: Token) => setSourceAsset(token)}
             networks={sourceNetworks}
             balance={sourceBalance}
             balanceLoading={isSourceBalanceLoading}
           />
-          {/* <div className="py-4">
-            <span className="text-md">Fee: {1}</span>
-            <span className="text-xs"> %</span>
-          </div> */}
-
-          <div className="flex flex-col w-full">
-            <ToNetworkForm
-              disabled={!sourceNetwork}
-              network={destinationNetwork}
-              asset={destinationAsset}
-              sourceAsset={sourceAsset}
-              setNetwork={(network: Network) => setDestinationNetwork(network)}
-              setAsset={(token: Token) => setDestinationAsset(token)}
-              networks={destinationNetworks}
-              balance={destinationBalance}
-              balanceLoading={isDestinationBalanceLoading}
+          <div className="flex justify-center items-center -my-7 z-10">
+            <ArrowUpDown
+              onClick={() => handleFlip()}
+              height={40}
+              width={36}
+              className="p-2 bg-level-1 rounded-md border-2 border-black hover:bg-level-3 cursor-pointer"
             />
           </div>
+          <ToNetworkForm
+            disabled={!sourceNetwork}
+            amount={sourceAmount}
+            network={destinationNetwork}
+            asset={destinationAsset}
+            sourceAsset={sourceAsset}
+            setNetwork={(network: CryptoNetwork) => setDestinationNetwork(network)}
+            setAsset={(token: NetworkCurrency) => setDestinationAsset(token)}
+            networks={destinationNetworks}
+            balance={destinationBalance}
+            balanceLoading={isDestinationBalanceLoading}
+          />
         </div>
 
         <div className="w-full xs:mb-3 leading-4">
-          <label
-            htmlFor="destination_address"
-            className="block font-semibold text-xs"
-          >
+          <label htmlFor="destination_address" className="block font-semibold text-xs">
             {`To ${destinationNetwork?.display_name ?? ''} address`}
           </label>
           <AddressButton
-            disabled={
-              !sourceNetwork ||
-              !sourceAsset ||
-              !destinationNetwork ||
-              !destinationAsset
-            }
+            disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
+            placeholder={destinationNetwork ? 'Enter your address here' : 'Select destination network'}
             isPartnerWallet={false}
             openAddressModal={() => setShowAddressModal(true)}
             partnerImage={'partnerImage'}
@@ -295,12 +263,7 @@ const Swap: FC = () => {
           >
             <Address
               close={() => setShowAddressModal(false)}
-              disabled={
-                !sourceNetwork ||
-                !sourceAsset ||
-                !destinationNetwork ||
-                !destinationAsset
-              }
+              disabled={!sourceNetwork || !sourceAsset || !destinationNetwork || !destinationAsset}
               address={destinationAddress}
               setAddress={setDestinationAddress}
               name={'destination_address'}
@@ -311,7 +274,7 @@ const Swap: FC = () => {
             />
           </Modal>
         </div>
-
+       
         <button
           onClick={handleSwap}
           disabled={
@@ -329,9 +292,7 @@ const Swap: FC = () => {
           {isSubmitting ? (
             <SpinIcon className="animate-spin h-5 w-5" />
           ) : (
-            warningMessage === 'Create Swap' && (
-              <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
-            )
+            warningMessage === 'Create Swap' && <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
           )}
           <span className="grow">{warningMessage}</span>
         </button>
@@ -349,15 +310,10 @@ const AddressButton: FC<{
   openAddressModal: () => void
   isPartnerWallet: boolean
   partnerImage?: string
+  placeholder: string
   disabled: boolean
   address: string
-}> = ({
-  openAddressModal,
-  isPartnerWallet,
-  partnerImage,
-  disabled,
-  address,
-}) => (
+}> = ({ openAddressModal, isPartnerWallet, partnerImage, disabled, placeholder, address }) => (
   <button
     type="button"
     disabled={disabled}
@@ -366,24 +322,10 @@ const AddressButton: FC<{
   >
     {isPartnerWallet && (
       <div className="shrink-0 flex items-center pointer-events-none">
-        {partnerImage && (
-          <Image
-            alt="Partner logo"
-            className="rounded-md object-contain"
-            src={partnerImage}
-            width="24"
-            height="24"
-          />
-        )}
+        {partnerImage && <Image alt="Partner logo" className="rounded-md object-contain" src={partnerImage} width="24" height="24" />}
       </div>
     )}
-    <div className="truncate text-muted">
-      {address ? (
-        <TruncatedAdrress address={address} />
-      ) : (
-        <span>Enter your address here</span>
-      )}
-    </div>
+    <div className="truncate text-muted">{address ? <TruncatedAdrress address={address} /> : <span>{placeholder}</span>}</div>
   </button>
 )
 
