@@ -1,5 +1,4 @@
 import winston, { createLogger, format, transports } from "winston";
-import { Request } from "express";
 
 // Define custom log levels
 const customLevels = {

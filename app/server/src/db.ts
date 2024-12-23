@@ -1,5 +1,6 @@
+import { prisma } from "./prisma-instance"
+
 import { mainnetSettings, testnetSettings } from "@/domain/settings"
-import { prisma } from "@/domain/prisma"
 
 const main = async () => {
   try {
