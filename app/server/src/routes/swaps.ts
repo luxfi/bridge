@@ -1,7 +1,18 @@
-import { getSigFromMpcOracleNetwork } from "@/domain/mpc"
 import { Router, Request, Response } from "express"
-import { handleSwapCreation, handlerCheckDeposit, handlerGetSwap, handlerGetSwaps, handlerSwapExpire, handlerUpdateMpcSignAction, handlerUpdatePayoutAction, handlerUpdateUserTransferAction, handlerUtilaPayoutAction } from "@/domain/swaps"
 import { check, validationResult, ValidationError, Result } from "express-validator"
+
+import { getSigFromMpcOracleNetwork } from "@/domain/mpc"
+import { 
+  handleSwapCreation, 
+  handlerCheckDeposit, 
+  handlerGetSwap, 
+  handlerGetSwaps, 
+  handlerSwapExpire, 
+  handlerUpdateMpcSignAction, 
+  handlerUpdatePayoutAction, 
+  handlerUpdateUserTransferAction, 
+  handlerUtilaPayoutAction 
+} from "@/domain/swaps"
 
 const router: Router = Router()
 
