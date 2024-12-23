@@ -8,10 +8,7 @@ import type { Network } from '@/domain/types'
 const fromInitial = networks.find((el: Network) => (el.display_name === 'Base'))
 const toInitial = networks.find((el: Network) => (el.display_name === 'Ethereum'))
 
-const Index: React.FC = () => (<>
-  <ApplyTypography>
-    <h3>Lorem ipsum dolor sit amet, consectetur</h3>
-  </ApplyTypography>
+const Index: React.FC = () => (
   <SwapCard 
     className='w-[500px] h-[530px]'
     fromNetworks={networks}
@@ -19,6 +16,6 @@ const Index: React.FC = () => (<>
     toNetworks={networks}
     toInitial={toInitial}
   />
-</>)
+)
 
 export default Index
