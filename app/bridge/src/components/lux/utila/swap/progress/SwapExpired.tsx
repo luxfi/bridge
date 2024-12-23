@@ -8,14 +8,14 @@ import {
 import { useAtom } from "jotai";
 import SwapItems from "./SwapItems";
 import ManualTransfer from "./ManualTransfer";
-import type { Network, Token } from "@/types/utila";
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork";
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string

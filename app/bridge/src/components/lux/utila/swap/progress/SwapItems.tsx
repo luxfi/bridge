@@ -4,13 +4,13 @@ import shortenAddress from "@/components/utils/ShortenAddress";
 import { useAtom } from "jotai";
 import { ethPriceAtom } from "@/store/utila";
 import { truncateDecimals } from "@/components/utils/RoundDecimals";
-import type { Network, Token } from "@/types/utila";
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork";
 
 interface IProps {
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
 }
