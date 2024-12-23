@@ -2,7 +2,6 @@
 import React from "react";
 import Image from "next/image";
 
-import type { Network, Token } from "@/types/utila";
 import SubmitButton from "@/components/buttons/submitButton";
 import shortenAddress from "@/components/utils/ShortenAddress";
 import BackgroundField from "@/components/backgroundField";
@@ -11,13 +10,14 @@ import { useFee } from "@/context/feeContext";
 import { isValidAddress } from "@/lib/addressValidator";
 import { useSwapDataState } from "@/context/swap";
 import { useSwapDepositHintClicked } from "@/stores/swapTransactionStore";
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork";
 
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string
@@ -98,7 +98,7 @@ const ManualTransfer: React.FC<IProps> = ({
               <div className="flex-shrink-0 h-7 w-7 relative">
                 {sourceAsset && (
                   <Image
-                    src={sourceNetwork.logo}
+                    src={sourceNetwork.logo || ''}
                     alt="From Logo"
                     height="60"
                     width="60"

@@ -2,17 +2,18 @@
 import React from 'react'
 import { cn } from '@hanzo/ui/util'
 
-import type { DepositAction, Network, Token } from '@/types/utila'
+import type { DepositAction } from '@/types/utila'
 import { Check, ChevronUp, ChevronDown, LucideLoader2 } from 'lucide-react'
 import shortenAddress, {
   capitalizeFirstCharacter,
 } from '@/components/utils/ShortenAddress'
 import ClipboardCopier from '@/components/Swap/Form/Copier'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 
 const DepositActionItem: React.FC<{
   data: DepositAction
-  asset: Token
-  network: Network
+  asset: NetworkCurrency
+  network: CryptoNetwork
 }> = ({ data, asset, network }) => {
   const [open, setOpen] = React.useState<boolean>(false)
 

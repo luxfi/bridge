@@ -175,10 +175,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.bitcoin-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "bip122:000000000019d6689c085ae165831e93",
-        namespace: "bip122",
-        reference: "000000000019d6689c085ae165831e93"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "bip122:000000000019d6689c085ae165831e93",
+      namespace: "bip122",
+      reference: "000000000019d6689c085ae165831e93"
     },
     assets: {
       "BTC": "assets/native.bitcoin-mainnet"
@@ -192,10 +192,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.bitcoin-testnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "bip122:000000000933ea01ad0ee984209779ba",
-        namespace: "bip122",
-        reference: "000000000933ea01ad0ee984209779ba"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "bip122:000000000933ea01ad0ee984209779ba",
+      namespace: "bip122",
+      reference: "000000000933ea01ad0ee984209779ba"
     },
     assets: {
       "BTC": "assets/native.bitcoin-testnet"
@@ -209,10 +209,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.ethereum-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:1",
-        namespace: "eip155",
-        reference: "1"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:1",
+      namespace: "eip155",
+      reference: "1"
     },
     assets: {
       "ETH": "assets/native.ethereum-mainnet"
@@ -226,10 +226,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.ethereum-testnet-goerli",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:5",
-        namespace: "eip155",
-        reference: "5"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:5",
+      namespace: "eip155",
+      reference: "5"
     },
     assets: {
       "ETH": "assets/native.ethereum-testnet-goerli"
@@ -243,10 +243,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.ethereum-testnet-sepolia",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:11155111",
-        namespace: "eip155",
-        reference: "11155111"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:11155111",
+      namespace: "eip155",
+      reference: "11155111"
     },
     assets: {
       "ETH": "assets/native.ethereum-testnet-sepolia"
@@ -260,10 +260,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.optimism-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:10",
-        namespace: "eip155",
-        reference: "10"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:10",
+      namespace: "eip155",
+      reference: "10"
     },
     assets: {
       "ETH": "assets/native.optimism-mainnet",
@@ -277,10 +277,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.optimism-testnet-goerli",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:420",
-        namespace: "eip155",
-        reference: "420"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:420",
+      namespace: "eip155",
+      reference: "420"
     },
     assets: {}
   },
@@ -292,10 +292,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.polygon-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:137",
-        namespace: "eip155",
-        reference: "137"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:137",
+      namespace: "eip155",
+      reference: "137"
     },
     assets: {
       "POL": "assets/native.polygon-mainnet"
@@ -309,10 +309,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.polygon-testnet-mumbai",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:80001",
-        namespace: "eip155",
-        reference: "80001"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:80001",
+      namespace: "eip155",
+      reference: "80001"
     },
     assets: {}
   },
@@ -324,10 +324,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.polygon-testnet-amoy",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:80002",
-        namespace: "eip155",
-        reference: "80002"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:80002",
+      namespace: "eip155",
+      reference: "80002"
     },
     assets: {}
   },
@@ -339,10 +339,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.arbitrum-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:42161",
-        namespace: "eip155",
-        reference: "42161"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:42161",
+      namespace: "eip155",
+      reference: "42161"
     },
     assets: {}
   },
@@ -354,10 +354,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.arbitrum-testnet-goerli",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:421613",
-        namespace: "eip155",
-        reference: "421613"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:421613",
+      namespace: "eip155",
+      reference: "421613"
     },
     assets: {}
   },
@@ -369,10 +369,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.avalanche-c-chain-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:43114",
-        namespace: "eip155",
-        reference: "43114"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:43114",
+      namespace: "eip155",
+      reference: "43114"
     },
     assets: {}
   },
@@ -384,10 +384,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.avalanche-c-chain-testnet-fuji",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:43113",
-        namespace: "eip155",
-        reference: "43113"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:43113",
+      namespace: "eip155",
+      reference: "43113"
     },
     assets: {}
   },
@@ -399,10 +399,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.bnb-smart-chain-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:56",
-        namespace: "eip155",
-        reference: "56"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:56",
+      namespace: "eip155",
+      reference: "56"
     },
     assets: {}
   },
@@ -414,10 +414,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.bnb-smart-chain-testnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:97",
-        namespace: "eip155",
-        reference: "97"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:97",
+      namespace: "eip155",
+      reference: "97"
     },
     assets: {
       "BNB": "assets/native.bnb-smart-chain-testnet",
@@ -431,10 +431,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.fuse-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:122",
-        namespace: "eip155",
-        reference: "122"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:122",
+      namespace: "eip155",
+      reference: "122"
     },
     assets: {}
   },
@@ -446,10 +446,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.fuse-testnet-spark",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:123",
-        namespace: "eip155",
-        reference: "123"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:123",
+      namespace: "eip155",
+      reference: "123"
     },
     assets: {}
   },
@@ -461,10 +461,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.base-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:8453",
-        namespace: "eip155",
-        reference: "8453"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:8453",
+      namespace: "eip155",
+      reference: "8453"
     },
     assets: {}
   },
@@ -476,10 +476,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.base-testnet-goerli",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:84531",
-        namespace: "eip155",
-        reference: "84531"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:84531",
+      namespace: "eip155",
+      reference: "84531"
     },
     assets: {}
   },
@@ -491,10 +491,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.tron-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "tron:0x2b6653dc",
-        namespace: "tron",
-        reference: "0x2b6653dc"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "tron:0x2b6653dc",
+      namespace: "tron",
+      reference: "0x2b6653dc"
     },
     assets: {
       "TRX": "assets/native.tron-mainnet"
@@ -508,10 +508,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.tron-testnet-shasta",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "tron:0x94a9059e",
-        namespace: "tron",
-        reference: "0x94a9059e"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "tron:0x94a9059e",
+      namespace: "tron",
+      reference: "0x94a9059e"
     },
     assets: {
       "TRX": "assets/native.tron-testnet-shasta"
@@ -525,13 +525,26 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.solana-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-        namespace: "solana",
-        reference: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      namespace: "solana",
+      reference: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
     },
     assets: {
-      "SOL": "assets/native.solana-mainnet"
+      "SOL": "assets/native.solana-mainnet",
+      "USDC": "assets/spl-token.solana-mainnet.EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "SIXR": "assets/spl-token.solana-mainnet.blabla",
+      "BONK": "assets/spl-token.solana-mainnet.DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "WIF": "assets/spl-token.solana-mainnet.Bpt5okWXXrEk7WmnfaWFSUUrXb74CJjZZUL7NJ2NUx5k",
+      "POPCAT": "assets/spl-token.solana-mainnet.7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
+      "PNUT": "assets/spl-token.solana-mainnet.2qEHjDLDLbuBgRYvsxhc5D6uDWAivNFZGan56P1tpump",
+      "MEW": "assets/spl-token.solana-mainnet.8CBmi9kAWNfQem9sgxBzSBmiUXBgfgVCg5sdstaC4R7m",
+      "BOME": "assets/spl-token.solana-mainnet.ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82",
+      "GIGA": "assets/spl-token.solana-mainnet.63LfDmNb3MQ8mw9MtZ2To9bEA2M71kZUUGq5tiJxcqj9",
+      "AI16Z": "assets/spl-token.solana-mainnet.HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC",
+      "FWOG": "assets/spl-token.solana-mainnet.A8C3xuqscfmyLrte3VmTqrAq8kgMASius9AFNANwpump",
+      "MOODENG": "assets/spl-token.solana-mainnet.ED5nyyWEzpPPiWimP8vYm7sD7TD3LAt3Q3gRTWHzPJBY",
+      "PONKE": "assets/spl-token.solana-mainnet.5z3EqYQo9HiCEs3R84RCDMu2n7anpDMxRhdK8PSWmrRC",
     }
   },
   'SOLANA_DEVNET': {
@@ -542,10 +555,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.solana-devnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
-        namespace: "solana",
-        reference: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+      namespace: "solana",
+      reference: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
     },
     assets: {
       "SOL": "assets/native.solana-devnet"
@@ -559,10 +572,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.cosmoshub-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "cosmos:cosmoshub-4",
-        namespace: "cosmos",
-        reference: "cosmoshub-4"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "cosmos:cosmoshub-4",
+      namespace: "cosmos",
+      reference: "cosmoshub-4"
     },
     assets: {}
   },
@@ -574,10 +587,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.osmosis-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "cosmos:osmosis-1",
-        namespace: "cosmos",
-        reference: "osmosis-1"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "cosmos:osmosis-1",
+      namespace: "cosmos",
+      reference: "osmosis-1"
     },
     assets: {}
   },
@@ -589,10 +602,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.injective-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "cosmos:injective-1",
-        namespace: "cosmos",
-        reference: "injective-1"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "cosmos:injective-1",
+      namespace: "cosmos",
+      reference: "injective-1"
     },
     assets: {}
   },
@@ -604,10 +617,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.rootstock-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:30",
-        namespace: "eip155",
-        reference: "30"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:30",
+      namespace: "eip155",
+      reference: "30"
     },
     assets: {}
   },
@@ -619,13 +632,18 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.ton-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "ton:-239",
-        namespace: "ton",
-        reference: "-239"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "ton:-239",
+      namespace: "ton",
+      reference: "-239"
     },
     assets: {
       "TON": "assets/native.ton-mainnet",
+      "USDC": "assets/jetton.ton-mainnet.EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728",
+      "NOT": "assets/jetton.ton-mainnet.EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT",
+      "DOGS": "assets/jetton.ton-mainnet.EQCvxJy4eG8hyHBFsZ7eePxrRsUQSFE_jpptRAYBmcG_DOGS",
+      "MRB": "assets/jetton.ton-mainnet.EQBtFLv5YbHRVr0PSb6KgmQztRK4N2BQ7alxp6mYOBxa-r18",
+      "REDO": "assets/jetton.ton-mainnet.EQBZ_cafPyDr5KUTs0aNxh0ZTDhkpEZONmLJA2SNGlLm4Cko"
     }
   },
   'BLAST_MAINNET': {
@@ -636,10 +654,10 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
     nativeAsset: "assets/native.blast-mainnet",
     custom: false,
     caipDetails: {
-        $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
-        chainId: "eip155:81457",
-        namespace: "eip155",
-        reference: "81457"
+      $typeName: "utila.api.v1alpha2.Network.CAIPDetails",
+      chainId: "eip155:81457",
+      namespace: "eip155",
+      reference: "81457"
     },
     assets: {}
   }

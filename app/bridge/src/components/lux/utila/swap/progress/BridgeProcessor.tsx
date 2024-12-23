@@ -7,17 +7,18 @@ import DepositActionItem from '@/components/lux/utila/share/DepositActionItem'
 import SpinIcon from "@/components/icons/spinIcon"
 import { ArrowRight } from "lucide-react"
 //hooks
-import type { DepositAction, Network, Token } from '@/types/utila'
+import type { DepositAction } from '@/types/utila'
 import SwapItems from './SwapItems'
 import { useAtom } from 'jotai'
 import { useEthersSigner } from '@/lib/ethersToViem/ethers'
 import { useServerAPI } from '@/hooks/useServerAPI'
+import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 interface IProps {
   className?: string
-  sourceNetwork: Network
-  sourceAsset: Token
-  destinationNetwork: Network
-  destinationAsset: Token
+  sourceNetwork: CryptoNetwork
+  sourceAsset: NetworkCurrency
+  destinationNetwork: CryptoNetwork
+  destinationAsset: NetworkCurrency
   destinationAddress: string
   sourceAmount: string
   swapId: string

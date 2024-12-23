@@ -62,7 +62,7 @@ const NetworkFormField: React.FC<{
           </Button>
           <TokenSelectWrapper
             placeholder="Asset"
-            values={network ? network.currencies : []}
+            values={network ? network.currencies.filter((c: NetworkCurrency) => c.status === 'active') : []}
             value={asset}
             setValue={setAsset}
             disabled={true}
