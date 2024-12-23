@@ -1,4 +1,4 @@
-import { type LinkDescriptor } from '@remix-run/node'
+import { type LinkDescriptor } from '@vercel/remix'
 
 type CrossOrigin = "anonymous" | "use-credentials"
 
