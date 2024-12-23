@@ -7,20 +7,23 @@ import {
   Scripts,
   ScrollRestoration,
   type MetaFunction,
-  LiveReload
 } from '@remix-run/react'
-import type { LinksFunction } from '@vercel/remix'
+import  { type LinksFunction  } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react';
 
 import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
 
-import '@luxfi/ui/style/lux-global-non-next.css'
-import '@luxfi/ui/style/cart-animation.css'
-import '@luxfi/ui/style/checkout-animation.css'
+
+import '@/style/lux-global-non-next.css'
+import '@/style/cart-animation.css'
+import '@/style/checkout-animation.css'
 
 import Main from 'app/components/main'
+import Header from 'app/components/header'
 import _links from './links';
-import metadata from './metadata';
+import metadata from './metadata'
+
+import siteDef from './site-def'
 
 export const config = { runtime: 'edge' }
 
@@ -45,6 +48,7 @@ const Layout: React.FC<PropsWithChildren> = ({
       <Links />
     </head>
     <body className={bodyClasses} >
+      <Header siteDef={siteDef}/>
       <Main className='gap-4 '>
         {children}
       </Main>

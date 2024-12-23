@@ -13,10 +13,9 @@
   "type": "module",
   "dependencies": {
     "@hanzo/ui": "catalog:",
-    "@luxfi/ui": "catalog:",
-    "@remix-run/node": "^2.15.1",
     "@remix-run/react": "^2.15.1",
     "@remix-run/serve": "^2.15.1",
+    "@remix-run/node": "^2.15.1",
     "@vercel/analytics": "^1.4.1",
     "@vercel/remix": "^2.15.1",
     "isbot": "^4.4.0",
@@ -26,7 +25,8 @@
     "mobx-utils": "^6.1.0",
     "react": "catalog:",
     "react-currency-input-field": "^3.9.0",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-social-icons": "^6.18.0"
   },
   "devDependencies": {
     "@originjs/vite-plugin-commonjs": "^1.0.3",
