@@ -1,6 +1,6 @@
-import ERC20B_ABI from '@/constants/ERC20B.json'
-import { prisma } from "@/domain/prisma"
-import { isValidAddress } from "@/domain/utils"
+import ERC20B_ABI from './constants/ERC20B.json'
+import { prisma } from "@/prisma-instance"
+import { isValidAddress } from "@/util"
 import { statusMapping, SwapStatus, UtilaTransactionStateMapping } from "@/models/SwapStatus"
 import { TransactionType } from "@/models/TransactionTypes"
 import { getTokenPrice } from "./tokens"

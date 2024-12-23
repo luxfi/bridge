@@ -30,7 +30,6 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
       }
     ],
     "metadata": null,
@@ -66,7 +65,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "WETH",
@@ -342,7 +341,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "SIXR",
@@ -593,7 +592,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
-        "is_native": true
+        
       },
       {
         "name": "Wrapped Ether",
