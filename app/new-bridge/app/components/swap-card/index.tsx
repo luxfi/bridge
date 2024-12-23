@@ -9,11 +9,11 @@ import FromToCard from './from-to-card'
 import ReceiveCard from '../receive-card'
 
 const FIXTURE = {
-  usdValue: 33455566666,
+  usdValue: 3345,
   usdFee: 2.4,
   tokensGas: .045,
   txnTime: '~5min',
-  tokensAvailable: 1004.334556666,
+  tokensAvailable: 1004.4556,
   bridge: {
     name: 'Across',
     logo: 'https://cdn.lux.network/bridge/currencies/dai.png',
