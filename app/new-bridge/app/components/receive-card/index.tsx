@@ -11,7 +11,7 @@ const ReceiveCard: React.FC<{
   token: Token
   usdValue: number 
   usdFee: number
-  gasInTokens: number
+  tokensGas: number
   txnTime: string // eg, '~5min'
   bridges?: Bridge[]  
   bridge?: Bridge
@@ -23,7 +23,7 @@ const ReceiveCard: React.FC<{
   token,
   usdValue,
   usdFee,
-  gasInTokens,
+  tokensGas,
   txnTime, // eg, '~5min'
   bridge,
   onSelect,

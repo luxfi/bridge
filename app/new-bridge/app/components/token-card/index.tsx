@@ -10,13 +10,17 @@ const TokenCard: React.FC<{
   tokens: Token[]
   token: Token | null
   setToken: (token: Token | null) => void
-  usdValue: number | null // value of 1 in USD
+  amountChanged: (a: number) => void
+  usdValue?: number  
+  tokensAvailable: number | null 
   className?: string
 }> = ({
   tokens,
   token,
   setToken,
+  amountChanged,
   usdValue,
+  tokensAvailable,
   className=''
 }) => {
 
@@ -28,7 +32,9 @@ const TokenCard: React.FC<{
     formatted?: string | undefined, 
     values?: CurrencyInputOnChangeValues | undefined
   ) => {
-    _setAmount(value ? Number(value) : 0)
+    const a = value ? Number(value) : 0
+    _setAmount(a)
+    amountChanged(a)
   }
 
   return (
@@ -51,18 +57,22 @@ const TokenCard: React.FC<{
           popoverAlign='end'
         />
       </div>
-      { _amount > 0 && usdValue && (
+      <div className='flex justify-between items-center text-muted text-sm gap-1.5'>
+      { (_amount > 0 && usdValue) ? (
         <CurrencyInput 
           readOnly
           prefix='$'
           decimalsLimit={2}
-          value={_amount * usdValue}
-          className={
-            'cursor-default text-muted bg-level-0 ' + 
-            '!border-none focus:outline-none text-sm'
-          }
+          value={usdValue}
+          className='cursor-default !border-none bg-level-0 !min-w-0 focus:outline-none'
         />                
+      ) : (
+        <div/>
       )}
+      <span className={cn('block shrink-0', (tokensAvailable === null || token === null) ? 'invisible w-[1px] h-[1px] overflow-x-hidden' : '')}>
+        {`${tokensAvailable} ${token?.name} avail`}
+      </span>
+      </div>
     </div>
   )
 }
