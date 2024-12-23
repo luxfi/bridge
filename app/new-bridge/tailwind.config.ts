@@ -1,5 +1,5 @@
 import type { Config } from 'tailwindcss'
-import { preset } from '@luxfi/ui/tailwind'
+import { preset } from './app/tailwind'
 
 const fontFamily = {
   sans: 'inter',
@@ -23,7 +23,6 @@ export default {
   content: {
     files: [
       'app/**/*.tsx',
-      './node_modules/@luxfi/ui/**/*.{ts,tsx}',
       './node_modules/@hanzo/**/*.{ts,tsx}'
     ]
   },
