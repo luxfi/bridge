@@ -1,26 +1,26 @@
 import { useState } from 'react'
 
-import type { Token } from '@/domain/types'
+import type { Asset } from '@luxfi/core'
 import { cn } from '@hanzo/ui/util'
 
-import CurrencyInput, { type CurrencyInputOnChangeValues } from '../currency-input'
-import TokenCombobox from '../token-combobox'
+import CurrencyInput, { type CurrencyInputOnChangeValues } from './currency-input'
+import AssetCombobox from './asset-combobox'
 
-const TokenCard: React.FC<{
-  tokens: Token[]
-  token: Token | null
-  setToken: (token: Token | null) => void
+const AssetCard: React.FC<{
+  assets: Asset[]
+  asset: Asset | null
+  setAsset: (asset: Asset | null) => void
   amountChanged: (a: number) => void
   usdValue?: number  
-  tokensAvailable: number | null 
+  assetsAvailable: number | null 
   className?: string
 }> = ({
-  tokens,
-  token,
-  setToken,
+  assets,
+  asset,
+  setAsset,
   amountChanged,
   usdValue,
-  tokensAvailable,
+  assetsAvailable,
   className=''
 }) => {
 
@@ -49,10 +49,10 @@ const TokenCard: React.FC<{
             '!border-none focus:outline-none text-xl !placeholder-muted-3'
           }
         />
-        <TokenCombobox 
-          tokens={tokens}
-          token={token}
-          setToken={setToken}
+        <AssetCombobox 
+          assets={assets}
+          asset={asset}
+          setAsset={setAsset}
           buttonClx='shrink-0 border-none'
           popoverAlign='end'
         />
@@ -69,8 +69,8 @@ const TokenCard: React.FC<{
       ) : (
         <div/>
       )}
-      <span className={cn('block shrink-0', (tokensAvailable === null || token === null) ? 'invisible w-[1px] h-[1px] overflow-x-hidden' : '')}>
-        {`${tokensAvailable} ${token?.name} avail`}
+      <span className={cn('block shrink-0', (assetsAvailable === null || asset === null) ? 'invisible w-[1px] h-[1px] overflow-x-hidden' : '')}>
+        {`${assetsAvailable} ${asset?.name} avail`}
       </span>
       </div>
     </div>
@@ -78,4 +78,4 @@ const TokenCard: React.FC<{
 }
 
 
-export default TokenCard
+export default AssetCard

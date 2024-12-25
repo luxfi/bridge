@@ -27,7 +27,4 @@ const SocialIcon: React.FC<{
   />
 )
 
-export {
-  type SocialIconProps,
-  SocialIcon as default
-}
+export default SocialIcon 

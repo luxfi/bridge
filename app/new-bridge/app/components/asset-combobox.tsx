@@ -3,25 +3,25 @@ import React from 'react'
 import { Combobox, type ComboboxTriggerProps, type ListAdaptor } from '@hanzo/ui/primitives-common'
 import { cn } from '@hanzo/ui/util'
 
-import type { Token } from '@/domain/types'
+import type { Asset } from '@luxfi/core'
 
 const adaptor = {
-  getValue:   (el: Token): string => (el.asset),
-  equals:     (el1: Token, el2: Token): boolean => (
+  getValue:   (el: Asset): string => (el.asset),
+  equals:     (el1: Asset, el2: Asset): boolean => (
     el1.asset.toUpperCase() === el2.asset.toUpperCase()
   ),
-  valueEquals: (el: Token, v: string): boolean => (
+  valueEquals: (el: Asset, v: string): boolean => (
     el.asset.toUpperCase() === v.toUpperCase()
   ),
-  getLabel:   (el: Token): string => (el.name),
-  getImageUrl: (el: Token): string => (el.logo),
+  getLabel:   (el: Asset): string => (el.name),
+  getImageUrl: (el: Asset): string => (el.logo),
 
-} satisfies ListAdaptor<Token>
+} satisfies ListAdaptor<Asset>
 
-const TokenCombobox: React.FC<{
-  tokens: Token[]
-  token: Token | null
-  setToken: (token: Token | null) => void
+const AssetCombobox: React.FC<{
+  assets: Asset[]
+  asset: Asset | null
+  setAsset: (Asset: Asset | null) => void
   placeholder?: string
   searchHint?: string
   disabled?: boolean
@@ -29,9 +29,9 @@ const TokenCombobox: React.FC<{
   popoverClx?: string
   popoverAlign? : "center" | "end" | "start"
 }> = ({
-  tokens, 
-  token, 
-  setToken,
+  assets, 
+  asset, 
+  setAsset,
   placeholder,
   searchHint,
   disabled=false,
@@ -40,10 +40,10 @@ const TokenCombobox: React.FC<{
   popoverAlign = 'center', 
 }) => (
 
-  <Combobox<Token, ComboboxTriggerProps<Token>>
-    elements={tokens}
-    current={token}
-    setCurrent={setToken}
+  <Combobox<Asset, ComboboxTriggerProps<Asset>>
+    elements={assets}
+    current={asset}
+    setCurrent={setAsset}
     adaptor={adaptor}
     noCheckmark
     searchPlaceholder={searchHint}
@@ -53,7 +53,7 @@ const TokenCombobox: React.FC<{
     listItemSelectedClx='!bg-level-2'
     triggerProps={{
       open: false,
-      current: (token ?? null),
+      current: (asset ?? null),
       currentLabel: null,
       imageUrl: null,
       placeholder,
@@ -64,4 +64,4 @@ const TokenCombobox: React.FC<{
   />
 )
 
-export default TokenCombobox
+export default AssetCombobox
