@@ -27,7 +27,7 @@ const useSettingsRef = (): AppSettingsRef => {
   const ref = useContext(SettingsContext)
 
   if (!ref ) {
-    throw new Error('useSettingsRef must be used withing a SettingsProvider!')
+    throw new Error('useSettingsRef() must be used within the scope of a SettingsProvider!')
   }
 
   return ref
