@@ -2,16 +2,19 @@ import React from 'react'
 
 import { cn } from '@hanzo/ui/util'
 
-import type { Bridge, Network, Token } from '@/domain/types'
+import type { Network, Asset  } from '@luxfi/core'
+
+import type { Bridge, } from '@/domain/types'
+
 import BridgeLabel from './bridge-label'
 
 const ReceiveCard: React.FC<{
   from: Network
   to: Network
-  token: Token
+  asset: Asset
   usdValue: number 
   usdFee: number
-  tokensGas: number
+  assetGas: number
   txnTime: string // eg, '~5min'
   bridges?: Bridge[]  
   bridge?: Bridge
@@ -20,10 +23,10 @@ const ReceiveCard: React.FC<{
 }> = ({
   from,
   to,
-  token,
+  asset,
   usdValue,
   usdFee,
-  tokensGas,
+  assetGas,
   txnTime, // eg, '~5min'
   bridge,
   onSelect,

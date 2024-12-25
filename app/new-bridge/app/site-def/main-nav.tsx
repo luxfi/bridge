@@ -1,4 +1,4 @@
-import type LinkDefExtended from '@/types/link-def-extended'
+import type LinkDefExtended from '@/hanzo-ui-types/link-def-extended'
 
 import Anodized from '../components/icons/anodized-titanium'
 import GunMetal from '../components/icons/gun-metal'

@@ -1,4 +1,4 @@
-import type SiteDef  from '@/types/site-def'
+import type SiteDef  from '@/hanzo-ui-types/site-def'
 import { standard } from './footer' 
 import mainNav from './main-nav'
 

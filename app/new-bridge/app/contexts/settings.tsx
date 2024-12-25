@@ -1,58 +1,52 @@
-import { 
-  createContext, 
-  useContext, 
-  type PropsWithChildren 
-} from 'react'
+import { createContext, useContext, type PropsWithChildren } from 'react'
 
-import { BridgeAppSettings } from '@/types/bridge-app-settings'
+import type AppSettings from '@/domain/types/app-settings'
 
-// Type for the Settings Container
-type SettingsContainer = {
-  settings: BridgeAppSettings
-};
+interface AppSettingsRef {
+  settings: AppSettings | undefined
+}
 
-// Create the Context
-const SettingsContext = createContext<SettingsContainer | null>(null)
+const SettingsContext = createContext<AppSettingsRef | null>({
+  settings: undefined
+} satisfies AppSettingsRef)
 
-// Provider Component
 const SettingsProvider: React.FC<{
-  settings: BridgeAppSettings
+  settings?: AppSettings
 } & PropsWithChildren> = ({ 
   children, 
   settings 
 }) => {
   return (
-    <SettingsContext.Provider value={{ settings }}>
+    <SettingsContext.Provider value={{settings}}>
       {children}
     </SettingsContext.Provider>
-  );
-};
+  )
+}
 
-// Hook to Access Settings
-const useSettings = (): BridgeAppSettings => {
-  const container = useContext(SettingsContext)
+const useSettingsRef = (): AppSettingsRef => {
+  const ref = useContext(SettingsContext)
 
-  if (!container) {
-    throw new Error('useSettings must be used within a SettingsProvider')
+  if (!ref ) {
+    throw new Error('useSettingsRef must be used withing a SettingsProvider!')
   }
 
-  return container.settings
-};
+  return ref
+}
 
-// Hook to Access the Entire Settings Container
-const useSettingsContainer = (): SettingsContainer => {
-  const container = useContext(SettingsContext)
 
-  if (!container) {
-    throw new Error('useSettingsContainer must be used within a SettingsProvider')
+const useSettings = (): AppSettings => {
+  const ref = useContext(SettingsContext)
+
+  if (!ref || !ref.settings) {
+    throw new Error('SettingsProvider not ititialized!')
   }
 
-  return container
+  return ref.settings
 };
 
 export {
   SettingsProvider,
+  useSettingsRef,
   useSettings,
-  useSettingsContainer,
-  SettingsContext
-};
+  type AppSettingsRef
+}

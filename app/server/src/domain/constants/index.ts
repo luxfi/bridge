@@ -1,4 +1,4 @@
-import { UTILA_NETWORK } from "@/models/utila"
+import { UTILA_NETWORK } from "@luxfi/core"
 
 export default class KnownInternalNames {
   static Exchanges = class {

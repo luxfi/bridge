@@ -1,4 +1,3 @@
 export type { default as Bridge } from './bridge'
-export type { default as Deposit } from './deposit'
-export type { default as Network } from './network'
-export type { default as Token } from './token'
+export type { default as AppSettings } from './app-settings'
+export type { default as BackendService } from './backend-service'

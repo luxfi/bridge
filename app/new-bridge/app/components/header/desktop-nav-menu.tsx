@@ -10,8 +10,8 @@ import {
   navigationMenuTriggerStyle
 } from '@hanzo/ui/primitives-common'
 
-import type ChildMenu from '@/types/child-menu'
-import type LinkDefExtended from '@/types/link-def-extended'
+import type ChildMenu from '@/hanzo-ui-types/child-menu'
+import type LinkDefExtended from '@/hanzo-ui-types/link-def-extended'
 
 const DesktopNav: React.FC<{
   links: LinkDefExtended[],

@@ -12,7 +12,7 @@ export enum SwapStatus {
   UserPayoutPending = "user_payout_pending",
   PayoutSuccess = "payout_success"
 }
-export const statusMapping: { [key: number]: SwapStatus } = {
+export const swapStatusByIndex: { [key: number]: SwapStatus } = {
   "0": SwapStatus.Created,
   "1": SwapStatus.UserTransferPending,
   "2": SwapStatus.UserTransferDelayed,
@@ -23,7 +23,7 @@ export const statusMapping: { [key: number]: SwapStatus } = {
   "7": SwapStatus.Cancelled,
 };
 
-export enum UtilaTransactionState {
+export enum UtilaTransactionStatus {
   AWAITING_APPROVAL = "AWAITING_APPROVAL",
   AWAITING_POLICY_CHECK = "AWAITING_POLICY_CHECK",
   AWAITING_SIGNATURE = "AWAITING_SIGNATURE",
@@ -40,19 +40,19 @@ export enum UtilaTransactionState {
   EXPIRED = "EXPIRED"
 }
 
-export const UtilaTransactionStateMapping: { [key: number]: UtilaTransactionState } = {
-  "1": UtilaTransactionState.AWAITING_APPROVAL,
-  "2": UtilaTransactionState.AWAITING_POLICY_CHECK,
-  "3": UtilaTransactionState.AWAITING_SIGNATURE,
-  "4": UtilaTransactionState.SIGNED,
-  "5": UtilaTransactionState.AWAITING_PUBLISH,
-  "6": UtilaTransactionState.PUBLISHED,
-  "7": UtilaTransactionState.MINED,
-  "8": UtilaTransactionState.FAILED,
-  "9": UtilaTransactionState.DECLINED,
-  "10": UtilaTransactionState.REPLACED,
-  "11": UtilaTransactionState.CANCELED,
-  "12": UtilaTransactionState.DROPPED,
-  "13": UtilaTransactionState.CONFIRMED,
-  "14": UtilaTransactionState.EXPIRED
+export const utilaTransactionStatusByIndex: { [key: number]: UtilaTransactionStatus } = {
+  "1": UtilaTransactionStatus.AWAITING_APPROVAL,
+  "2": UtilaTransactionStatus.AWAITING_POLICY_CHECK,
+  "3": UtilaTransactionStatus.AWAITING_SIGNATURE,
+  "4": UtilaTransactionStatus.SIGNED,
+  "5": UtilaTransactionStatus.AWAITING_PUBLISH,
+  "6": UtilaTransactionStatus.PUBLISHED,
+  "7": UtilaTransactionStatus.MINED,
+  "8": UtilaTransactionStatus.FAILED,
+  "9": UtilaTransactionStatus.DECLINED,
+  "10": UtilaTransactionStatus.REPLACED,
+  "11": UtilaTransactionStatus.CANCELED,
+  "12": UtilaTransactionStatus.DROPPED,
+  "13": UtilaTransactionStatus.CONFIRMED,
+  "14": UtilaTransactionStatus.EXPIRED
 }

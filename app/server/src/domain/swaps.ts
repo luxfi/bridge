@@ -1,12 +1,14 @@
+import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from "ethers"
+
+import { TransactionType, swapStatusByIndex, SwapStatus, utilaTransactionStatusByIndex } from "@luxfi/core"
+
+import { UTILA_NETWORKS } from "@/domain/constants"
 import ERC20B_ABI from './constants/ERC20B.json'
 import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
-import { statusMapping, SwapStatus, UtilaTransactionStateMapping } from "@/models/SwapStatus"
-import { TransactionType } from "@/models/TransactionTypes"
+
 import { getTokenPrice } from "./tokens"
 import { archiveWalletForExpire, client, createNewWalletForDeposit } from "./utila"
-import { UTILA_NETWORKS } from "@/domain/constants"
-import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from "ethers"
 
 export interface SwapData {
   amount: number
@@ -24,7 +26,7 @@ export interface SwapData {
   use_teleporter: boolean
   [property: string]: any
 }
-
+/* TODO
 export type UpdateSwapData = {
   confirmations: number
   max_confirmations: number
@@ -36,6 +38,7 @@ export type UpdateSwapData = {
   add_input_tx: string
   // [property: string]: any;
 }
+*/
 /**
  * Create swap according to users' input
  * @param data SwapData
@@ -426,7 +429,7 @@ export async function handlerDepositAction(
     destinationAddress,
     amount,
     hash,
-    status: UtilaTransactionStateMapping[state],
+    status: utilaTransactionStatusByIndex[state],
     created,
     type
   })
@@ -467,7 +470,7 @@ export async function handlerDepositAction(
         transaction_hash: hash
       },
       data: {
-        status: UtilaTransactionStateMapping[state],
+        status: utilaTransactionStatusByIndex[state],
         confirmations: state === 13 ? 10 : 0,
         max_confirmations: 10,
         created_date: created
@@ -477,7 +480,7 @@ export async function handlerDepositAction(
   } else {
     await prisma.depositAction.create({
       data: {
-        status: UtilaTransactionStateMapping[state],
+        status: utilaTransactionStatusByIndex[state],
         from: sourceAddress ?? 'unknown sender...',
         to: destinationAddress,
         amount: amount,
@@ -1005,7 +1008,7 @@ export async function handlerGetHasBySwaps(address: string) {
 
 export async function handlerGetExplorer(status: string[]) {
   console.time()
-  const statuses = status.map((numberStr: string) => statusMapping[Number(numberStr)])
+  const statuses = status.map((numberStr: string) => swapStatusByIndex[Number(numberStr)])
   console.log("🚀 ~ handlerGetExplorer ~ statuses:", statuses)
 
   try {

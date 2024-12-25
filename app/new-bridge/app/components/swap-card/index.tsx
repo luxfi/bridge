@@ -2,18 +2,19 @@ import React, { useRef, useState } from 'react'
 
 import { cn } from '@hanzo/ui/util'
 
-import type { Bridge, Network, Token } from '@/domain/types'
+import type { Network, Asset } from '@luxfi/core'
+import type { Bridge } from '@/domain/types'
 
-import TokenCard from '../token-card'
+import AssetCard from '../asset-card'
 import FromToCard from './from-to-card'
 import ReceiveCard from '../receive-card'
 
 const FIXTURE = {
   usdValue: 3345,
   usdFee: 2.4,
-  tokensGas: .045,
+  assetGas: .045,
   txnTime: '~5min',
-  tokensAvailable: 1004.4556,
+  assetsAvailable: 1004.4556,
   bridge: {
     name: 'Across',
     logo: 'https://cdn.lux.network/bridge/currencies/dai.png',
@@ -39,7 +40,7 @@ const SwapCard: React.FC<{
   const _to = useRef<Network | null>(toInitial ?? null)
   const _fromNetworks = useRef<Network[]>(fromNetworks)
   const _toNetworks = useRef<Network[]>(toNetworks)
-  const _token = useRef<Token | null>(fromInitial?.currencies![0] ?? null)
+  const _asset = useRef<Asset | null>(fromInitial?.currencies![0] ?? null)
   const _amount = useRef<number>(0)
   const [triggerUpdate, setTriggerUpdate] = useState<boolean>(false) 
 
@@ -59,8 +60,8 @@ const SwapCard: React.FC<{
     _amount.current = n
   }
 
-  const setToken = (t: Token | null) => {
-    _token.current = t
+  const setAsset = (t: Asset | null) => {
+    _asset.current = t
     update()
   }
 
@@ -89,23 +90,23 @@ const SwapCard: React.FC<{
         setTo={setTo}
         className='flex w-full gap-2 relative'
       />
-      <TokenCard 
-        tokens={_from.current?.currencies!}
-        token={_token.current}
-        setToken={setToken}
+      <AssetCard 
+        assets={_from.current?.currencies!}
+        asset={_asset.current}
+        setAsset={setAsset}
         usdValue={FIXTURE.usdValue}
         amountChanged={setAmount}
-        tokensAvailable={FIXTURE.tokensAvailable}
+        assetsAvailable={FIXTURE.assetsAvailable}
         className='w-full rounded-lg mt-2'
       />
       {_amount.current > 0 && (
         <ReceiveCard
           from={_from.current!}
           to={_to.current!}
-          token={_token.current!}
+          asset={_asset.current!}
           usdValue={FIXTURE.usdValue}
           usdFee={FIXTURE.usdFee}
-          tokensGas={FIXTURE.tokensGas}
+          assetGas={FIXTURE.assetGas}
           bridge={FIXTURE.bridge}
           txnTime={FIXTURE.txnTime}
           className=''

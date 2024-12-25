@@ -3,7 +3,7 @@ import React from 'react'
 import { Combobox } from '@hanzo/ui/primitives-common'
 import { cn } from '@hanzo/ui/util'
 
-import type { Network } from '@/domain/types'
+import type { Network } from '@luxfi/core'
 
 import adaptor from './adaptor'
 import NetworkComboboxTrigger, { type NetworkTriggerProps } from './trigger'

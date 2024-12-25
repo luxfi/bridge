@@ -17,12 +17,7 @@ import Avatar from './avatar'
 import Search from './search'
 import Warpcast from './warpcast'
 
-import  {
-  type SocialIconProps,
-  default as SocialIcon 
-} from './social-icon'
-
-export { type LucideIcon as Icon, type SocialIconProps } 
+import SocialIcon from './social-icon'
 
 export {
   bag,
@@ -39,7 +34,8 @@ export {
   LeftArrow,
   Avatar,
   Search,
-  Warpcast
+  Warpcast,
+  type LucideIcon as Icon
 }
 
 

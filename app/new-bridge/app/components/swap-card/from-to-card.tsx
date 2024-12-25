@@ -1,8 +1,5 @@
-import { useState } from 'react'
+import type { Network  } from '@luxfi/core'
 
-import type { Network } from '@/domain/types'
-
-// import DecimalInput from './decimal-input'
 import NetworkCombobox from '../network-combobox'
 import ReverseButton from './reverse-button'
 
