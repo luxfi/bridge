@@ -375,104 +375,7 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))(esbuild@0.18.20))
 
-  app/explorer:
-    dependencies:
-      '@headlessui/react':
-        specifier: ^1.7.15
-        version: 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@heroicons/react':
-        specifier: ^2.0.18
-        version: 2.2.0(react@18.3.1)
-      '@luxdefi/ui':
-        specifier: 0.2.3
-        version: 0.2.3(@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(next-themes@0.2.1(next@14.2.16(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))))(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))
-      '@next/mdx':
-        specifier: 14.1.0
-        version: 14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
-      '@radix-ui/react-accordion':
-        specifier: ^1.1.2
-        version: 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-dropdown-menu':
-        specifier: ^2.0.5
-        version: 2.1.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.2
-        version: 1.1.1(@types/react@18.3.12)(react@18.3.1)
-      '@radix-ui/react-tooltip':
-        specifier: ^1.0.6
-        version: 1.1.6(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      axios:
-        specifier: ^1.6.0
-        version: 1.7.9
-      class-variance-authority:
-        specifier: ^0.7.0
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.0
-        version: 2.1.1
-      copy-to-clipboard:
-        specifier: ^3.3.3
-        version: 3.3.3
-      framer-motion:
-        specifier: ^10.12.18
-        version: 10.18.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      heroicons:
-        specifier: ^2.0.18
-        version: 2.2.0
-      lucide-react:
-        specifier: ^0.307.0
-        version: 0.307.0(react@18.3.1)
-      next:
-        specifier: 'catalog:'
-        version: 14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react:
-        specifier: 'catalog:'
-        version: 18.3.1
-      react-dom:
-        specifier: 'catalog:'
-        version: 18.3.1(react@18.3.1)
-      swr:
-        specifier: ^2.2.0
-        version: 2.3.0(react@18.3.1)
-      tailwind-merge:
-        specifier: ^2.2.0
-        version: 2.6.0
-    devDependencies:
-      '@mdx-js/loader':
-        specifier: ^3.0.0
-        version: 3.1.0(acorn@8.14.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
-      '@mdx-js/react':
-        specifier: ^3.0.0
-        version: 3.1.0(@types/react@18.3.12)(react@18.3.1)
-      '@types/mdx':
-        specifier: ^2.0.9
-        version: 2.0.13
-      '@types/react':
-        specifier: 'catalog:'
-        version: 18.3.12
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 18.3.1
-      autoprefixer:
-        specifier: 10.4.16
-        version: 10.4.16(postcss@8.4.33)
-      postcss:
-        specifier: 8.4.33
-        version: 8.4.33
-      postcss-import:
-        specifier: ^16.0.0
-        version: 16.1.0(postcss@8.4.33)
-      tailwindcss:
-        specifier: 'catalog:'
-        version: 3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))
-      tailwindcss-animate:
-        specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))
-      typescript:
-        specifier: 'catalog:'
-        version: 5.7.2
-
-  app/new-bridge:
+  app/bridge3:
     dependencies:
       '@hanzo/ui':
         specifier: 'catalog:'
@@ -580,6 +483,103 @@ importers:
       vite-tsconfig-paths:
         specifier: 5.1.2
         version: 5.1.2(typescript@5.7.2)(vite@5.4.11(@types/node@22.10.2)(terser@5.37.0))
+
+  app/explorer:
+    dependencies:
+      '@headlessui/react':
+        specifier: ^1.7.15
+        version: 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@heroicons/react':
+        specifier: ^2.0.18
+        version: 2.2.0(react@18.3.1)
+      '@luxdefi/ui':
+        specifier: 0.2.3
+        version: 0.2.3(@next/mdx@14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(next-themes@0.2.1(next@14.2.16(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))))(tailwindcss-interaction-media@0.1.0)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))
+      '@next/mdx':
+        specifier: 14.1.0
+        version: 14.1.0(@mdx-js/loader@3.1.0(acorn@8.14.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))))(@mdx-js/react@3.1.0(@types/react@18.3.12)(react@18.3.1))
+      '@radix-ui/react-accordion':
+        specifier: ^1.1.2
+        version: 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-dropdown-menu':
+        specifier: ^2.0.5
+        version: 2.1.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-slot':
+        specifier: ^1.0.2
+        version: 1.1.1(@types/react@18.3.12)(react@18.3.1)
+      '@radix-ui/react-tooltip':
+        specifier: ^1.0.6
+        version: 1.1.6(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      axios:
+        specifier: ^1.6.0
+        version: 1.7.9
+      class-variance-authority:
+        specifier: ^0.7.0
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.0
+        version: 2.1.1
+      copy-to-clipboard:
+        specifier: ^3.3.3
+        version: 3.3.3
+      framer-motion:
+        specifier: ^10.12.18
+        version: 10.18.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      heroicons:
+        specifier: ^2.0.18
+        version: 2.2.0
+      lucide-react:
+        specifier: ^0.307.0
+        version: 0.307.0(react@18.3.1)
+      next:
+        specifier: 'catalog:'
+        version: 14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
+      swr:
+        specifier: ^2.2.0
+        version: 2.3.0(react@18.3.1)
+      tailwind-merge:
+        specifier: ^2.2.0
+        version: 2.6.0
+    devDependencies:
+      '@mdx-js/loader':
+        specifier: ^3.0.0
+        version: 3.1.0(acorn@8.14.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
+      '@mdx-js/react':
+        specifier: ^3.0.0
+        version: 3.1.0(@types/react@18.3.12)(react@18.3.1)
+      '@types/mdx':
+        specifier: ^2.0.9
+        version: 2.0.13
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.3.12
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.1
+      autoprefixer:
+        specifier: 10.4.16
+        version: 10.4.16(postcss@8.4.33)
+      postcss:
+        specifier: 8.4.33
+        version: 8.4.33
+      postcss-import:
+        specifier: ^16.0.0
+        version: 16.1.0(postcss@8.4.33)
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))
+      typescript:
+        specifier: 'catalog:'
+        version: 5.7.2
 
   app/server:
     dependencies:
