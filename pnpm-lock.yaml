@@ -389,6 +389,9 @@ importers:
       '@remix-run/react':
         specifier: ^2.15.1
         version: 2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2)
+      '@remix-run/route-config':
+        specifier: ^2.15.2
+        version: 2.15.2(@remix-run/dev@2.15.2(@remix-run/react@2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2))(@remix-run/serve@2.15.2(typescript@5.7.2))(@types/node@22.10.2)(bufferutil@4.0.8)(terser@5.37.0)(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(vite@5.4.11(@types/node@22.10.2)(terser@5.37.0)))(typescript@5.7.2)
       '@remix-run/serve':
         specifier: ^2.15.1
         version: 2.15.2(typescript@5.7.2)
@@ -434,9 +437,6 @@ importers:
       react-use-intercom:
         specifier: ^2.1.0
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      remix-typedjson:
-        specifier: ^0.4.1
-        version: 0.4.1(@remix-run/react@2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2))(@remix-run/server-runtime@2.15.2(typescript@5.7.2))(react@18.3.1)
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
@@ -4347,6 +4347,16 @@ packages:
     peerDependencies:
       react: ^18.0.0
       react-dom: ^18.0.0
+      typescript: ^5.1.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@remix-run/route-config@2.15.2':
+    resolution: {integrity: sha512-xAbH3VCgsvUK3YH2INU7yhZMjbw5bGoSaGEGS3k+QdX8a9gWeFKPex+w76ZNjVNVVOMOE+yJVpdN9RrIu0Pfeg==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@remix-run/dev': ^2.15.2
       typescript: ^5.1.0
     peerDependenciesMeta:
       typescript:
@@ -13007,13 +13017,6 @@ packages:
   remark-slug@6.1.0:
     resolution: {integrity: sha512-oGCxDF9deA8phWvxFuyr3oSJsdyUAxMFbA0mZ7Y1Sas+emILtO+e5WutF9564gDsEN4IXaQXm5pFo6MLH+YmwQ==}
 
-  remix-typedjson@0.4.1:
-    resolution: {integrity: sha512-AL6LdNajqce1Exy6aB1bD6GYMk90S6H31e8kDCi6jLgBi4K82Ph604lqGGzalswaPPYckYK+NZzgvhWEY7JCDw==}
-    peerDependencies:
-      '@remix-run/react': ^1.16.0 || ^2.0
-      '@remix-run/server-runtime': ^1.16.0 || ^2.0
-      react: ^17.0.2 || ^18.0.0
-
   renderkid@3.0.0:
     resolution: {integrity: sha512-q/7VIQA8lmM1hF+jn+sFSPWGlMkSAeNYcPLmDQx2zzuiDfaLrOmumR8iaUKlenFgh0XRPIUeSPlH3A+AW3Z5pg==}
 
@@ -20129,6 +20132,13 @@ snapshots:
       react-router: 6.28.1(react@18.3.1)
       react-router-dom: 6.28.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       turbo-stream: 2.4.0
+    optionalDependencies:
+      typescript: 5.7.2
+
+  '@remix-run/route-config@2.15.2(@remix-run/dev@2.15.2(@remix-run/react@2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2))(@remix-run/serve@2.15.2(typescript@5.7.2))(@types/node@22.10.2)(bufferutil@4.0.8)(terser@5.37.0)(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(vite@5.4.11(@types/node@22.10.2)(terser@5.37.0)))(typescript@5.7.2)':
+    dependencies:
+      '@remix-run/dev': 2.15.2(@remix-run/react@2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2))(@remix-run/serve@2.15.2(typescript@5.7.2))(@types/node@22.10.2)(bufferutil@4.0.8)(terser@5.37.0)(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(vite@5.4.11(@types/node@22.10.2)(terser@5.37.0))
+      lodash: 4.17.21
     optionalDependencies:
       typescript: 5.7.2
 
@@ -32458,12 +32468,6 @@ snapshots:
       github-slugger: 1.5.0
       mdast-util-to-string: 1.1.0
       unist-util-visit: 2.0.3
-
-  remix-typedjson@0.4.1(@remix-run/react@2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2))(@remix-run/server-runtime@2.15.2(typescript@5.7.2))(react@18.3.1):
-    dependencies:
-      '@remix-run/react': 2.15.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.2)
-      '@remix-run/server-runtime': 2.15.2(typescript@5.7.2)
-      react: 18.3.1
 
   renderkid@3.0.0:
     dependencies:

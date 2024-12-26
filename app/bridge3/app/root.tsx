@@ -59,9 +59,6 @@ const Layout: React.FC<PropsWithChildren> = ({
       </Contexts>
       <ScrollRestoration />
       <Scripts />
-      {/* https://github.com/remix-run/remix/issues/2958#issuecomment-2188876125
-      process.env.NODE_ENV === 'development' && <LiveReload /> 
-      */}
       {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
       <Analytics />
     </body>

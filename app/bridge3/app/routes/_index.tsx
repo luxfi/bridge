@@ -1,13 +1,19 @@
 import { useLoaderData } from '@remix-run/react'
-import { typedjson } from 'remix-typedjson'
 
 import type { Network } from '@luxfi/core'
 
 import SwapCard from '@/components/swap-card'
 import backend from '@/domain/backend'
 import useSetSettings from '@/contexts/use-set-settings'
+import type { AppSettings } from '@/domain/types'
 
-export const loader = async () => {
+interface LoaderReturnType {
+  settings: AppSettings,
+  fromInitial?: Network,
+  toInitial?: Network,
+}
+
+export const loader = async (): Promise<LoaderReturnType> => {
 
   const settings = await backend.getSettings()
 
@@ -22,11 +28,11 @@ export const loader = async () => {
   }
   // otherwise an error is thrown
 
-    return typedjson({
-      settings,
-      fromInitial: undefined,
-      toInitial: undefined
-    })
+  return {
+    settings: settings!,
+    fromInitial: undefined,
+    toInitial: undefined
+  }
 
 }
 
@@ -35,7 +41,8 @@ export const shouldRevalidate = () => false;
 
 const Index: React.FC = () => {
 
-  const { settings, fromInitial, toInitial } = useLoaderData<typeof loader>()
+  const { settings, fromInitial, toInitial } =  useLoaderData<LoaderReturnType>() as LoaderReturnType 
+
   useSetSettings( 
     settings,
     fromInitial,
