@@ -5,7 +5,7 @@ import type { Network } from '@luxfi/core'
 
 import SwapCard from '@/components/swap-card'
 import backend from '@/domain/backend'
-import { useSettingsRef } from '@/contexts/settings'
+import useSetSettings from '@/contexts/use-set-settings'
 
 export const loader = async () => {
 
@@ -36,17 +36,12 @@ export const shouldRevalidate = () => false;
 const Index: React.FC = () => {
 
   const { settings, fromInitial, toInitial } = useLoaderData<typeof loader>()
-  const settingsRef = useSettingsRef()
-  settingsRef.settings = settings
+  useSetSettings( 
+    settings,
+    fromInitial,
+    toInitial 
+  )
 
-  return (
-  <SwapCard 
-    className='w-[500px] h-[530px]'
-    fromNetworks={settingsRef.settings!.networks!}
-    fromInitial={fromInitial}
-    toNetworks={settingsRef.settings!.networks!}
-    toInitial={toInitial}
-  />
-)
+  return ( <SwapCard className='w-[500px] h-[530px]' /> )
 }
 export default Index

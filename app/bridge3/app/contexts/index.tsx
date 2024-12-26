@@ -1,18 +1,17 @@
 import type { PropsWithChildren } from 'react'
 
-import { SettingsProvider } from '@/contexts/settings'
-import type BridgeSettings from '@/domain/types/app-settings'
+import SettingsProvider from '@/contexts/settings'
+import SwapStateProvider from '@/contexts/swap-state'
 
-const Contexts: React.FC<{
-  settings?: BridgeSettings
-} & PropsWithChildren> = ({ 
-  settings, 
+const Contexts: React.FC<PropsWithChildren> = ({ 
   children 
 }) => {
 
   return (
-    <SettingsProvider settings={settings}>
+    <SettingsProvider >
+    <SwapStateProvider>
       {children}
+    </SwapStateProvider>
     </SettingsProvider>
   )
 }

@@ -1,6 +1,6 @@
 import { cn } from '@hanzo/ui/util'
 
-import { Bridge } from '@/domain/types'
+import { type Bridge } from '@/domain/types'
 
 const BridgeLabel: React.FC<{
   bridge: Bridge

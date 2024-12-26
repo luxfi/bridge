@@ -1,4 +1,4 @@
-import { BackendService } from '../types'
+import { type BackendService } from '../types'
 import { default as getSettings } from './get-settings'
 
 export default {

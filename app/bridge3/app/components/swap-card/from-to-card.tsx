@@ -1,7 +1,8 @@
-import type { Network  } from '@luxfi/core'
+import { observer } from 'mobx-react-lite'
 
 import NetworkCombobox from '../network-combobox'
 import ReverseButton from './reverse-button'
+import { useSwapState } from '@/contexts/swap-state'
 
 const ABS_CENTERED = {
   position: 'absolute',
@@ -11,42 +12,39 @@ const ABS_CENTERED = {
 } satisfies React.CSSProperties
 
 const FromToCard: React.FC<{
-  from: Network | null
-  to: Network | null
-  fromNetworks: Network[] 
-  toNetworks: Network[] 
-  setFrom: (v: Network | null) => void
-  setTo: (v: Network | null) => void
-  swapFromAndTo: () => void
   className?: string
-}> = ({
-  from,
-  to,
-  fromNetworks,
-  toNetworks,
-  setFrom,
-  setTo,
-  swapFromAndTo,
+}> = observer(({
   className=''
 }) => {
 
+  const swapState = useSwapState()
+  
+  const swapFromAndTo = () => {
+    const tmp = swapState.from
+    swapState.setFrom(swapState.to)
+    swapState.setTo(tmp)
+
+    const tmpNetworks = swapState.fromNetworks
+    swapState.setFromNetworks(swapState.toNetworks)
+    swapState.setToNetworks(tmpNetworks)
+  }
 
     // 'flex w-full gap-2 relative'
   return (
     <div className={className}>
       <NetworkCombobox
-        networks={fromNetworks}
-        setNetwork={setFrom}
-        network={from}
+        networks={swapState.fromNetworks}
+        setNetwork={swapState.setFrom}
+        network={swapState.from}
         buttonClx='grow pr-4'
         popoverClx='w-[350px]'
         popoverAlign='start'
         label='from'
       />
       <NetworkCombobox
-        networks={toNetworks}
-        setNetwork={setTo}
-        network={to}
+        networks={swapState.toNetworks}
+        setNetwork={swapState.setTo}
+        network={swapState.to}
         buttonClx='grow pl-4'
         popoverClx='w-[350px]'
         popoverAlign='end'
@@ -60,6 +58,6 @@ const FromToCard: React.FC<{
       />
     </div>
   )
-}
+})
 
 export default FromToCard

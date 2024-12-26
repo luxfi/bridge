@@ -8,6 +8,7 @@
   ],
   "exclude": [ "/node_modules" ],
   "compilerOptions": {
+    "noEmit": true,
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
