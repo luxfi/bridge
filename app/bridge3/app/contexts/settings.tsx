@@ -6,9 +6,7 @@ interface AppSettingsRef {
   settings: AppSettings | undefined
 }
 
-const SettingsContext = createContext<AppSettingsRef | null>({
-  settings: undefined
-} satisfies AppSettingsRef)
+const SettingsContext = createContext<AppSettingsRef | null>(null)
 
 const SettingsProvider: React.FC<{
   settings?: AppSettings
@@ -23,17 +21,6 @@ const SettingsProvider: React.FC<{
   )
 }
 
-const useSettingsRef = (): AppSettingsRef => {
-  const ref = useContext(SettingsContext)
-
-  if (!ref ) {
-    throw new Error('useSettingsRef() must be used within the scope of a SettingsProvider!')
-  }
-
-  return ref
-}
-
-
 const useSettings = (): AppSettings => {
   const ref = useContext(SettingsContext)
 
@@ -42,11 +29,10 @@ const useSettings = (): AppSettings => {
   }
 
   return ref.settings
-};
+}
 
 export {
-  SettingsProvider,
-  useSettingsRef,
+  SettingsProvider as default,
+  SettingsContext,
   useSettings,
-  type AppSettingsRef
 }

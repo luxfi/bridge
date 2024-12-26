@@ -1,30 +1,23 @@
-import { useState } from 'react'
+import { observer } from 'mobx-react-lite'
 
-import type { Asset } from '@luxfi/core'
 import { cn } from '@hanzo/ui/util'
 
 import CurrencyInput, { type CurrencyInputOnChangeValues } from './currency-input'
+import { useSwapState } from '@/contexts/swap-state'
+
 import AssetCombobox from './asset-combobox'
 
 const AssetCard: React.FC<{
-  assets: Asset[]
-  asset: Asset | null
-  setAsset: (asset: Asset | null) => void
-  amountChanged: (a: number) => void
   usdValue?: number  
-  assetsAvailable: number | null 
+  availableOfAsset?: number
   className?: string
-}> = ({
-  assets,
-  asset,
-  setAsset,
-  amountChanged,
+}> = observer(({
   usdValue,
-  assetsAvailable,
+  availableOfAsset,
   className=''
 }) => {
 
-  const [_amount, _setAmount] = useState<number>(0)
+  const swapState = useSwapState()
 
     // component ensures a valid number string
   const onAmountChange = (
@@ -33,8 +26,7 @@ const AssetCard: React.FC<{
     values?: CurrencyInputOnChangeValues | undefined
   ) => {
     const a = value ? Number(value) : 0
-    _setAmount(a)
-    amountChanged(a)
+    swapState.setAmount(a)
   }
 
   return (
@@ -50,15 +42,15 @@ const AssetCard: React.FC<{
           }
         />
         <AssetCombobox 
-          assets={assets}
-          asset={asset}
-          setAsset={setAsset}
+          assets={swapState.assetsAvailable}
+          asset={swapState.asset}
+          setAsset={swapState.setAsset}
           buttonClx='shrink-0 border-none'
           popoverAlign='end'
         />
       </div>
       <div className='flex justify-between items-center text-muted text-sm gap-1.5'>
-      { (_amount > 0 && usdValue) ? (
+      { (swapState.amount > 0 && usdValue) ? (
         <CurrencyInput 
           readOnly
           prefix='$'
@@ -69,13 +61,18 @@ const AssetCard: React.FC<{
       ) : (
         <div/>
       )}
-      <span className={cn('block shrink-0', (assetsAvailable === null || asset === null) ? 'invisible w-[1px] h-[1px] overflow-x-hidden' : '')}>
-        {`${assetsAvailable} ${asset?.name} avail`}
+      <span className={cn(
+        'block shrink-0', 
+        (availableOfAsset === undefined || !swapState.asset) ? 
+          'invisible w-[1px] h-[1px] overflow-x-hidden' 
+          : 
+          ''
+      )}>
+        {`${availableOfAsset} ${swapState.asset?.name} avail`}
       </span>
       </div>
     </div>
   )
-}
-
+})
 
 export default AssetCard
