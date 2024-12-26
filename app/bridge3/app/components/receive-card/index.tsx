@@ -29,23 +29,25 @@ const ReceiveCard: React.FC<{
 
   const swapState = useSwapState()
 
-  return swapState.amount > 0 ? (
+//  return swapState.amount > 0 ? (
+  return false ? (
+
     <div 
       className={cn(
         'border border-muted-4 py-2 px-2', 
         (!!bridge && !!onSelect) ? 'cursor-poiner' : '',
         className
       )} 
-      onClick={(!!bridge && !!onSelect) ? () => {onSelect(bridge)} : undefined}
+      onClick={(!!bridge && !!onSelect) ? () => {onSelect!(bridge!)} : undefined}
     >
       <div className='flex flex-col justify-between items-center text-sm'>
       {swapState.to ? (
-        <span className='block'>Receive on {swapState.to.display_name }</span>
+        <span className='block'>Receive on {swapState.to?.display_name }</span>
       ) : ( 
         <span className='block'/>
       )}
       {bridge ? (
-        <BridgeLabel bridge={bridge} />
+        <BridgeLabel bridge={bridge!} />
       ) : (
         <div />
       )}

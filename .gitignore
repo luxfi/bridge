@@ -9,7 +9,9 @@ node_modules/
 # testing
 /coverage
 
-app/*/.next/
+**/.next
+**/.vercel
+**/build
 
 # k8 files
 /mpc-nodes/k8s
@@ -28,7 +30,6 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
-.vercel
 .nx
 pkg/utila/dist
 .rollup.cache/

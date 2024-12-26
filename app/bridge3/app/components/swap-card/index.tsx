@@ -7,6 +7,7 @@ import type { Bridge } from '@/domain/types'
 import AssetCard from '../asset-card'
 import FromToCard from './from-to-card'
 import ReceiveCard from '../receive-card'
+import TeleportSwitch from '../teleport-switch'
 
 const FIXTURE = {
   usdValue: 3345,
@@ -29,9 +30,12 @@ const SwapCard: React.FC<{
 
   return (
     <div className={cn(
-      'flex flex-col justify-start items-center p-6 rounded border border-muted-4', 
+      'flex flex-col justify-start items-center px-6 py-4 gap-4 rounded border border-muted-4', 
       className
     )}>
+      <div className='flex justify-start w-full mt-2'>
+        <TeleportSwitch switchClx='h-4 w-8' thumbClx='h-[15px] w-[15px]'/>
+      </div>
       <FromToCard className='flex w-full gap-2 relative' />
       <AssetCard 
         usdValue={FIXTURE.usdValue}

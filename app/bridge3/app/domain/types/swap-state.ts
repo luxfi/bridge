@@ -7,14 +7,13 @@ interface SwapState {
   get from() : Network | null
   get assetsAvailable() : Asset[] 
   get asset() : Asset | null
+  get teleport() : boolean
+  get amount() : number
   setFrom(n: Network | null) : void
   setTo(n: Network | null): void 
-  setFromNetworks(n: Network[]): void 
-  setToNetworks(n: Network[]): void 
   setAsset(a: Asset | null): void
-
-  get amount() : number
   setAmount(a: number): void
+  setTeleport(b: boolean): void
 
   setNetworks(
     networks: Network[], 

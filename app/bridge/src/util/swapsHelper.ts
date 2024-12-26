@@ -6,6 +6,7 @@ import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/
  * @param asset
  * @returns
  */
+  // BUG?: :aa This only works for teleport but is called by utila!!
 export const getDestinationNetworks = (asset: NetworkCurrency | undefined, networks: CryptoNetwork[]) => {
   if (!asset) {
     return []
