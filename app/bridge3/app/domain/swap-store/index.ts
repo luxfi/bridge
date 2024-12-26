@@ -5,7 +5,7 @@ import {
   action,
 } from 'mobx'
 
-import  { type Asset, type Network, type NetworkType } from '@luxfi/core'
+import type { Asset, Network } from '@luxfi/core'
 import type SwapState from '../types/swap-state' 
 import { SWAP_PAIRS as TELEPORT_SWAP_PAIRS } from '../constants/teleport'
 import { SWAP_PAIRS as NON_TELEPORT_SWAP_PAIRS } from '../constants/non-teleport'
@@ -65,7 +65,7 @@ class SwapStore implements SwapState {
     this._from = initialFrom ?? null 
     this._to = initialTo ?? null
 
-    
+
   }
 
   get from() : Network | null {

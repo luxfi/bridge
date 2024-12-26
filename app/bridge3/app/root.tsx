@@ -9,6 +9,8 @@ import {
   type MetaFunction,
 } from '@remix-run/react'
 
+  // 'type' must be outside the curlies! 
+  // https://github.com/remix-run/remix/issues/9916#issuecomment-2436405265
 import type { LinksFunction } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react'
 
