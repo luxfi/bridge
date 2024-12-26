@@ -9,7 +9,7 @@ import {
   type MetaFunction,
 } from '@remix-run/react'
 
-import  { type LinksFunction, type LoaderFunction } from '@vercel/remix'
+import type { LinksFunction } from '@vercel/remix'
 import { Analytics } from '@vercel/analytics/react'
 
 import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
