@@ -1,4 +1,4 @@
-import AppSettings from './app-settings'
+import type AppSettings from './app-settings'
 
 interface BackendService {
   getSettings: () => Promise<AppSettings | undefined> 
