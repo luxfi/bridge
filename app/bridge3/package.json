@@ -21,7 +21,7 @@
     "@vercel/analytics": "^1.4.1",
     "@vercel/remix": "^2.15.1",
     "axios": "^1.7.9",
-    "isbot": "^4.4.0",
+    "isbot": "^4",
     "lucide-react": "catalog:",
     "mobx": "^6.12.3",
     "mobx-react-lite": "^4.0.7",
@@ -29,10 +29,7 @@
     "react": "catalog:",
     "react-currency-input-field": "^3.9.0",
     "react-dom": "catalog:",
-    "react-error-boundary": "^4.0.11",
-    "react-social-icons": "^6.18.0",
-    "react-use-intercom": "^2.1.0",
-    "uuid": "^9.0.0"
+    "react-social-icons": "^6.18.0"
   },
   "devDependencies": {
     "@originjs/vite-plugin-commonjs": "^1.0.3",
@@ -42,8 +39,6 @@
     "@types/react-dom": "catalog:",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.20",
-    "i": "^0.3.7",
-    "npm": "^11.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
