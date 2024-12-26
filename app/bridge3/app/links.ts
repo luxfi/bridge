@@ -1,4 +1,6 @@
-import { type LinkDescriptor } from '@vercel/remix'
+  // 'type' must be outside the curlies! 
+  // https://github.com/remix-run/remix/issues/9916#issuecomment-2436405265
+import type { LinkDescriptor } from '@vercel/remix'
 
 type CrossOrigin = "anonymous" | "use-credentials"
 
