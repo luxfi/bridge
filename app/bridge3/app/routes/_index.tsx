@@ -16,16 +16,16 @@ export const loader = async () => {
   if (settings) {
 
     const { networks } = settings
-    fromInitial = networks.find((el: Network) => (el.display_name === 'Base'))
-    toInitial = networks.find((el: Network) => (el.display_name === 'Ethereum'))
+    //fromInitial = networks.find((el: Network) => (el.display_name === 'Base'))
+    //toInitial = networks.find((el: Network) => (el.display_name === 'Ethereum'))
 
   }
   // otherwise an error is thrown
 
     return typedjson({
       settings,
-      fromInitial,
-      toInitial
+      fromInitial: undefined,
+      toInitial: undefined
     })
 
 }

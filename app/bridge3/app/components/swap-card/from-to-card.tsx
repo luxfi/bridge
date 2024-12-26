@@ -18,7 +18,7 @@ const FromToCard: React.FC<{
 }) => {
 
   const swapState = useSwapState()
-  
+  /* TODO
   const swapFromAndTo = () => {
     const tmp = swapState.from
     swapState.setFrom(swapState.to)
@@ -28,6 +28,7 @@ const FromToCard: React.FC<{
     swapState.setFromNetworks(swapState.toNetworks)
     swapState.setToNetworks(tmpNetworks)
   }
+  */
 
     // 'flex w-full gap-2 relative'
   return (
@@ -53,7 +54,7 @@ const FromToCard: React.FC<{
       />
       <ReverseButton 
         className='p-1 h-auto text-muted active:!bg-level-3' 
-        onClick={swapFromAndTo} 
+        onClick={() => {}} 
         style={ABS_CENTERED}
       />
     </div>
