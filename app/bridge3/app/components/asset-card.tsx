@@ -42,7 +42,7 @@ const AssetCard: React.FC<{
           }
         />
         <AssetCombobox 
-          assets={swapState.assetsAvailable}
+          assets={swapState.possibleAssets}
           asset={swapState.asset}
           setAsset={swapState.setAsset}
           buttonClx='shrink-0 border-none'

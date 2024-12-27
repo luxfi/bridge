@@ -5,7 +5,7 @@ interface SwapState {
   get toNetworks(): Network[]
   get to() : Network | null
   get from() : Network | null
-  get assetsAvailable() : Asset[] 
+  get possibleAssets() : Asset[] 
   get asset() : Asset | null
   get teleport() : boolean
   get amount() : number
