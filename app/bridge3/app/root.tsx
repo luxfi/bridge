@@ -28,7 +28,7 @@ import _links from './links';
 import metadata from './metadata'
 import siteDef from './site-def'
 
-export const config = { runtime: 'edge' }
+//export const config = { runtime: 'edge' }
 
 const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
 
@@ -59,9 +59,6 @@ const Layout: React.FC<PropsWithChildren> = ({
       </Contexts>
       <ScrollRestoration />
       <Scripts />
-      {/* https://github.com/remix-run/remix/issues/2958#issuecomment-2188876125
-      process.env.NODE_ENV === 'development' && <LiveReload /> 
-      */}
       {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
       <Analytics />
     </body>
