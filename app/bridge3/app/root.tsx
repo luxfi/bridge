@@ -28,7 +28,7 @@ import _links from './links';
 import metadata from './metadata'
 import siteDef from './site-def'
 
-export const config = { runtime: 'edge' }
+//export const config = { runtime: 'edge' }
 
 const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
 
