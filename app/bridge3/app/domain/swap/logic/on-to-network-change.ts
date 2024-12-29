@@ -4,11 +4,11 @@ import type { SwapState } from '@/domain/types'
 
 export default (store: SwapState) => (reaction(
   () => ({
-    toNetworks: store.toNetworks,
+    toNetwork: store.toNetwork,
   }),
   ({ 
-    toNetworks, 
+    toNetwork, 
   }) => {
-    store.setToNetwork(toNetworks.length ? toNetworks[0] : null)
+    store.setToAsset(toNetwork?.currencies.length ? toNetwork?.currencies[0] : null)
   }
 ))

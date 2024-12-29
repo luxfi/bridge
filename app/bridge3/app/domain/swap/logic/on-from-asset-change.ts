@@ -3,11 +3,14 @@ import { reaction } from 'mobx'
 import type { Network, Asset } from '@luxfi/core'
 import type { SwapState } from '@/domain/types'
 
-import { SWAP_PAIRS as TELEPORT_SWAP_PAIRS } from '@/domain/constants/teleport'
-import { SWAP_PAIRS as NON_TELEPORT_SWAP_PAIRS } from '@/domain/constants/non-teleport'
+const swapExists = (
+  swapPairs: Record<string, string[]>, 
+  src: Asset,  
+  swapAsset: Asset
+): boolean => (
+  swapPairs[src.asset].includes(swapAsset.asset)
+)
 
-    // :aa NOTE: Shouldn't this use `NON_TELEPORT_SWAP_PAIRS` and `!== 'evm'` in the non-telport case??  
-    // bridge2 uses this for both cases! Wierd. dunno
 export default (store: SwapState) => (reaction(
   () => ({
     fromAsset: store.fromAsset,
@@ -15,27 +18,15 @@ export default (store: SwapState) => (reaction(
   ({ 
     fromAsset, 
   }) => {
+      // Networks for which at least one swap pair exists (swap is possible)
     store.setToNetworks(
-      fromAsset ? ( // store.teleport ? (
-          store.allNetworks
-            .map((n: Network) => ({
-              ...n,
-              currencies: n.currencies.filter(
-                  (c: Asset) => (TELEPORT_SWAP_PAIRS[fromAsset!.asset].includes(c.asset))
-                ),
-            }))
-            .filter((n: Network) => n.currencies.length > 0 && n.type === 'evm')
-        
-        /* ) : (
-          store.allNetworks
-            .map((n: Network) => ({
-              ...n,
-              currencies: n.currencies.filter(
-                  (c: Asset) => (NON_TELEPORT_SWAP_PAIRS[fromAsset!.asset].includes(c.asset))
-                ),
-            }))
-            .filter((n: Network) => n.currencies.length > 0 && n.type !== 'evm')
-        ) */ 
+      fromAsset ? (
+        store.allNetworks
+          .map((n: Network) => ({
+            ...n,
+            currencies: n.currencies.filter((c: Asset) => (swapExists(store.swapPairs, fromAsset!, c))),
+          }))
+          .filter((n: Network) => n.currencies.length > 0)
       ) : []  
     )  
   }
