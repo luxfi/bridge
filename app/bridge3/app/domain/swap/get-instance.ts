@@ -3,7 +3,7 @@ import { enableStaticRendering } from 'mobx-react-lite'
 import type { Network } from '@luxfi/core'
 
 import type { SwapState } from '@/domain/types'
-import SwapStore from './index'
+import SwapStore from './store'
 
 // https://dev.to/ivandotv/mobx-server-side-rendering-with-next-js-4m18
 enableStaticRendering(typeof window === "undefined")

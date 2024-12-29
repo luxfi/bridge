@@ -41,8 +41,8 @@ const ReceiveCard: React.FC<{
       onClick={(!!bridge && !!onSelect) ? () => {onSelect!(bridge!)} : undefined}
     >
       <div className='flex flex-col justify-between items-center text-sm'>
-      {swapState.to ? (
-        <span className='block'>Receive on {swapState.to?.display_name }</span>
+      {swapState.toNetwork ? (
+        <span className='block'>Receive on {swapState.toNetwork?.display_name }</span>
       ) : ( 
         <span className='block'/>
       )}
