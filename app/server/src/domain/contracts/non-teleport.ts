@@ -1,4 +1,6 @@
-export const CONTRACTS = {
+import type { Contracts } from '@luxfi/core'
+
+export default {
   1: {
     chain_id: 1,
     teleporter: "",
@@ -88,21 +90,4 @@ export const CONTRACTS = {
     teleporter: "0x306533aaedc8d2e28F05a7d42E999730C45aB5B1",
     vault: "0xF2d3BE50D818d48A4e516FbaBb61609F9792CfA6",
   },
-};
-
-export const SWAP_PAIRS: Record<string, string[]> = {
-  BTC: ["LBTC", "LBTC"],
-  WETH: ["LETH", "ZETH"],
-  ETH: ["LETH", "ZETH"],
-  TON: ["LTON", "ZTON"],
-  SOL: ["LSOL", "ZSOL"],
-  jUSDC: ["LUSD", "ZUSD"],
-  POL: ["LPOL", "ZPOL"],
-  BNB: ["LBNB", "ZBNB"],
-  FTM: ["LFTM", "ZFTM"],
-  DAI: ["LUSD", "ZUSD"],
-  USDT: ["LUSD", "ZUSD"],
-  USDC: ["LUSD", "ZUSD"],
-  CELO: ["LCELO", "ZCELO"],
-  XDAI: ["LXDAI", "ZXDAI"],
-};
+} satisfies Contracts

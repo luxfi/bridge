@@ -2,6 +2,7 @@ import mainnetNetworks from './mainnet/networks'
 import mainnetExchanges from './mainnet/exchanges'
 import testnetExchanges from './testnet/exchanges'
 import testnetNetworks from './testnet/networks'
+import swapPairs from './swap-pairs'
 
 export const mainnetSettings = {
   data: {
@@ -9,6 +10,7 @@ export const mainnetSettings = {
     discovery: {},
     exchanges: mainnetExchanges,
     networks: mainnetNetworks,
+    swapPairs
   },
   sources: [],
   destinations: [],
@@ -22,6 +24,7 @@ export const testnetSettings = {
     discovery: {},
     exchanges: testnetExchanges,
     networks: testnetNetworks,
+    swapPairs
   },
   sources: [],
   destinations: [],

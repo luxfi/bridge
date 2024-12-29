@@ -19,16 +19,12 @@ export default (store: SwapState) => (reaction(
       store.setFromNetworks(networks.filter((n: Network) => ( n.type !== 'evm' && n.status === 'active')))
     }
     store.setFromNetwork(store.fromNetworks.length ? store.fromNetworks[0] : null)
-    //store.setFromAssets(store.fromNetwork?.currencies /* .filter((c: Asset) => (c.status === 'active')) */ ?? [] )
     store.setFromAssets(store.fromNetwork?.currencies.filter((c: Asset) => (c.status === 'active')) ?? [])
     store.setFromAsset(store.fromAssets.length ? store.fromAssets[0] : null)
   },
-  { fireImmediately: true}
+    // fire now so the effects cascade is kicked off 
+    // by what was passed into the constructor
+  { fireImmediately: true} 
 ))
-
-  /*
-    store.setToNetworks(toNets)
-    store.setTo(store.toNetworks.length ? store.toNetworks[0] : null)
-    */
 
 
