@@ -12,6 +12,7 @@ let instance: SwapStore | undefined =  undefined
 
 const getInstance = (
   networks: Network[],
+  swapPairs: Record<string, string[]>,
   initialFrom?: Network,
   initialTo?: Network 
 ): SwapState => {
@@ -20,6 +21,7 @@ const getInstance = (
    if (typeof window === "undefined") {
     const inst = new SwapStore(
       networks, 
+      swapPairs,
       initialTo, 
       initialFrom
     )
@@ -32,6 +34,7 @@ const getInstance = (
   if (!instance) {
     instance = new SwapStore(
       networks, 
+      swapPairs,
       initialTo, 
       initialFrom
     )

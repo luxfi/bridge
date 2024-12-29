@@ -26,9 +26,4 @@ export default (store: SwapState) => (reaction(
   { fireImmediately: true}
 ))
 
-  /*
-    store.setToNetworks(toNets)
-    store.setTo(store.toNetworks.length ? store.toNetworks[0] : null)
-    */
-
 

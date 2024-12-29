@@ -1,31 +1,34 @@
-import { createContext, useContext, useEffect, type PropsWithChildren } from 'react'
+import { createContext, useContext, useEffect, useRef, type PropsWithChildren } from 'react'
 
 import type { Network } from '@luxfi/core'
 
 import type { SwapState } from '@/domain/types'
 import getInstance from '@/domain/swap/get-instance'
+import type SwapStore from '@/domain/swap/store'
 
-interface SwapStateRef {
-  swapState: SwapState | null
-}
-
-const SwapStateContext = createContext<SwapStateRef | null>(null)
+const SwapStateContext = createContext<React.MutableRefObject<SwapState | null> | null>(null)
 
 const SwapStateProvider: React.FC<PropsWithChildren> = ({ 
   children, 
 }) => {
-  
-  useEffect(() => (() => {
 
+  const swapStateRef = useRef<SwapState | null>(null)
+  useEffect(() => (() => {
+    if (swapStateRef.current) {
+      (swapStateRef.current as SwapStore).dispose()
+    }
   }), [])
+
   return (
-  <SwapStateContext.Provider value={{ swapState: null }}>
-    {children}
-  </SwapStateContext.Provider>
-)}
+    <SwapStateContext.Provider value={swapStateRef}>
+      {children}
+    </SwapStateContext.Provider>
+  )
+}
 
 const useInitializeSwapState = (
   networks: Network[], 
+  swapPairs: Record<string, string[]>,
   initialTo?: Network, 
   initialFrom?: Network
 ): void => {
@@ -36,32 +39,33 @@ const useInitializeSwapState = (
     throw new Error('useInitializeSwapState() must be used within the scope of a SwapStateProvider!')
   }
 
-  if (ref.swapState) {
-    ref.swapState.setNetworks(
+  if (ref.current) {
+    ref.current.reset(
       networks, 
+      swapPairs,
       initialTo, 
       initialFrom
     )
   }
   else {
-    ref.swapState = getInstance(
+    ref.current = getInstance(
       networks, 
+      swapPairs,
       initialTo, 
       initialFrom
     )
   }
 }
 
-
 const useSwapState = (): SwapState => {
 
   const ref = useContext(SwapStateContext)
 
-  if (!ref || !ref.swapState) {
+  if (!ref || !ref.current) {
     throw new Error('SwapStateProvider or SwapState not ititialized!')
   }
 
-  return ref.swapState
+  return ref.current
 };
 
 export {

@@ -70,6 +70,7 @@ const AssetCard: React.FC<{
       )}>
         {`${availableOfAsset} ${swapState.fromAsset?.name} avail`}
       </span>
+      <div>To {swapState.toAsset?.asset ?? ''}</div>
       </div>
     </div>
   )

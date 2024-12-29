@@ -14,6 +14,7 @@ const useSetSettings = (
 
   useInitializeSwapState(
     settings.networks,
+    settings.swapPairs,
     fromInitial,
     toInitial
   )
