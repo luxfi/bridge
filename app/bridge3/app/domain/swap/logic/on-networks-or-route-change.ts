@@ -1,7 +1,11 @@
 import { reaction } from 'mobx'
 
-import type { Network, Asset } from '@luxfi/core'
+import type { Network, Asset, NetworkType } from '@luxfi/core'
 import type { SwapState } from '@/domain/types'
+
+const matchesRoute = (teleport: boolean, t: NetworkType): boolean => (
+  (teleport ? t === 'evm' : t !== 'evm' )  
+)
 
 export default (store: SwapState) => (reaction(
   () => ({
@@ -12,19 +16,16 @@ export default (store: SwapState) => (reaction(
     networks, 
     teleport
   }) => {
-    if (teleport) {
-      store.setFromNetworks(networks.filter((n: Network) => ( n.type === 'evm' && n.status === 'active')))
-    }
-    else {
-      store.setFromNetworks(networks.filter((n: Network) => ( n.type !== 'evm' && n.status === 'active')))
-    }
+    store.setFromNetworks(networks.filter(
+      (n: Network) => (n.status === 'active' && matchesRoute(teleport, n.type))
+    ))
     store.setFromNetwork(store.fromNetworks.length ? store.fromNetworks[0] : null)
-    store.setFromAssets(store.fromNetwork?.currencies.filter((c: Asset) => (c.status === 'active')) ?? [])
+    store.setFromAssets(store.fromNetwork?.currencies ?? [])
     store.setFromAsset(store.fromAssets.length ? store.fromAssets[0] : null)
   },
-    // fire now so the effects cascade is kicked off 
-    // by what was passed into the constructor
-  { fireImmediately: true} 
+    // fire now so that all reactions will cascade based on
+    // what was passed into the constructor
+  { fireImmediately: true}
 ))
 
 
