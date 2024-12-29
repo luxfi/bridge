@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, type PropsWithChildren } 
 
 import type { Network } from '@luxfi/core'
 
-import type { SwapState } from '@/domain/types'
+import type { AppSettings, SwapState } from '@/domain/types'
 import getInstance from '@/domain/swap/get-instance'
 import type SwapStore from '@/domain/swap/store'
 
@@ -27,8 +27,7 @@ const SwapStateProvider: React.FC<PropsWithChildren> = ({
 }
 
 const useInitializeSwapState = (
-  networks: Network[], 
-  swapPairs: Record<string, string[]>,
+  settings: AppSettings,
   initialTo?: Network, 
   initialFrom?: Network
 ): void => {
@@ -40,17 +39,15 @@ const useInitializeSwapState = (
   }
 
   if (ref.current) {
-    ref.current.reset(
-      networks, 
-      swapPairs,
+    ref.current.setSettings(
+      settings,
       initialTo, 
       initialFrom
     )
   }
   else {
     ref.current = getInstance(
-      networks, 
-      swapPairs,
+      settings,
       initialTo, 
       initialFrom
     )

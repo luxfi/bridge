@@ -11,10 +11,8 @@ const useSetSettings = (
   toInitial?: Network 
 ): void => {
 
-
   useInitializeSwapState(
-    settings.networks,
-    settings.swapPairs,
+    settings,
     fromInitial,
     toInitial
   )
@@ -22,9 +20,7 @@ const useSetSettings = (
   if (!settingsRef) {
     throw new Error('useSetSettings() must be within SettingsProvider and SwapStateProvider!')
   }
-  settingsRef.settings = settings
+  settingsRef.current = settings
 }
 
-export {
-  useSetSettings as default
-}
+export default useSetSettings

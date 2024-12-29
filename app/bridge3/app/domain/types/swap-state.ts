@@ -1,17 +1,19 @@
 import type { Network, Asset } from '@luxfi/core'
+import type AppSettings from './app-settings'
 
 interface SwapState {
 
-  get allNetworks() : Network[]
-  get fromNetworks(): Network[]
-  get toNetworks(): Network[]
-  get toNetwork() : Network | null
-  get fromNetwork() : Network | null
-  get fromAssets() : Asset[] 
-  get fromAsset() : Asset | null
-  get toAsset() : Asset | null
-  get teleport() : boolean
-  get fromAssetQuantity() : number
+  allNetworks : Network[]
+  fromNetworks: Network[]
+  toNetworks: Network[]
+  toNetwork : Network | null
+  fromNetwork : Network | null
+  fromAssets : Asset[] 
+  fromAsset : Asset | null
+  toAsset : Asset | null
+  teleport : boolean
+  fromAssetQuantity : number
+
   setFromNetwork(n: Network | null) : void
   setToNetwork(n: Network | null): void 
   setFromAsset(a: Asset | null): void
@@ -20,20 +22,16 @@ interface SwapState {
   setTeleport(b: boolean): void
 
     // internal use
-  get swapPairs(): Record<string, string[]>
+  swapPairs: Record<string, string[]>
   setFromNetworks(n: Network[]): void
   setToNetworks(n: Network[]): void
   setFromAssets(a: Asset[]): void
 
-  reset (
-    networks: Network[], 
-    swapPairs: Record<string, string[]>,
+  setSettings (
+    settings: AppSettings,
     initialTo?: Network, 
     initialFrom?: Network
   ): void
-
 }
 
-export {
-  type SwapState as default
-}
+export { type SwapState as default }
