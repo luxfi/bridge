@@ -1,6 +1,5 @@
 import { reaction } from 'mobx'
 
-//import type { Network, Asset } from '@luxfi/core'
 import type { SwapState } from '@/domain/types'
 
 export default (store: SwapState) => (reaction(
