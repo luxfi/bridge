@@ -35,8 +35,8 @@ const FromToCard: React.FC<{
     <div className={className}>
       <NetworkCombobox
         networks={swapState.fromNetworks}
-        setNetwork={swapState.setFrom}
-        network={swapState.from}
+        setNetwork={swapState.setFromNetwork}
+        network={swapState.fromNetwork}
         buttonClx='grow pr-4'
         popoverClx='w-[350px]'
         popoverAlign='start'
@@ -44,8 +44,8 @@ const FromToCard: React.FC<{
       />
       <NetworkCombobox
         networks={swapState.toNetworks}
-        setNetwork={swapState.setTo}
-        network={swapState.to}
+        setNetwork={swapState.setToNetwork}
+        network={swapState.toNetwork}
         buttonClx='grow pl-4'
         popoverClx='w-[350px]'
         popoverAlign='end'
