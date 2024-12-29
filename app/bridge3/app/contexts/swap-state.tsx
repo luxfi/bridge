@@ -1,9 +1,9 @@
-import { createContext, useContext, type PropsWithChildren } from 'react'
+import { createContext, useContext, useEffect, type PropsWithChildren } from 'react'
 
 import type { Network } from '@luxfi/core'
 
 import type { SwapState } from '@/domain/types'
-import getInstance from '@/domain/swap-store/get-instance'
+import getInstance from '@/domain/swap/get-instance'
 
 interface SwapStateRef {
   swapState: SwapState | null
@@ -13,11 +13,16 @@ const SwapStateContext = createContext<SwapStateRef | null>(null)
 
 const SwapStateProvider: React.FC<PropsWithChildren> = ({ 
   children, 
-}) => (
+}) => {
+  
+  useEffect(() => (() => {
+
+  }), [])
+  return (
   <SwapStateContext.Provider value={{ swapState: null }}>
     {children}
   </SwapStateContext.Provider>
-)
+)}
 
 const useInitializeSwapState = (
   networks: Network[], 
