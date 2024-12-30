@@ -2,7 +2,7 @@ import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from "ethe
 import { TransactionType, swapStatusByIndex, SwapStatus, utilaTransactionStatusByIndex } from "@luxfi/core"
 
 import { UTILA_NETWORKS } from "@/domain/constants"
-import ERC20B_ABI from './constants/ERC20B.json'
+import ERC20B_ABI from "@/domain/constants/ERC20B.json"
 import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
 

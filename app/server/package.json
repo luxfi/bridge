@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@luxfi/utila": "^3.0.0",
-    "@luxfi/core": "10.0.0",
+    "@luxfi/core": "latest",
     "@prisma/client": "^6.0.0",
     "@solana/addresses": "2.0.0",
     "axios": "^1.7.4",
