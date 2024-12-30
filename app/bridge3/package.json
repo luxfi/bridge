@@ -13,8 +13,8 @@
   "sideEffects": false,
   "type": "module",
   "dependencies": {
-    "@hanzo/ui": "file:../../../../hanzoai/react-sdk/pkg/ui",
-    "@luxfi/core": "workspace:*",
+    "@hanzo/ui": "catalog:",
+    "@luxfi/core": "catalog:",
     "@remix-run/node": "^2.15.1",
     "@remix-run/react": "^2.15.1",
     "@remix-run/route-config": "^2.15.2",

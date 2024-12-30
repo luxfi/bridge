@@ -13,8 +13,11 @@ catalogs:
       specifier: 7.3.4
       version: 7.3.4
     '@hanzo/ui':
-      specifier: 4.3.2
-      version: 4.3.2
+      specifier: 4.3.3
+      version: 4.3.3
+    '@luxfi/core':
+      specifier: 10.0.0
+      version: 10.0.0
     '@luxfi/ui':
       specifier: 5.4.1
       version: 5.4.1
@@ -57,10 +60,10 @@ importers:
         version: 0.15.0(yi3anhbuujv26dssci7jqe6fp4)
       '@hanzo/auth':
         specifier: 'catalog:'
-        version: 2.5.2(cph54drwbxluu7xj6o4mlowo2i)
+        version: 2.5.2(hz3nrotlqomwjyu3mnw3jv7viu)
       '@hanzo/ui':
         specifier: 'catalog:'
-        version: 4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
+        version: 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
       '@headlessui/react':
         specifier: ^1.7.3
         version: 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -75,7 +78,7 @@ importers:
         version: 1.4.13(@babel/core@7.26.0)(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)
       '@luxfi/ui':
         specifier: 'catalog:'
-        version: 5.4.1(2fhzzjwpzdu6uc6t2cqytxpf2a)
+        version: 5.4.1(rny65snizxwnjmkhr37ney22fe)
       '@metamask/jazzicon':
         specifier: ^2.0.0
         version: 2.0.0
@@ -378,11 +381,11 @@ importers:
   app/bridge3:
     dependencies:
       '@hanzo/ui':
-        specifier: file:../../../../hanzoai/react-sdk/pkg/ui
-        version: file:../../hanzoai/react-sdk/pkg/ui(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
+        specifier: 'catalog:'
+        version: 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
       '@luxfi/core':
-        specifier: workspace:*
-        version: link:../../pkg/luxfi-core
+        specifier: 'catalog:'
+        version: 10.0.0
       '@remix-run/node':
         specifier: ^2.15.1
         version: 2.15.2(typescript@5.7.2)
@@ -569,8 +572,8 @@ importers:
   app/server:
     dependencies:
       '@luxfi/core':
-        specifier: workspace:*
-        version: link:../../pkg/luxfi-core
+        specifier: 10.0.0
+        version: 10.0.0
       '@luxfi/utila':
         specifier: ^3.0.0
         version: 3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.14.15)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)
@@ -578,8 +581,8 @@ importers:
         specifier: ^6.0.0
         version: 6.1.0
       '@solana/addresses':
-        specifier: 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-        version: 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)
+        specifier: 2.0.0
+        version: 2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.2)
       axios:
         specifier: ^1.7.4
         version: 1.7.9
@@ -673,10 +676,10 @@ importers:
     dependencies:
       '@hanzo/auth':
         specifier: 'catalog:'
-        version: 2.5.2(aojd7ed7ah7bseoyln5yqvt7ky)
+        version: 2.5.2(r4otqt3herh746warcx5po37jq)
       '@hanzo/commerce':
         specifier: 'catalog:'
-        version: 7.3.4(5wqibeuqg3p4wl5coq4x2a6miq)
+        version: 7.3.4(hb4e3ojjy6f3swyy6tukbbsdny)
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -2508,23 +2511,8 @@ packages:
       react: ^18.3.1
       react-dom: ^18.3.1
 
-  '@hanzo/ui@4.3.2':
-    resolution: {integrity: sha512-YLSK7xPB85Cqfctprv7xXE/GEQ0oES4pO4Eu6uVz+ibiLJHcYo7oqYp4LASneoXVThnS/VMqUO3ZhhI6nNZZyg==}
-    peerDependencies:
-      '@hookform/resolvers': ^3.3.2
-      embla-carousel: ^8.1.6
-      lucide-react: 'catalog:'
-      mobx: ^6.12.3
-      next: 'catalog:'
-      next-themes: ^0.2.1
-      react: 'catalog:'
-      react-dom: 'catalog:'
-      react-hook-form: 'catalog:'
-      validator: ^13.11.0
-      zod: 3.23.8
-
-  '@hanzo/ui@file:../../hanzoai/react-sdk/pkg/ui':
-    resolution: {directory: ../../hanzoai/react-sdk/pkg/ui, type: directory}
+  '@hanzo/ui@4.3.3':
+    resolution: {integrity: sha512-ip5X9AImkK2yHRRITirDAdnMfVIq5hf00o3mv5ms0VkaUvFoDKvJT558zo7DVZhJg5j9728YyE3v3eDt/ddsWw==}
     peerDependencies:
       '@hookform/resolvers': ^3.3.2
       embla-carousel: ^8.1.6
@@ -2697,6 +2685,9 @@ packages:
       tailwindcss: ^3.4.1
       tailwindcss-animate: ^1.0.6
       tailwindcss-interaction-media: ^0.1.0
+
+  '@luxfi/core@10.0.0':
+    resolution: {integrity: sha512-Kx6V7+uTEn5NEDZaiQ486mGh9Ot0iRVjcL86+Sv0yfTAXTEUfz5blepeCRijceEF9gYBa/+lH6jQqbEcPC6k6g==}
 
   '@luxfi/ui@5.4.1':
     resolution: {integrity: sha512-jUcho7OktsOzs+o2geLeI58E9QibuBdIDSSOxL1QBy4mcKBiRV1NaKV+ZwSz6mOyg7DA0tzR3Ic9bLgvavRB+g==}
@@ -4641,11 +4632,17 @@ packages:
     peerDependencies:
       '@solana/web3.js': ^1.58.0
 
-  '@solana/addresses@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
-    resolution: {integrity: sha512-i2U29niAUMA0oj+rrmQwNtgRroaMpOVtNLyuEUBksNDL6dc0BymLMcFXL9cZB+2FqZQNhXcbPzJS/HDlubo3Zw==}
+  '@solana/addresses@2.0.0':
+    resolution: {integrity: sha512-8n3c/mUlH1/z+pM8e7OJ6uDSXw26Be0dgYiokiqblO66DGQ0d+7pqFUFZ5pEGjJ9PU2lDTSfY8rHf4cemOqwzQ==}
+    engines: {node: '>=20.18.0'}
+    peerDependencies:
+      typescript: '>=5'
 
-  '@solana/assertions@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
-    resolution: {integrity: sha512-7BXizCyM5YNNIEVy5fobOa534a1WVT9vU6vPDGpGFxBc7q67RiOtL1hKQCSeA5lDhWoHVrbYJR+TFxB1h31NxQ==}
+  '@solana/assertions@2.0.0':
+    resolution: {integrity: sha512-NyPPqZRNGXs/GAjfgsw7YS6vCTXWt4ibXveS+ciy5sdmp/0v3pA6DlzYjleF9Sljrew0IiON15rjaXamhDxYfQ==}
+    engines: {node: '>=20.18.0'}
+    peerDependencies:
+      typescript: '>=5'
 
   '@solana/buffer-layout-utils@0.2.0':
     resolution: {integrity: sha512-szG4sxgJGktbuZYDg2FfNmkMi0DYQoVjN2h7ta1W1hPrwzarcFLBq9UpX1UjNXsNpT9dn+chgprtWGioUAr4/g==}
@@ -4655,8 +4652,11 @@ packages:
     resolution: {integrity: sha512-E1ImOIAD1tBZFRdjeM4/pzTiTApC0AOBGwyAMS4fwIodCWArzJ3DWdoh8cKxeFM2fElkxBh2Aqts1BPC373rHA==}
     engines: {node: '>=5.10'}
 
-  '@solana/codecs-core@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
-    resolution: {integrity: sha512-XJCVPclx+my5g4/xiBfGgI6WS9vG4UF08HoehyLIoKBiT0/y87CIY5DR096xjGgRvPtZmZDfSdz8/TDilA1y4A==}
+  '@solana/codecs-core@2.0.0':
+    resolution: {integrity: sha512-qCG+3hDU5Pm8V6joJjR4j4Zv9md1z0RaecniNDIkEglnxmOUODnmPLWbtOjnDylfItyuZeDihK8hkewdj8cUtw==}
+    engines: {node: '>=20.18.0'}
+    peerDependencies:
+      typescript: '>=5'
 
   '@solana/codecs-core@2.0.0-rc.1':
     resolution: {integrity: sha512-bauxqMfSs8EHD0JKESaNmNuNvkvHSuN3bbWAF5RjOfDu2PugxHrvRebmYauvSumZ3cTfQ4HJJX6PG5rN852qyQ==}
@@ -4668,18 +4668,23 @@ packages:
     peerDependencies:
       typescript: '>=5'
 
-  '@solana/codecs-numbers@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
-    resolution: {integrity: sha512-QQ9Qf2z8uaui5a2nbxBREpWp+AuoJUbz0XvxUoXYupn8fLyNJQlpVAyvH5gDRLVckeTtfT8l/OJ45+XJP8bNpw==}
+  '@solana/codecs-numbers@2.0.0':
+    resolution: {integrity: sha512-r66i7VzJO1MZkQWZIAI6jjJOFVpnq0+FIabo2Z2ZDtrArFus/SbSEv543yCLeD2tdR/G/p+1+P5On10qF50Y1Q==}
+    engines: {node: '>=20.18.0'}
+    peerDependencies:
+      typescript: '>=5'
 
   '@solana/codecs-numbers@2.0.0-rc.1':
     resolution: {integrity: sha512-J5i5mOkvukXn8E3Z7sGIPxsThRCgSdgTWJDQeZvucQ9PT6Y3HiVXJ0pcWiOWAoQ3RX8e/f4I3IC+wE6pZiJzDQ==}
     peerDependencies:
       typescript: '>=5'
 
-  '@solana/codecs-strings@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
-    resolution: {integrity: sha512-ESAa52yQeRwY0rWc/rtTEwVGvy5e7zZ9Z3wgqvlbzaOa0h7DbjOjYEDXFdJMmwZslabh+3k+SY1UdNH+F3WLZg==}
+  '@solana/codecs-strings@2.0.0':
+    resolution: {integrity: sha512-dNqeCypsvaHcjW86H0gYgAZGGkKVBeKVeh7WXlOZ9kno7PeQ2wNkpccyzDfuzaIsKv+HZUD3v/eo86GCvnKazQ==}
+    engines: {node: '>=20.18.0'}
     peerDependencies:
       fastestsmallesttextencoderdecoder: ^1.0.22
+      typescript: '>=5'
 
   '@solana/codecs-strings@2.0.0-rc.1':
     resolution: {integrity: sha512-9/wPhw8TbGRTt6mHC4Zz1RqOnuPTqq1Nb4EyuvpZ39GW6O2t2Q7Q0XxiB3+BdoEjwA2XgPw6e2iRfvYgqty44g==}
@@ -4692,9 +4697,12 @@ packages:
     peerDependencies:
       typescript: '>=5'
 
-  '@solana/errors@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
-    resolution: {integrity: sha512-oEZQ6ORyF9cN3zaGUv+tYUrGaKjylJGlKPoqcQEY0XTFXPGUg5a4Et6pYpuChg8Of99iWbrVlydDFVEwPF9Zvg==}
+  '@solana/errors@2.0.0':
+    resolution: {integrity: sha512-IHlaPFSy4lvYco1oHJ3X8DbchWwAwJaL/4wZKnF1ugwZ0g0re8wbABrqNOe/jyZ84VU9Z14PYM8W9oDAebdJbw==}
+    engines: {node: '>=20.18.0'}
     hasBin: true
+    peerDependencies:
+      typescript: '>=5'
 
   '@solana/errors@2.0.0-rc.1':
     resolution: {integrity: sha512-ejNvQ2oJ7+bcFAYWj225lyRkHnixuAeb7RQCixm+5mH4n1IA4Qya/9Bmfy5RAAHQzxK43clu3kZmL5eF9VGtYQ==}
@@ -17255,26 +17263,9 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
-  '@hanzo/auth@2.5.2(aojd7ed7ah7bseoyln5yqvt7ky)':
+  '@hanzo/auth@2.5.2(hz3nrotlqomwjyu3mnw3jv7viu)':
     dependencies:
-      '@hanzo/ui': 4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.24.1)
-      '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
-      firebase: 10.12.0(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))
-      firebase-admin: 12.7.0
-      lucide-react: 0.456.0(react@18.3.1)
-      mobx: 6.13.5
-      mobx-react-lite: 4.1.0(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
-      next: 14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-hook-form: 7.54.2(react@18.3.1)
-      zod: 3.24.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  '@hanzo/auth@2.5.2(cph54drwbxluu7xj6o4mlowo2i)':
-    dependencies:
-      '@hanzo/ui': 4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
+      '@hanzo/ui': 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
       '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
       firebase: 10.12.0(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))
       firebase-admin: 12.7.0
@@ -17289,10 +17280,27 @@ snapshots:
       - encoding
       - supports-color
 
-  '@hanzo/commerce@7.3.4(5wqibeuqg3p4wl5coq4x2a6miq)':
+  '@hanzo/auth@2.5.2(r4otqt3herh746warcx5po37jq)':
     dependencies:
-      '@hanzo/auth': 2.5.2(aojd7ed7ah7bseoyln5yqvt7ky)
-      '@hanzo/ui': 4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.24.1)
+      '@hanzo/ui': 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
+      '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
+      firebase: 10.12.0(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))
+      firebase-admin: 12.7.0
+      lucide-react: 0.456.0(react@18.3.1)
+      mobx: 6.13.5
+      mobx-react-lite: 4.1.0(mobx@6.13.5)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      next: 14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-hook-form: 7.54.2(react@18.3.1)
+      zod: 3.24.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  '@hanzo/commerce@7.3.4(hb4e3ojjy6f3swyy6tukbbsdny)':
+    dependencies:
+      '@hanzo/auth': 2.5.2(r4otqt3herh746warcx5po37jq)
+      '@hanzo/ui': 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
       '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
       '@radix-ui/react-radio-group': 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -17314,10 +17322,10 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@hanzo/commerce@7.3.4(u6tkf5qkjx4el6vc5szfh527vi)':
+  '@hanzo/commerce@7.3.4(ripopynnjazvshaa7rhniye65y)':
     dependencies:
-      '@hanzo/auth': 2.5.2(cph54drwbxluu7xj6o4mlowo2i)
-      '@hanzo/ui': 4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
+      '@hanzo/auth': 2.5.2(hz3nrotlqomwjyu3mnw3jv7viu)
+      '@hanzo/ui': 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
       '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
       '@radix-ui/react-radio-group': 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -17349,7 +17357,7 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@hanzo/ui@4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)':
+  '@hanzo/ui@4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)':
     dependencies:
       '@hanzo/react-drawer': 0.1.8(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
@@ -17412,70 +17420,7 @@ snapshots:
       - date-fns
       - tailwindcss
 
-  '@hanzo/ui@4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(validator@13.12.0)(zod@3.24.1)':
-    dependencies:
-      '@hanzo/react-drawer': 0.1.8(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
-      '@next/third-parties': 15.1.3(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-accordion': 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-aspect-ratio': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-avatar': 1.1.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-checkbox': 1.1.3(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-context-menu': 2.2.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-dialog': 1.1.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-icons': 1.3.2(react@18.3.1)
-      '@radix-ui/react-label': 2.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-navigation-menu': 1.2.3(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-popover': 1.1.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-progress': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-radio-group': 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-scroll-area': 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-select': 2.1.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-separator': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-slider': 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-slot': 1.1.1(@types/react@18.3.12)(react@18.3.1)
-      '@radix-ui/react-switch': 1.1.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-tabs': 1.1.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-toast': 1.2.4(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-toggle': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-toggle-group': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-tooltip': 1.1.6(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@splinetool/react-spline': 4.0.0(@splinetool/runtime@1.9.54)(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@splinetool/runtime': 1.9.54
-      '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      cmdk: 0.2.1(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      embla-carousel: 8.5.1
-      embla-carousel-react: 8.5.1(react@18.3.1)
-      input-otp: 1.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      lodash.castarray: 4.4.0
-      lodash.isplainobject: 4.0.6
-      lodash.merge: 4.6.2
-      lucide-react: 0.456.0(react@18.3.1)
-      markdown-to-jsx: 7.7.2(react@18.3.1)
-      mobx: 6.13.5
-      next: 14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next-themes: 0.2.1(next@14.2.16(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      postcss-selector-parser: 6.1.2
-      react: 18.3.1
-      react-day-picker: 8.10.1(date-fns@3.6.0)(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-hook-form: 7.54.2(react@18.3.1)
-      react-intersection-observer: 9.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sonner: 1.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      tailwind-merge: 2.6.0
-      tailwindcss-animate: 1.0.7(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))
-      tailwindcss-interaction-media: 0.1.0
-      validator: 13.12.0
-      zod: 3.24.1
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - date-fns
-      - tailwindcss
-
-  '@hanzo/ui@file:../../hanzoai/react-sdk/pkg/ui(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)':
+  '@hanzo/ui@4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.456.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)':
     dependencies:
       '@hanzo/react-drawer': 0.1.8(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
@@ -17880,11 +17825,13 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@luxfi/ui@5.4.1(2fhzzjwpzdu6uc6t2cqytxpf2a)':
+  '@luxfi/core@10.0.0': {}
+
+  '@luxfi/ui@5.4.1(rny65snizxwnjmkhr37ney22fe)':
     dependencies:
-      '@hanzo/auth': 2.5.2(cph54drwbxluu7xj6o4mlowo2i)
-      '@hanzo/commerce': 7.3.4(u6tkf5qkjx4el6vc5szfh527vi)
-      '@hanzo/ui': 4.3.2(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
+      '@hanzo/auth': 2.5.2(hz3nrotlqomwjyu3mnw3jv7viu)
+      '@hanzo/commerce': 7.3.4(ripopynnjazvshaa7rhniye65y)
+      '@hanzo/ui': 4.3.3(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1)
       '@hookform/resolvers': 3.9.1(react-hook-form@7.54.2(react@18.3.1))
       '@next/third-parties': 14.2.22(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@types/node': 20.17.10
@@ -20382,18 +20329,20 @@ snapshots:
       - react
       - react-native
 
-  '@solana/addresses@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)':
+  '@solana/addresses@2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.2)':
     dependencies:
-      '@solana/assertions': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-      '@solana/codecs-core': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-      '@solana/codecs-strings': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)
-      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/assertions': 2.0.0(typescript@5.7.2)
+      '@solana/codecs-core': 2.0.0(typescript@5.7.2)
+      '@solana/codecs-strings': 2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.2)
+      '@solana/errors': 2.0.0(typescript@5.7.2)
+      typescript: 5.7.2
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/assertions@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+  '@solana/assertions@2.0.0(typescript@5.7.2)':
     dependencies:
-      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/errors': 2.0.0(typescript@5.7.2)
+      typescript: 5.7.2
 
   '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
     dependencies:
@@ -20410,9 +20359,10 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
-  '@solana/codecs-core@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+  '@solana/codecs-core@2.0.0(typescript@5.7.2)':
     dependencies:
-      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/errors': 2.0.0(typescript@5.7.2)
+      typescript: 5.7.2
 
   '@solana/codecs-core@2.0.0-rc.1(typescript@5.7.2)':
     dependencies:
@@ -20426,10 +20376,11 @@ snapshots:
       '@solana/errors': 2.0.0-rc.1(typescript@5.7.2)
       typescript: 5.7.2
 
-  '@solana/codecs-numbers@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+  '@solana/codecs-numbers@2.0.0(typescript@5.7.2)':
     dependencies:
-      '@solana/codecs-core': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/codecs-core': 2.0.0(typescript@5.7.2)
+      '@solana/errors': 2.0.0(typescript@5.7.2)
+      typescript: 5.7.2
 
   '@solana/codecs-numbers@2.0.0-rc.1(typescript@5.7.2)':
     dependencies:
@@ -20437,12 +20388,13 @@ snapshots:
       '@solana/errors': 2.0.0-rc.1(typescript@5.7.2)
       typescript: 5.7.2
 
-  '@solana/codecs-strings@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e(fastestsmallesttextencoderdecoder@1.0.22)':
+  '@solana/codecs-strings@2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.2)':
     dependencies:
-      '@solana/codecs-core': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-      '@solana/codecs-numbers': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
-      '@solana/errors': 2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e
+      '@solana/codecs-core': 2.0.0(typescript@5.7.2)
+      '@solana/codecs-numbers': 2.0.0(typescript@5.7.2)
+      '@solana/errors': 2.0.0(typescript@5.7.2)
       fastestsmallesttextencoderdecoder: 1.0.22
+      typescript: 5.7.2
 
   '@solana/codecs-strings@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.2)':
     dependencies:
@@ -20463,10 +20415,11 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/errors@2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e':
+  '@solana/errors@2.0.0(typescript@5.7.2)':
     dependencies:
       chalk: 5.4.1
       commander: 12.1.0
+      typescript: 5.7.2
 
   '@solana/errors@2.0.0-rc.1(typescript@5.7.2)':
     dependencies:

@@ -53,9 +53,9 @@
   },
   "dependencies": {
     "@luxfi/utila": "^3.0.0",
-    "@luxfi/core": "workspace:*",
+    "@luxfi/core": "10.0.0",
     "@prisma/client": "^6.0.0",
-    "@solana/addresses": "2.0.0-preview.1.20240323014038.94f2053250ed5d78cd55951bdec72ef7795e528e",
+    "@solana/addresses": "2.0.0",
     "axios": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -70,3 +70,4 @@
     "winston": "^3.17.0"
   }
 }
+
