@@ -26,7 +26,7 @@ const AssetCard: React.FC<{
     values?: CurrencyInputOnChangeValues | undefined
   ) => {
     const a = value ? Number(value) : 0
-    swapState.setAmount(a)
+    swapState.setFromAssetQuantity(a)
   }
 
   return (
@@ -42,15 +42,15 @@ const AssetCard: React.FC<{
           }
         />
         <AssetCombobox 
-          assets={swapState.assetsAvailable}
-          asset={swapState.asset}
-          setAsset={swapState.setAsset}
+          assets={swapState.fromAssets}
+          asset={swapState.fromAsset}
+          setAsset={swapState.setFromAsset}
           buttonClx='shrink-0 border-none'
           popoverAlign='end'
         />
       </div>
       <div className='flex justify-between items-center text-muted text-sm gap-1.5'>
-      { (swapState.amount > 0 && usdValue) ? (
+      { (swapState.fromAssetQuantity > 0 && usdValue) ? (
         <CurrencyInput 
           readOnly
           prefix='$'
@@ -63,13 +63,14 @@ const AssetCard: React.FC<{
       )}
       <span className={cn(
         'block shrink-0', 
-        (availableOfAsset === undefined || !swapState.asset) ? 
+        (availableOfAsset === undefined || !swapState.fromAsset) ? 
           'invisible w-[1px] h-[1px] overflow-x-hidden' 
           : 
           ''
       )}>
-        {`${availableOfAsset} ${swapState.asset?.name} avail`}
+        {`${availableOfAsset} ${swapState.fromAsset?.name} avail`}
       </span>
+      <div>To {swapState.toAsset?.asset ?? ''}</div>
       </div>
     </div>
   )

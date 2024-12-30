@@ -13,8 +13,9 @@ const adaptor = {
   valueEquals: (el: Asset, v: string): boolean => (
     el.asset.toUpperCase() === v.toUpperCase()
   ),
-  getLabel:   (el: Asset): string => (el.name),
-  getImageUrl: (el: Asset): string => (el.logo),
+  getLabel:     (el: Asset): string => (el.name),
+  getImageUrl:  (el: Asset): string => (el.logo),
+  isDisabled:   (el: Asset): boolean => (el.status !== 'active') 
 
 } satisfies ListAdaptor<Asset>
 
@@ -50,7 +51,8 @@ const AssetCombobox: React.FC<{
     popoverClx={cn('font-sans font-medium w-full', popoverClx)}
     popoverAlign={popoverAlign}
     listItemClx='bg-background hover:!bg-level-3'
-    listItemSelectedClx='!bg-level-2'
+    listItemSelectedClx='!bg-level-2'   // fw default is level-3
+    listItemDisabledClx='!opacity-30' // fw default is 35
     triggerProps={{
       open: false,
       current: (asset ?? null),

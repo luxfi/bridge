@@ -7,7 +7,8 @@
     "start": "remix-serve ./build/server/index.js",
     "tc": "tsc",
     "typecheck": "tsc",
-    "clean": "rm -rf ./node_modules"
+    "clean": "rm -rf ./node_modules",
+    "clean:all": "pnpm -w clean:all"
   },
   "sideEffects": false,
   "type": "module",
