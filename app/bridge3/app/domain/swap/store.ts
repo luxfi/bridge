@@ -38,6 +38,16 @@ class SwapStore implements SwapState {
     initialFrom?: Network
   ) {
     makeObservable(this, {
+      fromNetworks: observable.shallow,
+      toNetworks: observable.shallow,
+      fromNetwork: observable.shallow,
+      toNetwork: observable.shallow,
+      fromAssets: observable.shallow,
+      fromAsset:observable.shallow,
+      toAsset: observable.shallow,
+      fromAssetQuantity: observable,
+      teleport: observable,
+      allNetworks: observable.shallow,
       setFromNetwork: action.bound,
       setToNetwork: action.bound,
       setFromAssets: action,
@@ -54,13 +64,18 @@ class SwapStore implements SwapState {
     this.toNetwork = initialTo ?? null
   }
 
+    /**  
+    This should be called clients-side as early as possible 
+    (eg, in useEffect()).
+     
+    Mobx reaction()s return a disposer function.
+    Provider calls our dispose() when it unmounts 
+    via useEffect()'s return value. 
+
+    These should be called in REVERSE order of causality 
+    for the effects to cascade properly the first time.
+    */
   initialize = () => {
-
-      // Mobx reaction()s return a disposer function.
-      // Provider calls our dispose() when it unmounts via useEffect() 
-
-      // These should be called in REVERSE order of causality 
-      // for the effects to cascade properly the first time.
     this._disposers.push(onToNetworkChange(this))
     this._disposers.push(onToNetworksChange(this))
     this._disposers.push(onFromAssetChange(this))
