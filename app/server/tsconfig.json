@@ -1,22 +1,40 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src", // Base directory for imports
+    "baseUrl": "./src", // Base directory for module resolution
     "paths": {
-      "@/*": ["*"] // Map "@/..." to "./src/..."
+      "@/*": ["*"] // Map "@/..." to "./src/..." for cleaner imports
     },
-    "module": "commonjs", // Required for Node.js
-    "esModuleInterop": true, // Allows default imports for CommonJS modules
-    "target": "es2020", // Use modern ECMAScript features
-    "moduleResolution": "node", // Resolve Node.js modules correctly
-    "resolveJsonModule": true, // Allow JSON imports
-    "sourceMap": true, // Generate source maps for debugging
-    "outDir": "dist", // Output directory
+    "module": "NodeNext", // Ensures compatibility with moduleResolution: NodeNext
+    "moduleResolution": "NodeNext", // Required for modern Node.js ESM/CommonJS resolution
+    "target": "ES2022", // Use modern ECMAScript features
+    "lib": ["ES2022", "DOM"], // Include modern JavaScript and browser APIs
+    "allowSyntheticDefaultImports": true, // Compatibility for CommonJS/ESM interop
+    "esModuleInterop": true, // Allow default imports for CommonJS modules
+    "resolveJsonModule": true, // Enable importing JSON files
     "strict": true, // Enable all strict type-checking options
-    "strictNullChecks": true, // Strict null checks
-    "noImplicitAny": true, // Prevent implicit `any` types
-    "skipLibCheck": true, // Skip checking of type definitions
-    "forceConsistentCasingInFileNames": true // Enforce file name case sensitivity
+    "noImplicitAny": true, // Disallow variables of type `any` unless explicitly declared
+    "strictNullChecks": true, // Enforce strict nullability checks
+    "strictBindCallApply": true, // Check function bind, call, and apply methods strictly
+    "forceConsistentCasingInFileNames": true, // Ensure consistent file name casing
+    "skipLibCheck": true, // Skip type checking for type declaration files
+    "sourceMap": true, // Generate source maps for debugging
+    "outDir": "dist", // Specify output directory for compiled files
+    "rootDir": "./src", // Specify input directory to maintain structure in output
+    "noEmitOnError": true, // Prevent emitting files on compilation errors
+    "allowJs": true, // Allow importing JavaScript files
+    "checkJs": false, // Avoid type checking JavaScript files
+    "types": ["node"] // Include Node.js type definitions
   },
-  "include": ["src/**/*.ts"], // Include all TypeScript files in "src"
-  "exclude": ["node_modules", "dist"] // Exclude "node_modules" and compiled files
+  "include": [
+    "src/**/*.ts", // Include all TypeScript files
+    "src/**/*.d.ts", // Include type declaration files
+    "src/**/*.tsx" // Include React TypeScript files if applicable
+  ],
+  "exclude": [
+    "node_modules", // Exclude dependencies
+    "dist", // Exclude compiled output
+    "tests", // Optionally exclude test files from compilation
+    "**/*.test.ts", // Exclude test files matching this pattern
+    "**/*.spec.ts" // Exclude spec files matching this pattern
+  ]
 }
