@@ -6,7 +6,7 @@ import swapPairs from './swap-pairs'
 const getSettings = async (): Promise<AppSettings | undefined> => {
 
   const { data } = await axios.get(
-    `https://api-bridge.lux.network/api/settings?version=mainnet`
+    import.meta.env.VITE_SERVER_URI + '/api/settings?version=' + import.meta.env.VITE_NET_VERSION
   )
 
   data.swapPairs = swapPairs

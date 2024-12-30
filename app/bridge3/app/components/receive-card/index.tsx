@@ -9,7 +9,6 @@ import { useSwapState } from '@/contexts/swap-state'
 import BridgeLabel from './bridge-label'
 
 const ReceiveCard: React.FC<{
-  usdValue: number 
   usdFee: number
   assetGas: number
   txnTime: string // eg, '~5min'
@@ -18,7 +17,6 @@ const ReceiveCard: React.FC<{
   onSelect?: (bridge: Bridge) => void
   className?: string
 }> = observer(({
-  usdValue,
   usdFee,
   assetGas,
   txnTime, // eg, '~5min'
