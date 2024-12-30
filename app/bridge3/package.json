@@ -13,7 +13,7 @@
   "sideEffects": false,
   "type": "module",
   "dependencies": {
-    "@hanzo/ui": "catalog:",
+    "@hanzo/ui": "file:../../../../hanzoai/react-sdk/pkg/ui",
     "@luxfi/core": "workspace:*",
     "@remix-run/node": "^2.15.1",
     "@remix-run/react": "^2.15.1",

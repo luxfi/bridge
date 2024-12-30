@@ -32,7 +32,7 @@ export default (store: SwapState) => (reaction(
       ) : []  
     )  
     if (fromAsset) {
-      const price = await backend.getAssetPrice(fromAsset)  
+      const price = await backend.getAssetPrice(fromAsset)
       store.setFromAssetPriceUSD(price ?? null)
     }
 

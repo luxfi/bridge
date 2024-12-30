@@ -27,7 +27,7 @@ const AssetCard: React.FC<{
     swapState.setFromAssetQuantity(a)
   }
 
-  return (
+  return (<>
     <div className={cn('border border-muted-4 py-2 pl-3 pr-1.5 has-[:focus]:border-muted', className)}>
       <div className='flex justify-between items-center gap-1'>
         <CurrencyInput 
@@ -52,7 +52,7 @@ const AssetCard: React.FC<{
         <CurrencyInput 
           readOnly
           prefix='$'
-          decimalsLimit={2}
+          decimalScale={2}
           value={swapState.fromAssetPriceUSD * swapState.fromAssetQuantity}
           className='cursor-default !border-none bg-level-0 !min-w-0 focus:outline-none'
         />                
@@ -68,10 +68,10 @@ const AssetCard: React.FC<{
       )}>
         {`${availableOfAsset} ${swapState.fromAsset?.name} avail`}
       </span>
-      <div>To {swapState.toAsset?.asset ?? ''}</div>
-      </div>
     </div>
-  )
+    </div>
+    {swapState.toAsset && (<div>To {swapState.toAsset?.asset ?? ''}</div>) }
+  </>)
 })
 
 export default AssetCard
