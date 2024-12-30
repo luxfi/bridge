@@ -14,7 +14,7 @@
   "type": "module",
   "dependencies": {
     "@hanzo/ui": "catalog:",
-    "@luxfi/core": "workspace:*",
+    "@luxfi/core": "catalog:",
     "@remix-run/node": "^2.15.1",
     "@remix-run/react": "^2.15.1",
     "@remix-run/route-config": "^2.15.2",
