@@ -3,17 +3,13 @@ import type { PropsWithChildren } from 'react'
 import SettingsProvider from '@/contexts/settings'
 import SwapStateProvider from '@/contexts/swap-state'
 import { LuxKitProvider } from '@/contexts/luxkit'
+import { EthersProvider } from '@/contexts/ethers'
 
-const Contexts: React.FC<PropsWithChildren> = ({ 
-  children 
-}) => {
-
+const Contexts: React.FC<PropsWithChildren> = ({ children }) => {
   return (
-    <SettingsProvider >
+    <SettingsProvider>
       <LuxKitProvider>
-        <SwapStateProvider>
-          {children}
-        </SwapStateProvider>
+        <SwapStateProvider>{children}</SwapStateProvider>
       </LuxKitProvider>
     </SettingsProvider>
   )
