@@ -1,21 +1,19 @@
-import { createContext, useContext, type PropsWithChildren } from 'react'
+import { createContext, useContext, useRef, type PropsWithChildren } from 'react'
 
 import type AppSettings from '@/domain/types/app-settings'
-
-interface AppSettingsRef {
-  settings: AppSettings | undefined
-}
-
-const SettingsContext = createContext<AppSettingsRef | null>(null)
+const SettingsContext = createContext<React.MutableRefObject<AppSettings | null> | null>(null)
 
 const SettingsProvider: React.FC<{
-  settings?: AppSettings
+  settings?: AppSettings | null
 } & PropsWithChildren> = ({ 
   children, 
-  settings 
+  settings=null 
 }) => {
+
+  const settingsRef = useRef<AppSettings | null>(settings)
+
   return (
-    <SettingsContext.Provider value={{settings}}>
+    <SettingsContext.Provider value={settingsRef}>
       {children}
     </SettingsContext.Provider>
   )
@@ -24,11 +22,11 @@ const SettingsProvider: React.FC<{
 const useSettings = (): AppSettings => {
   const ref = useContext(SettingsContext)
 
-  if (!ref || !ref.settings) {
+  if (!ref || !ref.current) {
     throw new Error('SettingsProvider not ititialized!')
   }
 
-  return ref.settings
+  return ref.current
 }
 
 export {
