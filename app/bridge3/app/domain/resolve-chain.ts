@@ -1,6 +1,6 @@
 import type { Network } from '@luxfi/core'
 import type { Chain } from 'viem'
-import { SendErrorMessage } from '@/lib/telegram'
+import { SendErrorMessage } from '@/domain/telegram'
 
 export default function resolveChain(
   network: Network
