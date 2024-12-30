@@ -21,9 +21,6 @@ catalogs:
     '@luxfi/ui':
       specifier: 5.4.1
       version: 5.4.1
-    '@types/node':
-      specifier: 20.14.15
-      version: 20.14.15
     '@types/react':
       specifier: 18.3.12
       version: 18.3.12
@@ -572,11 +569,11 @@ importers:
   app/server:
     dependencies:
       '@luxfi/core':
-        specifier: 10.0.0
+        specifier: latest
         version: 10.0.0
       '@luxfi/utila':
         specifier: ^3.0.0
-        version: 3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.14.15)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)
+        version: 3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.10)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)
       '@prisma/client':
         specifier: ^6.0.0
         version: 6.1.0
@@ -636,8 +633,8 @@ importers:
         specifier: ^0.5.3
         version: 0.5.3
       '@types/node':
-        specifier: 'catalog:'
-        version: 20.14.15
+        specifier: ^20.17.1
+        version: 20.17.10
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -655,7 +652,7 @@ importers:
         version: 3.4.2
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2)
+        version: 10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)
       tsc-alias:
         specifier: ^1.8.10
         version: 1.8.10
@@ -663,7 +660,7 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.5.4
         version: 5.7.2
 
   pkg/luxfi-core:
@@ -5716,9 +5713,6 @@ packages:
 
   '@types/node@18.19.68':
     resolution: {integrity: sha512-QGtpFH1vB99ZmTa63K4/FU8twThj4fuVSBkGddTp7uIL/cuoLWIUSL2RcOaigBhfR+hg5pgGkBnkoOxrTVBMKw==}
-
-  '@types/node@20.14.15':
-    resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
 
   '@types/node@20.17.10':
     resolution: {integrity: sha512-/jrvh5h6NXhEauFFexRin69nA0uHJ5gwk4iDivp/DeoEua3uwCUto6PC86IpRITBOs4+6i2I56K5x5b6WYGXHA==}
@@ -17861,13 +17855,13 @@ snapshots:
       - '@react-native-async-storage/async-storage'
       - embla-carousel
 
-  '@luxfi/utila@3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.14.15)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)':
+  '@luxfi/utila@3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.10)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@bufbuild/buf': 1.46.0
       '@bufbuild/protobuf': 2.2.2
       '@connectrpc/connect': 2.0.0-beta.1(@bufbuild/protobuf@2.2.2)
       '@connectrpc/connect-node': 2.0.0-beta.1(@bufbuild/protobuf@2.2.2)(@connectrpc/connect@2.0.0-beta.1(@bufbuild/protobuf@2.2.2))
-      '@nx/rollup': 20.3.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.14.15)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))(typescript@5.7.2)
+      '@nx/rollup': 20.3.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.10)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))(typescript@5.7.2)
       jsonwebtoken: 9.0.2
       tslib: 2.3.0
       viem: 2.16.0(bufferutil@4.0.9)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.24.1)
@@ -18405,7 +18399,7 @@ snapshots:
       tslib: 2.3.0
       yargs-parser: 21.1.1
 
-  '@nx/js@20.3.0(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(typescript@5.7.2)':
+  '@nx/js@20.3.0(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(typescript@5.7.2)':
     dependencies:
       '@babel/core': 7.26.0
       '@babel/plugin-proposal-decorators': 7.25.9(@babel/core@7.26.0)
@@ -18434,7 +18428,7 @@ snapshots:
       semver: 7.6.3
       source-map-support: 0.5.19
       tinyglobby: 0.2.10
-      ts-node: 10.9.1(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2)
+      ts-node: 10.9.1(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)
       tsconfig-paths: 4.2.0
       tslib: 2.3.0
     transitivePeerDependencies:
@@ -18478,10 +18472,10 @@ snapshots:
   '@nx/nx-win32-x64-msvc@20.3.0':
     optional: true
 
-  '@nx/rollup@20.3.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.14.15)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))(typescript@5.7.2)':
+  '@nx/rollup@20.3.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.10)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))(typescript@5.7.2)':
     dependencies:
       '@nx/devkit': 20.3.0(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))
-      '@nx/js': 20.3.0(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(typescript@5.7.2)
+      '@nx/js': 20.3.0(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(typescript@5.7.2)
       '@rollup/plugin-babel': 6.0.4(@babel/core@7.26.0)(@types/babel__core@7.20.5)(rollup@4.29.1)
       '@rollup/plugin-commonjs': 25.0.8(rollup@4.29.1)
       '@rollup/plugin-image': 3.0.3(rollup@4.29.1)
@@ -18494,7 +18488,7 @@ snapshots:
       postcss: 8.4.49
       rollup: 4.29.1
       rollup-plugin-copy: 3.5.0
-      rollup-plugin-postcss: 4.0.2(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))
+      rollup-plugin-postcss: 4.0.2(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))
       rollup-plugin-typescript2: 0.36.0(rollup@4.29.1)(typescript@5.7.2)
       tslib: 2.3.0
     transitivePeerDependencies:
@@ -22027,7 +22021,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/cacheable-request@6.0.3':
     dependencies:
@@ -22047,7 +22041,7 @@ snapshots:
 
   '@types/cors@2.8.17':
     dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/cross-spawn@6.0.6':
     dependencies:
@@ -22099,7 +22093,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
       '@types/qs': 6.9.17
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -22115,12 +22109,12 @@ snapshots:
 
   '@types/fs-extra@8.1.5':
     dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/graceful-fs@4.1.9':
     dependencies:
@@ -22163,7 +22157,7 @@ snapshots:
 
   '@types/jsonwebtoken@9.0.7':
     dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/keyv@3.1.4':
     dependencies:
@@ -22196,7 +22190,7 @@ snapshots:
 
   '@types/morgan@1.9.9':
     dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/ms@0.7.34': {}
 
@@ -22216,10 +22210,6 @@ snapshots:
   '@types/node@14.18.63': {}
 
   '@types/node@18.19.68':
-    dependencies:
-      undici-types: 5.26.5
-
-  '@types/node@20.14.15':
     dependencies:
       undici-types: 5.26.5
 
@@ -22285,12 +22275,12 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
       '@types/send': 0.17.4
 
   '@types/stack-utils@2.0.3': {}
@@ -31035,13 +31025,13 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.4.49
 
-  postcss-load-config@3.1.4(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2)):
+  postcss-load-config@3.1.4(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)):
     dependencies:
       lilconfig: 2.1.0
       yaml: 1.10.2
     optionalDependencies:
       postcss: 8.4.49
-      ts-node: 10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2)
+      ts-node: 10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)
 
   postcss-load-config@4.0.2(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)):
     dependencies:
@@ -32286,7 +32276,7 @@ snapshots:
       globby: 10.0.1
       is-plain-object: 3.0.1
 
-  rollup-plugin-postcss@4.0.2(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2)):
+  rollup-plugin-postcss@4.0.2(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2)):
     dependencies:
       chalk: 4.1.2
       concat-with-sourcemaps: 1.1.0
@@ -32295,7 +32285,7 @@ snapshots:
       p-queue: 6.6.2
       pify: 5.0.0
       postcss: 8.4.49
-      postcss-load-config: 3.1.4(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2))
+      postcss-load-config: 3.1.4(postcss@8.4.49)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))
       postcss-modules: 4.3.1(postcss@8.4.49)
       promise.series: 0.2.0
       resolve: 1.22.10
@@ -33454,34 +33444,14 @@ snapshots:
       '@ts-morph/common': 0.11.1
       code-block-writer: 10.1.1
 
-  ts-node@10.9.1(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2):
+  ts-node@10.9.1(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.14.15
-      acorn: 8.14.0
-      acorn-walk: 8.3.4
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 5.7.2
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-    optionalDependencies:
-      '@swc/core': 1.10.4(@swc/helpers@0.5.15)
-
-  ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.14.15)(typescript@5.7.2):
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.11
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.4
-      '@types/node': 20.14.15
+      '@types/node': 20.17.10
       acorn: 8.14.0
       acorn-walk: 8.3.4
       arg: 4.1.3
@@ -33513,7 +33483,6 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.10.4(@swc/helpers@0.5.15)
-    optional: true
 
   ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.7.2):
     dependencies:
