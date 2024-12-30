@@ -16,6 +16,7 @@ export default (store: SwapState) => (reaction(
     networks, 
     teleport
   }) => {
+    
     store.setFromNetworks(networks.filter(
       (n: Network) => (n.status === 'active' && matchesRoute(teleport, n.type))
     ))
