@@ -2,56 +2,47 @@ import { createContext, useContext, useEffect, useRef, type PropsWithChildren } 
 
 import type { Network } from '@luxfi/core'
 
-import type { AppSettings, SwapState } from '@/domain/types'
+import type { SwapState, AppSettings } from '@/domain/types'
 import getInstance from '@/domain/swap/get-instance'
-import type SwapStore from '@/domain/swap/store'
+import SwapStore from '@/domain/swap/store'
+import { useSettings } from './settings'
 
-const SwapStateContext = createContext<React.MutableRefObject<SwapState | null> | null>(null)
+const SwapStateContext = createContext<React.MutableRefObject<SwapState> | null>(null)
 
-const SwapStateProvider: React.FC<PropsWithChildren> = ({ 
+const SwapStateProvider: React.FC<{
+  appSettings: AppSettings,
+  defaultFromNetwork?: Network,
+  defaultToNetwork?: Network,
+} & PropsWithChildren> = ({ 
   children, 
+  appSettings,
+  defaultFromNetwork,
+  defaultToNetwork
 }) => {
 
-  const swapStateRef = useRef<SwapState | null>(null)
-  useEffect(() => (() => {
+  const swapStateRef = useRef<SwapState>(getInstance(
+    appSettings,
+    defaultFromNetwork,
+    defaultToNetwork
+  ))
+
+  useEffect(() => {
     if (swapStateRef.current) {
-      (swapStateRef.current as SwapStore).dispose()
+      (swapStateRef.current as SwapStore).initialize()
     }
-  }), [])
+
+    return () => {
+      if (swapStateRef.current) {
+        (swapStateRef.current as SwapStore).dispose()
+      }
+    }
+  }, [])
 
   return (
     <SwapStateContext.Provider value={swapStateRef}>
       {children}
     </SwapStateContext.Provider>
   )
-}
-
-const useInitializeSwapState = (
-  settings: AppSettings,
-  initialTo?: Network, 
-  initialFrom?: Network
-): void => {
-
-  const ref = useContext(SwapStateContext)
-
-  if (!ref ) {
-    throw new Error('useInitializeSwapState() must be used within the scope of a SwapStateProvider!')
-  }
-
-  if (ref.current) {
-    ref.current.setSettings(
-      settings,
-      initialTo, 
-      initialFrom
-    )
-  }
-  else {
-    ref.current = getInstance(
-      settings,
-      initialTo, 
-      initialFrom
-    )
-  }
 }
 
 const useSwapState = (): SwapState => {
@@ -68,6 +59,5 @@ const useSwapState = (): SwapState => {
 export {
   SwapStateProvider as default,
   SwapStateContext,
-  useInitializeSwapState,  
   useSwapState,
 }
