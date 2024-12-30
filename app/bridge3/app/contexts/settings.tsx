@@ -1,16 +1,16 @@
 import { createContext, useContext, useRef, type PropsWithChildren } from 'react'
 
 import type AppSettings from '@/domain/types/app-settings'
-const SettingsContext = createContext<React.MutableRefObject<AppSettings | null> | null>(null)
+const SettingsContext = createContext<React.MutableRefObject<AppSettings> | null>(null)
 
 const SettingsProvider: React.FC<{
-  settings?: AppSettings | null
+  appSettings: AppSettings
 } & PropsWithChildren> = ({ 
   children, 
-  settings=null 
+  appSettings 
 }) => {
 
-  const settingsRef = useRef<AppSettings | null>(settings)
+  const settingsRef = useRef<AppSettings>(appSettings)
 
   return (
     <SettingsContext.Provider value={settingsRef}>

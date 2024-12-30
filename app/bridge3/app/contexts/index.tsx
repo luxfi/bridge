@@ -1,17 +1,31 @@
 import type { PropsWithChildren } from 'react'
 
+import type { Network } from '@luxfi/core'
+
 import SettingsProvider from '@/contexts/settings'
 import SwapStateProvider from '@/contexts/swap-state'
+import type { AppSettings } from '@/domain/types'
 
-const Contexts: React.FC<PropsWithChildren> = ({ 
-  children 
+const Contexts: React.FC<{
+  appSettings: AppSettings,
+  defaultFromNetwork?: Network  
+  defaultToNetwork?: Network  
+} & PropsWithChildren> = ({ 
+  children,
+  appSettings,
+  defaultFromNetwork,  
+  defaultToNetwork,  
 }) => {
 
   return (
-    <SettingsProvider >
-    <SwapStateProvider>
-      {children}
-    </SwapStateProvider>
+    <SettingsProvider appSettings={appSettings}>
+      <SwapStateProvider 
+        appSettings={appSettings} 
+        defaultFromNetwork={defaultFromNetwork} 
+        defaultToNetwork={defaultToNetwork}
+      >
+        {children}
+      </SwapStateProvider>
     </SettingsProvider>
   )
 }
