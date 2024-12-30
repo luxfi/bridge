@@ -10,6 +10,7 @@ interface SwapState {
   fromNetwork : Network | null
   fromAssets : Asset[] 
   fromAsset : Asset | null
+  fromAssetPriceUSD: number | null
   toAsset : Asset | null
   teleport : boolean
   fromAssetQuantity : number
@@ -17,6 +18,7 @@ interface SwapState {
   setFromNetwork(n: Network | null) : void
   setToNetwork(n: Network | null): void 
   setFromAsset(a: Asset | null): void
+  setFromAssetPriceUSD(n: number | null): void
   setToAsset(a: Asset | null): void
   setFromAssetQuantity(a: number): void
   setTeleport(b: boolean): void

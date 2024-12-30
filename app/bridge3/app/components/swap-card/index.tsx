@@ -10,11 +10,10 @@ import ReceiveCard from '../receive-card'
 import TeleportSwitch from '../teleport-switch'
 
 const FIXTURE = {
-  usdValue: 3345,
   usdFee: 2.4,
   assetGas: .045,
   txnTime: '~5min',
-  assetsAvailable: 1004.4556,
+  assetsAvailable: 10.4556,
   bridge: {
     name: 'Across',
     logo: 'https://cdn.lux.network/bridge/currencies/dai.png',
@@ -38,12 +37,10 @@ const SwapCard: React.FC<{
       </div>
       <FromToCard className='flex w-full gap-2 relative' />
       <AssetCard 
-        usdValue={FIXTURE.usdValue}
         availableOfAsset={FIXTURE.assetsAvailable}
         className='w-full rounded-lg mt-2'
       />
       <ReceiveCard
-        usdValue={FIXTURE.usdValue}
         usdFee={FIXTURE.usdFee}
         assetGas={FIXTURE.assetGas}
         bridge={FIXTURE.bridge}
