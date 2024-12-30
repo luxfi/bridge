@@ -2,6 +2,8 @@ import { reaction } from 'mobx'
 
 import type { Network, Asset } from '@luxfi/core'
 import type { SwapState } from '@/domain/types'
+import backend from '@/domain/backend'
+
 
 const swapExists = (
   swapPairs: Record<string, string[]>, 
@@ -15,7 +17,7 @@ export default (store: SwapState) => (reaction(
   () => ({
     fromAsset: store.fromAsset,
   }),
-  ({ 
+  async ({ 
     fromAsset, 
   }) => {
       // Networks for which at least one swap pair exists (swap is possible)
@@ -29,5 +31,10 @@ export default (store: SwapState) => (reaction(
           .filter((n: Network) => n.currencies.length > 0)
       ) : []  
     )  
+    if (fromAsset) {
+      const price = await backend.getAssetPrice(fromAsset)  
+      store.setFromAssetPriceUSD(price ?? null)
+    }
+
   }
 ))

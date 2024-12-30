@@ -23,6 +23,7 @@ class SwapStore implements SwapState {
   toNetwork: Network | null = null
   fromAssets: Asset[] = []
   fromAsset: Asset | null = null
+  fromAssetPriceUSD: number | null = null
   toAsset: Asset | null = null
   fromAssetQuantity: number = 0
   teleport: boolean = true
@@ -38,10 +39,22 @@ class SwapStore implements SwapState {
     initialFrom?: Network
   ) {
     makeObservable(this, {
+      fromNetworks: observable.shallow,
+      toNetworks: observable.shallow,
+      fromNetwork: observable.shallow,
+      toNetwork: observable.shallow,
+      fromAssets:observable.shallow,
+      fromAsset: observable.shallow,
+      fromAssetPriceUSD: observable,
+      toAsset: observable.shallow,
+      fromAssetQuantity: observable,
+      teleport: observable,
+      allNetworks: observable.shallow,
       setFromNetwork: action.bound,
       setToNetwork: action.bound,
       setFromAssets: action,
       setFromAsset: action.bound,
+      setFromAssetPriceUSD: action.bound,
       setToAsset: action.bound,
       setFromAssetQuantity: action.bound,
       setTeleport: action.bound,
@@ -76,6 +89,7 @@ class SwapStore implements SwapState {
   setToNetwork = (n: Network | null): void      => { this.toNetwork = n }
   setFromAssets = (a: Asset[]): void            => { this.fromAssets = a }
   setFromAsset = (a: Asset | null): void        => { this.fromAsset = a }
+  setFromAssetPriceUSD = (n: number | null): void => {this.fromAssetPriceUSD = n}
   setToAsset = (a: Asset | null): void          => { this.toAsset = a }
   setFromAssetQuantity = (a: number): void      => { this.fromAssetQuantity = a }
   setTeleport = (b: boolean): void              => { this.teleport = b }

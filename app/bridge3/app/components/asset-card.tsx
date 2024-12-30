@@ -8,11 +8,9 @@ import { useSwapState } from '@/contexts/swap-state'
 import AssetCombobox from './asset-combobox'
 
 const AssetCard: React.FC<{
-  usdValue?: number  
   availableOfAsset?: number
   className?: string
 }> = observer(({
-  usdValue,
   availableOfAsset,
   className=''
 }) => {
@@ -50,12 +48,12 @@ const AssetCard: React.FC<{
         />
       </div>
       <div className='flex justify-between items-center text-muted text-sm gap-1.5'>
-      { (swapState.fromAssetQuantity > 0 && usdValue) ? (
+      { (swapState.fromAssetQuantity > 0 && swapState.fromAssetPriceUSD) ? (
         <CurrencyInput 
           readOnly
           prefix='$'
           decimalsLimit={2}
-          value={usdValue}
+          value={swapState.fromAssetPriceUSD * swapState.fromAssetQuantity}
           className='cursor-default !border-none bg-level-0 !min-w-0 focus:outline-none'
         />                
       ) : (

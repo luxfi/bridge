@@ -1,4 +1,5 @@
 import { useLoaderData } from '@remix-run/react'
+import type { LoaderFunctionArgs } from '@vercel/remix'
 
 import type { Network } from '@luxfi/core'
 
@@ -17,17 +18,6 @@ export const loader = async (): Promise<LoaderReturnType> => {
 
   const settings = await backend.getSettings()
 
-  let fromInitial: Network | undefined
-  let toInitial: Network | undefined
-  if (settings) {
-
-    const { networks } = settings
-    //fromInitial = networks.find((el: Network) => (el.display_name === 'Base'))
-    //toInitial = networks.find((el: Network) => (el.display_name === 'Ethereum'))
-
-  }
-  // otherwise an error is thrown
-
   return {
     settings: settings!,
     fromInitial: undefined,
@@ -37,7 +27,7 @@ export const loader = async (): Promise<LoaderReturnType> => {
 }
 
   // cf: https://remix.run/docs/en/main/route/should-revalidate#never-reloading-the-root
-export const shouldRevalidate = () => false;
+export const shouldRevalidate = () => (false)
 
 const Index: React.FC = () => {
 
