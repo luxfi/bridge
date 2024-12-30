@@ -24,7 +24,6 @@ const getInstance = (
       initialTo, 
       initialFrom
     )
-    inst.initialize()
       // TODO how to call dispose()?
     return inst
   }
@@ -36,7 +35,6 @@ const getInstance = (
       initialTo, 
       initialFrom
     )
-    instance.initialize()
   }  
 
   return instance

@@ -28,6 +28,6 @@ export default (store: SwapState) => (reaction(
           }))
           .filter((n: Network) => n.currencies.length > 0)
       ) : []  
-    )  
+    ) 
   }
 ))
