@@ -1,4 +1,4 @@
-import type { CryptoNetwork } from "@/Models/CryptoNetwork"
+import type { CryptoNetwork, NetworkCurrency } from "@/Models/CryptoNetwork"
 import { SendErrorMessage } from "./telegram"
 import { localeNumber } from "./utils"
 import { parseUnits as ethersParseUnits } from "ethers/lib/utils"
@@ -6,7 +6,7 @@ import { parseUnits as ethersParseUnits } from "ethers/lib/utils"
 export default function resolveChain(
   network: CryptoNetwork
 ): (Chain & RainbowKitChain) | undefined {
-  const nativeCurrency = network.currencies.find((c: any) => c.is_native)
+  const nativeCurrency = network.currencies.find((c: NetworkCurrency) => c.asset === network.native_currency)
   const blockExplorersBaseURL = new URL(network.transaction_explorer_template).origin
   const metadata = network.metadata
   const { ensRegistry, ensUniversalResolver, multicall3 } = metadata || {}
