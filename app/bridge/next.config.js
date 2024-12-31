@@ -26,6 +26,7 @@ module.exports = (phase, { defaultConfig }) => {
   const nextConfig = {
     experimental: {
       outputFileTracingRoot: path.join(__dirname, '../../'),
+      esmExternals: 'loose', // Support ESM modules loosely
     },
     basePath: process.env.APP_BASE_PATH || '',
     pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
@@ -69,8 +70,16 @@ module.exports = (phase, { defaultConfig }) => {
     webpack: (config, { isServer, dev }) => {
       config.cache = false; // Disable Webpack's persistent caching
       config.externals.push("pino-pretty", "lokijs", "encoding");
-      config.resolve.fallback = { fs: false, net: false, tls: false };
-      config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+      config.resolve.fallback = { 
+        fs: false, 
+        net: false, 
+        tls: false,
+        url: require.resolve('url/') 
+      }
+      config.resolve.alias = {
+        '@': path.resolve(__dirname, 'src'),
+        'node:url': require.resolve('url/') // Alias 'node:url'
+      }
       let conf = svgrPluginConfig(config)
       // if (dev) {
       //   conf =  watchPluginConfig(conf)
