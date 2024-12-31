@@ -18,9 +18,9 @@ import { Analytics } from '@vercel/analytics/react'
 import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
 import type { Network } from '@luxfi/core'
 
-import '@/style/lux-global-non-next.css'
-import '@/style/cart-animation.css'
-import '@/style/checkout-animation.css'
+import luxGlobalCss from '@/style/lux-global-non-next.css?url'
+import cartAnimationCss from '@/style/cart-animation.css?url'
+import checkoutAnimationCss from '@/style/checkout-animation.css?url'
 
 import type { AppSettings } from '@/domain/types'
 
@@ -31,17 +31,21 @@ import Header from '@/components/header'
 
 import backend from '@/domain/backend'
 
-import _links from './links';
+import fontAndIconLinks from './font-and-icon-links';
 import metadata from './metadata'
 import siteDef from './site-def'
 
-//export const config = { runtime: 'edge' }
+// export const config = { runtime: 'edge' } // not supported by vercel
 
 const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
 
-export const links: LinksFunction = () => (_links)
+export const links: LinksFunction = () => ([
+  ...fontAndIconLinks,
+  { rel: "stylesheet", href: luxGlobalCss },
+  { rel: "stylesheet", href: cartAnimationCss },
+  { rel: "stylesheet", href: checkoutAnimationCss }
+])
 export const meta: MetaFunction = () => (metadata)
-
 
 interface LoaderReturnType {
   appSettings: AppSettings,
@@ -53,10 +57,8 @@ export const loader = async (): Promise<LoaderReturnType> => {
 
   const appSettings = await backend.getSettings()
 
-  // otherwise an error is thrown
-
   return {
-    appSettings: appSettings!,
+    appSettings: appSettings!, // otherwise an error is thrown
     defaultFromNetwork: undefined,
     defaultToNetwork: undefined
   }
@@ -74,7 +76,7 @@ const Layout: React.FC<PropsWithChildren> = ({
     appSettings, 
     defaultFromNetwork, 
     defaultToNetwork 
-  } =  useLoaderData<LoaderReturnType>() as LoaderReturnType 
+  } =  useLoaderData<LoaderReturnType>() as LoaderReturnType // this cast is necessary, grr
 
   return (
     <html 
