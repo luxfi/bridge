@@ -1,7 +1,7 @@
 {
   "name": "@luxfi/core",
-  "version": "10.0.0",
-  "description": "core types and shared utilities related blockchain",
+  "version": "10.0.2",
+  "description": "Core types and shared utilities related to blockchain",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
@@ -21,16 +21,19 @@
   "scripts": {
     "lat": "npm show @luxfi/core version",
     "pub": "npm publish",
-    "tc": "tsc"
+    "build": "tsc --project tsconfig.json && tsc --project tsconfig.cjs.json",
+    "prepublishOnly": "npm run build"
   },
   "exports": {
-    ".": "./types/index.ts"
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
   },
-  "dependencies": {
-  },
-  "peerDependencies": {
-  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {},
+  "peerDependencies": {},
   "devDependencies": {
-    "typescript": "catalog:"
+    "typescript": "^5.7.2"
   }
 }
