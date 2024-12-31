@@ -30,7 +30,7 @@ const formatAvailable = (v: number | null): string => {
   if (!v) return ''
   let str = v.toFixed(5)
   if (v - parseFloat(str) !== 0) {
-    str += '...'
+    str = '~' + str 
   }
   return str
 }
@@ -44,7 +44,7 @@ const AmountAvailable: React.FC<{
 }) => {
   
   const formattedAmount = formatAvailable(amount ?? null)
-  const availableWasRounded = formattedAmount?.endsWith('...')
+  const availableWasRounded = formattedAmount?.startsWith('~')
   
   return (
     <span className='block shrink-0 cursor-default'>

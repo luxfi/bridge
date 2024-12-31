@@ -48,12 +48,9 @@ const AssetCard: React.FC<{
         <CurrencyInput 
           allowDecimals
           placeholder='0'
-          //groupSeparator={undefined}
-          //decimalSeparator='.'
           disableGroupSeparators
           decimalsLimit={6}
-          //decimalsLimit={2}
-          value={'' /* swapState.fromAssetQuantity */}
+          value={swapState.fromAssetQuantity}
           onValueChange={onAmountChange}
           className={
             'min-w-0 text-foreground focus:text-accent bg-level-0 p-1 ' + 
