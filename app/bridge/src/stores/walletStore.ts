@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { type StarknetWindowObject } from 'starknetkit';
+//import { type StarknetWindowObject } from 'starknetkit';
 
 interface WalletState {
     connectedWallets: Wallet[];
@@ -13,7 +13,7 @@ export type Wallet = {
     icon: (props: any) => React.JSX.Element;
     connector?: string;
     metadata?: {
-        starknetAccount?: StarknetWindowObject,
+        //starknetAccount?: StarknetWindowObject,
     }
     chainId?: string | number
 }
