@@ -229,9 +229,6 @@ importers:
       react-use-intercom:
         specifier: ^2.0.0
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      starknet:
-        specifier: ^6.11.0
-        version: 6.11.0
       starknetkit:
         specifier: ^2.3.3
         version: 2.6.1(@react-native-async-storage/async-storage@1.24.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))(bufferutil@4.0.9)(starknet@6.11.0)(utf-8-validate@5.0.10)

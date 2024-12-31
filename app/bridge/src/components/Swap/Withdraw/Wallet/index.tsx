@@ -4,11 +4,11 @@ import { useSettings } from "../../../../context/settings"
 import { useSwapDataState } from "../../../../context/swap"
 import KnownInternalNames from "../../../../lib/knownIds"
 import BridgeApiClient, { type DepositAddress } from "../../../../lib/BridgeApiClient"
-import ImtblxWalletWithdrawStep from "./ImtblxWalletWithdrawStep"
-import StarknetWalletWithdrawStep from "./StarknetWalletWithdraw"
+//import ImtblxWalletWithdrawStep from "./ImtblxWalletWithdrawStep"
+//import StarknetWalletWithdrawStep from "./StarknetWalletWithdraw"
 import useSWR from 'swr'
 import TransferFromWallet from "./WalletTransfer"
-import ZkSyncWalletWithdrawStep from "./ZKsyncWalletWithdraw"
+//import ZkSyncWalletWithdrawStep from "./ZKsyncWalletWithdraw"
 import useWalletTransferOptions from "../../../../hooks/useWalletTransferOptions"
 import { useFee } from "../../../../context/feeContext"
 
@@ -22,9 +22,9 @@ const WalletTransfer: React.FC = () => {
     const source_layer = networks.find(n => n.internal_name === source_network_internal_name)
     const sourceAsset = source_layer?.currencies?.find(c => c?.asset?.toLowerCase() === swap?.source_asset?.toLowerCase())
 
-    const sourceIsImmutableX = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ImmutableXMainnet?.toUpperCase() || source_network_internal_name === KnownInternalNames.Networks.ImmutableXGoerli?.toUpperCase()
-    const sourceIsZkSync = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ZksyncMainnet?.toUpperCase()
-    const sourceIsStarknet = source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.StarkNetMainnet?.toUpperCase() || source_network_internal_name === KnownInternalNames.Networks.StarkNetGoerli?.toUpperCase()
+    const sourceIsImmutableX =  false //source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ImmutableXMainnet?.toUpperCase() || source_network_internal_name === KnownInternalNames.Networks.ImmutableXGoerli?.toUpperCase()
+    const sourceIsZkSync =      false //source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.ZksyncMainnet?.toUpperCase()
+    const sourceIsStarknet =    false // source_network_internal_name?.toUpperCase() === KnownInternalNames.Networks.StarkNetMainnet?.toUpperCase() || source_network_internal_name === KnownInternalNames.Networks.StarkNetGoerli?.toUpperCase()
 
     const { canDoSweepless, isContractWallet } = useWalletTransferOptions()
     const shouldGetGeneratedAddress = isContractWallet?.ready && !canDoSweepless
@@ -45,19 +45,19 @@ const WalletTransfer: React.FC = () => {
     const sourceChainId = source_layer ? Number(source_layer?.chain_id) : null
     const requested_amount = Number(minAllowedAmount) > Number(swap?.requested_amount) ? minAllowedAmount : swap?.requested_amount
 
-    if (sourceIsImmutableX)
-        return <Wrapper>
-            <ImtblxWalletWithdrawStep depositAddress={depositAddress} />
-        </Wrapper>
-    else if (sourceIsStarknet)
-        return <Wrapper>
-            <StarknetWalletWithdrawStep amount={requested_amount} depositAddress={depositAddress} />
-        </Wrapper>
-    else if (sourceIsZkSync)
-        return <Wrapper>
-            {requested_amount && depositAddress && <ZkSyncWalletWithdrawStep depositAddress={depositAddress} amount={requested_amount} />}
-        </Wrapper>
-    else
+    //if (sourceIsImmutableX)
+    //    return <Wrapper>
+    //        <ImtblxWalletWithdrawStep depositAddress={depositAddress} />
+    //    </Wrapper>
+    //else if (sourceIsStarknet)
+    //    return <Wrapper>
+    //        <StarknetWalletWithdrawStep amount={requested_amount} depositAddress={depositAddress} />
+    //    </Wrapper>
+    //else if (sourceIsZkSync)
+    //    return <Wrapper>
+    //        {requested_amount && depositAddress && <ZkSyncWalletWithdrawStep depositAddress={depositAddress} amount={requested_amount} />}
+    //    </Wrapper>
+    //else
         return <Wrapper>
             {swap && source_layer && sourceAsset && requested_amount && sourceChainId && <TransferFromWallet
                 sequenceNumber={swap?.sequence_number}
