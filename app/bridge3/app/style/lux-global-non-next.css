@@ -11,6 +11,36 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+
+@layer base {
+  
+  * {
+    box-sizing: inherit;
+  }
+
+  /*
+    using this approach: 
+    https://stackoverflow.com/a/76066443/11645689
+    see src/app/(home)/scroll-snap
+  */
+
+  html {
+    scroll-snap-type: y mandatory;
+    height: 100vh;
+
+    overflow-y: scroll;
+    box-sizing: border-box;
+
+    scrollbar-width: none;
+  }
+
+  body {
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-size: 16px; 
+    letter-spacing: 0.15px;
+  }
+}
+
 div.nextjs-toast-errors-parent[data-nextjs-toast="true"] {
   display: none;
 }
