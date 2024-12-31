@@ -1,10 +1,18 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-  ],
-  "exclude": [
-    "node_modules",
-  ]
+  "compilerOptions": {
+    "target": "ES2022", // Use modern JavaScript features
+    "module": "ESNext", // Generate ES modules
+    "moduleResolution": "Node", // Resolve Node.js modules
+    "strict": true, // Enable strict type-checking
+    "esModuleInterop": true, // Interop for CommonJS modules
+    "allowSyntheticDefaultImports": true, // Support default imports
+    "skipLibCheck": true, // Skip type checks for dependencies
+    "resolveJsonModule": true, // Allow importing JSON files
+    "declaration": true, // Generate .d.ts files for types
+    "declarationMap": true, // Include source maps for declarations
+    "outDir": "dist/esm", // Output directory for ESM
+    "rootDir": "types" // Specify the source directory
+  },
+  "include": ["types/**/*.ts"], // Include TypeScript files
+  "exclude": ["node_modules"]
 }

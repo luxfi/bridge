@@ -569,8 +569,8 @@ importers:
   app/server:
     dependencies:
       '@luxfi/core':
-        specifier: ^10.0.0
-        version: 10.0.0
+        specifier: ^10.0.2
+        version: 10.0.2
       '@luxfi/utila':
         specifier: ^3.0.0
         version: 3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.10)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.10)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)
@@ -666,7 +666,7 @@ importers:
   pkg/luxfi-core:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.7.2
         version: 5.7.2
 
   pkg/settings:
@@ -2685,6 +2685,9 @@ packages:
 
   '@luxfi/core@10.0.0':
     resolution: {integrity: sha512-Kx6V7+uTEn5NEDZaiQ486mGh9Ot0iRVjcL86+Sv0yfTAXTEUfz5blepeCRijceEF9gYBa/+lH6jQqbEcPC6k6g==}
+
+  '@luxfi/core@10.0.2':
+    resolution: {integrity: sha512-Ap0CScDLCB/FmVp2NsSumlZyshjxhgYw4TaTpE2lpJzZV11QRiw3i+/Spg1stmQNQuPu1AFtdnzIG3ZRSDQvnQ==}
 
   '@luxfi/ui@5.4.1':
     resolution: {integrity: sha512-jUcho7OktsOzs+o2geLeI58E9QibuBdIDSSOxL1QBy4mcKBiRV1NaKV+ZwSz6mOyg7DA0tzR3Ic9bLgvavRB+g==}
@@ -17820,6 +17823,8 @@ snapshots:
       - '@types/react-dom'
 
   '@luxfi/core@10.0.0': {}
+
+  '@luxfi/core@10.0.2': {}
 
   '@luxfi/ui@5.4.1(rny65snizxwnjmkhr37ney22fe)':
     dependencies:
