@@ -19,6 +19,7 @@ export type CryptoNetwork = {
     chain_id: string | null | undefined
     status: 'active' | 'inactive'
     type: NetworkType
+    native_currency:string,
     transaction_explorer_template: string
     account_explorer_template: string
     currencies: NetworkCurrency[]
