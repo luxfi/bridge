@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json", // Extend the ESM config
+  "compilerOptions": {
+    "module": "CommonJS", // Generate CommonJS modules
+    "outDir": "dist/cjs" // Output directory for CJS
+  }
+}
