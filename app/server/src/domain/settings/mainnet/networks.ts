@@ -2551,7 +2551,7 @@ export default [
     "currencies": [
       {
         "name": "xDAI",
-        "asset": "xDAI",
+        "asset": "XDAI",
         "logo": "https://cdn.lux.network/bridge/currencies/xdai.png",
         "contract_address": "0x0000000000000000000000000000000000000000",
         "decimals": 18,
