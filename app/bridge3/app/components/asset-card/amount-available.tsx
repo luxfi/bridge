@@ -6,6 +6,8 @@ import {
   TooltipTrigger 
 } from '@hanzo/ui/primitives-common'
 
+import { formatToMaxChar } from '@hanzo/ui/util'
+
 const TooltipHelper: React.FC<{
   text: string
   tooltipClx?: string
@@ -26,35 +28,27 @@ const TooltipHelper: React.FC<{
   </TooltipProvider>
 )
 
-const formatAvailable = (v: number | null): string => {
-  if (!v) return ''
-  let str = v.toFixed(5)
-  if (v - parseFloat(str) !== 0) {
-    str = '~' + str 
-  }
-  return str
-}
-
 const AmountAvailable: React.FC<{
-  amount?: number
+  amount: number
+  maxChars: number
   fromAssetName: string
 }> = ({
   amount,
+  maxChars,
   fromAssetName
 }) => {
   
-  const formattedAmount = formatAvailable(amount ?? null)
-  const availableWasRounded = formattedAmount?.startsWith('~')
-  
+  const { result: formatted, change } = formatToMaxChar(amount, maxChars)
+
   return (
     <span className='block shrink-0 cursor-default'>
-    {availableWasRounded ? (
+    {change === 'rounded' ? (
       <TooltipHelper text={`${amount} ${fromAssetName}`} tooltipClx='text-foreground'>
-          <span>{formattedAmount}&nbsp;{fromAssetName}&nbsp;avail</span>
+        <span>~{formatted}&nbsp;{fromAssetName}&nbsp;avail</span>
       </TooltipHelper>
-    ) : (<>
-      <span>{formattedAmount}&nbsp;{fromAssetName}&nbsp;avail</span>  
-    </>)}
+    ) : (
+      <span>{amount}&nbsp;{fromAssetName}&nbsp;avail</span>  
+    )}
     </span>
   )
 }

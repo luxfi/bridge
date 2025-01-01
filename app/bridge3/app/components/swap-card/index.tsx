@@ -14,7 +14,7 @@ const FIXTURE = {
   usdFee: 2.4,
   assetGas: .045,
   txnTime: '~5min',
-  assetsAvailable: 1.4556567,
+  assetsAvailable: 100000001,
   bridge: {
     name: 'Across',
     logo: 'https://cdn.lux.network/bridge/currencies/dai.png',
@@ -34,7 +34,8 @@ const SwapCard: React.FC<{
 
   return (
     <div className={cn(
-      'flex flex-col justify-start items-center px-6 py-4 gap-4 rounded border border-muted-4', 
+      'flex flex-col justify-start items-center',
+      'px-6 py-4 gap-4 rounded border border-muted-4', 
       className
     )}>
       <div className='flex justify-start w-full mt-2'>

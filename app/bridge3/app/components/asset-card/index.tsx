@@ -61,7 +61,7 @@ const AssetCard: React.FC<{
           assets={swapState.fromAssets}
           asset={swapState.fromAsset}
           setAsset={swapState.setFromAsset}
-          buttonClx='shrink-0 border-none'
+          buttonClx='shrink-0 border-none pr-0 -mr-1'
           popoverAlign='end'
         />
       </div>
@@ -81,6 +81,7 @@ const AssetCard: React.FC<{
         { (availableOfAsset && swapState.fromAsset) ? (<>
           <AmountAvailable 
             amount={availableOfAsset} 
+            maxChars={8}
             fromAssetName={swapState.fromAsset?.name ?? ''}
            />
           <Button 
