@@ -1,6 +1,8 @@
 import type { Network, Asset } from '@luxfi/core'
 import type AppSettings from './app-settings'
 
+type Bridge = 'teleport' | 'utila'
+
 interface SwapState {
 
   allNetworks : Network[]
@@ -12,7 +14,7 @@ interface SwapState {
   fromAsset : Asset | null
   fromAssetPriceUSD: number | null
   toAsset : Asset | null
-  teleport : boolean
+  bridge : Bridge
   fromAssetQuantity : number
 
   setFromNetwork(n: Network | null) : void
@@ -21,7 +23,7 @@ interface SwapState {
   setFromAssetPriceUSD(n: number | null): void
   setToAsset(a: Asset | null): void
   setFromAssetQuantity(a: number): void
-  setTeleport(b: boolean): void
+  setBridge(b: Bridge): void
 
     // internal use
   swapPairs: Record<string, string[]>
@@ -36,4 +38,7 @@ interface SwapState {
   ): void
 }
 
-export { type SwapState as default }
+export { 
+  type SwapState as default,
+  type Bridge
+}
