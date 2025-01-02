@@ -5,7 +5,7 @@ packages:
 catalog:
   '@hanzo/auth': 2.5.2
   '@hanzo/commerce': 7.3.4
-  '@hanzo/ui': 4.3.8
+  '@hanzo/ui': 4.4.1
   '@luxfi/core': 10.0.0
   '@luxfi/ui': 5.5.1
   '@luxfi/data': 1.0.9
