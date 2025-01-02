@@ -12,6 +12,7 @@ node_modules/
 **/.next
 **/.vercel
 **/build
+**/dist
 
 # k8 files
 /mpc-nodes/k8s

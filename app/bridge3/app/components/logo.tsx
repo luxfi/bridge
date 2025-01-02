@@ -3,7 +3,7 @@ import { Link } from "@remix-run/react"
 
 import { type TShirtSize  } from '@hanzo/ui/types'
 
-import { logo as LuxLogo} from './icons'
+import { LuxLogo} from './icons'
 
 const TEXT = 'LUX'
 type LogoVariant = 'text-only' | 'logo-only' | 'full'
