@@ -1,24 +1,24 @@
 import { reaction } from 'mobx'
 
-import type { Network, Asset, NetworkType } from '@luxfi/core'
-import type { SwapState } from '@/domain/types'
+import type { Network, NetworkType } from '@luxfi/core'
+import type { SwapState, Bridge } from '@/domain/types'
 
-const matchesRoute = (teleport: boolean, t: NetworkType): boolean => (
-  (teleport ? t === 'evm' : t !== 'evm' )  
+const matchesRoute = (bridge: Bridge, t: NetworkType): boolean => (
+  (bridge === 'teleport' ? t === 'evm' : t !== 'evm' )  
 )
 
 export default (store: SwapState) => (reaction(
   () => ({
     networks: store.allNetworks,
-    teleport: store.teleport,   
+    bridge: store.bridge,   
   }),
   ({ 
     networks, 
-    teleport
+    bridge
   }) => {
     
     store.setFromNetworks(networks.filter(
-      (n: Network) => (n.status === 'active' && matchesRoute(teleport, n.type))
+      (n: Network) => (n.status === 'active' && matchesRoute(bridge, n.type))
     ))
     store.setFromNetwork(store.fromNetworks.length ? store.fromNetworks[0] : null)
     store.setFromAssets(store.fromNetwork?.currencies ?? [])

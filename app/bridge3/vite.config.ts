@@ -33,4 +33,10 @@ export default defineConfig({
       '@hanzo/ui/util', 
     ]
   },
+    // https://github.com/remix-run/remix/issues/10156#issuecomment-2440234744
+  server: {
+    warmup: {
+      clientFiles: ['app/**/*.tsx'],
+    },
+  },  
 })
