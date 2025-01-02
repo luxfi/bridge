@@ -82,7 +82,7 @@ const ManualTransfer: React.FC<IProps> = ({
             withoutBorder
             Explorable={
               sourceAsset?.contract_address != null &&
-              !sourceAsset.is_native &&
+              sourceAsset.asset !== sourceNetwork.native_currency &&
               isValidAddress(sourceAsset?.contract_address, sourceNetwork)
             }
             toExplore={
@@ -111,7 +111,7 @@ const ManualTransfer: React.FC<IProps> = ({
                   {sourceAsset?.asset}
                 </span>
                 {sourceAsset?.contract_address &&
-                  !sourceAsset.is_native &&
+                  sourceAsset.asset !== sourceNetwork.native_currency &&
                   isValidAddress(
                     sourceAsset.contract_address,
                     sourceNetwork
