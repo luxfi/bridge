@@ -7,7 +7,7 @@ import {
 } from 'mobx'
 
 import type { Asset, Network } from '@luxfi/core'
-import type { AppSettings, SwapState } from '@/domain/types' 
+import type { AppSettings, SwapState, Bridge } from '@/domain/types' 
 
 import onNetworksOrRouteChange from './logic/on-networks-or-route-change'
 import onFromNetworkChange from './logic/on-from-network-change'
@@ -26,7 +26,7 @@ class SwapStore implements SwapState {
   fromAssetPriceUSD: number | null = null
   toAsset: Asset | null = null
   fromAssetQuantity: number = 0
-  teleport: boolean = true
+  bridge: Bridge = 'teleport'
   allNetworks: Network[] = []
 
   swapPairs: Record<string, string[]>  = {}
@@ -48,7 +48,7 @@ class SwapStore implements SwapState {
       fromAssetPriceUSD: observable,
       toAsset: observable.shallow,
       fromAssetQuantity: observable,
-      teleport: observable,
+      bridge: observable,
       allNetworks: observable.shallow,
       setFromNetwork: action.bound,
       setToNetwork: action.bound,
@@ -57,7 +57,7 @@ class SwapStore implements SwapState {
       setFromAssetPriceUSD: action.bound,
       setToAsset: action.bound,
       setFromAssetQuantity: action.bound,
-      setTeleport: action.bound,
+      setBridge: action.bound,
       setSettings: action.bound,
     })
 
@@ -97,7 +97,7 @@ class SwapStore implements SwapState {
   setFromAssetPriceUSD = (n: number | null): void => {this.fromAssetPriceUSD = n}
   setToAsset = (a: Asset | null): void          => { this.toAsset = a }
   setFromAssetQuantity = (a: number): void      => { this.fromAssetQuantity = a }
-  setTeleport = (b: boolean): void              => { this.teleport = b }
+  setBridge = (b: Bridge): void                 => { this.bridge = b }
 
   setSettings = (
     settings: AppSettings,

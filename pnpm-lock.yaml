@@ -422,9 +422,6 @@ importers:
       react:
         specifier: 'catalog:'
         version: 18.3.1
-      react-currency-input-field:
-        specifier: ^3.9.0
-        version: 3.9.0(react@18.3.1)
       react-dom:
         specifier: 'catalog:'
         version: 18.3.1(react@18.3.1)
@@ -573,7 +570,7 @@ importers:
     dependencies:
       '@luxfi/core':
         specifier: ^10.0.2
-        version: 10.0.2
+        version: 10.0.3
       '@luxfi/utila':
         specifier: ^3.0.0
         version: 3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.11)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.11)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)
@@ -2706,8 +2703,8 @@ packages:
   '@luxfi/core@10.0.0':
     resolution: {integrity: sha512-Kx6V7+uTEn5NEDZaiQ486mGh9Ot0iRVjcL86+Sv0yfTAXTEUfz5blepeCRijceEF9gYBa/+lH6jQqbEcPC6k6g==}
 
-  '@luxfi/core@10.0.2':
-    resolution: {integrity: sha512-Ap0CScDLCB/FmVp2NsSumlZyshjxhgYw4TaTpE2lpJzZV11QRiw3i+/Spg1stmQNQuPu1AFtdnzIG3ZRSDQvnQ==}
+  '@luxfi/core@10.0.3':
+    resolution: {integrity: sha512-RJqYUYHwcOd191yIfcoGidtBMf8fgLTbcLvmrVjutnw4OotoWIAr8PdOOJC/GTzD9T/5RLpG1KTulBSge7bwPg==}
 
   '@luxfi/menu-icons@1.0.2':
     resolution: {integrity: sha512-extzm5BIORcTjMXywKClXB11vG8JYjDVzyp/7wUuRA1BVLmiLrDO7yvAke0SjmPoaNL05nCXRa/809DkFRkFvQ==}
@@ -12448,11 +12445,6 @@ packages:
     peerDependencies:
       react: ^16.3.0 || ^17.0.1 || ^18.0.0 || ^19.0.0
 
-  react-currency-input-field@3.9.0:
-    resolution: {integrity: sha512-OmkO0rRSGiNGbcO4F1wzC+Szm2A7tLRGtDAKF6t0xNrFr07q99AHo3BAn/68RTEG4iwqc2m2jekKZi33/8SV+Q==}
-    peerDependencies:
-      react: ^16.9.0 || ^17.0.0 || ^18.0.0
-
   react-day-picker@8.10.1:
     resolution: {integrity: sha512-TMx7fNbhLk15eqcMt+7Z7S2KF7mfTId/XJDjKE8f+IUcFn0l08/kI4FiYTL/0yuOLmEcbR4Fwe3GJf/NiiMnPA==}
     peerDependencies:
@@ -17802,7 +17794,7 @@ snapshots:
 
   '@luxfi/core@10.0.0': {}
 
-  '@luxfi/core@10.0.2': {}
+  '@luxfi/core@10.0.3': {}
 
   '@luxfi/menu-icons@1.0.2(@hanzo/ui@4.4.1(@hookform/resolvers@3.9.1(react-hook-form@7.54.2(react@18.3.1)))(@types/react-dom@18.3.1)(@types/react@18.3.12)(date-fns@3.6.0)(embla-carousel@8.5.1)(lucide-react@0.307.0(react@18.3.1))(mobx@6.13.5)(next-themes@0.2.1(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(next@14.2.16(@babel/core@7.26.0)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.54.2(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.11)(typescript@5.7.2)))(validator@13.12.0)(zod@3.24.1))(lucide-react@0.307.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -31608,10 +31600,6 @@ snapshots:
     dependencies:
       react: 18.3.1
       tween-functions: 1.2.0
-
-  react-currency-input-field@3.9.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
 
   react-day-picker@8.10.1(date-fns@3.6.0)(react@18.3.1):
     dependencies:
