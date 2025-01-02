@@ -97,7 +97,7 @@ const SwapItems: React.FC<IProps> = ({ sourceNetwork, sourceAsset, destinationNe
 
       if (!address) return '0'
 
-      if (asset.is_native) {
+      if (asset.asset === network.native_currency) {
         const ethBal = await provider.getBalance(signer?._address!)
         return formatEther(ethBal)
       } else {

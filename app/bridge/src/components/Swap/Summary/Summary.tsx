@@ -72,7 +72,6 @@ const Summary: React.FC<SwapInfoProps> = ({
 
     const requestedAmountInUsd = (Number(sourceAssetPriceData?.data?.price) * Number(requestedAmount)).toFixed(2)
     const receiveAmountInUsd = (Number(destinationAssetPriceData?.data?.price) * Number(receiveAmount)).toFixed(2)
-    // const nativeCurrency = refuelAmount && from.currencies.find(c => c.is_native)
 
     // const truncatedRefuelAmount = nativeCurrency && (hasRefuel && refuelAmount) ?
     //     truncateDecimals(refuelAmount, nativeCurrency?.precision) : null

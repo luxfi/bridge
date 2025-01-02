@@ -82,7 +82,6 @@ const TokenSelectWrapper: React.FC<IProps> = ({
                         <p>Contract Address: {value.contract_address}</p>
                       )}
                     <p>Decimals: {value.decimals}</p>
-                    <p>Native: {value.is_native ? 'Yes' : 'No'}</p>
                   </div>
                 </TooltipContent>
               </Tooltip>

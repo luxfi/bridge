@@ -80,7 +80,7 @@ const SwapSummary: React.FC = () => {
     }
     const requested_amount = (swapInputTransaction?.amount ?? swap.requested_amount) || undefined
 
-    const destinationNetworkNativeAsset = networks.find(n => n.internal_name === destinationLayer?.internal_name)?.currencies.find(a => a.is_native);
+    const destinationNetworkNativeAsset = destinationLayer?.currencies.find(a => a.asset === destinationLayer.native_currency);
     // const refuel_amount_in_usd = Number(destinationLayer?.refuel_amount_in_usd)
     const native_usd_price = Number(destinationNetworkNativeAsset?.price_in_usd)
     const currency_usd_price = Number(sourceAssetPriceData?.data?.price)

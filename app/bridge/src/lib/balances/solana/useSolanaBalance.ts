@@ -97,7 +97,7 @@ export default function useSolanaBalance(): BalanceProvider {
 
             const message = transaction.compileMessage();
             const result = await connection.getFeeForMessage(message)
-            const currencyDec = layer?.currencies?.find(l => l.is_native)?.decimals
+            const currencyDec = layer?.currencies?.find(l => l.asset === layer.native_currency)?.decimals
             const formatedGas = formatAmount(result.value, currencyDec!)
 
             gas = [{

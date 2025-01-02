@@ -58,7 +58,7 @@ const Refuel: React.FC<{
   refuel 
 }) => {
 
-    const destination_native_asset = to?.currencies.find(c => c.is_native)
+    const destination_native_asset = to?.currencies.find(c => c.asset === to.native_currency)
     const refuelCalculations = CaluclateRefuelAmount({
         refuelEnabled: refuel,
         currency,

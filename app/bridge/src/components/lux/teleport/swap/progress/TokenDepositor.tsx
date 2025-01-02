@@ -76,7 +76,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       console.log(sourceAmount, sourceAsset, localeNumber(sourceAmount, sourceAsset.decimals))
       const _amount = parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals)
 
-      if (sourceAsset.is_native) {
+      if (sourceAsset.asset === sourceNetwork.native_currency) {
         const _balance = await signer?.getBalance()
         console.log('::balance checking: ', {
           balance: Number(_balance) ?? 0,
@@ -125,7 +125,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
       const bridgeContract = new Contract(CONTRACTS[Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, teleporterABI, signer)
 
       const _bridgeTransferTx = await bridgeContract.vaultDeposit(_amount, sourceAsset.contract_address, {
-        value: sourceAsset.is_native ? _amount : 0,
+        value: sourceAsset.asset === sourceNetwork.native_currency ? _amount : 0,
       })
       await _bridgeTransferTx.wait()
 
