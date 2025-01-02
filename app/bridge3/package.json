@@ -7,14 +7,15 @@
     "start": "remix-serve ./build/server/index.js",
     "tc": "tsc",
     "typecheck": "tsc",
-    "clean": "rm -rf ./node_modules",
-    "clean:all": "pnpm -w clean:all"
+    "clean": "rm -rf ./node_modules && rm -rf ./vercel",
+    "clean:all": "pnpm -w clean:all && rm -rf ./vercel"
   },
   "sideEffects": false,
   "type": "module",
   "dependencies": {
     "@hanzo/ui": "catalog:",
     "@luxfi/core": "catalog:",
+    "@luxfi/menu-icons": "1.0.2",
     "@remix-run/node": "^2.15.1",
     "@remix-run/react": "^2.15.1",
     "@remix-run/route-config": "^2.15.2",

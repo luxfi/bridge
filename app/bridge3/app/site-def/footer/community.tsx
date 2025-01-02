@@ -1,5 +1,8 @@
 import type { LinkDef } from '@hanzo/ui/types'
-import { SocialIcon, Warpcast } from '@/components/icons'
+import { Warpcast } from '@luxfi/menu-icons'
+
+
+import { SocialIcon } from '@/components/icons'
 
 const SOC_ICON_SIZE = 18
 

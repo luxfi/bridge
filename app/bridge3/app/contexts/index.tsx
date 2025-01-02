@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from 'react'
 
+import { TooltipProvider } from '@hanzo/ui/primitives-common'
 import type { Network } from '@luxfi/core'
 
 import SettingsProvider from '@/contexts/settings'
@@ -24,7 +25,9 @@ const Contexts: React.FC<{
         defaultFromNetwork={defaultFromNetwork} 
         defaultToNetwork={defaultToNetwork}
       >
-        {children}
+        <TooltipProvider>
+          {children}
+        </TooltipProvider>
       </SwapStateProvider>
     </SettingsProvider>
   )
