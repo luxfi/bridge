@@ -31,7 +31,7 @@ const NetworkComboboxTriggerInner = ({
     className={cn(
       'flex gap-1.5 rounded-lg h-auto py-1', 
       rightJustified ? 'justify-start flex-row-reverse' : 'justify-start',
-      current ? '' : 'cursor-events-none !p-0', // so skeleton will look right
+      current ? '' : 'pointer-events-none !p-0', // so skeleton will look right
       buttonClx
     )}
   >

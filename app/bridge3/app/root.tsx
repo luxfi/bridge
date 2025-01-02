@@ -9,7 +9,7 @@ import {
   type MetaFunction,
 } from '@remix-run/react'
 
-import { useLoaderData } from '@remix-run/react'
+import { useLoaderData, useRouteLoaderData, useRouteError } from '@remix-run/react'
   // 'type' must be outside the curlies! 
   // https://github.com/remix-run/remix/issues/9916#issuecomment-2436405265
 import type { LinksFunction } from '@vercel/remix'
@@ -18,9 +18,9 @@ import { Analytics } from '@vercel/analytics/react'
 import { BreakpointIndicator } from '@hanzo/ui/primitives-common'
 import type { Network } from '@luxfi/core'
 
-import '@/style/lux-global-non-next.css'
-import '@/style/cart-animation.css'
-import '@/style/checkout-animation.css'
+import luxGlobalCss from '@/style/lux-global-non-next.css?url'
+import cartAnimationCss from '@/style/cart-animation.css?url'
+import checkoutAnimationCss from '@/style/checkout-animation.css?url'
 
 import type { AppSettings } from '@/domain/types'
 
@@ -31,17 +31,21 @@ import Header from '@/components/header'
 
 import backend from '@/domain/backend'
 
-import _links from './links';
+import fontAndIconLinks from './font-and-icon-links';
 import metadata from './metadata'
 import siteDef from './site-def'
 
-//export const config = { runtime: 'edge' }
+// export const config = { runtime: 'edge' } // not supported by vercel
 
 const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
 
-export const links: LinksFunction = () => (_links)
+export const links: LinksFunction = () => ([
+  ...fontAndIconLinks,
+  { rel: "stylesheet", href: luxGlobalCss },
+  { rel: "stylesheet", href: cartAnimationCss },
+  { rel: "stylesheet", href: checkoutAnimationCss }
+])
 export const meta: MetaFunction = () => (metadata)
-
 
 interface LoaderReturnType {
   appSettings: AppSettings,
@@ -53,10 +57,8 @@ export const loader = async (): Promise<LoaderReturnType> => {
 
   const appSettings = await backend.getSettings()
 
-  // otherwise an error is thrown
-
   return {
-    appSettings: appSettings!,
+    appSettings: appSettings!, // otherwise an error is thrown
     defaultFromNetwork: undefined,
     defaultToNetwork: undefined
   }
@@ -70,11 +72,16 @@ const Layout: React.FC<PropsWithChildren> = ({
   children 
 })  => {
   
+    // https://github.com/remix-run/remix/pull/8958
+    // https://github.com/remix-run/remix/issues/8951
+  const data = useRouteLoaderData("root") as LoaderReturnType
+  const error = useRouteError()
+
   const { 
     appSettings, 
     defaultFromNetwork, 
     defaultToNetwork 
-  } =  useLoaderData<LoaderReturnType>() as LoaderReturnType 
+  } = data
 
   return (
     <html 
@@ -90,20 +97,24 @@ const Layout: React.FC<PropsWithChildren> = ({
         <Links />
       </head>
       <body className={bodyClasses} >
-        <Contexts 
-          appSettings={appSettings} 
-          defaultFromNetwork={defaultFromNetwork}
-          defaultToNetwork={defaultToNetwork}
-        >
-          <Header siteDef={siteDef}/>
-          <Main className='gap-4 '>
-            {children}
-          </Main>
-        </Contexts>
-        <ScrollRestoration />
-        <Scripts />
-        {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
-        <Analytics />
+        {error ? (
+          <h1 className='mx-auto text-2xl mt-10'>error</h1>
+        ) : (<>
+          <Contexts 
+            appSettings={appSettings} 
+            defaultFromNetwork={defaultFromNetwork}
+            defaultToNetwork={defaultToNetwork}
+          >
+            <Header siteDef={siteDef}/>
+            <Main className='gap-4 '>
+              {children}
+            </Main>
+          </Contexts>
+          <ScrollRestoration />
+          <Scripts />
+          {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
+          <Analytics />
+        </>)}
       </body>
     </html>
   )
