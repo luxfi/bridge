@@ -5,12 +5,14 @@ import { SocialIcon as BaseSocialIcon } from 'react-social-icons'
 import { cn } from '@hanzo/ui/util'
 import './social-svg.css'
 
-const SocialIcon: React.FC<{
-    /** one of these: https://github.com/couetilc/react-social-icons/tree/main/db */
+interface SocialIconProps {
+    // one of these: https://github.com/couetilc/react-social-icons/tree/main/db
   network: string
   size: number
   className?: string
-}> = ({
+}
+
+const SocialIcon: React.FC<SocialIconProps> = ({
   network,
   size,
   className = ''
@@ -27,4 +29,7 @@ const SocialIcon: React.FC<{
   />
 )
 
-export default SocialIcon 
+export {
+  type SocialIconProps,
+  SocialIcon as default
+}
