@@ -9,7 +9,7 @@ import {
   type MetaFunction,
 } from '@remix-run/react'
 
-import { useLoaderData, useRouteLoaderData, useRouteError } from '@remix-run/react'
+import { useRouteLoaderData, useRouteError } from '@remix-run/react'
   // 'type' must be outside the curlies! 
   // https://github.com/remix-run/remix/issues/9916#issuecomment-2436405265
 import type { LinksFunction } from '@vercel/remix'
