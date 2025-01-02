@@ -120,7 +120,7 @@ export const resolveNativeBalance = async (
   from: CryptoNetwork,
   nativeTokenRes: FetchBalanceResult
 ) => {
-  const native_currency = from.currencies.find((a) => a.is_native);
+  const native_currency = from.currencies.find((a) => a.asset === from.native_currency);
   if (!native_currency) {
     return null;
   }
