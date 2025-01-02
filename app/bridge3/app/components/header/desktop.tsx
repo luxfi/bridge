@@ -1,4 +1,4 @@
-import React, { type PropsWithChildren } from 'react'
+import React, { useState, type FC, type PropsWithChildren } from 'react'
 
 import type { LinkDef } from '@hanzo/ui/types'
 import { cn } from '@hanzo/ui/util'
@@ -18,7 +18,7 @@ const DesktopHeader: React.FC<{
   children,
   logoVariant='text-only'
 }) => {
-    const [isMenuOpened, setIsMenuOpen] = React.useState(false);
+    const [isMenuOpened, setIsMenuOpen] = useState(false);
 
     // TODO move 13px into a size class and configure twMerge to recognize say, 'text-size-nav' 
     // (vs be beat out by 'text-color-nav')
