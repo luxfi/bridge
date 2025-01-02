@@ -46,7 +46,7 @@ const Processing: React.FC<{
     const swapOutputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Output)
     const swapRefuelTransaction = swap?.transactions?.find(t => t.type === TransactionType.Refuel)
 
-    const nativeCurrency = destination_layer?.currencies?.find(c => c.asset === destination_layer?.currencies.find(a => a.is_native)?.asset)
+    const nativeCurrency = destination_layer?.currencies?.find(c => c.asset === destination_layer?.currencies.find(a => a.asset === destination_layer.native_currency)?.asset)
     const truncatedRefuelAmount = swapRefuelTransaction?.amount ? truncateDecimals(swapRefuelTransaction?.amount, nativeCurrency?.precision) : null
 
     const progressStatuses = getProgressStatuses(swap, swapStatus)

@@ -69,7 +69,6 @@ const TokenSelectWrapper: React.FC<{
                     <p>Asset: {value.asset}</p>
                     { value.contract_address && value.contract_address !== '0x0000000000000000000000000000000000000000' && <p>Contract Address: {value.contract_address}</p> }
                     <p>Decimals: {value.decimals}</p>
-                    <p>Native: {value.is_native ? 'Yes' : 'No'}</p>
                   </div>
                 </TooltipContent>
               </Tooltip>

@@ -89,7 +89,7 @@ export const formatLongNumber = (num: number | string): string => {
  */
 export const fetchTokenBalance = async (address: string, network: CryptoNetwork, asset: NetworkCurrency) => {
   try {
-    if (asset.is_native) {
+    if (asset.asset === network.native_currency) {
       const provider = new ethers.providers.JsonRpcProvider(network.nodes[0])
       const _balance = await provider.getBalance(address)
       return Number(formatUnits(_balance, asset.decimals))
