@@ -1,5 +1,5 @@
 import React, { type PropsWithChildren } from 'react'
-
+import ConnectWallets from './components/wallets/connect-wallet'
 import {
   Links,
   Meta,
@@ -105,7 +105,9 @@ const Layout: React.FC<PropsWithChildren> = ({
             defaultFromNetwork={defaultFromNetwork}
             defaultToNetwork={defaultToNetwork}
           >
-            <Header siteDef={siteDef}/>
+            <Header siteDef={siteDef}>
+              <ConnectWallets/>
+            </Header>
             <Main className='gap-4 '>
               {children}
             </Main>
