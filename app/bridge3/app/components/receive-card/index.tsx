@@ -5,7 +5,6 @@ import * as motion from 'motion/react-client'
 
 import { cn, formatToMaxChar } from '@hanzo/ui/util'
 
-import type { Bridge, } from '@/domain/types'
 import { useSwapState } from '@/contexts/swap-state'
 
 import BridgeLabel from './bridge-label'
@@ -64,7 +63,6 @@ const ReceiveCard: React.FC<{
         className={cn(
           'flex flex-col gap-3',
           'border border-muted-4 py-2 px-2', 
-          //!!bridge ? 'cursor-pointer' : '',
           className
         )} 
       >
