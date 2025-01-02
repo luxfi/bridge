@@ -16,10 +16,12 @@
     "@hanzo/ui": "catalog:",
     "@luxfi/core": "catalog:",
     "@luxfi/menu-icons": "1.0.2",
+    "@rabby-wallet/rabbykit": "^0.1.0",
     "@remix-run/node": "^2.15.1",
     "@remix-run/react": "^2.15.1",
     "@remix-run/route-config": "^2.15.2",
     "@remix-run/serve": "^2.15.1",
+    "@tanstack/react-query": "^5.59.16",
     "@vercel/analytics": "^1.4.1",
     "@vercel/remix": "^2.15.1",
     "axios": "^1.7.9",
@@ -32,7 +34,9 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-social-icons": "^6.18.0",
-    "use-debounce": "^10.0.4"
+    "use-debounce": "^10.0.4",
+    "viem": "^2.22.1",
+    "wagmi": "^2.5.19"
   },
   "devDependencies": {
     "@originjs/vite-plugin-commonjs": "^1.0.3",

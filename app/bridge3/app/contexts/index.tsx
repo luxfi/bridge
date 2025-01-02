@@ -5,6 +5,7 @@ import type { Network } from '@luxfi/core'
 
 import SettingsProvider from '@/contexts/settings'
 import SwapStateProvider from '@/contexts/swap-state'
+import LuxKitProvider from '@/contexts/luxkit'
 import type { AppSettings } from '@/domain/types'
 
 const Contexts: React.FC<{
@@ -20,15 +21,17 @@ const Contexts: React.FC<{
 
   return (
     <SettingsProvider appSettings={appSettings}>
-      <SwapStateProvider 
-        appSettings={appSettings} 
-        defaultFromNetwork={defaultFromNetwork} 
-        defaultToNetwork={defaultToNetwork}
-      >
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
-      </SwapStateProvider>
+      <LuxKitProvider>
+        <SwapStateProvider 
+          appSettings={appSettings} 
+          defaultFromNetwork={defaultFromNetwork} 
+          defaultToNetwork={defaultToNetwork}
+          >
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </SwapStateProvider>
+      </LuxKitProvider>
     </SettingsProvider>
   )
 }
