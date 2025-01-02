@@ -9,7 +9,7 @@ import {
   type MetaFunction,
 } from '@remix-run/react'
 
-import { useLoaderData } from '@remix-run/react'
+import { useLoaderData, useRouteLoaderData, useRouteError } from '@remix-run/react'
   // 'type' must be outside the curlies! 
   // https://github.com/remix-run/remix/issues/9916#issuecomment-2436405265
 import type { LinksFunction } from '@vercel/remix'
@@ -72,11 +72,16 @@ const Layout: React.FC<PropsWithChildren> = ({
   children 
 })  => {
   
+    // https://github.com/remix-run/remix/pull/8958
+    // https://github.com/remix-run/remix/issues/8951
+  const data = useRouteLoaderData("root") as LoaderReturnType
+  const error = useRouteError()
+
   const { 
     appSettings, 
     defaultFromNetwork, 
     defaultToNetwork 
-  } =  useLoaderData<LoaderReturnType>() as LoaderReturnType // this cast is necessary, grr
+  } = data
 
   return (
     <html 
@@ -92,20 +97,24 @@ const Layout: React.FC<PropsWithChildren> = ({
         <Links />
       </head>
       <body className={bodyClasses} >
-        <Contexts 
-          appSettings={appSettings} 
-          defaultFromNetwork={defaultFromNetwork}
-          defaultToNetwork={defaultToNetwork}
-        >
-          <Header siteDef={siteDef}/>
-          <Main className='gap-4 '>
-            {children}
-          </Main>
-        </Contexts>
-        <ScrollRestoration />
-        <Scripts />
-        {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
-        <Analytics />
+        {error ? (
+          <h1 className='mx-auto text-2xl mt-10'>error</h1>
+        ) : (<>
+          <Contexts 
+            appSettings={appSettings} 
+            defaultFromNetwork={defaultFromNetwork}
+            defaultToNetwork={defaultToNetwork}
+          >
+            <Header siteDef={siteDef}/>
+            <Main className='gap-4 '>
+              {children}
+            </Main>
+          </Contexts>
+          <ScrollRestoration />
+          <Scripts />
+          {process.env.NODE_ENV === 'development' && <BreakpointIndicator />}
+          <Analytics />
+        </>)}
       </body>
     </html>
   )

@@ -15,6 +15,8 @@ export default defineConfig({
         v3_relativeSplatPath: true,
         v3_throwAbortReason: true,
         v3_singleFetch: true,
+          // cf: https://github.com/remix-run/react-router/pull/12441
+        v3_lazyRouteDiscovery: false // silences warning 
       },
       presets: [vercelPreset()],
     }),

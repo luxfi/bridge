@@ -1,4 +1,4 @@
-import React, { type PropsWithChildren } from 'react'
+import React, { useState, type PropsWithChildren } from 'react'
 
 import { cn } from '@hanzo/ui/util'
 import type SiteDef from '@/hanzo-ui-types/site-def'
@@ -21,7 +21,7 @@ const Header: React.FC<{
 }) => {
 
     // TODO
-    const [open, setOpen] = React.useState<boolean>(false);
+    const [open, setOpen] = useState<boolean>(false);
 
     const { nav: { common, featured }, currentAs } = siteDef
     const links = (featured) ? [...common, ...featured] : common
