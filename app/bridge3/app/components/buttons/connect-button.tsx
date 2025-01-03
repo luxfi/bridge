@@ -11,7 +11,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger
-} from '@hanzo/ui/primitives'
+} from '@hanzo/ui/primitives-common'
 
 import RainbowIcon from '@/components/icons/wallets/rainbow'
 import TON from '@/components/icons/wallets/ton'
@@ -29,24 +29,23 @@ const knownConnectors = [
   {
     name: 'EVM',
     id: 'evm',
-    // type: NetworkTypes.EVM,
     type: 'evm',
   },
   // {
   //   name: 'Starknet',
   //   id: 'starknet',
-  //   type: NetworkTypes.Starknet,
+  //   type: 'starknet'
   // },
-  // {
-  //   name: 'TON',
-  //   id: 'ton',
-  //   type: NetworkTypes.TON,
-  // },
-  // {
-  //   name: 'Solana',
-  //   id: 'solana',
-  //   type: NetworkTypes.Solana,
-  // },
+  {
+    name: 'TON',
+    id: 'ton',
+    type: 'ton'
+  },
+  {
+    name: 'Solana',
+    id: 'solana',
+    type: 'solana'
+  }
 ]
 
 const ConnectButton: React.FC<{

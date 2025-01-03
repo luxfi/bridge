@@ -1,5 +1,4 @@
 import React, { type PropsWithChildren } from 'react'
-import ConnectWallets from './components/wallets/connect-wallet'
 import { ConnectedWallets } from './components/wallets/connected-wallets'
 import {
   Links,
