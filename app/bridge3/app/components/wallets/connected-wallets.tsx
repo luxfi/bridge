@@ -9,21 +9,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hanzo/ui/primitives'
+} from '@hanzo/ui/primitives-common'
 
 import WalletIcon from '@/components/icons/wallet-icon'
 import shortenAddress from '@/domain/utils/shorten-address'
 import ConnectButton from '@/components/buttons/connect-button'
-// import AddressIcon from '@/components/icons/address-icon'
 import { cn } from '@hanzo/ui/util'
 // hooks
+import useWallet from '@/domain/wallets/useWallet'
+import { useAccount } from 'wagmi'
 import { useSettings } from '@/contexts/settings'
 // types
 import type { Wallet } from '@/domain/types/wallet'
 import type { Network } from '@luxfi/core'
-import useWallet from '@/domain/wallets/useWallet'
-import { useAccount } from 'wagmi'
-
 
 const ConnectedWallets: React.FC<
   {
@@ -39,143 +37,99 @@ const ConnectedWallets: React.FC<
   connectButtonClx = '',
   className = ''
 }) => {
-  const [openDialog, setOpenDialog] = useState<boolean>(false)
-  //hooks
-  const { chainId, address } = useAccount()
-  const { wallets } = useWallet()
-  const { networks } = useSettings()
+    const { wallets } = useWallet()
+    const [openDialog, setOpenDialog] = useState<boolean>(false)
+    //hooks
+    const { chainId, address } = useAccount()
+    const { networks } = useSettings()
 
-  if (address && chainId) {
-    const network = networks.find(
-      (n: Network) => Number(n.chain_id) === chainId
-    )
-    return (
-      <div className={cn("flex gap-2 items-center", className)}>
-        <div className="flex gap-2 items-center">
+    console.log(wallets)
+
+    if (address && chainId) {
+      const network = networks.find(
+        (n: Network) => Number(n.chain_id) === chainId
+      )
+
+      return (
+        <div className={cn('flex gap-2 items-center', className)}>
           <img
             src={
               network?.logo ??
               'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
             }
-            alt="Project Logo"
-            height="27"
-            width="27"
-            loading="eager"
-            className="rounded-full object-contain flex-none"
+            className='h-[27px] w-[27px] rounded-full'
           />
-          <span className='hidden sm:flex'>{network && network.display_name}</span>
+          <div
+            onClick={() => setOpenDialog(true)}
+            className='flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm'
+          >
+            <WalletsIcons wallets={wallets} />
+            {shortenAddress(address)}
+            <ChevronDown className='h-5 w-5' aria-hidden='true' />
+          </div>
+          <ConnectedWalletsDialog
+            openDialog={openDialog}
+            setOpenDialog={setOpenDialog}
+          />
         </div>
-        <div
-          onClick={() => setOpenDialog(true)}
-          className="flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm"
-        >
-          <WalletsIcons wallets={wallets} />
-          {shortenAddress(address)}
-          <ChevronDown className="h-5 w-5" aria-hidden="true" />
-        </div>
-        <ConnectedWalletsDialog
-          openDialog={openDialog}
-          setOpenDialog={setOpenDialog}
-        />
-      </div>
-    )
-  }
+      )
+    }
 
-  if (wallets.length > 0) {
+    if (wallets.length > 0) {
+      return (
+        <>
+          <Button
+            variant='outline'
+            size='square'
+            onClick={() => setOpenDialog(true)}
+            aria-label='Connect wallet'
+            className='text-muted-2 p-0 flex items-center justify-center'
+          >
+            <WalletsIcons wallets={wallets} />
+          </Button>
+          <ConnectedWalletsDialog
+            openDialog={openDialog}
+            setOpenDialog={setOpenDialog}
+          />
+        </>
+      )
+    }
+
     return (
-      <>
+      <ConnectButton>
         <Button
-          variant="outline"
-          size="square"
-          onClick={() => setOpenDialog(true)}
-          aria-label="Connect wallet"
-          className="text-muted-2 p-0 flex items-center justify-center"
+          variant={connectButtonVariant}
+          size='square'
+          aria-label='Connect wallet'
+          className={cn(
+            'flex items-center justify-center',
+            'text-muted-2 p-0 ',
+            connectButtonClx
+          )}
         >
-          <WalletsIcons wallets={wallets} />
+          {showWalletIcon && (
+            <WalletIcon className='h-5 w-5 mx-0.5' strokeWidth='1.5' />
+          )}
+          {children}
         </Button>
-        <ConnectedWalletsDialog
-          openDialog={openDialog}
-          setOpenDialog={setOpenDialog}
-        />
-      </>
+      </ConnectButton>
     )
   }
-
-  // return (
-  //   <div className={cn('flex gap-2 items-center', className)}>
-  //     <div className="hidden gap-2 items-center sm:flex">
-  //       <Image
-  //         src={
-  //           network?.logo ??
-  //           'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
-  //         }
-  //         alt="Project Logo"
-  //         height="22"
-  //         width="22"
-  //         loading="eager"
-  //         className="rounded-full object-contain"
-  //       />
-  //       <span>{network && network.display_name}</span>
-  //     </div>
-  //     <div
-  //       onClick={() => setOpenDialog(true)}
-  //       className="sm:flex hidden gap-1 items-center cursor-pointer bg-level-2 px-2 py-1 rounded-full"
-  //     >
-  //       <WalletsIcons wallets={wallets} />
-  //       {shortenAddress(address)}
-  //       <ChevronDown className="h-5 w-5" aria-hidden="true" />
-  //     </div>
-  //     <Button
-  //       variant="outline"
-  //       size="square"
-  //       onClick={() => setOpenDialog(true)}
-  //       aria-label="Connect wallet"
-  //       className={'text-muted-2 p-0 flex items-center justify-center sm:hidden'}
-  //     >
-  //       <WalletsIcons wallets={wallets} />
-  //     </Button>
-  //     <ConnectedWalletsDialog
-  //       openDialog={openDialog}
-  //       setOpenDialog={setOpenDialog}
-  //     />
-  //   </div>
-  // )
-
-  return (
-    <ConnectButton>
-      <Button
-        variant={connectButtonVariant}
-        size="square"
-        aria-label="Connect wallet"
-        className={cn(
-          'flex items-center justify-center',
-          'text-muted-2 p-0 ',
-          connectButtonClx
-        )}
-      >
-        {showWalletIcon && (
-          <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" />
-        )}
-        {children}
-      </Button>
-    </ConnectButton>
-  )
-}
 
 const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
   const firstWallet = wallets[0]
   const secondWallet = wallets[1]
 
   return (
-    <div className="-space-x-2 flex">
+    <div className='-space-x-2 flex'>
       {firstWallet?.connector && (
-        <firstWallet.icon className="flex-shrink-0 h-6 w-6" />
+        <firstWallet.icon className='flex-shrink-0 h-6 w-6' />
       )}
       {secondWallet?.connector && (
-        <secondWallet.icon className="flex-shrink-0 h-6 w-6" />
+        <secondWallet.icon className='flex-shrink-0 h-6 w-6' />
       )}
       {wallets.length > 2 && (
-        <div className="h-6 w-6 flex-shrink-0 rounded-full justify-center p-1 overlfow-hidden text-xs">
+        <div className='h-6 w-6 flex-shrink-0 rounded-full justify-center p-1 overlfow-hidden text-xs'>
           <span>
             <span>+</span>
             {wallets.length - 2}
@@ -197,7 +151,7 @@ const WalletsMenu = () => {
           onClick={() => {
             setOpenDialog(true)
           }}
-          type="button"
+          type='button'
           className={
             'py-3 px-4 relative flex items-center w-full rounded-md space-x-1 ' +
             'bg-level-1 hover:bg-level-2 font-semibold ' +
@@ -205,12 +159,12 @@ const WalletsMenu = () => {
           }
         >
           {wallets.length === 1 ? (
-            <div className="flex gap-4 items-start">
-              <div className="inline-flex items-center relative">
+            <div className='flex gap-4 items-start'>
+              <div className='inline-flex items-center relative'>
                 {/* <AddressIcon address={wallet.address} size={20} /> */}
                 {wallet.connector && (
-                  <span className="absolute -bottom-1 -right-2 ml-1 text-[10px] leading-4 font-semibold">
-                    <wallet.icon className="w-4 h-4 border-2 rounded-full" />
+                  <span className='absolute -bottom-1 -right-2 ml-1 text-[10px] leading-4 font-semibold'>
+                    <wallet.icon className='w-4 h-4 border-2 rounded-full' />
                   </span>
                 )}
               </div>
@@ -218,10 +172,10 @@ const WalletsMenu = () => {
             </div>
           ) : (
             <>
-              <div className="flex justify-center w-full">
+              <div className='flex justify-center w-full'>
                 Connected wallets
               </div>
-              <div className="place-items-end absolute left-2.5">
+              <div className='place-items-end absolute left-2.5'>
                 <WalletsIcons wallets={wallets} />
               </div>
             </>
@@ -238,10 +192,10 @@ const WalletsMenu = () => {
   return (
     <ConnectButton>
       <Button
-        className="border-none !px-4 flex justify-center gap-2"
-        type="button"
+        className='border-none !px-4 flex justify-center gap-2'
+        type='button'
       >
-        <WalletIcon className="h-5 w-5" strokeWidth={2} />
+        <WalletIcon className='h-5 w-5' strokeWidth={2} />
         <span>Connect a wallet</span>
       </Button>
     </ConnectButton>
@@ -259,20 +213,20 @@ const ConnectedWalletsDialog = ({
 
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle className="text-center">Wallets</DialogTitle>
+          <DialogTitle className='text-center'>Wallets</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col justify-start space-y-2">
+        <div className='flex flex-col justify-start space-y-2'>
           {wallets.map((wallet, index) => (
             <div
               key={index}
-              className="w-full relative items-center justify-between gap-2 flex rounded-md outline-none bg-level-1 p-3 border border-[#404040] "
+              className='w-full relative items-center justify-between gap-2 flex rounded-md outline-none bg-level-1 p-3 border border-[#404040] '
             >
-              <div className="flex space-x-4 items-center">
+              <div className='flex space-x-4 items-center'>
                 {wallet.connector && (
-                  <div className="inline-flex items-center relative">
-                    <wallet.icon className="w-8 h-8 p-0.5" />
+                  <div className='inline-flex items-center relative'>
+                    <wallet.icon className='w-8 h-8 p-0.5' />
                   </div>
                 )}
                 <p>{shortenAddress(wallet.address)}</p>
@@ -284,7 +238,7 @@ const ConnectedWalletsDialog = ({
                     setOpenDialog(false)
                   }
                 }}
-                className="p-1 hover:bg-level-2 text-xs  hover:opacity-75"
+                className='p-1 hover:bg-level-2 text-xs  hover:opacity-75'
               >
                 Disconnect
               </button>
@@ -297,9 +251,9 @@ const ConnectedWalletsDialog = ({
               setOpenDialog(false)
             }}
           >
-            <div className="hover:text-opacity-80 flex items-center gap-1 justify-end w-fit">
-              <Plus className="h-4 w-4" />
-              <span className="text-sm">Link a new wallet</span>
+            <div className='hover:text-opacity-80 flex items-center gap-1 justify-end w-fit'>
+              <Plus className='h-4 w-4' />
+              <span className='text-sm'>Link a new wallet</span>
             </div>
           </ConnectButton>
         </DialogFooter>
