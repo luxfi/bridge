@@ -9,6 +9,8 @@ import {
 import { type Chain, createClient } from 'viem'
 import { createModal } from '@rabby-wallet/rabbykit'
 import { createConfig as createWagmiConfig, WagmiProvider, http } from 'wagmi'
+import { mainnet, sepolia } from 'wagmi/chains'
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { type Network } from '@luxfi/core'
@@ -23,12 +25,22 @@ interface LuxkitInitializer {
   connect: () => void
 }
 
+const config = createWagmiConfig({
+    //@ts-expect-error wagmi chain types
+  chains: [mainnet, sepolia],
+  ssr: true,
+  transports: {
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+  },
+})
+
 const LuxkitContext = createContext<LuxkitInitializer | null>(null)
 
 export const LuxKitProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   const connectFnRef = useRef<ReturnType<typeof createModal>>()
-  const configRef = useRef<ReturnType<typeof createWagmiConfig>>()
+  //const configRef = useRef<ReturnType<typeof createWagmiConfig>>()
   
   const { networks } = useSettings()
 
@@ -38,20 +50,23 @@ export const LuxKitProvider: React.FC<PropsWithChildren> = ({ children }) => {
     .map(resolveChain)
     .filter(isChain)
 
+  console.log("CHAINS: ", chains.map((c) => (c.name)).join(', '))
+
   useEffect(() => {
     if (!connectFnRef.current) {
-
+/*
       configRef.current = createWagmiConfig({
         chains: chains as unknown as readonly [Chain, ...Chain[]],
+        ssr: true,
         client({ chain }) {
           return createClient({ chain, transport: http() })
         },
       })
-
+*/
       connectFnRef.current = createModal({
         //@ts-expect-error wagmi chain types
         chains,
-        wagmi: configRef.current,
+        wagmi: config,
         theme: 'dark',
         appName: 'Lux Bridge',
         projectId: '58a22d2bc1c793fc31c117ad9ceba8d9',
@@ -65,7 +80,7 @@ export const LuxKitProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   return (
     <LuxkitContext.Provider value={{ connect }}>
-      <WagmiProvider config={configRef.current!}>
+      <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
