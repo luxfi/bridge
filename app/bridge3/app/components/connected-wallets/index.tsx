@@ -1,5 +1,5 @@
-'use client'
 import { useState, type PropsWithChildren } from 'react'
+import { useAccount } from 'wagmi'
 import { ChevronDown, Plus } from 'lucide-react'
 
 import {
@@ -11,17 +11,17 @@ import {
   DialogTitle,
 } from '@hanzo/ui/primitives-common'
 
-import WalletIcon from '@/components/icons/wallet-icon'
-import shortenAddress from '@/domain/utils/shorten-address'
-import ConnectButton from '@/components/buttons/connect-button'
-import { cn } from '@hanzo/ui/util'
-// hooks
-import useWallet from '@/domain/wallets/useWallet'
-import { useAccount } from 'wagmi'
-import { useSettings } from '@/contexts/settings'
-// types
-import type { Wallet } from '@/domain/types/wallet'
 import type { Network } from '@luxfi/core'
+import { cn } from '@hanzo/ui/util'
+
+import { shortenAddress } from '@/domain/util'
+import useWallet from '@/domain/wallet/use-wallets'
+import { useSettings } from '@/contexts/settings'
+
+import WalletIcon from '@/components/icons/wallet-icon'
+import TriggerWrapper from './trigger-wrapper'
+
+import WalletIcons from './wallet-icons'
 
 const ConnectedWallets: React.FC<
   {
@@ -37,113 +37,91 @@ const ConnectedWallets: React.FC<
   connectButtonClx = '',
   className = ''
 }) => {
-    const { wallets } = useWallet()
-    const [openDialog, setOpenDialog] = useState<boolean>(false)
-    //hooks
-    const { chainId, address } = useAccount()
-    const { networks } = useSettings()
 
-    console.log(wallets)
+  const { wallets } = useWallet()
+  const [openDialog, setOpenDialog] = useState<boolean>(false)
+  const { chainId, address } = useAccount()
+  const { networks } = useSettings()
 
-    if (address && chainId) {
-      const network = networks.find(
-        (n: Network) => Number(n.chain_id) === chainId
-      )
+  //console.log(wallets)
 
-      return (
-        <div className={cn('flex gap-2 items-center', className)}>
-          <img
-            src={
-              network?.logo ??
-              'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
-            }
-            className='h-[27px] w-[27px] rounded-full'
-          />
-          <div
-            onClick={() => setOpenDialog(true)}
-            className='flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm'
-          >
-            <WalletsIcons wallets={wallets} />
-            {shortenAddress(address)}
-            <ChevronDown className='h-5 w-5' aria-hidden='true' />
-          </div>
-          <ConnectedWalletsDialog
-            openDialog={openDialog}
-            setOpenDialog={setOpenDialog}
-          />
-        </div>
-      )
-    }
-
-    if (wallets.length > 0) {
-      return (
-        <>
-          <Button
-            variant='outline'
-            size='square'
-            onClick={() => setOpenDialog(true)}
-            aria-label='Connect wallet'
-            className='text-muted-2 p-0 flex items-center justify-center'
-          >
-            <WalletsIcons wallets={wallets} />
-          </Button>
-          <ConnectedWalletsDialog
-            openDialog={openDialog}
-            setOpenDialog={setOpenDialog}
-          />
-        </>
-      )
-    }
+  if (address && chainId) {
+    const network = networks.find(
+      (n: Network) => Number(n.chain_id) === chainId
+    )
 
     return (
-      <ConnectButton>
-        <Button
-          variant={connectButtonVariant}
-          size='square'
-          aria-label='Connect wallet'
-          className={cn(
-            'flex items-center justify-center',
-            'text-muted-2 p-0 ',
-            connectButtonClx
-          )}
+      <div className={cn('flex gap-2 items-center', className)}>
+        <img
+          src={
+            network?.logo ??
+            'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
+          }
+          className='h-[27px] w-[27px] rounded-full'
+        />
+        <div
+          onClick={() => setOpenDialog(true)}
+          className='flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm'
         >
-          {showWalletIcon && (
-            <WalletIcon className='h-5 w-5 mx-0.5' strokeWidth='1.5' />
-          )}
-          {children}
-        </Button>
-      </ConnectButton>
+          <WalletIcons wallets={wallets} />
+          {shortenAddress(address)}
+          <ChevronDown className='h-5 w-5' aria-hidden='true' />
+        </div>
+        <ConnectedWalletsDialog
+          openDialog={openDialog}
+          setOpenDialog={setOpenDialog}
+        />
+      </div>
     )
   }
 
-const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
-  const firstWallet = wallets[0]
-  const secondWallet = wallets[1]
+  if (wallets.length > 0) {
+    return (
+      <>
+        <Button
+          variant='outline'
+          size='square'
+          onClick={() => setOpenDialog(true)}
+          aria-label='Connect wallet'
+          className='text-muted-2 p-0 flex items-center justify-center'
+        >
+          <WalletIcons wallets={wallets} />
+        </Button>
+        <ConnectedWalletsDialog
+          openDialog={openDialog}
+          setOpenDialog={setOpenDialog}
+        />
+      </>
+    )
+  }
 
   return (
-    <div className='-space-x-2 flex'>
-      {firstWallet?.connector && (
-        <firstWallet.icon className='flex-shrink-0 h-6 w-6' />
-      )}
-      {secondWallet?.connector && (
-        <secondWallet.icon className='flex-shrink-0 h-6 w-6' />
-      )}
-      {wallets.length > 2 && (
-        <div className='h-6 w-6 flex-shrink-0 rounded-full justify-center p-1 overlfow-hidden text-xs'>
-          <span>
-            <span>+</span>
-            {wallets.length - 2}
-          </span>
-        </div>
-      )}
-    </div>
+    <TriggerWrapper>
+      <Button
+        variant={connectButtonVariant}
+        size='square'
+        aria-label='Connect wallet'
+        className={cn(
+          'flex items-center justify-center',
+          'text-muted-2 p-0 ',
+          connectButtonClx
+        )}
+      >
+        {showWalletIcon && (
+          <WalletIcon className='h-5 w-5 mx-0.5' strokeWidth='1.5' />
+        )}
+        {children}
+      </Button>
+    </TriggerWrapper>
   )
 }
 
+  // :aa where is this used??
 const WalletsMenu = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false)
   const { wallets } = useWallet()
   const wallet = wallets[0]
+
   if (wallets.length > 0) {
     return (
       <>
@@ -176,7 +154,7 @@ const WalletsMenu = () => {
                 Connected wallets
               </div>
               <div className='place-items-end absolute left-2.5'>
-                <WalletsIcons wallets={wallets} />
+                <WalletIcons wallets={wallets} />
               </div>
             </>
           )}
@@ -190,7 +168,7 @@ const WalletsMenu = () => {
   }
 
   return (
-    <ConnectButton>
+    <TriggerWrapper>
       <Button
         className='border-none !px-4 flex justify-center gap-2'
         type='button'
@@ -198,7 +176,7 @@ const WalletsMenu = () => {
         <WalletIcon className='h-5 w-5' strokeWidth={2} />
         <span>Connect a wallet</span>
       </Button>
-    </ConnectButton>
+    </TriggerWrapper>
   )
 }
 
@@ -246,7 +224,7 @@ const ConnectedWalletsDialog = ({
           ))}
         </div>
         <DialogFooter>
-          <ConnectButton
+          <TriggerWrapper
             onClose={() => {
               setOpenDialog(false)
             }}
@@ -255,11 +233,11 @@ const ConnectedWalletsDialog = ({
               <Plus className='h-4 w-4' />
               <span className='text-sm'>Link a new wallet</span>
             </div>
-          </ConnectButton>
+          </TriggerWrapper>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
 
-export { ConnectedWalletsDialog as default, WalletsMenu, ConnectedWallets }
+export { ConnectedWallets as default, WalletsMenu, ConnectedWallets }

@@ -22,15 +22,19 @@
     "lat": "npm show @luxfi/core version",
     "pub": "npm publish",
     "build": "tsc --project tsconfig.json && tsc --project tsconfig.cjs.json",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "build:clean": "rm -rf dist"
   },
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "import": "./dist/esm/types/index.js",
+      "require": "./dist/cjs/types/index.js"
+    },
+    "./constants": {
+      "import": "./dist/esm/constants/index.js",
+      "require": "./dist/cjs/constants/index.js"
     }
   },
-  "types": "./dist/index.d.ts",
   "dependencies": {},
   "peerDependencies": {},
   "devDependencies": {

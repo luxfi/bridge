@@ -14,7 +14,7 @@
   "type": "module",
   "dependencies": {
     "@hanzo/ui": "catalog:",
-    "@luxfi/core": "catalog:",
+    "@luxfi/core": "workspace:*",
     "@luxfi/menu-icons": "1.0.2",
     "@rabby-wallet/rabbykit": "^0.1.0",
     "@remix-run/node": "^2.15.1",

@@ -8,7 +8,7 @@ import Phantom from '@/components/icons/wallets/phantom'
 import { Coins, type LucideProps } from 'lucide-react'
 import { type Connector } from 'wagmi'
 
-export const ResolveEVMWalletIcon = ({ connector }: { connector: Connector }) => {
+const resolveEVMWalletIcon = ({ connector }: { connector: Connector }) => {
   let icon: ((props: any) => JSX.Element) | null = null
 
   // Check first by id then by name
@@ -54,3 +54,5 @@ const KnownKonnectorNames = {
 const CoinsIcon = (props: LucideProps) => {
   return <Coins {...props} strokeWidth={2} />
 }
+
+export default resolveEVMWalletIcon

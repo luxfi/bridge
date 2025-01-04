@@ -11,8 +11,10 @@
     "declaration": true, // Generate .d.ts files for types
     "declarationMap": true, // Include source maps for declarations
     "outDir": "dist/esm", // Output directory for ESM
-    "rootDir": "types" // Specify the source directory
+    "rootDir": "src"
   },
-  "include": ["types/**/*.ts"], // Include TypeScript files
+  "include": [
+    "src/**/*.ts"
+  ], 
   "exclude": ["node_modules"]
 }
