@@ -1,18 +1,17 @@
-import KnownInternalNames from '../known-ids'
-import { useDisconnect } from 'wagmi'
-import { useAccount } from 'wagmi'
+import { useAccount, useDisconnect } from 'wagmi'
+
+
+import { KnownInternalNames} from '@luxfi/core/constants'
+
+import type { WalletProvider}  from '@/domain/types'
+
 import { useSettings } from '@/contexts/settings'
-import { ResolveEVMWalletIcon } from '../resolve-evm-icon'
 import { useLux } from '@/contexts/luxkit'
-// types
-import type { WalletProvider } from '../useWallet'
-/**
- * hook for evm wallet operation
- * @returns 
- * @example
- * const { getConnectedWallet, connectWallet, disconnectWallet, autofillSupportedNetworks, withdrawalSupportedNetworks, name } = useEvm()
- */
-export const useEvm = (): WalletProvider => {
+
+import resolveEVMWalletIcon from './resolve-evm-icon'
+
+
+const useEvmProvider = (): WalletProvider => {
 
   const { disconnect } = useDisconnect()
   const { networks } = useSettings()
@@ -40,7 +39,7 @@ export const useEvm = (): WalletProvider => {
         address: account.address,
         connector: account.connector?.id,
         providerName: name,
-        icon: ResolveEVMWalletIcon({ connector: account.connector }),
+        icon: resolveEVMWalletIcon({ connector: account.connector }),
       }
     }
   }
@@ -54,3 +53,6 @@ export const useEvm = (): WalletProvider => {
     name,
   }
 }
+
+export default useEvmProvider
+

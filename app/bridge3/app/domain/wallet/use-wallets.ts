@@ -1,26 +1,23 @@
 import { toast } from '@hanzo/ui/primitives-common'
-import { useEvm } from './evm/useEvm'
-// import useTON from '../lib/wallets/ton/useTON'
-// import useStarknet from '../lib/wallets/starknet/useStarknet'
-// import useImmutableX from '../lib/wallets/immutableX/useIMX'
-// import useSolana from '../lib/wallets/solana/useSolana'
-//types
-import type { SwapItem } from '@/domain/types/swap'
-import type { Wallet } from '@/domain/types/wallet'
-import type { Network } from '@luxfi/core'
 
-export type WalletProvider = {
-  connectWallet: (chain?: string | number | undefined | null) => Promise<void> | undefined | void
-  disconnectWallet: () => Promise<void> | undefined | void
-  getConnectedWallet: () => Wallet | undefined
-  autofillSupportedNetworks?: string[]
-  withdrawalSupportedNetworks: string[]
-  name: string
+import type { Network } from '@luxfi/core'
+import type { SwapItem, Wallet, WalletProvider } from '@/domain/types'
+
+import { useEvmProvider } from './providers'
+
+interface useWalletsReturn {
+  wallets: Wallet[]
+  connectWallet: (providerName: string, chain?: string | number) => Promise<void>
+  disconnectWallet: (providerName: string, swap?: SwapItem) => Promise<void>
+  getWithdrawalProvider: (network: Network) => WalletProvider | undefined
+  getAutofillProvider: (network: Network) => WalletProvider | undefined
+  getAutofillProviderUsingName: (network: string) => WalletProvider | undefined
 }
 
-function useWallet() {
+const useWallets = (): useWalletsReturn => {
+
   const WalletProviders: WalletProvider[] = [
-    useEvm(),
+    useEvmProvider(),
     // useTON(),
     // useStarknet(),
     // useImmutableX(),
@@ -36,7 +33,7 @@ function useWallet() {
     }
   }
 
-  const handleDisconnect = async (providerName: string, swap?: SwapItem) => {
+  const handleDisconnect = async (providerName: string, swap?: SwapItem): Promise<void> => {
     const provider = WalletProviders.find((provider) => provider.name === providerName)
     try {
       // if (swap?.source_exchange) {
@@ -46,7 +43,8 @@ function useWallet() {
       //   await provider?.disconnectWallet()
       // }
       await provider?.disconnectWallet()
-    } catch {
+    } 
+    catch {
       toast.error('Could not disconnect the account')
     }
   }
@@ -89,4 +87,4 @@ function useWallet() {
   }
 }
 
-export default useWallet
+export default useWallets

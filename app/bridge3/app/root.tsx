@@ -1,5 +1,4 @@
 import React, { type PropsWithChildren } from 'react'
-import { ConnectedWallets } from './components/wallets/connected-wallets'
 import {
   Links,
   Meta,
@@ -35,9 +34,8 @@ import fontAndIconLinks from './font-and-icon-links';
 import metadata from './metadata'
 import siteDef from './site-def'
 
-// export const config = { runtime: 'edge' } // not supported by vercel
-
-const bodyClasses = 'bg-background text-foreground flex flex-col min-h-full '
+// NOTE: Edge is not supported by vercel!
+// export const config = { runtime: 'edge' } 
 
 export const links: LinksFunction = () => ([
   ...fontAndIconLinks,
@@ -67,7 +65,6 @@ export const loader = async (): Promise<LoaderReturnType> => {
   // cf: https://remix.run/docs/en/main/route/should-revalidate#never-reloading-the-root
 export const shouldRevalidate = () => (false)
 
-
 const Layout: React.FC<PropsWithChildren> = ({ 
   children 
 })  => {
@@ -96,7 +93,7 @@ const Layout: React.FC<PropsWithChildren> = ({
         <Meta />
         <Links />
       </head>
-      <body className={bodyClasses} >
+      <body className='bg-background text-foreground flex flex-col min-h-full ' >
         {error ? (
           <h1 className='mx-auto text-2xl mt-10'>error</h1>
         ) : (<>
@@ -105,9 +102,7 @@ const Layout: React.FC<PropsWithChildren> = ({
             defaultFromNetwork={defaultFromNetwork}
             defaultToNetwork={defaultToNetwork}
           >
-            <Header siteDef={siteDef}>
-              <ConnectedWallets/>
-            </Header>
+            <Header siteDef={siteDef} />
             <Main className='gap-4 '>
               {children}
             </Main>

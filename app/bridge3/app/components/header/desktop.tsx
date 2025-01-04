@@ -5,7 +5,7 @@ import { cn } from '@hanzo/ui/util'
 
 import Logo, { type LogoVariant } from '../logo'
 import DesktopNav from './desktop-nav-menu'
-
+import ConnectedWallets from '../connected-wallets'
 
 const DesktopHeader: React.FC<{
   currentAs: string | undefined
@@ -40,6 +40,7 @@ const DesktopHeader: React.FC<{
             <DesktopNav links={links} isMenuOpened={isMenuOpened} setIsMenuOpen={setIsMenuOpen} />
           </div>
           <div className='flex items-center'>
+            <ConnectedWallets />
             {children}
           </div>
         </div>
