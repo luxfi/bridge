@@ -23,7 +23,7 @@ import Phantom from '@/components/icons/wallets/phantom'
 import Solflare from '@/components/icons/wallets/solflare'
 import CoinbaseIcon from '@/components/icons/wallets/coinbase'
 import { cn } from '@hanzo/ui/util'
-import useWallet from '@/domain/wallets/useWallet'
+import useWallet from '@/domain/wallet/use-wallets'
 
 const knownConnectors = [
   {
@@ -48,7 +48,7 @@ const knownConnectors = [
   }
 ]
 
-const ConnectButton: React.FC<{
+const TriggerWrapper: React.FC<{
   className?: string
   onClose?: () => void
 } & PropsWithChildren> = ({
@@ -141,7 +141,7 @@ const ConnectButton: React.FC<{
     )
   }
 
-export default ConnectButton
+export default TriggerWrapper
 
 const ResolveConnectorIcon = ({
   connector,

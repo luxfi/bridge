@@ -1,3 +1,5 @@
+import type { SwapStatus } from '@luxfi/core'
+
 export type DepositAddress = {
   type: string
   address: `0x${string}`
