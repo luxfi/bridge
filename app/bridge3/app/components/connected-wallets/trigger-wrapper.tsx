@@ -13,17 +13,17 @@ import {
   PopoverTrigger
 } from '@hanzo/ui/primitives-common'
 
-import RainbowIcon from '@/components/icons/wallets/rainbow'
-import TON from '@/components/icons/wallets/ton'
-import MetaMaskIcon from '@/components/icons/wallets/metamask'
-import WalletConnectIcon from '@/components/icons/wallets/walletconnect'
-import TonKeeper from '@/components/icons/wallets/tonkeeper'
-import OpenMask from '@/components/icons/wallets/openmask'
-import Phantom from '@/components/icons/wallets/phantom'
-import Solflare from '@/components/icons/wallets/solflare'
-import CoinbaseIcon from '@/components/icons/wallets/coinbase'
+import RainbowIcon from '@/luxkit/icons/wallets/rainbow'
+import TON from '@/luxkit/icons/wallets/ton'
+import MetaMaskIcon from '@/luxkit/icons/wallets/metamask'
+import WalletConnectIcon from '@/luxkit/icons/wallets/walletconnect'
+import TonKeeper from '@/luxkit/icons/wallets/tonkeeper'
+import OpenMask from '@/luxkit/icons/wallets/openmask'
+import Phantom from '@/luxkit/icons/wallets/phantom'
+import Solflare from '@/luxkit/icons/wallets/solflare'
+import CoinbaseIcon from '@/luxkit/icons/wallets/coinbase'
 import { cn } from '@hanzo/ui/util'
-import useWallet from '@/domain/wallet/use-wallets'
+import { useWallets } from '@/luxkit'
 
 const knownConnectors = [
   {
@@ -57,7 +57,7 @@ const TriggerWrapper: React.FC<{
   onClose,
 }) => {
 
-    const { connectWallet, wallets } = useWallet()
+    const { connectWallet, wallets } = useWallets()
     const [open, setOpen] = useState<boolean>()
 
     const filteredConnectors = knownConnectors.filter(

@@ -5,7 +5,7 @@ interface WalletProvider {
   disconnectWallet: () => Promise<void> | undefined | void
   getConnectedWallet: () => Wallet | undefined
   autofillSupportedNetworks?: string[]
-  withdrawalSupportedNetworks: string[]
+  withdrawalSupportedNetworks?: string[]
   name: string
 }
 

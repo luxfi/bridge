@@ -15,7 +15,7 @@ import type { Network } from '@luxfi/core'
 import { cn } from '@hanzo/ui/util'
 
 import { shortenAddress } from '@/domain/util'
-import useWallet from '@/domain/wallet/use-wallets'
+import { useWallets } from '@/luxkit'
 import { useSettings } from '@/contexts/settings'
 
 import WalletIcon from '@/components/icons/wallet-icon'
@@ -37,8 +37,7 @@ const ConnectedWallets: React.FC<
   connectButtonClx = '',
   className = ''
 }) => {
-
-  const { wallets } = useWallet()
+  const { wallets } = useWallets()
   const [openDialog, setOpenDialog] = useState<boolean>(false)
   const { chainId, address } = useAccount()
   const { networks } = useSettings()
@@ -116,10 +115,10 @@ const ConnectedWallets: React.FC<
   )
 }
 
-  // :aa where is this used??
+// :aa where is this used??
 const WalletsMenu = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false)
-  const { wallets } = useWallet()
+  const { wallets } = useWallets()
   const wallet = wallets[0]
 
   if (wallets.length > 0) {
@@ -187,7 +186,7 @@ const ConnectedWalletsDialog = ({
   openDialog: boolean
   setOpenDialog: (open: boolean) => void
 }) => {
-  const { wallets, disconnectWallet } = useWallet()
+  const { wallets, disconnectWallet } = useWallets()
 
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>

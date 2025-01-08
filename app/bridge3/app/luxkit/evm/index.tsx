@@ -6,19 +6,22 @@ import {
   useMemo,
   type PropsWithChildren
 } from 'react'
-
+import resolveEVMWalletIcon from './resolve-evm-icon'
 import { createModal } from '@rabby-wallet/rabbykit'
 import { createConfig as createWagmiConfig, WagmiProvider, http } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createClient, type Chain } from 'viem'
+import type { Wallet } from '@/domain/types'
+// wagmi hooks
+import { useAccount, useDisconnect } from 'wagmi'
 
 const queryClient = new QueryClient()
 
-interface LuxkitInitializer {
+interface LuxEvmInitializer {
   connect: () => void
 }
 
-const LuxEvmContext = createContext<LuxkitInitializer | null>(null)
+const LuxEvmContext = createContext<LuxEvmInitializer | null>(null)
 
 interface LuxEvmProviderProps {
   chains: Chain[];
@@ -63,23 +66,56 @@ const LuxEvmProvider: React.FC<PropsWithChildren<LuxEvmProviderProps>> = ({ chil
   )
 }
 
+
+interface useLuxEvmReturn {
+  connectWallet: () => void,
+  disconnectWallet: () => void,
+  getConnectedWallet: () => Wallet | undefined,
+  // autofillSupportedNetworks,
+  // withdrawalSupportedNetworks,
+  name: 'evm',
+}
 /**
  * Provides access to the Luxkit context.
- * @returns {LuxkitInitializer} An object containing:
- * - {Function} initialize - Initializes the Luxkit with network configurations.
- * - {Function} connect - Establishes a connection to the Luxkit.
- *
+ * @returns {UseLuxEvmInitializer} An object containing:
+ * - {Function} connectWallet - Establishes a connection to the Luxkit.
+ * - {Functoin} disconnectWallet - Disconnect a connected wallet
+ * - {Functoin} getConnectedWallet - Get a wallet instance of connected wallet
+ * - {String} name - network type
  * @example
- * const luxkit = useLuxEvm();
- * luxkit.initialize([{ chainId: 1, name: 'Ethereum Mainnet' }]); // Initialize
- * luxkit.connect(); // Connect to the Luxkit
+ * {
+ *    connectWallet,
+ *    disconnectWallet,
+ *    getConnectedWallet,
+ *    name,
+ * } = useLuxEvm();
+ * connectWallet(); // Connect evm wallet
  */
-const useLuxEvm = (): LuxkitInitializer => {
+const useLuxEvm = (): useLuxEvmReturn => {
   const luxEvmRef = useContext(LuxEvmContext)
   if (!luxEvmRef) {
     throw new Error('useLuxEvm() must be within LuxkitInitializerContext!')
-  } else {
-    return luxEvmRef
+  }
+  const account = useAccount()
+  const name = 'evm'
+  const getWallet = () => {
+    if (account && account.address && account.connector) {
+      return {
+        address: account.address,
+        connector: account.connector?.id,
+        providerName: name,
+        icon: resolveEVMWalletIcon({ connector: account.connector }),
+      }
+    }
+  }
+  const { disconnect } = useDisconnect()
+  return {
+    getConnectedWallet: getWallet,
+    connectWallet: luxEvmRef.connect,
+    disconnectWallet: disconnect,
+    // autofillSupportedNetworks,
+    // withdrawalSupportedNetworks,
+    name: name,
   }
 }
 
