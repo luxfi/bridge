@@ -12,13 +12,14 @@ import { LuxEvmProvider } from '@/luxkit'
 export const LuxKitProvider: React.FC<PropsWithChildren> = ({ children }) => {
   
   const { networks } = useSettings()
+  // evm chains
   const chains = networks
     .filter((n: Network) => n.type === 'evm')
     .sort((a: Network, b: Network) => (Number(a.chain_id) - Number(b.chain_id)))
     .map(resolveChain)
     .filter((c: Chain | undefined): c is Chain => c != undefined)
-
   console.log("EVM CHAINS: ", chains.map((c) => (c.name)).join(', '))
+
   return (
     <LuxEvmProvider chains={chains}>
       {children}
