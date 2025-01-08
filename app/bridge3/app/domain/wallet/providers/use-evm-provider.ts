@@ -1,15 +1,14 @@
 import { useAccount, useDisconnect } from 'wagmi'
 
 
-import { KnownInternalNames} from '@luxfi/core/constants'
+import { KnownInternalNames } from '@luxfi/core/constants'
 
-import type { WalletProvider}  from '@/domain/types'
+import type { WalletProvider } from '@/domain/types'
 
 import { useSettings } from '@/contexts/settings'
-import { useLux } from '@/contexts/luxkit'
+import { useLuxEvm } from '@/luxkit'
 
 import resolveEVMWalletIcon from './resolve-evm-icon'
-
 
 const useEvmProvider = (): WalletProvider => {
 
@@ -31,7 +30,7 @@ const useEvmProvider = (): WalletProvider => {
   ]
   const name = 'evm'
   const account = useAccount()
-  const { connect } = useLux()
+  const { connect } = useLuxEvm()
 
   const getWallet = () => {
     if (account && account.address && account.connector) {
