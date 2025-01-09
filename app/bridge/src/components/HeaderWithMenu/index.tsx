@@ -12,12 +12,9 @@ import { cn } from '@hanzo/ui/util'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@hanzo/ui/primitives'
 //hooks
-import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { useAtom } from 'jotai'
 import { useTelepoterAtom } from '@/store/teleport'
-
-const ConnectWallets = dynamic(() => import('../ConnectedWallets').then((comp) => comp.ConnectedWallets), { loading: () => null })
 
 const HeaderWithMenu: React.FC<{
   goBack: (() => void) | undefined
@@ -66,11 +63,6 @@ const HeaderWithMenu: React.FC<{
         )}
       </div>
 
-      {/*
-      <div className='justify-center self-center col-start-2 col-span-3 mx-auto overflow-hidden '>
-        <GoHomeButton />
-      </div>
-    */}
       <div className="col-start-5 justify-self-end self-center flex items-center gap-3">
         {/* <ConnectWallets /> */}
         {/* <ChatButton /> */}
