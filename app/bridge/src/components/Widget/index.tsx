@@ -41,7 +41,7 @@ const Widget = ({
   return (
     <div>
       <div id="WIDGET_OUTER" className="flex flex-col content-center items-center justify-center xs:w-full md:w-auto">
-        <div id="WIDGET" className={cn('text-foreground md:rounded-lg w-full sm:overflow-hidden relative md:border border-[#121212]', className)}>
+        <div id="WIDGET" className={cn('text-foreground md:rounded-lg w-full sm:overflow-hidden relative md:border border-[#2a2a2a]', className)}>
           {sandbox && (
             <div className="relative">
               <div className="h-1 bg-secondary" />
