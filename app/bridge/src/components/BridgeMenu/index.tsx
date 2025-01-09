@@ -1,6 +1,5 @@
 'use client'
 import dynamic from 'next/dynamic'
-
 import Menu from './Menu'
 import Modal from '@/components/modal/modal'
 import Popover from '../modal/popover'
