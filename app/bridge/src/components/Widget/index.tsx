@@ -8,8 +8,6 @@ import Content from './Content'
 import Footer from './Footer'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import BridgeApiClient from '@/lib/BridgeApiClient'
-import Image from 'next/image'
-import { ArrowUpRight } from 'lucide-react'
 import GotoExchange from '../BridgeMenu/GotoExchange'
 
 const Widget = ({
