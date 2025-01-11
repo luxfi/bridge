@@ -14,9 +14,8 @@ export default defineConfig({
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,
         v3_throwAbortReason: true,
-        v3_singleFetch: true,
-          // cf: https://github.com/remix-run/react-router/pull/12441
-        v3_lazyRouteDiscovery: false // silences warning 
+        v3_singleFetch: true, // cf: https://github.com/remix-run/react-router/pull/12441
+        v3_lazyRouteDiscovery: false // silences warning
       },
       presets: [vercelPreset()],
     }),
@@ -25,18 +24,21 @@ export default defineConfig({
   ],
   optimizeDeps: {
     include: ['react-dom'],
-      // Not excluding these seem to:
-      //   a) always force a refresh after initial load  (cf(?): https://github.com/vitejs/vite/discussions/14801)
-      //   b) optimize an old version!
+    // Not excluding these seem to:
+    //   a) always force a refresh after initial load: https://github.com/vitejs/vite/discussions/14801)
+    //   b) optimize an old version!
     exclude: [
-      '@hanzo/ui/primitives-common', 
-      '@hanzo/ui/util', 
+      '@hanzo/ui/primitives-common',
+      '@hanzo/ui/util',
     ]
   },
-    // https://github.com/remix-run/remix/issues/10156#issuecomment-2440234744
+  // https://github.com/remix-run/remix/issues/10156#issuecomment-2440234744
   server: {
     warmup: {
       clientFiles: ['app/**/*.tsx'],
     },
-  },  
+  },
+  build: {
+    sourcemap: true, // Enable source maps in production build
+  },
 })
