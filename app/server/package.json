@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "nodemon",
     "db": "node dist/db.js",
+    "rm": "node dist/delete.js",
     "nodes": "node dist/nodes.js",
     "tc": "tsc",
     "typecheck": "tsc",
