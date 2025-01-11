@@ -40,5 +40,10 @@ export default defineConfig({
   },
   build: {
     sourcemap: true, // Enable source maps in production build
+    rollupOptions: {
+      output: {
+        sourcemapExcludeSources: false, // Include source content in the map
+      },
+    },
   },
 })
