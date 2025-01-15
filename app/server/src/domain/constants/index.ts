@@ -545,6 +545,7 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
       "FWOG": "assets/spl-token.solana-mainnet.A8C3xuqscfmyLrte3VmTqrAq8kgMASius9AFNANwpump",
       "MOODENG": "assets/spl-token.solana-mainnet.ED5nyyWEzpPPiWimP8vYm7sD7TD3LAt3Q3gRTWHzPJBY",
       "PONKE": "assets/spl-token.solana-mainnet.5z3EqYQo9HiCEs3R84RCDMu2n7anpDMxRhdK8PSWmrRC",
+      "SLOG": "assets/spl-token.solana-mainnet.9Xfko1cNUJ6cpgBxkdH7k7VyYouUmCtUij5tDWUFpump",
     }
   },
   'SOLANA_DEVNET': {
@@ -643,7 +644,8 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
       "NOT": "assets/jetton.ton-mainnet.EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT",
       "DOGS": "assets/jetton.ton-mainnet.EQCvxJy4eG8hyHBFsZ7eePxrRsUQSFE_jpptRAYBmcG_DOGS",
       "MRB": "assets/jetton.ton-mainnet.EQBtFLv5YbHRVr0PSb6KgmQztRK4N2BQ7alxp6mYOBxa-r18",
-      "REDO": "assets/jetton.ton-mainnet.EQBZ_cafPyDr5KUTs0aNxh0ZTDhkpEZONmLJA2SNGlLm4Cko"
+      "REDO": "assets/jetton.ton-mainnet.EQBZ_cafPyDr5KUTs0aNxh0ZTDhkpEZONmLJA2SNGlLm4Cko",
+      "SLOG": "assets/jetton.ton-mainnet.EQAzDRozHwB3tKN_5rXaar3ImQEFMYmWrGPNCstra91ivwTG",
     }
   },
   'BLAST_MAINNET': {
