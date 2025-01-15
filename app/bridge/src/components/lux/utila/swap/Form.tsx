@@ -59,7 +59,7 @@ const Swap: FC = () => {
 
   // src & dst networks
   const sourceNetworks = filteredNetworks
-  const destinationNetworks = React.useMemo(() => getDestinationNetworks(sourceAsset, networks), [sourceAsset])
+  const destinationNetworks = React.useMemo(() => getDestinationNetworks(sourceNetwork, sourceAsset, networks), [sourceAsset, sourceNetwork])
   // if page is mounted, set sourceNetwork as first one
   React.useEffect(() => {
     setSourceNetwork(filteredNetworks[0])
