@@ -133,6 +133,7 @@ const config: HardhatUserConfig = {
       baseSepolia: process.env.BASESCAN_API_KEY!,
       lux: "your API key", // Leave empty if not applicable
       luxTestnet: "your API key", // Leave empty if not applicable
+      zoo: "your API key", // Leave empty if not applicable
       // main nets
       polygon: process.env.POLYGONSCAN_API_KEY!,
       mainnet: process.env.ETHERSCAN_API_KEY!,

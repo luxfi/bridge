@@ -1,14 +1,13 @@
 'use client'
 import { useCallback, useRef, type PropsWithChildren } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { cn } from '@hanzo/ui/util'
 
 import HeaderWithMenu from '../HeaderWithMenu'
 import Content from './Content'
 import Footer from './Footer'
 import resolvePersistentQueryParams from '@/util/resolvePersistentQueryParams'
 import BridgeApiClient from '@/lib/BridgeApiClient'
-import Image from 'next/image'
-import { ArrowUpRight } from 'lucide-react'
 import GotoExchange from '../BridgeMenu/GotoExchange'
 
 const Widget = ({
@@ -40,7 +39,7 @@ const Widget = ({
   return (
     <div>
       <div id="WIDGET_OUTER" className="flex flex-col content-center items-center justify-center xs:w-full md:w-auto">
-        <div id="WIDGET" className={'text-foreground md:rounded-lg w-full sm:overflow-hidden relative md:border ' + className}>
+        <div id="WIDGET" className={cn('text-foreground md:rounded-lg w-full sm:overflow-hidden relative md:border border-[#2a2a2a]', className)}>
           {sandbox && (
             <div className="relative">
               <div className="h-1 bg-secondary" />

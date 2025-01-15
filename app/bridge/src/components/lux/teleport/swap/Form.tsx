@@ -17,6 +17,7 @@ import { SWAP_PAIRS } from '@/components/lux/teleport/constants/settings'
 import useWallet from '@/hooks/useWallet'
 import useAsyncEffect from 'use-async-effect'
 import { useAtom } from 'jotai'
+import { useNotify } from '@/context/toast-provider'
 import { useRouter } from 'next/navigation'
 import { useSettings } from '@/context/settings'
 import { useServerAPI } from '@/hooks/useServerAPI'
@@ -57,6 +58,8 @@ const Swap: FC = () => {
   const [tokenPrice, setTokenPrice] = React.useState<number>(0)
   const [flipInProgress, setFlipInProgress] = React.useState<boolean>(false)
 
+  const { notify } = useNotify()
+
   // hooks
   const router = useRouter()
   const { serverAPI } = useServerAPI()
@@ -74,9 +77,9 @@ const Swap: FC = () => {
           ...n,
           currencies: n.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)),
         }))
-        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM)
+        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM && n.internal_name !== sourceNetwork?.internal_name)
     }
-  }, [sourceAsset])
+  }, [sourceAsset, sourceNetwork])
   // when page is mounted, set source network as first network
   React.useEffect(() => {
     setSourceNetwork(filteredNetworks.find((n) => n.status === 'active'))
@@ -93,7 +96,7 @@ const Swap: FC = () => {
     // Prevent triggering useEffect if flip is in progress
     if (flipInProgress) return
 
-    destinationNetworks[0] && setDestinationNetwork(destinationNetworks[0])
+    setDestinationNetwork(destinationNetworks[0])
   }, [destinationNetworks])
   // when detination Network is changed, set destination asset as first asset
   React.useEffect(() => {
@@ -186,6 +189,7 @@ const Swap: FC = () => {
       console.log('::swap creation response:', response.data.data)
       router.push(`/swap/teleporter/${response.data?.data?.swap_id}`)
     } catch (err) {
+      notify(String(err), 'warn')
       console.log(err)
     } finally {
       setIsSubmitting(false)
@@ -193,7 +197,7 @@ const Swap: FC = () => {
   }
 
   const handleSwap = () => {
-    if (sourceNetwork && sourceAsset && destinationNetwork && destinationNetwork && destinationAddress && Number(sourceAmount) > 0) {
+    if (sourceNetwork && sourceAsset && destinationNetwork && destinationNetwork && destinationAddress && Number(sourceAmount) > 0 && warningMessage === 'Create Swap') {
       createSwap()
       setIsSubmitting(true)
     }
@@ -317,7 +321,8 @@ const Swap: FC = () => {
               !sourceAmount ||
               Number(sourceAmount) <= 0 ||
               isSubmitting ||
-              !address
+              !address ||
+              warningMessage !== 'Create Swap'
             }
             className="border -mb-3 border-muted-3 disabled:border-[#404040] items-center space-x-1 disabled:opacity-80 disabled:cursor-not-allowed relative w-full flex justify-center font-semibold rounded-md transform transition duration-200 ease-in-out hover:bg-primary-hover bg-primary-lux text-primary-fg disabled:hover:bg-primary-lux py-3 px-2 md:px-3 plausible-event-name=Swap+initiated"
           >
@@ -351,7 +356,7 @@ const AddressButton: FC<{
     type="button"
     disabled={disabled}
     onClick={openAddressModal}
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-black border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
   >
     {isPartnerWallet && (
       <div className="shrink-0 flex items-center pointer-events-none">
