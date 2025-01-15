@@ -108,7 +108,7 @@ const Swap: FC = () => {
       setSourceAsset(srcAsset)
     }
 
-    const destinationNetworks = getDestinationNetworks(destinationAsset, networks)
+    const destinationNetworks = getDestinationNetworks(sourceNetwork, destinationAsset, networks)
     const _destinationNetwork = destinationNetworks.find((n: CryptoNetwork) => n.internal_name === sourceNetwork?.internal_name)
 
     setDestinationNetwork(_destinationNetwork)
