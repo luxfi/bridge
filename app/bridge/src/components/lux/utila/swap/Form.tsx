@@ -24,12 +24,15 @@ import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/
 //utils
 import { fetchTokenBalance } from '@/lib/utils'
 import { getDestinationNetworks, getFirstSourceNetwork } from '@/util/swapsHelper'
+import { useNotify } from '@/context/toast-provider'
 
 const Address = dynamic(() => import('@/components/lux/teleport/share/Address'), {
   loading: () => <></>,
 })
 
 const Swap: FC = () => {
+  const { notify } = useNotify()
+
   const { networks } = useSettings()
   const filteredNetworks = networks.filter((n: CryptoNetwork) => n.status === 'active' && n.type !== NetworkType.EVM)
 
@@ -166,6 +169,7 @@ const Swap: FC = () => {
       console.log('::swap creation response:', response.data.data)
       router.push(`/swap/v2/${response.data?.data?.swap_id}`)
     } catch (err) {
+      notify(String(err), 'warn')
       console.log(err)
     } finally {
       setIsSubmitting(false)
