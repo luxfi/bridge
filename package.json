@@ -32,6 +32,11 @@
   "pnpm": {
     "allowedDeprecatedVersions": {
       "request": "*"
+    },
+    "overrides": {
+      "@wagmi/connectors": "5.7.3",
+      "@wagmi/core": "2.16.3"
     }
+
   }
 }
