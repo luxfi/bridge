@@ -47,7 +47,7 @@ export default function NetworkSelectWrapper<T>({
         'focus-peer:ring-primary', 
         'focus-peer:border-muted-3 focus-peer:border focus-peer:ring-1 focus:outline-none', 
         'disabled:cursor-not-allowed relative grow h-12 flex items-center text-left', 
-        'justify-bottom w-full pl-3 pr-4 py-2 border-b border-muted-3 font-semibold', 
+        'justify-bottom w-full pl-3 pr-4 py-2 border-b border-black font-semibold', 
         className
       )}
     >

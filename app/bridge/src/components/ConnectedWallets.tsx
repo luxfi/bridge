@@ -39,130 +39,87 @@ const ConnectedWallets: React.FC<
   connectButtonClx = '',
   className = ''
 }) => {
-  const { wallets } = useWallet()
-  const [openDialog, setOpenDialog] = useState<boolean>(false)
-  //hooks
-  const { chainId, signer, address } = useEthersSigner()
-  const { networks } = useSettings()
+    const { wallets } = useWallet()
+    const [openDialog, setOpenDialog] = useState<boolean>(false)
+    //hooks
+    const { chainId, signer, address } = useEthersSigner()
+    const { networks } = useSettings()
 
-  console.log(wallets)
+    console.log(wallets)
 
-  if (address && chainId) {
-    const network = networks.find(
-      (n: CryptoNetwork) => Number(n.chain_id) === chainId
-    )
-    return (
-      <div className={cn("flex gap-2 items-center", className)}>
-        <div className="flex gap-2 items-center">
-          <Image
-            src={
-              network?.logo ??
-              'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
-            }
-            alt="Project Logo"
-            height="27"
-            width="27"
-            loading="eager"
-            className="rounded-full object-contain flex-none"
+    if (address && chainId) {
+      const network = networks.find(
+        (n: CryptoNetwork) => Number(n.chain_id) === chainId
+      )
+      return (
+        <div className={cn("flex gap-2 items-center", className)}>
+          <div className="flex gap-2 items-center">
+            <Image
+              src={
+                network?.logo ??
+                'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
+              }
+              alt="Project Logo"
+              height="27"
+              width="27"
+              loading="eager"
+              className="rounded-full object-contain flex-none"
+            />
+            <span className='hidden sm:flex'>{network && network.display_name}</span>
+          </div>
+          <div
+            onClick={() => setOpenDialog(true)}
+            className="flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm"
+          >
+            <WalletsIcons wallets={wallets} />
+            {shortenAddress(address)}
+            <ChevronDown className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <ConnectedWalletsDialog
+            openDialog={openDialog}
+            setOpenDialog={setOpenDialog}
           />
-          <span className='hidden sm:flex'>{network && network.display_name}</span>
         </div>
-        <div
-          onClick={() => setOpenDialog(true)}
-          className="flex gap-1 items-center cursor-pointer bg-level-2 py-[2px] px-2 sm:py-1 rounded-full text-xs sm:text-sm"
-        >
-          <WalletsIcons wallets={wallets} />
-          {shortenAddress(address)}
-          <ChevronDown className="h-5 w-5" aria-hidden="true" />
-        </div>
-        <ConnectedWalletsDialog
-          openDialog={openDialog}
-          setOpenDialog={setOpenDialog}
-        />
-      </div>
-    )
-  }
+      )
+    }
 
-  if (wallets.length > 0) {
+    if (wallets.length > 0) {
+      return (
+        <>
+          <Button
+            variant="outline"
+            size="square"
+            onClick={() => setOpenDialog(true)}
+            aria-label="Connect wallet"
+            className="text-muted-2 p-0 flex items-center justify-center"
+          >
+            <WalletsIcons wallets={wallets} />
+          </Button>
+          <ConnectedWalletsDialog
+            openDialog={openDialog}
+            setOpenDialog={setOpenDialog}
+          />
+        </>
+      )
+    }
+
     return (
-      <>
-        <Button
-          variant="outline"
-          size="square"
-          onClick={() => setOpenDialog(true)}
+      <ConnectButton>
+        <button
           aria-label="Connect wallet"
-          className="text-muted-2 p-0 flex items-center justify-center"
+          className={cn(
+            'flex items-center justify-center text-muted-2 p-0 py-[6px] border border-muted-4 hover:border-muted-1',
+            connectButtonClx
+          )}
         >
-          <WalletsIcons wallets={wallets} />
-        </Button>
-        <ConnectedWalletsDialog
-          openDialog={openDialog}
-          setOpenDialog={setOpenDialog}
-        />
-      </>
+          {showWalletIcon && (
+            <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" />
+          )}
+          {children}
+        </button>
+      </ConnectButton>
     )
   }
-
-  // return (
-  //   <div className={cn('flex gap-2 items-center', className)}>
-  //     <div className="hidden gap-2 items-center sm:flex">
-  //       <Image
-  //         src={
-  //           network?.logo ??
-  //           'https://cdn.lux.network/bridge/currencies/lux/lux.svg'
-  //         }
-  //         alt="Project Logo"
-  //         height="22"
-  //         width="22"
-  //         loading="eager"
-  //         className="rounded-full object-contain"
-  //       />
-  //       <span>{network && network.display_name}</span>
-  //     </div>
-  //     <div
-  //       onClick={() => setOpenDialog(true)}
-  //       className="sm:flex hidden gap-1 items-center cursor-pointer bg-level-2 px-2 py-1 rounded-full"
-  //     >
-  //       <WalletsIcons wallets={wallets} />
-  //       {shortenAddress(address)}
-  //       <ChevronDown className="h-5 w-5" aria-hidden="true" />
-  //     </div>
-  //     <Button
-  //       variant="outline"
-  //       size="square"
-  //       onClick={() => setOpenDialog(true)}
-  //       aria-label="Connect wallet"
-  //       className={'text-muted-2 p-0 flex items-center justify-center sm:hidden'}
-  //     >
-  //       <WalletsIcons wallets={wallets} />
-  //     </Button>
-  //     <ConnectedWalletsDialog
-  //       openDialog={openDialog}
-  //       setOpenDialog={setOpenDialog}
-  //     />
-  //   </div>
-  // )
-
-  return (
-    <ConnectButton>
-      <Button
-        variant={connectButtonVariant}
-        size="square"
-        aria-label="Connect wallet"
-        className={cn(
-          'flex items-center justify-center',
-          'text-muted-2 p-0 ',
-          connectButtonClx
-        )}
-      >
-        {showWalletIcon && (
-          <WalletIcon className="h-5 w-5 mx-0.5" strokeWidth="1.5" />
-        )}
-        {children}
-      </Button>
-    </ConnectButton>
-  )
-}
 
 const WalletsIcons = ({ wallets }: { wallets: Wallet[] }) => {
   const firstWallet = wallets[0]

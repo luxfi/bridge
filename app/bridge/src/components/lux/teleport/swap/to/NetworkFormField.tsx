@@ -45,7 +45,7 @@ const NetworkFormField: React.FC<{
       <label htmlFor={'name'} className="block font-semibold text-xs">
         To
       </label>
-      <div className="border border-muted-3 bg-level-1 rounded-lg mt-1.5">
+      <div className="border-none bg-level-1 rounded-lg mt-1.5">
         <NetworkSelectWrapper
           disabled={disabled}
           placeholder={'Destination'}
