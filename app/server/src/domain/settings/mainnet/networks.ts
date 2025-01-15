@@ -1315,7 +1315,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      },
+        "destination_base_fee": 0,      
+      },
       {
         "name": "DAI",
         "asset": "DAI",
@@ -1330,7 +1331,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      },
+        "destination_base_fee": 0,      
+      },
       {
         "name": "Slog",
         "asset": "SLOG",
