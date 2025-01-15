@@ -8,7 +8,6 @@ export function isValidAddress(address?: string, network?: { internal_name: stri
     return false
   }
 
-  console.log("::validate address:", network, address)
   if (network?.internal_name === KnownInternalNames.Networks.RoninMainnet) {
     if (address.startsWith("ronin:")) {
       return isAddress(address.replace("ronin:", "0x"))
