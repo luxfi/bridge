@@ -8,8 +8,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // provider  = "sqlite"
+  //provider  = "postgresql"
+  provider  = "sqlite"
   url       = env("POSTGRES_URL") // uses connection pooling
   directUrl = env("POSTGRES_URL") // uses a direct connection
 }
