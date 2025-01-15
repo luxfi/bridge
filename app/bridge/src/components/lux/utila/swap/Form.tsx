@@ -24,12 +24,15 @@ import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/
 //utils
 import { fetchTokenBalance } from '@/lib/utils'
 import { getDestinationNetworks, getFirstSourceNetwork } from '@/util/swapsHelper'
+import { useNotify } from '@/context/toast-provider'
 
 const Address = dynamic(() => import('@/components/lux/teleport/share/Address'), {
   loading: () => <></>,
 })
 
 const Swap: FC = () => {
+  const { notify } = useNotify()
+
   const { networks } = useSettings()
   const filteredNetworks = networks.filter((n: CryptoNetwork) => n.status === 'active' && n.type !== NetworkType.EVM)
 
@@ -59,7 +62,7 @@ const Swap: FC = () => {
 
   // src & dst networks
   const sourceNetworks = filteredNetworks
-  const destinationNetworks = React.useMemo(() => getDestinationNetworks(sourceAsset, networks), [sourceAsset])
+  const destinationNetworks = React.useMemo(() => getDestinationNetworks(sourceNetwork, sourceAsset, networks), [sourceAsset, sourceNetwork])
   // if page is mounted, set sourceNetwork as first one
   React.useEffect(() => {
     setSourceNetwork(filteredNetworks[0])
@@ -108,7 +111,7 @@ const Swap: FC = () => {
       setSourceAsset(srcAsset)
     }
 
-    const destinationNetworks = getDestinationNetworks(destinationAsset, networks)
+    const destinationNetworks = getDestinationNetworks(sourceNetwork, destinationAsset, networks)
     const _destinationNetwork = destinationNetworks.find((n: CryptoNetwork) => n.internal_name === sourceNetwork?.internal_name)
 
     setDestinationNetwork(_destinationNetwork)
@@ -166,6 +169,7 @@ const Swap: FC = () => {
       console.log('::swap creation response:', response.data.data)
       router.push(`/swap/v2/${response.data?.data?.swap_id}`)
     } catch (err) {
+      notify(String(err), 'warn')
       console.log(err)
     } finally {
       setIsSubmitting(false)
@@ -318,7 +322,7 @@ const AddressButton: FC<{
     type="button"
     disabled={disabled}
     onClick={openAddressModal}
-    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-[#404040] border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
+    className="flex rounded-lg space-x-3 items-center cursor-pointer shadow-sm mt-1.5 bg-level-1 border-black border disabled:cursor-not-allowed h-12 leading-4 focus:ring-muted focus:border-muted font-semibold w-full px-3.5 py-3"
   >
     {isPartnerWallet && (
       <div className="shrink-0 flex items-center pointer-events-none">

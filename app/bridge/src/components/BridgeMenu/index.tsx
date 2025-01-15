@@ -1,6 +1,5 @@
 'use client'
 import dynamic from 'next/dynamic'
-
 import Menu from './Menu'
 import Modal from '@/components/modal/modal'
 import Popover from '../modal/popover'
@@ -85,7 +84,7 @@ const BridgeMenu: React.FC = () => {
       size="square"
       onClick={() => setOpenTopModal(true)}
       aria-label="Main menu"
-      className="text-muted-2 p-0 flex items-center justify-center"
+      className="text-muted-2 p-0 flex items-center justify-center border-none"
     >
       <MenuIcon className="h-6 w-6" strokeWidth={2} />
     </Button>

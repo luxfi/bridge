@@ -1,4 +1,4 @@
-import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from "ethers"
+import { Contract, formatEther, JsonRpcProvider, parseEther, parseUnits, Wallet } from "ethers"
 import { TransactionType, swapStatusByIndex, SwapStatus, utilaTransactionStatusByIndex } from "@luxfi/core"
 
 import { UTILA_NETWORKS } from "@/domain/constants"
@@ -648,7 +648,8 @@ export async function handlerUtilaPayoutAction(swapId: string) {
       console.log(`>> Minting PayoutToken for this Swap [${swap.id}]`)
 
       const contract = new Contract(swap.destination_asset.contract_address as string, ERC20B_ABI, wallet)
-      const txMint = await contract.bridgeMint(swap.destination_address, parseEther(String(swap.requested_amount)))
+      const decimals = swap?.destination_asset.decimals ?? 18
+      const txMint = await contract.bridgeMint(swap.destination_address, parseUnits(swap.requested_amount.toFixed(decimals), decimals))
       await txMint.wait()
       console.log(`>> Minted L/Z tokens ${txMint.hash}`)
 
