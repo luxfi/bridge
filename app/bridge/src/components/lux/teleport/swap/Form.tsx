@@ -77,9 +77,9 @@ const Swap: FC = () => {
           ...n,
           currencies: n.currencies.filter((c: NetworkCurrency) => SWAP_PAIRS?.[sourceAsset.asset].includes(c.asset)),
         }))
-        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM)
+        .filter((n: CryptoNetwork) => n.currencies.length > 0 && n.type === NetworkType.EVM && n.internal_name !== sourceNetwork?.internal_name)
     }
-  }, [sourceAsset])
+  }, [sourceAsset, sourceNetwork])
   // when page is mounted, set source network as first network
   React.useEffect(() => {
     setSourceNetwork(filteredNetworks.find((n) => n.status === 'active'))
@@ -96,7 +96,7 @@ const Swap: FC = () => {
     // Prevent triggering useEffect if flip is in progress
     if (flipInProgress) return
 
-    destinationNetworks[0] && setDestinationNetwork(destinationNetworks[0])
+    setDestinationNetwork(destinationNetworks[0])
   }, [destinationNetworks])
   // when detination Network is changed, set destination asset as first asset
   React.useEffect(() => {
