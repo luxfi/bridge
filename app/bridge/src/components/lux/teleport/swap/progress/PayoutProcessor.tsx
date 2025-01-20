@@ -65,9 +65,9 @@ const PayoutProcessor: React.FC<IProps> = ({
   const { connectWallet } = useWallet()
   const { serverAPI } = useServerAPI()
 
-  const toBurn = React.useMemo(() => (sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ') ? true : false), [sourceAsset])
+  const toBurn = React.useMemo(() => sourceAsset.mint, [sourceAsset])
   const toMint = React.useMemo(
-    () => (destinationAsset.name.startsWith('Liquid ') || destinationAsset.name.startsWith('Zoo ') ? true : false),
+    () => destinationAsset.mint,
     [destinationAsset]
   )
 
