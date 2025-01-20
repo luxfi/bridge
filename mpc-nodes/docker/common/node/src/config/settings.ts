@@ -1154,6 +1154,7 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   }
 ]
+
 export const TEST_NETWORKS: NETWORK[] = [
   {
     display_name: "Ethereum Sepolia",
