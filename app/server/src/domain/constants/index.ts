@@ -476,6 +476,7 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
       "PONKE": "assets/spl-token.solana-mainnet.5z3EqYQo9HiCEs3R84RCDMu2n7anpDMxRhdK8PSWmrRC",
       "SLOG": "assets/spl-token.solana-mainnet.9Xfko1cNUJ6cpgBxkdH7k7VyYouUmCtUij5tDWUFpump",
       "TRUMP": "assets/spl-token.solana-mainnet.6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      "MELANIA": "assets/spl-token.solana-mainnet.FUAfBo2jgks6gB4Z4LfZkqSZgzNucisEHqnNebaRxM1P",
       "Z": "assets/spl-token.solana-mainnet.TjXyMY9zb51fgW2rNp3SeFFVtB2ipcSjMKJ4nu3fomo",
     }
   },
