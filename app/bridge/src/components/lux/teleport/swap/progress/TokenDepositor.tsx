@@ -55,7 +55,7 @@ const UserTokenDepositor: React.FC<IProps> = ({
   const { switchChain } = useSwitchChain()
   const { connectWallet } = useWallet()
 
-  const toBurn = React.useMemo(() => (sourceAsset.name.startsWith('Liquid ') || sourceAsset.name.startsWith('Zoo ') ? true : false), [sourceAsset])
+  const toBurn = React.useMemo(() => sourceAsset.mint, [sourceAsset])
 
   React.useEffect(() => {
     // console.log(signer?.provider.network.chainId)
