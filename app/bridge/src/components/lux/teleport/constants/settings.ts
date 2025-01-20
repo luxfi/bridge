@@ -230,6 +230,8 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   MOODENG: ['LMOODENG', 'ZMOODENG'],
   PONKE: ['LPONKE', 'ZPONKE'],
   SLOG: ['SLOG'],
+  Z: ['Z'],
+  TRUMP: ['TRUMP'],
   // Ton tokens
   NOT: ['LNOT', 'ZNOT'],
   DOGS: ['LDOGS', 'ZDOGS'],
