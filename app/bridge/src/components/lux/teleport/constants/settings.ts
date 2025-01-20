@@ -231,6 +231,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   PONKE: ['LPONKE', 'ZPONKE'],
   SLOG: ['SLOG'],
   Z: ['Z'],
+  MELANIA: ['MELANIA'],
   TRUMP: ['TRUMP'],
   // Ton tokens
   NOT: ['LNOT', 'ZNOT'],

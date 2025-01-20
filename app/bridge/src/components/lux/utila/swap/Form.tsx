@@ -10,8 +10,7 @@ import SpinIcon from '@/components/icons/spinIcon'
 import shortenAddress from '@/components/utils/ShortenAddress'
 import FromNetworkForm from '@/components/lux/teleport/swap/from/NetworkFormField'
 import ToNetworkForm from '@/components/lux/teleport/swap/to/NetworkFormField'
-import { Button } from '@hanzo/ui/primitives'
-import { ArrowLeftRight, ArrowUpDown, WalletIcon } from 'lucide-react'
+import { ArrowLeftRight, ArrowUpDown } from 'lucide-react'
 //hooks
 import useWallet from '@/hooks/useWallet'
 import useAsyncEffect from 'use-async-effect'
@@ -52,7 +51,6 @@ const Swap: FC = () => {
 
   const [sourceAmount, setSourceAmount] = React.useState<string>('')
   const [tokenPrice, setTokenPrice] = React.useState<number>(0)
-  const [flipInProgress, setFlipInProgress] = React.useState<boolean>(false)
 
   // hooks
   const router = useRouter()
@@ -69,8 +67,6 @@ const Swap: FC = () => {
   }, [])
   // when sourceNetwork is changed, set source asset as first asset
   React.useEffect(() => {
-    // Prevent triggering useEffect if flip is in progress
-    if (flipInProgress) return
     if (sourceNetwork) {
       setSourceAsset(sourceNetwork.currencies.find((c) => c.status === 'active'))
     } else {
@@ -79,43 +75,17 @@ const Swap: FC = () => {
   }, [sourceNetwork])
   // set destination network
   React.useEffect(() => {
-    // Prevent triggering useEffect if flip is in progress
-    if (flipInProgress) return
-
     setDestinationNetwork(destinationNetworks[0])
   }, [destinationNetworks])
   // when detination Network is changed, set destination asset as first asset
   React.useEffect(() => {
     // Prevent triggering useEffect if flip is in progress
-    if (flipInProgress) return
+    // if (flipInProgress) return
 
     setDestinationAsset(destinationNetwork?.currencies.find((c) => c.status === 'active'))
   }, [destinationNetwork])
 
-  React.useEffect(() => {
-    if (flipInProgress) {
-      setFlipInProgress(false) // Reset the flip flag after state has been updated
-    }
-  }, [sourceNetwork, sourceAsset, destinationNetwork, destinationAsset]) // Dependency array includes all relevant states
-
   const handleFlip = () => {
-    setFlipInProgress(true)
-
-    const _sourceNetwork = filteredNetworks.find((n: CryptoNetwork) => n.internal_name === destinationNetwork?.internal_name)
-    if (_sourceNetwork) {
-      setSourceNetwork(_sourceNetwork)
-      setSourceAsset(destinationAsset)
-    } else {
-      const { srcNetwork, srcAsset } = getFirstSourceNetwork(sourceNetwork, sourceAsset, networks)
-      setSourceNetwork(srcNetwork)
-      setSourceAsset(srcAsset)
-    }
-
-    const destinationNetworks = getDestinationNetworks(sourceNetwork, destinationAsset, networks)
-    const _destinationNetwork = destinationNetworks.find((n: CryptoNetwork) => n.internal_name === sourceNetwork?.internal_name)
-
-    setDestinationNetwork(_destinationNetwork)
-    setDestinationAsset(sourceAsset)
   }
 
   // get token price
