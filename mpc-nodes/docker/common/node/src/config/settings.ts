@@ -262,7 +262,28 @@ export const MAIN_NETWORKS: NETWORK[] = [
         contract_address: "0x408E5681E209d37FD52c76cF9ee7EfFA8476cd9a",
         decimals: 18,
         is_native: false
-      }
+      },
+      {
+        name: "Official Trump",
+        asset: "TRUMP",
+        contract_address: "0x768972Ee4038a23b20B3beD3848027460172D897",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "Melania Meme",
+        asset: "MELANIA",
+        contract_address: "0x14F48A55722ecBa725aA83a294a8d3E8bE47DE46",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "Z",
+        asset: "Z",
+        contract_address: "0xA69E6612B525474CB893500b70FD7Ec374CbF9a3",
+        decimals: 6,
+        is_native: false
+      },
     ]
   },
   {
@@ -513,7 +534,28 @@ export const MAIN_NETWORKS: NETWORK[] = [
         contract_address: "0x137747A15dE042Cd01fCB41a5F3C7391d932750B",
         decimals: 18,
         is_native: false
-      }
+      },
+      {
+        name: "Official Trump",
+        asset: "TRUMP",
+        contract_address: "0x768972Ee4038a23b20B3beD3848027460172D897",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "Melania Meme",
+        asset: "MELANIA",
+        contract_address: "0x14F48A55722ecBa725aA83a294a8d3E8bE47DE46",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "Z",
+        asset: "Z",
+        contract_address: "0xA69E6612B525474CB893500b70FD7Ec374CbF9a3",
+        decimals: 6,
+        is_native: false
+      },
     ]
   },
   {
@@ -1809,6 +1851,11 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZDOGS: ["LDOGS"],
   ZMRB: ["LMRB"],
   ZREDO: ["LREDO"],
+  
+  // Lux & Zoo tokens
+  TRUMP: ["TRUMP"],
+  MELANIA: ["MELANIA"],
+  Z: ["Z"],
 
   // Evm tokens
   ETH: ["LETH", "ZETH"],
