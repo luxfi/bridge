@@ -830,7 +830,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Melania Meme",
@@ -846,7 +847,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Z",
@@ -862,7 +864,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid BTC",
@@ -879,6 +882,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid ETH",
@@ -895,6 +899,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid Dollar",
@@ -911,6 +916,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid ZOO",
@@ -927,6 +933,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid BNB",
@@ -943,6 +950,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid POL",
@@ -959,6 +967,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid CELO",
@@ -975,6 +984,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid FTM",
@@ -991,6 +1001,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid xDAI",
@@ -1007,6 +1018,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid SOL",
@@ -1023,6 +1035,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid TON",
@@ -1039,6 +1052,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid ADA",
@@ -1055,6 +1069,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid AVAX",
@@ -1071,6 +1086,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid BLAST",
@@ -1087,6 +1103,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid BONK",
@@ -1103,6 +1120,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid WIF",
@@ -1119,6 +1137,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid Popcat",
@@ -1135,6 +1154,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid PNUT",
@@ -1151,6 +1171,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid MEW",
@@ -1167,6 +1188,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid BOME",
@@ -1183,6 +1205,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid GIGA",
@@ -1199,6 +1222,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid AI16Z",
@@ -1215,6 +1239,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid FWOG",
@@ -1231,6 +1256,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid MOODENG",
@@ -1247,6 +1273,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid PONKE",
@@ -1262,7 +1289,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0,  
+        "mint": true    
       },
       {
         "name": "Liquid NOT",
@@ -1278,7 +1306,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true     
       },
       {
         "name": "Liquid DOGS",
@@ -1295,6 +1324,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid MRB",
@@ -1311,6 +1341,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Liquid REDO",
@@ -1327,6 +1358,7 @@ export default [
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
         "destination_base_fee": 0,
+        "mint": true
       }
     ],
     "metadata": null,
@@ -1443,7 +1475,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true     
       },
       {
         "name": "Official Trump",
@@ -1459,7 +1492,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Melania Meme",
@@ -1475,7 +1509,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Z",
@@ -1491,7 +1526,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true     
       },
       {
         "name": "Zoo BTC",
@@ -1507,7 +1543,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true      
       },
       {
         "name": "Zoo ETH",
@@ -1523,7 +1560,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true      
       },
       {
         "name": "Zoo Dollar",
@@ -1539,7 +1577,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,      
+        "destination_base_fee": 0, 
+        "mint": true      
       },
       {
         "name": "Zoo LUX",
@@ -1555,7 +1594,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo BNB",
@@ -1571,7 +1611,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo POL",
@@ -1587,7 +1628,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo CELO",
@@ -1603,7 +1645,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo FTM",
@@ -1619,7 +1662,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo xDAI",
@@ -1635,7 +1679,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo SOL",
@@ -1651,7 +1696,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo TON",
@@ -1667,7 +1713,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo ADA",
@@ -1683,7 +1730,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo AVAX",
@@ -1699,7 +1747,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo BLAST",
@@ -1715,7 +1764,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo BONK",
@@ -1731,7 +1781,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo WIF",
@@ -1747,7 +1798,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo Popcat",
@@ -1763,7 +1815,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo PNUT",
@@ -1779,7 +1832,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo MEW",
@@ -1795,7 +1849,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo BOME",
@@ -1811,7 +1866,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo GIGA",
@@ -1827,7 +1883,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo AI16Z",
@@ -1843,7 +1900,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo FWOG",
@@ -1859,7 +1917,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo MOODENG",
@@ -1875,7 +1934,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo PONKE",
@@ -1891,7 +1951,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo NOT",
@@ -1907,7 +1968,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo DOGS",
@@ -1923,7 +1985,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo MRB",
@@ -1939,7 +2002,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       },
       {
         "name": "Zoo REDO",
@@ -1955,7 +2019,8 @@ export default [
         "deposit_fee": 0,
         "withdrawal_fee": 0.01,
         "source_base_fee": 0,
-        "destination_base_fee": 0,
+        "destination_base_fee": 0, 
+        "mint": true
       }
     ],
     "metadata": null,

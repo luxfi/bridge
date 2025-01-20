@@ -13,14 +13,12 @@ interface Asset {
   withdrawal_fee: number
   source_base_fee: number
   destination_base_fee: number
-  //is_native: boolean
-
   id?: number,
   price_in_usd?: number | null,
   precision?: number | null,
   listing_date?: Date,
   network_id?: number
-
+  mint?: boolean
 }
 
 export {

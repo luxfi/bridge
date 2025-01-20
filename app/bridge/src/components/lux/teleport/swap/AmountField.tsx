@@ -10,18 +10,19 @@ const AmountField: React.FC<{
   setValue?: (value: string) => void
   value: string
   className?: string
-}> = ({
-  disabled,
-  value,
+}> = ({ 
+  disabled, 
+  value, 
   setValue,
-  className
+  className 
 }) => {
-  // No need to retest the pattern as we are blocking all other input via the pattern prop
+
+    // No need to retest the pattern as we are blocking all other input via the pattern prop
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (/^[0-9]*[.,]?[0-9]*$/.test(e.target.value) && setValue) {
-      setValue(e.target.value);
+    if (setValue) {
+      setValue(e.target.value)
     }
-  };
+  }
 
   return (
     <input
@@ -41,8 +42,8 @@ const AmountField: React.FC<{
       className={cn(
         'outline-none px-1 py-0',
         'focus:ring-0 disabled:cursor-not-allowed h-hit',
-        'leading-4 bg-level-1',
-        'placeholder:text-muted-3 focus:ring-foreground',
+        'leading-4 bg-level-1', 
+        'placeholder:text-muted-3 focus:ring-foreground', 
         'block font-semibold ',
         className
       )}
