@@ -148,6 +148,12 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
       msg: `Unmatched Network Type Error: Src and Dst chains' types are not matched.`
     })
     return
+  } else if (fromNetwork.internal_name === toNetwork.internal_name) {
+    res.json({
+      status: false,
+      msg: `Source and Destination networks are same`
+    })
+    return
   }
   // get Web3Form using rpc url of specific network
   const web3Form = getWeb3FormForRPC(fromNetwork.node)
@@ -377,8 +383,7 @@ const getEvmTransactionUsingTxId = async (txId: string, w3From: Web3<RegisteredS
       const iface = new Interface(abi)
       const eventLog = tx.logs
 
-      //@ts-expect-error "_event type not matching"
-      const _logs = await Promise.all(eventLog.map((e) => iface.parseLog(e)))
+      const _logs = await Promise.all(eventLog.map((e: any) => iface.parseLog(e)))
       const _log = _logs.filter((l) => l !== null)[0]
 
       if (!_log) {
