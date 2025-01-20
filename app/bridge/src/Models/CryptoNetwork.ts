@@ -43,6 +43,7 @@ export type NetworkCurrency = {
     precision: number
     price_in_usd: number
     is_native: boolean
+    mint?: boolean
 }
 export type NetworkNode = {
     url: string

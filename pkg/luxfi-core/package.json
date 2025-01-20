@@ -1,6 +1,6 @@
 {
   "name": "@luxfi/core",
-  "version": "10.0.2",
+  "version": "10.0.4",
   "description": "Core types and shared utilities related to blockchain",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
