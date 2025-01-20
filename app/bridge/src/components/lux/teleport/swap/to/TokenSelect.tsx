@@ -31,10 +31,10 @@ const TokenSelect: React.FC<{
                   <Image
                     src={item.logo || ''}
                     alt="Project Logo"
-                    height="40"
-                    width="40"
                     loading="eager"
-                    className="rounded-full object-contain"
+                    height={40}
+                    width={40}
+                    className="rounded-full aspect-square object-contain"
                   />
                 )}
               </div>

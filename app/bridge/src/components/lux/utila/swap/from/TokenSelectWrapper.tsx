@@ -52,9 +52,9 @@ const TokenSelectWrapper: React.FC<{
                     src={value.logo}
                     alt="Project Logo"
                     priority
-                    height="40"
-                    width="40"
-                    className="rounded-full object-contain"
+                    height={40}
+                    width={40}
+                    className="rounded-full aspect-square object-contain"
                   />
                 )}
               </div>
