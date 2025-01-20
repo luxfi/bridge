@@ -1,13 +1,13 @@
 
-import KnownInternalNames from "../../knownIds";
-import formatAmount from "../../formatAmount";
+import KnownInternalNames from "@/lib/knownIds";
+import formatAmount from "@/lib/formatAmount";
 import type {
     Balance,
     BalanceProps,
     BalanceProvider,
     Gas,
     GasProps
-} from "../../../Models/Balance";
+} from "@/Models/Balance";
 import type { PublicKey } from "@solana/web3.js"
 
 export default function useSolanaBalance(): BalanceProvider {
