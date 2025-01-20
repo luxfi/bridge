@@ -58,6 +58,10 @@ module.exports = (phase, { defaultConfig }) => {
           pathname: '**',
         },
         {
+          protocol: "https",
+          hostname: "arweave.net",
+        },
+        {
           protocol: "http",
           hostname: "localhost",
         }
