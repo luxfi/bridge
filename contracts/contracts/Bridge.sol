@@ -435,7 +435,6 @@ contract Bridge is Ownable, AccessControl {
             Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
             vault_
         );
-
         // Check if signedTxInfo already exists
         require(
             !transactionMap[signedTXInfo_].exists,
