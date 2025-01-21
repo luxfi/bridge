@@ -478,6 +478,7 @@ export const UTILA_NETWORKS: Record<string, UTILA_NETWORK> = {
       "TRUMP": "assets/spl-token.solana-mainnet.6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
       "MELANIA": "assets/spl-token.solana-mainnet.FUAfBo2jgks6gB4Z4LfZkqSZgzNucisEHqnNebaRxM1P",
       "Z": "assets/spl-token.solana-mainnet.TjXyMY9zb51fgW2rNp3SeFFVtB2ipcSjMKJ4nu3fomo",
+      "CYRUS": "assets/spl-token.solana-mainnet.UgwE6m5BMPMekfKqCJpdmBBbEdXu1kznfr88RHTfomo",
     }
   },
   'SOLANA_DEVNET': {
