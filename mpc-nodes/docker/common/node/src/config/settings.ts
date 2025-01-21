@@ -1871,6 +1871,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   TRUMP: ["TRUMP"],
   MELANIA: ["MELANIA"],
   Z: ["Z"],
+  CYRUS: ["CYRUS"],
 
   // Evm tokens
   ETH: ["LETH", "ZETH"],
