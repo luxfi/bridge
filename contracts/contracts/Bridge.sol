@@ -22,8 +22,10 @@ contract Bridge is Ownable, AccessControl {
     using Strings for uint256;
 
     uint256 public feeRate = 100; // Fee rate 1% decimals 4
+    bool withdrawalEnabled = true;
     address internal payoutAddress = 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714;
     LuxVault public vault;
+    
     /** Events */
     event BridgeBurned(address caller, uint256 amt, address token);
     event VaultDeposit(address depositor, uint256 amt, address token);
@@ -55,6 +57,14 @@ contract Bridge is Ownable, AccessControl {
     function grantAdmin(address to_) public onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, to_);
         emit AdminGranted(to_);
+    }
+
+    /**
+     * @dev set Withdrawal enabled
+     * @param state_ admin address
+     */
+    function setWithdrawalEnabled(bool state_) external onlyOwner {
+        withdrawalEnabled = state_;
     }
 
     /**
@@ -439,7 +449,8 @@ contract Bridge is Ownable, AccessControl {
         require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
 
         // Calculate fee and adjust amount
-        uint256 _amount = (tokenAmount_ * 10 ** 18) /
+        uint256 _toTokenDecimals = teleport.token.decimals();
+        uint256 _amount = (tokenAmount_ * 10 ** _toTokenDecimals) /
             (10 ** fromTokenDecimals_);
         teleport.token.bridgeMint(teleport.receiverAddress, _amount);
         // Add new transaction ID mapping
@@ -474,6 +485,8 @@ contract Bridge is Ownable, AccessControl {
         bytes memory signedTXInfo_,
         string memory vault_
     ) external returns (address) {
+        require(withdrawalEnabled == true, "Withdrawl not enabled!");
+
         TeleportStruct memory teleport;
         // Hash calculations
         teleport.tokenAddressHash = keccak256(
@@ -513,11 +526,12 @@ contract Bridge is Ownable, AccessControl {
         require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
 
         uint256 _amount = tokenAmount_;
+        uint256 _toTokenDecimals = teleport.token.decimals();
         if (toTokenAddress_ == address(0)) {
             _amount = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
         } else {
             _amount =
-                (tokenAmount_ * 10 ** ERC20(toTokenAddress_).decimals()) /
+                (tokenAmount_ * 10 ** _toTokenDecimals) /
                 (10 ** fromTokenDecimals_);
         }
         uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
