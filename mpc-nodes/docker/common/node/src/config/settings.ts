@@ -26,8 +26,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "LUX_MAINNET",
     is_testnet: false,
     chain_id: "96369",
-    teleporter: "0x5B562e80A56b600d729371eB14fE3B83298D0642",
-    vault: "0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e",
+    teleporter: "0x9012A4162deA268F6a9e475b78B33f20127158E3",
+    vault: "0xf1Adba64335af4E80fFe9A3a6b6Dc2f1e1cBb4CB",
     node: "https://api.lux.network",
     currencies: [
       {
@@ -284,6 +284,13 @@ export const MAIN_NETWORKS: NETWORK[] = [
         decimals: 6,
         is_native: false
       },
+      {
+        name: "Cyrus AI",
+        asset: "CYRUS",
+        contract_address: "0x0A78f7Ce8D65e0FD4D6B78848483bA3C4fb895c5",
+        decimals: 6,
+        is_native: false
+      },
     ]
   },
   {
@@ -291,8 +298,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "ZOO_MAINNET",
     is_testnet: false,
     chain_id: "200200",
-    teleporter: "0x5B562e80A56b600d729371eB14fE3B83298D0642",
-    vault: "0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e",
+    teleporter: "0x9012A4162deA268F6a9e475b78B33f20127158E3",
+    vault: "0xf1Adba64335af4E80fFe9A3a6b6Dc2f1e1cBb4CB",
     node: "https://api.zoo.network",
     currencies: [
       {
@@ -553,6 +560,13 @@ export const MAIN_NETWORKS: NETWORK[] = [
         name: "Z",
         asset: "Z",
         contract_address: "0xA69E6612B525474CB893500b70FD7Ec374CbF9a3",
+        decimals: 6,
+        is_native: false
+      },
+      {
+        name: "Cyrus AI",
+        asset: "CYRUS",
+        contract_address: "0x0A78f7Ce8D65e0FD4D6B78848483bA3C4fb895c5",
         decimals: 6,
         is_native: false
       },
