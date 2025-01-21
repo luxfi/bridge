@@ -2,14 +2,14 @@ export const CONTRACTS = {
   96369: {
     name: 'LUX_MAINNET',
     chain_id: 96369,
-    teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
-    vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
+    teleporter: '0x9012A4162deA268F6a9e475b78B33f20127158E3',
+    vault: '0xf1Adba64335af4E80fFe9A3a6b6Dc2f1e1cBb4CB',
   },
   200200: {
     name: 'ZOO_MAINNET',
     chain_id: 200200,
-    teleporter: '0x5B562e80A56b600d729371eB14fE3B83298D0642',
-    vault: '0x08c0f48517C6d94Dd18aB5b132CA4A84FB77108e',
+    teleporter: '0x9012A4162deA268F6a9e475b78B33f20127158E3',
+    vault: '0xf1Adba64335af4E80fFe9A3a6b6Dc2f1e1cBb4CB',
   },
   1: {
     name: 'ETHEREUM_MAINNET',
