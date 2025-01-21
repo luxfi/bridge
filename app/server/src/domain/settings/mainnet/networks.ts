@@ -868,6 +868,23 @@ export default [
         "mint": true
       },
       {
+        "name": "Cyrus AI",
+        "asset": "CYRUS",
+        "logo": "https://cdn.lux.network/bridge/currencies/cyrus.jpeg",
+        "contract_address": "0x0A78f7Ce8D65e0FD4D6B78848483bA3C4fb895c5",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0.01,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "mint": true
+      },
+      {
         "name": "Liquid BTC",
         "asset": "LBTC",
         "logo": "https://cdn.lux.network/bridge/currencies/lux/lbtc.svg",
@@ -1528,6 +1545,23 @@ export default [
         "source_base_fee": 0,
         "destination_base_fee": 0, 
         "mint": true     
+      },
+      {
+        "name": "Cyrus AI",
+        "asset": "CYRUS",
+        "logo": "https://cdn.lux.network/bridge/currencies/cyrus.jpeg",
+        "contract_address": "0x0A78f7Ce8D65e0FD4D6B78848483bA3C4fb895c5",
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": false,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0.01,
+        "source_base_fee": 0,
+        "destination_base_fee": 0,
+        "mint": true
       },
       {
         "name": "Zoo BTC",
