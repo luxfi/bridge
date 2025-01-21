@@ -26,8 +26,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "LUX_MAINNET",
     is_testnet: false,
     chain_id: "96369",
-    teleporter: "0x9012A4162deA268F6a9e475b78B33f20127158E3",
-    vault: "0xf1Adba64335af4E80fFe9A3a6b6Dc2f1e1cBb4CB",
+    teleporter: "0xae90b22d05809589E86B107140A8508304Da5C22",
+    vault: "0x799B5e68706481d809d7d5729fe9ADD8Dff969A2",
     node: "https://api.lux.network",
     currencies: [
       {
@@ -298,8 +298,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "ZOO_MAINNET",
     is_testnet: false,
     chain_id: "200200",
-    teleporter: "0x9012A4162deA268F6a9e475b78B33f20127158E3",
-    vault: "0xf1Adba64335af4E80fFe9A3a6b6Dc2f1e1cBb4CB",
+    teleporter: "0xae90b22d05809589E86B107140A8508304Da5C22",
+    vault: "0x799B5e68706481d809d7d5729fe9ADD8Dff969A2",
     node: "https://api.zoo.network",
     currencies: [
       {

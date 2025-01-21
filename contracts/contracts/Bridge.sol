@@ -435,6 +435,7 @@ contract Bridge is Ownable, AccessControl {
             Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
             vault_
         );
+
         // Check if signedTxInfo already exists
         require(
             !transactionMap[signedTXInfo_].exists,
@@ -525,13 +526,13 @@ contract Bridge is Ownable, AccessControl {
         // Check if signer is MPCOracle and corresponds to the correct ERC20B
         require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
 
-        uint256 _amount = tokenAmount_;
-        uint256 _toTokenDecimals = teleport.token.decimals();
+        uint256 _amount = 0;
+
         if (toTokenAddress_ == address(0)) {
             _amount = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
         } else {
             _amount =
-                (tokenAmount_ * 10 ** _toTokenDecimals) /
+                (tokenAmount_ * 10 ** teleport.token.decimals()) /
                 (10 ** fromTokenDecimals_);
         }
         uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
