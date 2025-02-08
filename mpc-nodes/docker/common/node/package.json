@@ -11,7 +11,7 @@
     "start": "ts-node-dev src/node.ts",
     "build": "tsc && tsc-alias && npx prisma generate",
     "server": "node dist/initialize.js",
-    "initialize": "node dist/node.js",
+    "initialize": "node dist/initialize.js",
     "keygen": "cd dist/multiparty && ./target/release/examples/gg18_keygen_client http://sm-manager:8000 keys.store",
     "production": "set PORT=80&&set ENVIRONMENT=PRODUCTION&&ts-node src/node.ts",
     "lint": "eslint src/**/*.ts",
