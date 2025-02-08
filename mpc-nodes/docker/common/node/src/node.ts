@@ -426,6 +426,7 @@ const getEvmTransactionUsingTxId = async (txId: string, w3From: Web3<RegisteredS
       }
     }
   } catch (err) {
+    console.log(">> getEvmTransactionUsingTxId", err)
     return {
       status: false,
       msg: "bad transaction hash, no transaction on chain",
