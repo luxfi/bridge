@@ -45,6 +45,22 @@ export const getWeb3FormForRPC = (rpcUrl: string) => {
 }
 
 /**
+ * kill all of running signers
+ */
+export const killSigners = async () => {
+  try {
+    const list = await find("name", `${signClientName} ${signSmManager}`)
+    if (list.length > 0) {
+      for (const p of list) {
+        await killSigner(String(p.pid))
+      }
+    }
+  } catch (err) {
+    console.log("::killSignersError:", err)
+  }
+}
+
+/**
  * generate signature
  * @param i 
  * @param msgHash 

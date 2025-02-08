@@ -16,7 +16,7 @@ import { RegisteredSubscription } from "web3/lib/commonjs/eth.exports"
 import { PrismaClient } from "@prisma/client"
 import { signDataValidator } from "./validator"
 import { MAIN_NETWORKS, SWAP_PAIRS, TEST_NETWORKS } from "./config/settings"
-import { getWeb3FormForRPC, hashAndSignTx } from "./utils"
+import { getWeb3FormForRPC, hashAndSignTx, killSigners } from "./utils"
 
 const prisma = new PrismaClient()
 
@@ -307,6 +307,13 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
     res.json(output)
     return
   }
+})
+/**
+ * kill current running signers
+ */
+app.post("api/v1/kill", async (req: Request, res: Response) => {
+  killSigners()
+  res.status(200).json({ status: true, msg: "success" })
 })
 
 /**
