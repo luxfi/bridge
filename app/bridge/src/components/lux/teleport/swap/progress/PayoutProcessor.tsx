@@ -140,6 +140,7 @@ const PayoutProcessor: React.FC<IProps> = ({
           amount: sourceAmount,
           from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
           to: destinationAddress,
+          hashedTxId: mintData.hashedTxId_
         })
         setSwapStatus('payout_success')
         throw new Error('Duplicated Hash detected. Please contact to support team')
@@ -187,6 +188,7 @@ const PayoutProcessor: React.FC<IProps> = ({
         amount: sourceAmount,
         from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
         to: destinationAddress,
+        hashedTxId: mintData.hashedTxId_
       })
       setSwapStatus('payout_success')
     } catch (err: any) {
