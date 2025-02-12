@@ -1,4 +1,4 @@
-import { prisma } from "./prisma-instance"
+import { prisma } from "@/prisma-instance"
 
 import { mainnetSettings, testnetSettings } from "@/domain/settings"
 
