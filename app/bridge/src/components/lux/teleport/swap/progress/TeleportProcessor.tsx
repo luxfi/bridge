@@ -114,7 +114,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       const { data } = await serverAPI.post(`/api/swaps/getsig`, signData)
       console.log('data from mpc oracle network:::', data)
       console.log('::swapId::save mpc signature to server:', swapId)
-      if (data.status) {
+      if (data.data) {
         await serverAPI.post(`/api/swaps/mpcsign/${swapId}`, {
           txHash: data.data.signature,
           amount: sourceAmount,
