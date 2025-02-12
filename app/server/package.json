@@ -15,7 +15,6 @@
     "typecheck": "tsc",
     "clean": "rm -rf ./node_modules",
     "prisma:gen": "pnpx prisma generate",
-    "postinstall": "pnpx prisma generate",
     "build": "pnpx prisma generate && tsc && tsc-alias",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
