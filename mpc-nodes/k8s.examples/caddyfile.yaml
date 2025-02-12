@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddyfile
+data:
+  Caddyfile: |
+    teleport.lux.network {
+      # Handle requests to /node0 and its subpaths
+      handle_path <path0>* {
+        reverse_proxy mpc-node-0:<PORT0>
+      }
+
+      # Handle requests to /node1 and its subpaths
+      handle_path <path1>* {
+        reverse_proxy mpc-node-1:<PORT1>
+      }
+
+      # Handle requests to /node2 and its subpaths
+      handle_path <path2>* {
+        reverse_proxy mpc-node-2:<PORT2>
+      }
+
+      # Catch-all for other requests, return 404 Not Found
+      handle {
+        respond "Not Found" 404
+      }
+    }
