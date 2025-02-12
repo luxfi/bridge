@@ -5,7 +5,6 @@ import morgan from "morgan"
 import { v4 as uuidv4 } from "uuid"
 
 import logger from "@/logger" // Import Winston logger
-
 import swaps from "@/routes/swaps"
 import explorer from "@/routes/explorer"
 import settings from "@/routes/settings"
