@@ -328,10 +328,9 @@ const checkStealthSignature = async (hashedTxId: string) => {
       where: { hashedTxId: hashedTxId }
     })
     console.log("::Find Stealth Hash: ", data)
-    if (data) {
-      return Promise.resolve({ status: true, data: data })
+    if (data.completed) {
+      return Promise.resolve({ status: true, data: null })
     } else {
-      // not a replay
       return Promise.resolve({ status: false, data })
     }
   } catch (err) {
