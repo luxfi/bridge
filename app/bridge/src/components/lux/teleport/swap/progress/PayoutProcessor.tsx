@@ -92,7 +92,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       tokenAmount_: parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
-      signedTXInfo_: mpcSignature,
+      signedTXInfo_: mpcSignature.includes("###") ? mpcSignature.split("###")[0] : mpcSignature,
       vault_: toBurn ? 'false' : 'true',
     }
 
@@ -111,9 +111,8 @@ const PayoutProcessor: React.FC<IProps> = ({
 
       // Set up provider and wallet
       const provider = new ethers.providers.JsonRpcProvider(destinationNetwork.nodes[0])
-      
+
       const feeData = await provider.getFeeData()
-      console.log(feeData)
 
       // Replace with your private key (store it securely, not hardcoded in production)
       const privateKey = process.env.NEXT_PUBLIC_LUX_SIGNER
@@ -121,6 +120,7 @@ const PayoutProcessor: React.FC<IProps> = ({
 
       const bridgeContract = new Contract(CONTRACTS[Number(destinationNetwork.chain_id) as keyof typeof CONTRACTS].teleporter, teleporterABI, wallet)
 
+      console.log(bridgeContract)
       const _signer = await bridgeContract.previewBridgeStealth(
         mintData.hashedTxId_,
         mintData.toTokenAddress_,
@@ -210,7 +210,7 @@ const PayoutProcessor: React.FC<IProps> = ({
       tokenAmount_: parseUnits(localeNumber(sourceAmount, sourceAsset.decimals), sourceAsset.decimals),
       fromTokenDecimals_: sourceAsset?.decimals,
       receiverAddress_: destinationAddress,
-      signedTXInfo_: mpcSignature,
+      signedTXInfo_: mpcSignature.includes("###") ? mpcSignature.split("###")[0] : mpcSignature,
       vault_: 'false',
     }
 
@@ -265,6 +265,7 @@ const PayoutProcessor: React.FC<IProps> = ({
           amount: sourceAmount,
           from: CONTRACTS[Number(sourceNetwork?.chain_id) as keyof typeof CONTRACTS].teleporter,
           to: destinationAddress,
+          hashedTxId: withdrawData.hashedTxId_
         })
         setSwapStatus('payout_success')
         throw new Error('Duplicated Hash detected. Please contact to support team')
