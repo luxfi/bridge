@@ -1,0 +1,28 @@
+apiVersion: apps/v1  
+kind: Deployment  
+metadata:  
+  name: caddy  
+spec:  
+  replicas: 1  
+  selector:  
+    matchLabels:  
+      app: caddy
+  template:
+    metadata:
+      labels:
+        app: caddy
+    spec:
+      containers:
+      - name: caddy
+        image: caddy:latest
+        ports:
+        - containerPort: 80  
+        - containerPort: 443  
+        volumeMounts:  
+        - name: caddyfile
+          mountPath: /etc/caddy/Caddyfile  # This is the typical mount path  
+          subPath: Caddyfile
+      volumes:
+      - name: caddyfile
+        configMap:
+          name: caddyfile
