@@ -1,0 +1,36 @@
+services:
+  sm-manager:
+    build:
+      context: .
+      dockerfile: ./services/sm-manager
+    ports:
+      - 8000:8000
+    networks:
+      - lux-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  mpc-node:
+    build:
+      context: .
+      dockerfile: ./services/mpc-node
+    environment:
+      - NODE_ENV=
+      - smTimeOutBound=
+      - sign_client_name=
+      - node_number=
+      - sign_sm_manager=
+      - PORT=
+      - POSTGRESQL_URL=
+    ports:
+      - 6000:6000
+    networks:
+      - lux-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+networks:
+  lux-network:
+    driver: bridge
