@@ -15,15 +15,16 @@ datasource db {
 }
 
 // pnpx prisma generate
-// npx prisma db push 
-// npx prisma studio 
+// npx prisma db push
+// npx prisma studio
 // prisma migrate dev
 
 model Teleporter {
-  id         Int    @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   txId       String
   chainType  String
   amount     String
   signature  String
-  hashedTxId String @unique
+  hashedTxId String  @unique
+  completed  Boolean @default(false)
 }
