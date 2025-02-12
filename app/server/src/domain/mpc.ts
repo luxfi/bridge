@@ -9,7 +9,11 @@ const mpc_nodes = [
   "http://mpc-node-1:6000"
   // "http://mpc-node-2:6000"
 ]
-
+/**
+ * get signature from mpc oracle network for mpc signature
+ * @param signData 
+ * @returns 
+ */
 export const getSigFromMpcOracleNetwork = (signData: { txId: string; fromNetworkId: string; toNetworkId: string; toTokenAddress: string; msgSignature: string; receiverAddressHash: string }) => {
   console.log("::signdata:", signData)
   return new Promise((resolve, reject) => {
@@ -22,4 +26,17 @@ export const getSigFromMpcOracleNetwork = (signData: { txId: string; fromNetwork
       }
     })
   })
+}
+/**
+ * update mpc-node to complete swap
+ * @param hashedTxId 
+ * @returns 
+ */
+export const completeSwapWithMpc = async (hashedTxId: string) => {
+  try {
+    const { data } = await axios.post(`${mpc_nodes[0]}/api/v1/complete`, { hashedTxId })
+    return data;
+  } catch (err) {
+    console.log(">> error in updating complete swap for mpc", err)
+  }
 }

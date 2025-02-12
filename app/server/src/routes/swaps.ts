@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express"
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
-import { getSigFromMpcOracleNetwork } from "@/domain/mpc"
+import { completeSwapWithMpc, getSigFromMpcOracleNetwork } from "@/domain/mpc"
 import { 
   handleSwapCreation, 
   handlerCheckDeposit, 
@@ -111,7 +111,13 @@ router.post(
 // method: GET and it's public
 router.post(
   "/payout/:swapId",
-  [check("txHash", "txHash is required").notEmpty(), check("amount", "amount is required").notEmpty(), check("from", "from is required").notEmpty(), check("to", "to is required").notEmpty()],
+  [
+    check("txHash", "txHash is required").notEmpty(), 
+    check("amount", "amount is required").notEmpty(), 
+    check("from", "from is required").notEmpty(), 
+    check("to", "to is required").notEmpty(),
+    check("hashedTxId", "hashedTxId is required").notEmpty(),
+  ],
   async (req: Request, res: Response) => {
     try {
       const errors: Result<ValidationError> = validationResult(req)
@@ -119,9 +125,10 @@ router.post(
         return res.status(400).json({ errors: errors.array() })
       }
       const swapId = req.params.swapId
-      const { txHash, amount, from, to } = req.body
-      const result = await handlerUpdatePayoutAction(swapId as string, txHash, Number(amount), from, to)
-      res.status(200).json({ data: result })
+      const { txHash, amount, from, to, hashedTxId } = req.body
+      const swapResult = await handlerUpdatePayoutAction(swapId as string, txHash, Number(amount), from, to)
+      const mpcResult = await completeSwapWithMpc(hashedTxId)
+      res.status(200).json({ data: swapResult, mpcResult })
     } catch (error: any) {
       res.status(500).json({ error: error?.message })
     }
