@@ -15,7 +15,8 @@
     "typecheck": "tsc",
     "clean": "rm -rf ./node_modules",
     "prisma:gen": "pnpx prisma generate",
-    "build": "tsc && tsc-alias && pnpx prisma generate",
+    "postinstall": "pnpx prisma generate",
+    "build": "pnpx prisma generate && tsc && tsc-alias",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
@@ -31,6 +32,9 @@
     "k8s:restart": "kubectl rollout restart deployment bridge-server",
     "k8s:status": "kubectl get deployments,service,pods -l app=bridge-server -o wide",
     "k8s:stop": "kubectl delete deployment bridge-server || true && kubectl delete service bridge-service || true"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
