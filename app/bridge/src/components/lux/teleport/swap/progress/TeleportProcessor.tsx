@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import Web3 from 'web3'
 import { useSwitchChain } from 'wagmi'
+import { NetworkType } from '@/Models/CryptoNetwork'
 import { useAtom } from 'jotai'
 import axios from 'axios'
 
@@ -49,6 +50,7 @@ const TeleportProcessor: React.FC<IProps> = ({
 }) => {
   //state
   const [isMpcSigning, setIsMpcSigning] = React.useState<boolean>(false)
+  const [xrpTxId, setXrpTxId] = useState<string>('')
   //atoms
   const [userTransferTransaction] = useAtom(userTransferTransactionAtom)
   const [swapStatus, setSwapStatus] = useAtom(swapStatusAtom)
@@ -75,8 +77,51 @@ const TeleportProcessor: React.FC<IProps> = ({
         : false,
     [destinationAsset]
   )
+  // Detect XRP deposit flow
+  const isXrp = sourceNetwork?.type === NetworkType.XRP
+
+  // Handler for XRP transaction hash input
+  const handleXrpMpcSignature = async () => {
+    if (!xrpTxId) {
+      notify('Enter XRP transaction hash', 'warn')
+      return
+    }
+    try {
+      setIsMpcSigning(true)
+      const receiverAddressHash = Web3.utils.keccak256(String(destinationAddress))
+      const signData = {
+        txId: xrpTxId,
+        fromNetworkId: sourceNetwork?.chain_id,
+        toNetworkId: destinationNetwork?.chain_id,
+        toTokenAddress: destinationAsset?.contract_address,
+        msgSignature: '',
+        receiverAddressHash,
+        nonce: 0
+      }
+      const { data } = await serverAPI.post(`/api/swaps/getsig`, signData)
+      if (data.data) {
+        await serverAPI.post(`/api/swaps/mpcsign/${swapId}`, {
+          txHash: data.data.signature,
+          amount: sourceAmount,
+          from: data.data.mpcSigner,
+          to: ''
+        })
+        setMpcSignature(data.data.signature)
+        setSwapStatus('user_payout_pending')
+      } else {
+        notify('Failed to get MPC signature for XRP', 'error')
+      }
+    } catch (err) {
+      console.error(err)
+      notify('XRPL signing failed', 'error')
+    } finally {
+      setIsMpcSigning(false)
+    }
+  }
 
   React.useEffect(() => {
+    // skip for XRP, handled via manual TX input
+    if (sourceNetwork?.type === NetworkType.XRP) return
     if (isConnecting || !signer) return
 
     if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
@@ -158,8 +203,42 @@ const TeleportProcessor: React.FC<IProps> = ({
     }
   }
 
+  // XRP flow: manual transaction hash input
+  if (isXrp) {
+    return (
+      <div className={`flex flex-col ${className}`}>
+        <div className="w-full flex flex-col space-y-5">
+          <SwapItems
+            sourceNetwork={sourceNetwork}
+            sourceAsset={sourceAsset}
+            destinationNetwork={destinationNetwork}
+            destinationAsset={destinationAsset}
+            destinationAddress={destinationAddress}
+            sourceAmount={sourceAmount}
+          />
+        </div>
+        <div className="mt-4">
+          <label htmlFor="xrp-tx" className="text-sm font-medium">XRP Transaction Hash</label>
+          <input
+            id="xrp-tx"
+            type="text"
+            className="w-full mt-2 px-3 py-2 border rounded"
+            placeholder="Enter XRP transaction hash"
+            value={xrpTxId}
+            onChange={(e) => setXrpTxId(e.target.value)}
+          />
+          <button
+            onClick={handleXrpMpcSignature}
+            disabled={isMpcSigning}
+            className="mt-3 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+          >
+            {isMpcSigning ? 'Signing...' : 'Get MPC Signature'}
+          </button>
+        </div>
+      </div>
+    )
+  }
   return (
-    <div className={`flex flex-col ${className}`}>
       <div className="space-y-5">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems
