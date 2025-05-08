@@ -8,8 +8,8 @@ import AppXrp from '@ledgerhq/hw-app-xrp'
 export type XrpAccount = { address: string }
 
 export function useXrplWallet() {
-  const [client, setClient] = useState<XrplClient>()
-  const [sdk, setSdk] = useState<XummSdk>()
+  const [client, setClient] = useState<any>()
+  const [sdk, setSdk] = useState<any>()
   const [account, setAccount] = useState<XrpAccount>()
   const [connector, setConnector] = useState<'xumm' | 'ledger'>('xumm')
 
@@ -30,8 +30,8 @@ export function useXrplWallet() {
     if (!sdk) throw new Error('XUMM SDK not initialized')
     const { uuid } = await sdk.payload.create({
       TransactionType: 'SignIn'
-    } as PayloadCreate)
-    sdk.ws.subscribe(`payload.${uuid}`).then(sub => {
+    } as any)
+    sdk.ws.subscribe(`payload.${uuid}`).then((sub: any) => {
       sub.on('success', (data: any) => {
         setAccount({ address: data.account })
         setConnector('xumm')
@@ -59,9 +59,9 @@ export function useXrplWallet() {
         Amount: amountDrops,
         Destination: destination
       }
-      const { uuid } = await sdk!.payload.create({ txjson: tx } as PayloadCreate)
+      const { uuid } = await sdk.payload.create({ txjson: tx } as any)
       return new Promise<string>(resolve => {
-        sdk!.ws.subscribe(`payload.${uuid}`).then(sub => {
+        sdk.ws.subscribe(`payload.${uuid}`).then((sub: any) => {
           sub.on('success', (data: any) => resolve(data.response.txid))
         })
       })
