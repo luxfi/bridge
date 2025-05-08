@@ -83,8 +83,9 @@ const TeleportProcessor: React.FC<IProps> = ({
   const isXrpl = sourceNetwork?.type === NetworkType.XRPL
 
   // Handler for XRP transaction hash input
-  const handleXrpMpcSignature = async () => {
-    if (!xrpTxId) {
+  const handleXrpMpcSignature = async (providedXrpTxId?: string) => {
+    const txidToSign = providedXrpTxId ?? xrpTxId
+    if (!txidToSign) {
       notify('Enter XRP transaction hash', 'warn')
       return
     }
@@ -92,7 +93,7 @@ const TeleportProcessor: React.FC<IProps> = ({
       setIsMpcSigning(true)
       const receiverAddressHash = Web3.utils.keccak256(String(destinationAddress))
       const signData = {
-        txId: xrpTxId,
+        txId: txidToSign,
         fromNetworkId: sourceNetwork?.chain_id,
         toNetworkId: destinationNetwork?.chain_id,
         toTokenAddress: destinationAsset?.contract_address,
@@ -240,8 +241,13 @@ const TeleportProcessor: React.FC<IProps> = ({
             <button
               onClick={async () => {
                 setIsMpcSigning(true)
-                const drops = Web3.utils.toWei(sourceAmount, '6')
-                const txid = await sendPayment(drops, sourceNetwork.teleporter)
+                const drops = Web3.utils.toWei(sourceAmount, 'mwei')
+                const txid = await sendPayment(
+                  drops,
+                  CONTRACTS[
+                    Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
+                  ].teleporter
+                )
                 await handleXrpMpcSignature(txid)
                 setIsMpcSigning(false)
               }}
@@ -264,7 +270,7 @@ const TeleportProcessor: React.FC<IProps> = ({
                 onChange={(e) => setXrpTxId(e.target.value)}
               />
               <button
-                onClick={handleXrpMpcSignature}
+                onClick={() => handleXrpMpcSignature()}
                 disabled={isMpcSigning}
                 className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
               >
