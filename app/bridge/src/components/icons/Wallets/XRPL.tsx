@@ -1,8 +1,9 @@
 import React from 'react'
-import Image from 'next/image'
+import Image, { type ImageProps } from 'next/image'
 
 // XRP Ledger icon for wallet display
-export default function XRPLIcon(props: React.ComponentProps<typeof Image>) {
+// XRP Ledger icon for wallet display
+export default function XRPLIcon(props: Omit<ImageProps, 'src' | 'alt'>) {
   return (
     <Image
       src="/assets/img/xrp.svg"
