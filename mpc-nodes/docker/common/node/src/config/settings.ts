@@ -1168,8 +1168,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     ]
   },
   {
-    display_name: "XRP Ledger",
-    internal_name: "XRP_MAINNET",
+    display_name: "XRPL Ledger",
+    internal_name: "XRPL_MAINNET",
     is_testnet: false,
     chain_id: "XRP-MAINNET",
     teleporter: "<YOUR_XRP_MAINNET_TELEPORTER_ADDRESS>",  // XRPL teleporter account holding burns
@@ -1817,10 +1817,10 @@ export const TEST_NETWORKS: NETWORK[] = [
       }
     ]
   },
-  // XRP Platform Testnet
+  // XRPL Platform Testnet
   {
-    display_name: "XRP Testnet",
-    internal_name: "XRP_TESTNET",
+    display_name: "XRPL Testnet",
+    internal_name: "XRPL_TESTNET",
     is_testnet: true,
     chain_id: "XRP-TESTNET",
     teleporter: "<YOUR_XRP_TESTNET_TELEPORTER_ADDRESS>",
@@ -1836,10 +1836,10 @@ export const TEST_NETWORKS: NETWORK[] = [
       }
     ]
   },
-  // XRP Incentivized Devnet
+  // XRPL Incentivized Devnet
   {
-    display_name: "XRP Devnet",
-    internal_name: "XRP_DEVNET",
+    display_name: "XRPL Devnet",
+    internal_name: "XRPL_DEVNET",
     is_testnet: true,
     chain_id: "XRP-DEVNET",
     teleporter: "<YOUR_XRP_DEVNET_TELEPORTER_ADDRESS>",
