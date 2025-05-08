@@ -236,7 +236,7 @@ const TeleportProcessor: React.FC<IProps> = ({
           </button>
         </div>
       </div>
-    )
+    );
   }
   return (
     <div className={`flex flex-col ${className}`}>
@@ -362,7 +362,7 @@ const TeleportProcessor: React.FC<IProps> = ({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default TeleportProcessor
