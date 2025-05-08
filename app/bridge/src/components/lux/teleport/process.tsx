@@ -30,7 +30,10 @@ interface IProps {
 
 const Form: React.FC<IProps> = ({ swapId, className }) => {
   const { networks } = useSettings()
-  const filteredNetworks = networks.filter((n: CryptoNetwork) => n.type === NetworkType.EVM)
+  const filteredNetworks = networks.filter(
+    (n: CryptoNetwork) =>
+      n.type === NetworkType.EVM || n.type === NetworkType.XRP
+  )
 
   const [sourceNetwork, setSourceNetwork] = React.useState<CryptoNetwork | undefined>(undefined)
   const [sourceAsset, setSourceAsset] = React.useState<NetworkCurrency | undefined>(undefined)
