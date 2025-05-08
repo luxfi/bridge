@@ -1817,14 +1817,34 @@ export const TEST_NETWORKS: NETWORK[] = [
       }
     ]
   },
+  // XRP Platform Testnet
+  {
+    display_name: "XRP Testnet",
+    internal_name: "XRP_TESTNET",
+    is_testnet: true,
+    chain_id: "XRP-TESTNET",
+    teleporter: "<YOUR_XRP_TESTNET_TELEPORTER_ADDRESS>",
+    vault: "<YOUR_XRP_TESTNET_VAULT_ADDRESS>",
+    node: "wss://s.altnet.rippletest.net:51233",
+    currencies: [
+      {
+        name: "XRP",
+        asset: "XRP",
+        contract_address: null,
+        decimals: 6,
+        is_native: true
+      }
+    ]
+  },
+  // XRP Incentivized Devnet
   {
     display_name: "XRP Devnet",
     internal_name: "XRP_DEVNET",
     is_testnet: true,
-    chain_id: "XRP-TESTNET",
+    chain_id: "XRP-DEVNET",
     teleporter: "<YOUR_XRP_DEVNET_TELEPORTER_ADDRESS>",
     vault: "<YOUR_XRP_DEVNET_VAULT_ADDRESS>",
-    node: "wss://s.altnet.rippletest.net:51233",
+    node: "wss://s.devnet.rippled.com:6006",
     currencies: [
       {
         name: "XRP",
