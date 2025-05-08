@@ -5,6 +5,7 @@ import { useSwitchChain } from 'wagmi'
 import { NetworkType } from '@/Models/CryptoNetwork'
 import { useAtom } from 'jotai'
 import axios from 'axios'
+import { useXrplWallet } from '@/hooks/useXrplWallet'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui/primitives'
 
@@ -61,6 +62,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   const { connectWallet } = useWallet()
   const { serverAPI } = useServerAPI()
   const { notify } = useNotify()
+  const { account, connectXumm, connectLedger, sendPayment } = useXrplWallet()
 
   const toBurn = React.useMemo(
     () =>
@@ -77,8 +79,8 @@ const TeleportProcessor: React.FC<IProps> = ({
         : false,
     [destinationAsset]
   )
-  // Detect XRP deposit flow
-  const isXrp = sourceNetwork?.type === NetworkType.XRP
+  // Detect XRPL deposit flow
+  const isXrpl = sourceNetwork?.type === NetworkType.XRPL
 
   // Handler for XRP transaction hash input
   const handleXrpMpcSignature = async () => {
@@ -121,7 +123,7 @@ const TeleportProcessor: React.FC<IProps> = ({
 
   React.useEffect(() => {
     // skip for XRP, handled via manual TX input
-    if (sourceNetwork?.type === NetworkType.XRP) return
+    if (sourceNetwork?.type === NetworkType.XRPL) return
     if (isConnecting || !signer) return
 
     if (Number(chainId) === Number(sourceNetwork?.chain_id)) {
@@ -203,8 +205,8 @@ const TeleportProcessor: React.FC<IProps> = ({
     }
   }
 
-  // XRP flow: manual transaction hash input
-  if (isXrp) {
+  // XRPL flow: manual transaction hash input
+  if (isXrpl) {
     return (
       <div className={`flex flex-col ${className}`}>
         <div className="w-full flex flex-col space-y-5">
@@ -217,23 +219,59 @@ const TeleportProcessor: React.FC<IProps> = ({
             sourceAmount={sourceAmount}
           />
         </div>
-        <div className="mt-4">
-          <label htmlFor="xrp-tx" className="text-sm font-medium">XRP Transaction Hash</label>
-          <input
-            id="xrp-tx"
-            type="text"
-            className="w-full mt-2 px-3 py-2 border rounded"
-            placeholder="Enter XRP transaction hash"
-            value={xrpTxId}
-            onChange={(e) => setXrpTxId(e.target.value)}
-          />
-          <button
-            onClick={handleXrpMpcSignature}
-            disabled={isMpcSigning}
-            className="mt-3 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-          >
-            {isMpcSigning ? 'Signing...' : 'Get MPC Signature'}
-          </button>
+        <div className="mt-4 space-y-4">
+          {!account && (
+            <div className="flex gap-2">
+              <button
+                onClick={connectXumm}
+                className="px-4 py-2 bg-indigo-600 text-white rounded"
+              >
+                Connect XUMM
+              </button>
+              <button
+                onClick={connectLedger}
+                className="px-4 py-2 bg-gray-700 text-white rounded"
+              >
+                Connect Ledger
+              </button>
+            </div>
+          )}
+          {account ? (
+            <button
+              onClick={async () => {
+                setIsMpcSigning(true)
+                const drops = Web3.utils.toWei(sourceAmount, '6')
+                const txid = await sendPayment(drops, sourceNetwork.teleporter)
+                await handleXrpMpcSignature(txid)
+                setIsMpcSigning(false)
+              }}
+              disabled={isMpcSigning}
+              className="px-4 py-2 bg-green-600 text-white rounded"
+            >
+              {isMpcSigning ? 'Processing…' : 'Pay & Sign'}
+            </button>
+          ) : (
+            <>
+              <label htmlFor="xrp-tx" className="text-sm font-medium">
+                XRP Transaction Hash
+              </label>
+              <input
+                id="xrp-tx"
+                type="text"
+                className="w-full px-3 py-2 border rounded"
+                placeholder="Enter XRP transaction hash"
+                value={xrpTxId}
+                onChange={(e) => setXrpTxId(e.target.value)}
+              />
+              <button
+                onClick={handleXrpMpcSignature}
+                disabled={isMpcSigning}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+              >
+                {isMpcSigning ? 'Signing...' : 'Get MPC Signature'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     );

@@ -3232,8 +3232,8 @@ export default [
     "nodes": []
   },
   {
-    "display_name": "XRP Ledger",
-    "internal_name": "XRP_MAINNET",
+    "display_name": "XRPL Ledger",
+    "internal_name": "XRPL_MAINNET",
     "logo": "https://cdn.lux.network/bridge/networks/xrp_mainnet.png",
     "native_currency": "XRP",
     "is_testnet": false,

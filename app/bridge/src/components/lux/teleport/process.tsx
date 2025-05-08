@@ -32,7 +32,7 @@ const Form: React.FC<IProps> = ({ swapId, className }) => {
   const { networks } = useSettings()
   const filteredNetworks = networks.filter(
     (n: CryptoNetwork) =>
-      n.type === NetworkType.EVM || n.type === NetworkType.XRP
+      n.type === NetworkType.EVM || n.type === NetworkType.XRPL
   )
 
   const [sourceNetwork, setSourceNetwork] = React.useState<CryptoNetwork | undefined>(undefined)
