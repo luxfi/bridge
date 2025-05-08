@@ -1550,5 +1550,40 @@ export default [
     "metadata": null,
     "managed_accounts": ["UQAvirnJ3tWyhjU0At4qRr-Miph3bI_38vgp0h73SHTl3TDB"],
     "nodes": []
+  },
+  {
+    "display_name": "XRP Devnet",
+    "internal_name": "XRP_TESTNET",
+    "logo": "https://cdn.lux.network/bridge/networks/xrp_devnet.png",
+    "native_currency": "XRP",
+    "is_testnet": true,
+    "is_featured": true,
+    "average_completion_time": "00:00:12.0000000",
+    "chain_id": null,
+    "status": "active",
+    "type": "xrp",
+    "transaction_explorer_template": "https://testnet.xrpscan.com/tx/{0}",
+    "account_explorer_template": "https://testnet.xrpscan.com/account/{0}",
+    "currencies": [
+      {
+        "name": "XRP",
+        "asset": "XRP",
+        "logo": "https://cdn.lux.network/bridge/currencies/xrp.svg",
+        "contract_address": null,
+        "decimals": 6,
+        "status": "active",
+        "is_deposit_enabled": false,
+        "is_withdrawal_enabled": true,
+        "is_refuel_enabled": false,
+        "max_withdrawal_amount": 0,
+        "deposit_fee": 0,
+        "withdrawal_fee": 0,
+        "source_base_fee": 0,
+        "destination_base_fee": 0
+      }
+    ],
+    "metadata": null,
+    "managed_accounts": [],
+    "nodes": []
   }
 ] satisfies Network[]
