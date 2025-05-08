@@ -160,9 +160,9 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
   // — XRPL path — detect XRP networks
   // XRPL path: handle XRP mainnet, testnet, and devnet
   if (
-    fromNetwork.internal_name === "XRP_MAINNET" ||
-    fromNetwork.internal_name === "XRP_TESTNET" ||
-    fromNetwork.internal_name === "XRP_DEVNET"
+    fromNetwork.internal_name === "XRPL_MAINNET" ||
+    fromNetwork.internal_name === "XRPL_TESTNET" ||
+    fromNetwork.internal_name === "XRPL_DEVNET"
   ) {
     const xrplClient = new XrplClient(fromNetwork.node)
     await xrplClient.connect()

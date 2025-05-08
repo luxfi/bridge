@@ -19,7 +19,7 @@ export default function useXRPLWallet(): WalletProvider {
 
   return {
     name: 'XRPL',
-    autofillSupportedNetworks: ['XRP_MAINNET', 'XRP_TESTNET'],
+    autofillSupportedNetworks: ['XRPL_MAINNET', 'XRPL_TESTNET'],
     withdrawalSupportedNetworks: [],
     connectWallet: async (_chain?: string | number | null | undefined) => {
       await connectXumm()
