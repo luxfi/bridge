@@ -239,6 +239,7 @@ const TeleportProcessor: React.FC<IProps> = ({
     )
   }
   return (
+    <div className={`flex flex-col ${className}`}>
       <div className="space-y-5">
         <div className="w-full flex flex-col space-y-5">
           <SwapItems
