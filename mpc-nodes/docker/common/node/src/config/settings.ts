@@ -1920,15 +1920,16 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZDOGS: ["LDOGS"],
   ZMRB: ["LMRB"],
   ZREDO: ["LREDO"],
-  
+
   // Lux & Zoo tokens
   TRUMP: ["TRUMP"],
   MELANIA: ["MELANIA"],
   Z: ["Z"],
   CYRUS: ["CYRUS"],
 
-  // XRP support (replace "WXRPL" with your actual wrapped-XRP symbol)
-  XRP: ["WXRPL"],
+  // XRP Ledger support
+  XRP: ["LXRP", "ZXRP"],
+
   // Evm tokens
   ETH: ["LETH", "ZETH"],
   WETH: ["LETH", "ZETH"],
