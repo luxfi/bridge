@@ -6,6 +6,7 @@ import useEVM from "../lib/wallets/evm/useEVM";
 //import useStarknet from "../lib/wallets/starknet/useStarknet";
 import useImmutableX from "../lib/wallets/immutableX/useIMX";
 import useSolana from "../lib/wallets/solana/useSolana";
+import useXRPLWallet from "../lib/wallets/xrpl/useXRPLWallet";
 import type { CryptoNetwork } from "@/Models/CryptoNetwork";
 
 export type WalletProvider = {
@@ -23,9 +24,10 @@ function useWallet() {
   const WalletProviders: WalletProvider[] = [
     // useTON(),
     useEVM(),
-    //useStarknet(),
     useImmutableX(),
     useSolana(),
+    useXRPLWallet(),
+    //useStarknet(),
   ];
 
   async function handleConnect(providerName: string, chain?: string | number) {
