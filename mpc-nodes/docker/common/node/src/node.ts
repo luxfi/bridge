@@ -10,6 +10,7 @@
 import cors from "cors"
 import express, { Request, Response } from "express"
 import Web3 from "web3"
+import { Client as XrplClient } from "xrpl"
 import { Interface } from "ethers"
 import { settings } from "./config"
 import { RegisteredSubscription } from "web3/lib/commonjs/eth.exports"
@@ -155,6 +156,49 @@ app.post("/api/v1/generate_mpc_sig", signDataValidator, async (req: Request, res
       msg: `Source and Destination networks are same`
     })
     return
+  }
+  // — XRPL path — detect XRP networks
+  if (fromNetwork.internal_name === "XRP_MAINNET" || fromNetwork.internal_name === "XRP_TESTNET") {
+    const xrplClient = new XrplClient(fromNetwork.node)
+    await xrplClient.connect()
+    try {
+      const { result } = await xrplClient.request({ command: "tx", transaction: txId })
+      if (!result || result.TransactionType !== "Payment" || result.Destination !== fromNetwork.teleporter) {
+        throw new Error("Invalid or non-payment XRPL tx")
+      }
+      const payload = {
+        teleporter: result.Destination,
+        token: "XRP",
+        from: result.Account,
+        eventName: "Payment",
+        value: result.Amount.toString()
+      }
+      const { signature, mpcSigner } = await hashAndSignTx({
+        web3Form: null,
+        toNetworkId,
+        hashedTxId: txId,
+        toTokenAddress,
+        tokenAmount: payload.value,
+        decimals: 6,
+        receiverAddressHash,
+        nonce,
+        vault: false
+      })
+      await savehashedTxId({
+        chainType: "xrp",
+        txId,
+        amount: payload.value,
+        signature: signature + "###" + mpcSigner,
+        hashedTxId: txId
+      })
+      res.json({ status: true, data: { ...payload, signature, mpcSigner, hashedTxId: txId } })
+      return
+    } catch (err: any) {
+      res.json({ status: false, msg: err.message })
+      return
+    } finally {
+      await xrplClient.disconnect()
+    }
   }
   // get Web3Form using rpc url of specific network
   const web3Form = getWeb3FormForRPC(fromNetwork.node)
