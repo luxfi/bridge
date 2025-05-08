@@ -1172,8 +1172,8 @@ export const MAIN_NETWORKS: NETWORK[] = [
     internal_name: "XRP_MAINNET",
     is_testnet: false,
     chain_id: "XRP-MAINNET",
-    teleporter: "<YOUR_XRP_MAINNET_TELEPORTER_ADDRESS>",
-    vault: "",
+    teleporter: "<YOUR_XRP_MAINNET_TELEPORTER_ADDRESS>",  // XRPL teleporter account holding burns
+    vault: "<YOUR_XRP_MAINNET_VAULT_ADDRESS>",      // XRPL vault account for returning funds
     node: "wss://s1.ripple.com",
     currencies: [
       {
@@ -1819,11 +1819,11 @@ export const TEST_NETWORKS: NETWORK[] = [
   },
   {
     display_name: "XRP Devnet",
-    internal_name: "XRP_TESTNET",
+    internal_name: "XRP_DEVNET",
     is_testnet: true,
     chain_id: "XRP-TESTNET",
     teleporter: "<YOUR_XRP_DEVNET_TELEPORTER_ADDRESS>",
-    vault: "",
+    vault: "<YOUR_XRP_DEVNET_VAULT_ADDRESS>",
     node: "wss://s.altnet.rippletest.net:51233",
     currencies: [
       {
