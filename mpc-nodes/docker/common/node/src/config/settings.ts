@@ -1166,8 +1166,25 @@ export const MAIN_NETWORKS: NETWORK[] = [
         is_native: false
       }
     ]
+  },
+  {
+    display_name: "XRP Ledger",
+    internal_name: "XRP_MAINNET",
+    is_testnet: false,
+    chain_id: "XRP-MAINNET",
+    teleporter: "<YOUR_XRP_MAINNET_TELEPORTER_ADDRESS>",
+    vault: "",
+    node: "wss://s1.ripple.com",
+    currencies: [
+      {
+        name: "XRP",
+        asset: "XRP",
+        contract_address: null,
+        decimals: 6,
+        is_native: true
+      }
+    ]
   }
-]
 
 export const TEST_NETWORKS: NETWORK[] = [
   {
@@ -1799,8 +1816,25 @@ export const TEST_NETWORKS: NETWORK[] = [
         is_native: false
       }
     ]
+  },
+  {
+    display_name: "XRP Devnet",
+    internal_name: "XRP_TESTNET",
+    is_testnet: true,
+    chain_id: "XRP-TESTNET",
+    teleporter: "<YOUR_XRP_DEVNET_TELEPORTER_ADDRESS>",
+    vault: "",
+    node: "wss://s.altnet.rippletest.net:51233",
+    currencies: [
+      {
+        name: "XRP",
+        asset: "XRP",
+        contract_address: null,
+        decimals: 6,
+        is_native: true
+      }
+    ]
   }
-]
 
 export const SWAP_PAIRS: Record<string, string[]> = {
   // lux tokens
@@ -1873,6 +1907,8 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   Z: ["Z"],
   CYRUS: ["CYRUS"],
 
+  // XRP support (replace "WXRPL" with your actual wrapped-XRP symbol)
+  XRP: ["WXRPL"],
   // Evm tokens
   ETH: ["LETH", "ZETH"],
   WETH: ["LETH", "ZETH"],
