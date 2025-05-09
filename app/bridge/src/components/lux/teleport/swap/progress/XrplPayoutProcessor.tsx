@@ -6,7 +6,7 @@ import { useServerAPI } from '@/hooks/useServerAPI'
 import { useXrplWallet } from '@/hooks/useXrplWallet'
 import { swapStatusAtom, bridgeMintTransactionAtom, userTransferTransactionAtom } from '@/store/teleport'
 import SwapItems from './SwapItems'
-import { NetworkType } from '@/Models/CryptoNetwork'
+import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
 
 interface IProps {
   sourceNetwork: { type: NetworkType; chain_id?: string | number }
@@ -60,10 +60,69 @@ const XrplPayoutProcessor: React.FC<IProps> = ({
     <div className={`flex flex-col ${className || ''}`}> 
       <div className="w-full flex flex-col space-y-5">
         <SwapItems
-          sourceNetwork={sourceNetwork as any}
-          sourceAsset={{ name: '', asset: '' } as any}
-          destinationNetwork={destinationNetwork as any}
-          destinationAsset={{ name: '', asset: '' } as any}
+          sourceNetwork={{
+            ...sourceNetwork,
+            display_name: '',
+            internal_name: '',
+            logo: '',
+            native_currency: '',
+            is_testnet: false,
+            is_featured: false,
+            average_completion_time: '',
+            status: 'active' as const,
+            transaction_explorer_template: '',
+            account_explorer_template: '',
+            currencies: [],
+            metadata: null,
+            managed_accounts: [],
+            nodes: []
+          } as CryptoNetwork}
+          sourceAsset={{
+            name: '',
+            asset: '',
+            logo: '',
+            contract_address: null,
+            decimals: 6,
+            status: 'active' as const,
+            is_deposit_enabled: false,
+            is_withdrawal_enabled: false,
+            is_refuel_enabled: false,
+            precision: 0,
+            price_in_usd: 0,
+            is_native: false
+          } as NetworkCurrency}
+          destinationNetwork={{
+            ...destinationNetwork,
+            display_name: '',
+            internal_name: '',
+            logo: '',
+            native_currency: '',
+            is_testnet: false,
+            is_featured: false,
+            average_completion_time: '',
+            chain_id: undefined,
+            status: 'active' as const,
+            transaction_explorer_template: '',
+            account_explorer_template: '',
+            currencies: [],
+            metadata: null,
+            managed_accounts: [],
+            nodes: []
+          } as CryptoNetwork}
+          destinationAsset={{
+            name: '',
+            asset: '',
+            logo: '',
+            contract_address: null,
+            decimals: 6,
+            status: 'active' as const,
+            is_deposit_enabled: false,
+            is_withdrawal_enabled: false,
+            is_refuel_enabled: false,
+            precision: 0,
+            price_in_usd: 0,
+            is_native: false
+          } as NetworkCurrency}
           destinationAddress={destinationAddress}
           sourceAmount={sourceAmount}
         />
