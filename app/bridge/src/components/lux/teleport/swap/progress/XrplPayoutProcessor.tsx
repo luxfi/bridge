@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import Web3 from 'web3'
 import { useNotify } from '@/context/toast-provider'
 import { useAtom } from 'jotai'
 import { useServerAPI } from '@/hooks/useServerAPI'
 import { useXrplWallet } from '@/hooks/useXrplWallet'
-import { swapStatusAtom, bridgeMintTransactionAtom, userTransferTransactionAtom } from '@/store/teleport'
+import { swapStatusAtom, bridgeMintTransactionAtom } from '@/store/teleport'
+import { xrpToDrops, isValidXrpAddress } from '@/lib/xrpUtils'
 import SwapItems from './SwapItems'
 import { NetworkType, type CryptoNetwork, type NetworkCurrency } from '@/Models/CryptoNetwork'
 
@@ -37,9 +37,18 @@ const XrplPayoutProcessor: React.FC<IProps> = ({
       notify('Please connect XRPL wallet first', 'warn')
       return
     }
+    
+    // Validate XRP destination address
+    if (!isValidXrpAddress(destinationAddress)) {
+      notify('Invalid XRP destination address', 'error')
+      return
+    }
     try {
       setIsPayout(true)
-      const drops = Web3.utils.toWei(sourceAmount, 'mwei')
+      
+      // XRP uses 6 decimals, convert amount to drops (1 XRP = 1,000,000 drops)
+      const drops = xrpToDrops(sourceAmount)
+      
       const txid = await sendPayment(drops, destinationAddress)
       setBridgeMintTx(txid)
       await serverAPI.post(`/api/swaps/payout/${swapId}`, {
@@ -50,7 +59,16 @@ const XrplPayoutProcessor: React.FC<IProps> = ({
       })
       setSwapStatus('payout_success')
     } catch (err: any) {
-      notify(err?.message || 'XRPL payout failed', 'error')
+      console.error('XRPL payment error:', err)
+      if (err?.message?.includes('timeout')) {
+        notify('Transaction timeout. The XRP network may be experiencing delays. Please check your XRP wallet for transaction status.', 'error')
+      } else if (err?.message?.includes('insufficient funds')) {
+        notify('Insufficient funds in your XRP wallet to complete this transaction.', 'error')
+      } else if (err?.message?.includes('rejected')) {
+        notify('Transaction was rejected. Please try again or use a different wallet.', 'error')
+      } else {
+        notify(err?.message || 'XRPL payout failed. Please check your XRP wallet and try again.', 'error')
+      }
     } finally {
       setIsPayout(false)
     }

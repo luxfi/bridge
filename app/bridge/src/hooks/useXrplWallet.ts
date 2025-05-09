@@ -7,6 +7,16 @@ import AppXrp from '@ledgerhq/hw-app-xrp'
 
 export type XrpAccount = { address: string }
 
+// XRPL Network configuration
+const XRPL_NETWORKS = {
+  MAINNET: 'wss://s1.ripple.com',
+  TESTNET: 'wss://s.altnet.rippletest.net:51233'
+}
+
+/**
+ * Hook for integrating with XRP Ledger wallets
+ * Supports both XUMM and Ledger hardware wallets
+ */
 export function useXrplWallet() {
   const [client, setClient] = useState<any>()
   const [sdk, setSdk] = useState<any>()
@@ -15,7 +25,11 @@ export function useXrplWallet() {
 
   // initialize XRPL client and XUMM SDK
   useEffect(() => {
-    const c = new XrplClient('wss://s1.ripple.com')
+    // Connect to XRPL network based on environment (default to mainnet)
+    const networkUrl = process.env.NEXT_PUBLIC_API_VERSION === 'mainnet' ? 
+      XRPL_NETWORKS.MAINNET : XRPL_NETWORKS.TESTNET
+    
+    const c = new XrplClient(networkUrl)
     c.connect().then(() => setClient(c))
     if (process.env.NEXT_PUBLIC_XUMM_API_KEY && process.env.NEXT_PUBLIC_XUMM_API_SECRET) {
       setSdk(new XummSdk(
@@ -52,6 +66,17 @@ export function useXrplWallet() {
   // send payment and return txid
   const sendPayment = async (amountDrops: string, destination: string) => {
     if (!client || !account) throw new Error('XRPL wallet not connected')
+    
+    // Basic validation check
+    if (!destination.startsWith('r') || destination.length < 25) {
+      throw new Error('Invalid XRP destination address')
+    }
+    
+    // Handle numeric validation
+    const drops = Number(amountDrops)
+    if (isNaN(drops) || drops <= 0) {
+      throw new Error('Invalid XRP amount')
+    }
     if (connector === 'xumm') {
       const tx = {
         TransactionType: 'Payment',
