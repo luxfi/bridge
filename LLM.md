@@ -10,6 +10,7 @@ The Lux.Network Bridge is a decentralized cross-chain bridge that uses Multi-Par
 2. **MPC Nodes**: Distributed nodes that use threshold signatures for secure transaction signing
 3. **Bridge UI**: Web interface for users to initiate cross-chain transfers
 4. **Backend Services**: APIs and services that coordinate the bridge operations
+5. **Blockchain Monitors**: Services that monitor different blockchains (EVM and non-EVM) for events
 
 ## Project Structure
 
@@ -51,6 +52,7 @@ The contracts support multiple blockchain networks, including:
 - Base
 - Polygon
 - Avalanche
+- XRP Ledger (XRPL)
 - Many other EVM-compatible chains
 
 ### MPC Nodes
@@ -60,6 +62,7 @@ The MPC (Multi-Party Computation) nodes are a distributed network of servers tha
 1. **Decentralized oracle operations using MPC**
 2. **Decentralized permissioning using MPC**
 3. **Zero-knowledge transactions**: Signers don't know details about assets being teleported
+4. **Multi-chain monitoring**: Nodes monitor various blockchains, including both EVM-compatible chains (like Ethereum, Binance Smart Chain, etc.) and non-EVM chains (like XRP Ledger)
 
 The MPC nodes are containerized using Docker and can be deployed on Kubernetes clusters for production environments.
 
@@ -88,6 +91,8 @@ The bridge operates through the following workflow:
 
 3. **MPC node validation**:
    - MPC nodes monitor the source chain for bridge events
+   - For EVM chains, nodes look for BridgeBurned or VaultDeposit events
+   - For XRPL, nodes look for Payment transactions to the teleporter address
    - Validate the transaction and collectively sign the approval
    - No single node has the complete private key
 
@@ -118,6 +123,48 @@ To run the bridge locally:
 1. Install `pnpm`: https://pnpm.io/installation
 2. Install dependencies: `pnpm install`
 3. Run the bridge UI: `pnpm dev`
+
+## Supported Chains and Networks
+
+The bridge currently supports the following blockchain networks:
+
+### Mainnets
+- **EVM-Compatible**:
+  - Ethereum (Chain ID: 1)
+  - Binance Smart Chain (Chain ID: 56)
+  - Polygon (Chain ID: 137)
+  - Optimism (Chain ID: 10)
+  - Arbitrum One (Chain ID: 42161)
+  - Celo (Chain ID: 42220)
+  - Base (Chain ID: 8453)
+  - Avalanche (Chain ID: 43114)
+  - Zora (Chain ID: 7777777)
+  - Blast (Chain ID: 81457)
+  - Linea (Chain ID: 59144)
+  - Fantom (Chain ID: 250)
+  - Aurora (Chain ID: 1313161554)
+  - Gnosis (Chain ID: 100)
+  - Lux Network (Chain ID: 96369)
+  - Zoo Network (Chain ID: 200200)
+  
+- **Non-EVM Chains**:
+  - XRP Ledger (XRPL) Mainnet
+
+### Testnets
+- **EVM-Compatible**:
+  - Ethereum Sepolia (Chain ID: 11155111)
+  - Ethereum Holesky (Chain ID: 17000)
+  - Base Sepolia (Chain ID: 84532)
+  - BSC Testnet (Chain ID: 97)
+  - Lux Testnet (Chain ID: 96368)
+  - Zoo Testnet (Chain ID: 200201)
+  
+- **Non-EVM Chains**:
+  - XRPL Testnet
+  - XRPL Devnet
+
+For the most up-to-date list and configuration, refer to the settings file at:
+`/mpc-nodes/docker/common/node/src/config/settings.ts`
 
 ## Architecture Decisions
 
@@ -150,3 +197,68 @@ The bridge implements multiple security measures:
 2. **Transaction Replay Protection**: Prevents replay attacks
 3. **Fee Mechanisms**: Discourages spam and funds system maintenance
 4. **Validation Checks**: Ensures transactions meet all requirements before execution
+
+## Adding New Chains
+
+### Adding a New EVM Chain
+
+To add a new EVM-compatible chain to the bridge, follow these steps:
+
+1. **Update Configuration**:
+   - Edit the configuration file at `/mpc-nodes/docker/common/node/src/config/settings.ts`
+   - Add a new entry to the `MAIN_NETWORKS` or `TEST_NETWORKS` array with the following information:
+     - `display_name`: User-friendly name of the network
+     - `internal_name`: Unique identifier for the network
+     - `is_testnet`: Boolean indicating if it's a testnet
+     - `chain_id`: The numeric chain ID
+     - `teleporter`: Address of the teleporter contract on this chain
+     - `vault`: Address of the vault contract on this chain
+     - `node`: RPC endpoint URL for this chain
+     - `currencies`: Array of supported tokens on this chain
+
+2. **Deploy Smart Contracts**:
+   - Deploy the Bridge.sol contract on the new chain
+   - Deploy the ERC20B.sol contract for bridgeable tokens
+   - Deploy the LuxVault.sol or ETHVault.sol as needed
+   - Update the configuration with the new contract addresses
+
+3. **Update Swap Pairs**:
+   - Add entries to the `SWAP_PAIRS` object to define which tokens on the new chain can be swapped with tokens on other chains
+
+4. **Testing**:
+   - Test transactions from the new chain to existing chains
+   - Test transactions from existing chains to the new chain
+   - Verify that tokens can be correctly bridged in both directions
+
+### Adding a Non-EVM Blockchain (like XRPL)
+
+Adding a non-EVM blockchain requires additional custom implementation:
+
+1. **Update Configuration**:
+   - Similar to EVM chains, add the configuration to the settings file
+   - Specify blockchain-specific parameters (like node endpoints and teleporter addresses)
+
+2. **Implement Blockchain Monitors**:
+   - In the MPC node, add specialized monitoring for the blockchain events
+   - For example, for XRPL, the implementation is in `node.ts` and looks for Payment transactions to the teleporter address
+
+3. **Add Transaction Validation**:
+   - Implement chain-specific validation of transactions
+   - For XRPL, this includes validating that the transaction is of type "Payment" and is sent to the correct teleporter address
+
+4. **Add Chain Libraries**:
+   - Import and use chain-specific libraries for interacting with the blockchain
+   - For XRPL, this includes the `xrpl` library
+
+5. **Implement Signature Generation**:
+   - Add support for generating signatures for minting tokens on destination chains
+   - Ensure that the transaction data is correctly formatted for the chain's requirements
+
+6. **Update UI**:
+   - Add support in the UI for connecting to the new blockchain's wallets
+   - Update network selection to include the new blockchain
+
+7. **Testing**:
+   - Test transactions from the new blockchain to existing chains
+   - Test transactions from existing chains to the new blockchain
+   - Verify that tokens can be correctly bridged in both directions
