@@ -83,7 +83,7 @@ const TeleportProcessor: React.FC<IProps> = ({
   const isXrpl = sourceNetwork?.type === NetworkType.XRPL
 
   // Handler for XRP transaction hash input
-  const handleXrpMpcSignature = async (providedXrpTxId?: string) => {
+  const handleXrplMpcSignature = async (providedXrpTxId?: string) => {
     const txidToSign = providedXrpTxId ?? xrpTxId
     if (!txidToSign) {
       notify('Enter XRP transaction hash', 'warn')
@@ -248,7 +248,7 @@ const TeleportProcessor: React.FC<IProps> = ({
                     Number(sourceNetwork.chain_id) as keyof typeof CONTRACTS
                   ].teleporter
                 )
-                await handleXrpMpcSignature(txid)
+                await handleXrplMpcSignature(txid)
                 setIsMpcSigning(false)
               }}
               disabled={isMpcSigning}
@@ -269,8 +269,8 @@ const TeleportProcessor: React.FC<IProps> = ({
                 value={xrpTxId}
                 onChange={(e) => setXrpTxId(e.target.value)}
               />
-              <button
-                onClick={() => handleXrpMpcSignature()}
+                    <button
+                onClick={() => handleXrplMpcSignature()}
                 disabled={isMpcSigning}
                 className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
               >
