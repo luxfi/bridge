@@ -68,8 +68,13 @@ const SwapDetails: React.FC<IProps> = ({
     if (destinationNetwork.type === NetworkType.XRPL) {
       return (
         <XrplPayoutProcessor
-          sourceNetwork={sourceNetwork}
-          destinationNetwork={destinationNetwork}
+          sourceNetwork={{
+            type: sourceNetwork.type,
+            chain_id: sourceNetwork.chain_id || undefined // Convert null to undefined
+          }}
+          destinationNetwork={{
+            type: destinationNetwork.type
+          }}
           destinationAddress={destinationAddress}
           sourceAmount={sourceAmount}
           swapId={swapId}
