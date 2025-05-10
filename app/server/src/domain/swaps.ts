@@ -301,7 +301,10 @@ export async function handlerUpdateUserTransferAction(id: string, txHash: string
 export async function handlerUpdatePayoutAction(id: string, txHash: string, amount: number, from: string, to: string) {
   try {
     let swap = await prisma.swap.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        transactions: true
+      }
     })
     const transaction = await prisma.transaction.create({
       data: {
@@ -341,6 +344,18 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
         }
       }
     })
+
+    // Calculate withdrawal time and update statistics
+    const inputTransaction = swap?.transactions?.find(t => t.type === TransactionType.Input)
+    if (inputTransaction && inputTransaction.timestamp) {
+      const withdrawalTimeSeconds = Math.floor(
+        (transaction.timestamp.getTime() - inputTransaction.timestamp.getTime()) / 1000
+      )
+      
+      // Update withdrawal time statistics
+      await updateWithdrawalTimeStatistics(swap?.destination_network_id, withdrawalTimeSeconds)
+    }
+
     swap = await prisma.swap.findUnique({
       where: { id },
       include: {
@@ -1071,3 +1086,211 @@ export async function handlerDelSwap(swapData: { id: string }) {
 //     throw new Error(`Error getting Prisma code: ${error.name} msg:${error?.message}`)
 //   }
 // }
+
+/**
+ * Get withdrawal time statistics for all networks
+ * @returns Array of withdrawal time statistics for each network
+ */
+export async function getWithdrawalTimeStatistics() {
+  try {
+    // Get all statistics with network information
+    const stats = await prisma.withdrawalTimeStatistic.findMany({
+      include: {
+        network: true
+      }
+    })
+
+    return stats.map(stat => ({
+      network_id: stat.network_id,
+      network_name: stat.network.internal_name,
+      display_name: stat.network.display_name,
+      total_withdrawals: stat.total_withdrawals,
+      avg_time_seconds: stat.avg_time_seconds,
+      min_time_seconds: stat.min_time_seconds,
+      max_time_seconds: stat.max_time_seconds,
+      last_24h_withdrawals: stat.last_24h_withdrawals,
+      last_24h_avg_seconds: stat.last_24h_avg_seconds,
+      last_hour_withdrawals: stat.last_hour_withdrawals,
+      last_hour_avg_seconds: stat.last_hour_avg_seconds,
+      updated_at: stat.updated_at
+    }))
+  } catch (error) {
+    console.error('Error getting withdrawal time statistics:', error)
+    return []
+  }
+}
+
+/**
+ * Get withdrawal time statistics for a specific network
+ * @param networkId The network ID or internal name
+ * @returns Withdrawal time statistics for the network
+ */
+export async function getNetworkWithdrawalTimeStatistics(networkId: string | number) {
+  try {
+    let network;
+    
+    // If networkId is a string, find the network by internal name
+    if (typeof networkId === 'string') {
+      network = await prisma.network.findFirst({
+        where: { internal_name: networkId }
+      })
+      
+      if (!network) {
+        throw new Error(`Network with internal name ${networkId} not found`)
+      }
+      
+      networkId = network.id
+    }
+
+    // Get statistics for the network
+    const stats = await prisma.withdrawalTimeStatistic.findFirst({
+      where: { network_id: Number(networkId) },
+      include: {
+        network: true
+      }
+    })
+
+    if (!stats) {
+      return {
+        network_id: Number(networkId),
+        network_name: network?.internal_name,
+        display_name: network?.display_name,
+        total_withdrawals: 0,
+        avg_time_seconds: 0,
+        min_time_seconds: 0,
+        max_time_seconds: 0,
+        last_24h_withdrawals: 0,
+        last_24h_avg_seconds: 0,
+        last_hour_withdrawals: 0,
+        last_hour_avg_seconds: 0,
+        updated_at: new Date()
+      }
+    }
+
+    return {
+      network_id: stats.network_id,
+      network_name: stats.network.internal_name,
+      display_name: stats.network.display_name,
+      total_withdrawals: stats.total_withdrawals,
+      avg_time_seconds: stats.avg_time_seconds,
+      min_time_seconds: stats.min_time_seconds,
+      max_time_seconds: stats.max_time_seconds,
+      last_24h_withdrawals: stats.last_24h_withdrawals,
+      last_24h_avg_seconds: stats.last_24h_avg_seconds,
+      last_hour_withdrawals: stats.last_hour_withdrawals,
+      last_hour_avg_seconds: stats.last_hour_avg_seconds,
+      updated_at: stats.updated_at
+    }
+  } catch (error) {
+    console.error('Error getting network withdrawal time statistics:', error)
+    throw error
+  }
+}
+
+/**
+ * Update withdrawal time statistics for a network
+ * @param networkId The network ID
+ * @param withdrawalTimeSeconds Time in seconds it took to complete the withdrawal
+ */
+async function updateWithdrawalTimeStatistics(networkId: number | undefined, withdrawalTimeSeconds: number) {
+  if (!networkId) return
+
+  try {
+    // Get or create stats entry for this network
+    let stats = await prisma.withdrawalTimeStatistic.findFirst({
+      where: { network_id: networkId }
+    })
+
+    const now = new Date()
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+
+    // If no stats exist yet, create initial entry
+    if (!stats) {
+      stats = await prisma.withdrawalTimeStatistic.create({
+        data: {
+          network_id: networkId,
+          total_withdrawals: 1,
+          total_time_seconds: withdrawalTimeSeconds,
+          avg_time_seconds: withdrawalTimeSeconds,
+          min_time_seconds: withdrawalTimeSeconds,
+          max_time_seconds: withdrawalTimeSeconds,
+          last_24h_withdrawals: 1,
+          last_24h_avg_seconds: withdrawalTimeSeconds,
+          last_hour_withdrawals: 1,
+          last_hour_avg_seconds: withdrawalTimeSeconds
+        }
+      })
+      return
+    }
+
+    // Get completed swaps with both input and output transactions for the last 24 hours
+    const last24HoursSwaps = await prisma.swap.findMany({
+      where: {
+        status: SwapStatus.PayoutSuccess,
+        transactions: {
+          some: {
+            type: TransactionType.Output,
+            timestamp: { gte: oneDayAgo }
+          }
+        }
+      },
+      include: {
+        transactions: true
+      }
+    })
+
+    // Calculate withdrawal times for each swap
+    const withdrawalTimes24h: number[] = []
+    const withdrawalTimes1h: number[] = []
+
+    for (const swap of last24HoursSwaps) {
+      const inputTx = swap.transactions.find(t => t.type === TransactionType.Input)
+      const outputTx = swap.transactions.find(t => t.type === TransactionType.Output)
+      
+      if (inputTx && outputTx && inputTx.timestamp && outputTx.timestamp) {
+        const time = Math.floor((outputTx.timestamp.getTime() - inputTx.timestamp.getTime()) / 1000)
+        withdrawalTimes24h.push(time)
+        
+        // Check if this transaction was in the last hour
+        if (outputTx.timestamp >= oneHourAgo) {
+          withdrawalTimes1h.push(time)
+        }
+      }
+    }
+
+    // Calculate averages
+    const avg24h = withdrawalTimes24h.length > 0 
+      ? withdrawalTimes24h.reduce((sum, time) => sum + time, 0) / withdrawalTimes24h.length 
+      : stats.last_24h_avg_seconds
+
+    const avg1h = withdrawalTimes1h.length > 0 
+      ? withdrawalTimes1h.reduce((sum, time) => sum + time, 0) / withdrawalTimes1h.length 
+      : stats.last_hour_avg_seconds
+
+    // Calculate new averages for all-time stats
+    const newTotalWithdrawals = stats.total_withdrawals + 1
+    const newTotalTimeSeconds = stats.total_time_seconds + withdrawalTimeSeconds
+    const newAvgTimeSeconds = newTotalTimeSeconds / newTotalWithdrawals
+
+    // Update the statistics
+    await prisma.withdrawalTimeStatistic.update({
+      where: { id: stats.id },
+      data: {
+        total_withdrawals: newTotalWithdrawals,
+        total_time_seconds: newTotalTimeSeconds,
+        avg_time_seconds: newAvgTimeSeconds,
+        min_time_seconds: Math.min(stats.min_time_seconds, withdrawalTimeSeconds),
+        max_time_seconds: Math.max(stats.max_time_seconds, withdrawalTimeSeconds),
+        last_24h_withdrawals: withdrawalTimes24h.length,
+        last_24h_avg_seconds: avg24h,
+        last_hour_withdrawals: withdrawalTimes1h.length,
+        last_hour_avg_seconds: avg1h
+      }
+    })
+
+    console.log(`Updated withdrawal time statistics for network ${networkId}. Average: ${newAvgTimeSeconds.toFixed(2)} seconds`)
+  } catch (error) {
+    console.error('Error updating withdrawal time statistics:', error)
+  }
+}

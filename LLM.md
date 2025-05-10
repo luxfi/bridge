@@ -1,10 +1,10 @@
-# Lux.Network MPC Bridge Architecture
+# Lux Network MPC Bridge Architecture
 
-This document provides a comprehensive overview of the Lux.Network MPC Bridge project, its components, and how they interact.
+This document provides a comprehensive overview of the Lux Network MPC Bridge project, its components, and how they interact.
 
 ## Project Overview
 
-The Lux.Network Bridge is a decentralized cross-chain bridge that uses Multi-Party Computation (MPC) to enable secure asset transfers between different blockchain networks. The bridge consists of several key components:
+The Lux Network Bridge is a decentralized cross-chain bridge that uses Multi-Party Computation (MPC) to enable secure asset transfers between different blockchain networks. The bridge consists of several key components:
 
 1. **Smart Contracts**: EVM-compatible contracts deployed on various networks
 2. **MPC Nodes**: Distributed nodes that use threshold signatures for secure transaction signing
@@ -146,7 +146,7 @@ The bridge currently supports the following blockchain networks:
   - Gnosis (Chain ID: 100)
   - Lux Network (Chain ID: 96369)
   - Zoo Network (Chain ID: 200200)
-  
+
 - **Non-EVM Chains**:
   - XRP Ledger (XRPL) Mainnet
 
@@ -158,7 +158,7 @@ The bridge currently supports the following blockchain networks:
   - BSC Testnet (Chain ID: 97)
   - Lux Testnet (Chain ID: 96368)
   - Zoo Testnet (Chain ID: 200201)
-  
+
 - **Non-EVM Chains**:
   - XRPL Testnet
   - XRPL Devnet
