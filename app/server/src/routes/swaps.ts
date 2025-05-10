@@ -11,7 +11,9 @@ import {
   handlerUpdateMpcSignAction, 
   handlerUpdatePayoutAction, 
   handlerUpdateUserTransferAction, 
-  handlerUtilaPayoutAction 
+  handlerUtilaPayoutAction,
+  getWithdrawalTimeStatistics,
+  getNetworkWithdrawalTimeStatistics
 } from "@/domain/swaps"
 
 const router: Router = Router()
@@ -230,6 +232,31 @@ router.get("/deposit-check/:swapId", async (req: Request, res: Response) => {
     res.status(500).send({
       error: err?.message
     })
+  }
+})
+
+// route: /api/swaps/statistics/withdrawal-time
+// description: Get withdrawal time statistics for all networks
+// method: GET and it's public
+router.get("/statistics/withdrawal-time", async (req: Request, res: Response) => {
+  try {
+    const result = await getWithdrawalTimeStatistics()
+    res.status(200).json({ data: result })
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message })
+  }
+})
+
+// route: /api/swaps/statistics/withdrawal-time/:networkId
+// description: Get withdrawal time statistics for a specific network
+// method: GET and it's public
+router.get("/statistics/withdrawal-time/:networkId", async (req: Request, res: Response) => {
+  try {
+    const networkId = req.params.networkId
+    const result = await getNetworkWithdrawalTimeStatistics(networkId)
+    res.status(200).json({ data: result })
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message })
   }
 })
 
