@@ -1,6 +1,6 @@
 # Lux Network MPC Bridge Architecture
 
-This document provides a comprehensive overview of the Lux Network MPC Bridge project, its components, and how they interact.
+This document provides a comprehensive overview of the Lux Network MPC Bridge project, its components, and how they interact. This document distinguishes between **current implementation** and **planned features**.
 
 ## Project Overview
 
@@ -32,6 +32,10 @@ The project is organized as a monorepo with the following main directories:
   - `luxfi-core/`: Core shared types and utilities
   - `settings/`: Configuration settings
   - `utila/`: Utility functions and helpers
+- `docs/`: Documentation and guides
+  - `unified-mpc-library.md`: Details on planned MPC implementation
+  - `utxo-guide.md`: Guide for planned UTXO-based chain integration
+  - `eddsa-guide.md`: Guide for planned EdDSA signature implementation
 
 ## Key Components
 
@@ -65,6 +69,17 @@ The MPC (Multi-Party Computation) nodes are a distributed network of servers tha
 4. **Multi-chain monitoring**: Nodes monitor various blockchains, including both EVM-compatible chains (like Ethereum, Binance Smart Chain, etc.) and non-EVM chains (like XRP Ledger)
 
 The MPC nodes are containerized using Docker and can be deployed on Kubernetes clusters for production environments.
+
+#### Current MPC Implementation
+
+- **CGGMP20 Protocol**: The bridge currently uses the CGGMP20 protocol for ECDSA threshold signatures
+- **ECDSA Support**: Only ECDSA is currently supported, which works with all EVM-compatible chains
+
+#### Planned MPC Enhancements
+
+- **DKLs23 Protocol**: Being evaluated as a possible future update for improved efficiency and security
+- **EdDSA Support**: Planned implementation of EdDSA for supporting non-EVM chains like Solana
+- **Unified MPC Library**: A planned abstraction layer to unify ECDSA and EdDSA implementations behind a common API
 
 ### Bridge UI
 
@@ -105,6 +120,51 @@ The bridge operates through the following workflow:
    - User receives tokens on the destination chain
    - UI updates to show transaction status
 
+## MPC Implementation (Current & Planned)
+
+### Current Implementation
+
+The current MPC implementation focuses on ECDSA threshold signatures using the CGGMP20 protocol:
+
+1. **CGGMP20 Protocol**:
+   - Secure threshold ECDSA signatures
+   - Based on Castagnos and Laguillaumie's encryption scheme
+   - Efficient distributed key generation and signing
+
+2. **Key Features**:
+   - Distributed key generation
+   - Threshold signatures (t-of-n)
+   - No trusted dealer required
+   - Asynchronous communication between nodes
+
+3. **Supported Chains**:
+   - All EVM-compatible chains
+   - XRPL (using ECDSA)
+
+### Planned Enhancements
+
+The following enhancements are planned for future development:
+
+1. **DKLs23 Protocol Evaluation**:
+   - Newer protocol being evaluated for possible implementation
+   - Improved efficiency and security properties
+   - Potential replacement or alternative to CGGMP20
+
+2. **EdDSA Support** (Planned):
+   - Implementation of threshold EdDSA signatures
+   - Support for chains like Solana that use Ed25519 signatures
+   - Integration with existing MPC infrastructure
+
+3. **Unified MPC Library** (Planned):
+   - Abstraction layer to unify ECDSA and EdDSA implementations
+   - Common API for different signature schemes
+   - Simplified integration of new blockchains
+
+4. **UTXO Support** (Planned):
+   - Support for UTXO-based blockchains like Bitcoin
+   - UTXO management and transaction building
+   - Integration with MPC signing
+
 ## Development Environment
 
 The project uses:
@@ -126,9 +186,7 @@ To run the bridge locally:
 
 ## Supported Chains and Networks
 
-The bridge currently supports the following blockchain networks:
-
-### Mainnets
+### Currently Supported
 - **EVM-Compatible**:
   - Ethereum (Chain ID: 1)
   - Binance Smart Chain (Chain ID: 56)
@@ -150,18 +208,11 @@ The bridge currently supports the following blockchain networks:
 - **Non-EVM Chains**:
   - XRP Ledger (XRPL) Mainnet
 
-### Testnets
-- **EVM-Compatible**:
-  - Ethereum Sepolia (Chain ID: 11155111)
-  - Ethereum Holesky (Chain ID: 17000)
-  - Base Sepolia (Chain ID: 84532)
-  - BSC Testnet (Chain ID: 97)
-  - Lux Testnet (Chain ID: 96368)
-  - Zoo Testnet (Chain ID: 200201)
-
+### Planned Support
 - **Non-EVM Chains**:
-  - XRPL Testnet
-  - XRPL Devnet
+  - Solana (pending EdDSA implementation)
+  - Bitcoin (pending UTXO implementation)
+  - Avalanche X-Chain (pending UTXO implementation)
 
 For the most up-to-date list and configuration, refer to the settings file at:
 `/mpc-nodes/docker/common/node/src/config/settings.ts`
@@ -230,9 +281,9 @@ To add a new EVM-compatible chain to the bridge, follow these steps:
    - Test transactions from existing chains to the new chain
    - Verify that tokens can be correctly bridged in both directions
 
-### Adding a Non-EVM Blockchain (like XRPL)
+### Adding a Non-EVM Blockchain (Future)
 
-Adding a non-EVM blockchain requires additional custom implementation:
+Adding a non-EVM blockchain would require additional custom implementation (planned features):
 
 1. **Update Configuration**:
    - Similar to EVM chains, add the configuration to the settings file
@@ -240,19 +291,22 @@ Adding a non-EVM blockchain requires additional custom implementation:
 
 2. **Implement Blockchain Monitors**:
    - In the MPC node, add specialized monitoring for the blockchain events
-   - For example, for XRPL, the implementation is in `node.ts` and looks for Payment transactions to the teleporter address
+   - For XRPL, the implementation looks for Payment transactions to the teleporter address
+   - For Solana (planned), would need to monitor for specific program events
 
 3. **Add Transaction Validation**:
    - Implement chain-specific validation of transactions
-   - For XRPL, this includes validating that the transaction is of type "Payment" and is sent to the correct teleporter address
+   - For XRPL, validate that the transaction is of type "Payment"
+   - For Solana (planned), would need to validate program invocations
 
 4. **Add Chain Libraries**:
    - Import and use chain-specific libraries for interacting with the blockchain
    - For XRPL, this includes the `xrpl` library
+   - For Solana (planned), would need to use the `@solana/web3.js` library
 
 5. **Implement Signature Generation**:
    - Add support for generating signatures for minting tokens on destination chains
-   - Ensure that the transaction data is correctly formatted for the chain's requirements
+   - For EdDSA chains like Solana (planned), would need to implement EdDSA threshold signatures
 
 6. **Update UI**:
    - Add support in the UI for connecting to the new blockchain's wallets
@@ -262,3 +316,35 @@ Adding a non-EVM blockchain requires additional custom implementation:
    - Test transactions from the new blockchain to existing chains
    - Test transactions from existing chains to the new blockchain
    - Verify that tokens can be correctly bridged in both directions
+
+## Future Roadmap (Planned Features)
+
+### EdDSA Support
+
+Implementation of Edwards-curve Digital Signature Algorithm (EdDSA) threshold signatures to support chains like Solana:
+
+1. **Protocol Selection**: Evaluation and selection of an appropriate EdDSA threshold signature protocol
+2. **Integration with Existing MPC Framework**: Extending the current MPC framework to support EdDSA
+3. **Key Generation**: Implementation of distributed key generation for EdDSA
+4. **Signature Generation**: Implementation of threshold signatures for EdDSA
+5. **Chain Integration**: Support for Solana and other EdDSA-based chains
+
+### UTXO Support
+
+Implementation of support for UTXO-based blockchains like Bitcoin and Avalanche X-Chain:
+
+1. **UTXO Management**: Tracking and management of UTXOs
+2. **Transaction Building**: Creation of UTXO-based transactions
+3. **MPC Integration**: Using the existing MPC infrastructure for signing UTXO transactions
+4. **Monitoring**: Tracking UTXO-based blockchain for events
+5. **Sweeping**: Implementation of UTXO sweeping for efficient management
+
+### DKLs23 Protocol Evaluation
+
+Evaluation and potential implementation of the DKLs23 protocol for improved efficiency and security:
+
+1. **Performance Analysis**: Comparison with the current CGGMP20 implementation
+2. **Security Analysis**: Evaluation of security properties
+3. **Implementation**: Development of a DKLs23-based threshold signature scheme
+4. **Integration**: Integration with the existing MPC infrastructure
+5. **Testing**: Comprehensive testing to ensure reliability and security
