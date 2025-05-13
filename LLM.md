@@ -1,350 +1,117 @@
-# Lux Network MPC Bridge Architecture
-
-This document provides a comprehensive overview of the Lux Network MPC Bridge project, its components, and how they interact. This document distinguishes between **current implementation** and **planned features**.
+# LLM.md - Lux.Network Bridge CGGMP21 Implementation
 
 ## Project Overview
 
-The Lux Network Bridge is a decentralized cross-chain bridge that uses Multi-Party Computation (MPC) to enable secure asset transfers between different blockchain networks. The bridge consists of several key components:
-
-1. **Smart Contracts**: EVM-compatible contracts deployed on various networks
-2. **MPC Nodes**: Distributed nodes that use threshold signatures for secure transaction signing
-3. **Bridge UI**: Web interface for users to initiate cross-chain transfers
-4. **Backend Services**: APIs and services that coordinate the bridge operations
-5. **Blockchain Monitors**: Services that monitor different blockchains (EVM and non-EVM) for events
-
-## Project Structure
-
-The project is organized as a monorepo with the following main directories:
-
-- `app/`: Frontend applications
-  - `bridge/`: Main bridge UI application (Next.js)
-  - `bridge3/`: New version of the bridge UI
-  - `explorer/`: Block explorer UI
-  - `server/`: Backend API services
-- `contracts/`: Smart contracts for the bridge
-  - `contracts/`: Solidity smart contracts for various chains
-  - `ignition/`: Deployment modules for the contracts
-  - `scripts/`: Utility scripts for contract interactions
-- `mpc-nodes/`: MPC node implementation
-  - `docker/`: Docker configuration for running MPC nodes
-  - `k8s.examples/`: Kubernetes deployment examples
-- `pkg/`: Shared packages and utilities
-  - `luxfi-core/`: Core shared types and utilities
-  - `settings/`: Configuration settings
-  - `utila/`: Utility functions and helpers
-- `docs/`: Documentation and guides
-  - `unified-mpc-library.md`: Details on planned MPC implementation
-  - `utxo-guide.md`: Guide for planned UTXO-based chain integration
-  - `eddsa-guide.md`: Guide for planned EdDSA signature implementation
+This document provides information about the implementation of the CGGMP21 protocol for the Lux.Network bridge. The CGGMP21 protocol is an advanced threshold ECDSA implementation that provides enhanced security features like non-interactive signing, proactive security, and identifiable abort.
 
 ## Key Components
 
-### Smart Contracts
+### 1. Protocol Management
 
-The bridge uses several key smart contracts:
+The implementation is designed to support multiple MPC protocols through a plugin-style architecture:
 
-1. **Bridge.sol**: The main contract that handles the teleport operations, including minting, burning, and vault interactions.
-2. **ERC20B.sol**: Bridgeable ERC20 token implementation that supports the bridge-specific operations.
-3. **LuxVault.sol**: Vault contract that securely holds tokens during the bridging process.
-4. **ETHVault.sol**: Specialized vault for handling native ETH.
+- `protocol.ts`: Core module that defines protocol interfaces and implementations
+- Protocol enum: `GG18`, `CGGMP20`, and `CGGMP21`
+- Factory pattern: `createProtocol()` to instantiate the appropriate protocol handler
 
-The contracts support multiple blockchain networks, including:
-- Ethereum (mainnet and testnets)
-- BSC (Binance Smart Chain)
-- Lux Network
-- Zoo Network
-- Base
-- Polygon
-- Avalanche
-- XRP Ledger (XRPL)
-- Many other EVM-compatible chains
+### 2. CGGMP21 Protocol Features
 
-### MPC Nodes
+The CGGMP21 protocol implementation includes:
 
-The MPC (Multi-Party Computation) nodes are a distributed network of servers that collectively sign transactions without any single node having access to the complete private key. Key features:
+- **Presigning**: Generate signing data without knowing the message to be signed
+- **Key Refresh**: Periodic key refreshing for enhanced security
+- **Non-Interactive Signing**: Single round of communication after presigning
 
-1. **Decentralized oracle operations using MPC**
-2. **Decentralized permissioning using MPC**
-3. **Zero-knowledge transactions**: Signers don't know details about assets being teleported
-4. **Multi-chain monitoring**: Nodes monitor various blockchains, including both EVM-compatible chains (like Ethereum, Binance Smart Chain, etc.) and non-EVM chains (like XRP Ledger)
+### 3. API Endpoints
 
-The MPC nodes are containerized using Docker and can be deployed on Kubernetes clusters for production environments.
+New endpoints added to support CGGMP21:
 
-#### Current MPC Implementation
+- `/api/v1/refresh_keys`: Refresh key shares for enhanced security
+- `/api/v1/generate_presign`: Generate presign data manually
+- `/api/v1/protocol_status`: Get current protocol status and statistics
 
-- **CGGMP20 Protocol**: The bridge currently uses the CGGMP20 protocol for ECDSA threshold signatures
-- **ECDSA Support**: Only ECDSA is currently supported, which works with all EVM-compatible chains
+### 4. Configuration
 
-#### Planned MPC Enhancements
+Environment variables for configuring the protocol:
 
-- **DKLs23 Protocol**: Being evaluated as a possible future update for improved efficiency and security
-- **EdDSA Support**: Planned implementation of EdDSA for supporting non-EVM chains like Solana
-- **Unified MPC Library**: A planned abstraction layer to unify ECDSA and EdDSA implementations behind a common API
+```
+# Protocol selection
+mpc_protocol=cggmp21  # Options: cggmp20, cggmp21
 
-### Bridge UI
+# Party configuration
+party_id=0
+threshold=2
+total_parties=3
+key_store_path=./keyshares
 
-The bridge UI is a Next.js application that provides:
+# Presigning configuration
+presign_count=10  # Number of presign data to generate at startup
+```
 
-1. **Swap interface**: Allows users to initiate cross-chain transfers
-2. **Network selection**: Support for multiple source and destination networks
-3. **Token selection**: Support for various tokens on each network
-4. **Wallet integration**: Connection to various wallets (EVM, Solana, etc.)
-5. **Transaction history**: View and track past transactions
+## Design Decisions
 
-## Bridge Workflow
+1. **Backward Compatibility**: The implementation maintains backward compatibility with the existing CGGMP20 protocol.
 
-The bridge operates through the following workflow:
+2. **Protocol Abstraction**: An abstract `MPCProtocol` class defines a common interface for all protocol implementations, allowing easy switching between protocols.
 
-1. **User initiates a transfer**:
-   - User connects their wallet to the bridge UI
-   - Selects source network, token, amount, destination network, and address
-   - Confirms the transaction
+3. **Presigning Management**: CGGMP21 includes a system for managing presign data that is generated in advance for better performance and security.
 
-2. **Source chain operations**:
-   - If using a wrapped token: Burns the token on the source chain
-   - If using a native token: Locks the token in the vault
+4. **Key Refresh**: CGGMP21 supports periodic key refreshing without changing the public key, enhancing security.
 
-3. **MPC node validation**:
-   - MPC nodes monitor the source chain for bridge events
-   - For EVM chains, nodes look for BridgeBurned or VaultDeposit events
-   - For XRPL, nodes look for Payment transactions to the teleporter address
-   - Validate the transaction and collectively sign the approval
-   - No single node has the complete private key
+## Implementation Details
 
-4. **Destination chain operations**:
-   - If minting a wrapped token: Creates new tokens on the destination chain
-   - If releasing a native token: Releases tokens from the vault
-   - Transfers to the recipient address
+### CGGMP21 Protocol Class
 
-5. **Transaction completion**:
-   - User receives tokens on the destination chain
-   - UI updates to show transaction status
+The `CGGMP21Protocol` class implements the `MPCProtocol` interface and adds specific methods for CGGMP21:
 
-## MPC Implementation (Current & Planned)
+```typescript
+export class CGGMP21Protocol extends MPCProtocol {
+  // Core signing method (implements MPCProtocol interface)
+  async sign(options: SignOptions): Promise<{ r: string; s: string; v: string; signature: string }>
+  
+  // CGGMP21-specific methods
+  async generatePresignData(): Promise<{ id: string, path: string }>
+  async refreshKeyShares(epoch: number): Promise<string>
+  async getOrCreatePresignData(): Promise<{ id: string, path: string }>
+}
+```
 
-### Current Implementation
+### PresignStore
 
-The current MPC implementation focuses on ECDSA threshold signatures using the CGGMP20 protocol:
+A dedicated store for managing presign data:
 
-1. **CGGMP20 Protocol**:
-   - Secure threshold ECDSA signatures
-   - Based on Castagnos and Laguillaumie's encryption scheme
-   - Efficient distributed key generation and signing
+```typescript
+export class PresignStore {
+  async savePresignData(presignData: PresignData): Promise<void>
+  async getUnusedPresignData(): Promise<PresignData | null>
+  async getUnusedCount(): Promise<number>
+  async markPresignDataAsUsed(id: string): Promise<void>
+  async markAllAsUsed(): Promise<void>
+}
+```
 
-2. **Key Features**:
-   - Distributed key generation
-   - Threshold signatures (t-of-n)
-   - No trusted dealer required
-   - Asynchronous communication between nodes
+### Integration with Existing Signing System
 
-3. **Supported Chains**:
-   - All EVM-compatible chains
-   - XRPL (using ECDSA)
-
-### Planned Enhancements
+The existing signing system in `utils.ts` was modified to use the protocol handler:
 
-The following enhancements are planned for future development:
+```typescript
+// Use protocol handler for signing
+const { signature, r, s, v } = await protocolHandler.sign({ messageHash: netSigningMsg });
+```
 
-1. **DKLs23 Protocol Evaluation**:
-   - Newer protocol being evaluated for possible implementation
-   - Improved efficiency and security properties
-   - Potential replacement or alternative to CGGMP20
+## Usage Flow
 
-2. **EdDSA Support** (Planned):
-   - Implementation of threshold EdDSA signatures
-   - Support for chains like Solana that use Ed25519 signatures
-   - Integration with existing MPC infrastructure
-
-3. **Unified MPC Library** (Planned):
-   - Abstraction layer to unify ECDSA and EdDSA implementations
-   - Common API for different signature schemes
-   - Simplified integration of new blockchains
-
-4. **UTXO Support** (Planned):
-   - Support for UTXO-based blockchains like Bitcoin
-   - UTXO management and transaction building
-   - Integration with MPC signing
-
-## Development Environment
-
-The project uses:
-
-- **Node.js v20+**: JavaScript runtime
-- **pnpm**: Package manager (v9.15.0+)
-- **Next.js**: React framework for the UI
-- **TypeScript**: For type-safe code
-- **Hardhat**: Ethereum development environment for contracts
-- **Docker/Kubernetes**: For containerization and deployment of MPC nodes
-
-## Running Locally
-
-To run the bridge locally:
-
-1. Install `pnpm`: https://pnpm.io/installation
-2. Install dependencies: `pnpm install`
-3. Run the bridge UI: `pnpm dev`
-
-## Supported Chains and Networks
-
-### Currently Supported
-- **EVM-Compatible**:
-  - Ethereum (Chain ID: 1)
-  - Binance Smart Chain (Chain ID: 56)
-  - Polygon (Chain ID: 137)
-  - Optimism (Chain ID: 10)
-  - Arbitrum One (Chain ID: 42161)
-  - Celo (Chain ID: 42220)
-  - Base (Chain ID: 8453)
-  - Avalanche (Chain ID: 43114)
-  - Zora (Chain ID: 7777777)
-  - Blast (Chain ID: 81457)
-  - Linea (Chain ID: 59144)
-  - Fantom (Chain ID: 250)
-  - Aurora (Chain ID: 1313161554)
-  - Gnosis (Chain ID: 100)
-  - Lux Network (Chain ID: 96369)
-  - Zoo Network (Chain ID: 200200)
-
-- **Non-EVM Chains**:
-  - XRP Ledger (XRPL) Mainnet
-
-### Planned Support
-- **Non-EVM Chains**:
-  - Solana (pending EdDSA implementation)
-  - Bitcoin (pending UTXO implementation)
-  - Avalanche X-Chain (pending UTXO implementation)
-
-For the most up-to-date list and configuration, refer to the settings file at:
-`/mpc-nodes/docker/common/node/src/config/settings.ts`
-
-## Architecture Decisions
-
-### MPC Over Traditional Multi-sig
-
-The bridge uses MPC for enhanced security compared to traditional multi-signature approaches:
-- No single entity can compromise the bridge
-- Private keys never exist in complete form
-- Decentralized validation of cross-chain transfers
-
-### Vault System
-
-The vault system allows for:
-- Secure custody of assets during the bridge process
-- Efficient asset management across chains
-- Fee collection mechanism for bridge operations
-
-### Modular Design
-
-The project's modular architecture enables:
-- Easy addition of new blockchain networks
-- Support for different token types
-- Scalable infrastructure to handle increasing loads
-
-## Security Considerations
-
-The bridge implements multiple security measures:
-
-1. **Threshold Signatures**: Requires a minimum number of MPC nodes to sign transactions
-2. **Transaction Replay Protection**: Prevents replay attacks
-3. **Fee Mechanisms**: Discourages spam and funds system maintenance
-4. **Validation Checks**: Ensures transactions meet all requirements before execution
-
-## Adding New Chains
-
-### Adding a New EVM Chain
-
-To add a new EVM-compatible chain to the bridge, follow these steps:
-
-1. **Update Configuration**:
-   - Edit the configuration file at `/mpc-nodes/docker/common/node/src/config/settings.ts`
-   - Add a new entry to the `MAIN_NETWORKS` or `TEST_NETWORKS` array with the following information:
-     - `display_name`: User-friendly name of the network
-     - `internal_name`: Unique identifier for the network
-     - `is_testnet`: Boolean indicating if it's a testnet
-     - `chain_id`: The numeric chain ID
-     - `teleporter`: Address of the teleporter contract on this chain
-     - `vault`: Address of the vault contract on this chain
-     - `node`: RPC endpoint URL for this chain
-     - `currencies`: Array of supported tokens on this chain
-
-2. **Deploy Smart Contracts**:
-   - Deploy the Bridge.sol contract on the new chain
-   - Deploy the ERC20B.sol contract for bridgeable tokens
-   - Deploy the LuxVault.sol or ETHVault.sol as needed
-   - Update the configuration with the new contract addresses
-
-3. **Update Swap Pairs**:
-   - Add entries to the `SWAP_PAIRS` object to define which tokens on the new chain can be swapped with tokens on other chains
-
-4. **Testing**:
-   - Test transactions from the new chain to existing chains
-   - Test transactions from existing chains to the new chain
-   - Verify that tokens can be correctly bridged in both directions
-
-### Adding a Non-EVM Blockchain (Future)
-
-Adding a non-EVM blockchain would require additional custom implementation (planned features):
-
-1. **Update Configuration**:
-   - Similar to EVM chains, add the configuration to the settings file
-   - Specify blockchain-specific parameters (like node endpoints and teleporter addresses)
-
-2. **Implement Blockchain Monitors**:
-   - In the MPC node, add specialized monitoring for the blockchain events
-   - For XRPL, the implementation looks for Payment transactions to the teleporter address
-   - For Solana (planned), would need to monitor for specific program events
-
-3. **Add Transaction Validation**:
-   - Implement chain-specific validation of transactions
-   - For XRPL, validate that the transaction is of type "Payment"
-   - For Solana (planned), would need to validate program invocations
-
-4. **Add Chain Libraries**:
-   - Import and use chain-specific libraries for interacting with the blockchain
-   - For XRPL, this includes the `xrpl` library
-   - For Solana (planned), would need to use the `@solana/web3.js` library
-
-5. **Implement Signature Generation**:
-   - Add support for generating signatures for minting tokens on destination chains
-   - For EdDSA chains like Solana (planned), would need to implement EdDSA threshold signatures
-
-6. **Update UI**:
-   - Add support in the UI for connecting to the new blockchain's wallets
-   - Update network selection to include the new blockchain
-
-7. **Testing**:
-   - Test transactions from the new blockchain to existing chains
-   - Test transactions from existing chains to the new blockchain
-   - Verify that tokens can be correctly bridged in both directions
-
-## Future Roadmap (Planned Features)
-
-### EdDSA Support
-
-Implementation of Edwards-curve Digital Signature Algorithm (EdDSA) threshold signatures to support chains like Solana:
-
-1. **Protocol Selection**: Evaluation and selection of an appropriate EdDSA threshold signature protocol
-2. **Integration with Existing MPC Framework**: Extending the current MPC framework to support EdDSA
-3. **Key Generation**: Implementation of distributed key generation for EdDSA
-4. **Signature Generation**: Implementation of threshold signatures for EdDSA
-5. **Chain Integration**: Support for Solana and other EdDSA-based chains
-
-### UTXO Support
-
-Implementation of support for UTXO-based blockchains like Bitcoin and Avalanche X-Chain:
-
-1. **UTXO Management**: Tracking and management of UTXOs
-2. **Transaction Building**: Creation of UTXO-based transactions
-3. **MPC Integration**: Using the existing MPC infrastructure for signing UTXO transactions
-4. **Monitoring**: Tracking UTXO-based blockchain for events
-5. **Sweeping**: Implementation of UTXO sweeping for efficient management
-
-### DKLs23 Protocol Evaluation
-
-Evaluation and potential implementation of the DKLs23 protocol for improved efficiency and security:
-
-1. **Performance Analysis**: Comparison with the current CGGMP20 implementation
-2. **Security Analysis**: Evaluation of security properties
-3. **Implementation**: Development of a DKLs23-based threshold signature scheme
-4. **Integration**: Integration with the existing MPC infrastructure
-5. **Testing**: Comprehensive testing to ensure reliability and security
+1. **Configuration**: Set `mpc_protocol=cggmp21` in environment variables
+2. **Initialization**: At startup, the system generates presign data (configured by `presign_count`)
+3. **Signing**: When a transaction needs to be signed, the system:
+   - Gets or creates presign data
+   - Signs the message using the presign data
+   - Marks the presign data as used
+4. **Maintenance**: Periodically refresh keys using the `/api/v1/refresh_keys` endpoint
+
+## Future Improvements
+
+1. **Automated Key Refreshing**: Implement a scheduled job for regular key refreshing
+2. **Better Error Handling**: Improve error handling for protocol operations
+3. **Performance Optimization**: Implement batched presigning operations
+4. **Monitoring**: Add metrics and monitoring for presign data usage and protocol operations

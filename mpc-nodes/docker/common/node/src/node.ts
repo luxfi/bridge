@@ -73,6 +73,67 @@ app.get("/networks", async (req: Request, res: Response) => {
   }
 })
 
+/**
+ * Get MPC protocol status
+ */
+app.get("/api/v1/protocol_status", async (req: Request, res: Response) => {
+  try {
+    // Get current protocol info
+    const mpcProtocol = (process.env.mpc_protocol || 'cggmp20').toLowerCase()
+    const partyId = parseInt(process.env.party_id || '0')
+    const threshold = parseInt(process.env.threshold || '2')
+    const totalParties = parseInt(process.env.total_parties || '3')
+    
+    const status = {
+      protocol: mpcProtocol,
+      party_id: partyId,
+      threshold,
+      total_parties: totalParties
+    }
+    
+    // If using CGGMP21, get additional info about presign data
+    if (mpcProtocol === 'cggmp21') {
+      try {
+        // Import the protocol module dynamically to avoid circular dependencies
+        const { Protocol, createProtocol } = require('./mpc/protocol')
+        
+        const keyStorePath = process.env.key_store_path || settings.KeyStore
+        const binPath = __dirname + "/multiparty/target/release/examples"
+        
+        // Create protocol handler
+        const protocolHandler = createProtocol(Protocol.CGGMP21, {
+          protocol: Protocol.CGGMP21,
+          partyId,
+          threshold,
+          totalParties,
+          keySharePath: keyStorePath,
+          binPath
+        })
+        
+        // Check if protocol handler has the PresignStore
+        if ('presignStore' in protocolHandler) {
+          // @ts-ignore - we know this property exists
+          const unusedCount = await protocolHandler.presignStore.getUnusedCount()
+          // @ts-ignore - we know this property exists
+          const totalCount = protocolHandler.presignStore.data ? protocolHandler.presignStore.data.length : 0
+          
+          status.presign_data = {
+            unused_count: unusedCount,
+            total_count: totalCount
+          }
+        }
+      } catch (error) {
+        console.error('Error getting presign data status:', error)
+      }
+    }
+    
+    res.status(200).json({ status: true, data: status })
+  } catch (err) {
+    console.error('Error getting protocol status:', err)
+    res.status(500).json({ status: false, msg: `Error getting protocol status: ${err.message || err}` })
+  }
+})
+
 /*
  * Given parameters associated with the token burn, we validate and produce a signature entitling user to payout.
  * Parameters specific to where funds are being moved / minted to, are hashed, such that only the user has knowledge of
@@ -383,9 +444,152 @@ app.post("/api/v1/complete", async (req: Request, res: Response) => {
 /**
  * kill current running signers
  */
-app.post("api/v1/kill", async (req: Request, res: Response) => {
+app.post("/api/v1/kill", async (req: Request, res: Response) => {
   killSigners()
   res.status(200).json({ status: true, msg: "success" })
+})
+
+/**
+ * Refresh key shares for CGGMP21 protocol
+ */
+app.post("/api/v1/refresh_keys", async (req: Request, res: Response) => {
+  const { epoch } = req.body
+  
+  // Check if we're using CGGMP21 protocol
+  const mpcProtocol = (process.env.mpc_protocol || 'cggmp20').toLowerCase()
+  
+  if (mpcProtocol !== 'cggmp21') {
+    return res.status(400).json({ 
+      status: false, 
+      msg: "Key refresh is only supported with CGGMP21 protocol" 
+    })
+  }
+  
+  if (!epoch || isNaN(Number(epoch))) {
+    return res.status(400).json({ 
+      status: false, 
+      msg: "Invalid epoch value. Please provide a valid number." 
+    })
+  }
+  
+  try {
+    // Import the protocol module dynamically to avoid circular dependencies
+    const { Protocol, createProtocol } = require('./mpc/protocol')
+    
+    const partyId = parseInt(process.env.party_id || '0')
+    const threshold = parseInt(process.env.threshold || '2')
+    const totalParties = parseInt(process.env.total_parties || '3')
+    const keyStorePath = process.env.key_store_path || settings.KeyStore
+    const binPath = __dirname + "/multiparty/target/release/examples"
+    
+    // Create protocol handler
+    const protocolHandler = createProtocol(Protocol.CGGMP21, {
+      protocol: Protocol.CGGMP21,
+      partyId,
+      threshold,
+      totalParties,
+      keySharePath: keyStorePath,
+      binPath
+    })
+    
+    // Check if protocol handler has refreshKeyShares method
+    if ('refreshKeyShares' in protocolHandler) {
+      // @ts-ignore - we know this method exists
+      const newKeySharePath = await protocolHandler.refreshKeyShares(Number(epoch))
+      
+      res.status(200).json({ 
+        status: true, 
+        msg: "Key shares refreshed successfully", 
+        data: { keySharePath: newKeySharePath } 
+      })
+    } else {
+      res.status(500).json({ 
+        status: false, 
+        msg: "Protocol does not support key refresh" 
+      })
+    }
+  } catch (error) {
+    console.error('Error refreshing keys:', error)
+    res.status(500).json({ 
+      status: false, 
+      msg: `Error refreshing keys: ${error.message || error}` 
+    })
+  }
+})
+
+/**
+ * Generate presign data for CGGMP21 protocol
+ */
+app.post("/api/v1/generate_presign", async (req: Request, res: Response) => {
+  const { count } = req.body
+  
+  // Check if we're using CGGMP21 protocol
+  const mpcProtocol = (process.env.mpc_protocol || 'cggmp20').toLowerCase()
+  
+  if (mpcProtocol !== 'cggmp21') {
+    return res.status(400).json({ 
+      status: false, 
+      msg: "Presign data is only supported with CGGMP21 protocol" 
+    })
+  }
+  
+  const presignCount = count && !isNaN(Number(count)) ? Number(count) : 10
+  
+  try {
+    // Import the protocol module dynamically to avoid circular dependencies
+    const { Protocol, createProtocol } = require('./mpc/protocol')
+    
+    const partyId = parseInt(process.env.party_id || '0')
+    const threshold = parseInt(process.env.threshold || '2')
+    const totalParties = parseInt(process.env.total_parties || '3')
+    const keyStorePath = process.env.key_store_path || settings.KeyStore
+    const binPath = __dirname + "/multiparty/target/release/examples"
+    
+    // Create protocol handler
+    const protocolHandler = createProtocol(Protocol.CGGMP21, {
+      protocol: Protocol.CGGMP21,
+      partyId,
+      threshold,
+      totalParties,
+      keySharePath: keyStorePath,
+      binPath
+    })
+    
+    // Check if protocol handler has generatePresignData method
+    if ('generatePresignData' in protocolHandler) {
+      // Generate presign data in background
+      const { spawn } = require('child_process')
+      const generateScript = __dirname + '/generate-presign.js'
+      
+      // Set environment variables for the script
+      const env = { ...process.env, presign_count: presignCount.toString() }
+      
+      const child = spawn('node', [generateScript], {
+        detached: true,
+        stdio: 'ignore',
+        env
+      })
+      
+      // Unref the child process to allow the parent to exit independently
+      child.unref()
+      
+      res.status(200).json({ 
+        status: true, 
+        msg: `Started generating ${presignCount} presign data in the background` 
+      })
+    } else {
+      res.status(500).json({ 
+        status: false, 
+        msg: "Protocol does not support presign data" 
+      })
+    }
+  } catch (error) {
+    console.error('Error generating presign data:', error)
+    res.status(500).json({ 
+      status: false, 
+      msg: `Error generating presign data: ${error.message || error}` 
+    })
+  }
 })
 
 /**

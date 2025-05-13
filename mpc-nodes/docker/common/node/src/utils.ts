@@ -7,6 +7,8 @@ import { promisify } from "util"
 import { exec as childExec } from "child_process"
 import { settings } from "./config"
 import { SIGN_REQUEST } from "./types"
+import * as path from "path"
+import { Protocol, createProtocol } from "./mpc/protocol"
 
 const exec = promisify(childExec)
 dotenv.config()
@@ -18,6 +20,24 @@ const signSmManager = process.env.sign_sm_manager
 const smTimeOutBound = Number(process.env.smTimeOutBound)
 /** key share for this node */
 const keyStore = settings.KeyStore
+
+/** MPC protocol settings */
+const mpcProtocol = (process.env.mpc_protocol || 'cggmp20').toLowerCase() as Protocol
+const partyId = parseInt(process.env.party_id || '0')
+const threshold = parseInt(process.env.threshold || '2')
+const totalParties = parseInt(process.env.total_parties || '3')
+const binPath = path.join(__dirname, "/multiparty/target/release/examples")
+
+// Create protocol handler
+const protocolHandler = createProtocol(mpcProtocol as Protocol, {
+  partyId,
+  threshold,
+  totalParties,
+  keySharePath: keyStore,
+  binPath,
+  signClientName,
+  smManager
+})
 
 const killSigner = async (signerProc: string) => {
   try {
@@ -190,17 +210,33 @@ export const signMessage = async (message: string, web3: Web3<RegisteredSubscrip
 
     const myMsgHashAndPrefix = web3.eth.accounts.hashMessage(message)
     const netSigningMsg = myMsgHashAndPrefix.substr(2)
-    const i = 0
+
+    // Use protocol handler for signing
     try {
-      const { signature, r, s, v } = (await signClient(i, netSigningMsg)) as any
-      let signer = ""
-      try {
-        signer = recoverAddress(myMsgHashAndPrefix, signature)
-        console.log("MPC Address:", signer)
-      } catch (err) {
-        console.log("err: ", err)
+      // If still using the legacy method
+      if (mpcProtocol === Protocol.CGGMP20 && process.env.use_legacy_signing === 'true') {
+        const i = 0
+        const { signature, r, s, v } = (await signClient(i, netSigningMsg)) as any
+        let signer = ""
+        try {
+          signer = recoverAddress(myMsgHashAndPrefix, signature)
+          console.log("MPC Address:", signer)
+        } catch (err) {
+          console.log("err: ", err)
+        }
+        return Promise.resolve({ signature, signer })
+      } else {
+        // Use protocol handler
+        const { signature, r, s, v } = await protocolHandler.sign({ messageHash: netSigningMsg });
+        let signer = ""
+        try {
+          signer = recoverAddress(myMsgHashAndPrefix, signature)
+          console.log("MPC Address (using protocol: " + mpcProtocol + "):", signer)
+        } catch (err) {
+          console.log("err: ", err)
+        }
+        return Promise.resolve({ signature, signer })
       }
-      return Promise.resolve({ signature, signer })
     } catch (err) {
       console.log("Error:", err)
       return Promise.reject("signClientError:")
