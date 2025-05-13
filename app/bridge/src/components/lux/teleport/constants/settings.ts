@@ -166,6 +166,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   LDOGS: ['ZDOGS'],
   LMRB: ['ZMRB'],
   LREDO: ['ZREDO'],
+  LXRP: ['XRP', 'ZXRP'],
   // Zoo tokens
   ZOO: ['LZOO'],
   ZBTC: ['WBTC', 'LBTC'],
@@ -197,6 +198,7 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZDOGS: ['LDOGS'],
   ZMRB: ['LMRB'],
   ZREDO: ['LREDO'],
+  ZXRP: ['LXRP', 'XRP'],
   // Evm tokens
   ETH: ['LETH', 'ZETH'],
   WETH: ['LETH', 'ZETH'],
@@ -239,4 +241,6 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   DOGS: ['LDOGS', 'ZDOGS'],
   MRB: ['LMRB', 'ZMRB'],
   REDO: ['LREDO', 'ZREDO'],
+  // XRP Ledger tokens
+  XRP: ['LXRP', 'ZXRP'],
 }

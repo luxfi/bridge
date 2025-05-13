@@ -8,6 +8,7 @@ export enum NetworkType {
     TON = "ton",
     Bitocoin = "btc",
     Cardano = "cardano",
+    XRPL = "xrpl",
 }
 
 export type CryptoNetwork = {

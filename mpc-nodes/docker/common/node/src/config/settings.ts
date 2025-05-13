@@ -1166,8 +1166,25 @@ export const MAIN_NETWORKS: NETWORK[] = [
         is_native: false
       }
     ]
+  },
+  {
+    display_name: "XRPL Ledger",
+    internal_name: "XRPL_MAINNET",
+    is_testnet: false,
+    chain_id: "XRP-MAINNET",
+    teleporter: "<YOUR_XRP_MAINNET_TELEPORTER_ADDRESS>",  // XRPL teleporter account holding burns
+    vault: "<YOUR_XRP_MAINNET_VAULT_ADDRESS>",      // XRPL vault account for returning funds
+    node: "wss://s1.ripple.com",
+    currencies: [
+      {
+        name: "XRP",
+        asset: "XRP",
+        contract_address: null,
+        decimals: 6,
+        is_native: true
+      }
+    ]
   }
-]
 
 export const TEST_NETWORKS: NETWORK[] = [
   {
@@ -1799,8 +1816,45 @@ export const TEST_NETWORKS: NETWORK[] = [
         is_native: false
       }
     ]
+  },
+  // XRPL Platform Testnet
+  {
+    display_name: "XRPL Testnet",
+    internal_name: "XRPL_TESTNET",
+    is_testnet: true,
+    chain_id: "XRP-TESTNET",
+    teleporter: "<YOUR_XRP_TESTNET_TELEPORTER_ADDRESS>",
+    vault: "<YOUR_XRP_TESTNET_VAULT_ADDRESS>",
+    node: "wss://s.altnet.rippletest.net:51233",
+    currencies: [
+      {
+        name: "XRP",
+        asset: "XRP",
+        contract_address: null,
+        decimals: 6,
+        is_native: true
+      }
+    ]
+  },
+  // XRPL Incentivized Devnet
+  {
+    display_name: "XRPL Devnet",
+    internal_name: "XRPL_DEVNET",
+    is_testnet: true,
+    chain_id: "XRP-DEVNET",
+    teleporter: "<YOUR_XRP_DEVNET_TELEPORTER_ADDRESS>",
+    vault: "<YOUR_XRP_DEVNET_VAULT_ADDRESS>",
+    node: "wss://s.devnet.rippled.com:6006",
+    currencies: [
+      {
+        name: "XRP",
+        asset: "XRP",
+        contract_address: null,
+        decimals: 6,
+        is_native: true
+      }
+    ]
   }
-]
 
 export const SWAP_PAIRS: Record<string, string[]> = {
   // lux tokens
@@ -1866,12 +1920,15 @@ export const SWAP_PAIRS: Record<string, string[]> = {
   ZDOGS: ["LDOGS"],
   ZMRB: ["LMRB"],
   ZREDO: ["LREDO"],
-  
+
   // Lux & Zoo tokens
   TRUMP: ["TRUMP"],
   MELANIA: ["MELANIA"],
   Z: ["Z"],
   CYRUS: ["CYRUS"],
+
+  // XRP Ledger support
+  XRP: ["LXRP", "ZXRP"],
 
   // Evm tokens
   ETH: ["LETH", "ZETH"],
