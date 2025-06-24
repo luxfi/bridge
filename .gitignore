@@ -44,3 +44,7 @@ storybook-static/*
 .sedbak
 
 **/tsconfig.tsbuildinfo
+
+AGENT.md
+codex.md
+CLAUDE.md
