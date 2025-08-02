@@ -7,8 +7,10 @@ import UserTokenDepositor from './progress/TokenDepositor'
 import TeleportProcessor from './progress/TeleportProcessor'
 import PayoutProcessor from './progress/PayoutProcessor'
 import SwapSuccess from './progress/SwapSuccess'
+import XrplPayoutProcessor from './progress/XrplPayoutProcessor'
 import { SwapStatus } from '@/Models/SwapStatus'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
+import { NetworkType } from '@/Models/CryptoNetwork'
 
 interface IProps {
   className?: string
@@ -62,6 +64,24 @@ const SwapDetails: React.FC<IProps> = ({
       />
     )
   } else if (swapStatus === SwapStatus.UserPayoutPending) {
+    // XRPL payout flow
+    if (destinationNetwork.type === NetworkType.XRPL) {
+      return (
+        <XrplPayoutProcessor
+          sourceNetwork={{
+            type: sourceNetwork.type,
+            chain_id: sourceNetwork.chain_id || undefined // Convert null to undefined
+          }}
+          destinationNetwork={{
+            type: destinationNetwork.type
+          }}
+          destinationAddress={destinationAddress}
+          sourceAmount={sourceAmount}
+          swapId={swapId}
+          className={className}
+        />
+      )
+    }
     return (
       <PayoutProcessor
         sourceNetwork={sourceNetwork}

@@ -13,7 +13,8 @@
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "analyze": "cross-env ANALYZE=true next build",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest --config vitest.config.ts"
   },
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
@@ -21,6 +22,8 @@
     "@hanzo/ui": "4.2.0",
     "@headlessui/react": "^1.7.3",
     "@imtbl/imx-sdk": "2.1.1",
+    "@ledgerhq/hw-app-xrp": "^6.31.0",
+    "@ledgerhq/hw-transport-webhid": "^6.30.0",
     "@loopring-web/loopring-sdk": "3.3.5",
     "@loopring-web/web3-provider": "1.4.13",
     "@luxfi/ui": "5.4.1",
@@ -83,6 +86,8 @@
     "viem": "^2.9.9",
     "wagmi": "^2.5.19",
     "web3": "^4.11.1",
+    "xrpl": "^4.2.5",
+    "xumm": "^1.8.0",
     "zksync": "^0.13.1",
     "zustand": "^4.4.1"
   },
@@ -99,6 +104,9 @@
     "@storybook/nextjs": "^7.4.5",
     "@storybook/react": "^7.4.5",
     "@storybook/testing-library": "^0.2.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/react-hooks": "^8.0.1",
     "@types/bn.js": "^5.1.0",
     "@types/crypto-js": "^4.1.1",
     "@types/lodash.merge": "^4.6.9",
@@ -122,6 +130,7 @@
     "storybook-react-context": "^0.6.0",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
+    "vitest": "^3.1.3",
     "webpack-watch-files-plugin": "^1.2.1"
   }
 }
