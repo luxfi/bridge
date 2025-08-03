@@ -29,6 +29,7 @@ type Config struct {
 	NatsURL   string
 	ConsulURL string
 	DataDir   string
+	KMSConfig KMSConfig // KMS configuration
 }
 
 type Server struct {
@@ -38,6 +39,7 @@ type Server struct {
 	mpcNode             *mpc.Node
 	sessions            sync.Map
 	messageQueueManager *messaging.NATsMessageQueueManager
+	kmsManager          *KMSManager // KMS manager for key storage
 }
 
 type SignRequest struct {
@@ -60,6 +62,19 @@ type SignResponse struct {
 }
 
 func NewServer(config Config) (*Server, error) {
+	// Initialize KMS manager if KMS is configured
+	var kmsManager *KMSManager
+	if config.KMSConfig.URL != "" && config.KMSConfig.Token != "" {
+		var err error
+		kmsManager, err = NewKMSManager(config.KMSConfig)
+		if err != nil {
+			logger.Warnf("Failed to initialize KMS manager: %v. Continuing without KMS.", err)
+			// Continue without KMS - fallback to local storage
+		} else {
+			logger.Info("KMS manager initialized successfully")
+		}
+	}
+
 	// Connect to NATS
 	nc, err := nats.Connect(config.NatsURL)
 	if err != nil {
@@ -137,6 +152,7 @@ func NewServer(config Config) (*Server, error) {
 		consul:              consul,
 		mpcNode:             mpcNode,
 		messageQueueManager: messageQueueManager,
+		kmsManager:          kmsManager,
 	}, nil
 }
 

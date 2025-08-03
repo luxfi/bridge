@@ -1,4 +1,65 @@
 services:
+  # Lux ID Service (Casdoor-based unified authentication)
+  lux-id:
+    image: casbin/casdoor:latest
+    container_name: bridge-lux-id
+    ports:
+      - "8000:8000"
+    environment:
+      - RUNNING_IN_DOCKER=true
+    volumes:
+      - ./config/casdoor/app.conf:/conf/app.conf
+      - lux-id-data:/var/lib/casdoor
+    networks:
+      - bridge-network
+    depends_on:
+      lux-id-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Lux ID Database (PostgreSQL for Casdoor)
+  lux-id-db:
+    image: postgres:15-alpine
+    container_name: bridge-lux-id-db
+    environment:
+      - POSTGRES_USER=casdoor
+      - POSTGRES_PASSWORD=casdoor123
+      - POSTGRES_DB=casdoor
+    volumes:
+      - lux-id-db-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casdoor"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # KMS Service (Mock for local development)
+  kms:
+    image: hashicorp/vault:1.15
+    container_name: bridge-kms
+    ports:
+      - "8200:8200"
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=myroot
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # Infrastructure Services
   nats:
     image: nats:2.10-alpine
@@ -47,6 +108,9 @@ services:
       - CONSUL_URL=http://consul:8500
       - DATA_DIR=/data/mpc
       - LOG_LEVEL=info
+      - KMS_URL=http://kms:8200
+      - KMS_TOKEN=myroot
+      - KMS_PATH=secret/mpc
     volumes:
       - mpc-data-0:/data/mpc
     ports:
@@ -57,6 +121,8 @@ services:
       nats:
         condition: service_healthy
       consul:
+        condition: service_healthy
+      kms:
         condition: service_healthy
 
   mpc-node-1:
@@ -69,6 +135,9 @@ services:
       - CONSUL_URL=http://consul:8500
       - DATA_DIR=/data/mpc
       - LOG_LEVEL=info
+      - KMS_URL=http://kms:8200
+      - KMS_TOKEN=myroot
+      - KMS_PATH=secret/mpc
     volumes:
       - mpc-data-1:/data/mpc
     ports:
@@ -79,6 +148,8 @@ services:
       nats:
         condition: service_healthy
       consul:
+        condition: service_healthy
+      kms:
         condition: service_healthy
 
   mpc-node-2:
@@ -91,6 +162,9 @@ services:
       - CONSUL_URL=http://consul:8500
       - DATA_DIR=/data/mpc
       - LOG_LEVEL=info
+      - KMS_URL=http://kms:8200
+      - KMS_TOKEN=myroot
+      - KMS_PATH=secret/mpc
     volumes:
       - mpc-data-2:/data/mpc
     ports:
@@ -101,6 +175,8 @@ services:
       nats:
         condition: service_healthy
       consul:
+        condition: service_healthy
+      kms:
         condition: service_healthy
 
   # Database
@@ -138,6 +214,15 @@ services:
       - MPC_THRESHOLD=2
       - MPC_TOTAL_NODES=3
       - MPC_KEY_PREFIX=bridge/mpc
+      - KMS_URL=http://kms:8200
+      - KMS_TOKEN=myroot
+      # Lux ID (Casdoor) Authentication
+      - AUTH_PROVIDER=casdoor
+      - CASDOOR_ENDPOINT=http://lux-id:8000
+      - CASDOOR_CLIENT_ID=lux-bridge
+      - CASDOOR_CLIENT_SECRET=lux-bridge-secret
+      - CASDOOR_ORGANIZATION=lux-network
+      - CASDOOR_APPLICATION=bridge
     ports:
       - "5000:5000"
     networks:
@@ -146,6 +231,8 @@ services:
       - postgres
       - nats
       - consul
+      - kms
+      - lux-id
       - mpc-node-0
       - mpc-node-1
       - mpc-node-2
@@ -161,12 +248,20 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5000
       - NEXT_PUBLIC_CHAIN_ENV=local
+      # Lux ID (Casdoor) Authentication
+      - NEXT_PUBLIC_AUTH_PROVIDER=casdoor
+      - NEXT_PUBLIC_CASDOOR_ENDPOINT=http://localhost:8000
+      - NEXT_PUBLIC_CASDOOR_CLIENT_ID=lux-bridge
+      - NEXT_PUBLIC_CASDOOR_ORGANIZATION=lux-network
+      - NEXT_PUBLIC_CASDOOR_APPLICATION=bridge
+      - NEXT_PUBLIC_CASDOOR_REDIRECT_URI=http://localhost:3000/auth/callback
     ports:
       - "3000:3000"
     networks:
       - bridge-network
     depends_on:
       - bridge-server
+      - lux-id
     volumes:
       - ./app/bridge:/app
       - /app/node_modules
@@ -174,6 +269,8 @@ services:
     command: npm run dev
 
 volumes:
+  lux-id-data:
+  lux-id-db-data:
   nats-data:
   consul-data:
   mpc-data-0:
