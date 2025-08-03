@@ -44,3 +44,25 @@ storybook-static/*
 .sedbak
 
 **/tsconfig.tsbuildinfo
+
+# Sensitive data
+exports/
+backups/
+certs/
+*.key
+*.pem
+*.crt
+*.p12
+
+# MPC data
+mpc-data*/
+mpc-keys/
+
+# Docker volumes
+volumes/
+postgres-data/
+*.sql
+
+# Migration artifacts
+migration-config.json
+docker-compose.cgg21mp.yml

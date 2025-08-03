@@ -1,0 +1,14 @@
+nats:
+  url: nats://127.0.0.1:4223
+consul:
+  address: localhost:8500
+
+mpc_threshold: 2
+environment: local # Options: mainnet, testnet, local
+badger_password: "bridgempcpassword123456789012345" # 32 bytes for AES-256
+event_initiator_pubkey: "c3f3511cd2f849fd61e81ea62a842fd33367ee8fb5b867bb900877c7fb72ce3b"
+max_concurrent_keygen: 2
+db_path: "./data/mpc"  
+backup_enabled: true
+backup_period_seconds: 300 # 5 minutes
+backup_dir: ./data/backups
