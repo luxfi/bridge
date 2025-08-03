@@ -57,11 +57,11 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "prisma": "^6.3.1",
     "@luxfi/core": "^10.0.4",
     "@luxfi/utila": "^3.0.0",
     "@solana/addresses": "2.0.0",
     "axios": "^1.7.4",
+    "consul": "^2.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
@@ -71,7 +71,10 @@
     "module-alias": "^2.2.3",
     "morgan": "^1.10.0",
     "multicoin-address-validator": "^0.5.22",
+    "nats": "^2.29.3",
+    "prisma": "^6.3.1",
     "uuid": "^9.0.0",
+    "web3": "^4.16.0",
     "winston": "^3.17.0"
   }
 }

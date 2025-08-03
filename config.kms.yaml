@@ -1,0 +1,29 @@
+# Lux KMS Configuration for MPC Nodes
+# Add these settings to your existing config.yaml
+
+# Lux KMS Integration Settings
+kms:
+  # For local Lux KMS instance (if running ~/work/lux/kms locally)
+  site_url: "http://localhost:8080"
+  
+  # For production Lux KMS
+  # site_url: "https://kms.lux.network"
+  
+  # Project settings (required)
+  project_id: "your-project-id"  # Or set KMS_PROJECT_ID env var
+  environment: "prod"  # Options: dev, staging, prod
+  secret_path: "/mpc"  # Path where MPC secrets will be stored
+  
+  # Authentication options:
+  
+  # Option 1: Service Token (simplest)
+  # Set KMS_TOKEN environment variable
+  
+  # Option 2: Universal Auth (recommended for production)
+  # Create a machine identity in Lux KMS and use its credentials
+  client_id: "your-client-id"
+  client_secret: "your-client-secret"
+
+# Example environment variables to set:
+# export KMS_PROJECT_ID="651c...your-project-id"
+# export KMS_TOKEN="st.your-service-token"  # If using service token auth

@@ -15,6 +15,8 @@ import rate from "@/routes/rate"
 import utila from "@/routes/utila"
 import networks from "@/routes/networks"
 import exchanges from "@/routes/exchanges"
+import { mpcService } from "@/services/mpc-service"
+import { bridgeMPC } from "@/domain/mpc-bridge"
 
 try {
   dotenv.config()
@@ -94,6 +96,24 @@ try {
     res.send("Hello, Winston Logger!")
   })
 
+  // Health endpoint
+  app.get("/health", async (req: Request, res: Response) => {
+    try {
+      const mpcStatus = await mpcService.getNetworkStatus()
+      res.json({
+        status: "healthy",
+        mpc: mpcStatus,
+        timestamp: new Date().toISOString()
+      })
+    } catch (error) {
+      res.status(503).json({
+        status: "unhealthy",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      })
+    }
+  })
+
   // Add a 404 handler for unmatched routes
   app.use((req, res) => {
     logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`)
@@ -113,8 +133,18 @@ try {
   })
 
   // Start the server
-  app.listen(port, () => {
+  app.listen(port, async () => {
     logger.info(`>> Server Is Running On Port ${port}`)
+    
+    // Initialize MPC service
+    try {
+      logger.info("Initializing MPC service...")
+      await mpcService.initialize()
+      await bridgeMPC.initialize()
+      logger.info("MPC service initialized successfully")
+    } catch (error) {
+      logger.error("Failed to initialize MPC service:", error)
+    }
   })
 } catch (error) {
   // Catch any initialization errors

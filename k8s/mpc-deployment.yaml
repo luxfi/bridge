@@ -1,0 +1,474 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lux-bridge
+---
+# NATS Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+  namespace: lux-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats
+        image: nats:2.10-alpine
+        args: ["-js", "-m", "8222", "--store_dir", "/data"]
+        ports:
+        - containerPort: 4222
+          name: client
+        - containerPort: 8222
+          name: monitor
+        volumeMounts:
+        - name: nats-storage
+          mountPath: /data
+        livenessProbe:
+          tcpSocket:
+            port: 4222
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 4222
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: nats-storage
+        persistentVolumeClaim:
+          claimName: nats-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: lux-bridge
+spec:
+  selector:
+    app: nats
+  ports:
+  - port: 4222
+    targetPort: 4222
+    name: client
+  - port: 8222
+    targetPort: 8222
+    name: monitor
+---
+# Consul StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul
+  namespace: lux-bridge
+spec:
+  serviceName: consul
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:
+      containers:
+      - name: consul
+        image: consul:1.17
+        args:
+          - "agent"
+          - "-server"
+          - "-bootstrap-expect=1"
+          - "-ui"
+          - "-client=0.0.0.0"
+          - "-data-dir=/consul/data"
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8600
+          name: dns
+          protocol: UDP
+        volumeMounts:
+        - name: consul-data
+          mountPath: /consul/data
+        env:
+        - name: CONSUL_BIND_INTERFACE
+          value: eth0
+        livenessProbe:
+          exec:
+            command: ["consul", "members"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+  volumeClaimTemplates:
+  - metadata:
+      name: consul-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul
+  namespace: lux-bridge
+spec:
+  selector:
+    app: consul
+  ports:
+  - port: 8500
+    targetPort: 8500
+    name: http
+  - port: 8600
+    targetPort: 8600
+    protocol: UDP
+    name: dns
+---
+# MPC Node StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mpc-node
+  namespace: lux-bridge
+spec:
+  serviceName: mpc-node
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mpc-node
+  template:
+    metadata:
+      labels:
+        app: mpc-node
+    spec:
+      containers:
+      - name: mpc
+        image: luxfi/lux-mpc:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: grpc
+        env:
+        - name: NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NATS_URL
+          value: nats://nats:4222
+        - name: CONSUL_URL
+          value: http://consul:8500
+        - name: DB_PATH
+          value: /data/mpc
+        - name: HTTP_PORT
+          value: "8080"
+        - name: GRPC_PORT
+          value: "9090"
+        - name: LOG_LEVEL
+          value: debug
+        - name: KEY_PREFIX
+          value: bridge/mpc
+        - name: THRESHOLD
+          value: "2"
+        - name: TOTAL_NODES
+          value: "3"
+        volumeMounts:
+        - name: mpc-data
+          mountPath: /data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: mpc-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpc-node
+  namespace: lux-bridge
+spec:
+  selector:
+    app: mpc-node
+  clusterIP: None
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  - port: 9090
+    targetPort: 9090
+    name: grpc
+---
+# Bridge Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridge-server
+  namespace: lux-bridge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bridge-server
+  template:
+    metadata:
+      labels:
+        app: bridge-server
+    spec:
+      containers:
+      - name: bridge
+        image: luxfi/bridge-server:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: PORT
+          value: "3000"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: database-url
+        - name: NATS_URL
+          value: nats://nats:4222
+        - name: CONSUL_URL
+          value: http://consul:8500
+        - name: NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MPC_THRESHOLD
+          value: "2"
+        - name: MPC_TOTAL_NODES
+          value: "3"
+        - name: MPC_KEY_PREFIX
+          value: bridge/mpc
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bridge-server
+  namespace: lux-bridge
+spec:
+  selector:
+    app: bridge-server
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+  type: LoadBalancer
+---
+# Bridge UI Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridge-ui
+  namespace: lux-bridge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bridge-ui
+  template:
+    metadata:
+      labels:
+        app: bridge-ui
+    spec:
+      containers:
+      - name: ui
+        image: luxfi/bridge-ui:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: http://bridge-server:3000
+        - name: NEXT_PUBLIC_CHAIN_ENV
+          value: mainnet
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bridge-ui
+  namespace: lux-bridge
+spec:
+  selector:
+    app: bridge-ui
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+  type: LoadBalancer
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: lux-bridge
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          value: bridge
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: postgres-password
+        - name: POSTGRES_DB
+          value: bridge
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "bridge"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: lux-bridge
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+# Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bridge-secrets
+  namespace: lux-bridge
+type: Opaque
+stringData:
+  database-url: "postgresql://bridge:bridge@postgres:5432/bridge"
+  postgres-password: "bridge"
+---
+# PersistentVolumeClaim for NATS
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nats-pvc
+  namespace: lux-bridge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bridge-ingress
+  namespace: lux-bridge
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - bridge.lux.network
+    - bridge-api.lux.network
+    secretName: bridge-tls
+  rules:
+  - host: bridge.lux.network
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-ui
+            port:
+              number: 80
+  - host: bridge-api.lux.network
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-server
+            port:
+              number: 3000

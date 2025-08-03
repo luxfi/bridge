@@ -1,0 +1,70 @@
+services:
+  # Infrastructure Services Only
+  nats:
+    image: nats:2.10-alpine
+    container_name: bridge-nats
+    ports:
+      - "4223:4222"
+      - "8223:8222"
+    command: "-js -m 8222 --store_dir /data"
+    volumes:
+      - nats-data:/data
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "4222"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  consul:
+    image: hashicorp/consul:1.16
+    container_name: bridge-consul
+    ports:
+      - "8501:8500"
+      - "8602:8600/udp"
+    command: "agent -server -bootstrap-expect=1 -ui -client=0.0.0.0"
+    volumes:
+      - consul-data:/consul/data
+    networks:
+      - bridge-network
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bridge-postgres
+    environment:
+      - POSTGRES_USER=bridge
+      - POSTGRES_PASSWORD=bridge
+      - POSTGRES_DB=bridge
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bridge"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  nats-data:
+  consul-data:
+  postgres-data:
+
+networks:
+  bridge-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

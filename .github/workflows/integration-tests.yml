@@ -1,0 +1,177 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  integration:
+    name: E2E Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: bridge
+          POSTGRES_PASSWORD: bridge
+          POSTGRES_DB: bridge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+        options: >-
+          --health-cmd "nc -z localhost 4222"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      consul:
+        image: hashicorp/consul:1.16
+        ports:
+          - 8500:8500
+        options: >-
+          --health-cmd "consul members"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22.0'
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8
+
+    - name: Install dependencies
+      run: |
+        # Go dependencies
+        cd mpc-service && go mod download && cd ..
+        
+        # Node dependencies
+        pnpm install --frozen-lockfile
+
+    - name: Build MPC nodes
+      run: |
+        cd mpc-service
+        go build -o ../bin/mpc-node-0 ./cmd/server
+        cp ../bin/mpc-node-0 ../bin/mpc-node-1
+        cp ../bin/mpc-node-0 ../bin/mpc-node-2
+        cd ..
+
+    - name: Start MPC nodes
+      run: |
+        # Start 3 MPC nodes
+        NODE_ID=mpc-node-0 NODE_PORT=6000 DATA_DIR=./data0 \
+          NATS_URL=nats://localhost:4222 CONSUL_URL=http://localhost:8500 \
+          ./bin/mpc-node-0 &
+        
+        NODE_ID=mpc-node-1 NODE_PORT=6001 DATA_DIR=./data1 \
+          NATS_URL=nats://localhost:4222 CONSUL_URL=http://localhost:8500 \
+          ./bin/mpc-node-1 &
+        
+        NODE_ID=mpc-node-2 NODE_PORT=6002 DATA_DIR=./data2 \
+          NATS_URL=nats://localhost:4222 CONSUL_URL=http://localhost:8500 \
+          ./bin/mpc-node-2 &
+        
+        # Wait for nodes to start
+        sleep 10
+
+    - name: Check MPC nodes health
+      run: |
+        curl -f http://localhost:6000/health || exit 1
+        curl -f http://localhost:6001/health || exit 1
+        curl -f http://localhost:6002/health || exit 1
+
+    - name: Run database migrations
+      working-directory: ./app/server
+      env:
+        DATABASE_URL: postgresql://bridge:bridge@localhost:5432/bridge
+      run: |
+        pnpm run prisma:gen || echo "No Prisma"
+        psql -h localhost -U bridge -d bridge -f ../../scripts/init.sql
+
+    - name: Start bridge server
+      working-directory: ./app/server
+      env:
+        NODE_ENV: test
+        PORT: 5000
+        DATABASE_URL: postgresql://bridge:bridge@localhost:5432/bridge
+        NATS_URL: nats://localhost:4222
+        CONSUL_URL: http://localhost:8500
+      run: |
+        pnpm run build
+        pnpm start &
+        sleep 10
+
+    - name: Run integration tests
+      run: |
+        # Test MPC status endpoint
+        echo "Testing MPC status..."
+        curl -f http://localhost:5000/api/mpc/status || exit 1
+        
+        # Test health endpoint
+        echo "Testing health endpoint..."
+        curl -f http://localhost:5000/health || exit 1
+        
+        # Run test script
+        ./test-bridge-integration.sh
+
+    - name: Run UI automation tests
+      if: false # Enable when Selenium is set up
+      working-directory: ./ui-automation
+      run: |
+        npm install
+        npm test -- --testPathPattern=smoke
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          **/coverage/
+          **/test-results/
+          **/*.log
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --all-projects --severity-threshold=high

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express"
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
-import { completeSwapWithMpc, getSigFromMpcOracleNetwork } from "@/domain/mpc"
+import { completeSwapWithMpc, getSigFromMpcOracleNetwork } from "@/domain/mpc-modern"
 import { 
   handleSwapCreation, 
   handlerCheckDeposit, 
