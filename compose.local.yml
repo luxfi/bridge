@@ -1,0 +1,139 @@
+services:
+  # Lux ID Service (Casdoor-based unified authentication)
+  lux-id:
+    image: casbin/casdoor:latest
+    container_name: bridge-lux-id
+    ports:
+      - "8000:8000"
+    environment:
+      - RUNNING_IN_DOCKER=true
+    volumes:
+      - ./config/casdoor/app.conf:/conf/app.conf
+      - lux-id-data:/var/lib/casdoor
+    networks:
+      - bridge-network
+    depends_on:
+      lux-id-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Lux ID Database (PostgreSQL for Casdoor)
+  lux-id-db:
+    image: postgres:15-alpine
+    container_name: bridge-lux-id-db
+    environment:
+      - POSTGRES_USER=casdoor
+      - POSTGRES_PASSWORD=casdoor123
+      - POSTGRES_DB=casdoor
+    volumes:
+      - lux-id-db-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casdoor"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # KMS Service (Mock for local development)
+  kms:
+    image: hashicorp/vault:1.15
+    container_name: bridge-kms
+    ports:
+      - "8200:8200"
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=myroot
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Infrastructure Services
+  nats:
+    image: nats:2.10-alpine
+    container_name: bridge-nats
+    ports:
+      - "4223:4222"
+      - "8223:8222"
+    command: "-js -m 8222 --store_dir /data"
+    volumes:
+      - nats-data:/data
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "4222"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  consul:
+    image: hashicorp/consul:1.16
+    container_name: bridge-consul
+    ports:
+      - "8501:8500"
+      - "8602:8600/udp"
+    command: "agent -server -bootstrap-expect=1 -ui -client=0.0.0.0"
+    volumes:
+      - consul-data:/consul/data
+    networks:
+      - bridge-network
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bridge-postgres
+    environment:
+      - POSTGRES_USER=bridge
+      - POSTGRES_PASSWORD=bridge
+      - POSTGRES_DB=bridge
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bridge"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # For local development, we'll comment out the MPC nodes and services
+  # that require building. Run them locally with:
+  # 1. cd ../mpc && make build && ./lux-mpc start
+  # 2. cd app/server && pnpm dev
+  # 3. cd app/bridge && pnpm dev
+
+volumes:
+  lux-id-data:
+  lux-id-db-data:
+  nats-data:
+  consul-data:
+  postgres-data:
+
+networks:
+  bridge-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

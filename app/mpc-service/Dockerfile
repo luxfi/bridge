@@ -6,13 +6,10 @@ RUN apk add --no-cache git make
 WORKDIR /build
 
 # First, copy the MPC module from the parent directory
-COPY ../../mpc /mpc
+COPY ./mpc /mpc
 
-# Copy go mod files
-COPY go.mod go.sum ./
-
-# Update go.mod to use vendor mode or download dependencies
-COPY . .
+# Copy the mpc-service application
+COPY ./app/mpc-service /build
 
 # Download dependencies with vendor mode to handle local replace
 RUN go mod download || true

@@ -29,7 +29,7 @@ The project is organized as a monorepo with the following main directories:
   - `docker/`: Docker configuration for running MPC nodes
   - `k8s.examples/`: Kubernetes deployment examples
 - `pkg/`: Shared packages and utilities
-  - `luxfi-core/`: Core shared types and utilities
+  - `core/`: Core shared types and utilities
   - `settings/`: Configuration settings
   - `utila/`: Utility functions and helpers
 - `docs/`: Documentation and guides

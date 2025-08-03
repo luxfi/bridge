@@ -40,6 +40,7 @@ func main() {
 		NatsURL:   *natsURL,
 		ConsulURL: *consulURL,
 		DataDir:   *dataDir,
+		KMSConfig: server.GetKMSConfigFromEnv(), // Load KMS config from environment
 	}
 
 	// Create and start server

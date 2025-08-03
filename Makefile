@@ -60,9 +60,14 @@ push: build
 
 # Start local development server
 up:
-	@echo "Starting local development server..."
-	@echo "Note: ghcr.io images not available yet. Use 'make up-local' for local development"
-	docker compose up -d
+	@echo "Starting local development infrastructure (KMS, Lux ID, databases)..."
+	@echo "Note: MPC nodes and app services should be run locally"
+	docker compose -f compose.local.yml up -d
+	@echo ""
+	@echo "Infrastructure started! Now run:"
+	@echo "  1. MPC nodes: cd ../mpc && make build && ./lux-mpc start"
+	@echo "  2. Bridge server: cd app/server && pnpm dev"
+	@echo "  3. Bridge UI: cd app/bridge && pnpm dev"
 
 # Start local development with infrastructure only
 up-local:
@@ -90,7 +95,7 @@ testnet:
 # Stop the bridge ecosystem
 down:
 	@echo "Stopping bridge ecosystem..."
-	docker compose down
+	docker compose -f compose.local.yml down
 
 # Stop local infrastructure
 down-local:

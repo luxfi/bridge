@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/hashicorp/consul/api v1.29.4
+	github.com/luxfi/kms-go v0.0.0
 	github.com/luxfi/mpc v0.0.0
 	github.com/nats-io/nats.go v1.36.0
 	github.com/sirupsen/logrus v1.9.3
@@ -97,5 +98,6 @@ require (
 
 replace (
 	github.com/agl/ed25519 => github.com/luxfi/edwards25519 v0.0.0-20200305024217-f36fc4b53d43
+	github.com/luxfi/kms-go => ../../../kms-go
 	github.com/luxfi/mpc => ../../mpc
 )
