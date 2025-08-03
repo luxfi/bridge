@@ -7,7 +7,7 @@
     "module": "NodeNext", // Ensures compatibility with moduleResolution: NodeNext
     "moduleResolution": "NodeNext", // Required for modern Node.js ESM/CommonJS resolution
     "target": "ES2022", // Use modern ECMAScript features
-    "lib": ["ES2022", "DOM"], // Include modern JavaScript and browser APIs
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // Include modern JavaScript and browser APIs
     "allowSyntheticDefaultImports": true, // Compatibility for CommonJS/ESM interop
     "esModuleInterop": true, // Allow default imports for CommonJS modules
     "resolveJsonModule": true, // Enable importing JSON files

@@ -1,0 +1,32 @@
+# CODEOWNERS for Lux Bridge
+
+# Default owners for everything in the repo
+* @luxfi/bridge-maintainers
+
+# MPC service owners
+/mpc-service/ @luxfi/mpc-maintainers @luxfi/security
+
+# Smart contracts owners  
+/contracts/ @luxfi/smart-contracts @luxfi/security
+
+# Frontend and UI owners
+/app/client/ @luxfi/frontend
+/app/ui/ @luxfi/frontend
+/ui-automation/ @luxfi/qa
+
+# Backend server owners
+/app/server/ @luxfi/backend
+
+# DevOps and CI/CD
+/.github/ @luxfi/devops
+/docker/ @luxfi/devops
+/k8s/ @luxfi/devops
+
+# Documentation
+/docs/ @luxfi/docs
+/*.md @luxfi/docs
+
+# Security-sensitive files
+/mpc-service/cmd/ @luxfi/security @luxfi/mpc-maintainers
+/contracts/bridges/ @luxfi/security @luxfi/smart-contracts
+/.env* @luxfi/security @luxfi/devops

@@ -1,0 +1,388 @@
+services:
+  # Infrastructure Services
+  nats:
+    image: nats:2.10-alpine
+    container_name: bridge-nats
+    restart: always
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "-js -m 8222 --store_dir /data -c /etc/nats/nats.conf"
+    volumes:
+      - nats-data:/data
+      - ./config/nats/mainnet.conf:/etc/nats/nats.conf:ro
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "4222"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  consul:
+    image: hashicorp/consul:1.17
+    container_name: bridge-consul
+    restart: always
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap-expect=3 -ui -client=0.0.0.0 -datacenter=mainnet"
+    volumes:
+      - consul-data:/consul/data
+      - ./config/consul/mainnet.json:/consul/config/mainnet.json:ro
+    networks:
+      - bridge-network
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+      - CONSUL_DATACENTER=mainnet
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Database with replication support
+  postgres:
+    image: postgres:15-alpine
+    container_name: bridge-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=bridge
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=bridge
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --locale=en_US.utf8
+      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./config/postgres/mainnet.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - bridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bridge"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # MPC Nodes - Distributed across different availability zones
+  mpc-node-0:
+    image: ghcr.io/luxfi/lux-mpc:latest
+    container_name: bridge-mpc-0
+    restart: always
+    environment:
+      - NODE_ID=mpc-node-0
+      - NODE_PORT=6000
+      - NATS_URL=nats://nats:4222
+      - CONSUL_URL=http://consul:8500
+      - DATA_DIR=/data/mpc
+      - LOG_LEVEL=info
+      - MPC_THRESHOLD=2
+      - MPC_TOTAL_NODES=3
+      - MPC_KEY_PREFIX=bridge/mpc/mainnet
+      - NETWORK=mainnet
+      - ENABLE_TLS=true
+      - TLS_CERT_PATH=/certs/tls.crt
+      - TLS_KEY_PATH=/certs/tls.key
+    volumes:
+      - mpc-data-0:/data/mpc
+      - ./certs/mpc-0:/certs:ro
+    ports:
+      - "6000:6000"
+      - "9090:9090"
+    networks:
+      - bridge-network
+    depends_on:
+      nats:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:6000/health", "--insecure"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  mpc-node-1:
+    image: ghcr.io/luxfi/lux-mpc:latest
+    container_name: bridge-mpc-1
+    restart: always
+    environment:
+      - NODE_ID=mpc-node-1
+      - NODE_PORT=6000
+      - NATS_URL=nats://nats:4222
+      - CONSUL_URL=http://consul:8500
+      - DATA_DIR=/data/mpc
+      - LOG_LEVEL=info
+      - MPC_THRESHOLD=2
+      - MPC_TOTAL_NODES=3
+      - MPC_KEY_PREFIX=bridge/mpc/mainnet
+      - NETWORK=mainnet
+      - ENABLE_TLS=true
+      - TLS_CERT_PATH=/certs/tls.crt
+      - TLS_KEY_PATH=/certs/tls.key
+    volumes:
+      - mpc-data-1:/data/mpc
+      - ./certs/mpc-1:/certs:ro
+    ports:
+      - "6001:6000"
+      - "9091:9090"
+    networks:
+      - bridge-network
+    depends_on:
+      nats:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:6000/health", "--insecure"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  mpc-node-2:
+    image: ghcr.io/luxfi/lux-mpc:latest
+    container_name: bridge-mpc-2
+    restart: always
+    environment:
+      - NODE_ID=mpc-node-2
+      - NODE_PORT=6000
+      - NATS_URL=nats://nats:4222
+      - CONSUL_URL=http://consul:8500
+      - DATA_DIR=/data/mpc
+      - LOG_LEVEL=info
+      - MPC_THRESHOLD=2
+      - MPC_TOTAL_NODES=3
+      - MPC_KEY_PREFIX=bridge/mpc/mainnet
+      - NETWORK=mainnet
+      - ENABLE_TLS=true
+      - TLS_CERT_PATH=/certs/tls.crt
+      - TLS_KEY_PATH=/certs/tls.key
+    volumes:
+      - mpc-data-2:/data/mpc
+      - ./certs/mpc-2:/certs:ro
+    ports:
+      - "6002:6000"
+      - "9092:9090"
+    networks:
+      - bridge-network
+    depends_on:
+      nats:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:6000/health", "--insecure"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # Bridge Server with HA
+  bridge-server:
+    image: ghcr.io/luxfi/bridge-server:latest
+    container_name: bridge-server
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://bridge:${POSTGRES_PASSWORD}@postgres:5432/bridge?sslmode=require
+      - NATS_URL=nats://nats:4222
+      - CONSUL_URL=http://consul:8500
+      - NODE_ID=bridge-server-0
+      - MPC_THRESHOLD=2
+      - MPC_TOTAL_NODES=3
+      - MPC_KEY_PREFIX=bridge/mpc/mainnet
+      - NETWORK=mainnet
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+      - LOG_LEVEL=info
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_MAX=100
+      - RATE_LIMIT_WINDOW=60
+    ports:
+      - "3000:3000"
+      - "9093:9090"
+    networks:
+      - bridge-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+      mpc-node-0:
+        condition: service_healthy
+      mpc-node-1:
+        condition: service_healthy
+      mpc-node-2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+  # Bridge UI with CDN-ready config
+  bridge-ui:
+    image: ghcr.io/luxfi/bridge-ui:latest
+    container_name: bridge-ui
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://bridge-api.lux.network
+      - NEXT_PUBLIC_CHAIN_ENV=mainnet
+      - NEXT_PUBLIC_ENABLE_ANALYTICS=true
+      - NEXT_PUBLIC_GA_ID=${GA_ID}
+    ports:
+      - "3001:3000"
+    networks:
+      - bridge-network
+    depends_on:
+      - bridge-server
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # Enhanced Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bridge-prometheus
+    restart: always
+    volumes:
+      - ./monitoring/prometheus/mainnet.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9094:9090"
+    networks:
+      - bridge-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bridge-grafana
+    restart: always
+    ports:
+      - "3002:3000"
+    networks:
+      - bridge-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_SERVER_ROOT_URL=https://metrics.bridge.lux.network
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  # Backup Service
+  backup:
+    image: ghcr.io/luxfi/bridge-backup:latest
+    container_name: bridge-backup
+    restart: always
+    environment:
+      - BACKUP_INTERVAL=3600
+      - BACKUP_RETENTION_DAYS=30
+      - S3_BUCKET=${BACKUP_S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - postgres-data:/data/postgres:ro
+      - mpc-data-0:/data/mpc-0:ro
+      - mpc-data-1:/data/mpc-1:ro
+      - mpc-data-2:/data/mpc-2:ro
+    networks:
+      - bridge-network
+
+volumes:
+  nats-data:
+    driver: local
+  consul-data:
+    driver: local
+  mpc-data-0:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/ssd/bridge/mpc-0
+  mpc-data-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/ssd/bridge/mpc-1
+  mpc-data-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/ssd/bridge/mpc-2
+  postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/ssd/bridge/postgres
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  bridge-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

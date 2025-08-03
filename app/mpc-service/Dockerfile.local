@@ -1,0 +1,23 @@
+# Use the pre-built binary instead of building from source
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates curl
+
+WORKDIR /app
+
+# Copy the pre-built binary
+COPY /Users/z/work/lux/bridge/lux-mpc /app/mpc-server
+RUN chmod +x /app/mpc-server
+
+# Create data directory
+RUN mkdir -p /data/mpc
+
+# Expose ports
+EXPOSE 6000 8080 9090
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+# Run the server
+CMD ["/app/mpc-server"]
