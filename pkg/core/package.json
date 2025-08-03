@@ -12,7 +12,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/luxfi/bridge.git",
-    "directory": "pkg/luxfi-core"
+    "directory": "pkg/core"
   },
   "keywords": [
     "hanzo",
