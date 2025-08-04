@@ -1,5 +1,5 @@
 {
-  "name": "@luxbridge/app",
+  "name": "@luxbridge/app-v3",
   "private": true,
   "scripts": {
     "build": "remix vite:build",

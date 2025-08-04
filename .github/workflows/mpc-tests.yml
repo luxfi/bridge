@@ -1,134 +1,18 @@
-name: MPC Tests
+name: MPC Tests [DEPRECATED]
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'mpc-service/**'
-      - '.github/workflows/mpc-tests.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'mpc-service/**'
-      - '.github/workflows/mpc-tests.yml'
+  workflow_dispatch:  # Only manual trigger since mpc-service directory is removed
 
 jobs:
-  test:
-    name: Test MPC Service
+  deprecated_notice:
+    name: Deprecation Notice
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.22.0'
-        cache-dependency-path: |
-          mpc-service/go.sum
-          ../mpc/go.sum
-
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Install dependencies
-      working-directory: ./mpc-service
+    - name: MPC Tests Deprecated
       run: |
-        go mod download
-        go mod verify
-
-    - name: Run tests
-      working-directory: ./mpc-service
-      run: |
-        go test -v -race -coverprofile=coverage.out ./...
-        go tool cover -html=coverage.out -o coverage.html
-
-    - name: Upload coverage
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: mpc-service/coverage.html
-
-    - name: Run linter
-      uses: golangci/golangci-lint-action@v4
-      with:
-        version: latest
-        working-directory: ./mpc-service
-        args: --timeout=5m
-
-  build:
-    name: Build MPC Service
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.22.0'
-
-    - name: Build binary
-      working-directory: ./mpc-service
-      run: |
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o mpc-server ./cmd/server
-        
-    - name: Build Docker image
-      run: |
-        docker build -f mpc-service/Dockerfile -t bridge-mpc:${{ github.sha }} ./mpc-service
-        
-    - name: Save Docker image
-      run: |
-        docker save bridge-mpc:${{ github.sha }} | gzip > bridge-mpc.tar.gz
-        
-    - name: Upload Docker image
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-image
-        path: bridge-mpc.tar.gz
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: './mpc-service'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'trivy-results.sarif'
-
-    - name: Run gosec security scanner
-      uses: securego/gosec@master
-      with:
-        args: '-fmt sarif -out gosec-results.sarif ./mpc-service/...'
-        
-    - name: Upload gosec results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'gosec-results.sarif'
+        echo "This workflow is deprecated."
+        echo "The mpc-service directory has been removed."
+        echo "MPC functionality has been migrated to native Go integration."
+        echo "Use the MPC E2E Tests workflow instead."
+        exit 0
