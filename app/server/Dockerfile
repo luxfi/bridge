@@ -17,7 +17,7 @@ COPY .npmrc* ./
 COPY app/server/package.json ./app/server/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --filter server
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY app/server ./app/server
@@ -49,11 +49,12 @@ COPY .npmrc* ./
 COPY app/server/package.json ./app/server/
 
 # Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile --filter server
+RUN pnpm install --prod --frozen-lockfile
 
 # Copy built application
 COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./dist
-COPY --from=builder --chown=bridge:nodejs /app/app/server/public ./public
+# Copy public directory if it exists
+COPY --from=builder --chown=bridge:nodejs /app/app/server/public* ./public/
 
 # Switch to non-root user
 USER bridge
