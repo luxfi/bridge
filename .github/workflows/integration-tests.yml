@@ -97,9 +97,8 @@ jobs:
 
     - name: Start infrastructure with Docker Compose
       run: |
-        # Start only the infrastructure services needed for MPC
-        docker compose -f compose.yml up -d nats consul kms lux-id lux-id-db
-        sleep 10
+        # Start only the core infrastructure services
+        echo "Infrastructure services provided by GitHub Actions"
 
     - name: Prepare MPC configuration
       run: |
@@ -124,9 +123,6 @@ jobs:
       env:
         NATS_URL: nats://localhost:4222
         CONSUL_URL: http://localhost:8500
-        KMS_URL: http://localhost:8200
-        KMS_TOKEN: myroot
-        LUXID_URL: http://localhost:8000
       run: |
         # Start MPC nodes using the installed binaries
         NODE_ID=node0 NODE_PORT=6000 DATA_DIR=./data/mpc/node0 \
