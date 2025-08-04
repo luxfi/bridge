@@ -57,6 +57,18 @@ certs/
 # MPC data
 mpc-data*/
 mpc-keys/
+data/mpc/
+data/
+*.vlog
+*.mem
+MANIFEST
+KEYREGISTRY
+DISCARD
+LOCK
+
+# Logs
+logs/
+*.log
 
 # Docker volumes
 volumes/

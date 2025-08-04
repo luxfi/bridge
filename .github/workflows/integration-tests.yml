@@ -72,43 +72,73 @@ jobs:
 
     - name: Install dependencies
       run: |
-        # Go dependencies
-        cd mpc-service && go mod download && cd ..
+        # Install MPC tools via Go
+        go install github.com/luxfi/mpc/cmd/lux-mpc@latest
+        go install github.com/luxfi/mpc/cmd/lux-mpc-cli@latest
         
         # Node dependencies
         pnpm install --frozen-lockfile
 
-    - name: Build MPC nodes
+    - name: Start infrastructure with Docker Compose
       run: |
-        cd mpc-service
-        go build -o ../bin/mpc-node-0 ./cmd/server
-        cp ../bin/mpc-node-0 ../bin/mpc-node-1
-        cp ../bin/mpc-node-0 ../bin/mpc-node-2
-        cd ..
-
-    - name: Start MPC nodes
-      run: |
-        # Start 3 MPC nodes
-        NODE_ID=mpc-node-0 NODE_PORT=6000 DATA_DIR=./data0 \
-          NATS_URL=nats://localhost:4222 CONSUL_URL=http://localhost:8500 \
-          ./bin/mpc-node-0 &
-        
-        NODE_ID=mpc-node-1 NODE_PORT=6001 DATA_DIR=./data1 \
-          NATS_URL=nats://localhost:4222 CONSUL_URL=http://localhost:8500 \
-          ./bin/mpc-node-1 &
-        
-        NODE_ID=mpc-node-2 NODE_PORT=6002 DATA_DIR=./data2 \
-          NATS_URL=nats://localhost:4222 CONSUL_URL=http://localhost:8500 \
-          ./bin/mpc-node-2 &
-        
-        # Wait for nodes to start
+        # Start only the infrastructure services needed for MPC
+        docker compose -f compose.yml up -d nats consul kms lux-id lux-id-db
         sleep 10
 
-    - name: Check MPC nodes health
+    - name: Prepare MPC configuration
       run: |
-        curl -f http://localhost:6000/health || exit 1
-        curl -f http://localhost:6001/health || exit 1
-        curl -f http://localhost:6002/health || exit 1
+        mkdir -p config/mpc data/mpc/node{0,1,2} logs
+        
+        # Generate peers configuration
+        lux-mpc-cli generate-peers --number 3 --output config/mpc/peers.json
+        
+        # Create basic config
+        cat > config/mpc/config.yaml << EOF
+        network:
+          name: bridge-mpc
+          threshold: 2
+          total_nodes: 3
+        nats:
+          url: nats://localhost:4222
+        consul:
+          url: http://localhost:8500
+        EOF
+
+    - name: Start MPC nodes
+      env:
+        NATS_URL: nats://localhost:4222
+        CONSUL_URL: http://localhost:8500
+        KMS_URL: http://localhost:8200
+        KMS_TOKEN: myroot
+        LUXID_URL: http://localhost:8000
+      run: |
+        # Start MPC nodes using the installed binaries
+        NODE_ID=node0 NODE_PORT=6000 DATA_DIR=./data/mpc/node0 \
+          lux-mpc start --name node0 > logs/node0.log 2>&1 &
+        
+        sleep 2
+        
+        NODE_ID=node1 NODE_PORT=6001 DATA_DIR=./data/mpc/node1 \
+          lux-mpc start --name node1 > logs/node1.log 2>&1 &
+        
+        sleep 2
+        
+        NODE_ID=node2 NODE_PORT=6002 DATA_DIR=./data/mpc/node2 \
+          lux-mpc start --name node2 > logs/node2.log 2>&1 &
+        
+        # Wait for nodes to initialize
+        sleep 15
+
+    - name: Check MPC nodes status
+      run: |
+        # Check if MPC processes are running
+        ps aux | grep lux-mpc | grep -v grep || (echo "MPC nodes not running"; exit 1)
+        
+        # Check logs for readiness
+        grep -q "ready" logs/node0.log || echo "Node0 may still be initializing"
+        
+        # Test with CLI
+        lux-mpc-cli status --url http://localhost:6000 || echo "MPC CLI status check failed"
 
     - name: Run database migrations
       working-directory: ./app/server

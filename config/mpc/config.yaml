@@ -1,0 +1,36 @@
+# Lux MPC Network Configuration
+network:
+  name: bridge-mpc
+  threshold: 2
+  total_nodes: 3
+
+nodes:
+  - id: mpc-node-0
+    port: 6000
+    grpc_port: 9090
+  - id: mpc-node-1
+    port: 6001
+    grpc_port: 9091
+  - id: mpc-node-2
+    port: 6002
+    grpc_port: 9092
+
+nats:
+  url: nats://localhost:4223
+  subject_prefix: bridge.mpc
+
+consul:
+  url: http://localhost:8501
+  service_name: bridge-mpc
+
+kms:
+  url: http://localhost:8200
+  token: myroot
+  project_id: mpc-bridge
+  secret_path: /mpc
+
+auth:
+  provider: luxid
+  luxid_url: http://localhost:8000
+  client_id: mpc-bridge
+  client_secret: mpc-bridge-secret
