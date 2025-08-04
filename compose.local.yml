@@ -118,11 +118,11 @@ services:
       timeout: 3s
       retries: 5
 
-  # For local development, we'll comment out the MPC nodes and services
-  # that require building. Run them locally with:
-  # 1. cd ../mpc && make build && ./lux-mpc start
-  # 2. cd app/server && pnpm dev
-  # 3. cd app/bridge && pnpm dev
+  # MPC nodes are run locally using Go-installed tools:
+  # 1. make install-mpc       # Install MPC tools via go install
+  # 2. make start-mpc-nodes   # Start local MPC network
+  # 3. cd app/server && pnpm dev
+  # 4. cd app/bridge && pnpm dev
 
 volumes:
   lux-id-data:

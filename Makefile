@@ -157,26 +157,20 @@ import-keys:
 	docker cp exports/mpc-keys/node-2-key.json bridge-mpc-2:/data/mpc/keys/node_key.json
 	@echo "Keys imported. Restart nodes to apply."
 
+# Install MPC tools
+install-mpc:
+	@echo "Installing MPC tools..."
+	@./scripts/install-mpc-tools.sh
+
 # Start MPC nodes locally
 start-mpc-nodes:
 	@echo "Starting MPC nodes locally..."
-	@mkdir -p logs data
-	@cd ../mpc && make build
-	@echo "Starting node0..."
-	cd ../mpc && ./lux-mpc start --name node0 > ../../bridge/logs/node0.log 2>&1 &
-	@sleep 2
-	@echo "Starting node1..."
-	cd ../mpc && ./lux-mpc start --name node1 > ../../bridge/logs/node1.log 2>&1 &
-	@sleep 2
-	@echo "Starting node2..."
-	cd ../mpc && ./lux-mpc start --name node2 > ../../bridge/logs/node2.log 2>&1 &
-	@echo "MPC nodes started. Check logs in ./logs/"
+	@./scripts/start-mpc-network.sh
 
 # Stop MPC nodes
 stop-mpc-nodes:
 	@echo "Stopping MPC nodes..."
-	@pkill -f "lux-mpc start" || true
-	@echo "MPC nodes stopped"
+	@./scripts/stop-mpc-network.sh
 
 # Initialize MPC keys
 init-mpc:
