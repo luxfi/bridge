@@ -17,7 +17,7 @@ COPY .npmrc* ./
 COPY app/bridge/package.json ./app/bridge/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --filter bridge
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY app/bridge ./app/bridge
