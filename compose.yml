@@ -99,7 +99,7 @@ services:
 
   # MPC Nodes (3 nodes for 2-of-3 threshold)
   mpc-node-0:
-    image: ghcr.io/luxfi/lux-mpc:latest
+    image: ghcr.io/luxfi/mpc:latest
     container_name: bridge-mpc-0
     environment:
       - NODE_ID=mpc-node-0
