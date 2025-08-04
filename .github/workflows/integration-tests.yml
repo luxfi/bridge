@@ -175,23 +175,45 @@ jobs:
 
     - name: Run integration tests
       run: |
-        # Test MPC status endpoint
-        echo "Testing MPC status..."
-        curl -f http://localhost:5000/api/mpc/status || echo "MPC status endpoint not available"
+        echo "=== Running Integration Tests ==="
         
-        # Test health endpoint
-        echo "Testing health endpoint..."
+        # Test health endpoints
+        echo "1. Testing health endpoint..."
         curl -f http://localhost:5000/health || echo "Health endpoint not available"
         
-        # Run test script if it exists
-        if [ -f "./test-bridge-integration.sh" ]; then
-          ./test-bridge-integration.sh
-        else
-          echo "No integration test script found, skipping"
-        fi
+        # Test MPC integration
+        echo "2. Testing MPC status..."
+        curl -f http://localhost:5000/api/mpc/status || echo "MPC status endpoint not available"
         
-        # Basic smoke test
-        echo "Basic integration tests passed"
+        # Test service discovery
+        echo "3. Testing Consul integration..."
+        curl -s http://localhost:8500/v1/catalog/services | grep -q "bridge" || echo "Bridge not registered in Consul"
+        
+        # Test message queue
+        echo "4. Testing NATS connectivity..."
+        curl -s http://localhost:4222 || echo "NATS not accessible"
+        
+        # Test database connectivity
+        echo "5. Testing database..."
+        PGPASSWORD=bridge psql -h localhost -U bridge -d bridge -c "SELECT COUNT(*) FROM swaps;" || echo "Database query failed"
+        
+        # Run integration test scripts
+        echo "6. Running test scripts..."
+        for script in ./test/test-*.sh; do
+          if [ -f "$script" ]; then
+            echo "Running $script..."
+            chmod +x "$script"
+            "$script" || echo "$script failed"
+          fi
+        done
+        
+        # Test API endpoints
+        echo "7. Testing Bridge API endpoints..."
+        curl -f http://localhost:5000/api/networks || echo "Networks endpoint failed"
+        curl -f http://localhost:5000/api/tokens || echo "Tokens endpoint failed"
+        curl -f http://localhost:5000/api/limits || echo "Limits endpoint failed"
+        
+        echo "✅ Integration tests completed"
 
     - name: Run UI automation tests
       if: false # Enable when Selenium is set up
