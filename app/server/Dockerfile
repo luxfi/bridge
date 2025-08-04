@@ -7,17 +7,23 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy root workspace files
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY .npmrc* ./
+
+# Copy app package.json
+COPY app/server/package.json ./app/server/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --filter server
 
 # Copy source code
-COPY . .
+COPY app/server ./app/server
 
 # Build the application
-RUN pnpm run build
+RUN cd app/server && pnpm run build
 
 # Runtime stage
 FROM node:20-alpine AS runner
@@ -33,15 +39,21 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 bridge
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy root workspace files
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY .npmrc* ./
+
+# Copy app package.json
+COPY app/server/package.json ./app/server/
 
 # Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --filter server
 
 # Copy built application
-COPY --from=builder --chown=bridge:nodejs /app/dist ./dist
-COPY --from=builder --chown=bridge:nodejs /app/public ./public
+COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./dist
+COPY --from=builder --chown=bridge:nodejs /app/app/server/public ./public
 
 # Switch to non-root user
 USER bridge
