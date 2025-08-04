@@ -58,7 +58,7 @@ jobs:
     - name: Build and push Server image
       uses: docker/build-push-action@v5
       with:
-        context: ./app/server
+        context: .
         file: ./app/server/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
@@ -106,7 +106,7 @@ jobs:
     - name: Build and push UI image
       uses: docker/build-push-action@v5
       with:
-        context: ./app/bridge
+        context: .
         file: ./app/bridge/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
