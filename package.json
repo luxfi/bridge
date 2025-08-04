@@ -1,15 +1,24 @@
 {
   "name": "bridge",
   "version": "1.0.0",
-  "description": "",
+  "description": "Lux Bridge - Decentralized cross-chain bridge using MPC",
+  "packageManager": "pnpm@9.15.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "install:all": "pnpm install",
+    "test": "echo 'Run tests in individual packages'",
+    "ci:test": "pnpm -r test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["bridge", "mpc", "cross-chain", "lux"],
+  "author": "Lux Network",
+  "license": "MIT",
   "dependencies": {
     "@noble/ed25519": "^2.3.0"
-  }
+  },
+  "workspaces": [
+    "app/*",
+    "pkg/*",
+    "contracts"
+  ]
 }
