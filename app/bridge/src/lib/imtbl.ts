@@ -1,7 +1,7 @@
 import { ERC20TokenType, ETHTokenType, Link, type LinkResults } from '@imtbl/imx-sdk'
 import { type NetworkCurrency } from '../Models/CryptoNetwork'
 import KnownInternalNames from './knownIds'
-import { type SwapItem } from './BridgeApiClient'
+import { type SwapItem } from './BridgeRPCClient'
 import NetworkSettings from './NetworkSettings'
 
 export default class ImtblClient {

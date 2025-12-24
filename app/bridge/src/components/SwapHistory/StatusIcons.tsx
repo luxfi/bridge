@@ -1,7 +1,7 @@
 import { SwapStatus } from '../../Models/SwapStatus'
 import {
   type SwapItem,
-} from '@/lib/BridgeApiClient'
+} from '@/lib/BridgeRPCClient'
 
 export default function StatusIcon({
   swap,

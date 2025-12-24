@@ -8,7 +8,7 @@ import KnownInternalNames from '../../lib/knownIds'
 import { SwapDetailsComponentSkeleton } from '../Skeletons'
 import { ExternalLink } from 'lucide-react'
 import { type FC } from 'react'
-import { type SwapItem, TransactionType } from '../../lib/BridgeApiClient'
+import { type SwapItem, TransactionType } from '../../lib/BridgeRPCClient'
 import { useSettings } from '@/context/settings'
 import type { CryptoNetwork, NetworkCurrency } from '@/Models/CryptoNetwork'
 

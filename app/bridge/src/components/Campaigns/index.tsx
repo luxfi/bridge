@@ -5,7 +5,7 @@ import useSWR from 'swr'
 import { Gift } from 'lucide-react'
 
 import { ApiResponse } from '@/Models/ApiResponse'
-import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
+import BridgeRPCClient, { type Campaign } from '@/lib/BridgeRPCClient'
 import { useSettings } from '@/context/settings'
 
 import SpinIcon from '../icons/spinIcon'
@@ -16,7 +16,7 @@ import type { CryptoNetwork } from '@/Models/CryptoNetwork'
 const Rewards = () => {
 
     const { networks } = useSettings()
-    const apiClient = new BridgeApiClient()
+    const apiClient = new BridgeRPCClient()
     const { data: campaignsData, isLoading } = useSWR<ApiResponse<Campaign[]>>('/campaigns', apiClient.fetcher)
     const campaigns = campaignsData?.data
 

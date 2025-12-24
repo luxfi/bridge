@@ -59,7 +59,7 @@ const GlobalFooter = () => {
                     </Link>
                 </div>
                 <p className="text-center text-xs text-muted-2 leading-6">
-                    &copy; {new Date().getFullYear()} Lux Partners Limited. All rights reserved.
+                    &copy; {new Date().getFullYear()} Lux Industries Inc. All rights reserved.
                 </p>
             </div>
             <div className="flex space-x-6">
