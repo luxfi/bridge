@@ -1,0 +1,34 @@
+{
+  "index": {
+    "title": "Home",
+    "type": "page"
+  },
+  "docs": {
+    "title": "Documentation",
+    "type": "page"
+  },
+  "-- API": {
+    "type": "separator",
+    "title": "API"
+  },
+  "api": {
+    "title": "API Reference",
+    "href": "/docs#api-reference"
+  },
+  "-- Guides": {
+    "type": "separator",
+    "title": "Guides"
+  },
+  "integration": {
+    "title": "Integration Guide",
+    "href": "/docs#integration-guide"
+  },
+  "deployment": {
+    "title": "Deployment Guide",
+    "href": "/docs#deployment-guide"
+  },
+  "security": {
+    "title": "Security",
+    "href": "/docs#security-best-practices"
+  }
+}

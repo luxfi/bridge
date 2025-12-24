@@ -8,7 +8,7 @@ import useSWR from "swr"
 import { useAccount } from "wagmi"
 
 import { useSettings } from "@/context/settings"
-import BridgeApiClient, { type Campaign, type Leaderboard, type Reward } from "@/lib/BridgeApiClient"
+import BridgeRPCClient, { type Campaign, type Leaderboard, type Reward } from "@/lib/BridgeRPCClient"
 import { ApiResponse } from "@/Models/ApiResponse"
 
 import { RewardsComponentLeaderboardSkeleton } from "../../Skeletons"
@@ -32,7 +32,7 @@ const Component: React.FC<{
         setOpenTopModal(true)
     }
 
-    const apiClient = new BridgeApiClient()
+    const apiClient = new BridgeRPCClient()
     const { data: leaderboardData, isLoading } = useSWR<ApiResponse<Leaderboard>>(`/campaigns/${campaign?.id}/leaderboard`, apiClient.fetcher, { dedupingInterval: 60000 })
     const { data: rewardsData, isLoading: rewardsIsLoading } = useSWR<ApiResponse<Reward>>(`/campaigns/${campaign.id}/rewards/${address}`, apiClient.fetcher, { dedupingInterval: 60000 })
     const leaderboard = leaderboardData?.data
