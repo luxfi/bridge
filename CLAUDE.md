@@ -1,1 +1,1 @@
-docs/LLM.md
+LLM.md

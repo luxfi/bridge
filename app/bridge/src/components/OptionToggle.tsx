@@ -1,5 +1,5 @@
 import { RadioGroup } from "@headlessui/react";
-import { SwapType } from "../lib/BridgeApiClient";
+import { SwapType } from "../lib/BridgeRPCClient";
 import { classNames } from "./utils/classNames";
 
 export interface NavRadioOption {

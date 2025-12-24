@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 import { useAuthDataUpdate, useAuthState, UserType } from '@/context/authContext'
 import { useTimerState } from '@/context/timerContext'
-import BridgeApiClient from '@/lib/BridgeApiClient'
+import BridgeRPCClient from '@/lib/BridgeRPCClient'
 import BridgeAuthApiClient from '@/lib/userAuthApiClient'
 import { type AuthConnectResponse } from '@/Models/BridgeAuth'
 
@@ -91,7 +91,7 @@ const VerifyEmailCode: React.FC<{
                         return
                     }
                     var apiAuthClient = new BridgeAuthApiClient()
-                    var apiClient = new BridgeApiClient()
+                    var apiClient = new BridgeRPCClient()
                     const res = await apiAuthClient.connectAsync(tempEmail, values.Code)
                     updateAuthData(res)
                     await onSuccessfullVerify(res)

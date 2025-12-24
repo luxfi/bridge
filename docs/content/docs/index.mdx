@@ -1,0 +1,840 @@
+---
+title: Lux Bridge Documentation
+description: Comprehensive documentation for the Lux Bridge - a decentralized cross-chain bridge using Multi-Party Computation (MPC) for secure asset transfers
+---
+
+# Lux Bridge Documentation
+
+## Overview
+
+The Lux Bridge is a decentralized cross-chain bridge infrastructure that enables secure, trustless asset transfers between multiple blockchain networks using Multi-Party Computation (MPC) technology. Built on a foundation of cryptographic security and distributed consensus, the bridge provides a robust solution for interoperability in the multi-chain ecosystem.
+
+## Architecture & Design
+
+### Core Components
+
+The Lux Bridge architecture consists of several interconnected layers:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Bridge UI                             │
+│                   (React/Next.js Frontend)                   │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                     Bridge Server                            │
+│                  (API & Business Logic)                      │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                    MPC Node Network                          │
+│              (3-node threshold signature)                    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                 Infrastructure Services                      │
+│         (KMS, Lux ID, NATS, Consul, PostgreSQL)             │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                   Blockchain Networks                        │
+│     (Lux, Ethereum, BSC, Polygon, Arbitrum, zkSync, etc)    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Multi-Party Computation (MPC)
+
+The bridge employs a 2-of-3 threshold signature scheme using MPC technology:
+
+- **Distributed Key Generation**: Private keys are never fully reconstructed
+- **Threshold Signatures**: Any 2 of 3 nodes can sign transactions
+- **No Single Point of Failure**: Compromise of one node doesn't affect security
+- **Cryptographic Validation**: All operations verified through zero-knowledge proofs
+
+### Security Model
+
+#### Byzantine Fault Tolerance
+The MPC network tolerates up to 1 malicious node while maintaining security and liveness. The system employs:
+
+- **Consensus Protocol**: BFT consensus for transaction agreement
+- **Signature Threshold**: 2-of-3 nodes required for valid signatures
+- **Key Rotation**: Periodic key refresh to maintain forward secrecy
+- **Slashing Conditions**: Economic penalties for malicious behavior
+
+#### Cryptographic Primitives
+- **ECDSA**: For Ethereum-compatible chains
+- **Ed25519**: For high-performance chains
+- **BLS**: For aggregated signatures
+- **Post-Quantum**: ML-DSA ready for quantum resistance
+
+## Supported Chains & Assets
+
+### Supported Blockchains
+
+#### Layer 1 Networks
+- **Lux Network** (Native)
+- **Ethereum** (ETH)
+- **BNB Smart Chain** (BSC)
+- **Polygon** (MATIC)
+- **Avalanche** (AVAX)
+- **Fantom** (FTM)
+
+#### Layer 2 Networks
+- **Arbitrum One**
+- **Optimism**
+- **zkSync Era**
+- **Polygon zkEVM**
+- **Base**
+- **Blast**
+
+#### Other Networks
+- **TON (The Open Network)**
+- **Solana** (Coming Soon)
+- **Cosmos Hub** (Via IBC)
+
+### Supported Assets
+
+#### Stablecoins
+- **USDT** (Tether)
+- **USDC** (USD Coin)
+- **DAI** (MakerDAO)
+- **ZUSD** (Zoo USD)
+
+#### Native Tokens
+- **LUX** (Lux Network)
+- **ETH** (Ethereum)
+- **BNB** (BNB Chain)
+- **MATIC** (Polygon)
+- **AVAX** (Avalanche)
+
+#### Wrapped Assets
+- **ZETH** (Wrapped ETH)
+- **ZBNB** (Wrapped BNB)
+- **ZPOL** (Wrapped MATIC)
+- **ZAVAX** (Wrapped AVAX)
+- **ZTON** (Wrapped TON)
+
+## Asset Locking & Minting Mechanisms
+
+### Lock-and-Mint Model
+
+The bridge operates on a lock-and-mint mechanism:
+
+1. **Source Chain**: Assets are locked in secure vault contracts
+2. **MPC Validation**: Transfer is validated by MPC network
+3. **Destination Chain**: Equivalent wrapped tokens are minted
+4. **Redemption**: Wrapped tokens can be burned to unlock original assets
+
+### Vault Architecture
+
+```solidity
+interface IVault {
+    function deposit(address token, uint256 amount) external;
+    function withdraw(address token, uint256 amount, bytes calldata signature) external;
+    function getBalance(address token) external view returns (uint256);
+}
+```
+
+Each supported chain has dedicated vault contracts:
+- **LuxVault**: Main vault for Lux Network
+- **ETHVault**: Ethereum mainnet vault
+- **BSCVault**: BNB Smart Chain vault
+- **ZooVault**: Multi-asset aggregated vault
+
+### Wrapped Token Standard
+
+All wrapped tokens follow the ERC20B standard with additional bridging capabilities:
+
+```solidity
+interface IERC20B is IERC20 {
+    function mint(address to, uint256 amount) external;
+    function burn(uint256 amount) external;
+    function burnFrom(address from, uint256 amount) external;
+}
+```
+
+## Cross-Chain Message Passing
+
+### Message Protocol
+
+The bridge implements a universal message passing protocol:
+
+```typescript
+interface CrossChainMessage {
+    sourceChain: ChainId;
+    destChain: ChainId;
+    nonce: bigint;
+    sender: Address;
+    recipient: Address;
+    payload: Bytes;
+    signatures: MPCSignature[];
+}
+```
+
+### Message Flow
+
+1. **Initiation**: User initiates transfer on source chain
+2. **Event Emission**: Bridge contract emits transfer event
+3. **Oracle Detection**: MPC nodes detect and validate event
+4. **Consensus**: Nodes reach consensus on transfer validity
+5. **Signature Generation**: Threshold signature created
+6. **Relay**: Signed message relayed to destination chain
+7. **Execution**: Destination contract validates and executes
+
+## Fee Structure
+
+### Base Fees
+
+| Operation | Fee | Description |
+|-----------|-----|-------------|
+| Bridge Transfer | 0.3% | Percentage of transfer amount |
+| Minimum Fee | $1.00 | Minimum fee per transaction |
+| Maximum Fee | $500 | Cap on single transaction fee |
+
+### Dynamic Fee Components
+
+- **Gas Fee**: Actual gas cost on destination chain
+- **MPC Operation Fee**: Fixed fee for MPC validation
+- **Liquidity Fee**: Variable based on pool depth
+- **Network Congestion**: Surge pricing during high load
+
+### Fee Distribution
+
+- **40%**: MPC Node Operators
+- **30%**: Liquidity Providers
+- **20%**: Protocol Treasury
+- **10%**: Insurance Fund
+
+## API Reference
+
+### REST API Endpoints
+
+#### Bridge Status
+```http
+GET /api/v1/status
+```
+Returns current bridge operational status and health metrics.
+
+#### Supported Chains
+```http
+GET /api/v1/chains
+```
+Returns list of supported blockchain networks.
+
+#### Supported Assets
+```http
+GET /api/v1/assets
+```
+Returns list of supported tokens and assets.
+
+#### Get Quote
+```http
+POST /api/v1/quote
+Content-Type: application/json
+
+{
+  "sourceChain": "ethereum",
+  "destChain": "lux",
+  "asset": "USDT",
+  "amount": "1000.00"
+}
+```
+
+#### Initiate Transfer
+```http
+POST /api/v1/transfer
+Content-Type: application/json
+
+{
+  "sourceChain": "ethereum",
+  "destChain": "lux",
+  "asset": "USDT",
+  "amount": "1000.00",
+  "recipient": "0x...",
+  "signature": "0x..."
+}
+```
+
+#### Transfer Status
+```http
+GET /api/v1/transfer/{transferId}
+```
+
+### WebSocket API
+
+#### Subscribe to Transfer Updates
+```javascript
+ws.send(JSON.stringify({
+  type: 'subscribe',
+  channel: 'transfer',
+  transferId: '0x...'
+}));
+```
+
+#### Receive Status Updates
+```javascript
+ws.on('message', (data) => {
+  const update = JSON.parse(data);
+  // Handle transfer status update
+});
+```
+
+## Integration Guide
+
+### Smart Contract Integration
+
+#### 1. Install Dependencies
+
+```bash
+npm install @luxfi/bridge-contracts
+```
+
+#### 2. Import Bridge Interface
+
+```solidity
+pragma solidity ^0.8.20;
+
+import "@luxfi/bridge-contracts/interfaces/IBridge.sol";
+
+contract MyContract {
+    IBridge public bridge;
+
+    constructor(address _bridge) {
+        bridge = IBridge(_bridge);
+    }
+
+    function bridgeAssets(
+        address token,
+        uint256 amount,
+        uint256 destChainId,
+        address recipient
+    ) external {
+        IERC20(token).approve(address(bridge), amount);
+        bridge.deposit(token, amount, destChainId, recipient);
+    }
+}
+```
+
+### JavaScript/TypeScript SDK
+
+#### Installation
+
+```bash
+npm install @luxfi/bridge-sdk
+```
+
+#### Basic Usage
+
+```typescript
+import { LuxBridge, ChainId } from '@luxfi/bridge-sdk';
+
+// Initialize bridge
+const bridge = new LuxBridge({
+  rpcUrl: 'https://api.lux.network',
+  privateKey: process.env.PRIVATE_KEY
+});
+
+// Get supported chains
+const chains = await bridge.getSupportedChains();
+
+// Get quote for transfer
+const quote = await bridge.getQuote({
+  sourceChain: ChainId.ETHEREUM,
+  destChain: ChainId.LUX,
+  asset: 'USDT',
+  amount: '1000.00'
+});
+
+// Execute transfer
+const transfer = await bridge.transfer({
+  sourceChain: ChainId.ETHEREUM,
+  destChain: ChainId.LUX,
+  asset: 'USDT',
+  amount: '1000.00',
+  recipient: '0x...'
+});
+
+// Monitor transfer status
+bridge.on('transfer', transfer.id, (status) => {
+  console.log('Transfer status:', status);
+});
+```
+
+#### Advanced Features
+
+```typescript
+// Batch transfers
+const transfers = await bridge.batchTransfer([
+  { asset: 'USDT', amount: '100', recipient: '0x...' },
+  { asset: 'ETH', amount: '0.5', recipient: '0x...' }
+]);
+
+// Custom slippage tolerance
+const transfer = await bridge.transfer({
+  // ... transfer params
+  slippageTolerance: 0.5 // 0.5%
+});
+
+// Gas price optimization
+const transfer = await bridge.transfer({
+  // ... transfer params
+  gasStrategy: 'fast' // 'slow', 'normal', 'fast'
+});
+```
+
+## Deployment Guide
+
+### Prerequisites
+
+- Node.js v20+
+- pnpm v9.15.0+
+- Go 1.22+ (for MPC tools)
+- Docker & Docker Compose
+- PostgreSQL 15+
+- Vault (HashiCorp) for KMS
+
+### Local Deployment
+
+#### 1. Clone Repository
+
+```bash
+git clone https://github.com/luxfi/bridge
+cd bridge
+```
+
+#### 2. Install Dependencies
+
+```bash
+# Install JavaScript dependencies
+pnpm install
+
+# Install MPC tools
+make install-mpc
+```
+
+#### 3. Configure Environment
+
+```bash
+# Copy example environment
+cp .env.example .env
+
+# Edit configuration
+vim .env
+```
+
+Required environment variables:
+```env
+# Network Configuration
+NETWORK=testnet
+CHAIN_ID=31337
+
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5433/bridge
+
+# MPC Configuration
+MPC_NODE_COUNT=3
+MPC_THRESHOLD=2
+
+# KMS Configuration
+VAULT_ADDR=http://localhost:8200
+VAULT_TOKEN=your-token
+
+# Lux ID (Authentication)
+CASDOOR_ENDPOINT=http://localhost:8000
+```
+
+#### 4. Start Infrastructure
+
+```bash
+# Start all services
+make up
+
+# Or start individually
+docker-compose up -d postgres
+docker-compose up -d vault
+docker-compose up -d casdoor
+docker-compose up -d nats
+docker-compose up -d consul
+```
+
+#### 5. Initialize MPC Network
+
+```bash
+# Generate MPC keys
+make generate-mpc-keys
+
+# Start MPC nodes
+make start-mpc-nodes
+```
+
+#### 6. Deploy Smart Contracts
+
+```bash
+# Deploy to local network
+cd contracts
+npx hardhat run scripts/deploy.js --network localhost
+
+# Deploy to testnet
+npx hardhat run scripts/deploy.js --network testnet
+```
+
+#### 7. Start Bridge Services
+
+```bash
+# Start API server
+cd app/server
+pnpm dev
+
+# Start UI (in another terminal)
+cd app/bridge
+pnpm dev
+```
+
+### Production Deployment
+
+#### Kubernetes Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lux-bridge
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lux-bridge
+  template:
+    metadata:
+      labels:
+        app: lux-bridge
+    spec:
+      containers:
+      - name: bridge-api
+        image: luxfi/bridge-api:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: database-url
+```
+
+#### Docker Compose Production
+
+```yaml
+version: '3.8'
+
+services:
+  bridge-api:
+    image: luxfi/bridge-api:latest
+    environment:
+      NODE_ENV: production
+    networks:
+      - bridge-network
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+
+  mpc-node:
+    image: luxfi/mpc-node:latest
+    environment:
+      NODE_ENV: production
+    networks:
+      - bridge-network
+    deploy:
+      replicas: 3
+```
+
+#### High Availability Setup
+
+1. **Database**: PostgreSQL with streaming replication
+2. **MPC Nodes**: Geographic distribution across regions
+3. **Load Balancing**: HAProxy or nginx for API endpoints
+4. **Monitoring**: Prometheus + Grafana stack
+5. **Backup**: Regular snapshots of vault data
+
+## Security Best Practices
+
+### Smart Contract Security
+
+#### Audit Requirements
+- Formal verification of critical functions
+- Multiple independent security audits
+- Bug bounty program with rewards up to $100,000
+- Continuous monitoring and incident response
+
+#### Access Control
+```solidity
+contract Bridge is AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
+    modifier onlyAdmin() {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Not admin");
+        _;
+    }
+
+    modifier onlyOperator() {
+        require(hasRole(OPERATOR_ROLE, msg.sender), "Not operator");
+        _;
+    }
+}
+```
+
+#### Pausability
+```solidity
+contract Bridge is Pausable {
+    function pause() external onlyAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyAdmin {
+        _unpause();
+    }
+
+    function deposit() external whenNotPaused {
+        // Bridge logic
+    }
+}
+```
+
+### MPC Security
+
+#### Key Management
+- Hardware Security Modules (HSM) for key storage
+- Key rotation every 30 days
+- Threshold key generation ceremony
+- Secure multiparty computation protocols
+
+#### Node Security
+- TLS 1.3 for all communications
+- Mutual TLS authentication between nodes
+- Rate limiting and DDoS protection
+- Regular security updates and patches
+
+#### Monitoring & Alerting
+```yaml
+alerts:
+  - name: MPCNodeDown
+    condition: up{job="mpc-node"} == 0
+    for: 5m
+    severity: critical
+
+  - name: HighErrorRate
+    condition: rate(errors_total[5m]) > 0.05
+    severity: warning
+
+  - name: UnauthorizedAccess
+    condition: unauthorized_requests_total > 10
+    severity: critical
+```
+
+### Operational Security
+
+#### Infrastructure Hardening
+- Disable unnecessary services
+- Regular security patching
+- Network segmentation
+- Firewall rules and IP whitelisting
+
+#### Secrets Management
+```bash
+# Store secrets in Vault
+vault kv put secret/bridge/api \
+  database_url="postgresql://..." \
+  jwt_secret="..." \
+  mpc_key="..."
+
+# Rotate secrets regularly
+vault kv metadata put -mount=secret \
+  -max-versions=5 \
+  -delete-version-after=30d \
+  bridge/api
+```
+
+#### Incident Response Plan
+
+1. **Detection**: Automated monitoring and alerting
+2. **Assessment**: Severity classification (P1-P4)
+3. **Containment**: Pause bridge if necessary
+4. **Eradication**: Fix vulnerability
+5. **Recovery**: Resume operations
+6. **Lessons Learned**: Post-mortem analysis
+
+### User Security Guidelines
+
+#### Wallet Security
+- Use hardware wallets for large transfers
+- Verify recipient addresses on multiple channels
+- Enable 2FA on exchange accounts
+- Use dedicated bridge addresses
+
+#### Transaction Verification
+- Always verify transaction details before signing
+- Check fee amounts are reasonable
+- Confirm destination chain and address
+- Monitor transaction status
+
+#### Phishing Protection
+- Only use official bridge URLs
+- Verify SSL certificates
+- Never share private keys or seed phrases
+- Report suspicious activities
+
+## Monitoring & Analytics
+
+### Metrics Collection
+
+The bridge exposes Prometheus metrics:
+
+```prometheus
+# Bridge metrics
+bridge_transfers_total{chain="ethereum",status="success"} 1234
+bridge_transfer_volume_usd{chain="ethereum",asset="USDT"} 1000000
+bridge_transfer_latency_seconds{chain="ethereum",percentile="p99"} 45.2
+
+# MPC metrics
+mpc_signature_generation_seconds{node="0"} 2.3
+mpc_node_uptime_seconds{node="0"} 86400
+mpc_consensus_rounds_total{status="success"} 5678
+
+# System metrics
+process_cpu_seconds_total 123.45
+process_resident_memory_bytes 234567890
+http_request_duration_seconds{endpoint="/transfer",percentile="p95"} 0.234
+```
+
+### Dashboards
+
+Grafana dashboards for monitoring:
+- Bridge Overview: Transfer volumes, success rates, fees
+- MPC Network: Node health, consensus metrics, key operations
+- Performance: Latency, throughput, error rates
+- Security: Failed authentications, suspicious activities
+
+### Logging
+
+Structured logging with correlation IDs:
+
+```json
+{
+  "timestamp": "2024-11-12T10:30:45Z",
+  "level": "info",
+  "service": "bridge-api",
+  "correlationId": "abc-123",
+  "event": "transfer_initiated",
+  "data": {
+    "transferId": "0x...",
+    "sourceChain": "ethereum",
+    "destChain": "lux",
+    "asset": "USDT",
+    "amount": "1000.00"
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Transfer Stuck in Pending
+1. Check MPC node status: `lux-mpc-cli status`
+2. Verify transaction on source chain explorer
+3. Check for sufficient gas on destination chain
+4. Review logs for error messages
+
+#### MPC Node Not Responding
+1. Check node health: `curl http://localhost:6000/health`
+2. Verify network connectivity
+3. Check NATS message queue status
+4. Restart node if necessary: `make restart-mpc-node-0`
+
+#### High Latency
+1. Monitor network conditions
+2. Check database performance
+3. Review MPC consensus rounds
+4. Scale infrastructure if needed
+
+### Debug Commands
+
+```bash
+# Check bridge status
+curl http://localhost:5000/api/v1/status
+
+# View MPC logs
+tail -f logs/mpc-node-*.log
+
+# Database queries
+psql -U bridge -d bridge -c "SELECT * FROM transfers WHERE status='pending';"
+
+# NATS monitoring
+nats-top -s localhost:4223
+
+# Consul services
+consul catalog services
+```
+
+## Governance & Upgrades
+
+### Governance Model
+
+The Lux Bridge is governed by LUX token holders through:
+- **Proposal Submission**: 10,000 LUX minimum
+- **Voting Period**: 7 days
+- **Quorum**: 4% of circulating supply
+- **Execution Delay**: 2 days (timelock)
+
+### Upgrade Process
+
+1. **Proposal**: Submit upgrade proposal with specifications
+2. **Review**: Technical and security review
+3. **Testing**: Deploy on testnet
+4. **Voting**: Community governance vote
+5. **Timelock**: 48-hour delay before execution
+6. **Deployment**: Coordinated upgrade across infrastructure
+
+### Emergency Procedures
+
+In case of critical vulnerabilities:
+1. Pause bridge operations
+2. Emergency multisig (3-of-5) can execute fixes
+3. Post-incident governance vote for ratification
+4. Compensation for affected users if applicable
+
+## Resources & Support
+
+### Documentation
+- [GitHub Repository](https://github.com/luxfi/bridge)
+- [API Documentation](https://docs.lux.network/bridge/api)
+- [Smart Contract Documentation](https://docs.lux.network/bridge/contracts)
+- [Video Tutorials](https://youtube.com/luxnetwork)
+
+### Community
+- [Discord](https://discord.gg/luxnetwork)
+- [Telegram](https://t.me/luxnetwork)
+- [Twitter](https://twitter.com/luxnetwork)
+- [Forum](https://forum.lux.network)
+
+### Support
+- Technical Support: support@lux.network
+- Security Issues: security@lux.network
+- Business Inquiries: partners@lux.network
+
+### Bug Bounty Program
+- Critical: Up to $100,000
+- High: Up to $25,000
+- Medium: Up to $5,000
+- Low: Up to $1,000
+
+Report vulnerabilities to: security@lux.network
+
+---
+
+*Last Updated: November 2024*
+*Version: 1.0.0*

@@ -63,7 +63,7 @@ const Footer: React.FC = () => (
   <footer className="flex flex-row justify-between text-muted-2 overflow-hidden py-6 w-full px-6 lg:px-8 mt-auto">
     <div className="mt-3 md:mt-0">
       <p className="text-center text-xs leading-6 cursor-default">
-          &copy; {new Date().getFullYear()} Lux Partners Limited. All rights reserved.
+          &copy; {new Date().getFullYear()} Lux Industries Inc. All rights reserved.
       </p>
     </div>
     <div className="flex justify-center mt-3 md:mt-0 gap-6">
