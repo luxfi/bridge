@@ -1,27 +1,40 @@
 // see https://remix.run/docs/ru/main/route/meta
-// Brand defaults — overridden at runtime via brand.json (see brand.ts)
-
-import { brand } from './brand'
 
 export default [
   {
-    title: brand.title,
+    title:  'Lux Bridge' 
   },
   {
-    name: 'description',
-    content: brand.description,
+      name: "description",
+      content: 'Lux Bridge is the only quantum safe and private platform for real world assets (RWAs)',
   },
   {
-    name: 'application-name',
-    content: brand.name,
+      name: "application-name",
+      content: 'Lux Bridge',
   },
   {
-    name: 'author',
-    content: brand.legalEntity,
+      name: "author",
+      content: 'Lux Industries Inc',
   },
   {
-    name: 'keywords',
-    content:
-      'Blockchain Bridge, Multi-Chain, EVM, Solana, Bitcoin, Cross-Chain, Interoperability, Cryptocurrency, Blockchain Technology',
+      name: "keywords",
+      content: "Lux Network, Blockchain Bridge, Multi-Chain, EVM, Solana, Bitcoin, Cross-Chain, Interoperability, Cryptocurrency, Blockchain Technology",
   },
-]
+  /*
+  openGraph: {
+    title: 'Lux Bridge Explorer - Explore your swaps',
+    description: "Connect across EVM, Solana, Bitcoin, and other blockchains with Lux Network's advanced bridge technology. Experience secure and efficient cross-chain functionality.",
+    images: 'https://explorer.bridge.lux.network/assets/img/opengraph-lux.jpg',
+    type: 'website',
+    href: "https://explorer.bridge.lux.network",
+
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Lux Bridge Explorer - Explore your swaps',
+    description: "Experience seamless multi-chain connectivity with Lux Network's Blockchain Bridge. EVM, Solana, Bitcoin, and more, united.",
+    images: 'https://explorer.bridge.lux.network/assets/img/opengraph-lux.jpg',
+    site: '@luxdefi'
+  },
+  */
+] 
