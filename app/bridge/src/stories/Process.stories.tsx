@@ -3,7 +3,7 @@ import {
   type SwapItem,
   TransactionStatus,
   TransactionType,
-} from "../lib/BridgeApiClient";
+} from "../lib/BridgeRPCClient";
 import { SwapStatus } from "../Models/SwapStatus";
 import {
   type SwapData,

@@ -1,0 +1,73 @@
+# Lux Bridge Documentation
+
+Welcome to the comprehensive documentation for the Lux Bridge - a decentralized cross-chain bridge infrastructure using Multi-Party Computation (MPC) for secure asset transfers.
+
+## Quick Links
+
+- [Architecture & Design](/docs) - Learn about the bridge architecture
+- [API Reference](/docs#api-reference) - Integrate with the bridge
+- [Deployment Guide](/docs#deployment-guide) - Deploy your own instance
+- [Security Best Practices](/docs#security-best-practices) - Keep your bridge secure
+
+## What is Lux Bridge?
+
+The Lux Bridge is a decentralized cross-chain bridge that enables:
+
+- **Secure Asset Transfers** - Transfer tokens between 15+ blockchain networks
+- **Multi-Party Computation** - 2-of-3 threshold signatures for maximum security
+- **Universal Message Passing** - Send arbitrary messages across chains
+- **Low Fees** - Competitive 0.3% bridge fee with caps
+- **Fast Finality** - Transfers complete in minutes, not hours
+
+## Supported Networks
+
+### Layer 1
+- Lux Network
+- Ethereum
+- BNB Smart Chain
+- Polygon
+- Avalanche
+- Fantom
+
+### Layer 2
+- Arbitrum One
+- Optimism
+- zkSync Era
+- Polygon zkEVM
+- Base
+- Blast
+
+## Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/luxfi/bridge
+cd bridge
+
+# Install dependencies
+pnpm install
+
+# Start local development
+make up
+make start-mpc-nodes
+cd app/bridge && pnpm dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to see the bridge UI.
+
+## Documentation Structure
+
+- **[Complete Documentation](/docs)** - Full technical documentation
+- **[Integration Examples](/docs#integration-guide)** - Code examples and SDKs
+- **[API Reference](/docs#api-reference)** - REST and WebSocket APIs
+- **[Security](/docs#security-best-practices)** - Security guidelines
+
+## Need Help?
+
+- Join our [Discord](https://discord.gg/luxnetwork)
+- Follow us on [Twitter](https://twitter.com/luxnetwork)
+- Email support: support@lux.network
+
+---
+
+*Version 1.0.0 - November 2024*

@@ -10,7 +10,7 @@ import { classNames } from '../utils/classNames'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ArrowRight, ChevronRight, Eye, RefreshCcw, Scroll } from 'lucide-react'
 
-import BridgeApiClient, { type SwapItem, SwapStatusInNumbers, TransactionType } from '@/lib/BridgeApiClient'
+import BridgeRPCClient, { type SwapItem, SwapStatusInNumbers, TransactionType } from '@/lib/BridgeRPCClient'
 import Modal from '@/components/modal/modal'
 import SpinIcon from '@/components/icons/spinIcon'
 import StatusIcon from '@/components/SwapHistory/StatusIcons'
@@ -65,7 +65,7 @@ function TransactionsHistory() {
       } = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/api/swaps?${!showAllSwaps ? `page=${page}` : ''}${
           status ? `&status=${status}` : ''
-        }&version=${BridgeApiClient.apiVersion}&teleport=${useTeleporter}&pageSize=${PAGE_SIZE}`
+        }&version=${BridgeRPCClient.apiVersion}&teleport=${useTeleporter}&pageSize=${PAGE_SIZE}`
       )
       return {
         data: data,

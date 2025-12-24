@@ -1,5 +1,5 @@
 import toast from "react-hot-toast";
-import BridgeApiClient, { type SwapItem } from "../lib/BridgeApiClient";
+import BridgeRPCClient, { type SwapItem } from "../lib/BridgeRPCClient";
 import { type Wallet } from "../stores/walletStore";
 // import useTON from "../lib/wallets/ton/useTON";
 import useEVM from "../lib/wallets/evm/useEVM";
@@ -45,7 +45,7 @@ function useWallet() {
     );
     try {
       if (swap?.source_exchange) {
-        const apiClient = new BridgeApiClient();
+        const apiClient = new BridgeRPCClient();
         await apiClient.DisconnectExchangeAsync(swap.id, "coinbase");
       } else {
         await provider?.disconnectWallet();

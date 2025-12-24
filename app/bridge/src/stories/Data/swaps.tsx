@@ -1,5 +1,5 @@
 import { SwapStatus } from "../../Models/SwapStatus"
-import { type SwapItem, TransactionStatus, TransactionType } from "../../lib/BridgeApiClient"
+import { type SwapItem, TransactionStatus, TransactionType } from "../../lib/BridgeRPCClient"
 
 export const swap: SwapItem = {
   "id": "39dbe478-5a7d-427c-b316-cc8c362ec010",

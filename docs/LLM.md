@@ -1,350 +1,286 @@
-# Lux Network MPC Bridge Architecture
+# Lux Bridge - AI Assistant Knowledge Base
 
-This document provides a comprehensive overview of the Lux Network MPC Bridge project, its components, and how they interact. This document distinguishes between **current implementation** and **planned features**.
+**Last Updated**: 2024-11-12
+**Project**: Lux Bridge
+**Organization**: Lux Network
 
 ## Project Overview
 
-The Lux Network Bridge is a decentralized cross-chain bridge that uses Multi-Party Computation (MPC) to enable secure asset transfers between different blockchain networks. The bridge consists of several key components:
-
-1. **Smart Contracts**: EVM-compatible contracts deployed on various networks
-2. **MPC Nodes**: Distributed nodes that use threshold signatures for secure transaction signing
-3. **Bridge UI**: Web interface for users to initiate cross-chain transfers
-4. **Backend Services**: APIs and services that coordinate the bridge operations
-5. **Blockchain Monitors**: Services that monitor different blockchains (EVM and non-EVM) for events
-
-## Project Structure
-
-The project is organized as a monorepo with the following main directories:
-
-- `app/`: Frontend applications
-  - `bridge/`: Main bridge UI application (Next.js)
-  - `bridge3/`: New version of the bridge UI
-  - `explorer/`: Block explorer UI
-  - `server/`: Backend API services
-- `contracts/`: Smart contracts for the bridge
-  - `contracts/`: Solidity smart contracts for various chains
-  - `ignition/`: Deployment modules for the contracts
-  - `scripts/`: Utility scripts for contract interactions
-- `mpc-nodes/`: MPC node implementation
-  - `docker/`: Docker configuration for running MPC nodes
-  - `k8s.examples/`: Kubernetes deployment examples
-- `pkg/`: Shared packages and utilities
-  - `core/`: Core shared types and utilities
-  - `settings/`: Configuration settings
-  - `utila/`: Utility functions and helpers
-- `docs/`: Documentation and guides
-  - `unified-mpc-library.md`: Details on planned MPC implementation
-  - `utxo-guide.md`: Guide for planned UTXO-based chain integration
-  - `eddsa-guide.md`: Guide for planned EdDSA signature implementation
-
-## Key Components
-
-### Smart Contracts
-
-The bridge uses several key smart contracts:
-
-1. **Bridge.sol**: The main contract that handles the teleport operations, including minting, burning, and vault interactions.
-2. **ERC20B.sol**: Bridgeable ERC20 token implementation that supports the bridge-specific operations.
-3. **LuxVault.sol**: Vault contract that securely holds tokens during the bridging process.
-4. **ETHVault.sol**: Specialized vault for handling native ETH.
-
-The contracts support multiple blockchain networks, including:
-- Ethereum (mainnet and testnets)
-- BSC (Binance Smart Chain)
-- Lux Network
-- Zoo Network
-- Base
-- Polygon
-- Avalanche
-- XRP Ledger (XRPL)
-- Many other EVM-compatible chains
-
-### MPC Nodes
-
-The MPC (Multi-Party Computation) nodes are a distributed network of servers that collectively sign transactions without any single node having access to the complete private key. Key features:
-
-1. **Decentralized oracle operations using MPC**
-2. **Decentralized permissioning using MPC**
-3. **Zero-knowledge transactions**: Signers don't know details about assets being teleported
-4. **Multi-chain monitoring**: Nodes monitor various blockchains, including both EVM-compatible chains (like Ethereum, Binance Smart Chain, etc.) and non-EVM chains (like XRP Ledger)
-
-The MPC nodes are containerized using Docker and can be deployed on Kubernetes clusters for production environments.
-
-#### Current MPC Implementation
-
-- **CGGMP20 Protocol**: The bridge currently uses the CGGMP20 protocol for ECDSA threshold signatures
-- **ECDSA Support**: Only ECDSA is currently supported, which works with all EVM-compatible chains
-
-#### Planned MPC Enhancements
-
-- **DKLs23 Protocol**: Being evaluated as a possible future update for improved efficiency and security
-- **EdDSA Support**: Planned implementation of EdDSA for supporting non-EVM chains like Solana
-- **Unified MPC Library**: A planned abstraction layer to unify ECDSA and EdDSA implementations behind a common API
-
-### Bridge UI
-
-The bridge UI is a Next.js application that provides:
-
-1. **Swap interface**: Allows users to initiate cross-chain transfers
-2. **Network selection**: Support for multiple source and destination networks
-3. **Token selection**: Support for various tokens on each network
-4. **Wallet integration**: Connection to various wallets (EVM, Solana, etc.)
-5. **Transaction history**: View and track past transactions
-
-## Bridge Workflow
-
-The bridge operates through the following workflow:
-
-1. **User initiates a transfer**:
-   - User connects their wallet to the bridge UI
-   - Selects source network, token, amount, destination network, and address
-   - Confirms the transaction
-
-2. **Source chain operations**:
-   - If using a wrapped token: Burns the token on the source chain
-   - If using a native token: Locks the token in the vault
-
-3. **MPC node validation**:
-   - MPC nodes monitor the source chain for bridge events
-   - For EVM chains, nodes look for BridgeBurned or VaultDeposit events
-   - For XRPL, nodes look for Payment transactions to the teleporter address
-   - Validate the transaction and collectively sign the approval
-   - No single node has the complete private key
-
-4. **Destination chain operations**:
-   - If minting a wrapped token: Creates new tokens on the destination chain
-   - If releasing a native token: Releases tokens from the vault
-   - Transfers to the recipient address
-
-5. **Transaction completion**:
-   - User receives tokens on the destination chain
-   - UI updates to show transaction status
-
-## MPC Implementation (Current & Planned)
-
-### Current Implementation
-
-The current MPC implementation focuses on ECDSA threshold signatures using the CGGMP20 protocol:
-
-1. **CGGMP20 Protocol**:
-   - Secure threshold ECDSA signatures
-   - Based on Castagnos and Laguillaumie's encryption scheme
-   - Efficient distributed key generation and signing
-
-2. **Key Features**:
-   - Distributed key generation
-   - Threshold signatures (t-of-n)
-   - No trusted dealer required
-   - Asynchronous communication between nodes
-
-3. **Supported Chains**:
-   - All EVM-compatible chains
-   - XRPL (using ECDSA)
-
-### Planned Enhancements
-
-The following enhancements are planned for future development:
-
-1. **DKLs23 Protocol Evaluation**:
-   - Newer protocol being evaluated for possible implementation
-   - Improved efficiency and security properties
-   - Potential replacement or alternative to CGGMP20
-
-2. **EdDSA Support** (Planned):
-   - Implementation of threshold EdDSA signatures
-   - Support for chains like Solana that use Ed25519 signatures
-   - Integration with existing MPC infrastructure
-
-3. **Unified MPC Library** (Planned):
-   - Abstraction layer to unify ECDSA and EdDSA implementations
-   - Common API for different signature schemes
-   - Simplified integration of new blockchains
-
-4. **UTXO Support** (Planned):
-   - Support for UTXO-based blockchains like Bitcoin
-   - UTXO management and transaction building
-   - Integration with MPC signing
-
-## Development Environment
-
-The project uses:
-
-- **Node.js v20+**: JavaScript runtime
-- **pnpm**: Package manager (v9.15.0+)
-- **Next.js**: React framework for the UI
-- **TypeScript**: For type-safe code
-- **Hardhat**: Ethereum development environment for contracts
-- **Docker/Kubernetes**: For containerization and deployment of MPC nodes
-
-## Running Locally
-
-To run the bridge locally:
-
-1. Install `pnpm`: https://pnpm.io/installation
-2. Install dependencies: `pnpm install`
-3. Run the bridge UI: `pnpm dev`
-
-## Supported Chains and Networks
-
-### Currently Supported
-- **EVM-Compatible**:
-  - Ethereum (Chain ID: 1)
-  - Binance Smart Chain (Chain ID: 56)
-  - Polygon (Chain ID: 137)
-  - Optimism (Chain ID: 10)
-  - Arbitrum One (Chain ID: 42161)
-  - Celo (Chain ID: 42220)
-  - Base (Chain ID: 8453)
-  - Avalanche (Chain ID: 43114)
-  - Zora (Chain ID: 7777777)
-  - Blast (Chain ID: 81457)
-  - Linea (Chain ID: 59144)
-  - Fantom (Chain ID: 250)
-  - Aurora (Chain ID: 1313161554)
-  - Gnosis (Chain ID: 100)
-  - Lux Network (Chain ID: 96369)
-  - Zoo Network (Chain ID: 200200)
-
-- **Non-EVM Chains**:
-  - XRP Ledger (XRPL) Mainnet
-
-### Planned Support
-- **Non-EVM Chains**:
-  - Solana (pending EdDSA implementation)
-  - Bitcoin (pending UTXO implementation)
-  - Avalanche X-Chain (pending UTXO implementation)
-
-For the most up-to-date list and configuration, refer to the settings file at:
-`/mpc-nodes/docker/common/node/src/config/settings.ts`
-
-## Architecture Decisions
-
-### MPC Over Traditional Multi-sig
-
-The bridge uses MPC for enhanced security compared to traditional multi-signature approaches:
-- No single entity can compromise the bridge
-- Private keys never exist in complete form
-- Decentralized validation of cross-chain transfers
-
-### Vault System
-
-The vault system allows for:
-- Secure custody of assets during the bridge process
-- Efficient asset management across chains
-- Fee collection mechanism for bridge operations
-
-### Modular Design
-
-The project's modular architecture enables:
-- Easy addition of new blockchain networks
-- Support for different token types
-- Scalable infrastructure to handle increasing loads
-
-## Security Considerations
-
-The bridge implements multiple security measures:
-
-1. **Threshold Signatures**: Requires a minimum number of MPC nodes to sign transactions
-2. **Transaction Replay Protection**: Prevents replay attacks
-3. **Fee Mechanisms**: Discourages spam and funds system maintenance
-4. **Validation Checks**: Ensures transactions meet all requirements before execution
-
-## Adding New Chains
-
-### Adding a New EVM Chain
-
-To add a new EVM-compatible chain to the bridge, follow these steps:
-
-1. **Update Configuration**:
-   - Edit the configuration file at `/mpc-nodes/docker/common/node/src/config/settings.ts`
-   - Add a new entry to the `MAIN_NETWORKS` or `TEST_NETWORKS` array with the following information:
-     - `display_name`: User-friendly name of the network
-     - `internal_name`: Unique identifier for the network
-     - `is_testnet`: Boolean indicating if it's a testnet
-     - `chain_id`: The numeric chain ID
-     - `teleporter`: Address of the teleporter contract on this chain
-     - `vault`: Address of the vault contract on this chain
-     - `node`: RPC endpoint URL for this chain
-     - `currencies`: Array of supported tokens on this chain
-
-2. **Deploy Smart Contracts**:
-   - Deploy the Bridge.sol contract on the new chain
-   - Deploy the ERC20B.sol contract for bridgeable tokens
-   - Deploy the LuxVault.sol or ETHVault.sol as needed
-   - Update the configuration with the new contract addresses
-
-3. **Update Swap Pairs**:
-   - Add entries to the `SWAP_PAIRS` object to define which tokens on the new chain can be swapped with tokens on other chains
-
-4. **Testing**:
-   - Test transactions from the new chain to existing chains
-   - Test transactions from existing chains to the new chain
-   - Verify that tokens can be correctly bridged in both directions
-
-### Adding a Non-EVM Blockchain (Future)
-
-Adding a non-EVM blockchain would require additional custom implementation (planned features):
-
-1. **Update Configuration**:
-   - Similar to EVM chains, add the configuration to the settings file
-   - Specify blockchain-specific parameters (like node endpoints and teleporter addresses)
-
-2. **Implement Blockchain Monitors**:
-   - In the MPC node, add specialized monitoring for the blockchain events
-   - For XRPL, the implementation looks for Payment transactions to the teleporter address
-   - For Solana (planned), would need to monitor for specific program events
-
-3. **Add Transaction Validation**:
-   - Implement chain-specific validation of transactions
-   - For XRPL, validate that the transaction is of type "Payment"
-   - For Solana (planned), would need to validate program invocations
-
-4. **Add Chain Libraries**:
-   - Import and use chain-specific libraries for interacting with the blockchain
-   - For XRPL, this includes the `xrpl` library
-   - For Solana (planned), would need to use the `@solana/web3.js` library
-
-5. **Implement Signature Generation**:
-   - Add support for generating signatures for minting tokens on destination chains
-   - For EdDSA chains like Solana (planned), would need to implement EdDSA threshold signatures
-
-6. **Update UI**:
-   - Add support in the UI for connecting to the new blockchain's wallets
-   - Update network selection to include the new blockchain
-
-7. **Testing**:
-   - Test transactions from the new blockchain to existing chains
-   - Test transactions from existing chains to the new blockchain
-   - Verify that tokens can be correctly bridged in both directions
-
-## Future Roadmap (Planned Features)
-
-### EdDSA Support
-
-Implementation of Edwards-curve Digital Signature Algorithm (EdDSA) threshold signatures to support chains like Solana:
-
-1. **Protocol Selection**: Evaluation and selection of an appropriate EdDSA threshold signature protocol
-2. **Integration with Existing MPC Framework**: Extending the current MPC framework to support EdDSA
-3. **Key Generation**: Implementation of distributed key generation for EdDSA
-4. **Signature Generation**: Implementation of threshold signatures for EdDSA
-5. **Chain Integration**: Support for Solana and other EdDSA-based chains
-
-### UTXO Support
-
-Implementation of support for UTXO-based blockchains like Bitcoin and Avalanche X-Chain:
-
-1. **UTXO Management**: Tracking and management of UTXOs
-2. **Transaction Building**: Creation of UTXO-based transactions
-3. **MPC Integration**: Using the existing MPC infrastructure for signing UTXO transactions
-4. **Monitoring**: Tracking UTXO-based blockchain for events
-5. **Sweeping**: Implementation of UTXO sweeping for efficient management
-
-### DKLs23 Protocol Evaluation
-
-Evaluation and potential implementation of the DKLs23 protocol for improved efficiency and security:
-
-1. **Performance Analysis**: Comparison with the current CGGMP20 implementation
-2. **Security Analysis**: Evaluation of security properties
-3. **Implementation**: Development of a DKLs23-based threshold signature scheme
-4. **Integration**: Integration with the existing MPC infrastructure
-5. **Testing**: Comprehensive testing to ensure reliability and security
+The Lux Bridge is a decentralized cross-chain bridge infrastructure that enables secure, trustless asset transfers between multiple blockchain networks using Multi-Party Computation (MPC) technology. It serves as the primary interoperability layer for the Lux ecosystem, connecting 15+ blockchain networks.
+
+## Architecture Summary
+
+### Core Technology Stack
+- **MPC Framework**: 2-of-3 threshold signature scheme using `github.com/luxfi/mpc`
+- **Frontend**: Next.js 14 with TypeScript, React 18, TailwindCSS
+- **Backend**: Node.js API server with Express
+- **Smart Contracts**: Solidity (OpenZeppelin), deployed on multiple chains
+- **Infrastructure**: Docker, Kubernetes, PostgreSQL, NATS, Consul, Vault (KMS)
+- **Authentication**: Lux ID (Casdoor) for unified auth
+
+### System Architecture
+```
+Bridge UI → Bridge Server → MPC Nodes → Blockchain Networks
+                              ↓
+                    KMS + Lux ID + NATS + Consul
+```
+
+### MPC Network Configuration
+- **Node Count**: 3 nodes (2-of-3 threshold)
+- **Ports**:
+  - HTTP API: 6000-6002
+  - gRPC: 9090-9092
+  - NATS: 4223
+  - Consul: 8501
+- **Security**: TLS 1.3, mutual authentication, HSM integration
+
+## Supported Networks & Assets
+
+### Blockchain Networks (15+)
+**Layer 1**: Lux, Ethereum, BSC, Polygon, Avalanche, Fantom
+**Layer 2**: Arbitrum, Optimism, zkSync Era, Polygon zkEVM, Base, Blast
+**Other**: TON, Solana (coming soon), Cosmos (via IBC)
+
+### Supported Assets
+**Stablecoins**: USDT, USDC, DAI, ZUSD
+**Native Tokens**: LUX, ETH, BNB, MATIC, AVAX
+**Wrapped Assets**: ZETH, ZBNB, ZPOL, ZAVAX, ZTON (ERC20B standard)
+
+## Key Smart Contracts
+
+### Core Contracts
+- `Bridge.sol` - Main bridge contract with deposit/withdraw logic
+- `LuxVault.sol` - Asset vault for Lux Network
+- `ETHVault.sol` - Ethereum vault contract
+- `ZooVault.sol` - Multi-asset aggregated vault
+- `LERC4626.sol` - Tokenized vault shares
+
+### Wrapped Token Contracts (ERC20B)
+All wrapped tokens follow the ERC20B standard with mint/burn capabilities:
+- Location: `/contracts/contracts/zoo/`
+- Examples: Z.sol, ZETH.sol, ZUSD.sol, ZBNB.sol
+
+## API Endpoints
+
+### REST API (Port 5000)
+- `GET /api/v1/status` - Bridge operational status
+- `GET /api/v1/chains` - Supported blockchains
+- `GET /api/v1/assets` - Supported tokens
+- `POST /api/v1/quote` - Get transfer quote
+- `POST /api/v1/transfer` - Initiate transfer
+- `GET /api/v1/transfer/{id}` - Transfer status
+
+### WebSocket API
+- Subscribe to transfer updates
+- Real-time status notifications
+- Event streaming for bridge operations
+
+## Essential Commands
+
+### Development
+```bash
+# Clone and install
+git clone https://github.com/luxfi/bridge
+cd bridge
+pnpm install
+
+# Install MPC tools
+make install-mpc
+
+# Start infrastructure
+make up
+
+# Start MPC nodes
+make start-mpc-nodes
+
+# Start services
+cd app/bridge && pnpm dev  # UI on :3000
+cd app/server && pnpm dev  # API on :5000
+```
+
+### Infrastructure Management
+```bash
+# Infrastructure
+make up                     # Start all infra services
+make down                   # Stop all services
+make logs                   # View aggregated logs
+
+# MPC Operations
+make start-mpc-nodes        # Start 3-node MPC network
+make stop-mpc-nodes         # Stop MPC nodes
+make generate-mpc-keys      # Generate new MPC keys
+lux-mpc-cli status          # Check MPC status
+
+# Development
+pnpm dev                    # Start development servers
+pnpm build                  # Build for production
+pnpm test                   # Run test suite
+pnpm lint                   # Run linters
+
+# Deployment
+make deploy-testnet         # Deploy to testnet
+make deploy-mainnet         # Deploy to mainnet
+```
+
+## Architecture
+
+The bridge uses a multi-layered architecture:
+
+1. **Presentation Layer**: React/Next.js UI for user interaction
+2. **API Layer**: Node.js server handling business logic
+3. **MPC Layer**: Distributed nodes for threshold signatures
+4. **Blockchain Layer**: Smart contracts on multiple chains
+5. **Infrastructure Layer**: Supporting services (DB, messaging, KMS)
+
+### Data Flow
+1. User initiates transfer on source chain
+2. Bridge contract locks assets in vault
+3. Event emitted and detected by MPC nodes
+4. MPC nodes reach consensus and generate signature
+5. Signed message relayed to destination chain
+6. Destination contract mints wrapped tokens
+7. User receives tokens on destination chain
+
+## Key Technologies
+
+- **Multi-Party Computation (MPC)**: Distributed key management
+- **Threshold Signatures**: 2-of-3 security model
+- **Smart Contracts**: Solidity with OpenZeppelin
+- **Message Queue**: NATS for inter-node communication
+- **Service Discovery**: Consul for dynamic configuration
+- **Key Management**: HashiCorp Vault
+- **Authentication**: Casdoor (Lux ID)
+- **Database**: PostgreSQL for state management
+- **Container Orchestration**: Docker/Kubernetes
+
+## Development Workflow
+
+### Local Development
+1. Start infrastructure: `make up`
+2. Initialize MPC network: `make start-mpc-nodes`
+3. Deploy contracts: `cd contracts && npx hardhat deploy`
+4. Start API server: `cd app/server && pnpm dev`
+5. Start UI: `cd app/bridge && pnpm dev`
+
+### Testing
+- Unit tests: `pnpm test:unit`
+- Integration tests: `pnpm test:integration`
+- Contract tests: `cd contracts && npx hardhat test`
+- E2E tests: `pnpm test:e2e`
+
+### Deployment
+1. Build artifacts: `pnpm build`
+2. Deploy contracts: `make deploy-{network}`
+3. Update configuration
+4. Deploy services via CI/CD
+5. Verify deployment: `make verify-deployment`
+
+## Configuration
+
+### Environment Variables
+```env
+# Network
+NETWORK=mainnet|testnet|local
+CHAIN_ID=31337
+
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5433/bridge
+
+# MPC
+MPC_NODE_COUNT=3
+MPC_THRESHOLD=2
+
+# KMS (Vault)
+VAULT_ADDR=http://localhost:8200
+VAULT_TOKEN=<token>
+
+# Authentication (Lux ID)
+CASDOOR_ENDPOINT=http://localhost:8000
+```
+
+### Service Ports
+- Bridge UI: 3000
+- Bridge API: 5000
+- MPC Nodes: 6000-6002 (HTTP), 9090-9092 (gRPC)
+- PostgreSQL: 5433 (bridge), 5434 (auth)
+- Vault (KMS): 8200
+- Lux ID: 8000
+- NATS: 4223
+- Consul: 8501
+
+## Security Best Practices
+
+1. **Never commit secrets** - Use environment variables
+2. **Validate all inputs** - Prevent injection attacks
+3. **Use secure communication** - TLS 1.3 everywhere
+4. **Implement rate limiting** - Prevent DDoS
+5. **Regular security audits** - Contract and code reviews
+6. **Monitor everything** - Logs, metrics, alerts
+7. **Incident response plan** - Be prepared for emergencies
+
+## Monitoring & Debugging
+
+### Health Checks
+- Bridge API: `curl http://localhost:5000/health`
+- MPC Nodes: `curl http://localhost:6000/health`
+- Infrastructure: `http://localhost:8501/ui` (Consul)
+
+### Debugging Commands
+```bash
+# Check MPC status
+lux-mpc-cli status --url http://localhost:6000
+
+# View logs
+tail -f logs/mpc-node-*.log
+
+# Database queries
+psql $DATABASE_URL -c "SELECT * FROM transfers WHERE status='pending';"
+
+# NATS monitoring
+nats-top -s localhost:4223
+```
+
+## Documentation
+
+### Comprehensive Documentation Site
+- **Location**: `/Users/z/work/lux/bridge/docs/content/docs/index.mdx`
+- **Build**: `cd docs && npm run build`
+- **View**: `cd docs && npm run dev` → http://localhost:3001
+- **Status**: ✅ Built successfully (November 2024)
+
+### Key Documentation Files
+- `docs/MPC-GO-INTEGRATION.md` - MPC setup and configuration
+- `docs/LUX-ID-INTEGRATION.md` - Authentication integration
+- `docs/DEPLOYMENT.md` - Production deployment guide
+- `docs/MIGRATION-TO-GO-MPC.md` - Migration from Docker to Go
+
+## Recent Updates
+
+### November 2024
+- Created comprehensive documentation in `/docs/content/docs/index.mdx`
+- Built documentation site with Nextra theme
+- Documented complete API reference
+- Added security best practices section
+- Created integration guide with code examples
+- Added deployment guide for local and production
+- Updated LLM.md with full bridge information
+
+## Context for All AI Assistants
+
+This file (`LLM.md`) is symlinked as:
+- `AGENTS.md`
+- `CLAUDE.md`
+- `QWEN.md`
+- `GEMINI.md`
+
+All files reference the same knowledge base. Updates here propagate to all AI systems.
+
+## Rules for AI Assistants
+
+1. **ALWAYS** update LLM.md with significant discoveries
+2. **NEVER** commit symlinked files (AGENTS.md, CLAUDE.md, etc.) - they're in .gitignore
+3. **NEVER** create random summary files - update THIS file
+
+---
+
+**Note**: This file serves as the single source of truth for all AI assistants working on this project.

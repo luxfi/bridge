@@ -14,7 +14,7 @@ export default [
   },
   {
       name: "author",
-      content: 'Lux Partners Limited',
+      content: 'Lux Industries Inc',
   },
   {
       name: "keywords",

@@ -9,7 +9,7 @@ import useSWR from 'swr'
 import { LinkElement } from '@hanzo/ui/primitives'
 
 import { useSettings } from '@/context/settings'
-import BridgeApiClient, { type Campaign } from '@/lib/BridgeApiClient'
+import BridgeRPCClient, { type Campaign } from '@/lib/BridgeRPCClient'
 import { type ApiResponse } from '@/Models/ApiResponse'
 
 import RainbowKit from '../../Swap/Withdraw/Wallet/RainbowKit'
@@ -34,7 +34,7 @@ const CampaignDetails: React.FC<{
     const { isConnected } = useAccount();
 
       // :aa Shouldn't this be loaded server-side in the parent page??
-    const apiClient = new BridgeApiClient()
+    const apiClient = new BridgeRPCClient()
     const { data: campaignsData, isLoading } = useSWR<ApiResponse<Campaign[]>>('/campaigns', apiClient.fetcher)
     const campaign = campaignsData?.data?.find((c) => (c.name === campaignName))
 

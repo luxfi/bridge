@@ -7,7 +7,7 @@ import React, {
 } from 'react'
 
 import { type Partner } from '@/Models/Partner'
-import { type AddressBookItem } from '@/lib/BridgeApiClient'
+import { type AddressBookItem } from '@/lib/BridgeRPCClient'
 import { isValidAddress } from '@/lib/addressValidator'
 import Image from 'next/image'
 import KnownInternalNames from '@/lib/knownIds'

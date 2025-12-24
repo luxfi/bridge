@@ -3,7 +3,7 @@ import { QueryParams } from "../Models/QueryParams";
 import { isValidAddress } from "./addressValidator";
 import { FilterDestinationLayers, FilterSourceLayers } from "../util/settingsHelper";
 import { BridgeAppSettings } from "../Models/BridgeAppSettings";
-import { type SwapItem } from "./BridgeApiClient";
+import { type SwapItem } from "./BridgeRPCClient";
 
 export function generateSwapInitialValues(settings: BridgeAppSettings, queryParams: QueryParams): SwapFormValues {
     const { destAddress, amount, asset, from, to, lockAsset } = queryParams
