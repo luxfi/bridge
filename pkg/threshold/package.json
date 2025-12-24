@@ -1,0 +1,43 @@
+{
+  "name": "@luxfi/threshold",
+  "version": "1.0.0",
+  "description": "T-Chain (ThresholdVM) SDK for MPC threshold signatures",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "scope": "@luxfi"
+  },
+  "author": "Lux Industries, Inc.",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luxfi/bridge.git",
+    "directory": "pkg/threshold"
+  },
+  "keywords": [
+    "mpc",
+    "threshold",
+    "signature",
+    "blockchain",
+    "lux"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.json && tsc --project tsconfig.cjs.json",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "lat": "npm show @luxfi/threshold version",
+    "pub": "npm publish"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "types": "./dist/esm/index.d.ts",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.0"
+  }
+}

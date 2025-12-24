@@ -10,8 +10,8 @@ import { Progress } from "@hanzo/ui/primitives";
 
 import { useSettings } from "@/context/settings"
 import BackgroundField from "../../backgroundField";
-import type { Campaign, Reward, RewardPayout } from "@/lib/BridgeApiClient"
-import BridgeApiClient from "@/lib/BridgeApiClient"
+import type { Campaign, Reward, RewardPayout } from "@/lib/BridgeRPCClient"
+import BridgeRPCClient from "@/lib/BridgeRPCClient"
 import { RewardsComponentSkeleton } from "../../Skeletons"
 import { ApiResponse } from "@/Models/ApiResponse"
 import ClickTooltip from "../../Tooltips/ClickTooltip"
@@ -26,7 +26,7 @@ const Rewards: React.FC<{
     const settings = useSettings()
     const { networks } = settings
     const { address } = useAccount();
-    const apiClient = new BridgeApiClient()
+    const apiClient = new BridgeRPCClient()
 
     const { data: rewardsData, isLoading: rewardsIsLoading } = useSWR<ApiResponse<Reward>>(`/campaigns/${campaign.id}/rewards/${address}`, apiClient.fetcher, { dedupingInterval: 60000 })
     const { data: payoutsData, isLoading: payoutsIsLoading } = useSWR<ApiResponse<RewardPayout[]>>(`/campaigns/${campaign.id}/payouts/${address}`, apiClient.fetcher, { dedupingInterval: 60000 })
