@@ -8,572 +8,389 @@ pragma solidity ^0.8.20;
     ██║     ██║   ██║ ██╔██╗     ██╔══██╗██╔══██╗██║██║  ██║██║   ██║██╔══╝  
     ███████╗╚██████╔╝██╔╝ ██╗    ██████╔╝██║  ██║██║██████╔╝╚██████╔╝███████╗
     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝╚═════╝  ╚═════╝ ╚══════╝
+
+    Lux Teleport Bridge v1.1.0 - Security Enhanced
+    
+    Security Features:
+    - EIP-712 typed data signatures
+    - ClaimId-based replay protection (immune to ECDSA malleability)
+    - Token whitelisting
+    - Role separation (ADMIN, ORACLE, PAUSER)
+    - Pausable emergency stop
+    - ReentrancyGuard protection
  */
 
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "./ERC20B.sol";
 import "./LuxVault.sol";
 
-contract Bridge is Ownable, AccessControl {
-    // Use the library functions from OpenZeppelin
-    using Strings for uint256;
+contract Bridge is AccessControl, Pausable, ReentrancyGuard, EIP712 {
+    using SafeERC20 for IERC20;
+    using ECDSA for bytes32;
 
-    uint256 public feeRate = 100; // Fee rate 1% decimals 4
-    bool withdrawalEnabled = true;
-    address internal payoutAddress = 0x9011E888251AB053B7bD1cdB598Db4f9DEd94714;
+    // ============ Roles ============
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    // ============ EIP-712 Types ============
+    bytes32 public constant CLAIM_TYPEHASH = keccak256(
+        "Claim(bytes32 burnTxHash,uint256 logIndex,address token,uint256 amount,uint256 toChainId,address recipient,bool vault,uint256 nonce,uint256 deadline)"
+    );
+
+    // ============ State ============
+    uint256 public feeRate = 100; // Fee rate 1% (decimals 4, max 1000 = 10%)
+    uint256 public constant MAX_FEE_RATE = 1000; // 10% max
+    address public feeRecipient;
     LuxVault public vault;
+    uint256 public nonce;
+
+    // Token whitelist
+    mapping(address => bool) public allowedTokens;
     
-    /** Events */
-    event BridgeBurned(address caller, uint256 amt, address token);
-    event VaultDeposit(address depositor, uint256 amt, address token);
-    event VaultWithdraw(address receiver, uint256 amt, address token);
-    event BridgeMinted(address recipient, address token, uint256 amt);
-    event BridgeWithdrawn(address recipient, address token, uint256 amt);
-    event AdminGranted(address to);
-    event AdminRevoked(address to);
-    event SigMappingAdded(bytes _key);
-    event NewMPCOracleSet(address MPCOracle);
+    // ClaimId-based replay protection (immune to signature malleability)
+    mapping(bytes32 => bool) public claimedIds;
 
-    constructor() Ownable(msg.sender) {
-        payoutAddress = msg.sender; // by default, the payout address is set to deployer
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    // ============ Events ============
+    event BridgeBurned(
+        bytes32 indexed burnId,
+        address indexed token,
+        address indexed sender,
+        uint256 amount,
+        uint256 toChainId,
+        address recipient,
+        bool vault,
+        uint256 nonce
+    );
+    event BridgeMinted(
+        bytes32 indexed claimId,
+        address indexed recipient,
+        address indexed token,
+        uint256 amount
+    );
+    event BridgeWithdrawn(
+        bytes32 indexed claimId,
+        address indexed recipient,
+        address indexed token,
+        uint256 amount
+    );
+    event VaultDeposit(address indexed depositor, uint256 amount, address indexed token);
+    event VaultWithdraw(address indexed receiver, uint256 amount, address indexed token);
+    event TokenAllowed(address indexed token, bool allowed);
+    event OracleUpdated(address indexed oracle, bool active);
+    event FeeUpdated(address indexed recipient, uint256 rate);
+    event VaultUpdated(address indexed vault);
+
+    // ============ Errors ============
+    error TokenNotAllowed(address token);
+    error ZeroAmount();
+    error ZeroAddress();
+    error ClaimAlreadyProcessed(bytes32 claimId);
+    error ClaimExpired(uint256 deadline);
+    error InvalidOracle(address signer);
+    error InvalidSignature();
+    error FeeRateTooHigh(uint256 rate);
+    error WithdrawalDisabled();
+    error InsufficientBalance(uint256 required, uint256 available);
+
+    // ============ Constructor ============
+    constructor(
+        string memory name,
+        string memory version,
+        address admin,
+        address _feeRecipient,
+        uint256 _feeRate
+    ) EIP712(name, version) {
+        if (admin == address(0)) revert ZeroAddress();
+        if (_feeRecipient == address(0)) revert ZeroAddress();
+        if (_feeRate > MAX_FEE_RATE) revert FeeRateTooHigh(_feeRate);
+
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(ADMIN_ROLE, admin);
+        _grantRole(PAUSER_ROLE, admin);
+        
+        feeRecipient = _feeRecipient;
+        feeRate = _feeRate;
     }
 
-    /**
-     * @dev Sets admins
-     */
-    modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Ownable");
-        _;
+    // ============ Admin Functions ============
+
+    /// @notice Set the vault contract
+    function setVault(address payable _vault) external onlyRole(ADMIN_ROLE) {
+        if (_vault == address(0)) revert ZeroAddress();
+        vault = LuxVault(_vault);
+        emit VaultUpdated(_vault);
     }
 
-    /**
-     * @dev Grants admins
-     * @param to_ admin address
-     */
-    function grantAdmin(address to_) public onlyAdmin {
-        grantRole(DEFAULT_ADMIN_ROLE, to_);
-        emit AdminGranted(to_);
+    /// @notice Add a new vault for an asset
+    function addNewVault(address asset) external onlyRole(ADMIN_ROLE) {
+        vault.addNewVault(asset);
     }
 
-    /**
-     * @dev set Withdrawal enabled
-     * @param state_ admin address
-     */
-    function setWithdrawalEnabled(bool state_) external onlyOwner {
-        withdrawalEnabled = state_;
+    /// @notice Add or remove token from whitelist
+    function setTokenAllowed(address token, bool allowed) external onlyRole(ADMIN_ROLE) {
+        allowedTokens[token] = allowed;
+        emit TokenAllowed(token, allowed);
     }
 
-    /**
-     * @dev Revoke admins
-     * @param to_ admin address
-     */
-    function revokeAdmin(address to_) public onlyAdmin {
-        require(hasRole(DEFAULT_ADMIN_ROLE, to_), "Ownable");
-        revokeRole(DEFAULT_ADMIN_ROLE, to_);
-        emit AdminRevoked(to_);
-    }
-
-    /**
-     * @dev Set fee payout addresses and fee - set at contract launch - in wei
-     * @param payoutAddress_ payout address
-     * @param feeRate_ fee rate for bridge fee
-     */
-    function setpayoutAddressess(
-        address payoutAddress_,
-        uint256 feeRate_
-    ) public onlyAdmin {
-        payoutAddress = payoutAddress_;
-        feeRate = feeRate_;
-    }
-
-    /**
-     * @dev Mappings
-     */
-    struct MPCOracleAddrInfo {
-        bool exists;
-    }
-
-    /**
-     * @dev Map MPCOracle address at blockHeight
-     */
-    mapping(address => MPCOracleAddrInfo) internal MPCOracleAddrMap;
-
-    function addMPCMapping(address key_) internal {
-        MPCOracleAddrMap[key_].exists = true;
-    }
-
-    /**
-     * @dev Used to set a new MPC address at block height - only MPC signers can update
-     * @param MPCO_ new mpc oracle signer address
-     */
-    function setMPCOracle(address MPCO_) public onlyAdmin {
-        addMPCMapping(MPCO_); // store in mapping.
-        emit NewMPCOracleSet(MPCO_);
-    }
-
-    /**
-     * @dev Get MPC Data Transaction
-     * @param key_ transaction hash
-     * @return boolean true if mpc signer address exists
-     */
-    function getMPCMapDataTx(address key_) public view returns (bool) {
-        return MPCOracleAddrMap[key_].exists;
-    }
-
-    /**
-     * @dev Struct for mapping transaction history
-     */
-    struct TransactionInfo {
-        string txid;
-        bool exists;
-        //bool isStealth;
-    }
-
-    mapping(bytes => TransactionInfo) internal transactionMap;
-
-    /**
-     * @dev add transaction id to mappding to prevent replay attack
-     * @param key_ transaction hash
-     */
-    function addMappingStealth(bytes memory key_) internal {
-        require(!transactionMap[key_].exists, "Tx Hash Already Exists");
-        transactionMap[key_].exists = true;
-        emit SigMappingAdded(key_);
-    }
-
-    /**
-     * @dev check if transaction already exists
-     * @param key_ transaction hash
-     * @return boolean
-     */
-    function keyExistsTx(bytes memory key_) public view returns (bool) {
-        return transactionMap[key_].exists;
-    }
-
-    /**
-     * @dev Teleport bridge data structure
-     */
-    struct TeleportStruct {
-        bytes32 networkIdHash;
-        bytes32 tokenAddressHash;
-        string tokenAmount;
-        address receiverAddress;
-        bytes32 receiverAddressHash;
-        string decimals;
-        ERC20B token;
-    }
-
-    /**
-     * @dev set vault address for teleport bridge
-     * @param vault_ new vault address
-     */
-    function setVault(address payable vault_) public onlyAdmin {
-        require(vault_ != address(0), "Invalid address");
-        vault = LuxVault(vault_);
-    }
-
-    /**
-     * @dev add new  vault
-     * @param asset_ new vault address
-     */
-    function addNewVault(address asset_) public onlyAdmin {
-        vault.addNewVault(asset_);
-    }
-
-    /**
-     * @dev Transfers the msg.senders coins to Lux vault
-     * @param amount_ token amount to transfer
-     * @param tokenAddr_ token address to transfer
-     */
-    function vaultDeposit(uint256 amount_, address tokenAddr_) public payable {
-        if (tokenAddr_ != address(0)) {
-            IERC20(tokenAddr_).transferFrom(
-                msg.sender,
-                address(vault),
-                amount_
-            );
-        }
-        vault.deposit{value: msg.value}(tokenAddr_, amount_);
-        emit VaultDeposit(msg.sender, amount_, tokenAddr_);
-    }
-
-    /**
-     * @dev Withdraw tokens from vault using MPC signed msg
-     * @param amount_ token amount to withdraw
-     * @param tokenAddr_ token address to withdraw
-     * @param receiver_ receiver's address
-     */
-    function vaultWithdraw(
-        uint256 amount_,
-        address tokenAddr_,
-        address receiver_
-    ) private {
-        address _shareAddress;
-        if (tokenAddr_ == address(0)) {
-            _shareAddress = vault.ethVaultAddress();
+    /// @notice Activate or deactivate an oracle
+    function setOracle(address oracle, bool active) external onlyRole(ADMIN_ROLE) {
+        if (oracle == address(0)) revert ZeroAddress();
+        if (active) {
+            _grantRole(ORACLE_ROLE, oracle);
         } else {
-            _shareAddress = vault.erc20Vault(tokenAddr_);
+            _revokeRole(ORACLE_ROLE, oracle);
         }
-        IERC20(_shareAddress).approve(address(vault), type(uint256).max);
-        vault.withdraw(tokenAddr_, receiver_, amount_);
-        emit VaultWithdraw(receiver_, amount_, tokenAddr_);
+        emit OracleUpdated(oracle, active);
     }
 
-    /**
-     * @dev preview vault withdraw
-     * @param tokenAddr_ token address to withdraw
-     * @return amount token available amount for withdrawal
-     */
-    function previewVaultWithdraw(
-        address tokenAddr_
-    ) public view returns (uint256) {
-        return vault.previewWithdraw(tokenAddr_);
+    /// @notice Update fee configuration
+    function setFeeConfig(address _feeRecipient, uint256 _feeRate) external onlyRole(ADMIN_ROLE) {
+        if (_feeRecipient == address(0)) revert ZeroAddress();
+        if (_feeRate > MAX_FEE_RATE) revert FeeRateTooHigh(_feeRate);
+        feeRecipient = _feeRecipient;
+        feeRate = _feeRate;
+        emit FeeUpdated(_feeRecipient, _feeRate);
     }
 
-    /**
-     * @dev Burns the msg.senders coins
-     * @param amount_ token amount to burn
-     * @param tokenAddr_ token address to burn
-     */
-    function bridgeBurn(uint256 amount_, address tokenAddr_) public {
-        TeleportStruct memory teleport;
-        teleport.token = ERC20B(tokenAddr_);
-        require(
-            (teleport.token.balanceOf(msg.sender) >= amount_),
-            "Insufficient token balance"
+    /// @notice Pause the bridge
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    /// @notice Unpause the bridge
+    function unpause() external onlyRole(ADMIN_ROLE) {
+        _unpause();
+    }
+
+    // ============ Bridge Functions ============
+
+    /// @notice Burn tokens with committed destination data
+    /// @dev All destination data is committed in the event for oracle nodes to read
+    function bridgeBurn(
+        address token,
+        uint256 amount,
+        uint256 toChainId,
+        address recipient,
+        bool useVault
+    ) external whenNotPaused nonReentrant returns (bytes32 burnId) {
+        if (!allowedTokens[token]) revert TokenNotAllowed(token);
+        if (amount == 0) revert ZeroAmount();
+        if (recipient == address(0)) revert ZeroAddress();
+
+        uint256 currentNonce = nonce++;
+        
+        burnId = keccak256(abi.encode(
+            block.chainid,
+            token,
+            msg.sender,
+            amount,
+            toChainId,
+            recipient,
+            useVault,
+            currentNonce
+        ));
+
+        // Burn the tokens
+        ERC20B(token).bridgeBurn(msg.sender, amount);
+
+        emit BridgeBurned(
+            burnId,
+            token,
+            msg.sender,
+            amount,
+            toChainId,
+            recipient,
+            useVault,
+            currentNonce
         );
-        teleport.token.bridgeBurn(msg.sender, amount_);
-        emit BridgeBurned(msg.sender, amount_, tokenAddr_);
     }
 
-    /**
-     * @dev Concat data to sign
-     * @param amt_ token amount
-     * @param toTargetAddrStr_ target address to mint
-     * @param txid_ tx hash
-     * @param tokenAddrStrHash_ hashed token address
-     * @param chainIdStr_ chain id
-     * @param decimalStr_ decimal of source token
-     * @param vault_ usage of valult
-     */
-    function append(
-        string memory amt_,
-        string memory toTargetAddrStr_,
-        string memory txid_,
-        string memory tokenAddrStrHash_,
-        string memory chainIdStr_,
-        string memory decimalStr_,
-        string memory vault_
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    amt_,
-                    toTargetAddrStr_,
-                    txid_,
-                    tokenAddrStrHash_,
-                    chainIdStr_,
-                    decimalStr_,
-                    vault_
-                )
-            );
+    /// @notice Deposit tokens to vault
+    function vaultDeposit(uint256 amount, address token) external payable whenNotPaused nonReentrant {
+        if (token != address(0)) {
+            IERC20(token).safeTransferFrom(msg.sender, address(vault), amount);
+        }
+        vault.deposit{value: msg.value}(token, amount);
+        emit VaultDeposit(msg.sender, amount, token);
     }
 
-    /**
-     * @dev split ECDSA signature to r, s, v
-     * @param sig ECDSA signature
-     * @return splitted_ v,s,r
-     */
-    function splitSignature(
-        bytes memory sig
-    ) internal pure returns (uint8, bytes32, bytes32) {
-        require(sig.length == 65, "invalid Length");
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
+    // ============ Claim Data Structure ============
 
-        assembly {
-            // first 32 bytes, after the length prefix
-            r := mload(add(sig, 32))
-            // second 32 bytes
-            s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes)
-            v := byte(0, mload(add(sig, 96)))
+    struct ClaimData {
+        bytes32 burnTxHash;
+        uint256 logIndex;
+        address token;
+        uint256 amount;
+        uint256 toChainId;
+        address recipient;
+        bool vault;
+        uint256 nonce;
+        uint256 deadline;
+    }
+
+    /// @notice Mint tokens with EIP-712 signature from oracle
+    function bridgeMint(
+        ClaimData calldata claim,
+        bytes calldata signature
+    ) external whenNotPaused nonReentrant returns (bytes32 claimId) {
+        if (!allowedTokens[claim.token]) revert TokenNotAllowed(claim.token);
+        if (claim.amount == 0) revert ZeroAmount();
+        if (claim.recipient == address(0)) revert ZeroAddress();
+        if (block.timestamp > claim.deadline) revert ClaimExpired(claim.deadline);
+        if (claim.toChainId != block.chainid) revert InvalidSignature();
+
+        // Compute claimId from all claim fields (immune to signature malleability)
+        claimId = keccak256(abi.encode(
+            claim.burnTxHash,
+            claim.logIndex,
+            claim.token,
+            claim.amount,
+            claim.toChainId,
+            claim.recipient,
+            claim.vault,
+            claim.nonce,
+            claim.deadline
+        ));
+
+        if (claimedIds[claimId]) revert ClaimAlreadyProcessed(claimId);
+
+        // Verify EIP-712 signature
+        bytes32 structHash = keccak256(abi.encode(
+            CLAIM_TYPEHASH,
+            claim.burnTxHash,
+            claim.logIndex,
+            claim.token,
+            claim.amount,
+            claim.toChainId,
+            claim.recipient,
+            claim.vault,
+            claim.nonce,
+            claim.deadline
+        ));
+        
+        bytes32 digest = _hashTypedDataV4(structHash);
+        address signer = ECDSA.recover(digest, signature);
+        
+        if (!hasRole(ORACLE_ROLE, signer)) revert InvalidOracle(signer);
+
+        // Mark as claimed
+        claimedIds[claimId] = true;
+
+        // Calculate fee
+        uint256 fee = (claim.amount * feeRate) / 10000;
+        uint256 amountAfterFee = claim.amount - fee;
+
+        // Mint tokens
+        ERC20B(claim.token).bridgeMint(claim.recipient, amountAfterFee);
+        if (fee > 0) {
+            ERC20B(claim.token).bridgeMint(feeRecipient, fee);
         }
 
-        return (v, r, s);
+        emit BridgeMinted(claimId, claim.recipient, claim.token, amountAfterFee);
     }
 
-    /**
-     * @dev recover signer from message and ECDSA signature
-     * @param message_ message to be signed
-     * @param sig_ ECDSA signature
-     * @return signer signer of ECDSA
-     */
-    function recoverSigner(
-        bytes32 message_,
-        bytes memory sig_
-    ) internal pure returns (address) {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        (v, r, s) = splitSignature(sig_);
-        return ecrecover(message_, v, r, s);
+    /// @notice Withdraw from vault with EIP-712 signature from oracle
+    function bridgeWithdraw(
+        ClaimData calldata claim,
+        bytes calldata signature
+    ) external whenNotPaused nonReentrant returns (bytes32 claimId) {
+        if (claim.amount == 0) revert ZeroAmount();
+        if (claim.recipient == address(0)) revert ZeroAddress();
+        if (block.timestamp > claim.deadline) revert ClaimExpired(claim.deadline);
+        if (claim.toChainId != block.chainid) revert InvalidSignature();
+
+        // Compute claimId
+        claimId = keccak256(abi.encode(
+            claim.burnTxHash,
+            claim.logIndex,
+            claim.token,
+            claim.amount,
+            claim.toChainId,
+            claim.recipient,
+            claim.vault,
+            claim.nonce,
+            claim.deadline
+        ));
+
+        if (claimedIds[claimId]) revert ClaimAlreadyProcessed(claimId);
+
+        // Verify EIP-712 signature
+        bytes32 structHash = keccak256(abi.encode(
+            CLAIM_TYPEHASH,
+            claim.burnTxHash,
+            claim.logIndex,
+            claim.token,
+            claim.amount,
+            claim.toChainId,
+            claim.recipient,
+            claim.vault,
+            claim.nonce,
+            claim.deadline
+        ));
+        
+        bytes32 digest = _hashTypedDataV4(structHash);
+        address signer = ECDSA.recover(digest, signature);
+        
+        if (!hasRole(ORACLE_ROLE, signer)) revert InvalidOracle(signer);
+
+        // Mark as claimed
+        claimedIds[claimId] = true;
+
+        // Calculate fee
+        uint256 fee = (claim.amount * feeRate) / 10000;
+        uint256 amountAfterFee = claim.amount - fee;
+
+        // Withdraw from vault
+        _vaultWithdraw(fee, claim.token, feeRecipient);
+        _vaultWithdraw(amountAfterFee, claim.token, claim.recipient);
+
+        emit BridgeWithdrawn(claimId, claim.recipient, claim.token, amountAfterFee);
     }
 
-    /**
-     * @dev Builds a prefixed hash to mimic the behavior of eth_sign
-     * @return prefixed prefixed msg
-     */
-    function prefixed(bytes32 hash) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
-            );
-    }
-
-    /**
-     * @dev get signer from tx data
-     * @notice Sets the vault address. Sig can only be claimed once.
-     * @param hashedTxId_ hashed tx id in source chain
-     * @param toTokenAddress_ token address in destination chain
-     * @param tokenAmount_ token amount that is transfered to lux vault in source chain
-     * @param fromTokenDecimals_ token decimal of source token
-     * @param receiverAddress_ destinatoin address to mint in destination chain
-     * @param signedTXInfo_ mpc signed msg from teleport oracle network
-     * @param vault_ if usage of vault
-     * @return signer return signer address of message
-     */
-    function previewBridgeStealth(
-        string memory hashedTxId_,
-        address toTokenAddress_,
-        uint256 tokenAmount_,
-        uint256 fromTokenDecimals_,
-        address receiverAddress_,
-        bytes memory signedTXInfo_,
-        string memory vault_
-    ) public view returns (address) {
-        TeleportStruct memory teleport;
-        // Hash calculations
-        teleport.tokenAddressHash = keccak256(
-            abi.encodePacked(toTokenAddress_)
-        );
-        teleport.token = ERC20B(toTokenAddress_);
-        teleport.receiverAddress = receiverAddress_;
-        teleport.receiverAddressHash = keccak256(
-            abi.encodePacked(receiverAddress_)
-        );
-        teleport.tokenAmount = Strings.toString(tokenAmount_);
-        teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(
-            abi.encodePacked(block.chainid.toString())
-        );
-        // Concatenate message
-        string memory message = append(
-            Strings.toHexString(uint256(teleport.networkIdHash), 32),
-            hashedTxId_,
-            Strings.toHexString(uint256(teleport.tokenAddressHash), 32),
-            teleport.tokenAmount,
-            teleport.decimals,
-            Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
-            vault_
-        );
-
-        address signer = recoverSigner(
-            prefixed(keccak256(abi.encodePacked(message))),
-            signedTXInfo_
-        );
-        return signer;
-    }
-    /**
-     * @dev stealth mint tokens using mpc signature
-     * @notice Sets the vault address. Sig can only be claimed once.
-     * @param hashedTxId_ hashed tx id in source chain
-     * @param toTokenAddress_ token address in destination chain
-     * @param tokenAmount_ token amount that is transfered to lux vault in source chain
-     * @param fromTokenDecimals_ token decimal of source token
-     * @param receiverAddress_ destinatoin address to mint in destination chain
-     * @param signedTXInfo_ mpc signed msg from teleport oracle network
-     * @param vault_ if usage of vault
-     * @return signer return signer address of message
-     */
-    function bridgeMintStealth(
-        string memory hashedTxId_,
-        address toTokenAddress_,
-        uint256 tokenAmount_,
-        uint256 fromTokenDecimals_,
-        address receiverAddress_,
-        bytes memory signedTXInfo_,
-        string memory vault_
-    ) external returns (address) {
-        TeleportStruct memory teleport;
-        // Hash calculations
-        teleport.tokenAddressHash = keccak256(
-            abi.encodePacked(toTokenAddress_)
-        );
-        teleport.token = ERC20B(toTokenAddress_);
-        teleport.receiverAddress = receiverAddress_;
-        teleport.receiverAddressHash = keccak256(
-            abi.encodePacked(receiverAddress_)
-        );
-        teleport.tokenAmount = Strings.toString(tokenAmount_);
-        teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(
-            abi.encodePacked(block.chainid.toString())
-        );
-        // Concatenate message
-        string memory message = append(
-            Strings.toHexString(uint256(teleport.networkIdHash), 32),
-            hashedTxId_,
-            Strings.toHexString(uint256(teleport.tokenAddressHash), 32),
-            teleport.tokenAmount,
-            teleport.decimals,
-            Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
-            vault_
-        );
-        // Check if signedTxInfo already exists
-        require(
-            !transactionMap[signedTXInfo_].exists,
-            "Duplicated Transaction Hash"
-        );
-        address signer = recoverSigner(
-            prefixed(keccak256(abi.encodePacked(message))),
-            signedTXInfo_
-        );
-
-        // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
-
-        // Calculate fee and adjust amount
-        uint256 _toTokenDecimals = teleport.token.decimals();
-        uint256 _amount = (tokenAmount_ * 10 ** _toTokenDecimals) /
-            (10 ** fromTokenDecimals_);
-        teleport.token.bridgeMint(teleport.receiverAddress, _amount);
-        // Add new transaction ID mapping
-        addMappingStealth(signedTXInfo_);
-
-        emit BridgeMinted(
-            teleport.receiverAddress,
-            toTokenAddress_,
-            _amount
-        );
-        return signer;
-    }
-
-    /**
-     * @dev withdraw tokens using mpc signature
-     * @notice Sets the vault address. Sig can only be claimed once.
-     * @param hashedTxId_ hashed tx id in source chain
-     * @param toTokenAddress_ token address in destination chain
-     * @param tokenAmount_ token amount that is transfered to lux vault in source chain
-     * @param fromTokenDecimals_ token decimal of source token
-     * @param receiverAddress_ destinatoin address to mint in destination chain
-     * @param signedTXInfo_ mpc signed msg from teleport oracle network
-     * @param vault_ if usage of vault
-     * @return signer return signer address of message
-     */
-    function bridgeWithdrawStealth(
-        string memory hashedTxId_,
-        address toTokenAddress_,
-        uint256 tokenAmount_,
-        uint256 fromTokenDecimals_,
-        address receiverAddress_,
-        bytes memory signedTXInfo_,
-        string memory vault_
-    ) external returns (address) {
-        require(withdrawalEnabled == true, "Withdrawl not enabled!");
-
-        TeleportStruct memory teleport;
-        // Hash calculations
-        teleport.tokenAddressHash = keccak256(
-            abi.encodePacked(toTokenAddress_)
-        );
-        teleport.token = ERC20B(toTokenAddress_);
-        teleport.receiverAddress = receiverAddress_;
-        teleport.receiverAddressHash = keccak256(
-            abi.encodePacked(receiverAddress_)
-        );
-        teleport.tokenAmount = Strings.toString(tokenAmount_);
-        teleport.decimals = Strings.toString(fromTokenDecimals_);
-        teleport.networkIdHash = keccak256(
-            abi.encodePacked(block.chainid.toString())
-        );
-        // Concatenate message
-        string memory message = append(
-            Strings.toHexString(uint256(teleport.networkIdHash), 32),
-            hashedTxId_,
-            Strings.toHexString(uint256(teleport.tokenAddressHash), 32),
-            teleport.tokenAmount,
-            teleport.decimals,
-            Strings.toHexString(uint256(teleport.receiverAddressHash), 32),
-            vault_
-        );
-        // Check if signedTxInfo already exists
-        require(
-            !transactionMap[signedTXInfo_].exists,
-            "Duplicated Transaction Hash"
-        );
-        address signer = recoverSigner(
-            prefixed(keccak256(abi.encodePacked(message))),
-            signedTXInfo_
-        );
-
-        // Check if signer is MPCOracle and corresponds to the correct ERC20B
-        require(MPCOracleAddrMap[signer].exists, "Unauthorized Signature");
-
-        uint256 _amount = 0;
-
-        if (toTokenAddress_ == address(0)) {
-            _amount = (tokenAmount_ * 10 ** 18) / (10 ** fromTokenDecimals_);
-        } else {
-            _amount =
-                (tokenAmount_ * 10 ** teleport.token.decimals()) /
-                (10 ** fromTokenDecimals_);
-        }
-        uint256 _bridgeFee = (_amount * feeRate) / 10 ** 4;
-        uint256 _adjustedAmount = _amount - _bridgeFee; // Use a local variable
-        // withdraw tokens
-        vaultWithdraw(_bridgeFee, toTokenAddress_, payoutAddress);
-        vaultWithdraw(
-            _adjustedAmount,
-            toTokenAddress_,
-            teleport.receiverAddress
-        );
-        // Add new transaction ID mapping
-        addMappingStealth(signedTXInfo_);
-
-        emit BridgeWithdrawn(
-            teleport.receiverAddress,
-            toTokenAddress_,
-            _amount
-        );
-        return signer;
-    }
-
-    /**
-     * @dev send funds
-     * @param amount_ token amount
-     * @param tokenAddr_ token address
-     * @param receiver_ receiver address
-     */
-    function pullWithdraw(
-        uint256 amount_,
-        address tokenAddr_,
-        address receiver_
-    ) external onlyOwner {
+    /// @notice Internal vault withdrawal
+    function _vaultWithdraw(uint256 amount, address token, address receiver) private {
+        if (amount == 0) return;
+        
         address shareAddress;
-        if (tokenAddr_ == address(0)) {
+        if (token == address(0)) {
             shareAddress = vault.ethVaultAddress();
         } else {
-            shareAddress = vault.erc20Vault(tokenAddr_);
+            shareAddress = vault.erc20Vault(token);
         }
         IERC20(shareAddress).approve(address(vault), type(uint256).max);
-        vault.withdraw(tokenAddr_, receiver_, amount_);
-        emit VaultWithdraw(receiver_, amount_, tokenAddr_);
+        vault.withdraw(token, receiver, amount);
+        emit VaultWithdraw(receiver, amount, token);
+    }
+
+    /// @notice Preview available vault withdrawal
+    function previewVaultWithdraw(address token) external view returns (uint256) {
+        return vault.previewWithdraw(token);
+    }
+
+    /// @notice Emergency withdrawal by admin
+    function emergencyWithdraw(
+        uint256 amount,
+        address token,
+        address receiver
+    ) external onlyRole(ADMIN_ROLE) {
+        _vaultWithdraw(amount, token, receiver);
+    }
+
+    /// @notice Check if a claim has been processed
+    function isClaimed(bytes32 claimId) external view returns (bool) {
+        return claimedIds[claimId];
+    }
+
+    /// @notice Get the domain separator for EIP-712
+    function domainSeparator() external view returns (bytes32) {
+        return _domainSeparatorV4();
     }
 
     receive() external payable {}
