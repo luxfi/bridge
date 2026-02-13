@@ -13,16 +13,8 @@ pragma solidity ^0.8.20;
 import "../ERC20B.sol";
 
 contract ZooFTM is ERC20B {
-    string public constant _name = "Zoo FTM";
-    string public constant _symbol = "ZFTM";
+    string public constant TOKEN_NAME = "Zoo FTM";
+    string public constant TOKEN_SYMBOL = "ZFTM";
 
-    constructor() ERC20B(_name, _symbol) {}
-
-    function mint(address account, uint256 amount) public {
-        _mint(account, amount);
-    }
-
-    function burn(address account, uint256 amount) public {
-        _burn(account, amount);
-    }
+    constructor(address admin) ERC20B(TOKEN_NAME, TOKEN_SYMBOL, admin) {}
 }

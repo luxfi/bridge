@@ -14,6 +14,9 @@ contract ETHVault is ERC20 {
         uint256 amount
     );
 
+    // Errors
+    error ZeroAddress();
+
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
     // Function to receive ETH and mint shares
     receive() external payable {}
@@ -24,6 +27,7 @@ contract ETHVault is ERC20 {
      * @param receiver_ receiver's address
      */
     function deposit(uint256 amount_, address receiver_) external payable {
+        if (receiver_ == address(0)) revert ZeroAddress();
         require(msg.value > 0 && amount_ == msg.value, "Must send ETH");
         // Calculate the number of shares to mint
         uint256 shares = msg.value; // For simplicity, 1 ETH = 1 share
@@ -43,14 +47,15 @@ contract ETHVault is ERC20 {
         address receiver_,
         address owner_
     ) external {
+        if (receiver_ == address(0)) revert ZeroAddress();
         require(amount_ <= address(this).balance, "Insufficient balance");
         if (msg.sender != owner_) {
             uint256 allowed = allowance(owner_, msg.sender);
-            require(allowed >= amount_, "Invalid alowance");
+            require(allowed >= amount_, "Invalid allowance");
         }
         _burn(owner_, amount_);
         (bool success, ) = payable(receiver_).call{value: amount_}("");
-        require(success, "sending failed");
+        require(success, "ETH transfer failed");
         emit Withdraw(msg.sender, receiver_, owner_, amount_);
     }
 }
