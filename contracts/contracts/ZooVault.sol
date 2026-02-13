@@ -36,7 +36,7 @@ contract ZooVault is Ownable {
         string memory a,
         string memory b
     ) internal pure returns (string memory) {
-        return string(abi.encodePacked(a, b));
+        return string.concat(a, b);
     }
 
     /**
