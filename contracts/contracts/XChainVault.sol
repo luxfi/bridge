@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,6 +14,8 @@ import "./interfaces/IBridge.sol";
  * @dev Manages token vaults for X-Chain bridging with support for ERC20, ERC721, and ERC1155
  */
 contract XChainVault is Ownable {
+    using SafeERC20 for IERC20;
+
     // Warp precompile address
     address constant WARP_PRECOMPILE = 0x0200000000000000000000000000000000000000;
     
@@ -67,16 +70,29 @@ contract XChainVault is Ownable {
     mapping(address => mapping(uint32 => address)) public wrappedTokens; // originalToken => chainId => wrappedToken
     mapping(address => bool) public supportedTokens;
     mapping(uint32 => bool) public supportedChains;
-    
+
     uint256 private nonce;
     address public bridge;
-    
+
+    // Maximum array length for ERC1155 batch operations to prevent DoS
+    uint256 public constant MAX_BATCH_SIZE = 100;
+
+    // Events for admin functions
+    event SupportedTokenUpdated(address indexed token, bool supported);
+    event SupportedChainUpdated(uint32 indexed chainId, bool supported);
+    event BridgeUpdated(address indexed oldBridge, address indexed newBridge);
+
+    // Errors
+    error ZeroAddress();
+    error BatchSizeTooLarge(uint256 size, uint256 max);
+
     modifier onlyBridge() {
         require(msg.sender == bridge, "Only bridge can call");
         _;
     }
-    
+
     constructor(address _bridge) Ownable(msg.sender) {
+        if (_bridge == address(0)) revert ZeroAddress();
         bridge = _bridge;
     }
     
@@ -93,8 +109,8 @@ contract XChainVault is Ownable {
         require(supportedChains[destinationChainId], "Chain not supported");
         require(amount > 0, "Amount must be greater than 0");
         
-        // Transfer tokens to vault
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        // Transfer tokens to vault (using SafeERC20)
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         
         // Generate vault ID
         vaultId = keccak256(abi.encodePacked(
@@ -182,6 +198,7 @@ contract XChainVault is Ownable {
         require(supportedChains[destinationChainId], "Chain not supported");
         require(tokenIds.length == amounts.length, "Arrays length mismatch");
         require(tokenIds.length > 0, "Empty arrays");
+        if (tokenIds.length > MAX_BATCH_SIZE) revert BatchSizeTooLarge(tokenIds.length, MAX_BATCH_SIZE);
         
         // Transfer tokens to vault
         IERC1155(token).safeBatchTransferFrom(
@@ -239,7 +256,7 @@ contract XChainVault is Ownable {
         if (vault.tokenType == TokenType.ERC20) {
             require(vault.amount >= amount, "Insufficient vault balance");
             vault.amount -= amount;
-            IERC20(vault.originalToken).transfer(recipient, amount);
+            IERC20(vault.originalToken).safeTransfer(recipient, amount);
         } else if (vault.tokenType == TokenType.ERC721) {
             require(amount == 1, "Invalid amount for NFT");
             vault.isActive = false;
@@ -308,21 +325,27 @@ contract XChainVault is Ownable {
      * @dev Update supported tokens
      */
     function setSupportedToken(address token, bool supported) external onlyOwner {
+        if (token == address(0)) revert ZeroAddress();
         supportedTokens[token] = supported;
+        emit SupportedTokenUpdated(token, supported);
     }
-    
+
     /**
      * @dev Update supported chains
      */
     function setSupportedChain(uint32 chainId, bool supported) external onlyOwner {
         supportedChains[chainId] = supported;
+        emit SupportedChainUpdated(chainId, supported);
     }
-    
+
     /**
      * @dev Update bridge address
      */
     function setBridge(address _bridge) external onlyOwner {
+        if (_bridge == address(0)) revert ZeroAddress();
+        address oldBridge = bridge;
         bridge = _bridge;
+        emit BridgeUpdated(oldBridge, _bridge);
     }
     
     /**
