@@ -2,31 +2,23 @@
 pragma solidity ^0.8.20;
 
 /**
-    ████████╗██████╗ ██╗   ██╗███╗   ███╗██████╗ 
+    ████████╗██████╗ ██╗   ██╗███╗   ███╗██████╗
     ╚══██╔══╝██╔══██╗██║   ██║████╗ ████║██╔══██╗
        ██║   ██████╔╝██║   ██║██╔████╔██║██████╔╝
-       ██║   ██╔══██╗██║   ██║██║╚██╔╝██║██╔═══╝ 
-       ██║   ██║  ██║╚██████╔╝██║ ╚═╝ ██║██║     
-       ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     
+       ██║   ██╔══██╗██║   ██║██║╚██╔╝██║██╔═══╝
+       ██║   ██║  ██║╚██████╔╝██║ ╚═╝ ██║██║
+       ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝
  */
 
 import "../ERC20B.sol";
 
 contract TRUMP is ERC20B {
-    string public constant _name = "OFFICIAL TRUMP";
-    string public constant _symbol = "TRUMP";
+    string public constant TOKEN_NAME = "OFFICIAL TRUMP";
+    string public constant TOKEN_SYMBOL = "TRUMP";
 
-    constructor() ERC20B(_name, _symbol) {}
+    constructor(address admin) ERC20B(TOKEN_NAME, TOKEN_SYMBOL, admin) {}
 
     function decimals() public view virtual override returns (uint8) {
         return 6;
-    }
-
-    function mint(address account, uint256 amount) public {
-        _mint(account, amount);
-    }
-
-    function burn(address account, uint256 amount) public {
-        _burn(account, amount);
     }
 }
