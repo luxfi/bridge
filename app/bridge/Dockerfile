@@ -11,6 +11,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
 COPY .npmrc* ./
 
 # Copy app package.json
@@ -62,5 +63,5 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
 
-# Start the application
-CMD ["node", "server.js"]
+# Start the application (standalone output places server.js under app/bridge/ due to outputFileTracingRoot)
+CMD ["node", "app/bridge/server.js"]
