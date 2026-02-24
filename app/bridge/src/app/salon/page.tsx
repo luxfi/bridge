@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 
 import { clearTempData, getTempData } from '@/lib/openLink'
 
+export const dynamic = 'force-dynamic'
+
 const Salon: React.FC = () => {
   
   const router = useRouter()
