@@ -74,8 +74,7 @@ module.exports = (phase, { defaultConfig }) => {
     },
     webpack: (config, { isServer, dev }) => {
       config.cache = false; // Disable Webpack's persistent caching
-      config.externals.push("pino-pretty", "lokijs", "encoding",
-        "firebase-admin", "firebase-admin/app", "firebase-admin/auth", "firebase-admin/firestore");
+      config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
 
