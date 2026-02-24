@@ -54,13 +54,11 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Copy built application into workspace path so pnpm node_modules resolve correctly
 COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./app/server/dist
-# Copy prisma schema for runtime
-COPY --from=builder --chown=bridge:nodejs /app/app/server/prisma ./app/server/prisma
+# Copy prisma generated client from builder (avoids needing @prisma/client in prod deps)
+COPY --from=builder --chown=bridge:nodejs /app/app/server/node_modules/.prisma ./app/server/node_modules/.prisma
+COPY --from=builder --chown=bridge:nodejs /app/app/server/node_modules/@prisma ./app/server/node_modules/@prisma
 # Copy public directory if it exists
 COPY --from=builder --chown=bridge:nodejs /app/app/server/public* ./app/server/public/
-
-# Generate prisma client for production
-RUN cd app/server && pnpm exec prisma generate
 
 # Switch to non-root user
 USER bridge
