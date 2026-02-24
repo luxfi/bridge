@@ -10,28 +10,26 @@ import logger from "@/logger"
 import { UTILA_NETWORKS } from "@/domain/constants"
 import { handlerDepositAction } from "./swaps"
 
-// Ensure required environment variables are set
-const validateEnv = (): void => {
-  const requiredEnvVars = ["SERVICE_ACCOUNT_EMAIL", "SERVICE_ACCOUNT_PRIVATE_KEY"]
-  let missingVars: string[] = []
-  requiredEnvVars.forEach((key) => {
-    if (!process.env[key]) missingVars.push(key)
-  })
+// Utila/Fireblocks disabled — using native MPC only
+// Client is created lazily only if credentials are present
+let _client: any = null
 
-  if (missingVars.length > 0) {
-    logger.warn(`Utila integration is missing the following environment variables: ${missingVars.join(", ")}`)
+export const client = new Proxy({} as any, {
+  get(_target, prop) {
+    if (!_client) {
+      if (!process.env.SERVICE_ACCOUNT_EMAIL || !process.env.SERVICE_ACCOUNT_PRIVATE_KEY) {
+        throw new Error("Utila is disabled — SERVICE_ACCOUNT_EMAIL and SERVICE_ACCOUNT_PRIVATE_KEY not configured")
+      }
+      _client = createGrpcClient({
+        authStrategy: serviceAccountAuthStrategy({
+          email: process.env.SERVICE_ACCOUNT_EMAIL as string,
+          privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string
+        })
+      }).version("v1alpha2")
+    }
+    return (_client as any)[prop]
   }
-}
-
-validateEnv()
-
-// utila grpc client
-export const client = createGrpcClient({
-  authStrategy: serviceAccountAuthStrategy({
-    email: process.env.SERVICE_ACCOUNT_EMAIL as string,
-    privateKey: async () => process.env.SERVICE_ACCOUNT_PRIVATE_KEY as string
-  })
-}).version("v1alpha2")
+})
 
 export const utilaPublicKey = `
 -----BEGIN PUBLIC KEY-----

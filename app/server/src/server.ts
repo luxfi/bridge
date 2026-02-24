@@ -12,7 +12,8 @@ import tokens from "@/routes/tokens"
 import limits from "@/routes/limits"
 import quote from "@/routes/quote"
 import rate from "@/routes/rate"
-import utila from "@/routes/utila"
+// Utila/Fireblocks disabled — using native MPC only
+// import utila from "@/routes/utila"
 import networks from "@/routes/networks"
 import exchanges from "@/routes/exchanges"
 import { mpcService } from "@/services/mpc-service"
@@ -61,17 +62,6 @@ try {
   //   next()
   // })
 
-  // Backwards compatibility for legacy webhook paths
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.method === "POST" && req.path === "/webhook/utila") {
-      logger.info(`Rewriting request path: ${req.path} -> /v1/utila/webhook`)
-      req.url = "/v1/utila/webhook" // Rewrite the request path
-    }
-    next()
-  })
-
-  // add utila webhook router
-  app.use("/v1/utila", utila)
   // Parses incoming JSON requests and puts the parsed data in req.body
   app.use(express.json({
     verify: (req, res, buf) => {
