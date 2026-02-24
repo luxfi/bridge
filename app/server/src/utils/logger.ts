@@ -20,14 +20,5 @@ export const logger = winston.createLogger({
   ]
 });
 
-// Add file transport in production
-if (process.env.NODE_ENV === 'production') {
-  logger.add(new winston.transports.File({ 
-    filename: 'logs/error.log', 
-    level: 'error' 
-  }));
-  
-  logger.add(new winston.transports.File({ 
-    filename: 'logs/combined.log' 
-  }));
-}
+// In containers, log to stdout/stderr only (K8s captures container logs)
+// File transports disabled for containerized deployments
