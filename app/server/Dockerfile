@@ -52,13 +52,20 @@ COPY app/server/package.json ./app/server/
 # Install production dependencies only
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy built application
-COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./dist
+# Copy built application into workspace path so pnpm node_modules resolve correctly
+COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./app/server/dist
+# Copy prisma schema for runtime
+COPY --from=builder --chown=bridge:nodejs /app/app/server/prisma ./app/server/prisma
 # Copy public directory if it exists
-COPY --from=builder --chown=bridge:nodejs /app/app/server/public* ./public/
+COPY --from=builder --chown=bridge:nodejs /app/app/server/public* ./app/server/public/
+
+# Generate prisma client for production
+RUN cd app/server && pnpm exec prisma generate
 
 # Switch to non-root user
 USER bridge
+
+WORKDIR /app/app/server
 
 # Expose port
 EXPOSE 3000
@@ -68,4 +75,4 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
 
 # Start the server
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]
