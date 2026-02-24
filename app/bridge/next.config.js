@@ -77,17 +77,38 @@ module.exports = (phase, { defaultConfig }) => {
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
 
-      // Stub Firebase modules during server-side build to prevent
+      // Stub ALL Firebase modules during server-side build to prevent
       // "default Firebase app does not exist" errors at build time.
       // Firebase is client-only; real modules load at runtime in browser.
-      if (isServer && !dev) {
+      if (isServer) {
         const firebaseStub = path.resolve(__dirname, 'next-conf/firebase-stub.js');
+        // Match all firebase/* and @firebase/* import paths
         config.resolve.alias['firebase/app'] = firebaseStub;
         config.resolve.alias['firebase/firestore'] = firebaseStub;
         config.resolve.alias['firebase/auth'] = firebaseStub;
         config.resolve.alias['firebase/analytics'] = firebaseStub;
         config.resolve.alias['firebase/storage'] = firebaseStub;
+        config.resolve.alias['firebase/messaging'] = firebaseStub;
+        config.resolve.alias['firebase/functions'] = firebaseStub;
+        config.resolve.alias['firebase/database'] = firebaseStub;
+        config.resolve.alias['firebase/performance'] = firebaseStub;
+        config.resolve.alias['firebase/remote-config'] = firebaseStub;
+        config.resolve.alias['firebase'] = firebaseStub;
         config.resolve.alias['@firebase/app'] = firebaseStub;
+        config.resolve.alias['@firebase/auth'] = firebaseStub;
+        config.resolve.alias['@firebase/firestore'] = firebaseStub;
+        config.resolve.alias['@firebase/analytics'] = firebaseStub;
+        config.resolve.alias['@firebase/storage'] = firebaseStub;
+        config.resolve.alias['@firebase/messaging'] = firebaseStub;
+        config.resolve.alias['@firebase/functions'] = firebaseStub;
+        config.resolve.alias['@firebase/database'] = firebaseStub;
+        config.resolve.alias['@firebase/app-compat'] = firebaseStub;
+        config.resolve.alias['@firebase/auth-compat'] = firebaseStub;
+        config.resolve.alias['@firebase/firestore-compat'] = firebaseStub;
+        config.resolve.alias['firebase-admin'] = firebaseStub;
+        config.resolve.alias['firebase-admin/app'] = firebaseStub;
+        config.resolve.alias['firebase-admin/auth'] = firebaseStub;
+        config.resolve.alias['firebase-admin/firestore'] = firebaseStub;
       }
 
       let conf = svgrPluginConfig(config)
