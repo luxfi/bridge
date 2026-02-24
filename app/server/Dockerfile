@@ -28,6 +28,7 @@ RUN cd app/server && pnpm run build
 # Runtime stage
 FROM node:20-alpine AS runner
 
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 ENV NODE_ENV=production
