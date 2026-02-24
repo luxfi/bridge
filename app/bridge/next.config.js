@@ -76,6 +76,20 @@ module.exports = (phase, { defaultConfig }) => {
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+
+      // Stub Firebase modules during server-side build to prevent
+      // "default Firebase app does not exist" errors at build time.
+      // Firebase is client-only; real modules load at runtime in browser.
+      if (isServer && !dev) {
+        const firebaseStub = path.resolve(__dirname, 'next-conf/firebase-stub.js');
+        config.resolve.alias['firebase/app'] = firebaseStub;
+        config.resolve.alias['firebase/firestore'] = firebaseStub;
+        config.resolve.alias['firebase/auth'] = firebaseStub;
+        config.resolve.alias['firebase/analytics'] = firebaseStub;
+        config.resolve.alias['firebase/storage'] = firebaseStub;
+        config.resolve.alias['@firebase/app'] = firebaseStub;
+      }
+
       let conf = svgrPluginConfig(config)
       // if (dev) {
       //   conf =  watchPluginConfig(conf)
