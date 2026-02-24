@@ -5,7 +5,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copy root workspace files
 COPY package.json ./
@@ -33,7 +33,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install pnpm for runtime
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Add non-root user
 RUN addgroup --system --gid 1001 nodejs
