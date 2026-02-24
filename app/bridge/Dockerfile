@@ -14,21 +14,27 @@ COPY pnpm-workspace.yaml ./
 COPY tsconfig.base.json ./
 COPY .npmrc* ./
 
-# Copy app package.json
+# Copy all workspace package.json files for dependency resolution
 COPY app/bridge/package.json ./app/bridge/
+COPY pkg/core/package.json ./pkg/core/
+COPY pkg/settings/package.json ./pkg/settings/
+COPY pkg/threshold/package.json ./pkg/threshold/
+COPY pkg/ui/package.json ./pkg/ui/
+COPY pkg/utila/package.json ./pkg/utila/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy source code (packages first, then app)
+COPY pkg ./pkg
 COPY app/bridge ./app/bridge
 
 # Set Next.js to standalone mode
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV STANDALONE=true
 
-# Build the application
-RUN cd app/bridge && pnpm run build
+# Build the application with increased heap
+RUN cd app/bridge && NODE_OPTIONS="--max_old_space_size=4096" pnpm run build
 
 # Runtime stage
 FROM node:20-alpine AS runner
