@@ -42,6 +42,8 @@ ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:placeholder
 ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-PLACEHOLDER
 ENV NEXT_PUBLIC_IDENTITY_API=https://identity.lux.network
+ENV NEXT_PUBLIC_BACKEND_API=https://bridge.lux.network
+ENV NEXT_PUBLIC_API_VERSION=mainnet
 
 # Build the application with increased heap
 RUN cd app/bridge && NODE_OPTIONS="--max_old_space_size=4096" pnpm run build
