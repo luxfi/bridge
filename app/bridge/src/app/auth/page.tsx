@@ -1,21 +1,9 @@
-'use client'
+import dynamic from 'next/dynamic'
 
-import React from 'react'
-import AuthWizard from '@/components/Wizard/AuthWizard'
-import { FormWizardProvider } from '@/context/formWizardProvider'
-import { AuthStep } from '@/Models/Wizard'
-import { SwapDataProvider } from '@/context/swap'
+export const revalidate = 0
 
-export const dynamic = 'force-dynamic'
+const AuthContent = dynamic(() => import('@/components/AuthContent'), { ssr: false })
 
-const AuthPage = () => {
-  return (
-    <SwapDataProvider>
-      <FormWizardProvider initialStep={AuthStep.Email} initialLoading={false}>
-        <AuthWizard />
-      </FormWizardProvider>
-    </SwapDataProvider>
-  )
+export default function AuthPage() {
+  return <AuthContent />
 }
-
-export default AuthPage
