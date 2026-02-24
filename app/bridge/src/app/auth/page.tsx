@@ -10,6 +10,8 @@ import { AuthStep } from '@/Models/Wizard'
 import { SwapDataProvider } from '@/context/swap'
 import { BridgeAppSettings } from '@/Models/BridgeAppSettings'
 
+export const dynamic = 'force-dynamic'
+
 const AuthPage = async () => {
   try {
     const settings = await getBridgeSettings()
