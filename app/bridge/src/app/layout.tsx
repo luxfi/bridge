@@ -1,6 +1,5 @@
 import React, { type PropsWithChildren } from 'react'
 import dynamic from "next/dynamic"
-import { redirect } from 'next/navigation'
 
 import {
   RootLayout as RootLayoutCore,
@@ -31,31 +30,34 @@ const ConnectedWallets = dynamic(
 )
 
 const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => {
-  // get bridge settings
   const settings = await getBridgeSettings()
-
-  if (!settings) {
-    redirect('/')
-  }
 
   return (
     <RootLayoutCore siteDef={siteDef} showHeader={false}>
-      <Contexts settings={settings}>
-        <Header siteDef={siteDef} logoVariant='logo-only'>
-          <ConnectedWallets 
-            connectButtonVariant='outline' 
-            showWalletIcon={false}
-            connectButtonClx='pl-3 pr-2 flex rounded-lg relative'
-          >
-            <span className='pr-1.5'>Connect</span>
-            <span className='pr-1'>|</span>
-            <span className=''>
-              <ChevronDown className="h-4 w-4" aria-hidden="true" />
-            </span>
-          </ConnectedWallets >
-        </Header>
-        <Main>{children}</Main>
-      </Contexts>
+      {settings ? (
+        <Contexts settings={settings}>
+          <Header siteDef={siteDef} logoVariant='logo-only'>
+            <ConnectedWallets
+              connectButtonVariant='outline'
+              showWalletIcon={false}
+              connectButtonClx='pl-3 pr-2 flex rounded-lg relative'
+            >
+              <span className='pr-1.5'>Connect</span>
+              <span className='pr-1'>|</span>
+              <span className=''>
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </span>
+            </ConnectedWallets >
+          </Header>
+          <Main>{children}</Main>
+        </Contexts>
+      ) : (
+        <Main>
+          <div className="flex items-center justify-center min-h-screen">
+            <p className="text-muted-foreground">Bridge is loading...</p>
+          </div>
+        </Main>
+      )}
       <Footer siteDef={siteDef} />
     </RootLayoutCore>
   )
