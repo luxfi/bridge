@@ -3,9 +3,7 @@
 const withMDX = require("@next/mdx")();
 const { PHASE_PRODUCTION_SERVER } = require("next/constants");
 const path = require("path")
-const webpack = require("webpack")
 const svgrPluginConfig = require('./next-conf/svgr.next.config')
-const watchPluginConfig = require('./next-conf/watch.next.config')
 
 
 const securityHeaders = [
@@ -73,21 +71,6 @@ module.exports = (phase, { defaultConfig }) => {
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
-
-      // Stub ALL Firebase modules during server-side build to prevent
-      // "default Firebase app does not exist" errors at build time.
-      // Firebase is client-only; real modules load at runtime in browser.
-      // Uses NormalModuleReplacementPlugin with regex to catch ALL firebase
-      // import paths (firebase/*, @firebase/*, firebase-admin/*).
-      if (isServer) {
-        const firebaseStub = path.resolve(__dirname, 'next-conf/firebase-stub.js');
-        config.plugins.push(
-          new webpack.NormalModuleReplacementPlugin(
-            /^firebase\/|^firebase$|^@firebase\/|^firebase-admin/,
-            firebaseStub
-          )
-        );
-      }
 
       let conf = svgrPluginConfig(config)
       // if (dev) {
