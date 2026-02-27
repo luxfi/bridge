@@ -1,14 +1,6 @@
 import axios from "axios"
-const mpc_nodes = [
-  // "http://127.0.0.1:6000",
-  // "http://127.0.0.1:6000",
-  // "https://teleport-0.lux.network",
-  // "https://teleport-0.lux.network/"
-  // 'https://teleport-2.lux.network/',
-  "http://mpc-node-0:6000",
-  "http://mpc-node-1:6000"
-  // "http://mpc-node-2:6000"
-]
+const MPC_URL = process.env.MPC_URL || "http://mpc-node-0:8080";
+const mpc_nodes = MPC_URL.split(",").map(s => s.trim());
 /**
  * get signature from mpc oracle network for mpc signature
  * @param signData 
