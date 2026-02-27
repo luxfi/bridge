@@ -79,9 +79,11 @@ export default class BridgeApiClient {
   }
 
   async GetSettingsAsync(): Promise<BridgeSettings | undefined> {
+    if (!BridgeApiClient.apiBaseEndpoint) return undefined
     try {
       const { data } = await axios.get(
-        `${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`
+        `${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`,
+        { timeout: 5000 }
       )
       return data
     } catch (err: any) {
