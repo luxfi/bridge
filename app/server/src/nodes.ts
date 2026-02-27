@@ -1,6 +1,6 @@
 import axios from "axios"
-const mpc_nodes = ["http://mpc-node-0:6000", "http://mpc-node-1:6000", "http://mpc-node-2:6000"]
-// const mpc_nodes = ["https://teleport-0.lux.network", "https://teleport-1.lux.network", "https://teleport-2.lux.network"]
+const MPC_URL = process.env.MPC_URL || "http://mpc-node-0:8080";
+const mpc_nodes = MPC_URL.split(",").map(s => s.trim());
 
 const main = async () => {
   try {
