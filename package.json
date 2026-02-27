@@ -20,5 +20,15 @@
     "app/*",
     "pkg/*",
     "contracts"
-  ]
+  ],
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@hanzo/auth",
+        "@hanzo/commerce",
+        "firebase",
+        "firebase-admin"
+      ]
+    }
+  }
 }
