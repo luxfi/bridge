@@ -2,16 +2,17 @@ name: Build and Push Images
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    tags: ['v*']
     paths:
-
       - 'app/server/**'
       - 'app/bridge/**'
+      - 'pkg/**'
+      - 'contracts/**'
       - '.github/workflows/build-and-push.yml'
-      - 'compose*.yml'
       - 'Dockerfile*'
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -25,7 +26,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -51,8 +52,8 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-,enable={{is_default_branch}}
-          type=sha,prefix=pr-${{ github.event.pull_request.number }}-,enable=${{ github.event_name == 'pull_request' }}
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
           type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push Server image
@@ -61,7 +62,7 @@ jobs:
         context: .
         file: ./app/server/Dockerfile
         platforms: linux/amd64,linux/arm64
-        push: true
+        push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
@@ -73,7 +74,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -91,6 +92,15 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Create production .env for bridge
+      run: |
+        printf '%s\n' \
+          'NEXT_PUBLIC_BRIDGE_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_IDENTITY_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_EXPLORER_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_NETWORK_NAME=mainnet' \
+          > app/bridge/.env
+
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -99,8 +109,8 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-,enable={{is_default_branch}}
-          type=sha,prefix=pr-${{ github.event.pull_request.number }}-,enable=${{ github.event_name == 'pull_request' }}
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
           type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build and push UI image
@@ -109,7 +119,7 @@ jobs:
         context: .
         file: ./app/bridge/Dockerfile
         platforms: linux/amd64,linux/arm64
-        push: true
+        push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
