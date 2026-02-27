@@ -3,7 +3,6 @@
 const withMDX = require("@next/mdx")();
 const { PHASE_PRODUCTION_SERVER } = require("next/constants");
 const path = require("path")
-const webpack = require("webpack")
 const svgrPluginConfig = require('./next-conf/svgr.next.config')
 
 
@@ -74,18 +73,6 @@ module.exports = (phase, { defaultConfig }) => {
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
-
-      // Stub Firebase modules during SSR build — a transitive dependency
-      // imports Firebase which fails without credentials at build time.
-      if (isServer) {
-        const firebaseStub = path.resolve(__dirname, 'next-conf/firebase-stub.js');
-        config.plugins.push(
-          new webpack.NormalModuleReplacementPlugin(
-            /^firebase\/|^firebase$|^@firebase\/|^firebase-admin/,
-            firebaseStub
-          )
-        );
-      }
 
       let conf = svgrPluginConfig(config)
       // if (dev) {
