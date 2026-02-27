@@ -72,6 +72,14 @@ module.exports = (phase, { defaultConfig }) => {
       config.cache = false; // Disable Webpack's persistent caching
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
+      // Firebase removed — not used by bridge. Prevent transitive deps from bundling it.
+      config.resolve.alias['firebase/app'] = false;
+      config.resolve.alias['firebase/auth'] = false;
+      config.resolve.alias['firebase/firestore'] = false;
+      config.resolve.alias['firebase/analytics'] = false;
+      config.resolve.alias['firebase/storage'] = false;
+      config.resolve.alias['firebase-admin'] = false;
+      config.resolve.alias['firebase-admin/app'] = false;
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
 
       let conf = svgrPluginConfig(config)
@@ -84,8 +92,6 @@ module.exports = (phase, { defaultConfig }) => {
     // https://stackoverflow.com/questions/72621835/how-to-fix-you-may-need-an-appropriate-loader-to-handle-this-file-type-current
     transpilePackages: [
       '@hanzo/ui',
-      '@hanzo/auth',
-      '@hanzo/commerce',
       '@luxfi/ui',
       '@luxfi/data'
     ],

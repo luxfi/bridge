@@ -31,18 +31,8 @@ COPY . .
 # Set Next.js to standalone mode
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the bridge app (skip lint/typecheck for speed)
-RUN cd app/bridge && \
-    node -e " \
-      const fs = require('fs'); \
-      let cfg = fs.readFileSync('next.config.js', 'utf8'); \
-      cfg = cfg.replace( \
-        \"output: 'standalone'\", \
-        \"output: 'standalone',\\n    eslint: { ignoreDuringBuilds: true },\\n    typescript: { ignoreBuildErrors: true }\" \
-      ); \
-      fs.writeFileSync('next.config.js', cfg); \
-    " && \
-    NODE_OPTIONS=--max_old_space_size=2048 pnpm run build
+# Build the bridge app
+RUN cd app/bridge && NODE_OPTIONS=--max_old_space_size=2048 pnpm run build
 
 # Runtime stage
 FROM node:22-alpine AS runner

@@ -3,8 +3,6 @@ packages:
   - 'pkg/*'
 
 catalog:
-  '@hanzo/auth': 2.8.0
-  '@hanzo/commerce': 7.5.0
   '@hanzo/ui': 4.4.1
   '@luxfi/core': 10.0.0
   '@luxfi/ui': 5.5.1
