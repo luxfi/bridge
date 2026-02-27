@@ -1,0 +1,17 @@
+.git
+.github
+.next
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/build
+**/.turbo
+docs
+data
+config/mpc
+*.md
+!README.md
+.env*
+.vscode
+.idea

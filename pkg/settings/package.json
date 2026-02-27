@@ -24,8 +24,6 @@
     "clean": "rm -rf node_modules"
   },
   "peerDependencies": {
-    "@hanzo/auth": "catalog:",
-    "@hanzo/commerce": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

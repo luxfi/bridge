@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@eth-optimism/contracts-ts": "^0.15.0",
-    "@hanzo/auth": "catalog:",
     "@hanzo/ui": "4.2.0",
     "@headlessui/react": "^1.7.3",
     "@imtbl/imx-sdk": "2.1.1",
