@@ -66,7 +66,7 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     ],
     //@ts-expect-error "ignore chain type"
     chains: chains,
-    ssr: true,
+    ssr: false,
     autoConnect: true, // Automatically reconnect the wallet
   })
 
