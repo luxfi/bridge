@@ -136,8 +136,10 @@ jobs:
 
     - name: Install kubectl
       run: |
+        mkdir -p $HOME/bin
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl && mv kubectl /usr/local/bin/kubectl
+        chmod +x kubectl && mv kubectl $HOME/bin/kubectl
+        echo "$HOME/bin" >> $GITHUB_PATH
 
     - name: Configure kubectl
       run: doctl kubernetes cluster kubeconfig save lux-k8s --expiry-seconds 600
