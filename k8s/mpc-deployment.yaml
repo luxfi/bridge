@@ -81,7 +81,7 @@ spec:
     spec:
       containers:
       - name: consul
-        image: consul:1.17
+        image: hashicorp/consul:1.17
         args:
           - "agent"
           - "-server"
@@ -132,6 +132,52 @@ spec:
     protocol: UDP
     name: dns
 ---
+# MPC Config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mpc-config
+  namespace: lux-bridge
+data:
+  config.yaml: |
+    nats:
+      url: nats://nats:4222
+    consul:
+      address: consul:8500
+    environment: mainnet
+    mpc_threshold: 2
+    badger_password: "lux-bridge-mpc-prod-2026"
+    event_initiator_pubkey: "c3f3511cd2f849fd61e81ea62a842fd33367ee8fb5b867bb900877c7fb72ce3b"
+    max_concurrent_keygen: 2
+    db_path: /data/mpc
+    backup_enabled: true
+    backup_period_seconds: 300
+    backup_dir: /data/mpc/backups
+  peers.json: |
+    {
+      "node0": "0ce02715-0ead-48ef-9772-2583316cc860",
+      "node1": "c95c340e-5a18-472d-b9b0-5ac68218213a",
+      "node2": "ac37e85f-caca-4bee-8a3a-49a0fe35abff"
+    }
+  node0_identity.json: |
+    {"node_name":"node0","node_id":"0ce02715-0ead-48ef-9772-2583316cc860","public_key":"96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"}
+  node1_identity.json: |
+    {"node_name":"node1","node_id":"c95c340e-5a18-472d-b9b0-5ac68218213a","public_key":"d49b5caace90b8317accd728b7b4419baef2ff32a164411d9ac7c1f703e13f7e"}
+  node2_identity.json: |
+    {"node_name":"node2","node_id":"ac37e85f-caca-4bee-8a3a-49a0fe35abff","public_key":"e0a570f5e7b52f76ba54aca0578dcd0c7f6569b7640027664af5be2ba8f0cf49"}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mpc-identity-keys
+  namespace: lux-bridge
+type: Opaque
+stringData:
+  node0_private.key: "3f38e18df0cc601d460978087e888d1369bba70f07035289e7e1323bc1070eac96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"
+  node1_private.key: "a014abefd56782aea80de6a50273d4fbe78d9953b929d5c72b19480a7e3a06a7d49b5caace90b8317accd728b7b4419baef2ff32a164411d9ac7c1f703e13f7e"
+  node2_private.key: "0fae6fe2025d9f64b5d011e08dea9b7d7689a0ccadbf0942f07a475310d06895e0a570f5e7b52f76ba54aca0578dcd0c7f6569b7640027664af5be2ba8f0cf49"
+  initiator.key: "7b341f0406e2098f96e8918866324fc36436a279cd7ea7e2f8cc016e7a194a65"
+---
 # MPC Node StatefulSet
 apiVersion: apps/v1
 kind: StatefulSet
@@ -149,52 +195,72 @@ spec:
       labels:
         app: mpc-node
     spec:
+      initContainers:
+      - name: setup-identity
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          IDX=$(hostname | sed 's/mpc-node-//')
+          NODE_NAME="node${IDX}"
+          echo "Setting up identity for ${NODE_NAME}"
+          mkdir -p /app/identity
+          cp /config/config.yaml /app/config.yaml
+          cp /config/peers.json /app/peers.json
+          # Copy ALL node identities (needed for verifying peer messages)
+          for i in 0 1 2; do
+            cp /config/node${i}_identity.json /app/identity/node${i}_identity.json
+          done
+          # Copy own private key
+          cp /keys/${NODE_NAME}_private.key /app/identity/${NODE_NAME}_private.key
+          chmod 600 /app/identity/${NODE_NAME}_private.key
+          echo "Identity setup complete for ${NODE_NAME}"
+        volumeMounts:
+        - name: app-dir
+          mountPath: /app
+        - name: mpc-config
+          mountPath: /config
+        - name: mpc-keys
+          mountPath: /keys
       containers:
       - name: mpc
-        image: luxfi/lux-mpc:latest
+        image: ghcr.io/luxfi/lux-mpc:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          IDX=$(hostname | sed 's/mpc-node-//')
+          NODE_NAME="node${IDX}"
+          echo "Starting MPC node: ${NODE_NAME}"
+          cd /app && exec mpcd start -n "${NODE_NAME}"
         ports:
         - containerPort: 8080
           name: http
         - containerPort: 9090
           name: grpc
         env:
-        - name: NODE_ID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: NATS_URL
-          value: nats://nats:4222
-        - name: CONSUL_URL
-          value: http://consul:8500
-        - name: DB_PATH
-          value: /data/mpc
-        - name: HTTP_PORT
-          value: "8080"
-        - name: GRPC_PORT
-          value: "9090"
         - name: LOG_LEVEL
           value: debug
-        - name: KEY_PREFIX
-          value: bridge/mpc
-        - name: THRESHOLD
-          value: "2"
-        - name: TOTAL_NODES
-          value: "3"
         volumeMounts:
+        - name: app-dir
+          mountPath: /app
         - name: mpc-data
           mountPath: /data
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: app-dir
+        emptyDir: {}
+      - name: mpc-config
+        configMap:
+          name: mpc-config
+      - name: mpc-keys
+        secret:
+          secretName: mpc-identity-keys
   volumeClaimTemplates:
   - metadata:
       name: mpc-data
@@ -239,7 +305,7 @@ spec:
     spec:
       containers:
       - name: bridge
-        image: luxfi/bridge-server:latest
+        image: ghcr.io/luxfi/bridge-server:latest
         ports:
         - containerPort: 3000
           name: http
