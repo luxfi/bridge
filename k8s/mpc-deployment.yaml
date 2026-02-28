@@ -319,14 +319,20 @@ spec:
     spec:
       containers:
       - name: ui
-        image: luxfi/bridge-ui:latest
+        image: ghcr.io/luxfi/bridge-ui:latest
         ports:
         - containerPort: 3000
           name: http
         env:
-        - name: NEXT_PUBLIC_API_URL
-          value: http://bridge-server:3000
-        - name: NEXT_PUBLIC_CHAIN_ENV
+        - name: NEXT_PUBLIC_BRIDGE_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_BACKEND_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_IDENTITY_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_EXPLORER_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_NETWORK_NAME
           value: mainnet
         resources:
           requests:
