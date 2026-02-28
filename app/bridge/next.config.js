@@ -72,7 +72,8 @@ module.exports = (phase, { defaultConfig }) => {
       config.cache = false; // Disable Webpack's persistent caching
       config.externals.push("pino-pretty", "lokijs", "encoding");
       config.resolve.fallback = { fs: false, net: false, tls: false };
-      // Firebase removed — not used by bridge. Prevent transitive deps from bundling it.
+      // Firebase + @hanzo/auth removed — bridge uses JWT auth, not Firebase.
+      // Prevent @luxfi/ui transitive deps from being bundled.
       config.resolve.alias['firebase/app'] = false;
       config.resolve.alias['firebase/auth'] = false;
       config.resolve.alias['firebase/firestore'] = false;
@@ -80,6 +81,8 @@ module.exports = (phase, { defaultConfig }) => {
       config.resolve.alias['firebase/storage'] = false;
       config.resolve.alias['firebase-admin'] = false;
       config.resolve.alias['firebase-admin/app'] = false;
+      config.resolve.alias['@hanzo/auth'] = false;
+      config.resolve.alias['@hanzo/commerce'] = false;
       config.resolve.alias['@'] = path.resolve(__dirname, 'src');
 
       let conf = svgrPluginConfig(config)
