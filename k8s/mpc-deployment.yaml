@@ -224,7 +224,7 @@ spec:
           mountPath: /keys
       containers:
       - name: mpc
-        image: ghcr.io/luxfi/lux-mpc:latest
+        image: ghcr.io/luxfi/mpc:latest
         command: ["/bin/sh", "-c"]
         args:
         - |
