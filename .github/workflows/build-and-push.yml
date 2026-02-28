@@ -23,7 +23,7 @@ jobs:
   # ── Build bridge-ui on our native amd64 DOKS runner ──────────────────────
   build-ui:
     name: Build Bridge UI
-    runs-on: lux-build
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -76,7 +76,7 @@ jobs:
   # ── Build bridge-server on our native amd64 DOKS runner ──────────────────
   build-server:
     name: Build Bridge Server
-    runs-on: lux-build
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -118,7 +118,7 @@ jobs:
   # ── Deploy to lux-k8s after both images are ready ────────────────────────
   deploy:
     name: Deploy to lux-k8s
-    runs-on: lux-build
+    runs-on: ubuntu-latest
     needs: [build-ui, build-server]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
