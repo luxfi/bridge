@@ -20,24 +20,71 @@ env:
   IMAGE_PREFIX: ghcr.io/luxfi
 
 jobs:
-  build-server:
-    name: Build Bridge Server
-    runs-on: ubuntu-latest
+  # ── Build bridge-ui on our native amd64 DOKS runner ──────────────────────
+  build-ui:
+    name: Build Bridge UI
+    runs-on: lux-build
     permissions:
       contents: read
       packages: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.IMAGE_PREFIX }}/bridge-ui
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
 
-    - name: Log in to GitHub Container Registry
+    - name: Create production .env
+      run: |
+        printf '%s\n' \
+          'NEXT_PUBLIC_BRIDGE_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_BACKEND_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_IDENTITY_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_EXPLORER_API=https://bridge-api.lux.network' \
+          'NEXT_PUBLIC_NETWORK_NAME=mainnet' \
+          > app/bridge/.env
+
+    # Native amd64 — no QEMU, no emulation overhead
+    - name: Build and push UI (linux/amd64)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./app/bridge/Dockerfile
+        platforms: linux/amd64
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # ── Build bridge-server on our native amd64 DOKS runner ──────────────────
+  build-server:
+    name: Build Bridge Server
+    runs-on: lux-build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Log in to GHCR
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
@@ -56,72 +103,39 @@ jobs:
           type=semver,pattern={{major}}.{{minor}}
           type=raw,value=latest,enable={{is_default_branch}}
 
-    - name: Build and push Server image
+    - name: Build and push Server (linux/amd64)
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./app/server/Dockerfile
-        platforms: linux/amd64,linux/arm64
+        platforms: linux/amd64
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  build-ui:
-    name: Build Bridge UI
-    runs-on: ubuntu-latest
+  # ── Deploy to lux-k8s after both images are ready ────────────────────────
+  deploy:
+    name: Deploy to lux-k8s
+    runs-on: lux-build
+    needs: [build-ui, build-server]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
       contents: read
-      packages: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-    - name: Create production .env for bridge
+    - name: Configure kubectl
+      run: doctl kubernetes cluster kubeconfig save lux-k8s --expiry-seconds 600
+
+    - name: Restart bridge deployments
       run: |
-        printf '%s\n' \
-          'NEXT_PUBLIC_BRIDGE_API=https://bridge-api.lux.network' \
-          'NEXT_PUBLIC_BACKEND_API=https://bridge-api.lux.network' \
-          'NEXT_PUBLIC_IDENTITY_API=https://bridge-api.lux.network' \
-          'NEXT_PUBLIC_EXPLORER_API=https://bridge-api.lux.network' \
-          'NEXT_PUBLIC_NETWORK_NAME=mainnet' \
-          > app/bridge/.env
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.IMAGE_PREFIX }}/bridge-ui
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and push UI image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./app/bridge/Dockerfile
-        platforms: linux/amd64,linux/arm64
-        push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        kubectl rollout restart deployment/bridge-ui -n lux-bridge
+        kubectl rollout restart deployment/bridge-server -n lux-bridge
+        kubectl rollout status deployment/bridge-ui -n lux-bridge --timeout=300s
+        kubectl rollout status deployment/bridge-server -n lux-bridge --timeout=300s
