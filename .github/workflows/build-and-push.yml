@@ -20,10 +20,9 @@ env:
   IMAGE_PREFIX: ghcr.io/luxfi
 
 jobs:
-  # ── Build bridge-ui on our native amd64 DOKS runner ──────────────────────
   build-ui:
     name: Build Bridge UI
-    runs-on: ubuntu-latest
+    runs-on: lux-build
     permissions:
       contents: read
       packages: write
@@ -63,8 +62,7 @@ jobs:
           'NEXT_PUBLIC_NETWORK_NAME=mainnet' \
           > app/bridge/.env
 
-    # Native amd64 — no QEMU, no emulation overhead
-    - name: Build and push UI (linux/amd64)
+    - name: Build and push UI
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -73,13 +71,13 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/bridge-ui:buildcache
+        cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/bridge-ui:buildcache,mode=max
+        provenance: false
 
-  # ── Build bridge-server on our native amd64 DOKS runner ──────────────────
   build-server:
     name: Build Bridge Server
-    runs-on: ubuntu-latest
+    runs-on: lux-build
     permissions:
       contents: read
       packages: write
@@ -109,7 +107,7 @@ jobs:
           type=semver,pattern={{major}}.{{minor}}
           type=raw,value=latest,enable={{is_default_branch}}
 
-    - name: Build and push Server (linux/amd64)
+    - name: Build and push Server
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -118,13 +116,13 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/bridge-server:buildcache
+        cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/bridge-server:buildcache,mode=max
+        provenance: false
 
-  # ── Deploy to lux-k8s after both images are ready ────────────────────────
   deploy:
     name: Deploy to lux-k8s
-    runs-on: ubuntu-latest
+    runs-on: lux-build
     needs: [build-ui, build-server]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
