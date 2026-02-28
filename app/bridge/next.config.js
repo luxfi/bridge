@@ -96,7 +96,8 @@ module.exports = (phase, { defaultConfig }) => {
     transpilePackages: [
       '@hanzo/ui',
       '@luxfi/ui',
-      '@luxfi/data'
+      '@luxfi/data',
+      '@luxfi/menu-icons'
     ],
   };
 
