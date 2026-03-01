@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const MPC_URL = process.env.MPC_URL || "http://mpc-api.lux-mpc.svc:8081";
+const MPC_URL = process.env.MPC_URL || "http://mpc-api-svc.lux-mpc.svc:8081";
 const MPC_API_KEY = process.env.MPC_API_KEY || "";
 const mpc_nodes = MPC_URL.split(",").map(s => s.trim());
 
