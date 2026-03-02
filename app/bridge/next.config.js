@@ -62,7 +62,16 @@ module.exports = (phase, { defaultConfig }) => {
         {
           protocol: "http",
           hostname: "localhost",
-        }
+        },
+        // White-label tenant logo domains
+        { protocol: "https", hostname: "lux.network" },
+        { protocol: "https", hostname: "pars.network" },
+        { protocol: "https", hostname: "hanzo.ai" },
+        { protocol: "https", hostname: "zoo.ngo" },
+        { protocol: "https", hostname: "*.lux.network" },
+        { protocol: "https", hostname: "*.hanzo.ai" },
+        { protocol: "https", hostname: "*.pars.network" },
+        { protocol: "https", hostname: "*.zoo.ngo" },
       ],
     },
     compiler: {
