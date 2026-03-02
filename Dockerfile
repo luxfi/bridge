@@ -1,5 +1,5 @@
 # Bridge - Next.js standalone build
-FROM node:20-alpine AS deps
+FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 RUN corepack enable pnpm
 
@@ -15,7 +15,7 @@ COPY pkg/settings/package.json ./pkg/settings/
 RUN pnpm install --frozen-lockfile
 
 # Builder stage
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 RUN apk add --no-cache libc6-compat python3 make g++
 RUN corepack enable pnpm
 
@@ -31,7 +31,7 @@ WORKDIR /app/app/bridge
 RUN pnpm build
 
 # Runner stage
-FROM node:20-alpine AS runner
+FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
