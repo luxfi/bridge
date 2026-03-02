@@ -16,12 +16,14 @@ RUN pnpm install --no-frozen-lockfile
 
 # Builder stage
 FROM node:18-alpine AS builder
-RUN apk add --no-cache libc6-compat python3 make g++ git
+RUN apk add --no-cache libc6-compat
 RUN corepack enable pnpm
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+# Copy full workspace from deps (includes all node_modules with pnpm links)
+COPY --from=deps /app ./
+# Copy source files on top (.dockerignore excludes node_modules)
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -52,3 +54,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "app/bridge/server.js"]
+
