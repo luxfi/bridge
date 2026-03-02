@@ -3,60 +3,134 @@ kind: Namespace
 metadata:
   name: lux-bridge
 ---
-# KV Store — hanzoai/kv (Redis/Valkey)
-# Used for session caching and bridge state. Replaces legacy NATS/Consul.
-# MPC nodes use consensus mode (ZAP p2p) and do NOT need NATS or Consul.
+# NATS Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kv
+  name: nats
   namespace: lux-bridge
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kv
+      app: nats
   template:
     metadata:
       labels:
-        app: kv
+        app: nats
     spec:
       containers:
-      - name: kv
-        image: hanzoai/kv:latest
+      - name: nats
+        image: nats:2.10-alpine
+        args: ["-js", "-m", "8222", "--store_dir", "/data"]
         ports:
-        - containerPort: 6379
-          name: redis
+        - containerPort: 4222
+          name: client
+        - containerPort: 8222
+          name: monitor
         volumeMounts:
-        - name: kv-storage
+        - name: nats-storage
           mountPath: /data
         livenessProbe:
           tcpSocket:
-            port: 6379
+            port: 4222
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           tcpSocket:
-            port: 6379
+            port: 4222
           initialDelaySeconds: 5
           periodSeconds: 5
       volumes:
-      - name: kv-storage
+      - name: nats-storage
         persistentVolumeClaim:
-          claimName: kv-pvc
+          claimName: nats-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: kv
+  name: nats
   namespace: lux-bridge
 spec:
   selector:
-    app: kv
+    app: nats
   ports:
-  - port: 6379
-    targetPort: 6379
-    name: redis
+  - port: 4222
+    targetPort: 4222
+    name: client
+  - port: 8222
+    targetPort: 8222
+    name: monitor
+---
+# Consul StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul
+  namespace: lux-bridge
+spec:
+  serviceName: consul
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:
+      containers:
+      - name: consul
+        image: hashicorp/consul:1.17
+        args:
+          - "agent"
+          - "-server"
+          - "-bootstrap-expect=1"
+          - "-ui"
+          - "-client=0.0.0.0"
+          - "-data-dir=/consul/data"
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8600
+          name: dns
+          protocol: UDP
+        volumeMounts:
+        - name: consul-data
+          mountPath: /consul/data
+        env:
+        - name: CONSUL_BIND_INTERFACE
+          value: eth0
+        livenessProbe:
+          exec:
+            command: ["consul", "members"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+  volumeClaimTemplates:
+  - metadata:
+      name: consul-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul
+  namespace: lux-bridge
+spec:
+  selector:
+    app: consul
+  ports:
+  - port: 8500
+    targetPort: 8500
+    name: http
+  - port: 8600
+    targetPort: 8600
+    protocol: UDP
+    name: dns
 ---
 # MPC Config
 apiVersion: v1
@@ -66,11 +140,14 @@ metadata:
   namespace: lux-bridge
 data:
   config.yaml: |
-    # MPC nodes coordinate via ZAP p2p — no NATS or Consul needed.
+    nats:
+      url: nats://nats:4222
+    consul:
+      address: consul:8500
     environment: mainnet
     mpc_threshold: 3
     mpc_total_nodes: 5
-    # badger_password is injected via ZAPDB_PASSWORD env var from mpc-secrets k8s Secret (KMS-managed)
+    badger_password: "lux-bridge-mpc-prod-2026"
     event_initiator_pubkey: "c3f3511cd2f849fd61e81ea62a842fd33367ee8fb5b867bb900877c7fb72ce3b"
     max_concurrent_keygen: 3
     db_path: /data/mpc
@@ -79,11 +156,11 @@ data:
     backup_dir: /data/mpc/backups
   peers.json: |
     {
-      "node0": "0ce02715-0ead-48ef-9772-2583316cc860",
-      "node1": "c95c340e-5a18-472d-b9b0-5ac68218213a",
-      "node2": "ac37e85f-caca-4bee-8a3a-49a0fe35abff",
-      "node3": "ee42a050-c1e8-4875-ae03-4260047666ff",
-      "node4": "f67ec0b6-5a2f-410b-b43b-800b99315b41"
+      "node0": "lux-mainnet-node0",
+      "node1": "lux-mainnet-node1",
+      "node2": "lux-mainnet-node2",
+      "node3": "lux-mainnet-node3",
+      "node4": "lux-mainnet-node4"
     }
   node0_identity.json: |
     {"node_name":"node0","node_id":"0ce02715-0ead-48ef-9772-2583316cc860","public_key":"96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"}
@@ -96,16 +173,19 @@ data:
   node4_identity.json: |
     {"node_name":"node4","node_id":"f67ec0b6-5a2f-410b-b43b-800b99315b41","public_key":"9f387cbaba446ffc05d69cc5cd2f35ed82531b860ceae0febc25560251fcdd36"}
 ---
-# IMPORTANT: mpc-identity-keys is managed externally via KMS (kms.hanzo.ai).
-# Keys are stored in KMS under: MPC_NODE{0,1,2}_PRIVATE_KEY and MPC_INITIATOR_KEY
-# Apply with:
-#   kubectl create secret generic mpc-identity-keys -n lux-bridge \
-#     --from-literal="node0_private.key=$(kms get MPC_NODE0_PRIVATE_KEY)" \
-#     --from-literal="node1_private.key=$(kms get MPC_NODE1_PRIVATE_KEY)" \
-#     --from-literal="node2_private.key=$(kms get MPC_NODE2_PRIVATE_KEY)" \
-#     --from-literal="initiator.key=$(kms get MPC_INITIATOR_KEY)" \
-#     --dry-run=client -o yaml | kubectl apply -f -
-# DO NOT add secret values here — never commit keys to git.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mpc-identity-keys
+  namespace: lux-bridge
+type: Opaque
+stringData:
+  node0_private.key: "3f38e18df0cc601d460978087e888d1369bba70f07035289e7e1323bc1070eac96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"
+  node1_private.key: "a014abefd56782aea80de6a50273d4fbe78d9953b929d5c72b19480a7e3a06a7d49b5caace90b8317accd728b7b4419baef2ff32a164411d9ac7c1f703e13f7e"
+  node2_private.key: "0fae6fe2025d9f64b5d011e08dea9b7d7689a0ccadbf0942f07a475310d06895e0a570f5e7b52f76ba54aca0578dcd0c7f6569b7640027664af5be2ba8f0cf49"
+  node3_private.key: "2b3f0a5fe60fad2b6f8542d60a667d7897055d2678eb9483dac141876de08d4fa0082b30a0c5598b0d4d998e80866a6b7d1c4c66d0d8d907fd64ada5dceddd8b"
+  node4_private.key: "ed814d8449efb088291a888095ee83454d0f73e6894672daad43ee5dfb1706ed9f387cbaba446ffc05d69cc5cd2f35ed82531b860ceae0febc25560251fcdd36"
+  initiator.key: "7b341f0406e2098f96e8918866324fc36436a279cd7ea7e2f8cc016e7a194a65"
 ---
 # MPC Node StatefulSet
 apiVersion: apps/v1
@@ -124,13 +204,6 @@ spec:
       labels:
         app: mpc-node
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-        seccompProfile:
-          type: RuntimeDefault
       initContainers:
       - name: setup-identity
         image: alpine:latest
@@ -144,7 +217,7 @@ spec:
           cp /config/config.yaml /app/config.yaml
           cp /config/peers.json /app/peers.json
           # Copy ALL node identities (needed for verifying peer messages)
-          for i in 0 1 2 3 4; do
+          for i in 0 1 2; do
             cp /config/node${i}_identity.json /app/identity/node${i}_identity.json
           done
           # Copy own private key
@@ -161,11 +234,6 @@ spec:
       containers:
       - name: mpc
         image: ghcr.io/luxfi/mpc:latest
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop: ["ALL"]
         command: ["/bin/sh", "-c"]
         args:
         - |
@@ -180,23 +248,12 @@ spec:
           name: grpc
         env:
         - name: LOG_LEVEL
-          value: info
-        - name: ZAPDB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: bridge-secrets
-              key: mpc-db-password
-        - name: MPC_THRESHOLD
-          value: "3"
-        - name: MPC_TOTAL_NODES
-          value: "5"
+          value: debug
         volumeMounts:
         - name: app-dir
           mountPath: /app
         - name: mpc-data
           mountPath: /data
-        - name: tmp
-          mountPath: /tmp
         resources:
           requests:
             memory: "256Mi"
@@ -207,9 +264,6 @@ spec:
       volumes:
       - name: app-dir
         emptyDir: {}
-      - name: tmp
-        emptyDir:
-          sizeLimit: 50Mi
       - name: mpc-config
         configMap:
           name: mpc-config
@@ -235,27 +289,12 @@ spec:
     app: mpc-node
   clusterIP: None
   ports:
-  - port: 9651
-    targetPort: 9651
-    name: zap
   - port: 8080
     targetPort: 8080
-    name: api
----
-# MPC API service — bridge-server uses MPC_URL=http://mpc-api-svc.lux-bridge.svc:8081
-# mpcd listens on :8080 (--api flag); port 8081 is exposed for external callers
-apiVersion: v1
-kind: Service
-metadata:
-  name: mpc-api-svc
-  namespace: lux-bridge
-spec:
-  selector:
-    app: mpc-node
-  ports:
-  - port: 8081
-    targetPort: 8080
-    name: api
+    name: http
+  - port: 9090
+    targetPort: 9090
+    name: grpc
 ---
 # Bridge Server Deployment
 apiVersion: apps/v1
@@ -284,11 +323,15 @@ spec:
           value: production
         - name: PORT
           value: "3000"
-        - name: POSTGRES_URL
+        - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: bridge-secrets
               key: database-url
+        - name: NATS_URL
+          value: nats://nats:4222
+        - name: CONSUL_URL
+          value: http://consul:8500
         - name: NODE_ID
           valueFrom:
             fieldRef:
@@ -297,25 +340,10 @@ spec:
           value: "3"
         - name: MPC_TOTAL_NODES
           value: "5"
+        - name: MPC_TOTAL_NODES
+          value: "3"
         - name: MPC_KEY_PREFIX
           value: bridge/mpc
-        - name: MPC_API_URL
-          value: http://mpc-api-svc.lux-bridge.svc:8081
-        - name: MPC_API_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: bridge-secrets
-              key: mpc-api-token
-        - name: MPC_WALLET_ID
-          valueFrom:
-            secretKeyRef:
-              name: bridge-secrets
-              key: mpc-wallet-id
-        - name: BRIDGE_FEE_COLLECTOR
-          valueFrom:
-            secretKeyRef:
-              name: bridge-secrets
-              key: fee-collector-address
         livenessProbe:
           httpGet:
             path: /health
@@ -348,11 +376,9 @@ spec:
   - port: 3000
     targetPort: 3000
     name: http
-  type: ClusterIP
+  type: LoadBalancer
 ---
-# Bridge UI Deployment — Vite SPA served by ghcr.io/hanzoai/spa on :80.
-# BRIDGE_* env documents the build-time inlined config; for true
-# per-env values the image is built with those VITE_* vars baked in.
+# Bridge UI Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -372,17 +398,19 @@ spec:
       - name: ui
         image: ghcr.io/luxfi/bridge-ui:latest
         ports:
-        - containerPort: 80
+        - containerPort: 3000
           name: http
         env:
-        - name: BRIDGE_API_HOST
+        - name: NEXT_PUBLIC_BRIDGE_API
           value: https://bridge-api.lux.network
-        - name: BRIDGE_ENV
+        - name: NEXT_PUBLIC_BACKEND_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_IDENTITY_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_EXPLORER_API
+          value: https://bridge-api.lux.network
+        - name: NEXT_PUBLIC_NETWORK_NAME
           value: mainnet
-        - name: BRIDGE_CLIENT_ID
-          value: lux-bridge
-        - name: BRIDGE_IAM_ORG
-          value: lux-network
         resources:
           requests:
             memory: "256Mi"
@@ -401,9 +429,9 @@ spec:
     app: bridge-ui
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: 3000
     name: http
-  type: ClusterIP
+  type: LoadBalancer
 ---
 # PostgreSQL StatefulSet
 apiVersion: apps/v1
@@ -424,7 +452,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: ghcr.io/hanzoai/sql:latest
+        image: postgres:15-alpine
         ports:
         - containerPort: 5432
           name: postgres
@@ -467,21 +495,22 @@ spec:
   - port: 5432
     targetPort: 5432
 ---
-# bridge-secrets is managed externally via KMS (kms.hanzo.ai).
-# Secrets stored in KMS: BRIDGE_DATABASE_URL, BRIDGE_DB_PASSWORD, MPC_DB_PASSWORD
-# Apply with:
-#   kubectl create secret generic bridge-secrets -n lux-bridge \
-#     --from-literal="database-url=$(kms get BRIDGE_DATABASE_URL)" \
-#     --from-literal="postgres-password=$(kms get BRIDGE_DB_PASSWORD)" \
-#     --from-literal="mpc-db-password=$(kms get MPC_DB_PASSWORD)" \
-#     --dry-run=client -o yaml | kubectl apply -f -
-# DO NOT add secret values here — never commit credentials to git.
+# Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bridge-secrets
+  namespace: lux-bridge
+type: Opaque
+stringData:
+  database-url: "postgresql://bridge:bridge@postgres:5432/bridge"
+  postgres-password: "bridge"
 ---
-# PersistentVolumeClaim for KV store
+# PersistentVolumeClaim for NATS
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: kv-pvc
+  name: nats-pvc
   namespace: lux-bridge
 spec:
   accessModes:
@@ -497,38 +526,28 @@ metadata:
   name: bridge-ingress
   namespace: lux-bridge
   annotations:
+    kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  ingressClassName: ingress
   tls:
   - hosts:
     - bridge.lux.network
     - bridge-api.lux.network
     secretName: bridge-lux-tls
   - hosts:
-    - bridge.zoo.ngo
-    secretName: bridge-zoo-tls
+    - bridge.pars.network
+    secretName: bridge-pars-tls
   - hosts:
     - bridge.hanzo.ai
     secretName: bridge-hanzo-tls
   - hosts:
-    - bridge.pars.network
-    secretName: bridge-pars-tls
-  - hosts:
-    - bridge.spc.network
-    secretName: bridge-spc-tls
+    - bridge.zoo.ngo
+    secretName: bridge-zoo-tls
   rules:
   # Lux Network (primary)
   - host: bridge.lux.network
     http:
       paths:
-      - path: /v1/
-        pathType: Prefix
-        backend:
-          service:
-            name: opnet-watcher
-            port:
-              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -546,17 +565,10 @@ spec:
             name: bridge-server
             port:
               number: 3000
-  # Zoo — white-label
-  - host: bridge.zoo.ngo
+  # Pars Network — white-label, same bridge-ui backend
+  - host: bridge.pars.network
     http:
       paths:
-      - path: /v1/
-        pathType: Prefix
-        backend:
-          service:
-            name: opnet-watcher
-            port:
-              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -568,13 +580,6 @@ spec:
   - host: bridge.hanzo.ai
     http:
       paths:
-      - path: /v1/
-        pathType: Prefix
-        backend:
-          service:
-            name: opnet-watcher
-            port:
-              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -582,17 +587,10 @@ spec:
             name: bridge-ui
             port:
               number: 80
-  # Pars — white-label
-  - host: bridge.pars.network
+  # Zoo — white-label
+  - host: bridge.zoo.ngo
     http:
       paths:
-      - path: /v1/
-        pathType: Prefix
-        backend:
-          service:
-            name: opnet-watcher
-            port:
-              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -600,325 +598,3 @@ spec:
             name: bridge-ui
             port:
               number: 80
-  # SPC — white-label
-  - host: bridge.spc.network
-    http:
-      paths:
-      - path: /v1/
-        pathType: Prefix
-        backend:
-          service:
-            name: opnet-watcher
-            port:
-              number: 8090
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: bridge-ui
-            port:
-              number: 80
----
-# Bridge Tenant ConfigMap — loaded from manifests/tenants/*.yaml
-# One key per tenant manifest. opnet-watcher reads BRIDGE_TENANT_DIR.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: bridge-tenants
-  namespace: lux-bridge
-data:
-  lux.yaml: |
-    id: lux
-    name: "Lux Network"
-    hostnames: ["bridge.lux.network", "bridge.lux.io"]
-    home_chain_id: 96369
-    supported_chains: [lux-c, ethereum, base, opnet, solana, ton]
-    teleporter_addresses:
-      "96369": "kms://teleport/lux-c/teleporter"
-      "1": "kms://teleport/lux-c/teleporter-eth"
-      "8453": "kms://teleport/lux-c/teleporter-eth"
-      "4294967299": "kms://teleport/lux-c/teleporter-btc"
-      "1399811149": "kms://teleport/lux-c/teleporter-sol"
-      "1414483791": "kms://teleport/lux-c/teleporter-ton"
-    branding:
-      logo_url: "/static/lux/logo.svg"
-      primary_color: "#E84142"
-      theme: dark
-    features: {swap: true, yield: true, perps: true}
-  zoo.yaml: |
-    id: zoo
-    name: "Zoo Network"
-    hostnames: ["bridge.zoo.ngo"]
-    home_chain_id: 200200
-    supported_chains: [lux-c, ethereum, base, solana]
-    teleporter_addresses:
-      "96369": "kms://teleport/lux-c/teleporter"
-      "1": "kms://teleport/lux-c/teleporter-eth"
-      "8453": "kms://teleport/lux-c/teleporter-eth"
-      "1399811149": "kms://teleport/lux-c/teleporter-sol"
-    branding:
-      logo_url: "/static/zoo/logo.svg"
-      primary_color: "#10B981"
-      theme: dark
-    features: {swap: true, yield: true, perps: false}
-  hanzo.yaml: |
-    id: hanzo
-    name: "Hanzo Network"
-    hostnames: ["bridge.hanzo.ai"]
-    home_chain_id: 36963
-    supported_chains: [lux-c, ethereum, base, opnet]
-    teleporter_addresses:
-      "96369": "kms://teleport/lux-c/teleporter"
-      "1": "kms://teleport/lux-c/teleporter-eth"
-      "8453": "kms://teleport/lux-c/teleporter-eth"
-      "4294967299": "kms://teleport/lux-c/teleporter-btc"
-    branding:
-      logo_url: "/static/hanzo/logo.svg"
-      primary_color: "#6366F1"
-      theme: dark
-    features: {swap: true, yield: true, perps: true}
-  pars.yaml: |
-    id: pars
-    name: "Pars Network"
-    hostnames: ["bridge.pars.network"]
-    home_chain_id: 494949
-    supported_chains: [lux-c, ethereum, base]
-    teleporter_addresses:
-      "96369": "kms://teleport/lux-c/teleporter"
-      "1": "kms://teleport/lux-c/teleporter-eth"
-      "8453": "kms://teleport/lux-c/teleporter-eth"
-    branding:
-      logo_url: "/static/pars/logo.svg"
-      primary_color: "#F59E0B"
-      theme: light
-    features: {swap: true, yield: false, perps: false}
-  spc.yaml: |
-    id: spc
-    name: "SPC Network"
-    hostnames: ["bridge.spc.network"]
-    home_chain_id: 36911
-    supported_chains: [lux-c, ethereum, base]
-    teleporter_addresses:
-      "96369": "kms://teleport/lux-c/teleporter"
-      "1": "kms://teleport/lux-c/teleporter-eth"
-      "8453": "kms://teleport/lux-c/teleporter-eth"
-    branding:
-      logo_url: "/static/spc/logo.svg"
-      primary_color: "#3B82F6"
-      theme: dark
-    features: {swap: true, yield: false, perps: false}
----
-# Bridge Chain ConfigMap — loaded from manifests/chains/*.yaml
-# One key per chain manifest. opnet-watcher reads BRIDGE_CHAIN_DIR.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: bridge-chains
-  namespace: lux-bridge
-data:
-  lux-c.yaml: |
-    chain_id: 96369
-    name: "Lux C-Chain"
-    class: lux_native
-    tier: yield_enabled
-    assets:
-      - ticker: LUX
-        decimals: 18
-        recipient_encoding: evm_address
-        wrapper: {symbol: LUX, contract: "token/LUX.sol", decimals: 18}
-    finality: {mode: instant, confirmations: 1}
-  ethereum.yaml: |
-    chain_id: 1
-    name: "Ethereum"
-    class: evm
-    tier: yield_enabled
-    assets:
-      - ticker: ETH
-        decimals: 18
-        recipient_encoding: evm_address
-        wrapper: {symbol: LETH, contract: "liquid/tokens/LETH.sol", decimals: 18}
-      - ticker: USDC
-        decimals: 6
-        recipient_encoding: evm_address
-        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
-      - ticker: USDT
-        decimals: 6
-        recipient_encoding: evm_address
-        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
-      - ticker: DAI
-        decimals: 18
-        recipient_encoding: evm_address
-        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
-    finality: {mode: slot_finalized, confirmations: 64}
-  base.yaml: |
-    chain_id: 8453
-    name: "Base"
-    class: evm
-    tier: yield_enabled
-    assets:
-      - ticker: ETH
-        decimals: 18
-        recipient_encoding: evm_address
-        wrapper: {symbol: LETH, contract: "liquid/tokens/LETH.sol", decimals: 18}
-      - ticker: USDC
-        decimals: 6
-        recipient_encoding: evm_address
-        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
-    finality: {mode: block_depth, confirmations: 12}
-  opnet.yaml: |
-    chain_id: 4294967299
-    name: "OP_NET"
-    class: bitcoin_script
-    tier: yield_enabled
-    assets:
-      - ticker: BTC
-        decimals: 8
-        recipient_encoding: bech32
-        wrapper: {symbol: LBTC, contract: "liquid/tokens/LBTC.sol", decimals: 18}
-    finality: {mode: block_depth, confirmations: 6}
-  solana.yaml: |
-    chain_id: 1399811149
-    name: "Solana"
-    class: account_native
-    tier: locale_only
-    assets:
-      - ticker: SOL
-        decimals: 9
-        recipient_encoding: base58
-        wrapper: {symbol: LSOL, contract: "liquid/tokens/LSOL.sol", decimals: 18}
-    finality: {mode: slot_finalized, confirmations: 32}
-  ton.yaml: |
-    chain_id: 1414483791
-    name: "TON"
-    class: account_native
-    tier: locale_only
-    assets:
-      - ticker: TON
-        decimals: 9
-        recipient_encoding: raw_bytes
-        wrapper: {symbol: LTON, contract: "liquid/tokens/LTON.sol", decimals: 18}
-    finality: {mode: block_depth, confirmations: 1}
----
-# OPNET Watcher ConfigMap
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: opnet-watcher-config
-  namespace: lux-bridge
-data:
-  config.yaml: |
-    lux_rpc: https://api.lux.network/ext/bc/C/rpc
-    zoo_rpc: https://api.zoo.network/ext/bc/C/rpc
-    opnet_rpc: https://opnet.lux.network/rpc
-    teleporter_address: ""
-    lux_chain_id: 96369
-    zoo_chain_id: 200200
-    opnet_chain_id: 4294967299
-    poll_interval_seconds: 12
-    confirmations: 6
-    health_port: 8080
----
-# OPNET Watcher Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: opnet-watcher
-  namespace: lux-bridge
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: opnet-watcher
-  template:
-    metadata:
-      labels:
-        app: opnet-watcher
-    spec:
-      containers:
-      - name: opnet-watcher
-        image: ghcr.io/luxfi/opnet-watcher:latest
-        args: ["--config", "/config/config.yaml"]
-        ports:
-        - containerPort: 8080
-          name: health
-        - containerPort: 8090
-          name: api
-        env:
-        - name: MPC_API_URL
-          value: http://mpc-api-svc.lux-bridge.svc:8081
-        - name: MPC_API_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: bridge-secrets
-              key: mpc-api-token
-        - name: KMS_KEY_SHARES
-          valueFrom:
-            secretKeyRef:
-              name: opnet-watcher-secrets
-              key: kms-key-shares
-        - name: BRIDGE_TENANT_DIR
-          value: /etc/bridge/tenants
-        - name: BRIDGE_CHAIN_DIR
-          value: /etc/bridge/chains
-        volumeMounts:
-        - name: config
-          mountPath: /config
-          readOnly: true
-        - name: tenants
-          mountPath: /etc/bridge/tenants
-          readOnly: true
-        - name: chains
-          mountPath: /etc/bridge/chains
-          readOnly: true
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8090
-          initialDelaySeconds: 10
-          periodSeconds: 15
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8090
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "250m"
-      volumes:
-      - name: config
-        configMap:
-          name: opnet-watcher-config
-      - name: tenants
-        configMap:
-          name: bridge-tenants
-      - name: chains
-        configMap:
-          name: bridge-chains
----
-# opnet-watcher-secrets is managed externally via KMS (kms.hanzo.ai).
-# Apply with:
-#   kubectl create secret generic opnet-watcher-secrets -n lux-bridge \
-#     --from-literal="kms-key-shares=$(kms get OPNET_WATCHER_KMS_KEY_SHARES)" \
-#     --dry-run=client -o yaml | kubectl apply -f -
-# DO NOT add secret values here -- never commit keys to git.
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: opnet-watcher
-  namespace: lux-bridge
-spec:
-  selector:
-    app: opnet-watcher
-  ports:
-  - port: 8080
-    targetPort: 8080
-    name: health
-  - port: 8090
-    targetPort: 8090
-    name: api
