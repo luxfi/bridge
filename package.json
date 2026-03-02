@@ -34,6 +34,9 @@
         "firebase",
         "firebase-admin"
       ]
+    },
+    "overrides": {
+      "keccak": "3.0.4"
     }
   },
   "devDependencies": {
