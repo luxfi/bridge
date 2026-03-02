@@ -145,10 +145,11 @@ data:
     consul:
       address: consul:8500
     environment: mainnet
-    mpc_threshold: 2
+    mpc_threshold: 3
+    mpc_total_nodes: 5
     badger_password: "lux-bridge-mpc-prod-2026"
     event_initiator_pubkey: "c3f3511cd2f849fd61e81ea62a842fd33367ee8fb5b867bb900877c7fb72ce3b"
-    max_concurrent_keygen: 2
+    max_concurrent_keygen: 3
     db_path: /data/mpc
     backup_enabled: true
     backup_period_seconds: 300
@@ -157,7 +158,9 @@ data:
     {
       "node0": "lux-mainnet-node0",
       "node1": "lux-mainnet-node1",
-      "node2": "lux-mainnet-node2"
+      "node2": "lux-mainnet-node2",
+      "node3": "lux-mainnet-node3",
+      "node4": "lux-mainnet-node4"
     }
   node0_identity.json: |
     {"node_name":"node0","node_id":"0ce02715-0ead-48ef-9772-2583316cc860","public_key":"96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"}
@@ -165,6 +168,10 @@ data:
     {"node_name":"node1","node_id":"c95c340e-5a18-472d-b9b0-5ac68218213a","public_key":"d49b5caace90b8317accd728b7b4419baef2ff32a164411d9ac7c1f703e13f7e"}
   node2_identity.json: |
     {"node_name":"node2","node_id":"ac37e85f-caca-4bee-8a3a-49a0fe35abff","public_key":"e0a570f5e7b52f76ba54aca0578dcd0c7f6569b7640027664af5be2ba8f0cf49"}
+  node3_identity.json: |
+    {"node_name":"node3","node_id":"ee42a050-c1e8-4875-ae03-4260047666ff","public_key":"a0082b30a0c5598b0d4d998e80866a6b7d1c4c66d0d8d907fd64ada5dceddd8b"}
+  node4_identity.json: |
+    {"node_name":"node4","node_id":"f67ec0b6-5a2f-410b-b43b-800b99315b41","public_key":"9f387cbaba446ffc05d69cc5cd2f35ed82531b860ceae0febc25560251fcdd36"}
 ---
 apiVersion: v1
 kind: Secret
@@ -176,6 +183,8 @@ stringData:
   node0_private.key: "3f38e18df0cc601d460978087e888d1369bba70f07035289e7e1323bc1070eac96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"
   node1_private.key: "a014abefd56782aea80de6a50273d4fbe78d9953b929d5c72b19480a7e3a06a7d49b5caace90b8317accd728b7b4419baef2ff32a164411d9ac7c1f703e13f7e"
   node2_private.key: "0fae6fe2025d9f64b5d011e08dea9b7d7689a0ccadbf0942f07a475310d06895e0a570f5e7b52f76ba54aca0578dcd0c7f6569b7640027664af5be2ba8f0cf49"
+  node3_private.key: "2b3f0a5fe60fad2b6f8542d60a667d7897055d2678eb9483dac141876de08d4fa0082b30a0c5598b0d4d998e80866a6b7d1c4c66d0d8d907fd64ada5dceddd8b"
+  node4_private.key: "ed814d8449efb088291a888095ee83454d0f73e6894672daad43ee5dfb1706ed9f387cbaba446ffc05d69cc5cd2f35ed82531b860ceae0febc25560251fcdd36"
   initiator.key: "7b341f0406e2098f96e8918866324fc36436a279cd7ea7e2f8cc016e7a194a65"
 ---
 # MPC Node StatefulSet
@@ -186,7 +195,7 @@ metadata:
   namespace: lux-bridge
 spec:
   serviceName: mpc-node
-  replicas: 3
+  replicas: 5
   selector:
     matchLabels:
       app: mpc-node
@@ -328,7 +337,9 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: MPC_THRESHOLD
-          value: "2"
+          value: "3"
+        - name: MPC_TOTAL_NODES
+          value: "5"
         - name: MPC_TOTAL_NODES
           value: "3"
         - name: MPC_KEY_PREFIX

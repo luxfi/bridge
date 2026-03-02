@@ -1,0 +1,598 @@
+---
+# Lux MPC Landing Page
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mpc-lux-landing
+  namespace: lux-bridge
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lux MPC — Multi-Party Computation Infrastructure</title>
+    <meta name="description" content="Self-sovereign wallet infrastructure for Lux Network with multi-party computation. Configurable t-of-n threshold signing, 8 cryptographic protocols, multi-chain support. No single point of failure.">
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#000;color:#d4d4d4;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+    a{color:#fff;text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1080px;margin:0 auto;padding:0 24px;width:100%}
+    header{border-bottom:1px solid #1a1a1a;padding:16px 0;position:sticky;top:0;background:#000;z-index:10}
+    header .container{display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#fff;letter-spacing:-0.02em}
+    .logo svg{width:24px;height:24px}
+    .nav-links{display:flex;gap:20px;align-items:center}
+    .nav-links a{color:#666;font-size:14px;transition:color 0.15s}
+    .nav-links a:hover{color:#fff;text-decoration:none}
+    .btn{display:inline-flex;align-items:center;padding:8px 20px;border-radius:6px;font-size:14px;font-weight:500;transition:all 0.15s}
+    .btn-primary{background:#fff;color:#000}
+    .btn-primary:hover{background:#d4d4d4;text-decoration:none}
+    .btn-outline{border:1px solid #333;color:#fff}
+    .btn-outline:hover{border-color:#666;text-decoration:none}
+    .btn-sm{padding:6px 14px;font-size:13px}
+    .hero{text-align:center;padding:80px 0 60px}
+    .hero .badge{display:inline-block;padding:4px 12px;border:1px solid #1a1a1a;border-radius:20px;font-size:12px;color:#666;margin-bottom:24px;letter-spacing:0.04em;text-transform:uppercase}
+    .hero h1{font-size:clamp(36px,5.5vw,64px);font-weight:700;color:#fff;letter-spacing:-0.035em;line-height:1.05;margin-bottom:20px}
+    .hero h1 span{color:#525252}
+    .hero .subtitle{font-size:18px;color:#a3a3a3;max-width:640px;margin:0 auto 36px;line-height:1.65}
+    .hero .ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .stats-bar{border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:32px 0}
+    .stats-bar .container{display:flex;justify-content:space-around;flex-wrap:wrap;gap:24px}
+    .stat{text-align:center;min-width:100px}
+    .stat .value{font-size:24px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+    .stat .label{font-size:12px;color:#525252;margin-top:4px;text-transform:uppercase;letter-spacing:0.04em}
+    section{padding:64px 0}
+    section h2{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.02em;margin-bottom:8px}
+    section .section-sub{color:#666;font-size:15px;margin-bottom:40px;max-width:560px}
+    .protocols{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:#1a1a1a;border:1px solid #1a1a1a;border-radius:8px;overflow:hidden}
+    .protocol{background:#050505;padding:24px}
+    .protocol h3{color:#fff;font-size:14px;font-weight:600;margin-bottom:4px}
+    .protocol .proto-type{color:#525252;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px}
+    .protocol p{color:#666;font-size:13px;line-height:1.5}
+    .features{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+    .feature{border:1px solid #1a1a1a;border-radius:8px;padding:28px}
+    .feature h3{color:#fff;font-size:15px;font-weight:600;margin-bottom:8px}
+    .feature p{color:#666;font-size:14px;line-height:1.55}
+    .chains{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:#1a1a1a;border:1px solid #1a1a1a;border-radius:8px;overflow:hidden}
+    .chain{background:#050505;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .chain .name{color:#d4d4d4;font-size:14px;font-weight:500}
+    .chain .curve{color:#525252;font-size:12px;font-family:monospace}
+    .perf{width:100%;border-collapse:collapse;border:1px solid #1a1a1a;border-radius:8px;overflow:hidden}
+    .perf th{background:#050505;color:#525252;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;padding:12px 16px;text-align:left;border-bottom:1px solid #1a1a1a}
+    .perf td{padding:12px 16px;font-size:14px;border-bottom:1px solid #0a0a0a;color:#a3a3a3;font-variant-numeric:tabular-nums}
+    .perf tr:last-child td{border-bottom:none}
+    .perf .op{color:#fff;font-weight:500}
+    .cta-section{border-top:1px solid #1a1a1a;text-align:center;padding:80px 0}
+    .cta-section h2{margin-bottom:16px}
+    .cta-section p{color:#666;font-size:16px;margin-bottom:32px}
+    footer{border-top:1px solid #1a1a1a;padding:24px 0;margin-top:auto}
+    footer .container{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#333}
+    footer a{color:#333;transition:color 0.15s}
+    footer a:hover{color:#666;text-decoration:none}
+    @media(max-width:640px){
+      .hero{padding:48px 0 40px}
+      .stats-bar .container{justify-content:center}
+      .protocols,.chains{grid-template-columns:1fr}
+      .features{grid-template-columns:1fr}
+      .perf{font-size:13px}
+      .perf th,.perf td{padding:8px 12px}
+    }
+    </style>
+    </head>
+    <body>
+    <header>
+    <div class="container">
+      <a href="/" class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="24" height="24"><polygon points="25,46.65 50,3.35 0,3.35" fill="#fff"/></svg>
+        Lux MPC
+      </a>
+      <div class="nav-links">
+        <a href="#protocols">Protocols</a>
+        <a href="#chains">Chains</a>
+        <a href="#performance">Performance</a>
+        <a href="https://docs.lux.network/mpc">Docs</a>
+        <a href="https://bridge.lux.network" class="btn btn-primary btn-sm">Bridge</a>
+      </div>
+    </div>
+    </header>
+
+    <div class="hero">
+    <div class="container">
+      <div class="badge">Lux Network MPC Infrastructure</div>
+      <h1>Threshold Signing<br><span>for Lux Network</span></h1>
+      <p class="subtitle">Multi-party computation infrastructure securing the Lux Bridge. 3-of-5 threshold signatures with CGGMP21 and FROST protocols. Your keys never exist in a single location.</p>
+      <div class="ctas">
+        <a href="https://bridge.lux.network" class="btn btn-primary">Go to Bridge</a>
+        <a href="https://explore.lux.network" class="btn btn-outline">Explorer</a>
+        <a href="https://github.com/luxfi/mpc" class="btn btn-outline">GitHub</a>
+      </div>
+    </div>
+    </div>
+
+    <div class="stats-bar">
+    <div class="container">
+      <div class="stat"><div class="value">3</div><div class="label">MPC Nodes</div></div>
+      <div class="stat"><div class="value">3-of-5</div><div class="label">Threshold</div></div>
+      <div class="stat"><div class="value">21ms</div><div class="label">Signing</div></div>
+      <div class="stat"><div class="value">15+</div><div class="label">Chains</div></div>
+      <div class="stat"><div class="value">8</div><div class="label">Protocols</div></div>
+      <div class="stat"><div class="value">PQ</div><div class="label">Quantum-Safe</div></div>
+    </div>
+    </div>
+
+    <section id="protocols">
+    <div class="container">
+      <h2>Cryptographic Protocols</h2>
+      <p class="section-sub">Production-grade threshold cryptography securing cross-chain bridge operations on Lux Network.</p>
+      <div class="protocols">
+        <div class="protocol"><h3>CGGMP21</h3><div class="proto-type">Threshold ECDSA</div><p>4-round signing with identifiable aborts over secp256k1. Presignatures for offline signing. Bitcoin, Ethereum, all EVM chains.</p></div>
+        <div class="protocol"><h3>FROST</h3><div class="proto-type">Threshold Schnorr / EdDSA</div><p>2-round signing with hedged deterministic nonces. Ed25519 for Solana and TON. BIP-340 Taproot for Bitcoin.</p></div>
+        <div class="protocol"><h3>LSSS</h3><div class="proto-type">Linear Secret Sharing</div><p>Dynamic resharing without key reconstruction. Transition t-of-n configurations with zero downtime and generation rollback.</p></div>
+        <div class="protocol"><h3>TFHE</h3><div class="proto-type">Threshold Homomorphic Encryption</div><p>Multi-party threshold decryption with homomorphic operations. Confidential compute on encrypted data.</p></div>
+        <div class="protocol"><h3>Ringtail</h3><div class="proto-type">Post-Quantum Lattice</div><p>Module-LWE threshold signatures at 128/192/256-bit security levels. Protection against quantum adversaries.</p></div>
+        <div class="protocol"><h3>Quasar</h3><div class="proto-type">Hybrid BLS + Post-Quantum</div><p>Combines BLS12-381 pairing-based signatures with Ringtail lattice for immediate and future-proof security.</p></div>
+        <div class="protocol"><h3>BLS</h3><div class="proto-type">Aggregate Signatures</div><p>BLS12-381 pairing-based threshold signatures with efficient aggregation. Compatible with consensus systems.</p></div>
+        <div class="protocol"><h3>Doerner</h3><div class="proto-type">Optimized 2-of-2 ECDSA</div><p>Constant-time 2-party ECDSA at ~5ms signing. Specialized for peer-to-peer custody workflows.</p></div>
+      </div>
+    </div>
+    </section>
+
+    <section>
+    <div class="container">
+      <h2>Platform Capabilities</h2>
+      <p class="section-sub">Enterprise-grade digital asset custody for the Lux ecosystem.</p>
+      <div class="features">
+        <div class="feature"><h3>Configurable Threshold</h3><p>Any t-of-n scheme: 3-of-5, 3-of-5, 5-of-9, or any custom configuration. Byzantine-resilient majority.</p></div>
+        <div class="feature"><h3>Dynamic Resharing</h3><p>Add or remove signing parties without changing public keys or addresses. Zero-downtime key rotation.</p></div>
+        <div class="feature"><h3>Post-Quantum Security</h3><p>Ringtail lattice-based and Quasar hybrid schemes provide protection against future quantum computer attacks.</p></div>
+        <div class="feature"><h3>Confidential Compute</h3><p>TFHE threshold homomorphic encryption enables computation on encrypted data. Private policy evaluation.</p></div>
+        <div class="feature"><h3>Zero-Knowledge Proofs</h3><p>17 ZK proof systems including Paillier multiplication, Pedersen-Rabin, Schnorr proofs, and range proofs.</p></div>
+        <div class="feature"><h3>Multi-Chain Bridge</h3><p>Secures the Lux Bridge across 15+ blockchain networks. Threshold-signed cross-chain transactions.</p></div>
+      </div>
+    </div>
+    </section>
+
+    <section id="chains">
+    <div class="container">
+      <h2>Supported Chains</h2>
+      <p class="section-sub">Native support for every major blockchain through protocol-specific curve implementations.</p>
+      <div class="chains">
+        <div class="chain"><span class="name">Lux C-Chain</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Lux Subnets</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Bitcoin</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Bitcoin Taproot</span><span class="curve">BIP-340</span></div>
+        <div class="chain"><span class="name">Ethereum</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">All EVM Chains</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Solana</span><span class="curve">Ed25519</span></div>
+        <div class="chain"><span class="name">TON</span><span class="curve">Ed25519</span></div>
+        <div class="chain"><span class="name">Cosmos</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">XRPL</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Polygon</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Arbitrum</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Avalanche</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">BNB Chain</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Fantom</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Base</span><span class="curve">secp256k1</span></div>
+      </div>
+    </div>
+    </section>
+
+    <section id="performance">
+    <div class="container">
+      <h2>Performance</h2>
+      <p class="section-sub">Real benchmarks. Signing is O(t) independent of total party count.</p>
+      <table class="perf">
+        <thead><tr><th>Operation</th><th>3 parties</th><th>10 parties</th><th>20 parties</th><th>50 parties</th></tr></thead>
+        <tbody>
+          <tr><td class="op">Key Generation</td><td>22ms</td><td>38ms</td><td>332ms</td><td>1.9s</td></tr>
+          <tr><td class="op">Signing (t signers)</td><td>25ms</td><td>21ms</td><td>30ms</td><td>65ms</td></tr>
+          <tr><td class="op">Verification</td><td>2ms</td><td>2ms</td><td>2ms</td><td>2ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </section>
+
+    <section>
+    <div class="container">
+      <h2>Security Properties</h2>
+      <div class="features">
+        <div class="feature"><h3>No Single Point of Failure</h3><p>Private keys are never reconstructed. Threshold parties hold shares that are individually useless.</p></div>
+        <div class="feature"><h3>Identifiable Aborts</h3><p>CGGMP21 identifies the exact cheating party in a failed signing session. Automated fault recovery.</p></div>
+        <div class="feature"><h3>Proactive Security</h3><p>LSSS share refresh and Ringtail proactive rotation ensure long-term security. Generation-based key lifecycle.</p></div>
+        <div class="feature"><h3>Encrypted Storage</h3><p>All key shares encrypted at rest with AES-256. Optional KMS integration for hardware-backed encryption.</p></div>
+      </div>
+    </div>
+    </section>
+
+    <div class="cta-section">
+    <div class="container">
+      <h2>Secured by Lux Network</h2>
+      <p>Multi-party computation infrastructure powering the Lux cross-chain bridge.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="https://bridge.lux.network" class="btn btn-primary">Go to Bridge</a>
+        <a href="https://explore.lux.network" class="btn btn-outline">Explorer</a>
+        <a href="https://github.com/luxfi/mpc" class="btn btn-outline">GitHub</a>
+      </div>
+    </div>
+    </div>
+
+    <footer>
+    <div class="container">
+      <span>&copy; 2026 Lux Partners Limited</span>
+      <div style="display:flex;gap:20px">
+        <a href="https://lux.network">lux.network</a>
+        <a href="https://explore.lux.network">Explorer</a>
+        <a href="https://bridge.lux.network">Bridge</a>
+        <a href="https://github.com/luxfi/mpc">GitHub</a>
+      </div>
+    </div>
+    </footer>
+    </body>
+    </html>
+---
+# Pars MPC Landing Page
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mpc-pars-landing
+  namespace: lux-bridge
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pars MPC — Multi-Party Computation Infrastructure</title>
+    <meta name="description" content="Self-sovereign wallet infrastructure for Pars Network with multi-party computation. Configurable t-of-n threshold signing, 8 cryptographic protocols, multi-chain support.">
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#000;color:#d4d4d4;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+    a{color:#fff;text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1080px;margin:0 auto;padding:0 24px;width:100%}
+    header{border-bottom:1px solid #1a1a1a;padding:16px 0;position:sticky;top:0;background:#000;z-index:10}
+    header .container{display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#fff;letter-spacing:-0.02em}
+    .logo svg{width:24px;height:24px}
+    .nav-links{display:flex;gap:20px;align-items:center}
+    .nav-links a{color:#666;font-size:14px;transition:color 0.15s}
+    .nav-links a:hover{color:#fff;text-decoration:none}
+    .btn{display:inline-flex;align-items:center;padding:8px 20px;border-radius:6px;font-size:14px;font-weight:500;transition:all 0.15s}
+    .btn-primary{background:#fff;color:#000}
+    .btn-primary:hover{background:#d4d4d4;text-decoration:none}
+    .btn-outline{border:1px solid #333;color:#fff}
+    .btn-outline:hover{border-color:#666;text-decoration:none}
+    .btn-sm{padding:6px 14px;font-size:13px}
+    .hero{text-align:center;padding:80px 0 60px}
+    .hero .badge{display:inline-block;padding:4px 12px;border:1px solid #1a1a1a;border-radius:20px;font-size:12px;color:#666;margin-bottom:24px;letter-spacing:0.04em;text-transform:uppercase}
+    .hero h1{font-size:clamp(36px,5.5vw,64px);font-weight:700;color:#fff;letter-spacing:-0.035em;line-height:1.05;margin-bottom:20px}
+    .hero h1 span{color:#525252}
+    .hero .subtitle{font-size:18px;color:#a3a3a3;max-width:640px;margin:0 auto 36px;line-height:1.65}
+    .hero .ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .stats-bar{border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:32px 0}
+    .stats-bar .container{display:flex;justify-content:space-around;flex-wrap:wrap;gap:24px}
+    .stat{text-align:center;min-width:100px}
+    .stat .value{font-size:24px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+    .stat .label{font-size:12px;color:#525252;margin-top:4px;text-transform:uppercase;letter-spacing:0.04em}
+    section{padding:64px 0}
+    section h2{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.02em;margin-bottom:8px}
+    section .section-sub{color:#666;font-size:15px;margin-bottom:40px;max-width:560px}
+    .protocols{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:#1a1a1a;border:1px solid #1a1a1a;border-radius:8px;overflow:hidden}
+    .protocol{background:#050505;padding:24px}
+    .protocol h3{color:#fff;font-size:14px;font-weight:600;margin-bottom:4px}
+    .protocol .proto-type{color:#525252;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px}
+    .protocol p{color:#666;font-size:13px;line-height:1.5}
+    .features{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+    .feature{border:1px solid #1a1a1a;border-radius:8px;padding:28px}
+    .feature h3{color:#fff;font-size:15px;font-weight:600;margin-bottom:8px}
+    .feature p{color:#666;font-size:14px;line-height:1.55}
+    .chains{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:#1a1a1a;border:1px solid #1a1a1a;border-radius:8px;overflow:hidden}
+    .chain{background:#050505;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .chain .name{color:#d4d4d4;font-size:14px;font-weight:500}
+    .chain .curve{color:#525252;font-size:12px;font-family:monospace}
+    .perf{width:100%;border-collapse:collapse;border:1px solid #1a1a1a;border-radius:8px;overflow:hidden}
+    .perf th{background:#050505;color:#525252;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;padding:12px 16px;text-align:left;border-bottom:1px solid #1a1a1a}
+    .perf td{padding:12px 16px;font-size:14px;border-bottom:1px solid #0a0a0a;color:#a3a3a3;font-variant-numeric:tabular-nums}
+    .perf tr:last-child td{border-bottom:none}
+    .perf .op{color:#fff;font-weight:500}
+    .cta-section{border-top:1px solid #1a1a1a;text-align:center;padding:80px 0}
+    .cta-section h2{margin-bottom:16px}
+    .cta-section p{color:#666;font-size:16px;margin-bottom:32px}
+    footer{border-top:1px solid #1a1a1a;padding:24px 0;margin-top:auto}
+    footer .container{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#333}
+    footer a{color:#333;transition:color 0.15s}
+    footer a:hover{color:#666;text-decoration:none}
+    @media(max-width:640px){
+      .hero{padding:48px 0 40px}
+      .stats-bar .container{justify-content:center}
+      .protocols,.chains{grid-template-columns:1fr}
+      .features{grid-template-columns:1fr}
+      .perf{font-size:13px}
+      .perf th,.perf td{padding:8px 12px}
+    }
+    </style>
+    </head>
+    <body>
+    <header>
+    <div class="container">
+      <a href="/" class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="24" height="24"><circle cx="25" cy="25" r="22" fill="none" stroke="#fff" stroke-width="3"/><text x="25" y="32" text-anchor="middle" fill="#fff" font-size="24" font-weight="700" font-family="-apple-system,sans-serif">P</text></svg>
+        Pars MPC
+      </a>
+      <div class="nav-links">
+        <a href="#protocols">Protocols</a>
+        <a href="#chains">Chains</a>
+        <a href="#performance">Performance</a>
+        <a href="https://docs.pars.network/mpc">Docs</a>
+        <a href="https://bridge.pars.network" class="btn btn-primary btn-sm">Bridge</a>
+      </div>
+    </div>
+    </header>
+
+    <div class="hero">
+    <div class="container">
+      <div class="badge">Pars Network MPC Infrastructure</div>
+      <h1>Threshold Signing<br><span>for Pars Network</span></h1>
+      <p class="subtitle">Multi-party computation infrastructure securing the Pars Bridge. 3-of-5 threshold signatures with CGGMP21 and FROST protocols. Your keys never exist in a single location.</p>
+      <div class="ctas">
+        <a href="https://bridge.pars.network" class="btn btn-primary">Go to Bridge</a>
+        <a href="https://explore.pars.network" class="btn btn-outline">Explorer</a>
+        <a href="https://github.com/pars-network/mpc" class="btn btn-outline">GitHub</a>
+      </div>
+    </div>
+    </div>
+
+    <div class="stats-bar">
+    <div class="container">
+      <div class="stat"><div class="value">3</div><div class="label">MPC Nodes</div></div>
+      <div class="stat"><div class="value">3-of-5</div><div class="label">Threshold</div></div>
+      <div class="stat"><div class="value">21ms</div><div class="label">Signing</div></div>
+      <div class="stat"><div class="value">15+</div><div class="label">Chains</div></div>
+      <div class="stat"><div class="value">8</div><div class="label">Protocols</div></div>
+      <div class="stat"><div class="value">PQ</div><div class="label">Quantum-Safe</div></div>
+    </div>
+    </div>
+
+    <section id="protocols">
+    <div class="container">
+      <h2>Cryptographic Protocols</h2>
+      <p class="section-sub">Production-grade threshold cryptography securing cross-chain bridge operations on Pars Network.</p>
+      <div class="protocols">
+        <div class="protocol"><h3>CGGMP21</h3><div class="proto-type">Threshold ECDSA</div><p>4-round signing with identifiable aborts over secp256k1. Presignatures for offline signing. Bitcoin, Ethereum, all EVM chains.</p></div>
+        <div class="protocol"><h3>FROST</h3><div class="proto-type">Threshold Schnorr / EdDSA</div><p>2-round signing with hedged deterministic nonces. Ed25519 for Solana and TON. BIP-340 Taproot for Bitcoin.</p></div>
+        <div class="protocol"><h3>LSSS</h3><div class="proto-type">Linear Secret Sharing</div><p>Dynamic resharing without key reconstruction. Transition t-of-n configurations with zero downtime.</p></div>
+        <div class="protocol"><h3>TFHE</h3><div class="proto-type">Threshold Homomorphic Encryption</div><p>Multi-party threshold decryption with homomorphic operations. Confidential compute on encrypted data.</p></div>
+        <div class="protocol"><h3>Ringtail</h3><div class="proto-type">Post-Quantum Lattice</div><p>Module-LWE threshold signatures at 128/192/256-bit security levels. Protection against quantum adversaries.</p></div>
+        <div class="protocol"><h3>Quasar</h3><div class="proto-type">Hybrid BLS + Post-Quantum</div><p>Combines BLS12-381 pairing-based signatures with Ringtail lattice for immediate and future-proof security.</p></div>
+        <div class="protocol"><h3>BLS</h3><div class="proto-type">Aggregate Signatures</div><p>BLS12-381 pairing-based threshold signatures with efficient aggregation. Compatible with consensus systems.</p></div>
+        <div class="protocol"><h3>Doerner</h3><div class="proto-type">Optimized 2-of-2 ECDSA</div><p>Constant-time 2-party ECDSA at ~5ms signing. Specialized for peer-to-peer custody workflows.</p></div>
+      </div>
+    </div>
+    </section>
+
+    <section>
+    <div class="container">
+      <h2>Platform Capabilities</h2>
+      <p class="section-sub">Enterprise-grade digital asset custody for the Pars ecosystem.</p>
+      <div class="features">
+        <div class="feature"><h3>Configurable Threshold</h3><p>Any t-of-n scheme: 3-of-5, 3-of-5, 5-of-9, or any custom configuration. Byzantine-resilient majority.</p></div>
+        <div class="feature"><h3>Dynamic Resharing</h3><p>Add or remove signing parties without changing public keys or addresses. Zero-downtime key rotation.</p></div>
+        <div class="feature"><h3>Post-Quantum Security</h3><p>Ringtail lattice-based and Quasar hybrid schemes provide protection against future quantum computer attacks.</p></div>
+        <div class="feature"><h3>Confidential Compute</h3><p>TFHE threshold homomorphic encryption enables computation on encrypted data. Private policy evaluation.</p></div>
+        <div class="feature"><h3>Zero-Knowledge Proofs</h3><p>17 ZK proof systems including Paillier multiplication, Pedersen-Rabin, Schnorr proofs, and range proofs.</p></div>
+        <div class="feature"><h3>Multi-Chain Bridge</h3><p>Secures the Pars Bridge across 15+ blockchain networks. Threshold-signed cross-chain transactions.</p></div>
+      </div>
+    </div>
+    </section>
+
+    <section id="chains">
+    <div class="container">
+      <h2>Supported Chains</h2>
+      <p class="section-sub">Native support for every major blockchain through protocol-specific curve implementations.</p>
+      <div class="chains">
+        <div class="chain"><span class="name">Pars Network</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Lux Network</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Bitcoin</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Bitcoin Taproot</span><span class="curve">BIP-340</span></div>
+        <div class="chain"><span class="name">Ethereum</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">All EVM Chains</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Solana</span><span class="curve">Ed25519</span></div>
+        <div class="chain"><span class="name">TON</span><span class="curve">Ed25519</span></div>
+        <div class="chain"><span class="name">Cosmos</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">XRPL</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Polygon</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Arbitrum</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Avalanche</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">BNB Chain</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Base</span><span class="curve">secp256k1</span></div>
+        <div class="chain"><span class="name">Fantom</span><span class="curve">secp256k1</span></div>
+      </div>
+    </div>
+    </section>
+
+    <section id="performance">
+    <div class="container">
+      <h2>Performance</h2>
+      <p class="section-sub">Real benchmarks. Signing is O(t) independent of total party count.</p>
+      <table class="perf">
+        <thead><tr><th>Operation</th><th>3 parties</th><th>10 parties</th><th>20 parties</th><th>50 parties</th></tr></thead>
+        <tbody>
+          <tr><td class="op">Key Generation</td><td>22ms</td><td>38ms</td><td>332ms</td><td>1.9s</td></tr>
+          <tr><td class="op">Signing (t signers)</td><td>25ms</td><td>21ms</td><td>30ms</td><td>65ms</td></tr>
+          <tr><td class="op">Verification</td><td>2ms</td><td>2ms</td><td>2ms</td><td>2ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </section>
+
+    <section>
+    <div class="container">
+      <h2>Security Properties</h2>
+      <div class="features">
+        <div class="feature"><h3>No Single Point of Failure</h3><p>Private keys are never reconstructed. Threshold parties hold shares that are individually useless.</p></div>
+        <div class="feature"><h3>Identifiable Aborts</h3><p>CGGMP21 identifies the exact cheating party in a failed signing session. Automated fault recovery.</p></div>
+        <div class="feature"><h3>Proactive Security</h3><p>LSSS share refresh and Ringtail proactive rotation ensure long-term security. Generation-based key lifecycle.</p></div>
+        <div class="feature"><h3>Encrypted Storage</h3><p>All key shares encrypted at rest with AES-256. Optional KMS integration for hardware-backed encryption.</p></div>
+      </div>
+    </div>
+    </section>
+
+    <div class="cta-section">
+    <div class="container">
+      <h2>Secured by Pars Network</h2>
+      <p>Multi-party computation infrastructure powering the Pars cross-chain bridge.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="https://bridge.pars.network" class="btn btn-primary">Go to Bridge</a>
+        <a href="https://explore.pars.network" class="btn btn-outline">Explorer</a>
+        <a href="https://github.com/pars-network/mpc" class="btn btn-outline">GitHub</a>
+      </div>
+    </div>
+    </div>
+
+    <footer>
+    <div class="container">
+      <span>&copy; 2026 Pars Network</span>
+      <div style="display:flex;gap:20px">
+        <a href="https://pars.network">pars.network</a>
+        <a href="https://explore.pars.network">Explorer</a>
+        <a href="https://bridge.pars.network">Bridge</a>
+        <a href="https://github.com/pars-network/mpc">GitHub</a>
+      </div>
+    </div>
+    </footer>
+    </body>
+    </html>
+---
+# Nginx config — hostname-based routing, single port
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mpc-nginx-conf
+  namespace: lux-bridge
+data:
+  default.conf: |
+    server {
+        listen 80 default_server;
+        server_name _;
+
+        set $brand "lux";
+        if ($host ~* "pars") {
+            set $brand "pars";
+        }
+
+        root /usr/share/nginx/$brand;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /health {
+            return 200 "ok";
+            add_header Content-Type text/plain;
+        }
+    }
+---
+# Nginx deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpc-landing
+  namespace: lux-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mpc-landing
+  template:
+    metadata:
+      labels:
+        app: mpc-landing
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - name: lux-html
+          mountPath: /usr/share/nginx/lux
+        - name: pars-html
+          mountPath: /usr/share/nginx/pars
+        - name: nginx-conf
+          mountPath: /etc/nginx/conf.d
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      volumes:
+      - name: lux-html
+        configMap:
+          name: mpc-lux-landing
+      - name: pars-html
+        configMap:
+          name: mpc-pars-landing
+      - name: nginx-conf
+        configMap:
+          name: mpc-nginx-conf
+---
+# Single service for all MPC landing pages
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpc-landing
+  namespace: lux-bridge
+spec:
+  selector:
+    app: mpc-landing
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+---
+# Single Ingress — add new domains by adding rules (no new resources needed)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mpc-landing
+  namespace: lux-bridge
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: hanzo
+  rules:
+  - host: mpc.lux.network
+    http:
+      paths:
+      - backend:
+          service:
+            name: mpc-landing
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  - host: mpc.pars.network
+    http:
+      paths:
+      - backend:
+          service:
+            name: mpc-landing
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - mpc.lux.network
+    secretName: mpc-lux-network-tls
+  - hosts:
+    - mpc.pars.network
+    secretName: mpc-pars-network-tls

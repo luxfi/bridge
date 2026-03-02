@@ -1,9 +1,19 @@
 /**
  * White-label multi-tenant bridge configuration.
  *
- * Tenant config is resolved by hostname at request time.
- * MPC backend is pluggable: "lux-mpc" (3-node cluster) or "t-chain" (ThresholdVM).
- * Anyone can self-host by pointing a domain at the bridge and providing config.
+ * Tenants point a CNAME at bridge.lux.network — the bridge reads the
+ * incoming hostname and serves the right branding, logo, MPC wallet, and
+ * chain config automatically. Zero code changes needed for new tenants.
+ *
+ * Resolution order:
+ *   1. Static TENANT_REGISTRY (built-in tenants: lux, pars, hanzo, zoo)
+ *   2. BRIDGE_TENANT_CONFIG env var (JSON map) — for self-hosted / Bootnode deployments
+ *   3. Default (Lux branding)
+ *
+ * MPC modes:
+ *   lux-mpc   — shared 3-of-5 cluster (no per-tenant SPOF, recommended)
+ *   t-chain   — ThresholdVM on T-chain (decentralized, when deployed)
+ *   custom    — tenant's own MPC endpoint (self-hosted, set mpcEndpoint)
  */
 
 export type MpcMode = 'lux-mpc' | 't-chain' | 'custom'
@@ -19,17 +29,17 @@ export interface TenantConfig {
   primaryColor: string
   /** Brand secondary/accent color (hex) */
   accentColor?: string
-  /** Which MPC backend to use */
+  /** Which MPC backend to use (default: lux-mpc = shared 3-of-5 cluster) */
   mpcMode: MpcMode
-  /** Override MPC endpoint (for "custom" mode or self-hosted) */
+  /** Override MPC endpoint — required when mpcMode is "custom" */
   mpcEndpoint?: string
+  /** Override bridge API server URL (default: bridge-api.lux.network) */
+  apiUrl?: string
   /** Network environment */
   network: 'mainnet' | 'testnet'
-  /** Allowed source/destination chain IDs (undefined = all) */
+  /** Allowed source/destination chain IDs — undefined means all chains */
   allowedChains?: string[]
-  /** API server URL override */
-  apiUrl?: string
-  /** External links */
+  /** External links shown in nav/footer */
   links?: {
     home?: string
     explorer?: string
@@ -41,7 +51,14 @@ export interface ResolvedTenant extends TenantConfig {
   hostname: string
 }
 
-// Default tenant (lux bridge)
+// MPC cluster config (3-of-5 threshold)
+export const MPC_CLUSTER = {
+  threshold: 3,
+  totalNodes: 5,
+  scheme: '3-of-5',
+}
+
+// Default tenant (Lux branding) — used when hostname is unrecognized
 export const DEFAULT_TENANT: TenantConfig = {
   name: 'Lux Bridge',
   logoUrl: 'https://lux.network/images/logo.png',
@@ -56,8 +73,9 @@ export const DEFAULT_TENANT: TenantConfig = {
   },
 }
 
-// Static tenant registry — add hostname → config.
-// For self-hosted deployments: set BRIDGE_TENANT_CONFIG env var with JSON.
+// Static tenant registry — hostname → config.
+// New tenants: CNAME yourdomain → bridge.lux.network, add entry here
+// OR set BRIDGE_TENANT_CONFIG env var (Bootnode / self-hosted deployments).
 export const TENANT_REGISTRY: Record<string, TenantConfig> = {
   'bridge.lux.network': {
     name: 'Lux Bridge',
@@ -130,19 +148,24 @@ export const TENANT_REGISTRY: Record<string, TenantConfig> = {
 
 /**
  * Resolve tenant config from hostname.
- * Falls back to env-configured tenants, then DEFAULT_TENANT.
+ *
+ * Works with any CNAME pointing at bridge.lux.network — no DNS config
+ * needed on the bridge side beyond adding the host to TENANT_REGISTRY
+ * or BRIDGE_TENANT_CONFIG. The ingress TLS cert is handled by cert-manager.
  */
 export function resolveTenant(hostname: string): ResolvedTenant {
-  // Strip port if present (e.g. localhost:3000)
+  // Strip port (localhost:3000 → localhost)
   const host = hostname.split(':')[0]
 
-  // 1. Check static registry
+  // 1. Static registry (built-in tenants)
   const config = TENANT_REGISTRY[host]
   if (config) {
     return { ...config, hostname: host }
   }
 
-  // 2. Check env var override (for self-hosted deployments)
+  // 2. Env var — JSON map of hostname → TenantConfig
+  //    Used by Bootnode / self-hosted deployments to inject tenant config
+  //    without rebuilding the image. Set via k8s secret or CI env.
   const envConfig = process.env.BRIDGE_TENANT_CONFIG
   if (envConfig) {
     try {
@@ -150,12 +173,21 @@ export function resolveTenant(hostname: string): ResolvedTenant {
       if (parsed[host]) {
         return { ...parsed[host], hostname: host }
       }
+      // Wildcard match: *.yourdomain.com
+      for (const [pattern, cfg] of Object.entries(parsed)) {
+        if (pattern.startsWith('*.')) {
+          const suffix = pattern.slice(1) // .yourdomain.com
+          if (host.endsWith(suffix)) {
+            return { ...cfg, hostname: host }
+          }
+        }
+      }
     } catch {
-      // ignore
+      // ignore malformed env
     }
   }
 
-  // 3. Default
+  // 3. Default: Lux branding
   return { ...DEFAULT_TENANT, hostname: host }
 }
 
