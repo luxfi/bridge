@@ -1,4 +1,5 @@
 import React, { type PropsWithChildren } from 'react'
+import Image from 'next/image'
 
 import type { LinkDef } from '@hanzo/ui/types'
 
@@ -12,6 +13,8 @@ const DesktopHeader: React.FC<
     className?: string
     noAuth?: boolean
     logoVariant?: LogoVariant
+    /** White-label: override logo with custom image URL */
+    logoSrc?: string
   } & PropsWithChildren
 > = ({
   links,
@@ -19,11 +22,10 @@ const DesktopHeader: React.FC<
   noAuth = false,
   children,
   logoVariant = 'text-only',
+  logoSrc,
 }) => {
   const [isMenuOpened, setIsMenuOpen] = React.useState(false)
 
-  // TODO move 13px into a size class and configure twMerge to recognize say, 'text-size-nav'
-  // (vs be beat out by 'text-color-nav')
   return (
     <header
       id="DESKTOP_HEADER"
@@ -40,14 +42,19 @@ const DesktopHeader: React.FC<
           'mx-3 md:mx-6 w-full max-w-screen'
         }
       >
-        <Logo
-          size={logoVariant === 'logo-only' ? 'sm' : 'sm'}
-          href="/"
-          outerClx="flex"
-          key="two"
-          variant={logoVariant}
-        />
-        {/* md or larger */}
+        {logoSrc ? (
+          <a href="/" className="flex items-center">
+            <Image src={logoSrc} alt="Bridge Logo" height={32} width={120} style={{ objectFit: 'contain' }} />
+          </a>
+        ) : (
+          <Logo
+            size={logoVariant === 'logo-only' ? 'sm' : 'sm'}
+            href="/"
+            outerClx="flex"
+            key="two"
+            variant={logoVariant}
+          />
+        )}
         <div className=""></div>
         <div className="flex items-center">{children}</div>
       </div>

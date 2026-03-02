@@ -14,27 +14,27 @@ const Header: React.FC<{
   siteDef: SiteDef
   className?: string
   logoVariant?: LogoVariant
+  /** White-label: custom logo image URL (overrides default Lux logo) */
+  logoSrc?: string
 } & PropsWithChildren> = ({
   siteDef,
   className = '',
   children,
-  logoVariant='text-only'
+  logoVariant='text-only',
+  logoSrc,
 }) => {
-
-    // TODO
-    //const [open, setOpen] = React.useState<boolean>(false);
 
     const { nav: { common, featured }, currentAs, noAuth } = siteDef
     const links = (featured) ? [...common, ...featured] : common
 
     return (<>
       <DesktopHeader
-        // className={cn(className, 'hidden sm:flex')}
         className='flex'
         links={links}
         currentAs={currentAs}
         noAuth={noAuth}
         logoVariant={logoVariant}
+        logoSrc={logoSrc}
       >
         {children}
       </DesktopHeader>

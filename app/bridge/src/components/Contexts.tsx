@@ -12,6 +12,7 @@ import { SendErrorMessage } from '@/lib/telegram'
 import { THEME_COLORS, type ThemeData } from '../Models/Theme'
 import { AuthProvider } from '@/context/authContext'
 import { SettingsProvider } from '@/context/settings'
+import { TenantProvider } from '@/context/tenantContext'
 import { FeeProvider } from '@/context/feeContext'
 import { JotaiProvider } from '@/context/jotaiContext'
 import { EthersProvider } from '@/context/ethersContext'
@@ -63,6 +64,7 @@ const Contexts: React.FC<
 
   return (
     <SWRConfig value={{ revalidateOnFocus: false }}>
+      <TenantProvider>
       <IntercomProvider appId={INTERCOM_APP_ID} initializeDelay={2500}>
         {themeData && <ColorSchema themeData={themeData} />}
         <SettingsProvider settings={new BridgeAppSettings(_settings)}>
@@ -90,6 +92,7 @@ const Contexts: React.FC<
           </AuthProvider>
         </SettingsProvider>
       </IntercomProvider>
+      </TenantProvider>
     </SWRConfig>
   )
 }
