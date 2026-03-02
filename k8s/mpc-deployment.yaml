@@ -155,9 +155,9 @@ data:
     backup_dir: /data/mpc/backups
   peers.json: |
     {
-      "node0": "0ce02715-0ead-48ef-9772-2583316cc860",
-      "node1": "c95c340e-5a18-472d-b9b0-5ac68218213a",
-      "node2": "ac37e85f-caca-4bee-8a3a-49a0fe35abff"
+      "node0": "lux-mainnet-node0",
+      "node1": "lux-mainnet-node1",
+      "node2": "lux-mainnet-node2"
     }
   node0_identity.json: |
     {"node_name":"node0","node_id":"0ce02715-0ead-48ef-9772-2583316cc860","public_key":"96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"}
@@ -522,8 +522,18 @@ spec:
   - hosts:
     - bridge.lux.network
     - bridge-api.lux.network
-    secretName: bridge-tls
+    secretName: bridge-lux-tls
+  - hosts:
+    - bridge.pars.network
+    secretName: bridge-pars-tls
+  - hosts:
+    - bridge.hanzo.ai
+    secretName: bridge-hanzo-tls
+  - hosts:
+    - bridge.zoo.ngo
+    secretName: bridge-zoo-tls
   rules:
+  # Lux Network (primary)
   - host: bridge.lux.network
     http:
       paths:
@@ -544,3 +554,36 @@ spec:
             name: bridge-server
             port:
               number: 3000
+  # Pars Network — white-label, same bridge-ui backend
+  - host: bridge.pars.network
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-ui
+            port:
+              number: 80
+  # Hanzo — white-label
+  - host: bridge.hanzo.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-ui
+            port:
+              number: 80
+  # Zoo — white-label
+  - host: bridge.zoo.ngo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-ui
+            port:
+              number: 80
