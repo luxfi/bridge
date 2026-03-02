@@ -18,6 +18,8 @@ import Main from '@/components/main'
 import Header from '@/components/header'
 import { ChevronDown } from 'lucide-react'
 import getBridgeSettings from '@/util/getBridgeSettings'
+import { resolveTenant } from '@/lib/tenant'
+import { headers } from 'next/headers'
 
 export const metadata = { ..._metadata }
 
@@ -29,10 +31,41 @@ const ConnectedWallets = dynamic(
 const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => {
   const settings = await getBridgeSettings()
 
+  // Resolve tenant config server-side from incoming hostname
+  const headersList = headers()
+  const hostname =
+    headersList.get('x-tenant-hostname') ||
+    headersList.get('host') ||
+    'bridge.lux.network'
+  const tenant = resolveTenant(hostname)
+
+  // Build per-tenant siteDef override
+  const tenantSiteDef = {
+    ...siteDef,
+    currentAs: `https://${tenant.hostname}`,
+    ...(tenant.links?.home ? { home: tenant.links.home } : {}),
+  }
+
+  // Per-tenant metadata
+  const tenantMetadata = {
+    ..._metadata,
+    title: tenant.name,
+    description: `${tenant.name} — cross-chain bridge`,
+    ...(tenant.faviconUrl ? { icons: { icon: tenant.faviconUrl } } : {}),
+  }
+
   return (
     <html lang='en' suppressHydrationWarning className='dark' style={{backgroundColor: '#000'}}>
       <head>
         <base target='_blank' />
+        {/* Inject CSS vars for white-label theming */}
+        <style>{`
+          :root {
+            --brand-primary: ${tenant.primaryColor};
+            --brand-accent: ${tenant.accentColor || tenant.primaryColor};
+          }
+        `}</style>
+        {tenant.faviconUrl && <link rel='icon' href={tenant.faviconUrl} />}
       </head>
       <body
         suppressHydrationWarning
@@ -40,7 +73,7 @@ const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => {
       >
         {settings ? (
           <Contexts settings={settings}>
-            <Header siteDef={siteDef} logoVariant='logo-only'>
+            <Header siteDef={tenantSiteDef} logoVariant='logo-only' logoSrc={tenant.logoUrl}>
               <ConnectedWallets
                 connectButtonVariant='outline'
                 showWalletIcon={false}
@@ -62,7 +95,7 @@ const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => {
             </div>
           </Main>
         )}
-        <Footer siteDef={siteDef} />
+        <Footer siteDef={tenantSiteDef} />
       </body>
     </html>
   )
