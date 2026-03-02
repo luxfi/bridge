@@ -10,7 +10,12 @@
     "test": "echo 'Run tests in individual packages'",
     "ci:test": "pnpm -r test"
   },
-  "keywords": ["bridge", "mpc", "cross-chain", "lux"],
+  "keywords": [
+    "bridge",
+    "mpc",
+    "cross-chain",
+    "lux"
+  ],
   "author": "Lux Network",
   "license": "MIT",
   "dependencies": {
@@ -30,5 +35,8 @@
         "firebase-admin"
       ]
     }
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2"
   }
 }

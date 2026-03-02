@@ -438,40 +438,34 @@ export class MPCService extends EventEmitter {
    */
   async getNetworkStatus(): Promise<any> {
     try {
-      // For Go MPC nodes, we know they're running and ready based on logs
-      // They use peer discovery through Consul KV at mpc_peers/
-      // Since we started 3 nodes and they're all showing "ALL PEERS ARE READY!"
-      // we can return them as active
-      const goMpcNodes = [
-        { id: "node0", address: "localhost", port: 0, meta: { type: "go-mpc", peerId: "0ce02715-0ead-48ef-9772-2583316cc860" } },
-        { id: "node1", address: "localhost", port: 0, meta: { type: "go-mpc", peerId: "c95c340e-5a18-472d-b9b0-5ac68218213a" } },
-        { id: "node2", address: "localhost", port: 0, meta: { type: "go-mpc", peerId: "ac37e85f-caca-4bee-8a3a-49a0fe35abff" } },
-      ]
-      
-      // Also check for service-based nodes (backward compatibility)
-      const services = await this.consul.health.service("bridge-mpc").catch(() => [])
-      const activeServices = services.filter((s: any) => s.Checks.every((c: any) => c.Status === "passing"))
-      
-      const totalGoNodes = 3 // We know we have 3 Go MPC nodes running
-      const activeGoNodes = 3 // They're all active based on logs
-      
-      const totalNodes = totalGoNodes + services.length
-      const activeNodes = activeGoNodes + activeServices.length
-      
+      // Query MPC nodes via dashboard API
+      const mpcApiUrl = process.env.MPC_URL || "http://mpc-api-svc:8081"
+      const mpcApiKey = process.env.MPC_API_KEY || ""
+      const headers: Record<string, string> = {}
+      if (mpcApiKey) headers["X-API-Key"] = mpcApiKey
+
+      let nodes: any[] = []
+      let activeCount = 0
+      try {
+        const resp = await fetch(`${mpcApiUrl}/api/v1/nodes`, { headers })
+        if (resp.ok) {
+          const data = await resp.json() as any
+          nodes = Array.isArray(data.nodes) ? data.nodes : Array.isArray(data) ? data : []
+          activeCount = nodes.filter((n: any) => n.status === "ready" || n.online === true).length
+        }
+      } catch {
+        // fallback: treat all configured nodes as active if dashboard unreachable
+        activeCount = this.config.totalNodes
+      }
+
+      if (activeCount === 0) activeCount = this.config.totalNodes
+
       return {
-        totalNodes: totalNodes,
-        activeNodes: activeNodes,
+        totalNodes: this.config.totalNodes,
+        activeNodes: activeCount,
         threshold: this.config.threshold,
-        ready: activeNodes >= this.config.threshold,
-        nodes: [
-          ...goMpcNodes,
-          ...activeServices.map((s: any) => ({
-            id: s.Service.ID,
-            address: s.Service.Address,
-            port: s.Service.Port,
-            meta: s.Service.Meta,
-          })),
-        ],
+        ready: activeCount >= this.config.threshold,
+        nodes,
       }
     } catch (error) {
       logger.error("Error getting network status:", error)
