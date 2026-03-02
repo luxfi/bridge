@@ -19,7 +19,7 @@ jobs:
     services:
       # Database for Bridge
       postgres-bridge:
-        image: postgres:15-alpine
+        image: ghcr.io/hanzoai/sql:17-alpine
         env:
           POSTGRES_USER: bridge
           POSTGRES_PASSWORD: bridge
@@ -34,7 +34,7 @@ jobs:
 
       # Database for Lux ID (Casdoor)
       postgres-id:
-        image: postgres:15-alpine
+        image: ghcr.io/hanzoai/sql:17-alpine
         env:
           POSTGRES_USER: casdoor
           POSTGRES_PASSWORD: casdoor
