@@ -23,7 +23,7 @@ services:
 
   # Lux ID Database (PostgreSQL for Casdoor)
   lux-id-db:
-    image: ghcr.io/hanzoai/sql:17-alpine
+    image: ghcr.io/hanzoai/sql:latest
     container_name: bridge-lux-id-db
     environment:
       - POSTGRES_USER=casdoor
@@ -99,7 +99,7 @@ services:
 
   # Database
   postgres:
-    image: ghcr.io/hanzoai/sql:17-alpine
+    image: ghcr.io/hanzoai/sql:latest
     container_name: bridge-postgres
     environment:
       - POSTGRES_USER=bridge
