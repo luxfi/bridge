@@ -3,134 +3,60 @@ kind: Namespace
 metadata:
   name: lux-bridge
 ---
-# NATS Deployment
+# KV Store — hanzoai/kv (Redis/Valkey)
+# Used for session caching and bridge state. Replaces legacy NATS/Consul.
+# MPC nodes use consensus mode (ZAP p2p) and do NOT need NATS or Consul.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nats
+  name: kv
   namespace: lux-bridge
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nats
+      app: kv
   template:
     metadata:
       labels:
-        app: nats
+        app: kv
     spec:
       containers:
-      - name: nats
-        image: nats:2.10-alpine
-        args: ["-js", "-m", "8222", "--store_dir", "/data"]
+      - name: kv
+        image: hanzoai/kv:latest
         ports:
-        - containerPort: 4222
-          name: client
-        - containerPort: 8222
-          name: monitor
+        - containerPort: 6379
+          name: redis
         volumeMounts:
-        - name: nats-storage
+        - name: kv-storage
           mountPath: /data
         livenessProbe:
           tcpSocket:
-            port: 4222
+            port: 6379
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           tcpSocket:
-            port: 4222
+            port: 6379
           initialDelaySeconds: 5
           periodSeconds: 5
       volumes:
-      - name: nats-storage
+      - name: kv-storage
         persistentVolumeClaim:
-          claimName: nats-pvc
+          claimName: kv-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nats
+  name: kv
   namespace: lux-bridge
 spec:
   selector:
-    app: nats
+    app: kv
   ports:
-  - port: 4222
-    targetPort: 4222
-    name: client
-  - port: 8222
-    targetPort: 8222
-    name: monitor
----
-# Consul StatefulSet
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: consul
-  namespace: lux-bridge
-spec:
-  serviceName: consul
-  replicas: 1
-  selector:
-    matchLabels:
-      app: consul
-  template:
-    metadata:
-      labels:
-        app: consul
-    spec:
-      containers:
-      - name: consul
-        image: hashicorp/consul:1.17
-        args:
-          - "agent"
-          - "-server"
-          - "-bootstrap-expect=1"
-          - "-ui"
-          - "-client=0.0.0.0"
-          - "-data-dir=/consul/data"
-        ports:
-        - containerPort: 8500
-          name: http
-        - containerPort: 8600
-          name: dns
-          protocol: UDP
-        volumeMounts:
-        - name: consul-data
-          mountPath: /consul/data
-        env:
-        - name: CONSUL_BIND_INTERFACE
-          value: eth0
-        livenessProbe:
-          exec:
-            command: ["consul", "members"]
-          initialDelaySeconds: 30
-          periodSeconds: 10
-  volumeClaimTemplates:
-  - metadata:
-      name: consul-data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 10Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: consul
-  namespace: lux-bridge
-spec:
-  selector:
-    app: consul
-  ports:
-  - port: 8500
-    targetPort: 8500
-    name: http
-  - port: 8600
-    targetPort: 8600
-    protocol: UDP
-    name: dns
+  - port: 6379
+    targetPort: 6379
+    name: redis
 ---
 # MPC Config
 apiVersion: v1
@@ -147,7 +73,7 @@ data:
     environment: mainnet
     mpc_threshold: 3
     mpc_total_nodes: 5
-    badger_password: "lux-bridge-mpc-prod-2026"
+    # badger_password is injected via ZAPDB_PASSWORD env var from mpc-secrets k8s Secret (KMS-managed)
     event_initiator_pubkey: "c3f3511cd2f849fd61e81ea62a842fd33367ee8fb5b867bb900877c7fb72ce3b"
     max_concurrent_keygen: 3
     db_path: /data/mpc
@@ -173,19 +99,16 @@ data:
   node4_identity.json: |
     {"node_name":"node4","node_id":"f67ec0b6-5a2f-410b-b43b-800b99315b41","public_key":"9f387cbaba446ffc05d69cc5cd2f35ed82531b860ceae0febc25560251fcdd36"}
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mpc-identity-keys
-  namespace: lux-bridge
-type: Opaque
-stringData:
-  node0_private.key: "3f38e18df0cc601d460978087e888d1369bba70f07035289e7e1323bc1070eac96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"
-  node1_private.key: "a014abefd56782aea80de6a50273d4fbe78d9953b929d5c72b19480a7e3a06a7d49b5caace90b8317accd728b7b4419baef2ff32a164411d9ac7c1f703e13f7e"
-  node2_private.key: "0fae6fe2025d9f64b5d011e08dea9b7d7689a0ccadbf0942f07a475310d06895e0a570f5e7b52f76ba54aca0578dcd0c7f6569b7640027664af5be2ba8f0cf49"
-  node3_private.key: "2b3f0a5fe60fad2b6f8542d60a667d7897055d2678eb9483dac141876de08d4fa0082b30a0c5598b0d4d998e80866a6b7d1c4c66d0d8d907fd64ada5dceddd8b"
-  node4_private.key: "ed814d8449efb088291a888095ee83454d0f73e6894672daad43ee5dfb1706ed9f387cbaba446ffc05d69cc5cd2f35ed82531b860ceae0febc25560251fcdd36"
-  initiator.key: "7b341f0406e2098f96e8918866324fc36436a279cd7ea7e2f8cc016e7a194a65"
+# IMPORTANT: mpc-identity-keys is managed externally via KMS (kms.hanzo.ai).
+# Keys are stored in KMS under: MPC_NODE{0,1,2}_PRIVATE_KEY and MPC_INITIATOR_KEY
+# Apply with:
+#   kubectl create secret generic mpc-identity-keys -n lux-bridge \
+#     --from-literal="node0_private.key=$(kms get MPC_NODE0_PRIVATE_KEY)" \
+#     --from-literal="node1_private.key=$(kms get MPC_NODE1_PRIVATE_KEY)" \
+#     --from-literal="node2_private.key=$(kms get MPC_NODE2_PRIVATE_KEY)" \
+#     --from-literal="initiator.key=$(kms get MPC_INITIATOR_KEY)" \
+#     --dry-run=client -o yaml | kubectl apply -f -
+# DO NOT add secret values here — never commit keys to git.
 ---
 # MPC Node StatefulSet
 apiVersion: apps/v1
@@ -298,12 +221,27 @@ spec:
     app: mpc-node
   clusterIP: None
   ports:
+  - port: 9651
+    targetPort: 9651
+    name: zap
   - port: 8080
     targetPort: 8080
-    name: http
-  - port: 9090
-    targetPort: 9090
-    name: grpc
+    name: api
+---
+# MPC API service — bridge-server uses MPC_URL=http://mpc-api-svc.lux-bridge.svc:8081
+# mpcd listens on :8080 (--api flag); port 8081 is exposed for external callers
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpc-api-svc
+  namespace: lux-bridge
+spec:
+  selector:
+    app: mpc-node
+  ports:
+  - port: 8081
+    targetPort: 8080
+    name: api
 ---
 # Bridge Server Deployment
 apiVersion: apps/v1
@@ -459,7 +397,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:15-alpine
+        image: ghcr.io/hanzoai/sql:16-alpine
         ports:
         - containerPort: 5432
           name: postgres
@@ -502,23 +440,21 @@ spec:
   - port: 5432
     targetPort: 5432
 ---
-# Secrets
-apiVersion: v1
-kind: Secret
-metadata:
-  name: bridge-secrets
-  namespace: lux-bridge
-type: Opaque
-stringData:
-  database-url: "postgresql://bridge:bridge@postgres:5432/bridge"
-  postgres-password: "bridge"
-  mpc-db-password: "lux-bridge-mpc-prod-2026"
+# bridge-secrets is managed externally via KMS (kms.hanzo.ai).
+# Secrets stored in KMS: BRIDGE_DATABASE_URL, BRIDGE_DB_PASSWORD, MPC_DB_PASSWORD
+# Apply with:
+#   kubectl create secret generic bridge-secrets -n lux-bridge \
+#     --from-literal="database-url=$(kms get BRIDGE_DATABASE_URL)" \
+#     --from-literal="postgres-password=$(kms get BRIDGE_DB_PASSWORD)" \
+#     --from-literal="mpc-db-password=$(kms get MPC_DB_PASSWORD)" \
+#     --dry-run=client -o yaml | kubectl apply -f -
+# DO NOT add secret values here — never commit credentials to git.
 ---
-# PersistentVolumeClaim for NATS
+# PersistentVolumeClaim for KV store
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nats-pvc
+  name: kv-pvc
   namespace: lux-bridge
 spec:
   accessModes:
@@ -534,9 +470,9 @@ metadata:
   name: bridge-ingress
   namespace: lux-bridge
   annotations:
-    kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  ingressClassName: hanzo
   tls:
   - hosts:
     - bridge.lux.network
