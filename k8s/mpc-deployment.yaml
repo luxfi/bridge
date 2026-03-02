@@ -397,7 +397,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: ghcr.io/hanzoai/sql:17-alpine
+        image: ghcr.io/hanzoai/sql:latest
         ports:
         - containerPort: 5432
           name: postgres
