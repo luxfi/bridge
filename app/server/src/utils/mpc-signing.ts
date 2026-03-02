@@ -144,5 +144,5 @@ export class MPCRequestSigner {
 
 // Export singleton instance
 export const mpcRequestSigner = new MPCRequestSigner(
-  process.env.MPC_INITIATOR_KEY_PATH || "/Users/z/work/lux/mpc/identity/initiator.key"
+  process.env.MPC_INITIATOR_KEY_PATH || "/app/identity/initiator.key"
 )

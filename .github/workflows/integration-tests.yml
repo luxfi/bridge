@@ -16,7 +16,7 @@ jobs:
     
     services:
       postgres:
-        image: ghcr.io/hanzoai/sql:17-alpine
+        image: ghcr.io/hanzoai/sql:latest
         env:
           POSTGRES_USER: bridge
           POSTGRES_PASSWORD: bridge
