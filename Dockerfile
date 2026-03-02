@@ -12,7 +12,7 @@ COPY pkg/core/package.json ./pkg/core/
 COPY pkg/settings/package.json ./pkg/settings/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Builder stage
 FROM node:18-alpine AS builder
