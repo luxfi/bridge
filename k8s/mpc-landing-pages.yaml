@@ -94,6 +94,7 @@ data:
         <a href="#chains">Chains</a>
         <a href="#performance">Performance</a>
         <a href="https://docs.lux.network/mpc">Docs</a>
+        <a href="https://api.mpc.lux.network" class="btn btn-outline btn-sm">API</a>
         <a href="https://bridge.lux.network" class="btn btn-primary btn-sm">Bridge</a>
       </div>
     </div>
@@ -106,8 +107,8 @@ data:
       <p class="subtitle">Multi-party computation infrastructure securing the Lux Bridge. 3-of-5 threshold signatures with CGGMP21 and FROST protocols. Your keys never exist in a single location.</p>
       <div class="ctas">
         <a href="https://bridge.lux.network" class="btn btn-primary">Go to Bridge</a>
+        <a href="https://api.mpc.lux.network/healthz" class="btn btn-outline">Node Status</a>
         <a href="https://explore.lux.network" class="btn btn-outline">Explorer</a>
-        <a href="https://github.com/luxfi/mpc" class="btn btn-outline">GitHub</a>
       </div>
     </div>
     </div>
@@ -567,7 +568,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  ingressClassName: hanzo
+  ingressClassName: ingress
   rules:
   - host: mpc.lux.network
     http:

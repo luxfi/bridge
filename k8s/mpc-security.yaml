@@ -1,0 +1,86 @@
+# MPC Network Security Policy
+# Namespace: lux-bridge
+#
+# Threat model:
+#   - MPC nodes hold key shares; lateral movement from any other pod must be blocked
+#   - Only the bridge-server may call the MPC HTTP/dashboard APIs
+#   - MPC nodes must reach each other for ZAP p2p consensus on port 9651
+#   - Egress is unrestricted (nodes need S3, postgres, external peers)
+#
+# Ports:
+#   9651 - ZAP p2p consensus (mpc-node ↔ mpc-node only)
+#   8080 - HTTP API        (bridge-server → mpc-node only)
+#   8081 - Dashboard API   (bridge-server → mpc-node only; also exposed via Ingress)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mpc-node-ingress
+  namespace: lux-bridge
+spec:
+  podSelector:
+    matchLabels:
+      app: mpc-node
+  policyTypes:
+  - Ingress
+  ingress:
+  # bridge-server → mpc-node: HTTP API and dashboard API
+  - from:
+    - podSelector:
+        matchLabels:
+          app: bridge-server
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+  # mpc-node ↔ mpc-node: ZAP p2p consensus
+  - from:
+    - podSelector:
+        matchLabels:
+          app: mpc-node
+    ports:
+    - protocol: TCP
+      port: 9651
+---
+# Egress: unrestricted — nodes must reach S3, postgres, and external MPC peers
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mpc-node-egress
+  namespace: lux-bridge
+spec:
+  podSelector:
+    matchLabels:
+      app: mpc-node
+  policyTypes:
+  - Egress
+  egress:
+  - {}
+---
+# Ingress: api.mpc.lux.network → mpc-api-svc:8081
+# API key auth is enforced by mpcd itself. TLS via cert-manager.
+# DNS: add A record api.mpc.lux.network → ingress controller IP.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mpc-api-ingress
+  namespace: lux-bridge
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: ingress
+  tls:
+  - hosts:
+    - api.mpc.lux.network
+    secretName: mpc-api-lux-tls
+  rules:
+  - host: api.mpc.lux.network
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mpc-api-svc
+            port:
+              number: 8081
