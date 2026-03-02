@@ -156,11 +156,11 @@ data:
     backup_dir: /data/mpc/backups
   peers.json: |
     {
-      "node0": "lux-mainnet-node0",
-      "node1": "lux-mainnet-node1",
-      "node2": "lux-mainnet-node2",
-      "node3": "lux-mainnet-node3",
-      "node4": "lux-mainnet-node4"
+      "node0": "0ce02715-0ead-48ef-9772-2583316cc860",
+      "node1": "c95c340e-5a18-472d-b9b0-5ac68218213a",
+      "node2": "ac37e85f-caca-4bee-8a3a-49a0fe35abff",
+      "node3": "ee42a050-c1e8-4875-ae03-4260047666ff",
+      "node4": "f67ec0b6-5a2f-410b-b43b-800b99315b41"
     }
   node0_identity.json: |
     {"node_name":"node0","node_id":"0ce02715-0ead-48ef-9772-2583316cc860","public_key":"96e47112bab4cb83e59a0a222964fad096f02a9dc52e449097f8991470a141ab"}
@@ -217,7 +217,7 @@ spec:
           cp /config/config.yaml /app/config.yaml
           cp /config/peers.json /app/peers.json
           # Copy ALL node identities (needed for verifying peer messages)
-          for i in 0 1 2; do
+          for i in 0 1 2 3 4; do
             cp /config/node${i}_identity.json /app/identity/node${i}_identity.json
           done
           # Copy own private key
@@ -248,7 +248,16 @@ spec:
           name: grpc
         env:
         - name: LOG_LEVEL
-          value: debug
+          value: info
+        - name: ZAPDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: mpc-db-password
+        - name: MPC_THRESHOLD
+          value: "3"
+        - name: MPC_TOTAL_NODES
+          value: "5"
         volumeMounts:
         - name: app-dir
           mountPath: /app
@@ -340,8 +349,6 @@ spec:
           value: "3"
         - name: MPC_TOTAL_NODES
           value: "5"
-        - name: MPC_TOTAL_NODES
-          value: "3"
         - name: MPC_KEY_PREFIX
           value: bridge/mpc
         livenessProbe:
@@ -505,6 +512,7 @@ type: Opaque
 stringData:
   database-url: "postgresql://bridge:bridge@postgres:5432/bridge"
   postgres-password: "bridge"
+  mpc-db-password: "lux-bridge-mpc-prod-2026"
 ---
 # PersistentVolumeClaim for NATS
 apiVersion: v1
