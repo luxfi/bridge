@@ -1,0 +1,104 @@
+# MPC Operator Compose — Distributed 3-of-5 Multi-Geo Setup
+#
+# OVERVIEW
+# --------
+# Each geo-distributed operator runs this file on their own server.
+# Together, 5 operators form a 3-of-5 threshold MPC cluster: any 3 nodes
+# can produce a valid signature; no single operator holds a complete key.
+#
+# SETUP SEQUENCE (one-time, done by the initiator — node0)
+# ---------------------------------------------------------
+# 1. All 5 operators share their public IP and port 9651 with each other.
+# 2. Each operator copies this file, creates a .env (see ENVIRONMENT below),
+#    and sets MPC_NODE_ID to their assigned node name (node0 .. node4).
+# 3. MPC_PEERS lists the OTHER 4 operators' endpoints, e.g.:
+#      node0 sets: node1@203.0.113.11:9651,node2@203.0.113.12:9651,...
+# 4. The initiator (node0) runs key generation once:
+#      docker compose -f mpc-operator.yml exec mpcd mpcd keygen --threshold 2 --nodes 5
+#    The resulting key shares are written to /data and backed up to S3.
+#    Each operator's share is encrypted with their own LUX_MPC_PASSWORD.
+# 5. After keygen, all 5 operators start their compose stack:
+#      docker compose -f mpc-operator.yml up -d
+#
+# S3 BACKUP
+# ---------
+# Each operator manages their own backup independently using their own
+# bucket/prefix. Credentials never leave the operator's server.
+# Recommended prefix: mpc/<node-id>/  e.g. mpc/node0/
+#
+# NETWORKING
+# ----------
+# Port 9651 (p2p) MUST be reachable from the internet — open it in your
+# firewall/security group. Ports 8080 and 8081 are private; bind them to
+# 127.0.0.1 or restrict with a firewall rule to prevent public exposure.
+#
+# ENVIRONMENT (.env file alongside this compose file)
+# ---------------------------------------------------
+# LUX_MPC_PASSWORD=<strong-random-passphrase>   # encrypts the local ZapDB key share
+# MPC_NODE_ID=node0                              # node0 .. node4
+# MPC_LISTEN_ADDR=:9651                          # p2p — must be internet-accessible
+# MPC_API_ADDR=:8080                             # HTTP API — keep private
+# MPC_DASHBOARD_ADDR=:8081                       # dashboard — keep private
+# MPC_THRESHOLD=2                                # minimum signers required (2-of-5)
+# MPC_PEERS=node1@<ip1>:9651,node2@<ip2>:9651,node3@<ip3>:9651,node4@<ip4>:9651
+# MPC_S3_ENDPOINT=https://s3.amazonaws.com      # or MinIO endpoint
+# MPC_S3_BUCKET=my-mpc-backups
+# MPC_S3_ACCESS_KEY=<access-key>
+# MPC_S3_SECRET_KEY=<secret-key>
+
+services:
+  mpcd:
+    image: ghcr.io/luxfi/mpc:latest
+    restart: unless-stopped
+
+    # Run in consensus mode: no NATS or Consul dependency.
+    # Peers are discovered statically via MPC_PEERS.
+    # ZapDB stores the encrypted key share under /data.
+    command:
+    - mpcd
+    - start
+    - --node-id=${MPC_NODE_ID}
+    - --listen=${MPC_LISTEN_ADDR}
+    - --api=${MPC_API_ADDR}
+    - --dashboard=${MPC_DASHBOARD_ADDR}
+    - --threshold=${MPC_THRESHOLD}
+    - --peers=${MPC_PEERS}
+    - --db=/data/zapdb
+    - --s3-endpoint=${MPC_S3_ENDPOINT}
+    - --s3-bucket=${MPC_S3_BUCKET}
+    - --s3-prefix=mpc/${MPC_NODE_ID}/
+    - --consensus=direct
+
+    environment:
+      LUX_MPC_PASSWORD: ${LUX_MPC_PASSWORD}
+      MPC_NODE_ID: ${MPC_NODE_ID}
+      MPC_LISTEN_ADDR: ${MPC_LISTEN_ADDR}
+      MPC_API_ADDR: ${MPC_API_ADDR}
+      MPC_DASHBOARD_ADDR: ${MPC_DASHBOARD_ADDR}
+      MPC_THRESHOLD: ${MPC_THRESHOLD}
+      MPC_PEERS: ${MPC_PEERS}
+      MPC_S3_ENDPOINT: ${MPC_S3_ENDPOINT}
+      MPC_S3_BUCKET: ${MPC_S3_BUCKET}
+      MPC_S3_ACCESS_KEY: ${MPC_S3_ACCESS_KEY}
+      MPC_S3_SECRET_KEY: ${MPC_S3_SECRET_KEY}
+      LOG_LEVEL: info
+
+    ports:
+    # p2p consensus — internet-accessible; open in firewall
+    - "9651:9651"
+    # HTTP API — private; restrict at firewall or bind to 127.0.0.1
+    - "127.0.0.1:8080:8080"
+    # Dashboard API — private; restrict at firewall or bind to 127.0.0.1
+    - "127.0.0.1:8081:8081"
+
+    volumes:
+    # Persistent ZapDB storage for encrypted key share and consensus state.
+    # Back this up to S3 regularly; the node cannot sign without it.
+    - ./data:/data
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
