@@ -15,6 +15,6 @@ jobs:
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
       image: ghcr.io/luxfi/bridge
-
+      platforms: linux/amd64
       runner-amd64: lux-build
     secrets: inherit
