@@ -1,17 +1,47 @@
+# VCS and CI
 .git
 .github
-.next
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Build artifacts
 node_modules
 **/node_modules
+.next
 **/.next
 **/dist
 **/build
 **/.turbo
-docs
-data
-config/mpc
+
+# Documentation
 *.md
-!README.md
+\!README.md
+docs
+
+# Environment files
 .env*
-.vscode
-.idea
+
+# Test files
+test
+test-bridge-ui.js
+.storybook
+
+# Docker and infrastructure (avoid recursive context)
+Dockerfile
+Dockerfile.*
+docker
+k8s
+
+# Contracts (separate build)
+contracts
+
+# Compose and config files (not needed in build)
+compose*.yml
+config.yaml
+config.kms.yaml
+scripts
+check-ci-status.sh
+push-and-release.sh
