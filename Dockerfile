@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Bridge - Next.js standalone build
 FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat python3 make g++ git
@@ -11,8 +12,9 @@ COPY app/bridge/package.json ./app/bridge/
 COPY pkg/core/package.json ./pkg/core/
 COPY pkg/settings/package.json ./pkg/settings/
 
-# Install dependencies
-RUN pnpm install --no-frozen-lockfile
+# Install dependencies (cache pnpm store across builds)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --no-frozen-lockfile
 
 # Builder stage
 FROM node:18-alpine AS builder
