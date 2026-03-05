@@ -2,7 +2,7 @@ import React, { type PropsWithChildren } from 'react'
 import dynamic from "next/dynamic"
 import { Inter } from 'next/font/google'
 
-import { Footer } from '@luxfi/ui'
+// Footer removed — bridge is a single-page swap interface
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -95,7 +95,9 @@ const RootLayout: React.FC<PropsWithChildren> = async ({ children }) => {
             </div>
           </Main>
         )}
-        <Footer siteDef={tenantSiteDef} />
+        <footer className="py-4 text-center text-xs text-muted-foreground">
+          Lux Bridge
+        </footer>
       </body>
     </html>
   )
