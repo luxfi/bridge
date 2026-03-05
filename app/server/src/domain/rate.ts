@@ -15,8 +15,8 @@ export const getRate = async (
   ])
 
   return {
-    wallet_fee_in_usd: 10,
-    wallet_fee: 0.1,
+    wallet_fee_in_usd: 1,
+    wallet_fee: 0.01,
     wallet_receive_amount: amount,
     manual_fee_in_usd: 0,
     manual_fee: 0,
