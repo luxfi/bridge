@@ -17,7 +17,7 @@ COPY .npmrc* ./
 COPY app/server/package.json ./app/server/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source code
 COPY app/server ./app/server
