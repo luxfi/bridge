@@ -43,8 +43,6 @@ export class BridgeMPCIntegration {
   private constructor() {
     // Setup signature completion handler
     mpcService.on("signatureComplete", this.handleSignatureComplete.bind(this))
-    // Subscribe to Go MPC result topics
-    this.subscribeToMpcResults()
   }
 
   static getInstance(): BridgeMPCIntegration {
@@ -61,6 +59,8 @@ export class BridgeMPCIntegration {
       await mpcService.initialize()
       this.isInitialized = true
       logger.info("Bridge MPC integration initialized")
+      // Subscribe to MPC results now that NATS is connected
+      this.subscribeToMpcResults()
     } catch (error) {
       logger.error("Failed to initialize Bridge MPC integration:", error)
       throw error
@@ -177,11 +177,14 @@ export class BridgeMPCIntegration {
    * MPC nodes publish results with tx_id (not sessionId), so match by tx_id prefix.
    */
   async subscribeToMpcResults(): Promise<void> {
-    setTimeout(async () => {
-      if (!mpcService.nc) return
-      const sub = mpcService.nc.subscribe("mpc.mpc_signing_result.*")
-      ;(async () => {
-        for await (const msg of sub) {
+    if (!mpcService.nc) {
+      logger.warn("NATS not connected, cannot subscribe to MPC results")
+      return
+    }
+    logger.info("Subscribing to mpc.mpc_signing_result.*")
+    const sub = mpcService.nc.subscribe("mpc.mpc_signing_result.*")
+    ;(async () => {
+      for await (const msg of sub) {
           try {
             const result = JSON.parse(sc.decode(msg.data))
             logger.info("Received MPC signing result:", result)
@@ -223,7 +226,6 @@ export class BridgeMPCIntegration {
           }
         }
       })()
-    }, 1000)
   }
 
   async completeSwap(
