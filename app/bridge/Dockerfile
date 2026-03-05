@@ -20,7 +20,6 @@ COPY pkg/settings/package.json ./pkg/settings/
 COPY pkg/threshold/package.json ./pkg/threshold/
 COPY pkg/ui/package.json ./pkg/ui/
 COPY pkg/utila/package.json ./pkg/utila/
-COPY contracts/package.json ./contracts/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
