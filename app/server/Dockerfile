@@ -50,7 +50,7 @@ COPY .npmrc* ./
 COPY app/server/package.json ./app/server/
 
 # Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --no-frozen-lockfile
 
 # Copy built application into workspace path so pnpm node_modules resolve correctly
 COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./app/server/dist

@@ -22,7 +22,7 @@ COPY pkg/ui/package.json ./pkg/ui/
 COPY pkg/utila/package.json ./pkg/utila/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy all source code (needed for workspace deps at build time)
 COPY . .
