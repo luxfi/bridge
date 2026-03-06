@@ -11,6 +11,8 @@ on:
       - 'contracts/**'
       - '.github/workflows/build-and-push.yml'
       - 'Dockerfile*'
+      - '.npmrc'
+      - 'pnpm-workspace.yaml'
   pull_request:
     branches: [main]
   workflow_dispatch:
