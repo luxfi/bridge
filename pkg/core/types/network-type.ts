@@ -7,6 +7,7 @@ type NetworkType =
   | "zk_sync_lite"
   | "ton"
   | "btc"
+  | "xrp"
   | "cardano"
 
 
