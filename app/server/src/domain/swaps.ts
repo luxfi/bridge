@@ -9,6 +9,7 @@ import { isValidAddress } from "@/util"
 import { getTokenPrice } from "./tokens"
 import { isExitFromLux, BRIDGE_FEE_RATE } from "./quote"
 import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWORK_ASSET_MAP } from "./mpc-wallet"
+import { isMPCSigningEnabled, mpcBridgeMint, mpcSendNative } from "./mpc-signer"
 
 export interface SwapData {
   amount: number
@@ -633,7 +634,6 @@ export async function handlerUtilaPayoutAction(swapId: string) {
   })
 
   if (confirmed) {
-    const privateKey = process.env.LUX_SIGNER
     const feeCollector = process.env.BRIDGE_FEE_COLLECTOR || '0x0000000000000000000000000000000000000000'
 
     // 1% fee only on exits from Lux/Zoo; entries are free
@@ -656,35 +656,61 @@ export async function handlerUtilaPayoutAction(swapId: string) {
       token: swap.destination_asset.contract_address,
       payoutAmount,
       feeAmount,
-      feeCollector
+      feeCollector,
+      mpcEnabled: isMPCSigningEnabled()
     })
     if (!rpc) {
       throw new Error(`No RPC found for chain ${swap?.destination_network?.internal_name}`)
     }
     const provider = new JsonRpcProvider(rpc)
-    const feeData = await provider.getFeeData()
-    // signer
-    const wallet = new Wallet(privateKey!, provider)
+    const decimals = swap?.destination_asset.decimals ?? 18
+    const tokenAddress = swap.destination_asset.contract_address as string
+    const mintAmount = parseUnits(payoutAmount.toFixed(decimals), decimals)
+    const feeAmountWei = feeAmount > 0 ? parseUnits(feeAmount.toFixed(decimals), decimals) : 0n
+    const useMPC = isMPCSigningEnabled()
+
+    let signerAddress: string
+    let mintTxHash: string
 
     try {
-      console.log(`>> Minting PayoutToken for this Swap [${swap.id}]`)
+      console.log(`>> Minting PayoutToken for this Swap [${swap.id}] (MPC: ${useMPC})`)
 
-      const contract = new Contract(swap.destination_asset.contract_address as string, ERC20B_ABI, wallet)
-      const decimals = swap?.destination_asset.decimals ?? 18
+      if (useMPC) {
+        // MPC-signed payout
+        mintTxHash = await mpcBridgeMint(provider, tokenAddress, swap.destination_address, mintAmount, ERC20B_ABI)
+        signerAddress = process.env.MPC_WALLET_ID || 'mpc'
+        console.log(`>> Minted L/Z tokens via MPC ${mintTxHash}`)
 
-      // Mint net amount to user (after 1% fee)
-      const txMint = await contract.bridgeMint(swap.destination_address, parseUnits(payoutAmount.toFixed(decimals), decimals))
-      await txMint.wait()
-      console.log(`>> Minted L/Z tokens ${txMint.hash}`)
+        // Mint fee to fee collector via MPC
+        if (feeAmountWei > 0n && feeCollector !== '0x0000000000000000000000000000000000000000') {
+          try {
+            const feeTxHash = await mpcBridgeMint(provider, tokenAddress, feeCollector, feeAmountWei, ERC20B_ABI)
+            console.log(`>> Collected ${feeAmount} fee to ${feeCollector} via MPC (${feeTxHash})`)
+          } catch (feeErr) {
+            console.log(">> Fee collection failed (payout still succeeded):", feeErr)
+          }
+        }
+      } else {
+        // Legacy private key signer
+        const privateKey = process.env.LUX_SIGNER
+        const wallet = new Wallet(privateKey!, provider)
+        signerAddress = wallet.address
 
-      // Mint fee to fee collector
-      if (feeAmount > 0 && feeCollector !== '0x0000000000000000000000000000000000000000') {
-        try {
-          const txFee = await contract.bridgeMint(feeCollector, parseUnits(feeAmount.toFixed(decimals), decimals))
-          await txFee.wait()
-          console.log(`>> Collected ${feeAmount} fee to ${feeCollector} (${txFee.hash})`)
-        } catch (feeErr) {
-          console.log(">> Fee collection failed (payout still succeeded):", feeErr)
+        const contract = new Contract(tokenAddress, ERC20B_ABI, wallet)
+        const txMint = await contract.bridgeMint(swap.destination_address, mintAmount)
+        await txMint.wait()
+        mintTxHash = txMint.hash
+        console.log(`>> Minted L/Z tokens ${mintTxHash}`)
+
+        // Mint fee to fee collector
+        if (feeAmountWei > 0n && feeCollector !== '0x0000000000000000000000000000000000000000') {
+          try {
+            const txFee = await contract.bridgeMint(feeCollector, feeAmountWei)
+            await txFee.wait()
+            console.log(`>> Collected ${feeAmount} fee to ${feeCollector} (${txFee.hash})`)
+          } catch (feeErr) {
+            console.log(">> Fee collection failed (payout still succeeded):", feeErr)
+          }
         }
       }
 
@@ -692,10 +718,10 @@ export async function handlerUtilaPayoutAction(swapId: string) {
         data: {
           status: "payout",
           type: TransactionType.Output,
-          from: wallet.address,
+          from: signerAddress,
           to: swap.destination_address,
           amount: payoutAmount,
-          transaction_hash: txMint.hash,
+          transaction_hash: mintTxHash,
           confirmations: 2,
           max_confirmations: 2,
           swap: {
@@ -726,21 +752,29 @@ export async function handlerUtilaPayoutAction(swapId: string) {
       throw new Error("Error while minting Z/L tokens")
     }
 
+    // Refuel: send 1 native token if balance < 1
     try {
       const _balance = await provider.getBalance(swap.destination_address)
       console.log(">> Lux or Zoo balance:", Number(formatEther(_balance)));
       if (Number(formatEther(_balance)) < 1) {
         console.log(">> Sending 1 L/Z token");
-        const luxSendTxData = {
-          to: swap.destination_address,
-          value: parseEther('1'), // eth to wei
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          gasLimit: 3000000,
+        if (useMPC) {
+          const refuelHash = await mpcSendNative(provider, swap.destination_address, parseEther('1'))
+          console.log(`>> 1 Zoo or Lux sent via MPC to ${swap.destination_address} (${refuelHash})`)
+        } else {
+          const privateKey = process.env.LUX_SIGNER
+          const wallet = new Wallet(privateKey!, provider)
+          const feeData = await provider.getFeeData()
+          const _txSendLux = await wallet.sendTransaction({
+            to: swap.destination_address,
+            value: parseEther('1'),
+            maxFeePerGas: feeData.maxFeePerGas,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            gasLimit: 3000000,
+          })
+          await _txSendLux.wait()
+          console.log(`>> 1 Zoo or Lux is sent to ${swap.destination_address}`)
         }
-        const _txSendLux = await wallet.sendTransaction(luxSendTxData)
-        await _txSendLux.wait()
-        console.log(`>> 1 Zoo or Lux is sent to ${swap.destination_address}`)
       }
     } catch (err) {
       console.log(">> Error while sending 1 Z/L tokens", err)
