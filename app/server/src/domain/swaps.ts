@@ -7,7 +7,7 @@ import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
 
 import { getTokenPrice } from "./tokens"
-import { archiveWalletForExpire, client, createNewWalletForDeposit } from "./utila"
+import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWORK_ASSET_MAP } from "./mpc-wallet"
 
 export interface SwapData {
   amount: number
@@ -77,8 +77,8 @@ export async function handleSwapCreation(data: SwapData) {
 
     let deposit_address = ""
     if (use_deposit_address) {
-      // in the case of using utila mpc wallet
-      const wallet = await createNewWalletForDeposit(source_network)
+      // Native MPC wallet — replaces Utila
+      const wallet = await createMPCWalletForDeposit(source_network)
       deposit_address = `${wallet.name}###${wallet.addresses[0].address}`
     }
 
@@ -378,24 +378,41 @@ export async function handlerUpdatePayoutAction(id: string, txHash: string, amou
 export async function checkDepositAction({
   asset,
   wallet,
-  requestedAmount
+  requestedAmount,
+  networkInternalName,
 }: {
   asset: string,
   wallet: string,
-  requestedAmount: number
+  requestedAmount: number,
+  networkInternalName?: string,
 }) {
   try {
-    const { walletBalances } = await client.queryWalletBalances({
-      parent: wallet,
-      filter: `asset("${asset}")`
-    })
-    const balance = walletBalances.filter((b: any) => b.asset === asset).reduce((sum: number, b: any) => sum + Number(b.value), 0)
-    if (balance >= requestedAmount) { //if deposited amount is lager than needed
-      console.log(`>> Deposit for swap [${balance}, ${requestedAmount}]`)
-      return true
-    } else {
-      return false
+    // Extract address from wallet###address format
+    const address = wallet.includes('###') ? wallet.split('###')[1] : wallet
+
+    // If we have the network name, use native deposit check
+    if (networkInternalName) {
+      return await checkNativeDeposit({
+        networkInternalName,
+        address,
+        asset,
+        requiredAmount: requestedAmount,
+      })
     }
+
+    // Fallback: try all known networks for this asset
+    for (const [network, assets] of Object.entries(NETWORK_ASSET_MAP)) {
+      if (assets[asset]) {
+        const result = await checkNativeDeposit({
+          networkInternalName: network,
+          address,
+          asset,
+          requiredAmount: requestedAmount,
+        })
+        if (result) return true
+      }
+    }
+    return false
   } catch (err: any) {
     console.error(">> Error while checking Deposit Action", err?.message)
     return false
@@ -451,16 +468,13 @@ export async function handlerDepositAction(
   // check if action already exists
   const depositActions = swap.deposit_actions
   const _depositAction = depositActions.find((d: any) => d.transaction_hash === hash)
-  // checking Utila network
-  const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
-  if (!utilaNetwork) {
-    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
-  }
-  // checking network and asset match
+  // Check network and asset match using native mapping
+  const networkName = swap.source_network.internal_name as string
+  const assetMap = NETWORK_ASSET_MAP[networkName] || UTILA_NETWORKS[networkName]?.assets || {}
   const _wallet = swap.deposit_address?.split('###')?.[0] as string
-  const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
-  if (_asset?.toLowerCase() !== asset.toLowerCase()) {
-    throw new Error("Unrecognized Token Deposit")
+  const _asset = assetMap[swap.source_asset.asset as string] || swap.source_asset.asset
+  if (!_asset) {
+    throw new Error(`Unrecognized asset ${swap.source_asset.asset} on ${networkName}`)
   }
   // if deposit action exists, update it else create new one
   if (_depositAction) {
@@ -510,7 +524,8 @@ export async function handlerDepositAction(
     const confirmed = await checkDepositAction({
       asset: _asset,
       wallet: _wallet,
-      requestedAmount: Number(swap.requested_amount)
+      requestedAmount: Number(swap.requested_amount),
+      networkInternalName: swap.source_network.internal_name,
     })
 
     if (confirmed) {
@@ -546,13 +561,10 @@ export async function handlerCheckDeposit(
   if (!swap) {
     throw new Error("There is No swap for this transaction")
   }
-  const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
-  if (!utilaNetwork) {
-    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
-  }
-  // checking network and asset match
+  const networkName = swap.source_network.internal_name as string
+  const assetMap = NETWORK_ASSET_MAP[networkName] || UTILA_NETWORKS[networkName]?.assets || {}
   const _wallet = swap.deposit_address?.split('###')?.[0] as string
-  const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
+  const _asset = assetMap[swap.source_asset.asset as string] || swap.source_asset.asset
 
   const unconfirmedActions = swap.deposit_actions.filter((d: any) => d.status !== 'CONFIRMED')
   if (unconfirmedActions.length > 0) {
@@ -598,14 +610,11 @@ export async function handlerUtilaPayoutAction(swapId: string) {
     throw new Error("No swap found for this id")
   }
 
-  // checking Utila network
-  const utilaNetwork = UTILA_NETWORKS[swap.source_network.internal_name as string]
-  if (!utilaNetwork) {
-    throw new Error(`Unrecognized Utila Network [${swap.source_network.internal_name}]`)
-  }
-  // utila wallet and asset
+  // Native MPC wallet and asset
+  const networkName = swap.source_network.internal_name as string
+  const assetMap = NETWORK_ASSET_MAP[networkName] || UTILA_NETWORKS[networkName]?.assets || {}
   const _wallet = swap?.deposit_address?.split('###')?.[0] as string
-  const _asset = utilaNetwork.assets[swap.source_asset.asset as string]
+  const _asset = assetMap[swap.source_asset.asset as string] || swap.source_asset.asset
   // if already minted, reject
   if (swap.status !== SwapStatus.BridgeTransferPending) {
     throw new Error("Deposit is not completed or Already minted payout token for this swap")
@@ -741,7 +750,7 @@ export async function handlerSwapExpire(id: string) {
     })
     if (!swap) throw { message: "No swap found for swapId" }
     const wallet = swap.deposit_address?.split("#")?.[0]
-    archiveWalletForExpire(wallet as string)
+    archiveMPCWallet(wallet as string)
     await prisma.swap.update({
       where: { id },
       data: {
