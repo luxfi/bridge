@@ -5,11 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'app/server/**'
+      - 'pkg/core/**'
       - '.github/workflows/bridge-server.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'app/server/**'
+      - 'pkg/core/**'
       - '.github/workflows/bridge-server.yml'
 
 jobs:
@@ -51,6 +53,10 @@ jobs:
       working-directory: ./app/server
       run: |
         pnpm add -D @types/node winston
+
+    - name: Build workspace dependencies
+      working-directory: ./pkg/core
+      run: pnpm run build
 
     - name: Run type check
       working-directory: ./app/server
