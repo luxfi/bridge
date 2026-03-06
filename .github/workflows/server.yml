@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'app/server/**' # Only trigger the workflow for changes in the server directory
+      - 'app/server/**'
+      - 'pkg/core/**'
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -36,10 +37,9 @@ jobs:
         run: |
           docker login --username "${{ secrets.GH_USER }}" --password "${{ secrets.GH_TOKEN }}" ghcr.io
 
-      - name: Run Docker build and push with pnpm script
+      - name: Run Docker build and push
         run: |
-          docker buildx build --platform linux/amd64 -t ghcr.io/luxfi/bridge/server:latest -f docker/Dockerfile . --push
-        working-directory: app/server
+          docker buildx build --platform linux/amd64 -t ghcr.io/luxfi/bridge/server:latest -f app/server/Dockerfile . --push
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
