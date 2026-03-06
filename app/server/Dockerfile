@@ -13,16 +13,19 @@ COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
 COPY .npmrc* ./
 
-# Copy app package.json
+# Copy workspace package.json files
 COPY app/server/package.json ./app/server/
+COPY pkg/core/package.json ./pkg/core/
 
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
 # Copy source code
+COPY pkg/core ./pkg/core
 COPY app/server ./app/server
 
-# Build the application
+# Build workspace dependencies then the application
+RUN cd pkg/core && pnpm run build
 RUN cd app/server && pnpm run build
 
 # Runtime stage
@@ -46,12 +49,15 @@ COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
 COPY .npmrc* ./
 
-# Copy app package.json
+# Copy workspace package.json files
 COPY app/server/package.json ./app/server/
+COPY pkg/core/package.json ./pkg/core/
 
 # Install production dependencies only
 RUN pnpm install --prod --no-frozen-lockfile
 
+# Copy built workspace dependency
+COPY --from=builder --chown=bridge:nodejs /app/pkg/core/dist ./pkg/core/dist
 # Copy built application into workspace path so pnpm node_modules resolve correctly
 COPY --from=builder --chown=bridge:nodejs /app/app/server/dist ./app/server/dist
 # Copy prisma schema for generation
