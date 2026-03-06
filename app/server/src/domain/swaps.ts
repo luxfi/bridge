@@ -7,6 +7,7 @@ import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
 
 import { getTokenPrice } from "./tokens"
+import { isExitFromLux, BRIDGE_FEE_RATE } from "./quote"
 import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWORK_ASSET_MAP } from "./mpc-wallet"
 
 export interface SwapData {
@@ -110,22 +111,26 @@ export async function handleSwapCreation(data: SwapData) {
       }
     })
 
-    // estimate swap rate
+    // estimate swap rate — 1% fee only on exits from Lux/Zoo
     const [sourcePrice, destinationPrice] = await Promise.all([getTokenPrice(source_asset), getTokenPrice(destination_asset)])
-    const receive_amount = Number(amount) * sourcePrice / destinationPrice
+    const raw_receive_amount = Number(amount) * sourcePrice / destinationPrice
+    const feeRate = isExitFromLux(source_network, destination_network) ? BRIDGE_FEE_RATE : 0
+    const service_fee_amount = raw_receive_amount * feeRate
+    const receive_amount = raw_receive_amount - service_fee_amount
+    const service_fee_usd = service_fee_amount * destinationPrice
 
     // save quote
     const quote = await prisma.quote.create({
       data: {
         swap_id: swap.id,
         receive_amount: isNaN(receive_amount) ? 0 : receive_amount,
-        min_receive_amount: 0,
+        min_receive_amount: isNaN(receive_amount) ? 0 : receive_amount * (1 - 0.025),
         blockchain_fee: 0,
-        service_fee: 0,
+        service_fee: feeRate,
         avg_completion_time: "00:03:00",
         slippage: 0.025,
-        total_fee: 0,
-        total_fee_in_usd: 0
+        total_fee: isNaN(service_fee_amount) ? 0 : service_fee_amount,
+        total_fee_in_usd: isNaN(service_fee_usd) ? 0 : service_fee_usd
       }
     })
 
@@ -384,7 +389,7 @@ export async function checkDepositAction({
   asset: string,
   wallet: string,
   requestedAmount: number,
-  networkInternalName?: string,
+  networkInternalName?: string | null,
 }) {
   try {
     // Extract address from wallet###address format
@@ -603,7 +608,8 @@ export async function handlerUtilaPayoutAction(swapId: string) {
       destination_network: {
         include: { currencies: false }
       },
-      destination_asset: true
+      destination_asset: true,
+      quotes: true
     }
   })
   if (!swap) {
@@ -627,9 +633,15 @@ export async function handlerUtilaPayoutAction(swapId: string) {
   })
 
   if (confirmed) {
-    // todo: mint L or Z tokens here 
-    // Replace with your private key (store it securely, not hardcoded in production)
     const privateKey = process.env.LUX_SIGNER
+    const feeCollector = process.env.BRIDGE_FEE_COLLECTOR || '0x0000000000000000000000000000000000000000'
+
+    // 1% fee only on exits from Lux/Zoo; entries are free
+    const isExitSwap = isExitFromLux(swap.source_network.internal_name || '', swap.destination_network?.internal_name || '')
+    const payoutAmount = isExitSwap
+      ? (swap.quotes?.receive_amount ?? (swap.requested_amount * (1 - BRIDGE_FEE_RATE)))
+      : swap.requested_amount
+    const feeAmount = isExitSwap ? (swap.requested_amount - payoutAmount) : 0
 
     // rpc urls
     const rpcs: Record<string, string> = {
@@ -642,7 +654,9 @@ export async function handlerUtilaPayoutAction(swapId: string) {
     console.log(">> payout details", {
       rpc,
       token: swap.destination_asset.contract_address,
-      amount: swap.requested_amount
+      payoutAmount,
+      feeAmount,
+      feeCollector
     })
     if (!rpc) {
       throw new Error(`No RPC found for chain ${swap?.destination_network?.internal_name}`)
@@ -651,16 +665,28 @@ export async function handlerUtilaPayoutAction(swapId: string) {
     const feeData = await provider.getFeeData()
     // signer
     const wallet = new Wallet(privateKey!, provider)
-    // mint payout token
 
     try {
       console.log(`>> Minting PayoutToken for this Swap [${swap.id}]`)
 
       const contract = new Contract(swap.destination_asset.contract_address as string, ERC20B_ABI, wallet)
       const decimals = swap?.destination_asset.decimals ?? 18
-      const txMint = await contract.bridgeMint(swap.destination_address, parseUnits(swap.requested_amount.toFixed(decimals), decimals))
+
+      // Mint net amount to user (after 1% fee)
+      const txMint = await contract.bridgeMint(swap.destination_address, parseUnits(payoutAmount.toFixed(decimals), decimals))
       await txMint.wait()
       console.log(`>> Minted L/Z tokens ${txMint.hash}`)
+
+      // Mint fee to fee collector
+      if (feeAmount > 0 && feeCollector !== '0x0000000000000000000000000000000000000000') {
+        try {
+          const txFee = await contract.bridgeMint(feeCollector, parseUnits(feeAmount.toFixed(decimals), decimals))
+          await txFee.wait()
+          console.log(`>> Collected ${feeAmount} fee to ${feeCollector} (${txFee.hash})`)
+        } catch (feeErr) {
+          console.log(">> Fee collection failed (payout still succeeded):", feeErr)
+        }
+      }
 
       await prisma.transaction.create({
         data: {
@@ -668,7 +694,7 @@ export async function handlerUtilaPayoutAction(swapId: string) {
           type: TransactionType.Output,
           from: wallet.address,
           to: swap.destination_address,
-          amount: swap.requested_amount,
+          amount: payoutAmount,
           transaction_hash: txMint.hash,
           confirmations: 2,
           max_confirmations: 2,
