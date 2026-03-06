@@ -56,7 +56,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@luxfi/core": "^10.0.4",
+    "@luxfi/core": "workspace:*",
     "@luxfi/utila": "^3.0.0",
     "@noble/ed25519": "^2.3.0",
     "@prisma/client": "^6.3.1",
