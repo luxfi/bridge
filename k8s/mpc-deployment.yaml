@@ -127,6 +127,13 @@ spec:
       labels:
         app: mpc-node
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
       - name: setup-identity
         image: alpine:latest
@@ -157,6 +164,11 @@ spec:
       containers:
       - name: mpc
         image: ghcr.io/luxfi/mpc:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
         command: ["/bin/sh", "-c"]
         args:
         - |
@@ -186,6 +198,8 @@ spec:
           mountPath: /app
         - name: mpc-data
           mountPath: /data
+        - name: tmp
+          mountPath: /tmp
         resources:
           requests:
             memory: "256Mi"
@@ -196,6 +210,9 @@ spec:
       volumes:
       - name: app-dir
         emptyDir: {}
+      - name: tmp
+        emptyDir:
+          sizeLimit: 50Mi
       - name: mpc-config
         configMap:
           name: mpc-config
