@@ -1,31 +1,38 @@
 import { getTokenPrice } from "@/domain/tokens"
+import { isExitFromLux, BRIDGE_FEE_RATE } from "./quote"
 
 export const getRate = async (
-  fromNetwork: string, 
-  fromAsset: string, 
-  toNetwork: string, 
-  toAsset: string, 
-  amount: number, 
-  version: 'mainnet' | 'testnet', 
+  fromNetwork: string,
+  fromAsset: string,
+  toNetwork: string,
+  toAsset: string,
+  amount: number,
+  version: 'mainnet' | 'testnet',
 ) => {
 
   const [sourcePrice, destinationPrice] = await Promise.all([
-    getTokenPrice(fromAsset), 
+    getTokenPrice(fromAsset),
     getTokenPrice(toAsset)
   ])
 
+  const rawReceiveAmount = amount * sourcePrice / destinationPrice
+  const feeRate = isExitFromLux(fromNetwork, toNetwork) ? BRIDGE_FEE_RATE : 0
+  const feeAmount = rawReceiveAmount * feeRate
+  const receiveAmount = rawReceiveAmount - feeAmount
+  const feeUsd = feeAmount * destinationPrice
+
   return {
-    wallet_fee_in_usd: 1,
-    wallet_fee: 0.01,
-    wallet_receive_amount: amount,
-    manual_fee_in_usd: 0,
-    manual_fee: 0,
-    manual_receive_amount: amount * sourcePrice / destinationPrice,
+    wallet_fee_in_usd: feeUsd,
+    wallet_fee: feeRate,
+    wallet_receive_amount: receiveAmount,
+    manual_fee_in_usd: feeUsd,
+    manual_fee: feeRate,
+    manual_receive_amount: receiveAmount,
     avg_completion_time: {
       total_minutes: 2,
       total_seconds: 0,
       total_hours: 0,
     },
-    fee_usd_price: 10,
+    fee_usd_price: feeUsd,
   }
 }

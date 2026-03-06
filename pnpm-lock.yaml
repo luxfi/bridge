@@ -40,6 +40,9 @@ catalogs:
       specifier: 5.7.2
       version: 5.7.2
 
+overrides:
+  keccak: 3.0.4
+
 importers:
 
   .:
@@ -549,6 +552,9 @@ importers:
       '@luxfi/utila':
         specifier: ^3.0.0
         version: 3.0.0(@babel/core@7.26.0)(@babel/traverse@7.26.4)(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(@types/node@20.17.11)(bufferutil@4.0.9)(nx@20.3.0(@swc/core@1.10.4(@swc/helpers@0.5.15)))(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.11)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.24.1)
+      '@noble/ed25519':
+        specifier: ^2.3.0
+        version: 2.3.0
       '@prisma/client':
         specifier: ^6.3.1
         version: 6.3.1(prisma@6.3.1(typescript@5.7.2))(typescript@5.7.2)
@@ -9918,10 +9924,6 @@ packages:
 
   jws@3.2.2:
     resolution: {integrity: sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==}
-
-  keccak@1.4.0:
-    resolution: {integrity: sha512-eZVaCpblK5formjPjeTBik7TAg+pqnDrMHIffSvi9Lh7PQgM1+hSzakUeZFCk9DVVG0dacZJuaz2ntwlzZUIBw==}
-    engines: {node: '>=4.0.0'}
 
   keccak@3.0.4:
     resolution: {integrity: sha512-3vKuW0jV8J3XNTzvfyicFR5qvxrSAGl7KIhvgOu5cmWwM7tZRj3fMbj/pfIf4be7aznbc+prBWGjywox/g2Y6Q==}
@@ -25766,7 +25768,7 @@ snapshots:
       bn.js: 4.12.1
       create-hash: 1.2.0
       ethjs-util: 0.1.6
-      keccak: 1.4.0
+      keccak: 3.0.4
       rlp: 2.2.7
       safe-buffer: 5.2.1
       secp256k1: 3.8.1
@@ -27712,13 +27714,6 @@ snapshots:
   jws@3.2.2:
     dependencies:
       jwa: 1.4.1
-      safe-buffer: 5.2.1
-
-  keccak@1.4.0:
-    dependencies:
-      bindings: 1.5.0
-      inherits: 2.0.4
-      nan: 2.22.0
       safe-buffer: 5.2.1
 
   keccak@3.0.4:
