@@ -126,14 +126,15 @@ try {
   app.listen(port, async () => {
     logger.info(`>> Server Is Running On Port ${port}`)
     
-    // Initialize MPC service
+    // Initialize MPC signing service (NATS-based, used for bridge getsig endpoint)
+    // Wallet creation uses HTTP to MPC API directly via mpc-wallet.ts
     try {
-      logger.info("Initializing MPC service...")
+      logger.info("Initializing MPC signing service...")
       await mpcService.initialize()
       await bridgeMPC.initialize()
-      logger.info("MPC service initialized successfully")
+      logger.info("MPC signing service initialized successfully")
     } catch (error) {
-      logger.error("Failed to initialize MPC service:", error)
+      logger.warn("MPC signing service initialization failed (wallet creation still works via HTTP):", error)
     }
   })
 } catch (error) {
