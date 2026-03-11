@@ -137,7 +137,7 @@ jobs:
         HANZO_API_KEY: ${{ secrets.HANZO_API_KEY }}
         KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://kms.hanzo.ai' }}
       run: |
-        response=$(curl -sf "${KMS_ENDPOINT}/api/v1/secrets/raw?secretPath=/deploy&environment=production" \
+        response=$(curl -sf "${KMS_ENDPOINT}/api/v3/secrets/raw?workspaceId=e1359bf4-31b4-4dfa-bb90-323e2c298ad8&secretPath=/deploy&environment=prod" \
           -H "Authorization: Bearer ${HANZO_API_KEY}" 2>/dev/null || echo "")
         if [ -n "$response" ]; then
           token=$(echo "$response" | jq -r '.secrets[] | select(.secretKey=="DO_API_TOKEN") | .secretValue // empty')
