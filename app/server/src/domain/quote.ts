@@ -3,7 +3,7 @@ import { getTokenPrice } from "@/domain/tokens"
 // 0% fee bridging IN from external chains
 // 1% fee on every transfer FROM Lux/Zoo (to each other, or out to external)
 const BRIDGE_FEE_RATE = 0.01
-const LUX_ZOO_NETWORKS = ['LUX_MAINNET', 'LUX_TESTNET', 'ZOO_MAINNET', 'ZOO_TESTNET']
+const LUX_ZOO_NETWORKS = ['LUX_MAINNET', 'LUX_TESTNET', 'LUX_DEVNET', 'ZOO_MAINNET', 'ZOO_TESTNET', 'ZOO_DEVNET']
 
 function isExitFromLux(fromNetwork: string, _toNetwork: string): boolean {
   return LUX_ZOO_NETWORKS.includes(fromNetwork)

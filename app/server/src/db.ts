@@ -1,10 +1,10 @@
 import { prisma } from "@/prisma-instance"
 
-import { mainnetSettings, testnetSettings } from "@/domain/settings"
+import { mainnetSettings, testnetSettings, devnetSettings } from "@/domain/settings"
 
 const main = async () => {
   try {
-    const networks = [...mainnetSettings.data.networks, ...testnetSettings.data.networks]
+    const networks = [...mainnetSettings.data.networks, ...testnetSettings.data.networks, ...devnetSettings.data.networks]
     console.log("::starting networks data update...")
     let currenciesCount = 0
 
