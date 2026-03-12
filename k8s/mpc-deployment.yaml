@@ -287,7 +287,7 @@ spec:
           value: production
         - name: PORT
           value: "3000"
-        - name: DATABASE_URL
+        - name: POSTGRES_URL
           valueFrom:
             secretKeyRef:
               name: bridge-secrets
@@ -306,6 +306,23 @@ spec:
           value: "5"
         - name: MPC_KEY_PREFIX
           value: bridge/mpc
+        - name: MPC_API_URL
+          value: http://mpc-api-svc.lux-bridge.svc:8081
+        - name: MPC_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: mpc-api-token
+        - name: MPC_WALLET_ID
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: mpc-wallet-id
+        - name: BRIDGE_FEE_COLLECTOR
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: fee-collector-address
         livenessProbe:
           httpGet:
             path: /health

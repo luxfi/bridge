@@ -1,6 +1,9 @@
-import { mainnetSettings,  testnetSettings } from './settings'
+import { mainnetSettings, testnetSettings, devnetSettings, type NetworkVersion } from './settings'
 
-export const getNetworks = (version: 'mainnet' | 'testnet') => {
-  const settings = (version === "mainnet") ? mainnetSettings : testnetSettings
-  return settings.data.networks
+export const getNetworks = (version: NetworkVersion) => {
+  switch (version) {
+    case 'devnet': return devnetSettings.data.networks
+    case 'testnet': return testnetSettings.data.networks
+    default: return mainnetSettings.data.networks
+  }
 }

@@ -18,6 +18,7 @@ import networks from "@/routes/networks"
 import exchanges from "@/routes/exchanges"
 import { mpcService } from "@/services/mpc-service"
 import { bridgeMPC } from "@/domain/mpc-bridge"
+import { startTeleportProcessor } from "@/domain/teleport-processor"
 
 try {
   dotenv.config()
@@ -136,6 +137,9 @@ try {
     } catch (error) {
       logger.warn("MPC signing service initialization failed (wallet creation still works via HTTP):", error)
     }
+
+    // Start background processor for teleporter swaps stuck in TeleportProcessPending
+    startTeleportProcessor()
   })
 } catch (error) {
   // Catch any initialization errors
