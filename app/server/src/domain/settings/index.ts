@@ -2,6 +2,8 @@ import mainnetNetworks from './mainnet/networks'
 import mainnetExchanges from './mainnet/exchanges'
 import testnetExchanges from './testnet/exchanges'
 import testnetNetworks from './testnet/networks'
+import devnetExchanges from './devnet/exchanges'
+import devnetNetworks from './devnet/networks'
 import swapPairs from './swap-pairs'
 
 export const mainnetSettings = {
@@ -32,6 +34,26 @@ export const testnetSettings = {
   error: null,
 }
 
-export const getSettings = (version: 'mainnet' | 'testnet') => (
-  (version === "mainnet") ? mainnetSettings : testnetSettings
-)
+export const devnetSettings = {
+  data: {
+    currencies: [],
+    discovery: {},
+    exchanges: devnetExchanges,
+    networks: devnetNetworks,
+    swapPairs
+  },
+  sources: [],
+  destinations: [],
+  contractAddress: {},
+  error: null,
+}
+
+export type NetworkVersion = 'mainnet' | 'testnet' | 'devnet'
+
+export const getSettings = (version: NetworkVersion) => {
+  switch (version) {
+    case 'devnet': return devnetSettings
+    case 'testnet': return testnetSettings
+    default: return mainnetSettings
+  }
+}

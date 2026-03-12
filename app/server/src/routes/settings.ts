@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express"
-import { getSettings } from "@/domain/settings"
+import { getSettings, type NetworkVersion } from "@/domain/settings"
 
 const router: Router = Router()
 
@@ -9,7 +9,7 @@ const router: Router = Router()
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { version } = req.query
-    const settings = getSettings(version as 'mainnet' | 'testnet')
+    const settings = getSettings((version as NetworkVersion) ?? 'mainnet')
     res.status(200).json({ ...settings.data })
   } 
   catch (error: any) {

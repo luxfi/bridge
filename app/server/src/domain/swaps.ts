@@ -623,15 +623,23 @@ export async function handlerUtilaPayoutAction(swapId: string) {
   const _wallet = swap?.deposit_address?.split('###')?.[0] as string
   const _asset = assetMap[swap.source_asset.asset as string] || swap.source_asset.asset
   // if already minted, reject
-  if (swap.status !== SwapStatus.BridgeTransferPending) {
+  const allowedStatuses = [SwapStatus.BridgeTransferPending, SwapStatus.TeleportProcessPending]
+  if (!allowedStatuses.includes(swap.status as SwapStatus)) {
     throw new Error("Deposit is not completed or Already minted payout token for this swap")
   }
-  // check if deposit is completed
-  const confirmed = await checkDepositAction({
-    asset: _asset,
-    wallet: _wallet,
-    requestedAmount: Number(swap.requested_amount)
-  })
+
+  // Teleporter swaps skip deposit verification — the user's transfer tx is already recorded
+  const isTeleporterSwap = swap.status === SwapStatus.TeleportProcessPending
+  let confirmed = isTeleporterSwap
+
+  if (!isTeleporterSwap) {
+    // check if deposit is completed (deposit-address flow only)
+    confirmed = await checkDepositAction({
+      asset: _asset,
+      wallet: _wallet,
+      requestedAmount: Number(swap.requested_amount)
+    })
+  }
 
   if (confirmed) {
     const feeCollector = process.env.BRIDGE_FEE_COLLECTOR || '0x0000000000000000000000000000000000000000'
@@ -643,12 +651,14 @@ export async function handlerUtilaPayoutAction(swapId: string) {
       : swap.requested_amount
     const feeAmount = isExitSwap ? (swap.requested_amount - payoutAmount) : 0
 
-    // rpc urls
+    // rpc urls — Zoo is an L2 subnet on Lux, NOT the Z-chain
     const rpcs: Record<string, string> = {
-      'LUX_MAINNET': 'https://api.lux.network',
-      'LUX_TESTNET': 'https://api.lux-test.network',
-      'ZOO_MAINNET': 'https://api.zoo.network',
-      'ZOO_TESTNET': 'https://api.zoo-test.network'
+      'LUX_MAINNET': 'https://api.lux.network/ext/bc/C/rpc',
+      'LUX_TESTNET': 'https://api.lux-test.network/ext/bc/C/rpc',
+      'LUX_DEVNET': 'https://api.lux-dev.network/ext/bc/C/rpc',
+      'ZOO_MAINNET': 'https://api.lux.network/ext/bc/zoo/rpc',
+      'ZOO_TESTNET': 'https://api.lux-test.network/ext/bc/zoo/rpc',
+      'ZOO_DEVNET': 'https://api.lux-dev.network/ext/bc/zoo/rpc'
     }
     const rpc = rpcs[swap?.destination_network?.internal_name as string]
     console.log(">> payout details", {
