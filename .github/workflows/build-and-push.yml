@@ -24,7 +24,7 @@ env:
 jobs:
   build-ui:
     name: Build Bridge UI
-    runs-on: lux-build
+    runs-on: lux-build-linux-amd64
     permissions:
       contents: read
       packages: write
@@ -79,7 +79,7 @@ jobs:
 
   build-server:
     name: Build Bridge Server
-    runs-on: lux-build
+    runs-on: lux-build-linux-amd64
     permissions:
       contents: read
       packages: write
@@ -124,7 +124,7 @@ jobs:
 
   deploy:
     name: Deploy to lux-k8s
-    runs-on: lux-build
+    runs-on: lux-build-linux-amd64
     needs: [build-ui, build-server]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     permissions:
