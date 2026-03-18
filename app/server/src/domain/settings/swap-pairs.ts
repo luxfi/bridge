@@ -13,6 +13,7 @@ export default {
   LSOL: ['SOL', 'ZSOL'],
   LTON: ['TON', 'ZTON'],
   LXRP: ['XRP', 'ZXRP'],
+  LDOT: ['DOT', 'ZDOT'],
   LADA: ['ZADA'],
   LAVAX: ['AVAX', 'ZAVAX'],
   LBLAST: ['ZBLAST', 'BLAST'],
@@ -45,6 +46,7 @@ export default {
   ZSOL: ['SOL', 'LSOL'],
   ZTON: ['TON', 'LTON'],
   ZXRP: ['XRP', 'LXRP'],
+  ZDOT: ['DOT', 'LDOT'],
   ZADA: ['LADA'],
   ZAVAX: ['AVAX', 'LAVAX'],
   ZBLAST: ['LBLAST', 'BLAST'],
@@ -82,6 +84,7 @@ export default {
   BTC: ['LBTC', 'ZBTC'],
   TON: ['LTON', 'ZTON'],
   XRP: ['LXRP', 'ZXRP'],
+  DOT: ['LDOT', 'ZDOT'],
   // Solana tokens
   SOL: ['LSOL', 'ZSOL'],
   BONK: ['LBONK', 'ZBONK'],

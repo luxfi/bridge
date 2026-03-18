@@ -1,4 +1,6 @@
 import logger from "@/logger"
+import { encodeSubstrateAddress, SUBSTRATE_NETWORKS } from "./substrate-address.js"
+import { checkSubstrateDeposit } from "./substrate-deposit.js"
 
 /**
  * Native MPC wallet integration for Lux Bridge.
@@ -7,7 +9,7 @@ import logger from "@/logger"
  */
 
 // Network type to address field mapping
-const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp'> = {
+const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp' | 'dot'> = {
   // EVM chains use eth address
   ETHEREUM_MAINNET: 'eth',
   ETHEREUM_SEPOLIA: 'eth',
@@ -47,6 +49,8 @@ const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp'
   // XRP
   XRP_MAINNET: 'xrp',
   XRP_TESTNET: 'xrp',
+  // Polkadot / Substrate
+  POLKADOT_MAINNET: 'dot',
   // Cardano (placeholder — needs Ed25519)
   CARDANO_MAINNET: 'sol',
 }
@@ -131,6 +135,19 @@ export async function createMPCWalletForDeposit(networkInternalName: string): Pr
         // proper rAddress derivation should be added
         address = result.eth_address
         break
+      case 'dot': {
+        // Derive SS58 address from sr25519/ed25519 public key
+        // MPC keygen returns eddsa_pub_key which is ed25519 — usable for SS58
+        const pubKeyHex = result.eddsa_pub_key
+        if (!pubKeyHex) {
+          throw new Error('MPC keygen did not return eddsa_pub_key for Substrate address derivation')
+        }
+        const pubKeyBytes = new Uint8Array(
+          Buffer.from(pubKeyHex.startsWith('0x') ? pubKeyHex.slice(2) : pubKeyHex, 'hex')
+        )
+        address = encodeSubstrateAddress(pubKeyBytes, SUBSTRATE_NETWORKS.POLKADOT)
+        break
+      }
       default:
         address = result.eth_address
     }
@@ -183,6 +200,8 @@ export async function checkNativeDeposit({
         return await checkSOLDeposit(networkInternalName, address, asset, requiredAmount)
       case 'ton':
         return await checkTONDeposit(networkInternalName, address, requiredAmount)
+      case 'dot':
+        return await checkSubstrateDeposit(networkInternalName, address, requiredAmount)
       default:
         logger.warn(`Deposit check not implemented for ${addrType}`)
         return false
@@ -219,6 +238,8 @@ const RPC_URLS: Record<string, string> = {
   // TON
   TON_MAINNET: 'https://toncenter.com/api/v2',
   TON_TESTNET: 'https://testnet.toncenter.com/api/v2',
+  // Polkadot / Substrate
+  POLKADOT_MAINNET: 'https://rpc.polkadot.io',
 }
 
 async function checkEVMDeposit(network: string, address: string, asset: string, requiredAmount: number): Promise<boolean> {
@@ -314,4 +335,5 @@ export const NETWORK_ASSET_MAP: Record<string, Record<string, string>> = {
   BSC_TESTNET: { BNB: 'BNB' },
   XRP_MAINNET: { XRP: 'XRP' },
   XRP_TESTNET: { XRP: 'XRP' },
+  POLKADOT_MAINNET: { DOT: 'DOT' },
 }
