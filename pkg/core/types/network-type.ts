@@ -9,6 +9,7 @@ type NetworkType =
   | "btc"
   | "xrp"
   | "cardano"
+  | "substrate"
 
 
 export {
