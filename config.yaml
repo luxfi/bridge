@@ -5,7 +5,7 @@ consul:
 
 mpc_threshold: 2
 environment: local # Options: mainnet, testnet, local
-badger_password: "bridgempcpassword123456789012345" # 32 bytes for AES-256
+badger_password: "REPLACE_FROM_KMS" # Set via ZAPDB_PASSWORD env var in production
 event_initiator_pubkey: "c3f3511cd2f849fd61e81ea62a842fd33367ee8fb5b867bb900877c7fb72ce3b"
 max_concurrent_keygen: 2
 db_path: "./data/mpc"  
