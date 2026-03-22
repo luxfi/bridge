@@ -44,7 +44,7 @@ const DesktopHeader: React.FC<
       >
         {logoSrc ? (
           <a href="/" className="flex items-center">
-            <Image src={logoSrc} alt="Bridge Logo" height={32} width={120} style={{ objectFit: 'contain' }} />
+            <Image src={logoSrc} alt="Bridge Logo" height={32} width={120} unoptimized={logoSrc.endsWith('.svg')} style={{ objectFit: 'contain' }} />
           </a>
         ) : (
           <Logo
