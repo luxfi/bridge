@@ -61,7 +61,7 @@ export const MPC_CLUSTER = {
 // Default tenant (Lux branding) — used when hostname is unrecognized
 export const DEFAULT_TENANT: TenantConfig = {
   name: 'Lux Bridge',
-  logoUrl: 'https://lux.network/images/logo.png',
+  logoUrl: '/assets/img/lux-logo.svg',
   primaryColor: '#0055ff',
   accentColor: '#00ccff',
   mpcMode: 'lux-mpc',
@@ -79,8 +79,7 @@ export const DEFAULT_TENANT: TenantConfig = {
 export const TENANT_REGISTRY: Record<string, TenantConfig> = {
   'bridge.lux.network': {
     name: 'Lux Bridge',
-    logoUrl: 'https://lux.network/images/logo.png',
-    faviconUrl: 'https://lux.network/favicon.ico',
+    logoUrl: '/assets/img/lux-logo.svg',
     primaryColor: '#0055ff',
     accentColor: '#00ccff',
     mpcMode: 'lux-mpc',
@@ -93,7 +92,7 @@ export const TENANT_REGISTRY: Record<string, TenantConfig> = {
   },
   'bridge-test.lux.network': {
     name: 'Lux Bridge (Testnet)',
-    logoUrl: 'https://lux.network/images/logo.png',
+    logoUrl: '/assets/img/lux-logo.svg',
     primaryColor: '#0055ff',
     accentColor: '#00ccff',
     mpcMode: 'lux-mpc',
