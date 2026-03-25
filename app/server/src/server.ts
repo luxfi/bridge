@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 import morgan from "morgan"
+import helmet from "helmet"
 import { v4 as uuidv4 } from "uuid"
 
 import logger from "@/logger" // Import Winston logger
@@ -27,6 +28,13 @@ try {
   const port: number = process.env.PORT ? Number(process.env.PORT) : 5000
 
   logger.info(">> Server Initialization Started")
+
+  // Security: remove X-Powered-By header, add security headers
+  app.disable('x-powered-by')
+  app.use(helmet({
+    contentSecurityPolicy: false,        // managed by frontend
+    crossOriginEmbedderPolicy: false,    // bridge needs cross-origin
+  }))
 
   // Behind Proxy
   app.set('trust proxy', true)
@@ -81,10 +89,13 @@ try {
   app.use("/api/networks", networks)
   app.use("/api/exchanges", exchanges)
 
-  // Root endpoint
+  // Root endpoint — proper health check, no internal details
   app.get("/", (req: Request, res: Response) => {
-    logger.info("Root endpoint accessed")
-    res.send("Hello, Winston Logger!")
+    res.json({
+      service: "lux-bridge",
+      status: "ok",
+      timestamp: new Date().toISOString()
+    })
   })
 
   // Health endpoint
@@ -112,15 +123,16 @@ try {
   })
 
   // Global error handling middleware
+  // SECURITY: Never expose stack traces or internal error details to clients.
+  // Log the full error server-side, return only a generic message + requestId.
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const requestId = uuidv4()
     if (err instanceof Error) {
-      logger.error(`Error: ${err.message}`, { stack: err.stack, requestId })
-      res.status(500).json({ error: err.message, stack: err.stack, requestId })
+      logger.error(`Error: ${err.message}`, { stack: err.stack, requestId, path: req.originalUrl })
     } else {
-      logger.error(`Unknown Error: ${err}`, { requestId })
-      res.status(500).json({ error: "Internal Server Error", requestId })
+      logger.error(`Unknown Error: ${err}`, { requestId, path: req.originalUrl })
     }
+    res.status(500).json({ error: "Internal Server Error", requestId })
   })
 
   // Start the server
