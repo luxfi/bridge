@@ -1,5 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from "express"
 import cors from "cors"
+import rateLimit from "express-rate-limit"
 import dotenv from "dotenv"
 import morgan from "morgan"
 import helmet from "helmet"
@@ -47,7 +48,15 @@ try {
   })
 
   // Middleware
-  app.use(cors())
+  app.use(cors({
+    origin: ['https://bridge.lux.network', /\.lux\.(network|exchange)$/],
+  }))
+  app.use(rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,                  // limit each IP to 100 requests per window
+    standardHeaders: true,
+    legacyHeaders: false,
+  }))
   app.use(express.urlencoded({ extended: true }))
 
   morgan.token('referrer', (req) => req.headers['referer'] || '-')
