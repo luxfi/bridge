@@ -468,11 +468,11 @@ data:
     </body>
     </html>
 ---
-# Nginx config — hostname-based routing, single port
+# Static server config — hostname-based routing, single port
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mpc-nginx-conf
+  name: mpc-static-conf
   namespace: lux-bridge
 data:
   default.conf: |
@@ -485,7 +485,7 @@ data:
             set $brand "pars";
         }
 
-        root /usr/share/nginx/$brand;
+        root /usr/share/static/$brand;
         index index.html;
 
         location / {
@@ -498,7 +498,7 @@ data:
         }
     }
 ---
-# Nginx deployment
+# Static server deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -515,18 +515,18 @@ spec:
         app: mpc-landing
     spec:
       containers:
-      - name: nginx
-        image: nginx:alpine
+      - name: static
+        image: ghcr.io/hanzoai/static:latest
         ports:
         - containerPort: 80
           name: http
         volumeMounts:
         - name: lux-html
-          mountPath: /usr/share/nginx/lux
+          mountPath: /usr/share/static/lux
         - name: pars-html
-          mountPath: /usr/share/nginx/pars
-        - name: nginx-conf
-          mountPath: /etc/nginx/conf.d
+          mountPath: /usr/share/static/pars
+        - name: static-conf
+          mountPath: /etc/static/conf.d
         resources:
           requests:
             memory: "32Mi"
@@ -541,9 +541,9 @@ spec:
       - name: pars-html
         configMap:
           name: mpc-pars-landing
-      - name: nginx-conf
+      - name: static-conf
         configMap:
-          name: mpc-nginx-conf
+          name: mpc-static-conf
 ---
 # Single service for all MPC landing pages
 apiVersion: v1
@@ -568,7 +568,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  ingressClassName: ingress
+  ingressClassName: hanzo
   rules:
   - host: mpc.lux.network
     http:
