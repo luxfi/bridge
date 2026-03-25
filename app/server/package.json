@@ -68,6 +68,7 @@
     "ethers": "^6.13.4",
     "express": "^4.21.1",
     "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "morgan": "^1.10.0",
