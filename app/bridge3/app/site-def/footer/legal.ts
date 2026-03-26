@@ -1,14 +1,27 @@
 import type { LinkDef } from '@hanzo/ui/types'
 
+/**
+ * Legal links — use env vars for white-label deployments.
+ * Default to lps.lux.network for regulatory (shared across all brands).
+ */
+const termsUrl = process.env.NEXT_PUBLIC_TERMS_URL ?? '/terms'
+const privacyUrl = process.env.NEXT_PUBLIC_PRIVACY_URL ?? '/privacy'
+const regulatoryUrl = process.env.NEXT_PUBLIC_REGULATORY_URL ?? 'https://lps.lux.network/legal/regulatory-status'
+
 const legal: LinkDef[] = [
   {
-    title: 'Terms and Conditions',
-    href: 'https://docs.google.com/document/d/1mvkjr1w8Rv8ttirs1mu-_2fw_PXclOyS/preview',
-    newTab: true,
+    title: 'Terms of Service',
+    href: termsUrl,
+    newTab: termsUrl.startsWith('http'),
   },
   {
     title: 'Privacy Policy',
-    href: 'https://docs.google.com/document/d/1vZjOKaNdOoThDIaVLERWxflQLtOsuvLn/preview',
+    href: privacyUrl,
+    newTab: privacyUrl.startsWith('http'),
+  },
+  {
+    title: 'Regulatory Status',
+    href: regulatoryUrl,
     newTab: true,
   },
 ] 
