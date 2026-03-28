@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
-  const hostname = req.headers.get("host") || "bridge.lux.network";
+  const hostname = req.headers.get("host") || "localhost:3000";
 
   const response = NextResponse.next();
 

@@ -31,7 +31,7 @@ function MaintananceContent(props: PropsWithChildren) {
                             Any pending swaps will be completed after maintenance.
                         </p>
                     </h1>
-                    <SubmitButton onClick={() => window.open('https://twitter.com/luxdefi', '_blank')} icon={twitterLogo} isDisabled={false} isSubmitting={false}>Follow for updates</SubmitButton>
+                    <SubmitButton onClick={() => window.open('#', '_blank')} icon={twitterLogo} isDisabled={false} isSubmitting={false}>Follow for updates</SubmitButton>
                 </div>
             </CardContainer>
         </div>

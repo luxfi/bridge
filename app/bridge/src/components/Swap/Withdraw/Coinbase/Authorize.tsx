@@ -195,7 +195,7 @@ const Authorize: React.FC<{
                     <div className="pt-2 font-normal text-xs ">
                         <p className="block font-lighter text-left">
                             <span>Even after authorization Bridge can&apost initiate a withdrawal without your explicit confirmation.&nbsp</span>
-                            <a target='_blank' href='https://docs.bridge.lux.network/user-docs/connect-a-coinbase-account' className=' underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
+                            <a target='_blank' href='/docs/connect-a-coinbase-account' className=' underline hover:no-underline decoration-white cursor-pointer'>Learn more</a></p>
                     </div>
                 </div>
             </Widget.Footer>
