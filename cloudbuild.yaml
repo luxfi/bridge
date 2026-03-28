@@ -1,0 +1,31 @@
+# Cloud Build — Lux Bridge Server
+# Builds ONLY the bridge server (Next.js standalone).
+# The bridge-ui build is separate (needs pre-existing SSR data fixes).
+
+substitutions:
+  _ENV_SUFFIX: dev
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - 'DOCKER_BUILDKIT=1'
+    args:
+      - 'build'
+      - '--no-cache'
+      - '-f'
+      - 'Dockerfile'
+      - '-t'
+      - 'us-docker.pkg.dev/${PROJECT_ID}/backend/bridge:${_ENV_SUFFIX}'
+      - '-t'
+      - 'us-docker.pkg.dev/${PROJECT_ID}/backend/bridge:latest'
+      - '.'
+
+images:
+  - 'us-docker.pkg.dev/${PROJECT_ID}/backend/bridge:${_ENV_SUFFIX}'
+  - 'us-docker.pkg.dev/${PROJECT_ID}/backend/bridge:latest'
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s

@@ -66,7 +66,7 @@ const Delay: React.FC = () => {
     return (
         <div>
             <p className='text-md '><span>This usually means that the exchange needs additional verification.</span>
-                <Link target='_blank' href="https://docs.bridge.lux.network/user-docs/why-is-coinbase-transfer-taking-so-long"
+                <Link target='_blank' href="/docs/why-is-coinbase-transfer-taking-so-long"
                     className='disabled:text-opacity-40 disabled:bg-primary-900 disabled:cursor-not-allowed ml-1 underline hover:no-underline cursor-pointer'>Learn More</Link></p>
             <ul className="list-inside list-decimal font-light space-y-1 mt-2 text-left  ">
                 <li>Check your email for details from Coinbase</li>

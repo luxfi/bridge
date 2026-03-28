@@ -30,13 +30,8 @@ test-bridge-ui.js
 .storybook
 
 # Docker and infrastructure (avoid recursive context)
-Dockerfile
-Dockerfile.*
 docker
 k8s
-
-# Contracts (separate build)
-contracts
 
 # Compose and config files (not needed in build)
 compose*.yml

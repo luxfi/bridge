@@ -25,7 +25,7 @@ const GotoExchange: React.FC<IProps> = ({ className }) => (
           />
         </div>
         <div className="flex flex-col">
-          <h3 className="text-lg">Lux Exchange</h3>
+          <h3 className="text-lg">Exchange</h3>
           <h3 className="text-sm hidden sm:inline">Trade hyper liquid digital assets on LX with zero gas fees.</h3>
         </div>
       </div>

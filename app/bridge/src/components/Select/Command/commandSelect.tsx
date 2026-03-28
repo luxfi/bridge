@@ -47,7 +47,7 @@ export default function CommandSelect({ values, value, setValue, show, setShow, 
                     {
                         value?.isAvailable.disabledReason === LayerDisabledReason.LockNetworkIsTrue &&
                         <div className='text-xs text-left  mb-2'>
-                            <Info className='h-3 w-3 inline-block mb-0.5' /><span>&nbspYou&aposre accessing Bridge from a partner&aposs page. In case you want to transact with other networks, please open bridge.lux.network in a separate tab.</span>
+                            <Info className='h-3 w-3 inline-block mb-0.5' /><span>&nbspYou&aposre accessing Bridge from a partner&aposs page. In case you want to transact with other networks, please open the bridge in a separate tab.</span>
                         </div>
                     }
                     {values ?
