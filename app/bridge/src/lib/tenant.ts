@@ -1,211 +1,179 @@
 /**
- * White-label multi-tenant bridge configuration.
+ * Tenant resolution via Hanzo IAM organization.
  *
- * Tenants point a CNAME at bridge.lux.network — the bridge reads the
- * incoming hostname and serves the right branding, logo, MPC wallet, and
- * chain config automatically. Zero code changes needed for new tenants.
+ * The IAM org IS the tenant. Each deployment sets IAM_HOST + IAM_ORG env vars.
+ * The bridge fetches org config (name, logo, colors) from IAM at startup.
+ * Login is standard OIDC via IAM. JWT org claim drives everything downstream.
  *
- * Resolution order:
- *   1. Static TENANT_REGISTRY (built-in tenants: lux, pars, hanzo, zoo)
- *   2. BRIDGE_TENANT_CONFIG env var (JSON map) — for self-hosted / Bootnode deployments
- *   3. Default (Lux branding)
+ * This is the same pattern used by:
+ *   - ~/work/lux/exchange (VITE_IAM_HOST + VITE_IAM_ORG)
+ *   - ~/work/hanzo/kms (SITE_NAME from IAM org)
+ *   - ~/work/liquidity/app/apps/cex (VITE_IAM_HOST + VITE_IAM_ORG)
  *
- * MPC modes:
- *   lux-mpc   — shared 3-of-5 cluster (no per-tenant SPOF, recommended)
- *   t-chain   — ThresholdVM on T-chain (decentralized, when deployed)
- *   custom    — tenant's own MPC endpoint (self-hosted, set mpcEndpoint)
+ * Zero hardcoded brand. Zero tenant registry. IAM is the single source of truth.
  */
+
+// ── IAM org config (fetched at runtime from Hanzo IAM) ──────────────
+
+export interface IamOrg {
+  name: string
+  displayName: string
+  websiteUrl: string
+  logo: string
+  logoDark: string
+  favicon: string
+  themeData?: {
+    themeType?: string
+    colorPrimary?: string
+    borderRadius?: number
+    isCompact?: boolean
+    isEnabled?: boolean
+  }
+}
+
+// ── Tenant config (derived from IAM org + bridge-specific env vars) ──
 
 export type MpcMode = 'lux-mpc' | 't-chain' | 'custom'
 
 export interface TenantConfig {
-  /** Display name shown in UI */
+  /** Org name from IAM (e.g. "liquidity", "hanzo", "pars") */
+  orgName: string
+  /** Display name from IAM org.displayName */
   name: string
-  /** Logo image URL */
+  /** Logo URL from IAM org.logo */
   logoUrl: string
-  /** Favicon URL */
-  faviconUrl?: string
-  /** Brand primary color (hex) */
+  /** Logo for dark mode from IAM org.logoDark */
+  logoDarkUrl: string
+  /** Favicon from IAM org.favicon */
+  faviconUrl: string
+  /** Primary brand color from IAM org.themeData.colorPrimary */
   primaryColor: string
-  /** Brand secondary/accent color (hex) */
-  accentColor?: string
-  /** Which MPC backend to use (default: lux-mpc = shared 3-of-5 cluster) */
+  /** Website URL from IAM org.websiteUrl */
+  websiteUrl: string
+  /** MPC mode — from BRIDGE_MPC_MODE env (default: custom) */
   mpcMode: MpcMode
-  /** Override MPC endpoint — required when mpcMode is "custom" */
-  mpcEndpoint?: string
-  /** Override bridge API server URL (default: bridge-api.lux.network) */
-  apiUrl?: string
-  /** Network environment */
+  /** MPC endpoint — from MPC_ENDPOINT env */
+  mpcEndpoint: string
+  /** Network — from BRIDGE_NETWORK env (default: mainnet) */
   network: 'mainnet' | 'testnet'
-  /** Allowed source/destination chain IDs — undefined means all chains */
+  /** Allowed chains — from BRIDGE_ALLOWED_CHAINS env (comma-sep, or empty = all) */
   allowedChains?: string[]
-  /** External links shown in nav/footer */
-  links?: {
-    home?: string
-    explorer?: string
-    docs?: string
-  }
+  /** IAM OIDC issuer URL */
+  iamHost: string
+  /** IAM OIDC client ID */
+  clientId: string
+  /** Explorer URL — from BRIDGE_EXPLORER_URL env */
+  explorerUrl: string
+  /** Docs URL — from BRIDGE_DOCS_URL env */
+  docsUrl: string
 }
 
-export interface ResolvedTenant extends TenantConfig {
-  hostname: string
+// ── Environment config ───────────────────────────────────────────────
+
+const IAM_HOST = process.env.NEXT_PUBLIC_IAM_HOST || process.env.IAM_HOST || ''
+const IAM_ORG = process.env.NEXT_PUBLIC_IAM_ORG || process.env.IAM_ORG || ''
+const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID || process.env.IAM_CLIENT_ID || ''
+const MPC_ENDPOINT = process.env.MPC_ENDPOINT || ''
+const MPC_MODE = (process.env.BRIDGE_MPC_MODE || 'custom') as MpcMode
+const NETWORK = (process.env.BRIDGE_NETWORK || 'mainnet') as 'mainnet' | 'testnet'
+const ALLOWED_CHAINS = process.env.BRIDGE_ALLOWED_CHAINS
+  ? process.env.BRIDGE_ALLOWED_CHAINS.split(',').map((s) => s.trim())
+  : undefined
+const EXPLORER_URL = process.env.BRIDGE_EXPLORER_URL || ''
+const DOCS_URL = process.env.BRIDGE_DOCS_URL || ''
+
+// ── Fallback (used when IAM is unreachable) ──────────────────────────
+
+const FALLBACK_TENANT: TenantConfig = {
+  orgName: IAM_ORG || 'bridge',
+  name: process.env.NEXT_PUBLIC_BRAND_NAME || 'Bridge',
+  logoUrl: '/assets/img/logo.svg',
+  logoDarkUrl: '/assets/img/logo-dark.svg',
+  faviconUrl: '/favicon.ico',
+  primaryColor: '#4f46e5',
+  websiteUrl: '',
+  mpcMode: MPC_MODE,
+  mpcEndpoint: MPC_ENDPOINT,
+  network: NETWORK,
+  allowedChains: ALLOWED_CHAINS,
+  iamHost: IAM_HOST,
+  clientId: CLIENT_ID,
+  explorerUrl: EXPLORER_URL,
+  docsUrl: DOCS_URL,
 }
 
-// MPC cluster config (3-of-5 threshold)
-export const MPC_CLUSTER = {
-  threshold: 3,
-  totalNodes: 5,
-  scheme: '3-of-5',
-}
+// ── Fetch org from IAM ───────────────────────────────────────────────
 
-// Default tenant (Lux branding) — used when hostname is unrecognized
-export const DEFAULT_TENANT: TenantConfig = {
-  name: 'Lux Bridge',
-  logoUrl: '/assets/img/lux-logo.svg',
-  primaryColor: '#0055ff',
-  accentColor: '#00ccff',
-  mpcMode: 'lux-mpc',
-  network: 'mainnet',
-  links: {
-    home: 'https://lux.network',
-    explorer: 'https://explore.lux.network',
-    docs: 'https://docs.lux.network',
-  },
-}
-
-// Static tenant registry — hostname → config.
-// New tenants: CNAME yourdomain → bridge.lux.network, add entry here
-// OR set BRIDGE_TENANT_CONFIG env var (Bootnode / self-hosted deployments).
-export const TENANT_REGISTRY: Record<string, TenantConfig> = {
-  'bridge.lux.network': {
-    name: 'Lux Bridge',
-    logoUrl: '/assets/img/lux-logo.svg',
-    primaryColor: '#0055ff',
-    accentColor: '#00ccff',
-    mpcMode: 'lux-mpc',
-    network: 'mainnet',
-    links: {
-      home: 'https://lux.network',
-      explorer: 'https://explore.lux.network',
-      docs: 'https://docs.lux.network',
-    },
-  },
-  'bridge-test.lux.network': {
-    name: 'Lux Bridge (Testnet)',
-    logoUrl: '/assets/img/lux-logo.svg',
-    primaryColor: '#0055ff',
-    accentColor: '#00ccff',
-    mpcMode: 'lux-mpc',
-    network: 'testnet',
-    links: {
-      home: 'https://lux.network',
-      explorer: 'https://explore.lux-test.network',
-    },
-  },
-  'bridge.pars.network': {
-    name: 'Pars Bridge',
-    logoUrl: 'https://pars.network/logo.svg',
-    faviconUrl: 'https://pars.network/favicon.ico',
-    primaryColor: '#00cc88',
-    accentColor: '#00ffaa',
-    mpcMode: 'lux-mpc',
-    network: 'mainnet',
-    allowedChains: ['PARS', 'LUX', 'ETHEREUM', 'BSC'],
-    links: {
-      home: 'https://pars.network',
-      explorer: 'https://explore.pars.network',
-    },
-  },
-  'bridge.hanzo.ai': {
-    name: 'Hanzo Bridge',
-    logoUrl: 'https://hanzo.ai/logo.svg',
-    faviconUrl: 'https://hanzo.ai/favicon.ico',
-    primaryColor: '#fd4444',
-    accentColor: '#ff6666',
-    mpcMode: 'lux-mpc',
-    network: 'mainnet',
-    links: {
-      home: 'https://hanzo.ai',
-      explorer: 'https://explore.hanzo.ai',
-      docs: 'https://docs.hanzo.ai',
-    },
-  },
-  'bridge.zoo.ngo': {
-    name: 'Zoo Bridge',
-    logoUrl: 'https://zoo.ngo/logo.svg',
-    faviconUrl: 'https://zoo.ngo/favicon.ico',
-    primaryColor: '#22c55e',
-    accentColor: '#4ade80',
-    mpcMode: 'lux-mpc',
-    network: 'mainnet',
-    links: {
-      home: 'https://zoo.ngo',
-      explorer: 'https://explore.zoo.ngo',
-    },
-  },
-}
+let cachedTenant: TenantConfig | null = null
+let cacheExpiry = 0
 
 /**
- * Resolve tenant config from hostname.
- *
- * Works with any CNAME pointing at bridge.lux.network — no DNS config
- * needed on the bridge side beyond adding the host to TENANT_REGISTRY
- * or BRIDGE_TENANT_CONFIG. The ingress TLS cert is handled by cert-manager.
+ * Fetch org config from Hanzo IAM and build TenantConfig.
+ * Caches for 5 minutes. Falls back to env-var defaults if IAM unreachable.
  */
-export function resolveTenant(hostname: string): ResolvedTenant {
-  // Strip port (localhost:3000 → localhost)
-  const host = hostname.split(':')[0]
+export async function fetchTenant(): Promise<TenantConfig> {
+  const now = Date.now()
+  if (cachedTenant && now < cacheExpiry) return cachedTenant
 
-  // 1. Static registry (built-in tenants)
-  const config = TENANT_REGISTRY[host]
-  if (config) {
-    return { ...config, hostname: host }
+  if (!IAM_HOST || !IAM_ORG) {
+    // No IAM configured — use fallback (env-var driven brand)
+    cachedTenant = FALLBACK_TENANT
+    cacheExpiry = now + 300_000
+    return cachedTenant
   }
 
-  // 2. Env var — JSON map of hostname → TenantConfig
-  //    Used by Bootnode / self-hosted deployments to inject tenant config
-  //    without rebuilding the image. Set via k8s secret or CI env.
-  const envConfig = process.env.BRIDGE_TENANT_CONFIG
-  if (envConfig) {
-    try {
-      const parsed = JSON.parse(envConfig) as Record<string, TenantConfig>
-      if (parsed[host]) {
-        return { ...parsed[host], hostname: host }
-      }
-      // Wildcard match: *.yourdomain.com
-      for (const [pattern, cfg] of Object.entries(parsed)) {
-        if (pattern.startsWith('*.')) {
-          const suffix = pattern.slice(1) // .yourdomain.com
-          if (host.endsWith(suffix)) {
-            return { ...cfg, hostname: host }
-          }
-        }
-      }
-    } catch {
-      // ignore malformed env
+  try {
+    const url = `${IAM_HOST.replace(/\/+$/, '')}/api/get-organization?id=admin/${IAM_ORG}`
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      next: { revalidate: 300 }, // ISR: revalidate every 5 min
+    })
+
+    if (!res.ok) throw new Error(`IAM returned ${res.status}`)
+
+    const body = await res.json()
+    const org: IamOrg = body.data ?? body
+
+    cachedTenant = {
+      orgName: org.name || IAM_ORG,
+      name: org.displayName || FALLBACK_TENANT.name,
+      logoUrl: org.logo || FALLBACK_TENANT.logoUrl,
+      logoDarkUrl: org.logoDark || org.logo || FALLBACK_TENANT.logoDarkUrl,
+      faviconUrl: org.favicon || FALLBACK_TENANT.faviconUrl,
+      primaryColor: org.themeData?.colorPrimary || FALLBACK_TENANT.primaryColor,
+      websiteUrl: org.websiteUrl || FALLBACK_TENANT.websiteUrl,
+      mpcMode: MPC_MODE,
+      mpcEndpoint: MPC_ENDPOINT,
+      network: NETWORK,
+      allowedChains: ALLOWED_CHAINS,
+      iamHost: IAM_HOST,
+      clientId: CLIENT_ID,
+      explorerUrl: EXPLORER_URL,
+      docsUrl: DOCS_URL,
     }
-  }
+    cacheExpiry = now + 300_000
+    return cachedTenant
 
-  // 3. Default: Lux branding
-  return { ...DEFAULT_TENANT, hostname: host }
+  } catch (err) {
+    console.error('[tenant] Failed to fetch org from IAM, using fallback:', err)
+    cachedTenant = FALLBACK_TENANT
+    cacheExpiry = now + 60_000 // retry sooner on failure
+    return cachedTenant
+  }
 }
 
 /**
- * MPC endpoint resolution.
- * lux-mpc → cluster endpoint (set via env or default)
- * t-chain → ThresholdVM RPC on T-chain
- * custom → tenant-specified endpoint
+ * Synchronous access to cached tenant (for client components).
+ * Returns fallback if not yet fetched.
  */
-export function getMpcEndpoint(tenant: TenantConfig): string {
-  if (tenant.mpcEndpoint) return tenant.mpcEndpoint
+export function getTenant(): TenantConfig {
+  return cachedTenant || FALLBACK_TENANT
+}
 
-  switch (tenant.mpcMode) {
-    case 't-chain':
-      return (
-        process.env.TCHAIN_MPC_ENDPOINT || 'https://api.lux.network/ext/bc/T'
-      )
-    case 'lux-mpc':
-    default:
-      return process.env.MPC_ENDPOINT || 'http://mpc-node-0:6000'
-  }
+/**
+ * MPC endpoint for this deployment.
+ */
+export function getMpcEndpoint(): string {
+  const t = getTenant()
+  return t.mpcEndpoint || MPC_ENDPOINT || 'http://mpc-node-0:6000'
 }

@@ -108,7 +108,7 @@ const BriefInformation: React.FC<{
       def={{
         title: "Learn more",
         newTab: true,
-        href: "https://docs.lux.network",
+        href: "/docs/",
       }}
       className="inline-flex text-primary underline hover:no-underline"
     />

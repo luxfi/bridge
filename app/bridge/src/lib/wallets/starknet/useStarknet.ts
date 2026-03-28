@@ -29,7 +29,7 @@ export default function useStarknet(): WalletProvider {
                 argentMobileOptions: {
                     dappName: 'Bridge',
                     projectId: WALLETCONNECT_PROJECT_ID,
-                    url: 'https://bridge.lux.network/app',
+                    url: typeof window !== 'undefined' ? window.location.origin + '/app' : '/app',
                     description: 'Move crypto across exchanges, blockchains, and wallets.',
                     chainId: chainId as any
                 },

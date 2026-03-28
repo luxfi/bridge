@@ -139,14 +139,14 @@ const BridgeMenu: React.FC = () => {
                 Help
               </Menu.Item>
               <Menu.Item
-                pathname="https://docs.bridge.lux.network/"
+                pathname="/docs/"
                 target="_blank"
                 icon={<BookOpen className="h-5 w-5" />}
               >
                 Docs for Users
               </Menu.Item>
               <Menu.Item
-                pathname="https://docs.bridge.lux.network/user-docs/partners-and-integrations"
+                pathname="/docs/partners-and-integrations"
                 target="_blank"
                 icon={<Users className="h-5 w-5" />}
               >
@@ -155,14 +155,14 @@ const BridgeMenu: React.FC = () => {
             </Menu.Group>
             <Menu.Group>
               <Menu.Item
-                pathname="https://docs.bridge.lux.network/user-docs/information/privacy-policy"
+                pathname="/docs/information/privacy-policy"
                 target="_blank"
                 icon={<Shield className="h-5 w-5" />}
               >
                 Privacy Policy
               </Menu.Item>
               <Menu.Item
-                pathname="https://docs.bridge.lux.network/user-docs/information/terms-of-services"
+                pathname="/docs/information/terms-of-services"
                 target="_blank"
                 icon={<LibraryIcon className="h-5 w-5" />}
               >
