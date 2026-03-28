@@ -81,7 +81,7 @@ const ImtblxWalletWithdrawStep: React.FC<{
                 </span>
                 <GuideLink 
                   text={source_network?.display_name} 
-                  userGuideUrl='https://docs.bridge.lux.network/user-docs/your-first-swap/off-ramp/send-assets-from-immutablex' 
+                  userGuideUrl='/docs/your-first-swap/off-ramp/send-assets-from-immutablex'
                 />
             </WarningMessage>
             {
