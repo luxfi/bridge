@@ -141,7 +141,7 @@ const ManualTransfer: React.FC<IProps> = ({
           <div className="max-w-xs">
             <p className="text-base ">About manual transfers</p>
             <p className="text-xs ">
-              Transfer assets to Lux Bridge’s deposit address to complete the
+              Transfer assets to the bridge’s deposit address to complete the
               swap.
             </p>
           </div>

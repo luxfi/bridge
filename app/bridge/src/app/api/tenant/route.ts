@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { resolveTenant } from '@/lib/tenant'
+import { fetchTenant } from '@/lib/tenant'
 
 export const runtime = 'edge'
 
-export async function GET(req: NextRequest) {
-  // Hostname from query param (client-side) or x-tenant header (set by middleware)
-  const hostname =
-    req.nextUrl.searchParams.get('hostname') ||
-    req.headers.get('x-tenant-hostname') ||
-    req.headers.get('host') ||
-    'bridge.lux.network'
-
-  const tenant = resolveTenant(hostname)
+/**
+ * GET /api/tenant — returns tenant config derived from IAM org.
+ * Client-side components call this to get branding (name, logo, colors).
+ * Cached for 60s at edge, revalidates via IAM every 5 min server-side.
+ */
+export async function GET(_req: NextRequest) {
+  const tenant = await fetchTenant()
 
   return NextResponse.json(tenant, {
     headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' },

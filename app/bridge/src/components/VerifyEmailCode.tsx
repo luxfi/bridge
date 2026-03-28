@@ -62,8 +62,8 @@ const VerifyEmailCode: React.FC<{
         setShowDocModal(true)
     }
 
-    const handleOpenTerms = () => openDoc('https://docs.bridge.lux.network/user-docs/information/terms-of-services')
-    const handleOpenPrivacyPolicy = () => openDoc('https://docs.bridge.lux.network/user-docs/information/privacy-policy')
+    const handleOpenTerms = () => openDoc('/docs/information/terms-of-services')
+    const handleOpenPrivacyPolicy = () => openDoc('/docs/information/privacy-policy')
 
     const timerCountdown = userLockedOut ? 600 : 60
 

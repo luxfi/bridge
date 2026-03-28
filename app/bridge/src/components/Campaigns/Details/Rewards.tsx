@@ -65,7 +65,7 @@ const Rewards: React.FC<{
                     <span>Onboarding incentives that are earned by transferring to&nbsp;</span>{network?.display_name}<span>.&nbsp;</span>
                     <a
                         target='_blank'
-                        href="https://docs.lux.network/"
+                        href="/docs/"
                         className=" underline hover:no-underline decoration-white cursor-pointer"
                     >Learn more</a>
                 </span>

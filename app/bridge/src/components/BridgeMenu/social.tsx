@@ -11,37 +11,37 @@ import { type LinkDef } from '@hanzo/ui/types'
 export default [
   {
       title: 'Twitter',
-      href: 'https://twitter.com/luxfi',
+      href: '',
       icon: <TwitterLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Twitter'
   },
   {
       title: 'GitHub',
-      href: 'https://github.com/luxfi',
+      href: '',
       icon: <GitHubLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=GitHub'
   },
   {
       title: 'Discord',
-      href: 'https://chat.lux.network',
+      href: '',
       icon: <DiscordLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Discord'
   },
   {
       title: 'YouTube',
-      href: 'https://www.youtube.com/@luxfi',
+      href: '',
       icon: <YoutubeLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Youtube'
   },
   {
       title: 'Substack',
-      href: 'https://luxdefi.substack.com/',
+      href: '',
       icon: <SubstackLogo className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Substack'
   },
   {
       title: 'Roadmap',
-      href: 'https://github.com/orgs/luxdefi/projects/1/views/4',
+      href: '',
       icon: <LucideMap className="h-5 w-5" aria-hidden="true"/>,
       className: 'plausible-event-title=Roadmap'
   },

@@ -84,7 +84,7 @@ const SwapSuccess: React.FC<IProps> = ({
                   <Gauge value={100} size="verySmall" showCheckmark={true} />
                 </span>
                 <div className="flex flex-col items-center text-sm">
-                  <span>Lux Bridge confirmed your Deposit</span>
+                  <span>Bridge confirmed your Deposit</span>
                 </div>
               </div>
               <div className="flex flex-col px-10 gap-1">

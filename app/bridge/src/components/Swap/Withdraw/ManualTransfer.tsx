@@ -55,7 +55,7 @@ const ManualTransfer: React.FC = () => {
                             About manual transfers
                         </p>
                         <p className="text-xs ">
-                            Transfer assets to Lux Bridge’s deposit address to complete the swap.
+                            Transfer assets to the bridge’s deposit address to complete the swap.
                         </p>
                     </div>
                 </div>

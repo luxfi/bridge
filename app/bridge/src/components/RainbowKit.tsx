@@ -44,7 +44,7 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
   )
 
   const disclaimer: DisclaimerComponent = ({ Text }) => (
-    <Text>Thanks for choosing the Lux Bridge!</Text>
+    <Text>Thanks for choosing the Bridge!</Text>
   )
   const isChain = (c: Chain | undefined): c is Chain => c != undefined
 
@@ -55,7 +55,7 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
     .filter(isChain)
 
   const config: Config = getDefaultConfig({
-    appName: 'Lux Bridge',
+    appName: 'Bridge',
     projectId: 'e89228fed40d4c6e9520912214dfd68b',
     wallets: [
       ...wallets,
@@ -77,8 +77,8 @@ const RainbowProvider = ({ children }: { children: React.ReactNode }) => {
           avatar={CustomAvatar}
           modalSize="compact"
           appInfo={{
-            appName: 'LuxBridge',
-            learnMoreUrl: 'https://docs.bridge.lux.network/',
+            appName: 'Bridge',
+            learnMoreUrl: '/docs/',
             disclaimer: disclaimer,
           }}
           theme={darkTheme()}
