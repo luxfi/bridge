@@ -32,8 +32,9 @@ export default class BridgeAuthApiClient {
 
 function getIdentityBasePath() {
     const res = process.env.NEXT_PUBLIC_IDENTITY_API
-    if (!res) {
+    if (res === undefined || res === null) {
         throw new Error("NEXT_PUBLIC_IDENTITY_API is not set up in env vars")
     }
+    // Empty string means same-origin (relative URLs)
     return res
 }
