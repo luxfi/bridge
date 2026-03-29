@@ -59,6 +59,7 @@ RUN adduser --system --uid 1001 bridge
 COPY --from=builder /app/app/bridge/public ./public
 COPY --from=builder --chown=bridge:nodejs /app/app/bridge/.next/standalone ./
 COPY --from=builder --chown=bridge:nodejs /app/app/bridge/.next/static ./app/bridge/.next/static
+COPY docker/entrypoint.sh /app/entrypoint.sh
 
 USER bridge
 
@@ -67,4 +68,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "app/bridge/server.js"]

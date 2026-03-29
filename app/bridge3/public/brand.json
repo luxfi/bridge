@@ -1,0 +1,77 @@
+{
+  "brand": {
+    "name": "Lux Exchange",
+    "title": "Lux Exchange | Trade",
+    "description": "Multi-chain decentralized exchange powered by Lux Network",
+    "shortName": "LUX",
+    "labsName": "Lux Labs",
+    "legalEntity": "Lux Industries Inc.",
+    "walletName": "LUX Wallet",
+    "protocolName": "LUX Protocol",
+    "copyrightHolder": "Lux Industries Inc.",
+    "appDomain": "lux.exchange",
+    "docsDomain": "docs.lux.exchange",
+    "infoDomain": "info.lux.exchange",
+    "gatewayDomain": "gw.lux.exchange",
+    "wsDomain": "ws.lux.exchange",
+    "helpUrl": "https://docs.lux.exchange/help",
+    "termsUrl": "https://lux.exchange/terms",
+    "privacyUrl": "https://lux.exchange/privacy",
+    "downloadUrl": "https://lux.exchange/wallet",
+    "complianceEmail": "compliance@lux.exchange",
+    "supportEmail": "hi@lux.exchange",
+    "twitter": "https://x.com/luxfi",
+    "farcaster": "",
+    "linkedin": "",
+    "tiktok": "",
+    "github": "https://github.com/luxfi",
+    "discord": "https://discord.gg/lux",
+    "logoUrl": "https://cdn.jsdelivr.net/npm/@luxfi/brand@latest/assets/logo/logo.svg",
+    "faviconUrl": "https://cdn.jsdelivr.net/npm/@luxfi/brand@latest/assets/logo/favicon.png",
+    "primaryColor": "#000000",
+    "theme": {
+      "light": {
+        "accent1": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "neutral1": "#131313",
+        "neutral2": "rgba(19, 19, 19, 0.63)"
+      },
+      "dark": {
+        "accent1": "#FFFFFF",
+        "surface1": "#000000",
+        "surface2": "#1A1A1A",
+        "neutral1": "#FFFFFF",
+        "neutral2": "rgba(255, 255, 255, 0.65)"
+      }
+    }
+  },
+  "chains": {
+    "defaultChainId": 96369,
+    "supported": [96369, 96368, 96367, 200200, 1, 42161, 8453, 137, 43114]
+  },
+  "rpc": {
+    "96369": "https://api.lux.network/ext/bc/C/rpc",
+    "96368": "https://api.lux-test.network/ext/bc/C/rpc",
+    "96367": "https://api.lux-dev.network/ext/bc/C/rpc",
+    "200200": "https://api.zoo.network/ext/bc/C/rpc",
+    "200201": "https://api.zoo-test.network/ext/bc/C/rpc",
+    "1": "https://eth.llamarpc.com",
+    "42161": "https://arb1.arbitrum.io/rpc",
+    "8453": "https://mainnet.base.org",
+    "137": "https://polygon-rpc.com",
+    "43114": "https://api.avax.network/ext/bc/C/rpc"
+  },
+  "api": {
+    "graphql": "https://api.lux.exchange/v1/graphql",
+    "gateway": "https://gw.lux.exchange",
+    "insights": "https://insights.hanzo.ai"
+  },
+  "iam": {
+    "provider": "https://lux.id",
+    "clientId": "lux-exchange"
+  },
+  "walletConnect": {
+    "projectId": ""
+  }
+}
