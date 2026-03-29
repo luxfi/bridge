@@ -79,7 +79,7 @@ export default class BridgeApiClient {
   }
 
   async GetSettingsAsync(): Promise<BridgeSettings | undefined> {
-    if (!BridgeApiClient.apiBaseEndpoint) return undefined
+    if (BridgeApiClient.apiBaseEndpoint === undefined || BridgeApiClient.apiBaseEndpoint === null) return undefined
     try {
       const { data } = await axios.get(
         `${BridgeApiClient.apiBaseEndpoint}/api/settings?version=${BridgeApiClient.apiVersion}`,
