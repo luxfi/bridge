@@ -1,0 +1,32 @@
+# Pars Network — Tenant Manifest
+# Schema: schema.yaml v1.0.0
+#
+# Pars bridge. EVM chains focus.
+
+id: pars
+name: "Pars Network"
+
+hostnames:
+  - bridge.pars.network
+
+home_chain_id: 494949  # Pars C-Chain
+
+supported_chains:
+  - lux-c
+  - ethereum
+  - base
+
+teleporter_addresses:
+  "96369": "kms://teleport/lux-c/teleporter"
+  "1": "kms://teleport/lux-c/teleporter-eth"
+  "8453": "kms://teleport/lux-c/teleporter-eth"
+
+branding:
+  logo_url: "/static/pars/logo.svg"
+  primary_color: "#F59E0B"
+  theme: light
+
+features:
+  swap: true
+  yield: false
+  perps: false

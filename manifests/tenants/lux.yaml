@@ -1,0 +1,39 @@
+# Lux Network — Tenant Manifest
+# Schema: schema.yaml v1.0.0
+#
+# Primary bridge deployment. All chains supported. Full feature set.
+
+id: lux
+name: "Lux Network"
+
+hostnames:
+  - bridge.lux.network
+  - bridge.lux.io
+
+home_chain_id: 96369  # Lux C-Chain
+
+supported_chains:
+  - lux-c
+  - ethereum
+  - base
+  - opnet
+  - solana
+  - ton
+
+teleporter_addresses:
+  "96369": "kms://teleport/lux-c/teleporter"
+  "1": "kms://teleport/lux-c/teleporter-eth"
+  "8453": "kms://teleport/lux-c/teleporter-eth"
+  "4294967299": "kms://teleport/lux-c/teleporter-btc"
+  "1399811149": "kms://teleport/lux-c/teleporter-sol"
+  "1414483791": "kms://teleport/lux-c/teleporter-ton"
+
+branding:
+  logo_url: "/static/lux/logo.svg"
+  primary_color: "#E84142"
+  theme: dark
+
+features:
+  swap: true
+  yield: true
+  perps: true

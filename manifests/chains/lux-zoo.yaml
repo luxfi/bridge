@@ -1,0 +1,48 @@
+# Lux Zoo Chain — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Zoo L1 subnet on Lux. Uses Warp messaging for native bridging.
+
+chain_id: 200200
+name: "Lux Zoo"
+class: lux_native
+tier: yield_enabled
+
+signer:
+  protocol: bls
+  curve: bls12_381
+  threshold:
+    t: 2
+    n: 3
+  native_signer:
+    protocol: bls
+    curve: bls12_381
+
+finality:
+  mode: instant
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ZOO
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LZOO
+      contract: "liquid/tokens/LZOO.sol"
+      decimals: 18
+    strategy:
+      name: ZooStakingStrategy
+      contract: "bridge/teleport/strategies/ZooStakingStrategy.sol"
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/lux-zoo/native-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-zoo"
+
+watcher:
+  plugin: lux_warp_watcher
+  rpc_url: "kms://teleport/lux-zoo/rpc"
+  poll_interval_ms: 2000
+  start_block: 0

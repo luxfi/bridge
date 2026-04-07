@@ -1,0 +1,45 @@
+# Lux SPC Chain — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# SPC L1 subnet on Lux. Uses Warp messaging for native bridging.
+
+chain_id: 36911
+name: "Lux SPC"
+class: lux_native
+tier: bidirectional
+
+signer:
+  protocol: bls
+  curve: bls12_381
+  threshold:
+    t: 2
+    n: 3
+  native_signer:
+    protocol: bls
+    curve: bls12_381
+
+finality:
+  mode: instant
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: SPC
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LSPC
+      contract: "liquid/tokens/LSPC.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/lux-spc/native-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-spc"
+
+watcher:
+  plugin: lux_warp_watcher
+  rpc_url: "kms://teleport/lux-spc/rpc"
+  poll_interval_ms: 2000
+  start_block: 0
