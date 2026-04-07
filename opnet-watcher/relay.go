@@ -25,9 +25,8 @@ type Relay struct {
 	signer         *Signer
 	txSigner       *Signer // NEW-02: separate hot wallet for tx submission in threshold mode
 	httpClient     *http.Client
-	mu             sync.Mutex // protects nonce and nonceDirty
+	mu             sync.Mutex // protects nonce
 	nonce          uint64
-	nonceDirty     bool // HIGH-02: true after send error; forces nonce re-fetch
 	chainID        uint64
 }
 
@@ -55,13 +54,13 @@ func (r *Relay) SubmitDeposit(ctx context.Context, srcChainID, nonce uint64, rec
 
 	var calldata []byte
 	calldata = append(calldata, selector[:]...)
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)       // srcChainId
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(nonce))...)            // depositNonce
-	calldata = append(calldata, leftPad(recipient[:], 32)...)                              // recipient (address)
-	calldata = append(calldata, uint256Bytes(amount)...)                                   // amount
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(160))...)              // offset to bytes (5 * 32)
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)   // srcChainId
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(nonce))...)         // depositNonce
+	calldata = append(calldata, leftPad(recipient[:], 32)...)                           // recipient (address)
+	calldata = append(calldata, uint256Bytes(amount)...)                                // amount
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(160))...)           // offset to bytes (5 * 32)
 	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(uint64(len(sig))))...) // length of sig
-	calldata = append(calldata, rightPad(sig, 32)...)                                      // signature data
+	calldata = append(calldata, rightPad(sig, 32)...)                                   // signature data
 
 	return r.sendTx(ctx, calldata)
 }
@@ -75,12 +74,12 @@ func (r *Relay) SubmitBacking(ctx context.Context, srcChainID uint64, totalBacki
 
 	var calldata []byte
 	calldata = append(calldata, selector[:]...)
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)       // srcChainId
-	calldata = append(calldata, uint256Bytes(totalBacking)...)                             // totalBacking
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(timestamp))...)        // timestamp
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(128))...)              // offset to bytes (4 * 32)
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)     // srcChainId
+	calldata = append(calldata, uint256Bytes(totalBacking)...)                           // totalBacking
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(timestamp))...)      // timestamp
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(128))...)            // offset to bytes (4 * 32)
 	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(uint64(len(sig))))...) // length of sig
-	calldata = append(calldata, rightPad(sig, 32)...)                                      // signature data
+	calldata = append(calldata, rightPad(sig, 32)...)                                    // signature data
 
 	return r.sendTx(ctx, calldata)
 }
@@ -92,15 +91,14 @@ func (r *Relay) sendTx(ctx context.Context, calldata []byte) (string, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// HIGH-02: Re-fetch nonce from chain if dirty (post-error) or uninitialized.
-	if r.nonce == 0 || r.nonceDirty {
+	// Fetch nonce from chain if we haven't yet.
+	if r.nonce == 0 {
 		from := r.txSigner.Address()
 		n, err := r.fetchNonce(ctx, from)
 		if err != nil {
 			return "", fmt.Errorf("relay fetch nonce: %w", err)
 		}
 		r.nonce = n
-		r.nonceDirty = false
 	}
 
 	// Fetch gas price.
@@ -121,12 +119,8 @@ func (r *Relay) sendTx(ctx context.Context, calldata []byte) (string, error) {
 	// Submit signed transaction.
 	result, err := r.ethCall(ctx, "eth_sendRawTransaction", []interface{}{"0x" + hex.EncodeToString(signedTx)})
 	if err != nil {
-		// HIGH-02: Mark nonce dirty so next call re-fetches from chain.
-		// The tx may or may not have been mined (network timeout after broadcast).
-		// Re-fetching the pending nonce on next attempt handles both cases:
-		// - If tx was mined: chain nonce is incremented, we pick that up.
-		// - If tx was not mined: chain nonce is unchanged, we retry with same nonce.
-		r.nonceDirty = true
+		// Nonce recovery: re-fetch from chain on next attempt.
+		r.nonce = 0
 		return "", fmt.Errorf("relay send raw tx: %w", err)
 	}
 
