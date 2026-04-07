@@ -1,0 +1,32 @@
+# SPC Network — Tenant Manifest
+# Schema: schema.yaml v1.0.0
+#
+# SPC bridge. EVM chains focus.
+
+id: spc
+name: "SPC Network"
+
+hostnames:
+  - bridge.spc.network
+
+home_chain_id: 36911  # SPC C-Chain
+
+supported_chains:
+  - lux-c
+  - ethereum
+  - base
+
+teleporter_addresses:
+  "96369": "kms://teleport/lux-c/teleporter"
+  "1": "kms://teleport/lux-c/teleporter-eth"
+  "8453": "kms://teleport/lux-c/teleporter-eth"
+
+branding:
+  logo_url: "/static/spc/logo.svg"
+  primary_color: "#3B82F6"
+  theme: dark
+
+features:
+  swap: true
+  yield: false
+  perps: false
