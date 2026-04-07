@@ -62,6 +62,7 @@ func main() {
 	flag.Uint64Var(&cfg.MaxBackingChangePct, "max-backing-change-pct", cfg.MaxBackingChangePct, "Max backing change per attestation in percent (default 100)")
 	flag.Uint64Var(&cfg.LuxChainIDOverride, "lux-chain-id", cfg.LuxChainIDOverride, "Lux C-Chain ID for EIP-155 signing")
 	flag.StringVar(&cfg.SolanaVaultAddr, "solana-vault-addr", "", "Solana bridge config PDA address (required with --chain=solana)")
+	flag.StringVar(&cfg.CheckpointPath, "checkpoint-path", cfg.CheckpointPath, "Path to checkpoint file for deposit deduplication")
 
 	// Legacy OP_NET flags (backwards compatibility).
 	flag.StringVar(&cfg.SourceRPCURL, "opnet-rpc", "", "OP_NET node JSON-RPC URL (legacy, use --source-rpc)")
