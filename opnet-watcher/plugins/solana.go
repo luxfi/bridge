@@ -35,8 +35,8 @@ func NewSolanaPlugin(rpcURL, programID, vaultAddress string) *SolanaPlugin {
 	}
 }
 
-func (s *SolanaPlugin) Name() string    { return "solana" }
-func (s *SolanaPlugin) ChainID() uint64 { return SolanaChainID }
+func (s *SolanaPlugin) Name() string        { return "solana" }
+func (s *SolanaPlugin) ChainID() uint64     { return SolanaChainID }
 
 // PollDeposits fetches confirmed transaction signatures for the bridge program
 // starting from the given slot, then parses LockEvent data from each transaction's logs.
@@ -310,7 +310,7 @@ func parseLockEventFromLogs(logs []string, slot uint64, txSig string) (DepositEv
 		d := data[8:]
 
 		nonce := le64(d[16:24])
-		amount := new(big.Int).SetUint64(le64(d[120:128])) // amount at offset 120 (after 8+8+8+32+32+32)
+		amount := new(big.Int).SetUint64(le64(d[112:120]))
 
 		var recipient [20]byte
 		// EVM address is in the last 20 bytes of the 32-byte recipient field at offset 88
