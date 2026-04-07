@@ -27,7 +27,7 @@ services:
     container_name: bridge-lux-id-db
     environment:
       - POSTGRES_USER=casdoor
-      - POSTGRES_PASSWORD=casdoor123
+      - POSTGRES_PASSWORD=${CASDOOR_DB_PASSWORD:-changeme}
       - POSTGRES_DB=casdoor
     volumes:
       - lux-id-db-data:/var/lib/postgresql/data
@@ -41,76 +41,18 @@ services:
       timeout: 3s
       retries: 5
 
-  # KMS Service (Mock for local development)
-  kms:
-    image: hashicorp/vault:1.15
-    container_name: bridge-kms
-    ports:
-      - "8200:8200"
-    environment:
-      - VAULT_DEV_ROOT_TOKEN_ID=myroot
-      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
-    cap_add:
-      - IPC_LOCK
-    networks:
-      - bridge-network
-    healthcheck:
-      test: ["CMD", "vault", "status"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+  # KMS: use kms.hanzo.ai in production. For local dev, set KMS_TOKEN env var.
+  # NATS/Consul removed — MPC uses ZAP p2p consensus.
 
-  # Infrastructure Services
-  nats:
-    image: nats:2.10-alpine
-    container_name: bridge-nats
-    ports:
-      - "4223:4222"
-      - "8223:8222"
-    command: "-js -m 8222 --store_dir /data"
-    volumes:
-      - nats-data:/data
-    networks:
-      - bridge-network
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "4222"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  consul:
-    image: hashicorp/consul:1.16
-    container_name: bridge-consul
-    ports:
-      - "8501:8500"
-      - "8602:8600/udp"
-    command: "agent -server -bootstrap-expect=1 -ui -client=0.0.0.0"
-    volumes:
-      - consul-data:/consul/data
-    networks:
-      - bridge-network
-    environment:
-      - CONSUL_BIND_INTERFACE=eth0
-    healthcheck:
-      test: ["CMD", "consul", "members"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  # MPC Nodes (3 nodes for 2-of-3 threshold)
+  # MPC Nodes (3 nodes for 2-of-3 threshold) — ZAP p2p, no NATS/Consul
   mpc-node-0:
     image: ghcr.io/luxfi/mpc:latest
     container_name: bridge-mpc-0
     environment:
       - NODE_ID=mpc-node-0
       - NODE_PORT=6000
-      - NATS_URL=nats://nats:4222
-      - CONSUL_URL=http://consul:8500
       - DATA_DIR=/data/mpc
       - LOG_LEVEL=info
-      - KMS_URL=http://kms:8200
-      - KMS_TOKEN=myroot
-      - KMS_PATH=secret/mpc
     volumes:
       - mpc-data-0:/data/mpc
     ports:
@@ -118,26 +60,17 @@ services:
     networks:
       - bridge-network
     depends_on:
-      nats:
-        condition: service_healthy
-      consul:
-        condition: service_healthy
-      kms:
+      postgres:
         condition: service_healthy
 
   mpc-node-1:
-    image: ghcr.io/luxfi/lux-mpc:latest
+    image: ghcr.io/luxfi/mpc:latest
     container_name: bridge-mpc-1
     environment:
       - NODE_ID=mpc-node-1
       - NODE_PORT=6000
-      - NATS_URL=nats://nats:4222
-      - CONSUL_URL=http://consul:8500
       - DATA_DIR=/data/mpc
       - LOG_LEVEL=info
-      - KMS_URL=http://kms:8200
-      - KMS_TOKEN=myroot
-      - KMS_PATH=secret/mpc
     volumes:
       - mpc-data-1:/data/mpc
     ports:
@@ -145,26 +78,17 @@ services:
     networks:
       - bridge-network
     depends_on:
-      nats:
-        condition: service_healthy
-      consul:
-        condition: service_healthy
-      kms:
+      postgres:
         condition: service_healthy
 
   mpc-node-2:
-    image: ghcr.io/luxfi/lux-mpc:latest
+    image: ghcr.io/luxfi/mpc:latest
     container_name: bridge-mpc-2
     environment:
       - NODE_ID=mpc-node-2
       - NODE_PORT=6000
-      - NATS_URL=nats://nats:4222
-      - CONSUL_URL=http://consul:8500
       - DATA_DIR=/data/mpc
       - LOG_LEVEL=info
-      - KMS_URL=http://kms:8200
-      - KMS_TOKEN=myroot
-      - KMS_PATH=secret/mpc
     volumes:
       - mpc-data-2:/data/mpc
     ports:
@@ -172,11 +96,7 @@ services:
     networks:
       - bridge-network
     depends_on:
-      nats:
-        condition: service_healthy
-      consul:
-        condition: service_healthy
-      kms:
+      postgres:
         condition: service_healthy
 
   # Database
@@ -185,7 +105,7 @@ services:
     container_name: bridge-postgres
     environment:
       - POSTGRES_USER=bridge
-      - POSTGRES_PASSWORD=bridge
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
       - POSTGRES_DB=bridge
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -207,20 +127,16 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=5000
-      - DATABASE_URL=postgresql://bridge:bridge@postgres:5432/bridge
-      - NATS_URL=nats://nats:4222
-      - CONSUL_URL=http://consul:8500
+      - DATABASE_URL=postgresql://bridge:${POSTGRES_PASSWORD:-changeme}@postgres:5432/bridge
       - NODE_ID=bridge-server-0
       - MPC_THRESHOLD=2
       - MPC_TOTAL_NODES=3
       - MPC_KEY_PREFIX=bridge/mpc
-      - KMS_URL=http://kms:8200
-      - KMS_TOKEN=myroot
       # Lux ID (Casdoor) Authentication
       - AUTH_PROVIDER=casdoor
       - CASDOOR_ENDPOINT=http://lux-id:8000
       - CASDOOR_CLIENT_ID=lux-bridge
-      - CASDOOR_CLIENT_SECRET=lux-bridge-secret
+      - CASDOOR_CLIENT_SECRET=${CASDOOR_CLIENT_SECRET:-changeme}
       - CASDOOR_ORGANIZATION=lux-network
       - CASDOOR_APPLICATION=bridge
     ports:
@@ -229,9 +145,6 @@ services:
       - bridge-network
     depends_on:
       - postgres
-      - nats
-      - consul
-      - kms
       - lux-id
       - mpc-node-0
       - mpc-node-1
@@ -271,8 +184,6 @@ services:
 volumes:
   lux-id-data:
   lux-id-db-data:
-  nats-data:
-  consul-data:
   mpc-data-0:
   mpc-data-1:
   mpc-data-2:
