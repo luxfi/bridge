@@ -1,0 +1,259 @@
+# Teleport Chain Manifest Schema
+# Every chain integration in the Lux Teleport bridge MUST provide a manifest
+# conforming to this schema. The manifest is the single source of truth for:
+#   1. Locale registration in TeleportProposalBridge
+#   2. Source-chain adapter semantics (deposit/release)
+#   3. Watcher/finality plugin configuration
+#   4. MPC signer key type
+#   5. Asset definitions (ticker, decimals, recipient encoding, canonical wrapper)
+#   6. Conformance test pack reference
+#
+# Validate with: yq eval 'true' manifests/chains/<chain>.yaml
+
+schema_version: "1.0.0"
+
+# ============================================================================
+# REQUIRED FIELDS
+# ============================================================================
+
+# chain_id: uint64 — canonical chain identifier.
+#   EVM chains use their native chainId.
+#   Non-EVM chains use a deterministic encoding (e.g. OP_NET = 0x4F504E45).
+#   Lux C-Chain = 96369.
+chain_id:
+  type: integer
+  required: true
+  min: 1
+
+# name: human-readable chain name for logs/UIs
+name:
+  type: string
+  required: true
+
+# class: chain family — determines adapter and signer selection
+#   lux_native   — Lux subnets (C-Chain, D-Chain). Warp messaging, BLS finality.
+#   evm          — EVM-compatible L1/L2. ECDSA signer, block finality.
+#   bitcoin_script — Bitcoin-family UTXO chains. Taproot/P2WSH custody, block finality.
+#   account_native — Non-EVM account-model chains (Solana, TON, Sui). Chain-specific signer.
+class:
+  type: string
+  required: true
+  enum: [lux_native, evm, bitcoin_script, account_native]
+
+# tier: integration depth — determines which Teleport flows are enabled
+#   locale_only   — Registered as locale; no active bridge (pending signer/adapter).
+#   inbound_only  — Deposits accepted, minting on Lux. No withdrawals yet.
+#   bidirectional — Full deposit + withdraw. MPC custody live.
+#   yield_enabled — Bidirectional + yield strategy routing via LiquidVault.
+tier:
+  type: string
+  required: true
+  enum: [locale_only, inbound_only, bidirectional, yield_enabled]
+
+# ============================================================================
+# SIGNER CONFIGURATION
+# ============================================================================
+
+signer:
+  type: object
+  required: true
+  properties:
+    # protocol: MPC signing protocol used for this chain's key type
+    #   cggmp21  — ECDSA threshold (secp256k1). EVM and Bitcoin.
+    #   frost    — Schnorr/EdDSA threshold. Solana, TON, Lux validators.
+    #   bls      — BLS aggregation. Lux Warp messaging.
+    #   ringtail — Post-quantum lattice threshold. Future upgrade path.
+    protocol:
+      type: string
+      required: true
+      enum: [cggmp21, frost, bls, ringtail]
+
+    # curve: underlying elliptic curve
+    curve:
+      type: string
+      required: true
+      enum: [secp256k1, ed25519, bls12_381, ml_dsa_65]
+
+    # threshold: t-of-n signing quorum
+    threshold:
+      type: object
+      required: true
+      properties:
+        t:
+          type: integer
+          min: 2
+        n:
+          type: integer
+          min: 3
+
+    # native_signer: optional secondary signer for chain-native operations
+    #   (e.g. FROST for Taproot on Bitcoin, BLS for Warp on Lux)
+    native_signer:
+      type: object
+      required: false
+      properties:
+        protocol:
+          type: string
+          enum: [frost, bls, ringtail]
+        curve:
+          type: string
+          enum: [secp256k1, ed25519, bls12_381]
+
+# ============================================================================
+# FINALITY RULES
+# ============================================================================
+
+finality:
+  type: object
+  required: true
+  properties:
+    # mode: how finality is determined
+    #   block_depth     — Wait N confirmations.
+    #   slot_finalized  — Wait for slot finalization (Solana, Ethereum post-merge).
+    #   instant         — Single-slot finality (Lux Snowman).
+    mode:
+      type: string
+      required: true
+      enum: [block_depth, slot_finalized, instant]
+
+    # confirmations: number of blocks/slots to wait (block_depth mode)
+    confirmations:
+      type: integer
+      required: false
+      min: 1
+
+    # max_reorg_depth: deepest reorg the watcher should tolerate before halting
+    max_reorg_depth:
+      type: integer
+      required: false
+
+    # stale_attestation_seconds: max age of a backing attestation before Teleporter
+    #   rejects minting (maps to Teleporter._checkBackingRatio 24h default)
+    stale_attestation_seconds:
+      type: integer
+      required: true
+      default: 86400  # 24 hours
+
+# ============================================================================
+# ASSETS
+# ============================================================================
+
+assets:
+  type: array
+  required: true
+  min_items: 1
+  items:
+    type: object
+    properties:
+      # ticker: canonical asset symbol on the source chain
+      ticker:
+        type: string
+        required: true
+
+      # decimals: native decimal precision on source chain
+      decimals:
+        type: integer
+        required: true
+
+      # recipient_encoding: how recipient addresses are serialized
+      #   evm_address   — 20-byte hex (0x...)
+      #   bech32        — Bitcoin bech32/bech32m (bc1...)
+      #   base58        — Solana/Bitcoin legacy
+      #   raw_bytes     — 32-byte or 36-byte (TON, Sui)
+      recipient_encoding:
+        type: string
+        required: true
+        enum: [evm_address, bech32, base58, raw_bytes]
+
+      # wrapper: Liquid token minted on Lux C-Chain for this asset
+      wrapper:
+        type: object
+        required: true
+        properties:
+          symbol:
+            type: string
+            required: true
+          contract:
+            type: string
+            required: true
+            description: "Path relative to @luxfi/standard/contracts/"
+          decimals:
+            type: integer
+            required: true
+
+      # strategy: yield strategy (only for tier=yield_enabled)
+      strategy:
+        type: object
+        required: false
+        properties:
+          name:
+            type: string
+          contract:
+            type: string
+            description: "Path relative to @luxfi/standard/contracts/"
+
+# ============================================================================
+# ADAPTER CONFIGURATION
+# ============================================================================
+
+adapter:
+  type: object
+  required: true
+  properties:
+    # deposit_method: how deposits are detected on the source chain
+    #   event_log      — EVM event (TeleportVault.Deposit)
+    #   utxo_watch     — Monitor UTXO to MPC-controlled address
+    #   account_watch  — Monitor balance/instruction on account-model chain
+    deposit_method:
+      type: string
+      required: true
+      enum: [event_log, utxo_watch, account_watch]
+
+    # vault_contract: source-chain vault address or MPC custody address
+    #   For EVM: deployed TeleportVault/LiquidVault contract address
+    #   For Bitcoin: MPC-controlled Taproot address
+    #   For account-native: MPC-controlled program/account address
+    vault_contract:
+      type: string
+      required: true
+
+    # teleporter_contract: Lux C-Chain Teleporter contract that mints L* tokens
+    teleporter_contract:
+      type: string
+      required: true
+
+# ============================================================================
+# WATCHER CONFIGURATION
+# ============================================================================
+
+watcher:
+  type: object
+  required: true
+  properties:
+    # plugin: watcher implementation to use
+    #   evm_log_watcher      — Subscribe to EVM logs via eth_subscribe/getLogs
+    #   bitcoin_zmq_watcher  — Subscribe to Bitcoin ZMQ block notifications
+    #   solana_ws_watcher    — Subscribe to Solana WebSocket account changes
+    #   ton_liteserver_watcher — Poll TON liteserver for transactions
+    #   lux_warp_watcher     — Subscribe to Lux Warp messages
+    plugin:
+      type: string
+      required: true
+
+    # rpc_url: RPC endpoint (resolved from KMS at runtime, placeholder here)
+    rpc_url:
+      type: string
+      required: true
+      description: "KMS secret path or well-known endpoint"
+
+    # poll_interval_ms: polling interval for non-streaming watchers
+    poll_interval_ms:
+      type: integer
+      required: false
+      default: 12000
+
+    # start_block: block/slot to start watching from (0 = latest)
+    start_block:
+      type: integer
+      required: false
+      default: 0

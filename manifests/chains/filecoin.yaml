@@ -1,0 +1,43 @@
+# Filecoin (FEVM) — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — EVM adapter integration pending.
+# Filecoin EVM (FEVM) provides Solidity-compatible smart contracts.
+
+chain_id: 314
+name: "Filecoin"
+class: evm
+tier: locale_only
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 900  # Filecoin finality ~7.5 hours (900 tipsets at 30s)
+  max_reorg_depth: 900
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: FIL
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LFIL
+      contract: "liquid/tokens/LFIL.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/filecoin/teleport-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-fil"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/filecoin/rpc"
+  poll_interval_ms: 30000
+  start_block: 0
