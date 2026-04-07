@@ -62,14 +62,11 @@ signer:
     #   cggmp21  — ECDSA threshold (secp256k1). EVM and Bitcoin.
     #   frost    — Schnorr/EdDSA threshold. Solana, TON, Lux validators.
     #   bls      — BLS aggregation. Lux Warp messaging.
-    #   doerner  — 2-party ECDSA (Doerner et al.). Fast 2-of-2 path.
-    #   pulsar   — Post-quantum MLWE lattice threshold. PQ upgrade path.
-    #   corona   — Post-quantum RLWE lattice threshold.
-    #   magnetar — Post-quantum research variant (experimental).
+    #   corona — Post-quantum lattice threshold. Future upgrade path.
     protocol:
       type: string
       required: true
-      enum: [cggmp21, frost, bls, doerner, pulsar, corona, magnetar]
+      enum: [cggmp21, frost, bls, corona]
 
     # curve: underlying elliptic curve
     curve:
@@ -97,7 +94,7 @@ signer:
       properties:
         protocol:
           type: string
-          enum: [frost, bls, pulsar, corona, magnetar]
+          enum: [frost, bls, corona]
         curve:
           type: string
           enum: [secp256k1, ed25519, bls12_381]
