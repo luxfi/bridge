@@ -1,0 +1,42 @@
+# Stellar — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+
+chain_id: 4294967410
+name: "Stellar"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # Stellar Consensus Protocol — immediate finality
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: XLM
+    decimals: 7
+    recipient_encoding: raw_bytes  # G... base32 Stellar public key
+    wrapper:
+      symbol: LXLM
+      contract: "liquid/tokens/LXLM.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/stellar/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-xlm"
+
+watcher:
+  plugin: stellar_horizon_watcher
+  rpc_url: "kms://teleport/stellar/horizon"
+  poll_interval_ms: 5000
+  start_block: 0
