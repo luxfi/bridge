@@ -80,6 +80,11 @@ type Config struct {
 	// HIGH-03: Maximum percentage change in backing per attestation.
 	// Prevents unbacked minting via compromised RPC. Default 100 (100%).
 	MaxBackingChangePct uint64
+
+	// HIGH-01: Path to checkpoint file for deposit deduplication.
+	// Persists lastPos and seen nonces so restarts don't re-process deposits.
+	// Only one watcher instance should run per chain.
+	CheckpointPath string
 }
 
 // DefaultConfig returns a Config with sensible defaults.
@@ -92,6 +97,7 @@ func DefaultConfig() Config {
 		ConfirmationDepth:   6,
 		MaxBackingChangePct: 15,
 		LuxChainIDOverride:  LuxChainID,
+		CheckpointPath:      "/data/bridge/checkpoint.json",
 	}
 }
 
