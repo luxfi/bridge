@@ -1,0 +1,42 @@
+# Polkadot — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST sr25519 signer pending (Schnorr over Ristretto255).
+
+chain_id: 4294967380
+name: "Polkadot"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519  # sr25519 (Schnorrkel) uses Ristretto255; mapped to ed25519 in schema
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # GRANDPA finality gadget
+  confirmations: 2
+  max_reorg_depth: 8
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: DOT
+    decimals: 10
+    recipient_encoding: raw_bytes  # SS58-encoded Substrate address
+    wrapper:
+      symbol: LDOT
+      contract: "liquid/tokens/LDOT.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/polkadot/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-dot"
+
+watcher:
+  plugin: substrate_ws_watcher
+  rpc_url: "kms://teleport/polkadot/rpc"
+  poll_interval_ms: 6000
+  start_block: 0

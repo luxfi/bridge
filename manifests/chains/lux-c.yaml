@@ -1,0 +1,46 @@
+# Lux C-Chain — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Lux C-Chain is the destination for all Teleport minting, and also serves
+# as a source chain for bridging LUX to other networks.
+
+chain_id: 96369
+name: "Lux C-Chain"
+class: lux_native
+tier: yield_enabled
+
+signer:
+  protocol: bls
+  curve: bls12_381
+  threshold:
+    t: 2
+    n: 3
+  native_signer:
+    protocol: bls
+    curve: bls12_381  # Warp messaging uses BLS aggregation
+
+finality:
+  mode: instant  # Snowman consensus — single-slot finality
+  confirmations: 1
+  max_reorg_depth: 0  # No reorgs under BFT
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: LUX
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LUX
+      contract: "token/LUX.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/lux-c/native-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter"
+
+watcher:
+  plugin: lux_warp_watcher
+  rpc_url: "https://api.lux.network/ext/bc/C/rpc"
+  poll_interval_ms: 2000  # ~2s C-Chain block time
+  start_block: 0

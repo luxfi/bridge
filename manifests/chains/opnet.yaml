@@ -1,0 +1,50 @@
+# OP_NET (Bitcoin L1) — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# OP_NET is a Bitcoin metaprotocol layer providing smart contract capabilities
+# on Bitcoin L1. Deposits are native BTC sent to MPC-controlled Taproot UTXOs.
+# The watcher monitors Bitcoin blocks via ZMQ for confirmed deposits.
+
+chain_id: 4294967299  # 0x100000003
+name: "OP_NET"
+class: bitcoin_script
+tier: yield_enabled
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+  native_signer:
+    protocol: frost
+    curve: secp256k1  # Schnorr over secp256k1 for Taproot
+
+finality:
+  mode: block_depth
+  confirmations: 6
+  max_reorg_depth: 100
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: BTC
+    decimals: 8
+    recipient_encoding: bech32
+    wrapper:
+      symbol: LBTC
+      contract: "liquid/tokens/LBTC.sol"
+      decimals: 18  # LBTC is 18 decimals on Lux C-Chain (scaled from 8)
+    strategy:
+      name: BabylonBTCStrategy
+      contract: "bridge/teleport/strategies/BabylonBTCStrategy.sol"
+
+adapter:
+  deposit_method: utxo_watch
+  vault_contract: "kms://teleport/opnet/taproot-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-btc"
+
+watcher:
+  plugin: bitcoin_zmq_watcher
+  rpc_url: "kms://teleport/opnet/bitcoin-rpc"
+  poll_interval_ms: 60000  # ~1 Bitcoin block
+  start_block: 0
