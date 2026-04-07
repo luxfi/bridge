@@ -1,0 +1,48 @@
+# Polygon PoS — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+
+chain_id: 137
+name: "Polygon"
+class: evm
+tier: bidirectional
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 128  # Polygon PoS requires deep confirmation for safety
+  max_reorg_depth: 256
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: POL
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LPOL
+      contract: "liquid/tokens/LPOL.sol"
+      decimals: 18
+
+  - ticker: USDC
+    decimals: 6
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LUSD
+      contract: "liquid/tokens/LUSD.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/polygon/teleport-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-pol"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/polygon/rpc"
+  poll_interval_ms: 2000
+  start_block: 0

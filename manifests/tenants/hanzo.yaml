@@ -1,0 +1,34 @@
+# Hanzo Network — Tenant Manifest
+# Schema: schema.yaml v1.0.0
+#
+# Hanzo AI bridge. EVM chains + BTC.
+
+id: hanzo
+name: "Hanzo Network"
+
+hostnames:
+  - bridge.hanzo.ai
+
+home_chain_id: 36963  # Hanzo C-Chain
+
+supported_chains:
+  - lux-c
+  - ethereum
+  - base
+  - opnet
+
+teleporter_addresses:
+  "96369": "kms://teleport/lux-c/teleporter"
+  "1": "kms://teleport/lux-c/teleporter-eth"
+  "8453": "kms://teleport/lux-c/teleporter-eth"
+  "4294967299": "kms://teleport/lux-c/teleporter-btc"
+
+branding:
+  logo_url: "/static/hanzo/logo.svg"
+  primary_color: "#6366F1"
+  theme: dark
+
+features:
+  swap: true
+  yield: true
+  perps: true

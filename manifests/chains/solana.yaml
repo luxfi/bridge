@@ -1,0 +1,43 @@
+# Solana — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+# Once signer is ready, promote to inbound_only, then bidirectional.
+
+chain_id: 1399811149  # 0x536F6C4D — "SolM" in ASCII
+name: "Solana"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized
+  confirmations: 32  # ~32 slots for safe finality
+  max_reorg_depth: 64
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: SOL
+    decimals: 9
+    recipient_encoding: base58
+    wrapper:
+      symbol: LSOL
+      contract: "liquid/tokens/LSOL.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/solana/mpc-program"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-sol"
+
+watcher:
+  plugin: solana_ws_watcher
+  rpc_url: "kms://teleport/solana/rpc"
+  poll_interval_ms: 400  # ~400ms Solana slot time
+  start_block: 0

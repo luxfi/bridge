@@ -1,0 +1,119 @@
+# Tenant Manifest Schema
+# Each white-label bridge deployment MUST provide a tenant manifest conforming
+# to this schema. The manifest is the single source of truth for:
+#   1. Hostname-based routing (which domain -> which tenant)
+#   2. Supported chain set (references chain manifest files)
+#   3. Per-chain Teleporter contract addresses
+#   4. Frontend branding configuration
+#   5. Feature flags
+#
+# Validate with: yq eval 'true' manifests/tenants/<tenant>.yaml
+
+schema_version: "1.0.0"
+
+# ============================================================================
+# REQUIRED FIELDS
+# ============================================================================
+
+# id: unique tenant slug used as internal identifier and ConfigMap key.
+#   Must be lowercase alphanumeric + hyphens. e.g., "lux", "zoo", "hanzo"
+id:
+  type: string
+  required: true
+  pattern: "^[a-z0-9][a-z0-9-]*$"
+
+# name: human-readable display name for the bridge UI.
+name:
+  type: string
+  required: true
+
+# hostnames: list of DNS hostnames that route to this tenant.
+#   The opnet-watcher API resolves Host header against this list.
+#   First entry is canonical; others are aliases.
+hostnames:
+  type: array
+  required: true
+  min_items: 1
+  items:
+    type: string
+
+# home_chain_id: primary chain for this tenant.
+#   The bridge UI defaults to this chain as the "home" network.
+#   Must reference a chain_id from a chain manifest in supported_chains.
+home_chain_id:
+  type: integer
+  required: true
+  min: 1
+
+# supported_chains: list of chain manifest filenames (without .yaml extension).
+#   Each entry must correspond to a file in manifests/chains/<name>.yaml.
+#   Only these chains are available for bridging under this tenant.
+supported_chains:
+  type: array
+  required: true
+  min_items: 1
+  items:
+    type: string
+
+# ============================================================================
+# TELEPORTER ADDRESSES
+# ============================================================================
+
+# teleporter_addresses: per-chain Teleporter contract addresses for this tenant.
+#   Keys are chain_id (as string), values are 0x-prefixed contract addresses
+#   or KMS secret paths (kms://...).
+#   Only chains listed in supported_chains need entries here.
+teleporter_addresses:
+  type: object
+  required: true
+  additionalProperties:
+    type: string
+    description: "0x-prefixed address or kms:// secret path"
+
+# ============================================================================
+# BRANDING
+# ============================================================================
+
+branding:
+  type: object
+  required: true
+  properties:
+    # logo_url: path or URL to the tenant logo (served by hanzoai/static)
+    logo_url:
+      type: string
+      required: true
+
+    # primary_color: hex color for UI accent elements
+    primary_color:
+      type: string
+      required: true
+      pattern: "^#[0-9a-fA-F]{6}$"
+
+    # theme: light or dark base theme
+    theme:
+      type: string
+      required: true
+      enum: [light, dark]
+
+# ============================================================================
+# FEATURE FLAGS
+# ============================================================================
+
+features:
+  type: object
+  required: true
+  properties:
+    # swap: enable cross-chain swap UI
+    swap:
+      type: boolean
+      required: true
+
+    # yield: enable yield strategy display and routing
+    yield:
+      type: boolean
+      required: true
+
+    # perps: enable perpetuals trading UI
+    perps:
+      type: boolean
+      required: true

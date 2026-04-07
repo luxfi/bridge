@@ -66,10 +66,7 @@ metadata:
   namespace: lux-bridge
 data:
   config.yaml: |
-    nats:
-      url: nats://nats:4222
-    consul:
-      address: consul:8500
+    # MPC nodes coordinate via ZAP p2p — no NATS or Consul needed.
     environment: mainnet
     mpc_threshold: 3
     mpc_total_nodes: 5
@@ -292,10 +289,6 @@ spec:
             secretKeyRef:
               name: bridge-secrets
               key: database-url
-        - name: NATS_URL
-          value: nats://nats:4222
-        - name: CONSUL_URL
-          value: http://consul:8500
         - name: NODE_ID
           valueFrom:
             fieldRef:
@@ -355,7 +348,7 @@ spec:
   - port: 3000
     targetPort: 3000
     name: http
-  type: LoadBalancer
+  type: ClusterIP
 ---
 # Bridge UI Deployment
 apiVersion: apps/v1
@@ -410,7 +403,7 @@ spec:
   - port: 80
     targetPort: 3000
     name: http
-  type: LoadBalancer
+  type: ClusterIP
 ---
 # PostgreSQL StatefulSet
 apiVersion: apps/v1
@@ -513,19 +506,29 @@ spec:
     - bridge-api.lux.network
     secretName: bridge-lux-tls
   - hosts:
-    - bridge.pars.network
-    secretName: bridge-pars-tls
+    - bridge.zoo.ngo
+    secretName: bridge-zoo-tls
   - hosts:
     - bridge.hanzo.ai
     secretName: bridge-hanzo-tls
   - hosts:
-    - bridge.zoo.ngo
-    secretName: bridge-zoo-tls
+    - bridge.pars.network
+    secretName: bridge-pars-tls
+  - hosts:
+    - bridge.spc.network
+    secretName: bridge-spc-tls
   rules:
   # Lux Network (primary)
   - host: bridge.lux.network
     http:
       paths:
+      - path: /v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: opnet-watcher
+            port:
+              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -543,10 +546,17 @@ spec:
             name: bridge-server
             port:
               number: 3000
-  # Pars Network — white-label, same bridge-ui backend
-  - host: bridge.pars.network
+  # Zoo — white-label
+  - host: bridge.zoo.ngo
     http:
       paths:
+      - path: /v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: opnet-watcher
+            port:
+              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -558,6 +568,13 @@ spec:
   - host: bridge.hanzo.ai
     http:
       paths:
+      - path: /v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: opnet-watcher
+            port:
+              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -565,10 +582,17 @@ spec:
             name: bridge-ui
             port:
               number: 80
-  # Zoo — white-label
-  - host: bridge.zoo.ngo
+  # Pars — white-label
+  - host: bridge.pars.network
     http:
       paths:
+      - path: /v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: opnet-watcher
+            port:
+              number: 8090
       - path: /
         pathType: Prefix
         backend:
@@ -576,3 +600,325 @@ spec:
             name: bridge-ui
             port:
               number: 80
+  # SPC — white-label
+  - host: bridge.spc.network
+    http:
+      paths:
+      - path: /v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: opnet-watcher
+            port:
+              number: 8090
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bridge-ui
+            port:
+              number: 80
+---
+# Bridge Tenant ConfigMap — loaded from manifests/tenants/*.yaml
+# One key per tenant manifest. opnet-watcher reads BRIDGE_TENANT_DIR.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bridge-tenants
+  namespace: lux-bridge
+data:
+  lux.yaml: |
+    id: lux
+    name: "Lux Network"
+    hostnames: ["bridge.lux.network", "bridge.lux.io"]
+    home_chain_id: 96369
+    supported_chains: [lux-c, ethereum, base, opnet, solana, ton]
+    teleporter_addresses:
+      "96369": "kms://teleport/lux-c/teleporter"
+      "1": "kms://teleport/lux-c/teleporter-eth"
+      "8453": "kms://teleport/lux-c/teleporter-eth"
+      "4294967299": "kms://teleport/lux-c/teleporter-btc"
+      "1399811149": "kms://teleport/lux-c/teleporter-sol"
+      "1414483791": "kms://teleport/lux-c/teleporter-ton"
+    branding:
+      logo_url: "/static/lux/logo.svg"
+      primary_color: "#E84142"
+      theme: dark
+    features: {swap: true, yield: true, perps: true}
+  zoo.yaml: |
+    id: zoo
+    name: "Zoo Network"
+    hostnames: ["bridge.zoo.ngo"]
+    home_chain_id: 200200
+    supported_chains: [lux-c, ethereum, base, solana]
+    teleporter_addresses:
+      "96369": "kms://teleport/lux-c/teleporter"
+      "1": "kms://teleport/lux-c/teleporter-eth"
+      "8453": "kms://teleport/lux-c/teleporter-eth"
+      "1399811149": "kms://teleport/lux-c/teleporter-sol"
+    branding:
+      logo_url: "/static/zoo/logo.svg"
+      primary_color: "#10B981"
+      theme: dark
+    features: {swap: true, yield: true, perps: false}
+  hanzo.yaml: |
+    id: hanzo
+    name: "Hanzo Network"
+    hostnames: ["bridge.hanzo.ai"]
+    home_chain_id: 36963
+    supported_chains: [lux-c, ethereum, base, opnet]
+    teleporter_addresses:
+      "96369": "kms://teleport/lux-c/teleporter"
+      "1": "kms://teleport/lux-c/teleporter-eth"
+      "8453": "kms://teleport/lux-c/teleporter-eth"
+      "4294967299": "kms://teleport/lux-c/teleporter-btc"
+    branding:
+      logo_url: "/static/hanzo/logo.svg"
+      primary_color: "#6366F1"
+      theme: dark
+    features: {swap: true, yield: true, perps: true}
+  pars.yaml: |
+    id: pars
+    name: "Pars Network"
+    hostnames: ["bridge.pars.network"]
+    home_chain_id: 494949
+    supported_chains: [lux-c, ethereum, base]
+    teleporter_addresses:
+      "96369": "kms://teleport/lux-c/teleporter"
+      "1": "kms://teleport/lux-c/teleporter-eth"
+      "8453": "kms://teleport/lux-c/teleporter-eth"
+    branding:
+      logo_url: "/static/pars/logo.svg"
+      primary_color: "#F59E0B"
+      theme: light
+    features: {swap: true, yield: false, perps: false}
+  spc.yaml: |
+    id: spc
+    name: "SPC Network"
+    hostnames: ["bridge.spc.network"]
+    home_chain_id: 36911
+    supported_chains: [lux-c, ethereum, base]
+    teleporter_addresses:
+      "96369": "kms://teleport/lux-c/teleporter"
+      "1": "kms://teleport/lux-c/teleporter-eth"
+      "8453": "kms://teleport/lux-c/teleporter-eth"
+    branding:
+      logo_url: "/static/spc/logo.svg"
+      primary_color: "#3B82F6"
+      theme: dark
+    features: {swap: true, yield: false, perps: false}
+---
+# Bridge Chain ConfigMap — loaded from manifests/chains/*.yaml
+# One key per chain manifest. opnet-watcher reads BRIDGE_CHAIN_DIR.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bridge-chains
+  namespace: lux-bridge
+data:
+  lux-c.yaml: |
+    chain_id: 96369
+    name: "Lux C-Chain"
+    class: lux_native
+    tier: yield_enabled
+    assets:
+      - ticker: LUX
+        decimals: 18
+        recipient_encoding: evm_address
+        wrapper: {symbol: LUX, contract: "token/LUX.sol", decimals: 18}
+    finality: {mode: instant, confirmations: 1}
+  ethereum.yaml: |
+    chain_id: 1
+    name: "Ethereum"
+    class: evm
+    tier: yield_enabled
+    assets:
+      - ticker: ETH
+        decimals: 18
+        recipient_encoding: evm_address
+        wrapper: {symbol: LETH, contract: "liquid/tokens/LETH.sol", decimals: 18}
+      - ticker: USDC
+        decimals: 6
+        recipient_encoding: evm_address
+        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
+      - ticker: USDT
+        decimals: 6
+        recipient_encoding: evm_address
+        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
+      - ticker: DAI
+        decimals: 18
+        recipient_encoding: evm_address
+        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
+    finality: {mode: slot_finalized, confirmations: 64}
+  base.yaml: |
+    chain_id: 8453
+    name: "Base"
+    class: evm
+    tier: yield_enabled
+    assets:
+      - ticker: ETH
+        decimals: 18
+        recipient_encoding: evm_address
+        wrapper: {symbol: LETH, contract: "liquid/tokens/LETH.sol", decimals: 18}
+      - ticker: USDC
+        decimals: 6
+        recipient_encoding: evm_address
+        wrapper: {symbol: LUSD, contract: "liquid/tokens/LUSD.sol", decimals: 18}
+    finality: {mode: block_depth, confirmations: 12}
+  opnet.yaml: |
+    chain_id: 4294967299
+    name: "OP_NET"
+    class: bitcoin_script
+    tier: yield_enabled
+    assets:
+      - ticker: BTC
+        decimals: 8
+        recipient_encoding: bech32
+        wrapper: {symbol: LBTC, contract: "liquid/tokens/LBTC.sol", decimals: 18}
+    finality: {mode: block_depth, confirmations: 6}
+  solana.yaml: |
+    chain_id: 1399811149
+    name: "Solana"
+    class: account_native
+    tier: locale_only
+    assets:
+      - ticker: SOL
+        decimals: 9
+        recipient_encoding: base58
+        wrapper: {symbol: LSOL, contract: "liquid/tokens/LSOL.sol", decimals: 18}
+    finality: {mode: slot_finalized, confirmations: 32}
+  ton.yaml: |
+    chain_id: 1414483791
+    name: "TON"
+    class: account_native
+    tier: locale_only
+    assets:
+      - ticker: TON
+        decimals: 9
+        recipient_encoding: raw_bytes
+        wrapper: {symbol: LTON, contract: "liquid/tokens/LTON.sol", decimals: 18}
+    finality: {mode: block_depth, confirmations: 1}
+---
+# OPNET Watcher ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opnet-watcher-config
+  namespace: lux-bridge
+data:
+  config.yaml: |
+    lux_rpc: https://api.lux.network/ext/bc/C/rpc
+    zoo_rpc: https://api.zoo.network/ext/bc/C/rpc
+    opnet_rpc: https://opnet.lux.network/rpc
+    teleporter_address: ""
+    lux_chain_id: 96369
+    zoo_chain_id: 200200
+    opnet_chain_id: 4294967299
+    poll_interval_seconds: 12
+    confirmations: 6
+    health_port: 8080
+---
+# OPNET Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opnet-watcher
+  namespace: lux-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opnet-watcher
+  template:
+    metadata:
+      labels:
+        app: opnet-watcher
+    spec:
+      containers:
+      - name: opnet-watcher
+        image: ghcr.io/luxfi/opnet-watcher:latest
+        args: ["--config", "/config/config.yaml"]
+        ports:
+        - containerPort: 8080
+          name: health
+        - containerPort: 8090
+          name: api
+        env:
+        - name: MPC_API_URL
+          value: http://mpc-api-svc.lux-bridge.svc:8081
+        - name: MPC_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bridge-secrets
+              key: mpc-api-token
+        - name: KMS_KEY_SHARES
+          valueFrom:
+            secretKeyRef:
+              name: opnet-watcher-secrets
+              key: kms-key-shares
+        - name: BRIDGE_TENANT_DIR
+          value: /etc/bridge/tenants
+        - name: BRIDGE_CHAIN_DIR
+          value: /etc/bridge/chains
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: tenants
+          mountPath: /etc/bridge/tenants
+          readOnly: true
+        - name: chains
+          mountPath: /etc/bridge/chains
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+      volumes:
+      - name: config
+        configMap:
+          name: opnet-watcher-config
+      - name: tenants
+        configMap:
+          name: bridge-tenants
+      - name: chains
+        configMap:
+          name: bridge-chains
+---
+# opnet-watcher-secrets is managed externally via KMS (kms.hanzo.ai).
+# Apply with:
+#   kubectl create secret generic opnet-watcher-secrets -n lux-bridge \
+#     --from-literal="kms-key-shares=$(kms get OPNET_WATCHER_KMS_KEY_SHARES)" \
+#     --dry-run=client -o yaml | kubectl apply -f -
+# DO NOT add secret values here -- never commit keys to git.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opnet-watcher
+  namespace: lux-bridge
+spec:
+  selector:
+    app: opnet-watcher
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: health
+  - port: 8090
+    targetPort: 8090
+    name: api

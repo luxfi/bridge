@@ -1,0 +1,42 @@
+# Tezos — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — adapter integration pending.
+
+chain_id: 4294967500  # TEZOS_MAINNET from ChainIds.sol
+name: "Tezos"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # Tenderbake BFT finality (~30s)
+  confirmations: 2
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: XTZ
+    decimals: 6
+    recipient_encoding: raw_bytes  # tz1... base58check Tezos addresses
+    wrapper:
+      symbol: LXTZ
+      contract: "liquid/tokens/LXTZ.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/tezos/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-xtz"
+
+watcher:
+  plugin: tezos_ws_watcher
+  rpc_url: "kms://teleport/tezos/rpc"
+  poll_interval_ms: 15000
+  start_block: 0

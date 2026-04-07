@@ -1,0 +1,42 @@
+# Cosmos Hub — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — CGGMP21 secp256k1 adapter integration pending.
+
+chain_id: 4294967350
+name: "Cosmos Hub"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # CometBFT instant finality per block
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ATOM
+    decimals: 6
+    recipient_encoding: bech32  # cosmos1... bech32 addresses
+    wrapper:
+      symbol: LATOM
+      contract: "liquid/tokens/LATOM.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/cosmos/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-atom"
+
+watcher:
+  plugin: cosmos_ws_watcher
+  rpc_url: "kms://teleport/cosmos/rpc"
+  poll_interval_ms: 6000
+  start_block: 0

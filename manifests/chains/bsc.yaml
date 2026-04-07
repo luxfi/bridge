@@ -1,0 +1,48 @@
+# BNB Smart Chain — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+
+chain_id: 56
+name: "BNB Smart Chain"
+class: evm
+tier: bidirectional
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 15  # ~45s at 3s block time
+  max_reorg_depth: 64
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: BNB
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LBNB
+      contract: "liquid/tokens/LBNB.sol"
+      decimals: 18
+
+  - ticker: USDT
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LUSD
+      contract: "liquid/tokens/LUSD.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/bsc/teleport-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-bnb"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/bsc/rpc"
+  poll_interval_ms: 3000
+  start_block: 0

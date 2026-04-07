@@ -1,0 +1,40 @@
+# Avalanche C-Chain — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+
+chain_id: 43114
+name: "Avalanche"
+class: evm
+tier: bidirectional
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 35
+  max_reorg_depth: 64
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: AVAX
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LAVAX
+      contract: "liquid/tokens/LAVAX.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/avalanche/teleport-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-avax"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/avalanche/rpc"
+  poll_interval_ms: 2000
+  start_block: 0

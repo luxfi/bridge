@@ -1,0 +1,42 @@
+# TON (The Open Network) — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+
+chain_id: 1414483791  # 0x544F4E4F — "TONO" in ASCII
+name: "TON"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 1  # TON has fast finality via catchain
+  max_reorg_depth: 8
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: TON
+    decimals: 9
+    recipient_encoding: raw_bytes  # 36-byte TON address
+    wrapper:
+      symbol: LTON
+      contract: "liquid/tokens/LTON.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/ton/mpc-wallet"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-ton"
+
+watcher:
+  plugin: ton_liteserver_watcher
+  rpc_url: "kms://teleport/ton/liteserver"
+  poll_interval_ms: 5000
+  start_block: 0

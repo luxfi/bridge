@@ -1,0 +1,43 @@
+# TRON — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — TVM adapter integration pending.
+# TRON uses TVM (near-EVM Solidity-compatible) with secp256k1 signing.
+
+chain_id: 728126
+name: "TRON"
+class: evm
+tier: locale_only
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 19  # 19 SRs confirm — ~57s
+  max_reorg_depth: 32
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: TRX
+    decimals: 6
+    recipient_encoding: base58  # T... base58check TRON addresses
+    wrapper:
+      symbol: LTRX
+      contract: "liquid/tokens/LTRX.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/tron/teleport-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-trx"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/tron/rpc"
+  poll_interval_ms: 3000
+  start_block: 0

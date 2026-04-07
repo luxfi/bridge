@@ -1,0 +1,45 @@
+# Lux Pars Chain — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Pars L1 subnet on Lux. Uses Warp messaging for native bridging.
+
+chain_id: 494949
+name: "Lux Pars"
+class: lux_native
+tier: bidirectional
+
+signer:
+  protocol: bls
+  curve: bls12_381
+  threshold:
+    t: 2
+    n: 3
+  native_signer:
+    protocol: bls
+    curve: bls12_381
+
+finality:
+  mode: instant
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: PARS
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LPARS
+      contract: "liquid/tokens/LPARS.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/lux-pars/native-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-pars"
+
+watcher:
+  plugin: lux_warp_watcher
+  rpc_url: "kms://teleport/lux-pars/rpc"
+  poll_interval_ms: 2000
+  start_block: 0

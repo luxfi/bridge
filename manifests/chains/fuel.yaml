@@ -1,0 +1,43 @@
+# Fuel — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FuelVM (Sway) adapter pending.
+# Fuel uses UTXO-based parallel execution with Sway smart contracts.
+
+chain_id: 4294967520  # FUEL_MAINNET from ChainIds.sol
+name: "Fuel"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # Fuel settles to Ethereum DA
+  confirmations: 1
+  max_reorg_depth: 8
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ETH
+    decimals: 9
+    recipient_encoding: raw_bytes  # 32-byte Fuel (Bech32m) address
+    wrapper:
+      symbol: LETH
+      contract: "liquid/tokens/LETH.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/fuel/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-fuel"
+
+watcher:
+  plugin: fuel_ws_watcher
+  rpc_url: "kms://teleport/fuel/rpc"
+  poll_interval_ms: 1000
+  start_block: 0
