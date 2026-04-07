@@ -177,6 +177,58 @@ func TestCheckpointPreservesHigherLastPos(t *testing.T) {
 	}
 }
 
+func TestPruneSeenCapsMemory(t *testing.T) {
+	w := &Watcher{
+		seen: make(map[uint64]map[uint64]bool),
+	}
+	// Fill chain 1 with maxSeenPerChain + 5000 entries.
+	w.seen[1] = make(map[uint64]bool)
+	total := maxSeenPerChain + 5000
+	for i := uint64(1); i <= uint64(total); i++ {
+		w.seen[1][i] = true
+	}
+
+	// Chain 2 has a small number — should not be pruned.
+	w.seen[2] = map[uint64]bool{1: true, 2: true, 3: true}
+
+	w.pruneSeen()
+
+	if len(w.seen[1]) > maxSeenPerChain {
+		t.Errorf("chain 1 seen after prune = %d, want <= %d", len(w.seen[1]), maxSeenPerChain)
+	}
+
+	// Highest nonces should be preserved.
+	maxNonce := uint64(total)
+	if !w.seen[1][maxNonce] {
+		t.Errorf("highest nonce %d should be preserved", maxNonce)
+	}
+	if !w.seen[1][maxNonce-1] {
+		t.Errorf("second highest nonce %d should be preserved", maxNonce-1)
+	}
+
+	// Old nonces should be pruned.
+	if w.seen[1][1] {
+		t.Error("nonce 1 should have been pruned")
+	}
+
+	// Chain 2 should be untouched.
+	if len(w.seen[2]) != 3 {
+		t.Errorf("chain 2 seen = %d, want 3 (should not be pruned)", len(w.seen[2]))
+	}
+}
+
+func TestPruneSeenNoopWhenSmall(t *testing.T) {
+	w := &Watcher{
+		seen: map[uint64]map[uint64]bool{
+			1: {1: true, 2: true, 3: true},
+		},
+	}
+	w.pruneSeen()
+	if len(w.seen[1]) != 3 {
+		t.Errorf("expected 3 entries, got %d", len(w.seen[1]))
+	}
+}
+
 func TestDedupSkipsSeen(t *testing.T) {
 	plugin := &stubPlugin{name: "test", chainID: 42}
 	w := &Watcher{

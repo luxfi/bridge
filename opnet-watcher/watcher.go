@@ -245,12 +245,21 @@ func (w *Watcher) loadCheckpoint() error {
 	return nil
 }
 
+// maxSeenPerChain limits the seen map to prevent unbounded memory growth.
+// Since nonces are monotonically increasing, keeping the last N is sufficient.
+const maxSeenPerChain = 10000
+
 // saveCheckpoint writes current watcher state to the checkpoint file.
 // Uses atomic write (write to tmp, rename) to avoid partial writes on crash.
+// Prunes old nonces to prevent unbounded growth of the seen map.
 func (w *Watcher) saveCheckpoint() error {
 	if w.cfg.CheckpointPath == "" {
 		return nil
 	}
+
+	// Prune old nonces to cap memory usage.
+	w.pruneSeen()
+
 	cp := checkpoint{
 		LastPos: w.lastPos,
 		Seen:    w.seen,
@@ -268,4 +277,28 @@ func (w *Watcher) saveCheckpoint() error {
 		return err
 	}
 	return os.Rename(tmp, w.cfg.CheckpointPath)
+}
+
+// pruneSeen removes old nonce entries to prevent unbounded map growth.
+// Keeps only the highest maxSeenPerChain nonces per chain.
+func (w *Watcher) pruneSeen() {
+	for chainID, nonces := range w.seen {
+		if len(nonces) <= maxSeenPerChain {
+			continue
+		}
+		// Find the threshold: keep only nonces above (maxNonce - maxSeenPerChain).
+		var maxNonce uint64
+		for n := range nonces {
+			if n > maxNonce {
+				maxNonce = n
+			}
+		}
+		threshold := maxNonce - uint64(maxSeenPerChain) + 1
+		for n := range nonces {
+			if n < threshold {
+				delete(nonces, n)
+			}
+		}
+		w.seen[chainID] = nonces
+	}
 }
