@@ -144,13 +144,13 @@ func TestTenantForHostname(t *testing.T) {
 	}
 
 	tests := []struct {
-		host    string
-		wantID  string
-		wantErr bool
+		host     string
+		wantID   string
+		wantErr  bool
 	}{
 		{"bridge.lux.network", "lux", false},
 		{"bridge.lux.io", "lux", false},
-		{"Bridge.Lux.Network", "lux", false},     // case insensitive
+		{"Bridge.Lux.Network", "lux", false},  // case insensitive
 		{"bridge.lux.network:443", "lux", false}, // port stripped
 		{"bridge.zoo.ngo", "zoo", false},
 		{"bridge.unknown.com", "", true},
