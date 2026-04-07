@@ -1,0 +1,42 @@
+# NEAR Protocol — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+
+chain_id: 4294967400
+name: "NEAR"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # NEAR Doomslug + Nightshade finality
+  confirmations: 3
+  max_reorg_depth: 8
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: NEAR
+    decimals: 24
+    recipient_encoding: raw_bytes  # NEAR named accounts or implicit 64-hex
+    wrapper:
+      symbol: LNEAR
+      contract: "liquid/tokens/LNEAR.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/near/mpc-account"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-near"
+
+watcher:
+  plugin: near_ws_watcher
+  rpc_url: "kms://teleport/near/rpc"
+  poll_interval_ms: 1000
+  start_block: 0

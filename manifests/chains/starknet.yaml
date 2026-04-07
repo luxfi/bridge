@@ -1,0 +1,43 @@
+# StarkNet — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST stark_curve signer pending.
+# StarkNet uses STARK-friendly curve (Pedersen hash, ECDSA over stark curve).
+
+chain_id: 23448594291968334  # SN_MAIN from ChainIds.sol
+name: "StarkNet"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519  # stark_curve mapped to ed25519 in schema; actual is Stark curve
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # L1 proof acceptance
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ETH
+    decimals: 18
+    recipient_encoding: raw_bytes  # 32-byte felt StarkNet address
+    wrapper:
+      symbol: LETH
+      contract: "liquid/tokens/LETH.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/starknet/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-starknet"
+
+watcher:
+  plugin: starknet_ws_watcher
+  rpc_url: "kms://teleport/starknet/rpc"
+  poll_interval_ms: 30000
+  start_block: 0

@@ -27,7 +27,7 @@ services:
     container_name: bridge-lux-id-db
     environment:
       - POSTGRES_USER=casdoor
-      - POSTGRES_PASSWORD=casdoor123
+      - POSTGRES_PASSWORD=${CASDOOR_DB_PASSWORD:-changeme}
       - POSTGRES_DB=casdoor
     volumes:
       - lux-id-db-data:/var/lib/postgresql/data

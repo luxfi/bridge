@@ -1,0 +1,42 @@
+# Hyperliquid — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — EVM adapter integration pending.
+
+chain_id: 999
+name: "Hyperliquid"
+class: evm
+tier: locale_only
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 10
+  max_reorg_depth: 32
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: HYPE
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LHYPE
+      contract: "liquid/tokens/LHYPE.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/hyperliquid/teleport-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-hype"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/hyperliquid/rpc"
+  poll_interval_ms: 2000
+  start_block: 0
