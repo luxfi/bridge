@@ -90,7 +90,7 @@ func DefaultConfig() Config {
 		BlockPollInterval:   DefaultBlockPollInterval,
 		BackingInterval:     DefaultBackingInterval,
 		ConfirmationDepth:   6,
-		MaxBackingChangePct: 100,
+		MaxBackingChangePct: 15,
 		LuxChainIDOverride:  LuxChainID,
 	}
 }
