@@ -1,0 +1,46 @@
+# Stacks — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — Clarity/Bitcoin script adapter pending.
+# Stacks settles on Bitcoin L1 with Clarity smart contracts.
+
+chain_id: 4294967440  # STACKS_MAINNET from ChainIds.sol
+name: "Stacks"
+class: bitcoin_script
+tier: locale_only
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+  native_signer:
+    protocol: frost
+    curve: secp256k1  # Schnorr for Stacks Nakamoto upgrade
+
+finality:
+  mode: block_depth
+  confirmations: 6  # Anchored to Bitcoin — 6 Bitcoin block confirmations
+  max_reorg_depth: 100
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: STX
+    decimals: 6
+    recipient_encoding: base58  # Stacks SP.../SM... c32check addresses
+    wrapper:
+      symbol: LSTX
+      contract: "liquid/tokens/LSTX.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: utxo_watch
+  vault_contract: "kms://teleport/stacks/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-stx"
+
+watcher:
+  plugin: stacks_api_watcher
+  rpc_url: "kms://teleport/stacks/rpc"
+  poll_interval_ms: 30000
+  start_block: 0

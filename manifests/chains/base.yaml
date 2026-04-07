@@ -1,0 +1,51 @@
+# Base (Coinbase L2) — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+
+chain_id: 8453
+name: "Base"
+class: evm
+tier: yield_enabled
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 12  # L2 blocks, ~24s
+  max_reorg_depth: 64
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ETH
+    decimals: 18
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LETH
+      contract: "liquid/tokens/LETH.sol"
+      decimals: 18
+    strategy:
+      name: AaveV3Strategy
+      contract: "bridge/teleport/strategies/AaveV3Strategy.sol"
+
+  - ticker: USDC
+    decimals: 6
+    recipient_encoding: evm_address
+    wrapper:
+      symbol: LUSD
+      contract: "liquid/tokens/LUSD.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: event_log
+  vault_contract: "kms://teleport/base/liquid-vault"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-eth"
+
+watcher:
+  plugin: evm_log_watcher
+  rpc_url: "kms://teleport/base/rpc"
+  poll_interval_ms: 2000  # ~2s Base block time
+  start_block: 0

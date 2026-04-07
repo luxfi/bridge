@@ -1,0 +1,42 @@
+# Internet Computer (ICP) — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — CGGMP21 secp256k1 via canister threshold ECDSA pending.
+
+chain_id: 4294967490
+name: "Internet Computer"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: cggmp21
+  curve: secp256k1  # ICP chain-key ECDSA (threshold secp256k1)
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # ICP consensus — finality per round (~1s)
+  confirmations: 2
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ICP
+    decimals: 8
+    recipient_encoding: raw_bytes  # ICP principal / account identifier
+    wrapper:
+      symbol: LICP
+      contract: "liquid/tokens/LICP.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/icp/mpc-canister"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-icp"
+
+watcher:
+  plugin: icp_agent_watcher
+  rpc_url: "kms://teleport/icp/agent"
+  poll_interval_ms: 2000
+  start_block: 0
