@@ -1,0 +1,42 @@
+# Aptos — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+
+chain_id: 4294967340
+name: "Aptos"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # Aptos BFT finality per block
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: APT
+    decimals: 8
+    recipient_encoding: raw_bytes  # 32-byte Aptos address
+    wrapper:
+      symbol: LAPT
+      contract: "liquid/tokens/LAPT.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/aptos/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-apt"
+
+watcher:
+  plugin: aptos_ws_watcher
+  rpc_url: "kms://teleport/aptos/rpc"
+  poll_interval_ms: 1000
+  start_block: 0

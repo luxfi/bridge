@@ -1,0 +1,42 @@
+# Sui — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+
+chain_id: 4294967330
+name: "Sui"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # Sui checkpoint-based finality
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: SUI
+    decimals: 9
+    recipient_encoding: raw_bytes  # 32-byte Sui address
+    wrapper:
+      symbol: LSUI
+      contract: "liquid/tokens/LSUI.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/sui/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-sui"
+
+watcher:
+  plugin: sui_ws_watcher
+  rpc_url: "kms://teleport/sui/rpc"
+  poll_interval_ms: 3000
+  start_block: 0

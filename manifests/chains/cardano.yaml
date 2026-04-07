@@ -1,0 +1,43 @@
+# Cardano — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+# Note: Cardano uses extended UTXO model with Ed25519-BIP32 keys.
+
+chain_id: 4294967430
+name: "Cardano"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: block_depth
+  confirmations: 15  # ~5 minutes at 20s block time for safe settlement
+  max_reorg_depth: 36  # Ouroboros rollback limit (k parameter)
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ADA
+    decimals: 6
+    recipient_encoding: bech32  # addr1... bech32 Shelley addresses
+    wrapper:
+      symbol: LADA
+      contract: "liquid/tokens/LADA.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/cardano/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-ada"
+
+watcher:
+  plugin: cardano_ogmios_watcher
+  rpc_url: "kms://teleport/cardano/ogmios"
+  poll_interval_ms: 20000
+  start_block: 0

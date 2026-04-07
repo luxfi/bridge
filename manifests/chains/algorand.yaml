@@ -1,0 +1,42 @@
+# Algorand — Teleport Chain Manifest
+# Schema: ../schema.yaml v1.0.0
+#
+# Status: locale_only — FROST Ed25519 signer integration pending.
+
+chain_id: 4294967450
+name: "Algorand"
+class: account_native
+tier: locale_only
+
+signer:
+  protocol: frost
+  curve: ed25519
+  threshold:
+    t: 2
+    n: 3
+
+finality:
+  mode: slot_finalized  # Algorand instant finality via Pure PoS
+  confirmations: 1
+  max_reorg_depth: 0
+  stale_attestation_seconds: 86400
+
+assets:
+  - ticker: ALGO
+    decimals: 6
+    recipient_encoding: base58  # Algorand base32/base58 addresses
+    wrapper:
+      symbol: LALGO
+      contract: "liquid/tokens/LALGO.sol"
+      decimals: 18
+
+adapter:
+  deposit_method: account_watch
+  vault_contract: "kms://teleport/algorand/mpc-address"
+  teleporter_contract: "kms://teleport/lux-c/teleporter-algo"
+
+watcher:
+  plugin: algorand_indexer_watcher
+  rpc_url: "kms://teleport/algorand/rpc"
+  poll_interval_ms: 3300
+  start_block: 0
