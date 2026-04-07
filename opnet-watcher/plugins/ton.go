@@ -202,7 +202,7 @@ func parseDepositFromBOC(bodyB64 string, lt uint64, txHash string) (DepositEvent
 	const depositOp uint32 = 0x44455031
 
 	cellData := findCellData(data)
-	if cellData == nil || len(cellData) < 54 { // minimum: 4+8+8+32+2 bytes
+	if cellData == nil || len(cellData) < 53 { // minimum: op(4)+chainID(8)+nonce(8)+recipient(32)+varUint(1)
 		return DepositEvent{}, false
 	}
 
@@ -219,15 +219,9 @@ func parseDepositFromBOC(bodyB64 string, lt uint64, txHash string) (DepositEvent
 	var recipient [20]byte
 	copy(recipient[:], cellData[32:52]) // bytes 12-31 of the 32-byte field at offset 20
 
-	// WARNING: Simplified parser. TON coins use VarUInteger16 encoding: first 4 bits = byte
-	// count N, next N bytes = big-endian amount. This code assumes a fixed 8-byte big-endian
-	// value at offset 52, which is only correct when the coin amount occupies exactly 8 bytes
-	// (length nibble = 0x8). For production TON support, implement full VarUInteger16
-	// deserialization (read 4-bit length prefix, then N bytes) or use tonutils-go.
-	amount := new(big.Int)
-	if len(cellData) >= 60 {
-		amount.SetBytes(cellData[52:60])
-	}
+	// TON coins use VarUInteger16 encoding: high 4 bits of the byte at offset = byte count N,
+	// then N bytes big-endian amount in nanotons.
+	amount, _ := decodeVarUInteger16(cellData, 52)
 
 	_ = chainID // already known (TONChainID)
 
@@ -263,6 +257,21 @@ func findCellData(boc []byte) []byte {
 	}
 	// Fallback: return raw data (for non-standard encoding)
 	return boc
+}
+
+// decodeVarUInteger16 decodes a TON VarUInteger16 value at the given offset.
+// Encoding: high 4 bits of data[offset] = byte count N, next N bytes = big-endian integer.
+// Returns the decoded integer and the new offset past the consumed bytes.
+func decodeVarUInteger16(data []byte, offset int) (*big.Int, int) {
+	if offset >= len(data) {
+		return big.NewInt(0), offset
+	}
+	n := int(data[offset] >> 4) // high nibble = byte count
+	offset++
+	if n == 0 || offset+n > len(data) {
+		return big.NewInt(0), offset
+	}
+	return new(big.Int).SetBytes(data[offset : offset+n]), offset + n
 }
 
 func be32(b []byte) uint32 {

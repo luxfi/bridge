@@ -25,8 +25,9 @@ type Relay struct {
 	signer         *Signer
 	txSigner       *Signer // NEW-02: separate hot wallet for tx submission in threshold mode
 	httpClient     *http.Client
-	mu             sync.Mutex // protects nonce
+	mu             sync.Mutex // protects nonce and nonceDirty
 	nonce          uint64
+	nonceDirty     bool // HIGH-02: true after send error; forces nonce re-fetch
 	chainID        uint64
 }
 
@@ -91,14 +92,15 @@ func (r *Relay) sendTx(ctx context.Context, calldata []byte) (string, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// Fetch nonce from chain if we haven't yet.
-	if r.nonce == 0 {
+	// HIGH-02: Re-fetch nonce from chain if dirty (post-error) or uninitialized.
+	if r.nonce == 0 || r.nonceDirty {
 		from := r.txSigner.Address()
 		n, err := r.fetchNonce(ctx, from)
 		if err != nil {
 			return "", fmt.Errorf("relay fetch nonce: %w", err)
 		}
 		r.nonce = n
+		r.nonceDirty = false
 	}
 
 	// Fetch gas price.
@@ -119,8 +121,12 @@ func (r *Relay) sendTx(ctx context.Context, calldata []byte) (string, error) {
 	// Submit signed transaction.
 	result, err := r.ethCall(ctx, "eth_sendRawTransaction", []interface{}{"0x" + hex.EncodeToString(signedTx)})
 	if err != nil {
-		// Nonce recovery: re-fetch from chain on next attempt.
-		r.nonce = 0
+		// HIGH-02: Mark nonce dirty so next call re-fetches from chain.
+		// The tx may or may not have been mined (network timeout after broadcast).
+		// Re-fetching the pending nonce on next attempt handles both cases:
+		// - If tx was mined: chain nonce is incremented, we pick that up.
+		// - If tx was not mined: chain nonce is unchanged, we retry with same nonce.
+		r.nonceDirty = true
 		return "", fmt.Errorf("relay send raw tx: %w", err)
 	}
 
