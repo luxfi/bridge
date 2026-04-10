@@ -2,8 +2,8 @@ name: Docker Release
 
 on:
   push:
-    branches: [main]
-    tags: ["v*"]
+    branches: [main, dev, test]
+    tags: ['v*']
   workflow_dispatch:
 
 concurrency:
