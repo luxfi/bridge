@@ -3,7 +3,7 @@ module github.com/luxfi/bridge/opnet-watcher
 go 1.26.1
 
 require (
-	github.com/luxfi/crypto v1.17.38
+	github.com/luxfi/crypto v1.17.55
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -11,6 +11,7 @@ require (
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20260215031811-a0ab0b218a81 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/luxfi/cache v1.1.0 // indirect
 	github.com/luxfi/ids v1.2.9 // indirect
 	github.com/luxfi/log v1.4.1 // indirect
@@ -25,6 +26,3 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
-
-// Use local module during development
-replace github.com/luxfi/crypto => ../../crypto
