@@ -1,72 +1,15 @@
-# syntax=docker/dockerfile:1
-# Bridge - Next.js standalone build
-FROM node:18-alpine AS deps
+# syntax=docker/dockerfile:1.7
+#
+# Bridge — Vite 8 SPA served by ghcr.io/hanzoai/spa.
+# Build context: repo root (pnpm workspace).
+
+FROM node:22-alpine AS build
 RUN apk add --no-cache libc6-compat python3 make g++ git
-RUN corepack enable pnpm
-
+RUN corepack enable
 WORKDIR /app
-
-# Copy workspace config
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY app/bridge/package.json ./app/bridge/
-COPY pkg/core/package.json ./pkg/core/
-COPY pkg/settings/package.json ./pkg/settings/
-
-# Install dependencies (cache pnpm store across builds)
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --no-frozen-lockfile
-
-# Builder stage
-FROM node:18-alpine AS builder
-RUN apk add --no-cache libc6-compat
-RUN corepack enable pnpm
-
-WORKDIR /app
-
-# Copy full workspace from deps (includes all node_modules with pnpm links)
-COPY --from=deps /app ./
-# Copy source files on top (.dockerignore excludes node_modules)
 COPY . .
+RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm -C app/bridge build
 
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS=--max_old_space_size=4096
-
-# Build-time env vars for Next.js SSR (overridable via --build-arg)
-ARG NEXT_PUBLIC_BRIDGE_API=https://bridge-api.lux.network
-ARG NEXT_PUBLIC_BACKEND_API=https://bridge-api.lux.network
-ARG NEXT_PUBLIC_IDENTITY_API=https://bridge-api.lux.network
-ARG NEXT_PUBLIC_EXPLORER_API=https://bridge-api.lux.network
-ARG NEXT_PUBLIC_NETWORK_NAME=mainnet
-ENV NEXT_PUBLIC_BRIDGE_API=$NEXT_PUBLIC_BRIDGE_API
-ENV NEXT_PUBLIC_BACKEND_API=$NEXT_PUBLIC_BACKEND_API
-ENV NEXT_PUBLIC_IDENTITY_API=$NEXT_PUBLIC_IDENTITY_API
-ENV NEXT_PUBLIC_EXPLORER_API=$NEXT_PUBLIC_EXPLORER_API
-ENV NEXT_PUBLIC_NETWORK_NAME=$NEXT_PUBLIC_NETWORK_NAME
-
-WORKDIR /app/app/bridge
-RUN pnpm build
-
-# Runner stage
-FROM node:18-alpine AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 bridge
-
-COPY --from=builder /app/app/bridge/public ./public
-COPY --from=builder --chown=bridge:nodejs /app/app/bridge/.next/standalone ./
-COPY --from=builder --chown=bridge:nodejs /app/app/bridge/.next/static ./app/bridge/.next/static
-COPY docker/entrypoint.sh /app/entrypoint.sh
-
-USER bridge
-
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["node", "app/bridge/server.js"]
+FROM ghcr.io/hanzoai/spa
+COPY --from=build /app/app/bridge/dist /public

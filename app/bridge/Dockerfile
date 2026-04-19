@@ -1,66 +1,15 @@
-# Build stage
-FROM node:22-alpine AS builder
+# syntax=docker/dockerfile:1.7
+#
+# Bridge — Vite SPA served by ghcr.io/hanzoai/spa
+# Builds inside the monorepo (context = repo root) so workspace deps resolve.
 
+FROM node:22-alpine AS build
 RUN apk add --no-cache libc6-compat python3 make g++ git
+RUN corepack enable
 WORKDIR /app
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-
-# Copy root workspace files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-
-# Copy ALL workspace package.json files for proper resolution
-COPY app/bridge/package.json ./app/bridge/
-COPY app/bridge3/package.json ./app/bridge3/
-COPY app/explorer/package.json ./app/explorer/
-COPY app/server/package.json ./app/server/
-COPY pkg/core/package.json ./pkg/core/
-COPY pkg/settings/package.json ./pkg/settings/
-COPY pkg/threshold/package.json ./pkg/threshold/
-COPY pkg/ui/package.json ./pkg/ui/
-COPY pkg/utila/package.json ./pkg/utila/
-
-# Install dependencies
-RUN pnpm install --no-frozen-lockfile
-
-# Copy all source code (needed for workspace deps at build time)
 COPY . .
+RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm -C app/bridge build
 
-# Set Next.js to standalone mode
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Build the bridge app
-RUN cd app/bridge && NODE_OPTIONS=--max_old_space_size=2048 pnpm run build
-
-# Runtime stage
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Add non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy necessary files from builder
-COPY --from=builder /app/app/bridge/public ./public
-COPY --from=builder /app/app/bridge/package.json ./package.json
-
-# Copy standalone build
-COPY --from=builder --chown=nextjs:nodejs /app/app/bridge/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/app/bridge/.next/static ./app/bridge/.next/static
-
-# Switch to non-root user
-USER nextjs
-
-# Expose port
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-# Start the application
-CMD ["node", "app/bridge/server.js"]
+FROM ghcr.io/hanzoai/spa
+COPY --from=build /app/app/bridge/dist /public
