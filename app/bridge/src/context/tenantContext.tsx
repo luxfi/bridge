@@ -1,10 +1,8 @@
-'use client'
-
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { ResolvedTenant } from '@/lib/tenant'
+import { fetchTenant, getTenant, type TenantConfig } from '@/lib/tenant'
 
 interface TenantContextValue {
-  tenant: ResolvedTenant | null
+  tenant: TenantConfig | null
   loading: boolean
 }
 
@@ -14,49 +12,33 @@ const TenantContext = createContext<TenantContextValue>({
 })
 
 export function TenantProvider({ children }: { children: React.ReactNode }) {
-  const [tenant, setTenant] = useState<ResolvedTenant | null>(null)
+  const [tenant, setTenant] = useState<TenantConfig | null>(() => getTenant())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const hostname = window.location.hostname
-    fetch(`/api/tenant?hostname=${encodeURIComponent(hostname)}`)
-      .then((r) => r.json())
+    let cancelled = false
+    fetchTenant()
       .then((data) => {
+        if (cancelled) return
         setTenant(data)
-        // Apply CSS custom properties for white-label theming
         if (data.primaryColor) {
           document.documentElement.style.setProperty('--brand-primary', data.primaryColor)
         }
-        if (data.accentColor) {
-          document.documentElement.style.setProperty('--brand-accent', data.accentColor)
-        }
       })
-      .catch(() => { /* use defaults */ })
-      .finally(() => setLoading(false))
+      .catch(() => {
+        /* use fallback */
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  return (
-    <TenantContext.Provider value={{ tenant, loading }}>
-      {children}
-    </TenantContext.Provider>
-  )
+  return <TenantContext.Provider value={{ tenant, loading }}>{children}</TenantContext.Provider>
 }
 
 export function useTenant() {
   return useContext(TenantContext)
-}
-
-/** Server-side tenant resolution helper for layout.tsx */
-export async function fetchTenantServer(hostname: string): Promise<ResolvedTenant | null> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const res = await fetch(
-      `${baseUrl}/api/tenant?hostname=${encodeURIComponent(hostname)}`,
-      { next: { revalidate: 60 } }
-    )
-    if (!res.ok) return null
-    return res.json()
-  } catch {
-    return null
-  }
 }
