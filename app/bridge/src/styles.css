@@ -1,0 +1,45 @@
+/*
+ * Bridge — Vite SPA styles.
+ * Matches lux.cloud: #000 bg, rgba(255,255,255,0.08) borders, #f5f5f5 fg.
+ * Prismatic accent only for hero / brand moments.
+ */
+
+/* Existing Tailwind layer (kept — components reference @tailwind utilities) */
+@import './styles/globals.css';
+@import './styles/dialog-transition.css';
+
+:root {
+  color-scheme: dark;
+  --bg: #000;
+  --panel: #000;
+  --fg: #f5f5f5;
+  --muted: rgba(245, 245, 245, 0.55);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --accent: #f5f5f5;
+  --accent-bg: #1a1a1a;
+  --brand-primary: #4f46e5;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: 'Basel Grotesk', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+.prismatic {
+  background: linear-gradient(100deg, #a8a8ff 0%, #8bffd1 35%, #ffd18b 68%, #ff8bc0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
