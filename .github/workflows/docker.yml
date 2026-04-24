@@ -1,5 +1,4 @@
 name: Docker
-
 on:
   workflow_dispatch:
   push:
@@ -12,9 +11,21 @@ permissions:
 
 jobs:
   docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ghcr.io/luxfi/bridge
+            dockerfile: Dockerfile
+            context: .
+          - image: ghcr.io/luxfi/bridge/server
+            dockerfile: app/server/Dockerfile
+            context: .
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
-      image: ghcr.io/luxfi/bridge
+      image: ${{ matrix.image }}
+      dockerfile: ${{ matrix.dockerfile }}
+      context: ${{ matrix.context }}
     secrets: inherit
 
   notify-universe:
