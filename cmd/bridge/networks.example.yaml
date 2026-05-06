@@ -1,0 +1,67 @@
+# Example bridge config. Mount at /etc/bridge/networks.yaml.
+# Adding networks here is enough — no DB migration, no code change.
+# Schema: github.com/luxfi/bridge/cmd/bridge/config.go::Config
+brand:
+  name: Lux Bridge
+  title: Lux Bridge
+  logoUrl: /logo.svg
+  iconUrl: /icon.svg
+  brandHost: bridge.lux.network
+
+networks:
+  - internalName: lux-mainnet
+    displayName: Lux
+    nativeCurrency: LUX
+    chainId: "96369"
+    type: evm
+    isFeatured: true
+    avgCompletion: 1m
+    txExplorerTpl: https://explore.lux.network/tx/{tx}
+    addrExplorerTpl: https://explore.lux.network/address/{addr}
+
+  - internalName: ethereum-mainnet
+    displayName: Ethereum
+    nativeCurrency: ETH
+    chainId: "1"
+    type: evm
+    avgCompletion: 5m
+    txExplorerTpl: https://etherscan.io/tx/{tx}
+    addrExplorerTpl: https://etherscan.io/address/{addr}
+
+  - internalName: bsc-mainnet
+    displayName: BNB Chain
+    nativeCurrency: BNB
+    chainId: "56"
+    type: evm
+    avgCompletion: 2m
+    txExplorerTpl: https://bscscan.com/tx/{tx}
+    addrExplorerTpl: https://bscscan.com/address/{addr}
+
+tokens:
+  - asset: LUX
+    name: Lux
+    decimals: 18
+    network: lux-mainnet
+
+  - asset: USDT
+    name: Tether USD
+    decimals: 6
+    contract: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+    network: ethereum-mainnet
+
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    network: ethereum-mainnet
+
+limits:
+  minUSD: 10
+  maxUSD: 100000
+  per:
+    USDT:
+      minUSD: 10
+      maxUSD: 100000
+    USDC:
+      minUSD: 10
+      maxUSD: 100000
