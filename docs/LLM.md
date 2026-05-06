@@ -37,14 +37,14 @@ Bridge UI → Bridge Server → MPC Nodes → Blockchain Networks
 ## Supported Networks & Assets
 
 ### Blockchain Networks (15+)
-**Layer 1**: Lux, Ethereum, BSC, Polygon, Avalanche, Fantom
+**Layer 1**: Lux, Ethereum, BSC, Polygon, Fantom
 **Layer 2**: Arbitrum, Optimism, zkSync Era, Polygon zkEVM, Base, Blast
 **Other**: TON, Solana (coming soon), Cosmos (via IBC)
 
 ### Supported Assets
 **Stablecoins**: USDT, USDC, DAI, ZUSD
-**Native Tokens**: LUX, ETH, BNB, MATIC, AVAX
-**Wrapped Assets**: ZETH, ZBNB, ZPOL, ZAVAX, ZTON (ERC20B standard)
+**Native Tokens**: LUX, ETH, BNB, MATIC
+**Wrapped Assets**: ZETH, ZBNB, ZPOL, ZTON (ERC20B standard)
 
 ## Key Smart Contracts
 
