@@ -22,6 +22,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/opnet-watcher/plugins"
 	"github.com/luxfi/crypto/threshold"
 )
@@ -68,11 +70,21 @@ func main() {
 	flag.StringVar(&cfg.SourceRPCURL, "opnet-rpc", "", "OP_NET node JSON-RPC URL (legacy, use --source-rpc)")
 	flag.StringVar(&cfg.SourceBridgeAddr, "opnet-bridge-addr", "", "OP_NET bridge address (legacy, use --source-addr)")
 
+	profileName := flag.String("profile", envOrDefault("BRIDGE_PROFILE", "classical-compat"),
+		"bridge security profile: strict-pq | classical-compat")
+
 	flag.Parse()
 
 	if err := cfg.Validate(); err != nil {
 		log.Fatalf("invalid config: %v", err)
 	}
+
+	bridgeProfile, err := selectBridgeProfile(*profileName)
+	if err != nil {
+		log.Fatalf("bridge profile: %v", err)
+	}
+	log.Printf("bridge profile: %s (post_quantum_end_to_end=%t)",
+		bridgeProfile.Name, bridgeProfile.IsPostQuantumEndToEnd())
 
 	// Select chain plugin.
 	plugin := selectPlugin(chainName, cfg)
@@ -111,6 +123,16 @@ func main() {
 		}
 		txSigner = signer // Single-key mode: same key for proofs and txs
 		log.Printf("chain=%s chain_id=%d signer=0x%x mode=single-key-DEV-ONLY", plugin.Name(), plugin.ChainID(), signer.Address())
+	}
+
+	// Pin the bridge security profile on both signers. opnet-watcher
+	// is inherently a classical-compat path (Teleporter ECDSA); a
+	// strict-PQ profile here causes every signing call to refuse with
+	// ErrBridgeProfileForbidden — exactly the audit posture we want
+	// when running this binary under LUX_STRICT_E2E_PQ.
+	signer.SetProfile(bridgeProfile)
+	if txSigner != signer {
+		txSigner.SetProfile(bridgeProfile)
 	}
 
 	relay := NewRelay(cfg.LuxRPCURL, cfg.TeleporterAddr, signer, txSigner, cfg.LuxChainIDOverride)
@@ -168,6 +190,24 @@ func envOrDefault(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// selectBridgeProfile resolves the --profile flag value to a bridge
+// profile pointer. opnet-watcher is inherently a classical-compat
+// signer (Teleporter ECDSA); the strict-pq option is provided so an
+// operator can run an audit drill (every signing call refuses) and
+// verify the bridge_classical_compat_total metric goes to zero.
+func selectBridgeProfile(name string) (*bridge.BridgeProfile, error) {
+	switch name {
+	case "strict-pq", "lux-strict-pq", "lux-strict-pq-bridge":
+		p := bridge.LuxStrictPQBridgeProfile
+		return &p, nil
+	case "classical-compat", "bridge-classical-compat-unsafe":
+		p := bridge.BridgeClassicalCompat
+		return &p, nil
+	default:
+		return nil, fmt.Errorf("unknown bridge profile %q (valid: strict-pq, classical-compat)", name)
+	}
 }
 
 // evmChains maps chain names to their Teleporter chain IDs.
