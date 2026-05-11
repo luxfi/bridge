@@ -32,6 +32,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/luxfi/bridge"
 )
 
 var version = "dev"
@@ -41,6 +43,8 @@ func main() {
 	addr := flag.String("addr", envOr("BRIDGE_ADDR", ":8080"), "listen address")
 	backend := flag.String("backend", envOr("BRIDGE_BACKEND_URL", ""), "legacy Node backend URL for proxied routes (empty disables proxy)")
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
+	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
+		"bridge security profile: strict-pq | classical-compat")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -48,6 +52,16 @@ func main() {
 		fmt.Println(version)
 		return
 	}
+
+	// Resolve the bridge profile. Default is classical-compat (the
+	// user-facing UI talks to external L1s); operators pin
+	// strict-pq for an internal Lux↔Lux bridge.
+	profile, err := selectProfile(*profileFlag)
+	if err != nil {
+		log.Fatalf("bridge profile: %v", err)
+	}
+	log.Printf("bridge profile: %s (post_quantum_end_to_end=%t)",
+		profile.Name, profile.IsPostQuantumEndToEnd())
 
 	cfg, err := LoadConfig(*cfgPath)
 	if err != nil {
@@ -60,12 +74,14 @@ func main() {
 	}
 
 	api := NewAPI(cfg, *backend)
+	api.SetProfile(profile)
 
 	mux := http.NewServeMux()
 	api.Register(mux)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"status":"ok","version":%q,"backend_proxy":%t}`, version, *backend != "")
+		fmt.Fprintf(w, `{"status":"ok","version":%q,"backend_proxy":%t,"profile":%q,"post_quantum_end_to_end":%t}`,
+			version, *backend != "", profile.Name, profile.IsPostQuantumEndToEnd())
 	})
 	mux.Handle("/", frontend)
 
@@ -97,4 +113,21 @@ func envOr(k, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// selectProfile resolves the --profile flag value to a bridge profile
+// pointer. Refuses an unknown value rather than silently defaulting:
+// an operator who typos the profile name must see the error rather
+// than ship under the wrong posture.
+func selectProfile(name string) (*bridge.BridgeProfile, error) {
+	switch name {
+	case "strict-pq", "lux-strict-pq", "lux-strict-pq-bridge":
+		p := bridge.LuxStrictPQBridgeProfile
+		return &p, nil
+	case "classical-compat", "bridge-classical-compat-unsafe":
+		p := bridge.BridgeClassicalCompat
+		return &p, nil
+	default:
+		return nil, fmt.Errorf("unknown bridge profile %q (valid: strict-pq, classical-compat)", name)
+	}
 }
