@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/luxfi/bridge"
 	"github.com/luxfi/crypto"
 	"github.com/luxfi/crypto/secp256k1"
 	"github.com/luxfi/crypto/threshold"
@@ -41,10 +42,23 @@ type Signer struct {
 	signer     threshold.Signer
 	aggregator threshold.Aggregator
 	groupKey   threshold.PublicKey
+
+	// profile pins the bridge security posture. opnet-watcher produces
+	// Teleporter-compatible ECDSA signatures and is therefore inherently
+	// a classical-compat path; every signing call gates through
+	// profile.RefuseClassicalAdmin and increments
+	// bridge_classical_compat_total on success. Strict-PQ profiles
+	// refuse the operation outright.
+	profile *bridge.BridgeProfile
 }
 
 // NewSigner creates a single-key signer for development.
 // In production, use NewThresholdSigner with CGGMP21 key shares.
+//
+// The Signer is constructed with the BridgeClassicalCompat profile by
+// default — opnet-watcher signs Teleporter-compatible ECDSA / threshold
+// ECDSA. SetProfile may pin a different profile (e.g. strict-PQ during
+// migration drills, which will refuse every sign call).
 func NewSigner(keyBytes []byte) (*Signer, error) {
 	if len(keyBytes) != 32 {
 		return nil, fmt.Errorf("signer: key must be 32 bytes, got %d", len(keyBytes))
@@ -53,11 +67,14 @@ func NewSigner(keyBytes []byte) (*Signer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("signer: invalid key: %w", err)
 	}
-	return &Signer{key: key}, nil
+	p := bridge.BridgeClassicalCompat
+	return &Signer{key: key, profile: &p}, nil
 }
 
 // NewThresholdSigner creates a threshold signer using the given scheme and key share.
 // For Teleporter compatibility (ECDSA.recover), use threshold.SchemeCMP.
+//
+// Defaults to BridgeClassicalCompat; SetProfile overrides.
 func NewThresholdSigner(schemeID threshold.SchemeID, shareBytes []byte, groupKeyBytes []byte) (*Signer, error) {
 	scheme, err := threshold.GetScheme(schemeID)
 	if err != nil {
@@ -84,12 +101,26 @@ func NewThresholdSigner(schemeID threshold.SchemeID, shareBytes []byte, groupKey
 		return nil, fmt.Errorf("signer: create aggregator: %w", err)
 	}
 
+	p := bridge.BridgeClassicalCompat
 	return &Signer{
 		scheme:     scheme,
 		signer:     signer,
 		aggregator: aggregator,
 		groupKey:   groupKey,
+		profile:    &p,
 	}, nil
+}
+
+// SetProfile pins the bridge security profile on this Signer. Called
+// from main.go after the --profile flag is parsed. A strict-PQ profile
+// causes every subsequent SignRaw / SignDeposit / SignBacking /
+// SignTransaction call to refuse with ErrBridgeProfileForbidden; the
+// operator must explicitly opt into classical-compat for opnet-watcher
+// to produce Teleporter-compatible signatures.
+func (s *Signer) SetProfile(p *bridge.BridgeProfile) {
+	if p != nil {
+		s.profile = p
+	}
 }
 
 // Address returns the Ethereum-style address derived from the signer's public key.
@@ -114,7 +145,16 @@ func (s *Signer) IsThreshold() bool {
 // SignRaw signs a raw hash. In single-key mode, uses the local key.
 // In threshold mode, uses the threshold signing protocol.
 // Returns a 65-byte [R || S || V] signature with V = 27 or 28.
+//
+// SECURITY GATE: opnet-watcher produces secp256k1 ECDSA signatures
+// (Teleporter-compatible). Under a strict-PQ bridge profile, this call
+// refuses with ErrBridgeProfileForbidden. Under classical-compat, the
+// call proceeds and the bridge_classical_compat_total counter is
+// incremented.
 func (s *Signer) SignRaw(hash []byte) ([]byte, error) {
+	if err := s.profile.RefuseClassicalAdmin(); err != nil {
+		return nil, fmt.Errorf("signer: %w", err)
+	}
 	if s.key != nil {
 		return s.signSingleKey(hash)
 	}
@@ -124,7 +164,14 @@ func (s *Signer) SignRaw(hash []byte) ([]byte, error) {
 // SignTransaction signs a raw EIP-155 transaction and returns the RLP-encoded signed tx.
 // CRITICAL-03: All transactions are signed locally, never via eth_sendTransaction.
 // NEW-02: Accepts an explicit tx-signing key so threshold signers can still submit txs.
+//
+// SECURITY GATE: EIP-155 transactions are ECDSA secp256k1. Under a
+// strict-PQ profile this refuses; under classical-compat it proceeds
+// and increments bridge_classical_compat_total{primitive="admin"}.
 func (s *Signer) SignTransaction(unsignedRLP []byte, chainID uint64) ([]byte, error) {
+	if err := s.profile.RefuseClassicalAdmin(); err != nil {
+		return nil, fmt.Errorf("signer: %w", err)
+	}
 	if s.key == nil {
 		return nil, fmt.Errorf("signer: transaction signing requires single-key mode (use Relay.txKey for threshold)")
 	}
@@ -237,7 +284,14 @@ func (s *Signer) SignBacking(srcChainID uint64, totalBacking *big.Int, timestamp
 }
 
 // signEthMessage computes keccak256(data), wraps with EIP-191, signs.
+//
+// SECURITY GATE: EIP-191 messages are ECDSA secp256k1 (Teleporter
+// expects ECDSA.recover()). Strict-PQ refuses; classical-compat
+// proceeds and increments bridge_classical_compat_total.
 func (s *Signer) signEthMessage(data []byte) ([]byte, error) {
+	if err := s.profile.RefuseClassicalAdmin(); err != nil {
+		return nil, fmt.Errorf("signer: %w", err)
+	}
 	msgHash := crypto.Keccak256(data)
 
 	prefix := []byte("\x19Ethereum Signed Message:\n32")

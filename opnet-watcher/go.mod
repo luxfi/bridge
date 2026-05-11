@@ -3,9 +3,15 @@ module github.com/luxfi/bridge/opnet-watcher
 go 1.26.1
 
 require (
+	github.com/luxfi/bridge v0.0.0-00010101000000-000000000000
 	github.com/luxfi/crypto v1.17.55
 	gopkg.in/yaml.v3 v3.0.1
 )
+
+// The bridge top-level module (BridgeProfile audit gate) is co-located
+// in this repository; consume it via a local replace until the next
+// patch tag is published.
+replace github.com/luxfi/bridge => ../
 
 require (
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20260215031811-a0ab0b218a81 // indirect
