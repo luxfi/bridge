@@ -1,6 +1,6 @@
 module github.com/luxfi/bridge/opnet-watcher
 
-go 1.26.1
+go 1.26.3
 
 require (
 	github.com/luxfi/bridge v0.0.0-00010101000000-000000000000
