@@ -154,32 +154,33 @@ services:
       - /app/node_modules
     command: npm run dev
 
-  # Bridge UI
+  # Bridge UI — Vite SPA. Local-dev compose mounts host source and runs
+  # `pnpm dev` on port 3001 for hot-reload. Built image (ghcr.io/luxfi/
+  # bridge-ui:latest) is `ghcr.io/hanzoai/spa` serving prebuilt /dist on
+  # port 80 — used by compose.testnet.yml / compose.mainnet.yml / k8s.
+  # node:22-alpine matches app/bridge/Dockerfile build stage.
   bridge-ui:
-    image: ghcr.io/luxfi/bridge-ui:latest
+    image: node:22-alpine
     container_name: bridge-ui
+    working_dir: /app/app/bridge
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
-      - NEXT_PUBLIC_CHAIN_ENV=local
-      # Lux ID (Casdoor) Authentication
-      - NEXT_PUBLIC_AUTH_PROVIDER=casdoor
-      - NEXT_PUBLIC_CASDOOR_ENDPOINT=http://localhost:8000
-      - NEXT_PUBLIC_CASDOOR_CLIENT_ID=lux-bridge
-      - NEXT_PUBLIC_CASDOOR_ORGANIZATION=lux-network
-      - NEXT_PUBLIC_CASDOOR_APPLICATION=bridge
-      - NEXT_PUBLIC_CASDOOR_REDIRECT_URI=http://localhost:3000/auth/callback
+      # Vite reads these at build/dev time (build-time inline + dev-server pickup).
+      - VITE_BRIDGE_API_HOST=http://localhost:5000
+      - VITE_BRIDGE_ENV=local
+      - VITE_BRIDGE_CLIENT_ID=lux-bridge
+      - VITE_BRIDGE_IAM_ORG=lux-network
     ports:
-      - "3000:3000"
+      - "3001:3001"
     networks:
       - bridge-network
     depends_on:
       - bridge-server
       - lux-id
     volumes:
-      - ./app/bridge:/app
+      - ./:/app
       - /app/node_modules
-      - /app/.next
-    command: npm run dev
+      - /app/app/bridge/node_modules
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile || pnpm install; pnpm -C app/bridge dev --host 0.0.0.0 --port 3001"
 
 volumes:
   lux-id-data:
