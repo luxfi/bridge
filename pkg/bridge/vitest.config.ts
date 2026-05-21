@@ -6,9 +6,6 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     globals: true,
-    // happy-dom is sufficient for the hook tests; jsdom would also work
-    // but happy-dom starts ~5× faster on cold init.
-    environment: 'happy-dom',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    environment: 'node',
   },
 })
