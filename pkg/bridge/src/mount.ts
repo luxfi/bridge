@@ -1,7 +1,8 @@
 // mountBridge — declarative SDK entrypoint.
 //
-// Mirrors the `mountExchange` pattern from @partner/exchange: the host
-// passes a config and we own the DOM + React root from there.
+// Declarative mount: the host passes a config and the SDK owns the DOM +
+// React root from there. The shape mirrors other Lux product SDKs so a
+// downstream brand can wire identical config across products.
 //
 //   import { mountBridge } from '@luxfi/bridge'
 //

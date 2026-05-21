@@ -5,7 +5,51 @@
 
 ## Project Overview
 
-The Lux Bridge is a decentralized cross-chain bridge infrastructure that enables secure, trustless asset transfers between multiple blockchain networks using Multi-Party Computation (MPC) technology. It serves as the primary interoperability layer for the Lux ecosystem, connecting 15+ blockchain networks.
+Lux Bridge is the production cross-chain bridge for the Lux primary
+network. It is the deployment surface for the PQ-signed bridge reference
+implementation at `~/work/lux/teleport` — same EIP-712 typed-data flow,
+same claimId-based replay protection, same role-separated MPC oracle,
+same IAM-authenticated admin path, same KMS-backed signer keys. Teleport
+is the spec + canonical contracts (in `~/work/lux/standard/contracts/bridge/`);
+this repo ships the binary, the SDK, and the production deployment.
+
+It is on the Lux primary network. The bridge chain is the **B-Chain** in
+the primary-network architecture (P + Q + Z + B + …). There is no
+multi-region split — one bridge, one canonical SDK, one set of contracts,
+multiple white-label tenants consuming it.
+
+## Two MPC clusters — different trust models
+
+The bridge runs **two distinct MPC instances**. They are different
+software, different keys, different operators, different threat models.
+Conflating them is a critical security error.
+
+### Public MPC (m-chain) — user-facing threshold signer
+
+- Threshold-signs every user-facing bridge transaction (burn → claim → mint).
+- Validator set is the public m-chain validator set. Key material is split
+  across the m-chain participants; no single party (including Lux Industries)
+  can produce a signature unilaterally.
+- Trust model: 2-of-3 honest among the m-chain participants (CGGMP21 for
+  classical ECDSA paths; Pulsar / Pulsar-M for PQ-safe lattice paths under
+  `LUX_STRICT_E2E_PQ`).
+- Endpoint: `mpc.lux.network` (or tenant-supplied via `BridgeMPCConfig.publicUrl`).
+
+### Private MPC — treasury / fee operations ONLY
+
+- Treasury wallet for the bridge's own fee revenue. Collects protocol fees,
+  manages liquidity rebalances, pays operating costs.
+- Validator set is internal (Lux Industries operators). Different software
+  instance, different keys, different signing audience.
+- **NOT user-facing.** No user transaction ever transits the private MPC.
+  No user-funds custody. The private MPC cannot mint bridged assets and
+  cannot sign user claims.
+- Endpoint: `mpc-private.lux.network` (or tenant-supplied via
+  `BridgeMPCConfig.privateUrl`).
+
+If a config or code path points user-facing flows at the private MPC,
+that is a bug — refuse the change and reroute through the public m-chain
+MPC.
 
 ## Package layout — public vs internal
 
@@ -46,8 +90,8 @@ mountBridge({
 })
 ```
 
-Mirrors `mountExchange` from `@partner/exchange`. One declarative entry,
-build-time brand config, no hostname detection inside the SDK.
+One declarative entry, build-time brand config, no hostname detection
+inside the SDK.
 
 ## Publishing
 
