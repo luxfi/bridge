@@ -55,10 +55,11 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 
 2. **Build and Push Images**:
 ```bash
-# Build images locally first
+# Build images locally first (UI build context is repo root — pnpm
+# workspace resolves @luxfi/bridge to the sibling pkg/bridge package).
 docker build -t ghcr.io/luxfi/bridge-mpc:latest ./mpc-service
 docker build -t ghcr.io/luxfi/bridge-server:latest ./app/server
-docker build -t ghcr.io/luxfi/bridge-ui:latest ./app/bridge
+docker build -t ghcr.io/luxfi/bridge-ui:latest -f app/bridge/Dockerfile .
 
 # Push to registry
 docker push ghcr.io/luxfi/bridge-mpc:latest
