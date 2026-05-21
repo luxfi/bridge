@@ -1,6 +1,7 @@
 {
   "name": "@luxbridge/settings",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "private": true,
   "description": "Library that contains shared bridge settings",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
