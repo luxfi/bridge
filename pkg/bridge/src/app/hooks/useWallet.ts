@@ -23,7 +23,14 @@ export interface WalletState {
 
 // Display-only deterministic address (the leading bytes spell "LUXBRIDGE").
 // Replaced by Phase 3 R2 with the actual MPC-derived address per session.
-const DISPLAY_ADDRESS = '0xLUXBRIDGE000000000000000000000000DEADBEEF'
+//
+// Gated behind `import.meta.env.DEV` so production consumer builds tree-shake
+// the literal to unreachable code. In production this resolves to `null`, and
+// `connect()` throws — the stub is never invocable against real users.
+const DISPLAY_ADDRESS =
+  typeof import.meta !== 'undefined' && (import.meta as { env?: { DEV?: boolean } }).env?.DEV
+    ? '0xLUXBRIDGE000000000000000000000000DEADBEEF'
+    : null
 
 export function useWallet(): WalletState {
   const [address, setAddress] = useState<string | null>(null)
@@ -35,6 +42,12 @@ export function useWallet(): WalletState {
     setConnecting(true)
     // Simulated handshake latency; replaced by real MPC keygen round in R3.
     await new Promise((r) => setTimeout(r, 350))
+    if (DISPLAY_ADDRESS === null) {
+      setConnecting(false)
+      throw new Error(
+        'useWallet: stub wallet is dev-only. Real MPC wallet wiring lands in Phase 3 R3.'
+      )
+    }
     setAddress(DISPLAY_ADDRESS)
     setChainId(cid)
     setConnecting(false)
