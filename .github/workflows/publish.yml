@@ -30,7 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-tags: true
+          # On tag push the checkout action already resolves the tag ref;
+          # setting fetch-tags here on a self-hosted runner conflicts with
+          # the refspec the runner uses, so we leave it implicit.
+          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
