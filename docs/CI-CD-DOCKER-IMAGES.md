@@ -96,8 +96,8 @@ docker build -f app/mpc-service/Dockerfile .
 # Bridge Server
 docker build -f app/server/Dockerfile app/server/
 
-# Bridge UI
-docker build -f app/bridge/Dockerfile app/bridge/
+# Bridge UI (build context is repo root — pnpm workspace)
+docker build -f app/bridge/Dockerfile .
 ```
 
 ## Security
