@@ -1,10 +1,14 @@
 // ChainSelector — native <select> based chain picker.
 //
 // Native select avoids dragging a popover / portal lib into the SDK and ships
-// real working UI today. Phase 3 R2 swaps this for @hanzo/gui's `Select` so
-// the visual story matches the rest of the design system.
+// real working UI today. Phase 3 R2.5 swaps the layout + label primitives
+// onto `@hanzo/gui`; the `<select>` element stays native HTML because
+// `@hanzogui/select` is a heavy compound component (Portal + Sheet + Adapt)
+// that would change the render shape and pull a popover stack into the
+// bundle. See R2.5 report.
 
 import type { CSSProperties, FC } from 'react'
+import { Text, YStack } from '@hanzo/gui'
 import type { Chain } from '../lib/chains'
 
 export interface ChainSelectorProps {
@@ -51,8 +55,8 @@ export const ChainSelector: FC<ChainSelectorProps> = ({
   onChange,
   style,
 }) => (
-  <div style={{ ...wrap, ...style }}>
-    <span style={labelStyle}>{label}</span>
+  <YStack style={{ ...wrap, ...style }}>
+    <Text style={labelStyle}>{label}</Text>
     <select
       style={selectStyle}
       value={current.id}
@@ -68,5 +72,5 @@ export const ChainSelector: FC<ChainSelectorProps> = ({
         </option>
       ))}
     </select>
-  </div>
+  </YStack>
 )

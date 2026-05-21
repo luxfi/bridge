@@ -1,9 +1,11 @@
 // Header — brand area + wallet connect.
 //
 // Reads brand metadata from the SDK config (which downstream consumers set
-// once at mount time via setConfig). Phase 3 R2 swaps the styling layer.
+// once at mount time via setConfig). Phase 3 R2.5 swaps layout primitives
+// onto `@hanzo/gui` (XStack rendering as <header>, Text for brand name).
 
 import type { CSSProperties, FC } from 'react'
+import { Text, XStack } from '@hanzo/gui'
 import { getConfig } from '../../config'
 import type { WalletState } from '../hooks/useWallet'
 import { WalletConnect } from './WalletConnect'
@@ -58,8 +60,8 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
   const logo = cfg.brand?.logoUrl
   const initial = name.charAt(0).toUpperCase()
   return (
-    <header style={header}>
-      <div style={brand}>
+    <XStack render="header" style={header}>
+      <XStack style={brand}>
         {logo ? (
           <img
             src={logo}
@@ -67,13 +69,13 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
             style={{ width: 28, height: 28, borderRadius: 6 }}
           />
         ) : (
-          <span style={brandLogo} aria-hidden>
+          <Text style={brandLogo} aria-hidden>
             {initial}
-          </span>
+          </Text>
         )}
-        <span style={brandName}>{name}</span>
-      </div>
+        <Text style={brandName}>{name}</Text>
+      </XStack>
       <WalletConnect wallet={wallet} defaultChainId={defaultChainId} />
-    </header>
+    </XStack>
   )
 }

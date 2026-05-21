@@ -5,7 +5,7 @@
 // TransferState which TransferStatus renders below.
 
 import { useState, type CSSProperties, type FC } from 'react'
-import { Button } from '@hanzo/gui'
+import { Button, Text, XStack, YStack } from '@hanzo/gui'
 import type { SwapState } from '../hooks/useSwap'
 import type { WalletState } from '../hooks/useWallet'
 import type { TransferState } from '../hooks/useTransfers'
@@ -120,7 +120,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
 
   return (
     <Card>
-      <div style={chainsRow}>
+      <XStack style={chainsRow}>
         <ChainSelector
           label="From"
           chains={swap.chains}
@@ -140,7 +140,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           current={swap.toChain}
           onChange={swap.setToChain}
         />
-      </div>
+      </XStack>
 
       <AssetInput
         label="You send"
@@ -163,26 +163,26 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       />
 
       {swap.quote ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={quoteRow}>
-            <span>Rate</span>
-            <span>
+        <YStack style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <XStack style={quoteRow}>
+            <Text>Rate</Text>
+            <Text>
               1 {swap.fromAsset.symbol} ≈ {formatAmount(swap.quote.rate, 6)}{' '}
               {swap.toAsset.symbol}
-            </span>
-          </div>
-          <div style={quoteRow}>
-            <span>Fee</span>
-            <span>{formatUsd(swap.quote.feeUsd)}</span>
-          </div>
-          <div style={quoteRow}>
-            <span>Est. time</span>
-            <span>{swap.quote.etaText}</span>
-          </div>
-        </div>
+            </Text>
+          </XStack>
+          <XStack style={quoteRow}>
+            <Text>Fee</Text>
+            <Text>{formatUsd(swap.quote.feeUsd)}</Text>
+          </XStack>
+          <XStack style={quoteRow}>
+            <Text>Est. time</Text>
+            <Text>{swap.quote.etaText}</Text>
+          </XStack>
+        </YStack>
       ) : null}
 
-      {error ? <div style={errorBox}>{error}</div> : null}
+      {error ? <Text style={errorBox}>{error}</Text> : null}
 
       <Button
         style={canSubmit ? submit : submitDisabled}

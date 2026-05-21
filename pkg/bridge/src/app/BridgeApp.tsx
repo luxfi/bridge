@@ -14,11 +14,13 @@
 //   - PQ-safe. The signing layer (wired by Phase 3 R3) uses Ringtail-lattice
 //     + ECDSA-CMP hybrid; nothing in this file makes a classical-only
 //     assumption.
-//   - Tamagui swap. Phase 3 R2 replaces inline styles + native `<select>`
-//     with `@hanzo/gui` primitives. This file's shape is stable across
-//     that swap — the components in `./components/` are the seams.
+//   - Tamagui swap. Phase 3 R2 replaced inline `<button>`/`<input>` with
+//     `@hanzo/gui`'s Button + Input; Phase 3 R2.5 rotates the layout +
+//     text primitives (Card/XStack/YStack/Text). The components in
+//     `./components/` are the seams.
 
 import { useEffect, type FC } from 'react'
+import { Text, XStack, YStack } from '@hanzo/gui'
 
 import { getConfig } from '../config'
 import { Header } from './components/Header'
@@ -84,19 +86,25 @@ export const BridgeApp: FC = () => {
   const env = cfg.env
 
   return (
-    <div className="bridge-root" style={shell}>
+    <YStack className="bridge-root" style={shell}>
       <Header wallet={wallet} defaultChainId={swap.fromChain.id} />
-      <main style={main}>
-        <div style={stack}>
+      <XStack render="main" style={main}>
+        <YStack style={stack}>
           <SwapForm swap={swap} wallet={wallet} transfers={transfers} />
           <TransferStatus transfers={transfers.transfers} />
-        </div>
-      </main>
-      <footer style={footer}>
-        <span>Network: {env}</span>
+        </YStack>
+      </XStack>
+      <XStack
+        render="footer"
+        style={footer}
+        justifyContent="center"
+        alignItems="center"
+        flexWrap="wrap"
+      >
+        <Text>Network: {env}</Text>
         {docsUrl ? (
           <>
-            {' · '}
+            <Text>{' · '}</Text>
             <a
               href={docsUrl}
               target="_blank"
@@ -109,7 +117,7 @@ export const BridgeApp: FC = () => {
         ) : null}
         {supportEmail ? (
           <>
-            {' · '}
+            <Text>{' · '}</Text>
             <a
               href={`mailto:${supportEmail}`}
               style={{ color: 'var(--bridge-text-muted)' }}
@@ -118,8 +126,8 @@ export const BridgeApp: FC = () => {
             </a>
           </>
         ) : null}
-      </footer>
-    </div>
+      </XStack>
+    </YStack>
   )
 }
 

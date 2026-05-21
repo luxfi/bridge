@@ -1,11 +1,12 @@
 // AssetInput — amount input + native asset select.
 //
 // Side-by-side text input (amount) and select (asset). Validates numeric
-// input on type. Phase 3 R2 replaces this composition with @hanzo/gui's
-// `Input` and `Select` primitives.
+// input on type. Phase 3 R2.5 swaps the layout containers onto
+// `@hanzo/gui`'s stack primitives and the label text onto `Text`. The
+// `<select>` stays native HTML (see ChainSelector for rationale).
 
 import type { CSSProperties, FC } from 'react'
-import { Input } from '@hanzo/gui'
+import { Input, Text, XStack, YStack } from '@hanzo/gui'
 import type { Asset } from '../lib/assets'
 import { parseAmount } from '../lib/format'
 
@@ -79,12 +80,12 @@ export const AssetInput: FC<AssetInputProps> = ({
   readOnly = false,
   placeholder = '0.0',
 }) => (
-  <div style={wrap}>
-    <div style={labelRow}>
-      <span>{label}</span>
-      {readOnly && <span>estimated</span>}
-    </div>
-    <div style={row}>
+  <YStack style={wrap}>
+    <XStack style={labelRow}>
+      <Text>{label}</Text>
+      {readOnly && <Text>estimated</Text>}
+    </XStack>
+    <XStack style={row}>
       <Input
         style={inputStyle}
         inputMode="decimal"
@@ -116,6 +117,6 @@ export const AssetInput: FC<AssetInputProps> = ({
           </option>
         ))}
       </select>
-    </div>
-  </div>
+    </XStack>
+  </YStack>
 )

@@ -2,9 +2,12 @@
 //
 // Today this stubs the connection (see useWallet.ts). Phase 3 R3 wires
 // the real threshold-MPC session — the *button* contract here stays.
+//
+// Phase 3 R2.5 swaps the inline status dot from `<span>` to Tamagui `Text`
+// so brand fonts and theme tokens flow.
 
 import type { CSSProperties, FC } from 'react'
-import { Button } from '@hanzo/gui'
+import { Button, Text } from '@hanzo/gui'
 import type { WalletState } from '../hooks/useWallet'
 import { shortAddress } from '../lib/format'
 
@@ -14,8 +17,6 @@ export interface WalletConnectProps {
   defaultChainId: string
 }
 
-// Phase 3 R2 swap: `<button>` → @hanzo/gui's `Button`. Inline styles are
-// preserved verbatim; Phase 3 R2.5 will move them to Tamagui theme tokens.
 const buttonBase: CSSProperties = {
   background: 'var(--bridge-accent)',
   color: 'white',
@@ -72,7 +73,7 @@ export const WalletConnect: FC<WalletConnectProps> = ({
       onClick={wallet.disconnect}
       aria-label={`Disconnect wallet ${wallet.address}`}
     >
-      <span
+      <Text
         style={{
           display: 'inline-block',
           width: 8,
