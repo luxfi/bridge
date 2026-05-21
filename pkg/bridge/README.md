@@ -103,6 +103,33 @@ and the component seams stay stable across that swap.
 
 One canonical SDK name. One mount function. One config shape.
 
+## Consuming this SDK from a Vite app
+
+`@hanzo/gui` is React-Native-first. Web consumers MUST alias
+`react-native` to `react-native-web` and dedupe React roots, or the
+bundler will fail to resolve `react-native` from Tamagui's runtime:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: { 'react-native': 'react-native-web' },
+    dedupe: ['react', 'react-dom', 'react-native-web'],
+  },
+  define: {
+    'process.env.TAMAGUI_TARGET': JSON.stringify('web'),
+  },
+})
+```
+
+Add `react-native-web ^0.19.0` to the host app's dependencies. See
+`app/bridge/vite.config.ts` in this repository for the canonical
+configuration (it's what `bridge.lux.network` ships).
+
 ## License
 
 MIT
