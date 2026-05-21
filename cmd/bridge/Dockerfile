@@ -8,14 +8,16 @@
 #   docker build -f cmd/bridge/Dockerfile -t ghcr.io/luxfi/bridge:dev .
 
 # ── 1. UI build ───────────────────────────────────────────────────────────
+# Build context: repo root (pnpm workspace). app/bridge depends on
+# @luxfi/bridge via `workspace:*`, so the whole monorepo must be in scope
+# for pnpm to resolve the sibling package.
 FROM node:20-alpine AS ui-build
-WORKDIR /ui
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
-COPY app/bridge/package.json app/bridge/pnpm-lock.yaml* ./
+WORKDIR /repo
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+COPY . .
 RUN pnpm install --frozen-lockfile || pnpm install
-COPY app/bridge/ ./
-RUN pnpm build && \
-    if [ -d dist ]; then mv dist out; fi
+RUN pnpm -C app/bridge build && \
+    cp -r app/bridge/dist /ui-out
 
 # ── 2. Go build ───────────────────────────────────────────────────────────
 FROM golang:1.26.3-alpine AS go-build
@@ -26,7 +28,7 @@ RUN go mod download
 COPY cmd/ cmd/
 # Replace placeholder static/ with the real UI build.
 RUN rm -rf cmd/bridge/static && mkdir -p cmd/bridge/static
-COPY --from=ui-build /ui/out/ cmd/bridge/static/
+COPY --from=ui-build /ui-out/ cmd/bridge/static/
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w -X main.version=${VERSION}" \

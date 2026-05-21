@@ -4,7 +4,7 @@
 # (anything with `"publishConfig.access": "public"` and not `"private": true`).
 #
 # Public:  @luxfi/bridge, @luxfi/core, @luxfi/threshold, @luxfi/utila
-# Private (workspace-only, never published): @luxbridge/app, @luxbridge/app-v3,
+# Private (workspace-only, never published): @luxbridge/lux-tenant,
 #                                            @luxbridge/explorer, @luxbridge/server,
 #                                            @luxbridge/settings, @luxbridge/ui-automation
 #
