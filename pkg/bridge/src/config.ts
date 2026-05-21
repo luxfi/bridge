@@ -13,6 +13,14 @@ let current: BridgeConfig | undefined
  * Idempotent: calling again overwrites the previous config.
  */
 export function setConfig(cfg: BridgeConfig): BridgeConfig {
+  // Precedence: new auth.{clientId,orgSlug} blocks win over legacy
+  // top-level fields. Conflict throws so tenants notice at boot.
+  if (cfg.clientId && cfg.auth?.clientId && cfg.clientId !== cfg.auth.clientId) {
+    throw new Error('@luxfi/bridge: conflicting clientId (top-level vs auth.clientId)')
+  }
+  if (cfg.iamOrg && cfg.auth?.orgSlug && cfg.iamOrg !== cfg.auth.orgSlug) {
+    throw new Error('@luxfi/bridge: conflicting org (iamOrg vs auth.orgSlug)')
+  }
   current = cfg
   return cfg
 }

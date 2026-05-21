@@ -22,6 +22,10 @@ export {
 
 export type {
   BrandConfig,
+  BridgeAuthConfig,
   BridgeConfig,
+  BridgeKMSConfig,
+  BridgeMPCConfig,
+  BridgeWalletConfig,
   MountBridgeOptions,
 } from './types'
