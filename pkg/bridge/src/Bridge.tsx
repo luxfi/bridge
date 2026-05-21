@@ -31,8 +31,10 @@ export interface BridgeProps {
 }
 
 export const Bridge: FC<BridgeProps> = ({ config }) => {
-  // Seed config synchronously before children read it. useEffect is for the
-  // brand metadata side effect only.
+  // Seed config synchronously before children read it. The full config —
+  // including auth / kms / wallet / mpc blocks when present — is cached via
+  // `setConfig`; the internal app reads them lazily through `getConfig`.
+  // useEffect is for the brand metadata side effect only.
   setConfig(config)
 
   useEffect(() => {

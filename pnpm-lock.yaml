@@ -403,6 +403,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.7.2
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.10.3)(lightningcss@1.32.0)(terser@5.37.0)
 
   pkg/core:
     devDependencies:
