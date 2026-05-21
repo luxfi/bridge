@@ -1,0 +1,79 @@
+# Publish @luxfi/* packages to npm.
+#
+# Triggered by `v*` tag push. Publishes every public workspace package
+# (anything with `"publishConfig.access": "public"` and not `"private": true`).
+#
+# Public:  @luxfi/bridge, @luxfi/core, @luxfi/threshold, @luxfi/utila
+# Private (workspace-only, never published): @luxbridge/app, @luxbridge/app-v3,
+#                                            @luxbridge/explorer, @luxbridge/server,
+#                                            @luxbridge/settings, @luxbridge/ui-automation
+#
+# The version baked into each package.json is the source of truth — the git
+# tag is informational. Bump versions in PRs, tag once they merge to main.
+
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/'
+          scope: '@luxfi'
+
+      - run: corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+      - name: Configure npm auth (npmjs.org)
+        run: |
+          cat > .npmrc <<'NPMRC'
+          registry=https://registry.npmjs.org/
+          @luxfi:registry=https://registry.npmjs.org/
+          //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+          always-auth=true
+          NPMRC
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - run: pnpm install --frozen-lockfile || pnpm install
+
+      # Build the publishable @luxfi/* packages that emit dist/.
+      - name: Build @luxfi/core
+        run: pnpm --filter @luxfi/core build
+
+      - name: Build @luxfi/threshold
+        run: pnpm --filter @luxfi/threshold build
+
+      - name: Build @luxfi/utila
+        run: pnpm --filter @luxfi/utila build
+
+      # @luxfi/bridge ships source TS directly (no build step required for
+      # consumers using a bundler like Vite/webpack/esbuild — type-only).
+      - name: Typecheck @luxfi/bridge
+        run: pnpm --filter @luxfi/bridge tc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Publish via `pnpm publish -r` — pnpm walks the workspace, skips
+      # `private: true` packages, and only ships those whose version isn't
+      # already on the registry. `--no-git-checks` skips the dirty-tree
+      # guard since the tag commit may include workflow edits.
+      - name: Publish @luxfi/* to npmjs.org
+        run: pnpm publish -r --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
