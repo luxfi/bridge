@@ -14,11 +14,7 @@
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": [],
-    "baseUrl": ".",
-    "paths": {
-      "@luxbridge/app": ["./src/luxbridge-app.d.ts"]
-    }
+    "types": []
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
