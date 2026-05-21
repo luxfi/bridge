@@ -85,8 +85,23 @@ export interface BridgeMPCConfig {
   publicUrl: string
   /** Optional private MPC cluster URL (treasury fees). */
   privateUrl?: string
-  /** Threshold-sig protocol (mirrors `@luxfi/threshold` Protocol union). */
-  protocol?: 'lss' | 'cggmp21' | 'frost' | 'bls' | 'corona'
+  /**
+   * Threshold-signature protocol identifier.
+   *
+   * Classical (ECDSA/EdDSA): `cggmp21`, `frost`, `bls`, `doerner`.
+   * Post-quantum (lattice-based, leaderless-safe): `pulsar` (MLWE),
+   * `corona` (RLWE), `magnetar` (research variant).
+   *
+   * All protocols are leaderless and permissionless-safe by design.
+   */
+  protocol?:
+    | 'cggmp21'
+    | 'frost'
+    | 'bls'
+    | 'doerner'
+    | 'pulsar'
+    | 'corona'
+    | 'magnetar'
 }
 
 /**

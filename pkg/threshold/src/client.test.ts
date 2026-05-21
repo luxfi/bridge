@@ -26,7 +26,7 @@ describe('ThresholdClient', () => {
       const mockResponse: KeygenResponse = {
         sessionId: 'sess-123',
         keyId: 'key-1',
-        protocol: 'lss',
+        protocol: 'cggmp21',
         status: 'pending',
         threshold: 2,
         totalParties: 3,
@@ -40,7 +40,7 @@ describe('ThresholdClient', () => {
 
       const result = await client.keygen({ keyId: 'key-1', chain: 'ethereum' })
       expect(result.keyId).toBe('key-1')
-      expect(result.protocol).toBe('lss')
+      expect(result.protocol).toBe('cggmp21')
     })
 
     it('should call keygen with protocol', async () => {
