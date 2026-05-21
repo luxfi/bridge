@@ -350,7 +350,9 @@ spec:
     name: http
   type: ClusterIP
 ---
-# Bridge UI Deployment
+# Bridge UI Deployment — Vite SPA served by ghcr.io/hanzoai/spa on :80.
+# VITE_BRIDGE_* env documents the build-time inlined config; for true
+# per-env values the image is built with those VITE_* vars baked in.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -370,19 +372,17 @@ spec:
       - name: ui
         image: ghcr.io/luxfi/bridge-ui:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 80
           name: http
         env:
-        - name: NEXT_PUBLIC_BRIDGE_API
+        - name: VITE_BRIDGE_API_HOST
           value: https://bridge-api.lux.network
-        - name: NEXT_PUBLIC_BACKEND_API
-          value: https://bridge-api.lux.network
-        - name: NEXT_PUBLIC_IDENTITY_API
-          value: https://bridge-api.lux.network
-        - name: NEXT_PUBLIC_EXPLORER_API
-          value: https://bridge-api.lux.network
-        - name: NEXT_PUBLIC_NETWORK_NAME
+        - name: VITE_BRIDGE_ENV
           value: mainnet
+        - name: VITE_BRIDGE_CLIENT_ID
+          value: lux-bridge
+        - name: VITE_BRIDGE_IAM_ORG
+          value: lux-network
         resources:
           requests:
             memory: "256Mi"
@@ -401,7 +401,7 @@ spec:
     app: bridge-ui
   ports:
   - port: 80
-    targetPort: 3000
+    targetPort: 80
     name: http
   type: ClusterIP
 ---
