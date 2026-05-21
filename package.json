@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "install:all": "pnpm install",
-    "postinstall": "node scripts/patch-hanzogui-exports.cjs || true",
+    "postinstall": "node scripts/patch-hanzogui-exports.cjs",
     "test": "echo 'Run tests in individual packages'",
     "ci:test": "pnpm -r test"
   },
