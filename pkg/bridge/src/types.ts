@@ -28,9 +28,89 @@ export interface BrandConfig {
 }
 
 /**
+ * Auth (Hanzo IAM white-label) config block.
+ *
+ * Mirrors the `auth` prop accepted by `<Exchange>` in `@luxfi/exchange`, so
+ * tenant apps wire identical OIDC config across products.
+ */
+export interface BridgeAuthConfig {
+  /** Identity provider. Only `iam` is supported today. */
+  provider: 'iam'
+  /** OIDC issuer URL (e.g. `https://iam.lux.network`). */
+  issuer: string
+  /** OIDC client id (per-tenant, registered in IAM). */
+  clientId: string
+  /** Optional white-label IAM hostname (login UI). */
+  idHost?: string
+  /** Optional IAM org slug for multi-tenant routing. */
+  orgSlug?: string
+}
+
+/**
+ * KMS (secrets + runtime config) block.
+ *
+ * Tenants point this at their KMS endpoint; the bridge fetches per-tenant
+ * runtime secrets via JWT-gated requests.
+ */
+export interface BridgeKMSConfig {
+  /** KMS endpoint URL (e.g. `https://kms.lux.network`). */
+  url: string
+}
+
+/**
+ * Wallet connector config block.
+ *
+ * Pure declarative pass-through to the bridge's wallet layer. No defaults
+ * are baked in here — tenants supply their own WalletConnect project id and
+ * preferred chain set.
+ */
+export interface BridgeWalletConfig {
+  /** WalletConnect v2 project id (per tenant). */
+  walletConnectProjectId?: string
+  /** EVM chain id selected on first connect. */
+  defaultChainId?: number
+  /** Allow-list of EVM chain ids the connector exposes. */
+  supportedChainIds?: number[]
+}
+
+/**
+ * MPC cluster config block.
+ *
+ * The bridge co-signs cross-chain settlement via Lux MPC (CGGMP21 / FROST).
+ * Public cluster (m-chain) handles user wallets; the optional private cluster
+ * is reserved for treasury / fee accounts.
+ */
+export interface BridgeMPCConfig {
+  /** Public MPC cluster URL (m-chain). */
+  publicUrl: string
+  /** Optional private MPC cluster URL (treasury fees). */
+  privateUrl?: string
+  /**
+   * Threshold-signature protocol identifier.
+   *
+   * Classical (ECDSA/EdDSA): `cggmp21`, `frost`, `bls`, `doerner`.
+   * Post-quantum (lattice-based, leaderless-safe): `pulsar` (MLWE),
+   * `corona` (RLWE), `magnetar` (research variant).
+   *
+   * All protocols are leaderless and permissionless-safe by design.
+   */
+  protocol?:
+    | 'cggmp21'
+    | 'frost'
+    | 'bls'
+    | 'doerner'
+    | 'pulsar'
+    | 'corona'
+    | 'magnetar'
+}
+
+/**
  * Runtime configuration for the bridge SDK.
  *
- * `apiHost` and `env` are required; brand defaults to the unbranded Lux build.
+ * `apiHost` and `env` are required; every other block is optional and
+ * defaults to the unbranded Lux build. The optional blocks intentionally
+ * mirror the `<Exchange>` prop set in `@luxfi/exchange` so tenants wire
+ * identical config across products.
  */
 export interface BridgeConfig {
   /** API host (e.g. `https://api.bridge.lux.network`). */
@@ -39,9 +119,23 @@ export interface BridgeConfig {
   env: string
   /** Optional brand overrides for white-label deployments. */
   brand?: BrandConfig
-  /** Optional Lux ID OIDC client ID. */
+  /** Optional auth (Hanzo IAM) block. Mirrors `<Exchange auth={…} />`. */
+  auth?: BridgeAuthConfig
+  /** Optional KMS block. Mirrors `<Exchange kms={…} />`. */
+  kms?: BridgeKMSConfig
+  /** Optional wallet connector block. */
+  wallet?: BridgeWalletConfig
+  /** Optional MPC cluster block. */
+  mpc?: BridgeMPCConfig
+  /**
+   * Optional Lux ID OIDC client ID.
+   * @deprecated Use `auth.clientId` instead. Preserved for backwards compat.
+   */
   clientId?: string
-  /** Optional Lux ID OIDC org slug. */
+  /**
+   * Optional Lux ID OIDC org slug.
+   * @deprecated Use `auth.orgSlug` instead. Preserved for backwards compat.
+   */
   iamOrg?: string
 }
 
