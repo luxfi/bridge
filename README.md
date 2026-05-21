@@ -1,6 +1,46 @@
 # Lux Bridge
 
-Bridge monorepo for Lux Network - a decentralized cross-chain bridge using Multi-Party Computation (MPC) for secure asset transfers.
+Bridge monorepo for Lux Network — a decentralized cross-chain bridge using
+Multi-Party Computation (MPC) for secure asset transfers.
+
+## Embed the bridge SDK
+
+To embed bridge.lux.network in another app, install `@luxfi/bridge`:
+
+```bash
+pnpm add @luxfi/bridge react react-dom
+```
+
+```ts
+import { mountBridge } from '@luxfi/bridge'
+
+mountBridge({
+  config: {
+    apiHost: 'https://api.bridge.lux.network',
+    env: 'mainnet',
+    brand: { name: 'Lux Bridge', primaryColor: '#0066ff' },
+  },
+})
+```
+
+`@luxfi/bridge` is the only package consumers import. All `@luxbridge/*`
+packages are internal workspace deps and are never published.
+
+## Package scopes
+
+| Scope | Visibility | Role |
+|---|---|---|
+| `@luxfi/bridge` | public (npm) | Canonical SDK — embed bridge UI into a host app. |
+| `@luxfi/core` | public (npm) | Shared types (Asset, Network, Contract, ...). |
+| `@luxfi/threshold` | public (npm) | T-Chain MPC threshold-signature SDK. |
+| `@luxfi/utila` | public (npm) | Utila protobuf client. |
+| `@luxbridge/app` | private (workspace) | The bridge React UI (Vite SPA). |
+| `@luxbridge/settings` | private (workspace) | Network + asset registry. |
+| `@luxbridge/explorer` | private (workspace) | On-chain explorer UI. |
+| `@luxbridge/server` | private (workspace) | Bridge API daemon. |
+| `@luxbridge/ui-automation` | private (workspace) | Selenium UI test harness. |
+
+One canonical SDK name. One mount function. One config shape.
 
 ## Prerequisites
 
