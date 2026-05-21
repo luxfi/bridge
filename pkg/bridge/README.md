@@ -33,6 +33,62 @@ The SDK mounts into `#bridge-root` by default — drop one in your HTML:
 <div id="bridge-root"></div>
 ```
 
+## Full tenant example
+
+Bridge mirrors the `<Exchange>` prop surface from `@luxfi/exchange`, so a
+tenant wires identical auth / KMS / wallet / MPC config across both
+products:
+
+```ts
+import { mountBridge } from '@luxfi/bridge'
+
+mountBridge({
+  config: {
+    apiHost: 'https://api.bridge.lux.network',
+    env:     'mainnet',
+
+    // White-label visual identity.
+    brand: {
+      name:         'Lux Bridge',
+      logoUrl:      'https://cdn.lux.network/logo.svg',
+      faviconUrl:   'https://cdn.lux.network/favicon.svg',
+      primaryColor: '#0066ff',
+    },
+
+    // Auth (Hanzo IAM white-label) — same shape as <Exchange auth={…} />.
+    auth: {
+      provider: 'iam',
+      issuer:   'https://iam.lux.network',
+      clientId: 'lux-bridge',
+      idHost:   'https://lux.id',
+      orgSlug:  'lux',
+    },
+
+    // KMS endpoint — same shape as <Exchange kms={…} />.
+    kms: { url: 'https://kms.lux.network' },
+
+    // Wallet connector defaults (WalletConnect v2 + EVM chain set).
+    wallet: {
+      walletConnectProjectId: 'YOUR_WC_PROJECT_ID',
+      defaultChainId:         96369,
+      supportedChainIds:      [1, 96369, 200200, 36911],
+    },
+
+    // MPC cluster — public m-chain handles user wallets; private cluster
+    // is optional (treasury / fee accounts only).
+    mpc: {
+      publicUrl:  'https://mpc.lux.network',
+      privateUrl: 'https://mpc-private.lux.network',
+      protocol:   'cggmp21',
+    },
+  },
+})
+```
+
+Every block above is optional. Tenants that only need brand-level
+white-labeling can omit `auth`, `kms`, `wallet`, and `mpc` — the SDK falls
+back to its declarative defaults.
+
 ## React component
 
 If you prefer to manage your own React tree, import the component:
@@ -67,8 +123,44 @@ export function App() {
 | `apiHost` | `string` | yes | Bridge API endpoint. |
 | `env` | `string` | yes | `mainnet`, `testnet`, or custom env slug. |
 | `brand` | `BrandConfig` | no | White-label overrides. |
-| `clientId` | `string` | no | Lux ID OIDC client id. |
-| `iamOrg` | `string` | no | Lux ID OIDC org slug. |
+| `auth` | `BridgeAuthConfig` | no | Hanzo IAM OIDC block. Mirrors `<Exchange auth={…} />`. |
+| `kms` | `BridgeKMSConfig` | no | KMS endpoint block. Mirrors `<Exchange kms={…} />`. |
+| `wallet` | `BridgeWalletConfig` | no | Wallet connector defaults (WalletConnect v2 + chain set). |
+| `mpc` | `BridgeMPCConfig` | no | MPC cluster URLs + threshold-sig protocol. |
+| `clientId` | `string` | no | Deprecated — use `auth.clientId`. |
+| `iamOrg` | `string` | no | Deprecated — use `auth.orgSlug`. |
+
+### `BridgeAuthConfig`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `provider` | `'iam'` | yes | Identity provider. |
+| `issuer` | `string` | yes | OIDC issuer URL. |
+| `clientId` | `string` | yes | OIDC client id (per tenant). |
+| `idHost` | `string?` | no | White-label IAM hostname. |
+| `orgSlug` | `string?` | no | IAM org slug for multi-tenant routing. |
+
+### `BridgeKMSConfig`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `url` | `string` | yes | KMS endpoint URL. |
+
+### `BridgeWalletConfig`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `walletConnectProjectId` | `string?` | no | WalletConnect v2 project id. |
+| `defaultChainId` | `number?` | no | EVM chain id selected on first connect. |
+| `supportedChainIds` | `number[]?` | no | Allow-list of EVM chain ids. |
+
+### `BridgeMPCConfig`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `publicUrl` | `string` | yes | Public MPC cluster URL (m-chain). |
+| `privateUrl` | `string?` | no | Private MPC cluster URL (treasury fees). |
+| `protocol` | `Protocol?` | no | Threshold-sig protocol — one of `cggmp21`, `frost`, `bls`, `doerner`, `pulsar`, `corona`, `magnetar`. |
 
 ### `BrandConfig`
 
