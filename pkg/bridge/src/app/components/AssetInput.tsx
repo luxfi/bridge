@@ -5,6 +5,7 @@
 // `Input` and `Select` primitives.
 
 import type { CSSProperties, FC } from 'react'
+import { Input } from '@hanzo/gui'
 import type { Asset } from '../lib/assets'
 import { parseAmount } from '../lib/format'
 
@@ -84,17 +85,15 @@ export const AssetInput: FC<AssetInputProps> = ({
       {readOnly && <span>estimated</span>}
     </div>
     <div style={row}>
-      <input
+      <Input
         style={inputStyle}
-        type="text"
         inputMode="decimal"
         autoComplete="off"
         spellCheck={false}
         placeholder={placeholder}
         value={amount}
         readOnly={readOnly}
-        onChange={(e) => {
-          const v = e.target.value
+        onChangeText={(v: string) => {
           // Allow empty, partial decimals, or valid positive numbers.
           if (v === '' || v === '.' || parseAmount(v) !== null) {
             onAmountChange(v)

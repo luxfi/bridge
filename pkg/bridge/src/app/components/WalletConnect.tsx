@@ -4,6 +4,7 @@
 // the real threshold-MPC session — the *button* contract here stays.
 
 import type { CSSProperties, FC } from 'react'
+import { Button } from '@hanzo/gui'
 import type { WalletState } from '../hooks/useWallet'
 import { shortAddress } from '../lib/format'
 
@@ -13,6 +14,8 @@ export interface WalletConnectProps {
   defaultChainId: string
 }
 
+// Phase 3 R2 swap: `<button>` → @hanzo/gui's `Button`. Inline styles are
+// preserved verbatim; Phase 3 R2.5 will move them to Tamagui theme tokens.
 const buttonBase: CSSProperties = {
   background: 'var(--bridge-accent)',
   color: 'white',
@@ -49,8 +52,7 @@ export const WalletConnect: FC<WalletConnectProps> = ({
 }) => {
   if (!wallet.address) {
     return (
-      <button
-        type="button"
+      <Button
         style={{
           ...buttonBase,
           opacity: wallet.connecting ? 0.7 : 1,
@@ -61,15 +63,13 @@ export const WalletConnect: FC<WalletConnectProps> = ({
         }}
       >
         {wallet.connecting ? 'Connecting…' : 'Connect Wallet'}
-      </button>
+      </Button>
     )
   }
   return (
-    <button
-      type="button"
+    <Button
       style={pillBase}
       onClick={wallet.disconnect}
-      title="Disconnect wallet"
       aria-label={`Disconnect wallet ${wallet.address}`}
     >
       <span
@@ -83,6 +83,6 @@ export const WalletConnect: FC<WalletConnectProps> = ({
         aria-hidden
       />
       {shortAddress(wallet.address)}
-    </button>
+    </Button>
   )
 }

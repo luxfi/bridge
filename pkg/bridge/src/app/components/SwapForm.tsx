@@ -5,6 +5,7 @@
 // TransferState which TransferStatus renders below.
 
 import { useState, type CSSProperties, type FC } from 'react'
+import { Button } from '@hanzo/gui'
 import type { SwapState } from '../hooks/useSwap'
 import type { WalletState } from '../hooks/useWallet'
 import type { TransferState } from '../hooks/useTransfers'
@@ -126,15 +127,13 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           current={swap.fromChain}
           onChange={swap.setFromChain}
         />
-        <button
-          type="button"
+        <Button
           style={reverseBtn}
           onClick={swap.reverse}
-          title="Swap from / to"
           aria-label="Swap from and to chains"
         >
           ⇄
-        </button>
+        </Button>
         <ChainSelector
           label="To"
           chains={swap.chains}
@@ -185,14 +184,13 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
 
       {error ? <div style={errorBox}>{error}</div> : null}
 
-      <button
-        type="button"
+      <Button
         style={canSubmit ? submit : submitDisabled}
         disabled={!canSubmit}
         onClick={onSubmit}
       >
         {submitLabel}
-      </button>
+      </Button>
     </Card>
   )
 }
