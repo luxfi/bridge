@@ -1,9 +1,7 @@
-// Header — brand area + env/protocol chips + wallet connect.
+// Header — brand area + wallet connect.
 //
 // Reads brand metadata from the SDK config (which downstream consumers set
-// once at mount time via setConfig). The env + MPC protocol chips make
-// the active deploy target explicit so users can tell mainnet from testnet
-// at a glance and ops can verify the post-quantum protocol is wired right.
+// once at mount time via setConfig). Phase 3 R2 swaps the styling layer.
 
 import type { CSSProperties, FC } from 'react'
 import { getConfig } from '../../config'
@@ -19,8 +17,7 @@ const header: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: 10,
-  padding: 'var(--bridge-header-padding-y) var(--bridge-header-padding-x)',
+  padding: '14px 20px',
   borderBottom: '1px solid var(--bridge-border)',
   background: 'var(--bridge-bg)',
   position: 'sticky',
@@ -32,8 +29,6 @@ const brand: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 10,
-  minWidth: 0,
-  flex: '0 1 auto',
 }
 
 const brandLogo: CSSProperties = {
@@ -51,62 +46,8 @@ const brandLogo: CSSProperties = {
 }
 
 const brandName: CSSProperties = {
-  fontSize: 'var(--bridge-brand-name-size)',
+  fontSize: 15,
   fontWeight: 600,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-}
-
-const chipRow: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  marginLeft: 8,
-  minWidth: 0,
-}
-
-const chipBase: CSSProperties = {
-  display: 'var(--bridge-chip-display)',
-  fontSize: 10,
-  fontWeight: 600,
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase',
-  padding: '2px 6px',
-  borderRadius: 4,
-  border: '1px solid var(--bridge-border)',
-  color: 'var(--bridge-text-muted)',
-  background: 'var(--bridge-bg-input)',
-  whiteSpace: 'nowrap',
-}
-
-const envMainnet: CSSProperties = {
-  ...chipBase,
-  color: 'var(--bridge-success)',
-  borderColor: 'rgba(76, 175, 80, 0.32)',
-  background: 'rgba(76, 175, 80, 0.08)',
-}
-
-const envTestnet: CSSProperties = {
-  ...chipBase,
-  color: 'var(--bridge-accent)',
-  borderColor: 'rgba(91, 141, 239, 0.32)',
-  background: 'rgba(91, 141, 239, 0.08)',
-}
-
-// The MPC protocol chip is secondary information (ops + dev focus) — hide
-// it on phone-sized viewports to free header width for the wallet pill.
-// Driven by --bridge-mpc-chip-display so theme.css owns the breakpoint.
-const mpcChip: CSSProperties = {
-  ...chipBase,
-  display: 'var(--bridge-mpc-chip-display)' as CSSProperties['display'],
-}
-
-const right: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  flex: '0 0 auto',
 }
 
 export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
@@ -116,8 +57,6 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
   const name = cfg.brand?.name ?? 'Bridge'
   const logo = cfg.brand?.logoUrl
   const initial = name.charAt(0).toUpperCase()
-  const envStyle = cfg.env === 'mainnet' ? envMainnet : envTestnet
-  const protocol = cfg.mpc?.protocol ?? 'cggmp21'
   return (
     <header style={header}>
       <div style={brand}>
@@ -133,18 +72,8 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
           </span>
         )}
         <span style={brandName}>{name}</span>
-        <div style={chipRow}>
-          <span style={envStyle} title={`Bridge environment: ${cfg.env}`}>
-            {cfg.env}
-          </span>
-          <span style={mpcChip} title={`MPC threshold protocol: ${protocol}`}>
-            mpc · {protocol}
-          </span>
-        </div>
       </div>
-      <div style={right}>
-        <WalletConnect wallet={wallet} defaultChainId={defaultChainId} />
-      </div>
+      <WalletConnect wallet={wallet} defaultChainId={defaultChainId} />
     </header>
   )
 }
