@@ -1,6 +1,7 @@
 {
   "name": "@luxbridge/ui-automation",
   "version": "1.0.0",
+  "private": true,
   "description": "UI automation tests for Lux Bridge",
   "scripts": {
     "test": "jest",

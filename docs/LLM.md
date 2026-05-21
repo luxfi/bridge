@@ -1,12 +1,61 @@
 # Lux Bridge - AI Assistant Knowledge Base
 
-**Last Updated**: 2024-11-12
 **Project**: Lux Bridge
 **Organization**: Lux Network
 
 ## Project Overview
 
 The Lux Bridge is a decentralized cross-chain bridge infrastructure that enables secure, trustless asset transfers between multiple blockchain networks using Multi-Party Computation (MPC) technology. It serves as the primary interoperability layer for the Lux ecosystem, connecting 15+ blockchain networks.
+
+## Package layout — public vs internal
+
+Two scopes, one canonical SDK entrypoint. Downstream consumers (Lux, Hanzo,
+Zoo, Liquidity, any white-label) import `@luxfi/bridge` and nothing else.
+
+| Path | npm name | Scope | Published |
+|---|---|---|---|
+| `pkg/bridge/` | `@luxfi/bridge` | public SDK | yes (npmjs.org) |
+| `pkg/core/` | `@luxfi/core` | public shared types | yes |
+| `pkg/threshold/` | `@luxfi/threshold` | public MPC SDK | yes |
+| `pkg/utila/` | `@luxfi/utila` | public utila client | yes |
+| `pkg/settings/` | `@luxbridge/settings` | private workspace | no |
+| `pkg/ui/` | `@luxbridge/ui-automation` | private workspace | no |
+| `app/bridge/` | `@luxbridge/app` | private workspace | no |
+| `app/bridge3/` | `@luxbridge/app-v3` | private workspace | no |
+| `app/explorer/` | `@luxbridge/explorer` | private workspace | no |
+| `app/server/` | `@luxbridge/server` | private workspace | no |
+
+Rules:
+- `@luxfi/bridge` is the ONLY package consumers import. It re-exports
+  `mountBridge`, `Bridge`, and the config/brand types. Internals are hidden.
+- `@luxbridge/*` packages are workspace-only. They are not published and must
+  not be imported by anything outside this repo.
+- `@luxfi/{core,threshold,utila}` are generic Lux building-block libraries —
+  bridge-agnostic, may be reused elsewhere in the Lux ecosystem.
+
+## SDK mount pattern
+
+```ts
+import { mountBridge } from '@luxfi/bridge'
+
+mountBridge({
+  config: {
+    apiHost: 'https://api.bridge.lux.network',
+    env: 'mainnet',
+    brand: { name: 'Lux Bridge', primaryColor: '#0066ff' },
+  },
+})
+```
+
+Mirrors `mountExchange` from `@partner/exchange`. One declarative entry,
+build-time brand config, no hostname detection inside the SDK.
+
+## Publishing
+
+`.github/workflows/publish.yml` fires on `v*` tag push. Runs
+`pnpm publish -r --access public --no-git-checks` — pnpm walks the workspace,
+skips `private: true` packages, and publishes any `@luxfi/*` package whose
+version is not yet on npmjs.org. Bump versions in PRs; tag once merged.
 
 ## Architecture Summary
 
@@ -253,17 +302,6 @@ nats-top -s localhost:4223
 - `docs/LUX-ID-INTEGRATION.md` - Authentication integration
 - `docs/DEPLOYMENT.md` - Production deployment guide
 - `docs/MIGRATION-TO-GO-MPC.md` - Migration from Docker to Go
-
-## Recent Updates
-
-### November 2024
-- Created comprehensive documentation in `/docs/content/docs/index.mdx`
-- Built documentation site with Nextra theme
-- Documented complete API reference
-- Added security best practices section
-- Created integration guide with code examples
-- Added deployment guide for local and production
-- Updated LLM.md with full bridge information
 
 ## Context for All AI Assistants
 
