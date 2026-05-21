@@ -46,11 +46,7 @@
     "pub": "npm publish"
   },
   "dependencies": {
-    "@luxfi/brand": "^1.0.0"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
+    "@luxfi/brand": "^1.0.0",
     "@hanzo/gui": "^7.0.0",
     "@hanzogui/core": "^7.0.0",
     "@hanzogui/helpers": "^7.0.0",
@@ -58,12 +54,16 @@
     "@hanzogui/themes": "^7.0.0",
     "@hanzogui/animate": "^7.0.0",
     "@hanzogui/animate-presence": "^7.0.0",
+    "@hanzogui/button": "^7.0.0",
+    "@hanzogui/input": "^7.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
     "@hanzogui/popover": "^7.0.0",
     "@hanzogui/select": "^7.0.0",
     "@hanzogui/dialog": "^7.0.0",
-    "@hanzogui/button": "^7.0.0",
     "@hanzogui/card": "^7.0.0",
-    "@hanzogui/input": "^7.0.0",
     "@hanzogui/text": "^7.0.0",
     "@hanzogui/stacks": "^7.0.0",
     "@hanzogui/spinner": "^7.0.0",
@@ -83,19 +83,10 @@
     "@hanzogui/sheet": "^7.0.0"
   },
   "peerDependenciesMeta": {
-    "@hanzo/gui": { "optional": true },
-    "@hanzogui/core": { "optional": true },
-    "@hanzogui/helpers": { "optional": true },
-    "@hanzogui/constants": { "optional": true },
-    "@hanzogui/themes": { "optional": true },
-    "@hanzogui/animate": { "optional": true },
-    "@hanzogui/animate-presence": { "optional": true },
     "@hanzogui/popover": { "optional": true },
     "@hanzogui/select": { "optional": true },
     "@hanzogui/dialog": { "optional": true },
-    "@hanzogui/button": { "optional": true },
     "@hanzogui/card": { "optional": true },
-    "@hanzogui/input": { "optional": true },
     "@hanzogui/text": { "optional": true },
     "@hanzogui/stacks": { "optional": true },
     "@hanzogui/spinner": { "optional": true },
