@@ -160,7 +160,7 @@ export function App() {
 |---|---|---|---|
 | `publicUrl` | `string` | yes | Public MPC cluster URL (m-chain). |
 | `privateUrl` | `string?` | no | Private MPC cluster URL (treasury fees). |
-| `protocol` | `'cggmp21' \| 'frost'?` | no | Threshold-sig protocol. |
+| `protocol` | `Protocol?` | no | Threshold-sig protocol — one of `cggmp21`, `frost`, `bls`, `doerner`, `pulsar`, `corona`, `magnetar`. |
 
 ### `BrandConfig`
 
