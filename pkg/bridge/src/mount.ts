@@ -26,7 +26,8 @@ const DEFAULT_ROOT_ID = 'bridge-root'
  * Boot the bridge UI inside the host page.
  *
  * Boot order:
- *   1. Seed runtime config cache.
+ *   1. Seed runtime config cache (full config — apiHost, env, brand, plus
+ *      optional auth / kms / wallet / mpc blocks when present).
  *   2. Apply brand metadata to `document` (title, favicon, CSS variables).
  *   3. Resolve the DOM mount element (`#bridge-root` by default).
  *   4. Lazy-import `react-dom/client` and `react`, then render `<Bridge />`.
