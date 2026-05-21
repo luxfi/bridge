@@ -3,8 +3,23 @@
 
 // T-Chain (ThresholdVM) Types
 
-/** Supported MPC protocols */
-export type Protocol = 'lss' | 'cggmp21' | 'frost' | 'bls' | 'corona'
+/**
+ * Threshold-signature protocol identifier.
+ *
+ * Classical (ECDSA/EdDSA): `cggmp21`, `frost`, `bls`, `doerner`.
+ * Post-quantum (lattice-based, leaderless-safe): `pulsar` (MLWE),
+ * `corona` (RLWE), `magnetar` (research variant).
+ *
+ * All protocols are leaderless and permissionless-safe by design.
+ */
+export type Protocol =
+  | 'cggmp21'
+  | 'frost'
+  | 'bls'
+  | 'doerner'
+  | 'pulsar'
+  | 'corona'
+  | 'magnetar'
 
 /** Supported blockchain chains */
 export type Chain =
