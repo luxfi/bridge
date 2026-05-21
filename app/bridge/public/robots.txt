@@ -1,4 +1,0 @@
-user-agent: *
-allow: /
-
-sitemap: https://bridge.lux.network/sitemap.xml
