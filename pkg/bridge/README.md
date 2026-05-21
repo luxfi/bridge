@@ -1,7 +1,7 @@
 # @luxfi/bridge
 
 The canonical Lux Bridge SDK. Embed bridge.lux.network into any host
-application — Lux, Hanzo, Zoo, Liquidity, or any other downstream brand.
+application — Lux, Hanzo, Zoo, or any other downstream brand.
 
 ## Install
 
@@ -84,17 +84,51 @@ export function App() {
 
 ## Architecture
 
-`@luxfi/bridge` is the only package consumers import. Internals live under the
-private `@luxbridge/*` scope and are not published:
+`@luxfi/bridge` is the only package consumers import. The bridge UI is
+inlined under `src/app/` — no workspace cycle, no lazy import of sibling
+packages.
 
 ```
 @luxfi/bridge          (this package — public SDK)
-├── @luxbridge/app     (the bridge React app)
-├── @luxbridge/settings (network + asset registry)
-└── @luxfi/brand        (Lux brand defaults)
+├── src/Bridge.tsx     (React entry — renders BridgeApp inline)
+├── src/mount.ts       (declarative mountBridge() entry)
+├── src/config.ts      (BridgeConfig getter / setter)
+├── src/types.ts       (public type surface)
+└── src/app/           (inlined bridge UI: components, hooks, lib)
 ```
 
+Phase 3 R2 swaps the inline-styled primitives in `src/app/components/`
+for `@hanzo/gui` v7 (Tamagui) primitives. The shape of `BridgeApp.tsx`
+and the component seams stay stable across that swap.
+
 One canonical SDK name. One mount function. One config shape.
+
+## Consuming this SDK from a Vite app
+
+`@hanzo/gui` is React-Native-first. Web consumers MUST alias
+`react-native` to `react-native-web` and dedupe React roots, or the
+bundler will fail to resolve `react-native` from Tamagui's runtime:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: { 'react-native': 'react-native-web' },
+    dedupe: ['react', 'react-dom', 'react-native-web'],
+  },
+  define: {
+    'process.env.TAMAGUI_TARGET': JSON.stringify('web'),
+  },
+})
+```
+
+Add `react-native-web ^0.19.0` to the host app's dependencies. See
+`app/bridge/vite.config.ts` in this repository for the canonical
+configuration (it's what `bridge.lux.network` ships).
 
 ## License
 

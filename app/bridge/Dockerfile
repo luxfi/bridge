@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.7
 #
-# Bridge — Vite SPA served by ghcr.io/hanzoai/spa
-# Builds inside the monorepo (context = repo root) so workspace deps resolve.
+# bridge.lux.network — Vite SPA served by ghcr.io/hanzoai/spa.
+# Build context: repo root (pnpm workspace so @luxfi/bridge resolves
+# to the sibling pkg/bridge package).
 
 FROM node:22-alpine AS build
 RUN apk add --no-cache libc6-compat python3 make g++ git
