@@ -1,8 +1,8 @@
 // Public types for the @luxfi/bridge SDK.
 //
-// These types are part of the package's public API and follow semver. Internal
-// type churn happens inside @luxbridge/app and is hidden from consumers via
-// barrel re-export here.
+// These types are part of the package's public API and follow semver. The
+// inlined bridge UI under `./app/` consumes them through `getConfig()`
+// rather than re-exporting — keeping the public surface minimal.
 
 /**
  * Brand configuration for white-labeling the bridge UI.

@@ -1,27 +1,18 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { App } from './App'
-import { fetchTenant } from '@/lib/tenant'
-import './styles.css'
+// bridge.lux.network — slim tenant entry.
+//
+// Everything bridge-related lives in @luxfi/bridge (UI, hooks, types).
+// Everything brand-related lives in @luxfi/brand. This file does nothing
+// but pin a config and call the SDK's mountBridge().
+//
+// To change behavior:
+//   - brand:  ~/work/lux/brand          → bump @luxfi/brand
+//   - bridge: ~/work/lux/bridge/pkg/bridge → bump @luxfi/bridge
 
-const root = document.getElementById('root')
-if (!root) throw new Error('root element missing')
+import { mountBridge } from '@luxfi/bridge'
 
-// Kick off tenant fetch — components use getTenant() to read the cached value.
-// Fire-and-forget; UI renders immediately with the fallback and updates when
-// the IAM response arrives (components are expected to subscribe via a hook
-// or re-render naturally). For now we just prefetch.
-void fetchTenant().then((t) => {
-  document.title = t.name || document.title
-  if (t.faviconUrl) {
-    const link = document.querySelector<HTMLLinkElement>("link[rel='icon']")
-    if (link) link.href = t.faviconUrl
-  }
-  document.documentElement.style.setProperty('--brand-primary', t.primaryColor)
+import { bridgeConfig } from './bridge.config'
+
+void mountBridge({
+  config: bridgeConfig,
+  rootId: 'bridge-root',
 })
-
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)

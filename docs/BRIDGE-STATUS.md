@@ -36,10 +36,11 @@ pnpm dev
 The compose files are configured to use `ghcr.io/luxfi` images, but they need to be built and pushed first:
 
 ```bash
-# Build images
+# Build images (UI build context is repo root — pnpm workspace
+# resolves @luxfi/bridge to the sibling pkg/bridge package).
 docker build -t ghcr.io/luxfi/bridge-mpc:latest ./mpc-service
 docker build -t ghcr.io/luxfi/bridge-server:latest ./app/server
-docker build -t ghcr.io/luxfi/bridge-ui:latest ./app/bridge
+docker build -t ghcr.io/luxfi/bridge-ui:latest -f app/bridge/Dockerfile .
 
 # Push to registry (requires login)
 docker push ghcr.io/luxfi/bridge-mpc:latest
