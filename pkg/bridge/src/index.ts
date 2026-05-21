@@ -1,12 +1,13 @@
 // @luxfi/bridge — public SDK entrypoint.
 //
-// Downstream consumers (Lux, Hanzo, Zoo, Liquidity, etc.) import from here:
+// Downstream consumers (Lux, Hanzo, Zoo, etc.) import from here:
 //
 //   import { mountBridge } from '@luxfi/bridge'
 //   import { Bridge, type BridgeConfig } from '@luxfi/bridge'
 //
-// Internal packages (`@luxbridge/app`, `@luxbridge/settings`, …) are
-// implementation details and are never imported directly by consumers.
+// The bridge UI is inlined under `./app/` — there are no workspace
+// dependencies on sibling tenant packages (Phase 1.5 severed the
+// `@luxbridge/app` cycle that produced the blank-page bug).
 
 export { Bridge } from './Bridge'
 export type { BridgeProps } from './Bridge'
