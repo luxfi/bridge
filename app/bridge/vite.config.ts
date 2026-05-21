@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react'
 // Tamagui (@hanzo/gui) is a React-Native-first lib; on the web it expects
 // `react-native` to resolve to `react-native-web`. Phase 3 R2 adds this
 // alias to make the bridge SDK's Button / Input swap bundle cleanly.
+//
+// Downstream @luxfi/bridge consumers MUST replicate this alias + dedupe
+// + TAMAGUI_TARGET define, or Rolldown will fail to resolve
+// `react-native` from Tamagui's runtime. See pkg/bridge/README.md
+// ("Consuming this SDK from a Vite app") for the canonical block.
 export default defineConfig({
   plugins: [react()],
   resolve: {
