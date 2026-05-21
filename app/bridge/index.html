@@ -6,6 +6,18 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%235b8def'/></svg>" />
     <title>Lux Bridge</title>
     <meta name="description" content="Cross-chain bridge for the Lux Network." />
+    <!--
+      Runtime env: /__ENV.js sets window.__ENV before the main bundle
+      loads. Serving image templates this file at boot from BRIDGE_*
+      env vars; bridge.config.ts reads window.__ENV first, then falls
+      back to Vite's import.meta.env. One image, N envs.
+
+      Placed in <head> (and before the module script) so the synchronous
+      parser-blocking load happens before any deferred module executes —
+      the ordering is unambiguous regardless of how Vite reorganises
+      the bundle.
+    -->
+    <script src="/__ENV.js"></script>
   </head>
   <body>
     <div id="bridge-root"></div>
