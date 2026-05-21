@@ -24,7 +24,9 @@ permissions:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    # Self-hosted org runner. GitHub-hosted runners are not authorised for
+    # this org's billing plan.
+    runs-on: lux-build
     steps:
       - uses: actions/checkout@v4
         with:
