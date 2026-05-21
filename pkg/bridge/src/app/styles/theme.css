@@ -1,0 +1,55 @@
+/*
+ * @luxfi/bridge — inlined theme.
+ *
+ * Minimal CSS variables consumed by the bridge UI. Brand overrides set by
+ * `applyBrandMetadata()` (config.ts) take precedence at the `:root` level
+ * via `--brand-primary` / `--brand-secondary`.
+ *
+ * Phase 3 R2 will replace these inline styles with @hanzo/gui primitives;
+ * this file is intentionally small and additive.
+ */
+
+:root {
+  --bridge-bg: #0a0a0a;
+  --bridge-bg-elevated: #141414;
+  --bridge-bg-input: #1a1a1a;
+  --bridge-border: #2a2a2a;
+  --bridge-border-focus: #404040;
+  --bridge-text: #ffffff;
+  --bridge-text-muted: #888888;
+  --bridge-text-subtle: #555555;
+  --bridge-accent: var(--brand-primary, #5b8def);
+  --bridge-accent-hover: var(--brand-secondary, #7a9ff5);
+  --bridge-danger: #f44336;
+  --bridge-success: #4caf50;
+  --bridge-radius: 10px;
+  --bridge-radius-sm: 6px;
+  --bridge-spacing: 12px;
+  --bridge-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+.bridge-root {
+  font-family: var(--bridge-font);
+  background: var(--bridge-bg);
+  color: var(--bridge-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.bridge-root *,
+.bridge-root *::before,
+.bridge-root *::after {
+  box-sizing: border-box;
+}
+
+.bridge-root button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.bridge-root input,
+.bridge-root select {
+  font-family: inherit;
+}
