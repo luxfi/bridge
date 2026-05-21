@@ -12,23 +12,18 @@
 //
 // For declarative mounting (mounts into a DOM node, manages root, applies
 // brand metadata), prefer `mountBridge` from '@luxfi/bridge'.
+//
+// History: prior to Phase 1.5 this file lazy-imported `@luxbridge/app`. That
+// created a workspace cycle (tenant repos that re-exported the SDK could
+// only stub `@luxbridge/app` to break the cycle, which produced a blank
+// page). The bridge UI is now inlined under `./app/`, so there is no
+// runtime dependency on any sibling workspace package.
 
-import { lazy, Suspense, useEffect, type FC } from 'react'
+import { useEffect, type FC } from 'react'
 
 import { applyBrandMetadata, setConfig } from './config'
 import type { BridgeConfig } from './types'
-
-// Lazy-load the internal app so the SDK's bundle stays small for callers that
-// import types only. The actual bridge UI lives in @luxbridge/app and is
-// resolved via the workspace dep at install time.
-const InternalApp = lazy(async () => {
-  const mod = (await import('@luxbridge/app')) as { App?: FC; default?: FC }
-  const Component = mod.App ?? mod.default
-  if (!Component) {
-    throw new Error('@luxfi/bridge: @luxbridge/app did not export App or default')
-  }
-  return { default: Component }
-})
+import { BridgeApp } from './app/BridgeApp'
 
 export interface BridgeProps {
   /** Runtime config. Seeded into the SDK config cache on first render. */
@@ -36,19 +31,17 @@ export interface BridgeProps {
 }
 
 export const Bridge: FC<BridgeProps> = ({ config }) => {
-  // Seed config synchronously before children read it. useEffect is for the
-  // brand metadata side effect only.
+  // Seed config synchronously before children read it. The full config —
+  // including auth / kms / wallet / mpc blocks when present — is cached via
+  // `setConfig`; the internal app reads them lazily through `getConfig`.
+  // useEffect is for the brand metadata side effect only.
   setConfig(config)
 
   useEffect(() => {
     applyBrandMetadata(config.brand)
   }, [config.brand])
 
-  return (
-    <Suspense fallback={null}>
-      <InternalApp />
-    </Suspense>
-  )
+  return <BridgeApp />
 }
 
 export default Bridge
