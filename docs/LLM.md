@@ -20,8 +20,7 @@ Zoo, Liquidity, any white-label) import `@luxfi/bridge` and nothing else.
 | `pkg/utila/` | `@luxfi/utila` | public utila client | yes |
 | `pkg/settings/` | `@luxbridge/settings` | private workspace | no |
 | `pkg/ui/` | `@luxbridge/ui-automation` | private workspace | no |
-| `app/bridge/` | `@luxbridge/app` | private workspace | no |
-| `app/bridge3/` | `@luxbridge/app-v3` | private workspace | no |
+| `app/bridge/` | `@luxbridge/lux-tenant` | private workspace | no |
 | `app/explorer/` | `@luxbridge/explorer` | private workspace | no |
 | `app/server/` | `@luxbridge/server` | private workspace | no |
 
@@ -143,7 +142,7 @@ make up
 make start-mpc-nodes
 
 # Start services
-cd app/bridge && pnpm dev  # UI on :3000
+cd app/bridge && pnpm dev  # UI on :3001
 cd app/server && pnpm dev  # API on :5000
 ```
 
