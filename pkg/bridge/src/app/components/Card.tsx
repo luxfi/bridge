@@ -1,10 +1,13 @@
-// Card primitive — a styled container.
+// Card primitive — Tamagui-backed container.
 //
-// Phase 3 R2 will replace this with @hanzo/gui's `Card`. The wrapper exists
-// so the swap is mechanical: every call site uses `<Card>` and Phase 3 only
-// touches this one file.
+// Phase 3 R2.5 swaps the inner `<div>` to `@hanzo/gui`'s `Card` (a styled
+// YStack with brand-aware background + radius variants). The inline-style
+// API stays so every call site is mechanically unchanged; downstream
+// consumers can lift these into theme tokens once the GuiProvider is
+// wired into BridgeApp (Phase 3 R3).
 
 import type { CSSProperties, FC, ReactNode } from 'react'
+import { Card as GuiCard } from '@hanzo/gui'
 
 export interface CardProps {
   children: ReactNode
@@ -24,7 +27,8 @@ const base: CSSProperties = {
 }
 
 export const Card: FC<CardProps> = ({ children, style, bare }) => (
-  <div
+  <GuiCard
+    unstyled
     style={{
       ...base,
       ...(bare ? { padding: 0 } : null),
@@ -32,5 +36,5 @@ export const Card: FC<CardProps> = ({ children, style, bare }) => (
     }}
   >
     {children}
-  </div>
+  </GuiCard>
 )
