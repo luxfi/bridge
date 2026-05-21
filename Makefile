@@ -49,7 +49,7 @@ build-ui:
 	docker buildx build --platform linux/amd64,linux/arm64 \
 		-t ghcr.io/luxfi/bridge-ui:latest \
 		-f app/bridge/Dockerfile \
-		app/bridge/
+		.
 
 # Push images to ghcr.io/luxfi
 push: build
