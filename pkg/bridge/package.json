@@ -42,6 +42,7 @@
     "build": "tsc --noEmit",
     "tc": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "lat": "npm show @luxfi/bridge version",
     "pub": "npm publish"
   },
@@ -57,6 +58,7 @@
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "^2.1.0"
   }
 }

@@ -85,8 +85,8 @@ export interface BridgeMPCConfig {
   publicUrl: string
   /** Optional private MPC cluster URL (treasury fees). */
   privateUrl?: string
-  /** Threshold-sig protocol. */
-  protocol?: 'cggmp21' | 'frost'
+  /** Threshold-sig protocol (mirrors `@luxfi/threshold` Protocol union). */
+  protocol?: 'lss' | 'cggmp21' | 'frost' | 'bls' | 'corona'
 }
 
 /**
