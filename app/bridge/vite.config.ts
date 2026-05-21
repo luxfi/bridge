@@ -1,41 +1,28 @@
-import path from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// eslint-disable-next-line import/no-default-export
+// Tamagui (@hanzo/gui) is a React-Native-first lib; on the web it expects
+// `react-native` to resolve to `react-native-web`. Phase 3 R2 adds this
+// alias to make the bridge SDK's Button / Input swap bundle cleanly.
+//
+// Downstream @luxfi/bridge consumers MUST replicate this alias + dedupe
+// + TAMAGUI_TARGET define, or Rolldown will fail to resolve
+// `react-native` from Tamagui's runtime. See pkg/bridge/README.md
+// ("Consuming this SDK from a Vite app") for the canonical block.
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      'next/link': path.resolve(__dirname, 'src/shims/next-link.tsx'),
-      'next/navigation': path.resolve(__dirname, 'src/shims/next-navigation.ts'),
-      'next/image': path.resolve(__dirname, 'src/shims/next-image.tsx'),
-      'next/dynamic': path.resolve(__dirname, 'src/shims/next-dynamic.ts'),
-      'next/headers': path.resolve(__dirname, 'src/shims/next-headers.ts'),
-      'next/server': path.resolve(__dirname, 'src/shims/next-server.ts'),
-      'next/font/google': path.resolve(__dirname, 'src/shims/next-font-google.ts'),
-      '@next/mdx': path.resolve(__dirname, 'src/shims/next-mdx.ts'),
-      '@sentry/nextjs': path.resolve(__dirname, 'src/shims/sentry-nextjs.ts'),
+      'react-native': 'react-native-web',
     },
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    target: 'es2022',
-    sourcemap: false,
-    chunkSizeWarningLimit: 2_000,
-  },
-  server: {
-    port: 3000,
-    host: '0.0.0.0',
-  },
-  preview: {
-    port: 3000,
-    host: '0.0.0.0',
+    dedupe: ['react', 'react-dom', 'react-native-web'],
   },
   define: {
-    // Many downstream deps read process.env.* at runtime — polyfill to empty object.
-    'process.env': {},
+    // Tamagui's runtime reads these flags at module init.
+    'process.env.TAMAGUI_TARGET': JSON.stringify('web'),
+    __DEV__: 'false',
   },
+  server: { port: 3001, host: true },
+  preview: { port: 3001, host: true },
+  build: { outDir: 'dist', sourcemap: true },
 })
