@@ -96,3 +96,24 @@ describe('setConfig precedence guard', () => {
     expect(() => setConfig({ ...base })).not.toThrow()
   })
 })
+
+describe('setConfig accepts every supported MPC protocol', () => {
+  const protocols = [
+    'cggmp21',
+    'frost',
+    'bls',
+    'doerner',
+    'pulsar',
+    'corona',
+    'magnetar',
+  ] as const
+
+  it.each(protocols)('accepts protocol=%s', (protocol) => {
+    expect(() =>
+      setConfig({
+        ...base,
+        mpc: { publicUrl: 'https://mpc.example.test', protocol },
+      }),
+    ).not.toThrow()
+  })
+})
