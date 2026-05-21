@@ -4,22 +4,17 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "strict": false,
-    "noImplicitAny": false,
-    "skipLibCheck": true,
+    "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node"],
-    "baseUrl": "src",
-    "paths": {
-      "@/*": ["*"]
-    }
+    "types": ["vite/client"]
   },
-  "include": ["src", "vite.config.ts"],
-  "exclude": ["node_modules", "dist", ".next"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
