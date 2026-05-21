@@ -256,18 +256,20 @@ services:
           cpus: '2'
           memory: 4G
 
-  # Bridge UI with CDN-ready config
+  # Bridge UI - Mainnet — Vite SPA (ghcr.io/hanzoai/spa serves /dist on :80).
+  # VITE_BRIDGE_* env documents what the image was built with; the values
+  # become real only when baked at build time (app/bridge/Dockerfile).
   bridge-ui:
     image: ghcr.io/luxfi/bridge-ui:latest
     container_name: bridge-ui
     restart: always
     environment:
-      - NEXT_PUBLIC_API_URL=https://bridge-api.lux.network
-      - NEXT_PUBLIC_CHAIN_ENV=mainnet
-      - NEXT_PUBLIC_ENABLE_ANALYTICS=true
-      - NEXT_PUBLIC_GA_ID=${GA_ID}
+      - VITE_BRIDGE_API_HOST=https://bridge-api.lux.network
+      - VITE_BRIDGE_ENV=mainnet
+      - VITE_BRIDGE_CLIENT_ID=lux-bridge
+      - VITE_BRIDGE_IAM_ORG=lux-network
     ports:
-      - "3001:3000"
+      - "3001:80"
     networks:
       - bridge-network
     depends_on:
