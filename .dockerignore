@@ -26,7 +26,6 @@ docs
 
 # Test files
 test
-test-bridge-ui.js
 .storybook
 
 # Docker and infrastructure (avoid recursive context)
