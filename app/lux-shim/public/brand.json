@@ -1,0 +1,63 @@
+{
+  "brand": {
+    "name": "Lux Bridge",
+    "title": "Lux Bridge | Cross-chain transfers",
+    "description": "Cross-chain bridge for the Lux Network — powered by MPC threshold signing",
+    "shortName": "LUX",
+    "labsName": "Lux Labs",
+    "legalEntity": "Lux Industries Inc.",
+    "appDomain": "bridge.lux.network",
+    "docsDomain": "docs.lux.network/bridge",
+    "gatewayDomain": "api.lux.network",
+    "wsDomain": "ws.lux.network",
+    "helpUrl": "https://docs.lux.network/bridge",
+    "termsUrl": "https://lux.network/terms",
+    "privacyUrl": "https://lux.network/privacy",
+    "supportEmail": "hi@lux.network",
+    "twitter": "https://x.com/luxfi",
+    "github": "https://github.com/luxfi",
+    "discord": "https://discord.gg/lux",
+    "logoUrl": "https://cdn.jsdelivr.net/npm/@luxfi/brand@latest/assets/logo/logo.svg",
+    "faviconUrl": "https://cdn.jsdelivr.net/npm/@luxfi/brand@latest/assets/logo/favicon.png",
+    "primaryColor": "#000000",
+    "theme": {
+      "light": {
+        "accent1": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "neutral1": "#131313",
+        "neutral2": "rgba(19, 19, 19, 0.63)"
+      },
+      "dark": {
+        "accent1": "#FFFFFF",
+        "surface1": "#000000",
+        "surface2": "#1A1A1A",
+        "neutral1": "#FFFFFF",
+        "neutral2": "rgba(255, 255, 255, 0.65)"
+      }
+    }
+  },
+  "chains": {
+    "defaultChainId": 96369,
+    "supported": [96369, 96368, 96367, 200200, 200201, 1, 42161, 8453, 137, 43114]
+  },
+  "rpc": {
+    "96369":  "https://api.lux.network/ext/bc/C/rpc",
+    "96368":  "https://api.lux-test.network/ext/bc/C/rpc",
+    "96367":  "https://api.lux-dev.network/ext/bc/C/rpc",
+    "200200": "https://api.zoo.network/ext/bc/C/rpc",
+    "200201": "https://api.zoo-test.network/ext/bc/C/rpc",
+    "1":      "https://eth.llamarpc.com",
+    "42161":  "https://arb1.arbitrum.io/rpc",
+    "8453":   "https://mainnet.base.org",
+    "137":    "https://polygon-rpc.com",
+    "43114":  "https://api.avax.network/ext/bc/C/rpc"
+  },
+  "api": {
+    "gateway": "https://api.lux.network",
+    "ws":      "https://ws.lux.network"
+  },
+  "walletConnect": {
+    "projectId": ""
+  }
+}
