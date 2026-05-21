@@ -1,15 +1,11 @@
-// ChainSelector — thin wrapper around the custom Select.
+// ChainSelector — native <select> based chain picker.
 //
-// Maps Chain → SelectOption (id/label/secondary/logo) so the popover shows
-// the chain mark + name with the family ("EVM" / "Lux" / "SVM") as the
-// secondary line. Native <select> has been retired (REQUIREMENTS.md §5.4
-// wants the SDK to use proper UI primitives; the native control couldn't
-// render logos).
+// Native select avoids dragging a popover / portal lib into the SDK and ships
+// real working UI today. Phase 3 R2 swaps this for @hanzo/gui's `Select` so
+// the visual story matches the rest of the design system.
 
-import { useMemo, type CSSProperties, type FC } from 'react'
-
+import type { CSSProperties, FC } from 'react'
 import type { Chain } from '../lib/chains'
-import { Select, type SelectOption } from './Select'
 
 export interface ChainSelectorProps {
   label: string
@@ -19,24 +15,33 @@ export interface ChainSelectorProps {
   style?: CSSProperties
 }
 
-const familyLabel: Record<Chain['family'], string> = {
-  evm: 'EVM',
-  lux: 'Lux',
-  svm: 'Solana',
-  btc: 'Bitcoin',
-  ton: 'TON',
-  xrp: 'XRP',
-  cardano: 'Cardano',
-  substrate: 'Polkadot',
+const wrap: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  minWidth: 0,
+  flex: 1,
 }
 
-function toOption(c: Chain): SelectOption {
-  return {
-    id: c.id,
-    label: c.name,
-    secondary: familyLabel[c.family] ?? c.family.toUpperCase(),
-    ...(c.logoUrl ? { logoUrl: c.logoUrl } : {}),
-  }
+const labelStyle: CSSProperties = {
+  fontSize: 11,
+  color: 'var(--bridge-text-muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+}
+
+const selectStyle: CSSProperties = {
+  background: 'var(--bridge-bg-input)',
+  border: '1px solid var(--bridge-border)',
+  borderRadius: 'var(--bridge-radius-sm)',
+  color: 'var(--bridge-text)',
+  padding: '10px 12px',
+  fontSize: 14,
+  outline: 'none',
+  width: '100%',
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
 }
 
 export const ChainSelector: FC<ChainSelectorProps> = ({
@@ -45,20 +50,23 @@ export const ChainSelector: FC<ChainSelectorProps> = ({
   current,
   onChange,
   style,
-}) => {
-  const options = useMemo(() => chains.map(toOption), [chains])
-  const value = useMemo(() => toOption(current), [current])
-
-  return (
-    <Select
-      label={label}
-      value={value}
-      options={options}
-      onChange={(opt) => {
-        const next = chains.find((c) => c.id === opt.id)
+}) => (
+  <div style={{ ...wrap, ...style }}>
+    <span style={labelStyle}>{label}</span>
+    <select
+      style={selectStyle}
+      value={current.id}
+      onChange={(e) => {
+        const next = chains.find((c) => c.id === e.target.value)
         if (next) onChange(next)
       }}
-      {...(style ? { style } : {})}
-    />
-  )
-}
+      aria-label={`${label} chain`}
+    >
+      {chains.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)
