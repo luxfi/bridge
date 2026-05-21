@@ -34,7 +34,7 @@ packages are internal workspace deps and are never published.
 | `@luxfi/core` | public (npm) | Shared types (Asset, Network, Contract, ...). |
 | `@luxfi/threshold` | public (npm) | T-Chain MPC threshold-signature SDK. |
 | `@luxfi/utila` | public (npm) | Utila protobuf client. |
-| `@luxbridge/app` | private (workspace) | The bridge React UI (Vite SPA). |
+| `@luxbridge/lux-tenant` | private (workspace) | Slim Vite SPA for bridge.lux.network — consumes `@luxfi/bridge`. |
 | `@luxbridge/settings` | private (workspace) | Network + asset registry. |
 | `@luxbridge/explorer` | private (workspace) | On-chain explorer UI. |
 | `@luxbridge/server` | private (workspace) | Bridge API daemon. |
@@ -105,7 +105,7 @@ cd app/bridge && pnpm dev
 
 ### 5. Access Services
 
-- Bridge UI: http://localhost:3000
+- Bridge UI: http://localhost:3001
 - Bridge API: http://localhost:5000
 - Lux ID Admin: http://localhost:8000
 - Consul UI: http://localhost:8501
