@@ -44,12 +44,13 @@ jobs:
       - run: corepack enable && corepack prepare pnpm@9.15.0 --activate
 
       - name: Configure npm auth (npmjs.org)
-        # Bake the token directly into .npmrc — pnpm does NOT expand
-        # ${VAR} references in .npmrc, so the literal token has to be on
-        # disk for `pnpm publish` to authenticate. Write to $HOME so we
-        # don't clobber the repo's pnpm config (link-workspace-packages).
+        # Bake the token directly into the userconfig .npmrc — pnpm does
+        # NOT expand ${VAR} references in .npmrc, so the literal token
+        # has to be on disk. setup-node@v4 sets NPM_CONFIG_USERCONFIG to
+        # a temp path; we write to that exact path so pnpm picks it up.
         run: |
-          cat > "$HOME/.npmrc" <<NPMRC
+          target="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          cat > "$target" <<NPMRC
           registry=https://registry.npmjs.org/
           @luxfi:registry=https://registry.npmjs.org/
           //registry.npmjs.org/:_authToken=${NPM_TOKEN}
