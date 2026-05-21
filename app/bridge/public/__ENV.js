@@ -1,0 +1,14 @@
+// Runtime env for the bridge SPA. Overwritten at container boot by the
+// serving image's docker-entrypoint, or baked at build time.
+//
+// The SDK's bridge.config.ts reads window.__ENV before falling back to
+// Vite's build-time import.meta.env. This decouples the deployable image
+// from the environment it runs in: one image, N envs.
+window.__ENV = window.__ENV || {
+  BRIDGE_API_HOST: '',
+  BRIDGE_ENV: '',
+  BRIDGE_CLIENT_ID: '',
+  BRIDGE_IAM_ORG: '',
+  BRIDGE_LOGO_URL: '',
+  WC_PROJECT_ID: '',
+}
