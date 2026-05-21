@@ -14,7 +14,7 @@
  *   endpoint: 'http://localhost:9650/ext/bc/T'
  * })
  *
- * // Generate key for Ethereum (auto-selects LSS protocol)
+ * // Generate key for Ethereum (auto-selects CGGMP21 protocol)
  * const keygen = await client.keygen({ keyId: 'eth-key', chain: 'ethereum' })
  * const result = await client.waitForKeygen(keygen.sessionId)
  *
