@@ -1,10 +1,11 @@
 // TransferStatus — list of in-flight + recent transfers.
 //
 // Renders the transfer feed surfaced by useTransfers. Each row shows the
-// phase as a colored dot + label. Phase 3 R2 will swap the typography to
-// @hanzo/gui's `Text` primitive.
+// phase as a colored dot + label. Phase 3 R2.5 swaps the layout containers
+// onto `@hanzo/gui` stacks and the text leaves onto `Text`.
 
 import type { CSSProperties, FC } from 'react'
+import { Text, XStack, YStack } from '@hanzo/gui'
 import type { Transfer, TransferPhase } from '../hooks/useTransfers'
 import { DEFAULT_CHAINS, findChain } from '../lib/chains'
 import { formatAmount } from '../lib/format'
@@ -67,35 +68,33 @@ function shortChainName(chainId: string): string {
 
 export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => (
   <Card>
-    <div style={heading}>Transfers</div>
+    <Text style={heading}>Transfers</Text>
     {transfers.length === 0 ? (
-      <div style={empty}>No transfers yet. Submit a bridge above to start.</div>
+      <Text style={empty}>No transfers yet. Submit a bridge above to start.</Text>
     ) : (
-      <div>
+      <YStack>
         {transfers.map((t) => (
-          <div key={t.id} style={row}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span>
+          <XStack key={t.id} style={row}>
+            <YStack style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Text>
                 {formatAmount(t.inAmount, 6)} → {formatAmount(t.outAmount, 6)}
-              </span>
-              <span
-                style={{ fontSize: 11, color: 'var(--bridge-text-muted)' }}
-              >
+              </Text>
+              <Text style={{ fontSize: 11, color: 'var(--bridge-text-muted)' }}>
                 {shortChainName(t.fromChainId)} → {shortChainName(t.toChainId)}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span
+              </Text>
+            </YStack>
+            <XStack style={{ display: 'flex', alignItems: 'center' }}>
+              <Text
                 style={{ ...dot, background: phaseColor[t.phase] }}
                 aria-hidden
               />
-              <span style={{ color: phaseColor[t.phase] }}>
+              <Text style={{ color: phaseColor[t.phase] }}>
                 {phaseLabel[t.phase]}
-              </span>
-            </div>
-          </div>
+              </Text>
+            </XStack>
+          </XStack>
         ))}
-      </div>
+      </YStack>
     )}
   </Card>
 )
