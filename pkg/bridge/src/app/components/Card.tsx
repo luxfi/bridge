@@ -17,11 +17,10 @@ const base: CSSProperties = {
   background: 'var(--bridge-bg-elevated)',
   border: '1px solid var(--bridge-border)',
   borderRadius: 'var(--bridge-radius)',
-  padding: 'var(--bridge-card-padding)',
+  padding: '16px',
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--bridge-card-gap)',
-  boxShadow: 'var(--bridge-shadow-card)',
+  gap: '12px',
 }
 
 export const Card: FC<CardProps> = ({ children, style, bare }) => (
