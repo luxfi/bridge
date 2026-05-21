@@ -1,0 +1,62 @@
+{
+  "name": "@luxfi/bridge",
+  "version": "1.0.0",
+  "description": "Lux Bridge SDK — embed bridge.lux.network into any host application",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "scope": "@luxfi"
+  },
+  "author": "Lux Industries, Inc.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luxfi/bridge.git",
+    "directory": "pkg/bridge"
+  },
+  "keywords": [
+    "lux",
+    "luxfi",
+    "bridge",
+    "mpc",
+    "cross-chain",
+    "sdk",
+    "react"
+  ],
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./Bridge": "./src/Bridge.tsx",
+    "./config": "./src/config.ts",
+    "./types": "./src/types.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "public",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit",
+    "tc": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lat": "npm show @luxfi/bridge version",
+    "pub": "npm publish"
+  },
+  "dependencies": {
+    "@luxbridge/app": "workspace:*",
+    "@luxbridge/settings": "workspace:*",
+    "@luxfi/brand": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  }
+}
