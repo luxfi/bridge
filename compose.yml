@@ -165,10 +165,10 @@ services:
     working_dir: /app/app/bridge
     environment:
       # Vite reads these at build/dev time (build-time inline + dev-server pickup).
-      - VITE_BRIDGE_API_HOST=http://localhost:5000
-      - VITE_BRIDGE_ENV=local
-      - VITE_BRIDGE_CLIENT_ID=lux-bridge
-      - VITE_BRIDGE_IAM_ORG=lux-network
+      - BRIDGE_API_HOST=http://localhost:5000
+      - BRIDGE_ENV=local
+      - BRIDGE_CLIENT_ID=lux-bridge
+      - BRIDGE_IAM_ORG=lux-network
     ports:
       - "3001:3001"
     networks:
