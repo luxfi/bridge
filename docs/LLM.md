@@ -431,17 +431,23 @@ nats-top -s localhost:4223
 
 ## Documentation
 
-### Comprehensive Documentation Site
-- **Location**: `/Users/z/work/lux/bridge/docs/content/docs/index.mdx`
-- **Build**: `cd docs && npm run build`
-- **View**: `cd docs && npm run dev` → http://localhost:3001
-- **Status**: ✅ Built successfully (November 2024)
+### Comprehensive Documentation Site (Nextra)
+- **Location**: `~/work/lux/bridge/docs/` (Next.js + Nextra)
+- **Pages**: `docs/pages/*.mdx`
+- **Build**: `cd docs && pnpm install && pnpm build`
+- **Dev**: `cd docs && pnpm dev` → http://localhost:3000
 
 ### Key Documentation Files
-- `docs/MPC-GO-INTEGRATION.md` - MPC setup and configuration
-- `docs/LUX-ID-INTEGRATION.md` - Authentication integration
-- `docs/DEPLOYMENT.md` - Production deployment guide
-- `docs/MIGRATION-TO-GO-MPC.md` - Migration from Docker to Go
+- `docs/LLM.md` — this file, canonical AI/onboarding doc (single source of truth)
+- `docs/LUX-ID-INTEGRATION.md` — Casdoor-based unified auth integration
+- `pkg/bridge/README.md` — consumer-facing SDK docs (`mountBridge`, `BridgeConfig`)
+- Top-level `README.md` — quick-start + architecture pointer (kept consistent with this file)
+
+The legacy migration .md files (BRIDGE-STATUS, LOCAL-SETUP, the four MPC
+migration notes, DEPLOYMENT, CI-CD-DOCKER-IMAGES) were deleted in v1.1.12
+(commit `b04e805`, issue #391) — they described an architecture from
+before the SDK rationalization and confused new readers. Migration
+history lives in `git log` and the GH release notes.
 
 ## Context for All AI Assistants
 
