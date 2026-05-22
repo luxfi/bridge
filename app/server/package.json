@@ -14,6 +14,7 @@
     "nodes": "node dist/nodes.js",
     "tc": "tsc",
     "typecheck": "tsc",
+    "test": "vitest run",
     "clean": "rm -rf ./node_modules",
     "prisma:gen": "pnpm exec prisma generate",
     "build": "pnpm exec prisma generate && tsc && tsc-alias",
@@ -54,7 +55,8 @@
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.0"
   },
   "dependencies": {
     "@luxfi/core": "workspace:*",
@@ -70,6 +72,7 @@
     "express": "^4.21.1",
     "express-rate-limit": "^8.3.1",
     "express-validator": "^7.2.0",
+    "fireblocks-sdk": "^5.39.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
