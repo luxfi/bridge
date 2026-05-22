@@ -14,14 +14,14 @@ Zoo, Liquidity, any white-label) import `@luxfi/bridge` and nothing else.
 
 | Path | npm name | Scope | Published |
 |---|---|---|---|
-| `pkg/bridge/` | `@luxfi/bridge` | public SDK | yes (npmjs.org) |
-| `pkg/core/` | `@luxfi/core` | public shared types | yes |
-| `pkg/threshold/` | `@luxfi/threshold` | public MPC SDK | yes |
-| `pkg/utila/` | `@luxfi/utila` | public utila client | yes |
+| `pkg/bridge/` | `@luxfi/bridge` | public SDK | pending — see §Publishing |
+| `pkg/core/` | `@luxfi/core` | public shared types | yes (last 10.0.5, 2025-05-09) |
+| `pkg/threshold/` | `@luxfi/threshold` | public MPC SDK | pending — see §Publishing |
+| `pkg/utila/` | `@luxfi/utila` | public utila client | yes (last 3.0.0, 2024-11-21) |
 | `pkg/settings/` | `@luxbridge/settings` | private workspace | no |
 | `pkg/ui/` | `@luxbridge/ui-automation` | private workspace | no |
 | `app/bridge/` | `@luxbridge/lux-tenant` | private workspace | no |
-| `app/explorer/` | `@luxbridge/explorer` | private workspace | no |
+| `app/explorer/` | `@luxbridge/explorer` | private workspace; **migration to `ghcr.io/luxfi/explorer` planned** — see §Explorer migration | no |
 | `app/server/` | `@luxbridge/server` | private workspace | no |
 
 Rules:
@@ -31,6 +31,19 @@ Rules:
   not be imported by anything outside this repo.
 - `@luxfi/{core,threshold,utila}` are generic Lux building-block libraries —
   bridge-agnostic, may be reused elsewhere in the Lux ecosystem.
+
+### History — what got folded together
+
+- **`app/bridge3/`** (formerly `@luxbridge/app-v3`) was **folded into
+  `pkg/bridge/src/app/`** at commit `abed909` ("feat(pkg/bridge): inline
+  bridge UI under src/app/", phase 1.5). The old lazy-loaded workspace
+  cycle that produced the blank-page bug is gone. `Bridge.tsx` no longer
+  references any sibling workspace package.
+- **`app/bridge/`** was collapsed to a single canonical tenant build at
+  `6bc55b2` ("phase2-r2: collapse to canonical app/bridge tenant"). It is
+  now `@luxbridge/lux-tenant` (~120 LOC: `bridge.config.ts`, `main.tsx`,
+  `index.html` + Vite config), not the multi-variant Next.js app shown in
+  stale diagrams.
 
 ## SDK mount pattern
 
@@ -51,36 +64,160 @@ build-time brand config, no hostname detection inside the SDK.
 
 ## Publishing
 
-`.github/workflows/publish.yml` fires on `v*` tag push. Runs
-`pnpm publish -r --access public --no-git-checks` — pnpm walks the workspace,
-skips `private: true` packages, and publishes any `@luxfi/*` package whose
-version is not yet on npmjs.org. Bump versions in PRs; tag once merged.
+`.github/workflows/publish.yml` fires on `v*` tag push, runs on the
+self-hosted `lux-build` runner. Runs `pnpm publish -r --access public
+--no-git-checks` — pnpm walks the workspace, skips `private: true`
+packages, and publishes any `@luxfi/*` package whose version is not yet
+on npmjs.org. Bump versions in PRs; tag once merged.
+
+**Status as of 2026-05-22**: the workflow is wired and hardened (fail-fast
+on missing `NPM_TOKEN`/`NODE_AUTH_TOKEN`; token baked into the
+`NPM_CONFIG_USERCONFIG` path because pnpm doesn't expand `${VAR}` in
+.npmrc) but `@luxfi/bridge` and `@luxfi/threshold` are still 404 on
+npmjs.org. Confirmed by `@luxfi/core` 10.0.5 and `@luxfi/utila` 3.0.0
+both pre-dating every `v1.1.x` tag — no v1.1.x release has ever shipped
+to npm. Most likely missing `NPM_TOKEN` secret on the `luxfi/bridge` repo
+(Settings → Secrets and variables → Actions) OR an unavailable
+`lux-build` runner pool. The v1.1.10 fail-fast guard will surface either
+clearly on the next run.
+
+## Explorer migration
+
+`app/explorer/` (`@luxbridge/explorer`, Next.js standalone) is on a
+deprecation path. The canonical replacement is **`ghcr.io/luxfi/explorer`**
+— a single Go binary at `~/work/lux/explorer` that:
+
+- Indexes EVM chains via [`luxfi/indexer`](https://github.com/luxfi/indexer)
+- Exposes per-chain GraphQL via [`luxfi/graph`](https://github.com/luxfi/graph)
+- Serves the embedded SPA from [`luxfi/explore`](https://github.com/luxfi/explore) via `go:embed`
+
+Routes (served from one binary, port-flexible):
+
+| Path | Purpose |
+|---|---|
+| `/` | SPA (embedded; SPA-routing fallback) |
+| `/envs.js` | Runtime `window.ENV = {…}` |
+| `/v1/indexer/{slug}/*` | Per-chain explorer REST API |
+| `/v1/graph/{slug}/{subgraph}/graphql` | Per-chain, per-subgraph GraphQL |
+| `/v1/explorer/realtime` | WebSocket realtime hub |
+
+Migration plan: deploy `luxfi/explorer` alongside `app/explorer/`,
+hostname-cutover (`bridge-explorer.lux.network`) on K8s, delete the
+Next.js app after one-week soak. Same pattern as the
+`graphprotocol/graph-node` → `LiquidGraph` cutover in
+`liquidity/universe` (in-flight 2026-04-22; see
+`~/work/liquidity/universe/CLAUDE.md` § Explorer / indexer).
+
+The bridge backend (`app/server/`) does not depend on `app/explorer/`;
+the migration is UI-only.
 
 ## Architecture Summary
 
 ### Core Technology Stack
+- **SDK**: `@luxfi/bridge` — TypeScript source-published; React 18 + Tamagui
+  (`@hanzo/gui` v7 + `@hanzogui/*` peer-optional primitives); wagmi 2 + viem 2
+  + `@tanstack/react-query` 5 for wallet; `@luxfi/threshold` for native MPC
+  threshold sign sessions
+- **Tenant apps**: Vite + React 18.3.1 (`app/bridge/` = `@luxbridge/lux-tenant`,
+  `app/explorer/` = `@luxbridge/explorer`)
+- **Backend**: Node.js + Express + Prisma (`app/server/` = bridge API at
+  `api.bridge.lux.network`)
 - **MPC Framework**: 2-of-3 threshold signature scheme using `github.com/luxfi/mpc`
-- **Frontend**: Next.js 14 with TypeScript, React 18, TailwindCSS
-- **Backend**: Node.js API server with Express
+  (Go); client-side session helper via `@luxfi/threshold` (TS)
 - **Smart Contracts**: Solidity (OpenZeppelin), deployed on multiple chains
 - **Infrastructure**: Docker, Kubernetes, PostgreSQL, NATS, Consul, Vault (KMS)
 - **Authentication**: Lux ID (Casdoor) for unified auth
+- **Runtime config**: `window.__ENV` (templated from `BRIDGE_*` env at container
+  boot by nginx docker-entrypoint) with build-time `import.meta.env.VITE_*`
+  fallback. One image, N envs.
 
 ### System Architecture
 ```
-Bridge UI → Bridge Server → MPC Nodes → Blockchain Networks
-                              ↓
-                    KMS + Lux ID + NATS + Consul
+                   ┌──────────────────────────────────┐
+Tenant app         │ @luxfi/bridge  (pkg/bridge/)     │
+(app/bridge/,      │ exports: Bridge, mountBridge,    │
+ app/explorer/,    │   BridgeConfig, types            │
+ zoo/bridge/, …)   │                                  │
+imports SDK +      │ Bridge UI is INLINED at          │
+brand:             │   pkg/bridge/src/app/            │
+  @luxfi/bridge ─▶ │ (no @luxbridge/app-v3, no        │
+  @luxfi/brand     │  workspace cycle, no lazy load)  │
+  (or @zooai/brand,│                                  │
+   @hanzoai/brand) │ Direct deps:                     │
+                   │   @hanzo/gui, @luxfi/threshold,  │
+                   │   wagmi, viem, react-query       │
+                   └─────────────┬────────────────────┘
+                                 │
+                ┌────────────────┴─────────────────┐
+                ▼                                  ▼
+    ┌───────────────────────┐         ┌──────────────────────┐
+    │ app/server            │         │ @luxfi/threshold     │
+    │ Bridge API            │         │ MPC threshold SDK    │
+    │ Express + Prisma      │         │ (consumed by BOTH    │
+    │ api.bridge.lux.network│         │  SDK + server)       │
+    └──────────┬────────────┘         └──────────┬───────────┘
+               │                                 │
+               ▼                                 ▼
+    ┌─────────────────────┐            ┌──────────────────┐
+    │ b-chain             │            │ m-chain (public  │
+    │ Lux primary network │            │ MPC, m-chain)    │
+    │ consensus + state   │            │                  │
+    └─────────────────────┘            │ + optional       │
+                                       │ private cluster  │
+                                       │ (treasury fees)  │
+                                       │                  │
+                                       │ + optional       │
+                                       │ layered cosign:  │
+                                       │   Utila          │
+                                       │   Fireblocks     │
+                                       └──────────────────┘
 ```
 
 ### MPC Network Configuration
-- **Node Count**: 3 nodes (2-of-3 threshold)
+- **Node Count**: 3 nodes (2-of-3 threshold) on m-chain (public MPC)
 - **Ports**:
   - HTTP API: 6000-6002
   - gRPC: 9090-9092
   - NATS: 4223
   - Consul: 8501
 - **Security**: TLS 1.3, mutual authentication, HSM integration
+- **Protocols**: `cggmp21` (default), `frost`, `bls`, `doerner` (classical);
+  `pulsar` (MLWE), `corona` (RLWE), `magnetar` (lattice research variant) —
+  PQ-safe, leaderless, permissionless-safe by design.
+
+### Optional layered cosigners (since SDK v1.0.3)
+
+External MPC custodians can be layered ON TOP of the native threshold network
+as additional cosigners. The bridge backend enforces 2-of-2 (native + layered)
+before releasing settlement. Use when tenants are already on Utila or
+Fireblocks for institutional custody and need regulated-cosigner gating
+without giving up the native threshold property.
+
+Browser SDK declares config only; the secret half (Utila JWT / Fireblocks
+secret key) lives on `app/server/` (sourced from KMS at boot). No secret
+material is ever shipped in the page bundle.
+
+```ts
+mountBridge({
+  config: {
+    apiHost: 'https://api.bridge.lux.network',
+    env: 'mainnet',
+    mpc: {
+      publicUrl: 'https://mpc.lux.network',
+      protocol: 'cggmp21',
+      // optional — layered cosigner #1
+      utila: { orgId: 'tenant-x', clientId: 'lux-bridge' },
+      // optional — layered cosigner #2 (both may be enabled together)
+      fireblocks: { apiKey: 'pub-key-id', vaultAccountId: '0' },
+    },
+  },
+})
+```
+
+Per-swap, the SDK forwards a `cosigners[]` array of public identifiers
+(`orgId`, `clientId`, `apiKey`, vault ids) to `POST /api/swaps`. The
+backend pairs each entry with a KMS-held secret and completes the cosign
+on behalf of the tenant.
 
 ## Supported Networks & Assets
 
@@ -208,7 +345,9 @@ The bridge uses a multi-layered architecture:
 2. Initialize MPC network: `make start-mpc-nodes`
 3. Deploy contracts: `cd contracts && npx hardhat deploy`
 4. Start API server: `cd app/server && pnpm dev`
-5. Start UI: `cd app/bridge && pnpm dev`
+5. Start tenant UI: `cd app/bridge && pnpm dev` (Vite on :3001)
+6. SDK dev: edit `pkg/bridge/src/` — tenant Vite picks up changes live
+   through the workspace symlink. No publish needed for local iteration.
 
 ### Testing
 - Unit tests: `pnpm test:unit`
@@ -247,8 +386,10 @@ CASDOOR_ENDPOINT=http://localhost:8000
 ```
 
 ### Service Ports
-- Bridge UI: 3000
-- Bridge API: 5000
+- Bridge UI (tenant `app/bridge/`): **3001** (Vite dev/preview server)
+- Bridge API (`app/server/`): 5000 (Express)
+- Bridge explorer (`app/explorer/`, legacy): 3002 (Next.js)
+- Bridge explorer (`ghcr.io/luxfi/explorer`, replacement): port-flexible
 - MPC Nodes: 6000-6002 (HTTP), 9090-9092 (gRPC)
 - PostgreSQL: 5433 (bridge), 5434 (auth)
 - Vault (KMS): 8200
