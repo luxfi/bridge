@@ -1,41 +1,97 @@
 /*
- * @luxfi/bridge — inlined theme.
+ * @luxfi/bridge — modern theme.
  *
- * Minimal CSS variables consumed by the bridge UI. Brand overrides set by
- * `applyBrandMetadata()` (config.ts) take precedence at the `:root` level
- * via `--brand-primary` / `--brand-secondary`.
- *
- * Phase 3 R2 will replace these inline styles with @hanzo/gui primitives;
- * this file is intentionally small and additive.
+ * Design tokens for the inlined bridge UI. Brand overrides set by
+ * `applyBrandMetadata()` (config.ts) take precedence at `:root` via
+ * `--brand-primary` / `--brand-secondary`. Tenants can layer additional
+ * vars on the host page; only `--bridge-*` are owned by the SDK.
  */
 
 :root {
-  --bridge-bg: #0a0a0a;
-  --bridge-bg-elevated: #141414;
-  --bridge-bg-input: #1a1a1a;
-  --bridge-border: #2a2a2a;
-  --bridge-border-focus: #404040;
-  --bridge-text: #ffffff;
-  --bridge-text-muted: #888888;
-  --bridge-text-subtle: #555555;
+  /* Surfaces — layered dark stack with subtle blue undertone for depth. */
+  --bridge-bg: #07080b;
+  --bridge-bg-soft: #0d0e13;
+  --bridge-bg-elevated: #13141a;
+  --bridge-bg-input: #1a1c24;
+  --bridge-bg-hover: #20232d;
+
+  /* Borders. */
+  --bridge-border: #23252e;
+  --bridge-border-strong: #2e313c;
+  --bridge-border-focus: #4661c2;
+
+  /* Text. */
+  --bridge-text: #f7f8fa;
+  --bridge-text-muted: #9097a5;
+  --bridge-text-subtle: #5f6573;
+
+  /* Accent — driven by `--brand-primary`, with sane fallback. */
   --bridge-accent: var(--brand-primary, #5b8def);
   --bridge-accent-hover: var(--brand-secondary, #7a9ff5);
-  --bridge-danger: #f44336;
-  --bridge-success: #4caf50;
-  --bridge-radius: 10px;
-  --bridge-radius-sm: 6px;
-  --bridge-spacing: 12px;
-  --bridge-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  --bridge-accent-soft: rgba(91, 141, 239, 0.12);
+  --bridge-accent-border: rgba(91, 141, 239, 0.32);
+
+  /* Semantic. */
+  --bridge-danger: #f43d3d;
+  --bridge-danger-soft: rgba(244, 61, 61, 0.1);
+  --bridge-danger-border: rgba(244, 61, 61, 0.4);
+  --bridge-success: #34c759;
+  --bridge-success-soft: rgba(52, 199, 89, 0.1);
+  --bridge-success-border: rgba(52, 199, 89, 0.32);
+  --bridge-warning: #ffb02e;
+
+  /* Radii. Bridge cards use the large radius — modern bridge UIs run 16–20px. */
+  --bridge-radius: 20px;
+  --bridge-radius-md: 14px;
+  --bridge-radius-sm: 10px;
+  --bridge-radius-pill: 999px;
+
+  /* Spacing. */
+  --bridge-spacing-xs: 6px;
+  --bridge-spacing-sm: 10px;
+  --bridge-spacing: 14px;
+  --bridge-spacing-md: 18px;
+  --bridge-spacing-lg: 24px;
+
+  /* Typography. */
+  --bridge-font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bridge-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    monospace;
+
+  /* Shadows — layered, soft, used on cards + popovers. */
+  --bridge-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+  --bridge-shadow-popover:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 10px 40px rgba(0, 0, 0, 0.6);
+  --bridge-shadow-glow:
+    0 0 0 1px var(--bridge-accent-border),
+    0 0 24px var(--bridge-accent-soft);
+
+  /* Motion. */
+  --bridge-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bridge-transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bridge-root {
   font-family: var(--bridge-font);
-  background: var(--bridge-bg);
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      var(--bridge-accent-soft) 0%,
+      transparent 60%
+    ),
+    var(--bridge-bg);
   color: var(--bridge-text);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
 .bridge-root *,
@@ -52,4 +108,120 @@
 .bridge-root input,
 .bridge-root select {
   font-family: inherit;
+}
+
+/* Native scrollbar polish — applies inside any scroll container in the SDK. */
+.bridge-root *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.bridge-root *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.bridge-root *::-webkit-scrollbar-thumb {
+  background: var(--bridge-border-strong);
+  border-radius: var(--bridge-radius-pill);
+}
+.bridge-root *::-webkit-scrollbar-thumb:hover {
+  background: var(--bridge-text-subtle);
+}
+
+/* ─── Popover ────────────────────────────────────────────────────────── */
+
+.bridge-popover {
+  background: var(--bridge-bg-elevated);
+  border: 1px solid var(--bridge-border-strong);
+  border-radius: var(--bridge-radius-md);
+  box-shadow: var(--bridge-shadow-popover);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  animation: bridge-popover-enter var(--bridge-transition) both;
+}
+
+@keyframes bridge-popover-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.bridge-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--bridge-radius-sm);
+  cursor: pointer;
+  color: var(--bridge-text);
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  transition: background-color var(--bridge-transition-fast);
+}
+
+.bridge-popover-item:hover,
+.bridge-popover-item[data-highlighted='true'] {
+  background: var(--bridge-bg-hover);
+}
+
+.bridge-popover-item[data-selected='true'] {
+  color: var(--bridge-accent);
+}
+
+.bridge-popover-item[data-selected='true']::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bridge-accent);
+  margin-left: auto;
+}
+
+/* ─── Logo bubble ────────────────────────────────────────────────────── */
+
+.bridge-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bridge-bg-input);
+  border: 1px solid var(--bridge-border);
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bridge-text);
+}
+
+.bridge-logo > img,
+.bridge-logo > svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.bridge-logo-sm {
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+}
+
+.bridge-logo-lg {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
 }

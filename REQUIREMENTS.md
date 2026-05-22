@@ -19,7 +19,7 @@
 - The **MPC layer** is provided by `pkg/threshold/` (`@luxfi/threshold` SDK), deployed in two modes:
   - **Private MPC** — Lux treasury cluster, collects fees. Config under `config/mpc/config.yaml`.
   - **Public MPC** — `m-chain`, validator-powered, permissionless, deployed via `k8s/mpc-deployment.yaml`.
-- The **frontend** is packaged as a publishable white-label SDK `@luxfi/bridge` (`pkg/bridge/`). The bridge UI is **inlined** under `pkg/bridge/src/app/` — there is no longer a workspace `@luxbridge/app-v3` dependency. Each tenant (Lux, Zoo, Hanzo, and any third-party adopter) consumes the SDK from a thin host shell plus its own `@<org>/brand` package.
+- The **frontend** is packaged as a publishable white-label SDK `@luxfi/bridge` (`pkg/bridge/`). The bridge UI is **inlined** under `pkg/bridge/src/app/` — there is no longer a workspace `@luxbridge/app-v3` dependency. Each tenant (Lux, Zoo, Hanzo, ) consumes the SDK from a thin host shell plus its own `@<org>/brand` package.
 
 This document is the authoritative project requirements set. There is no `requirements.txt` working-notes file in the repo (none has existed in git history); REQUIREMENTS.md is the canonical record.
 
@@ -31,7 +31,7 @@ This document is the authoritative project requirements set. There is no `requir
    - `github.com/luxfi/bridge` Lux tenant — currently `app/bridge/` (`@luxbridge/lux-tenant`).
    - `github.com/zooai/bridge` Zoo tenant — pending (see §10).
 4. Embed the bridge inside `luxfi/exchange` and `zooai/exchange` using the same SDK.
-5. Support a third-party tenant operating its own backend (centralized MPC) — proves the SDK is genuinely backend-agnostic.
+5. Support  as a third tenant operating its own backend (centralized MPC) — proves the SDK is genuinely backend-agnostic.
 
 ## 3. Non-Goals
 
@@ -39,7 +39,7 @@ The following are **explicitly out of scope** for this initiative and must not c
 
 - Rewriting `app/server/` routes, schema, or Prisma layer beyond what's needed for chain rewiring.
 - Building new branding configs *before* data flow from b-chain to UI is proven end-to-end.
-- Optimizing for any third-party standalone-backend use case before Lux's hosted case works.
+- Optimizing for 's standalone-backend use case before Lux's hosted case works.
 - Changes to `@luxfi/threshold` MPC SDK internals — that package is consumed as-is.
 - Replacing wallet adapters or chain libraries inside the inlined bridge UI beyond what wiring requires.
 
@@ -138,7 +138,7 @@ Notable removals from prior drafts:
 | Server-side cosigner glue | **Merged** — `app/server/src/domain/cosigners.ts` + Fireblocks/native tests. End-to-end soak against a real Utila/Fireblocks tenant still pending. | `app/server/` |
 | Lux tenant app (`app/bridge/`) | `@luxbridge/lux-tenant` v1.0.0 — thin shell | This repo |
 | Zoo tenant app | Pending — needs new tenant repo (see §10) | TBD |
-| White-label tenant backend wire-up | Later | After Lux/Zoo tenants ship |
+| Liquidity backend wire-up | Later | After Lux/Zoo tenants ship |
 
 ### 5.3 SDK public API surface (verified against `pkg/bridge/src/index.ts`)
 
@@ -317,7 +317,7 @@ Status of original Phase 1 line items:
 
 ## 9. Phase 3 — White-Label SDK Publication
 
-**Outcome:** `@luxfi/bridge` is published to the public npm registry and any third party can adopt it with their own backend.
+**Outcome:** `@luxfi/bridge` is published to the public npm registry and  (or any third party) can adopt it with their own backend.
 
 **Deliverables**
 
@@ -328,14 +328,14 @@ Status of original Phase 1 line items:
 | 3.3 | Confirm there are no `workspace:*` deps left in the publishable surface. | `@luxfi/threshold` is currently a `workspace:*` runtime dep — it must be published to npm (or vendored / re-exported through `dist/`) before SDK publication. |
 | 3.4 | Publish `@luxfi/bridge` v1.x → npm under the `@luxfi` scope (public access). | `pnpm pub` from `pkg/bridge/`. |
 | 3.5 | ~~Land the R3 client-side MPC integration~~ — **done** (R5). `mpc-session.ts`, `bridge-api.ts`, `wagmi-config.ts`, `BridgeUtilaConfig` / `BridgeFireblocksConfig`, server-side `cosigners.ts` + tests are all merged; SDK bumped to v1.0.3. Remaining sub-task: end-to-end soak against a real Utila and a real Fireblocks tenant on testnet. | Secret material stays on `app/server/` — invariant must not regress. |
-| 3.6 | Document standalone-backend mode for third-party adopters: how to point `apiHost` at a non-Lux endpoint, what server API contract `app/server/` exposes, what's pluggable. | New doc under `docs/content/docs/`. |
-| 3.7 | Confirm a third-party adopter can render their own securities (AAPL, etc.) via the existing tokens/assets registry (`@luxbridge/settings`) without forking. If not, add an injection point. | May surface a `tokens?` field on `BridgeConfig`. |
+| 3.6 | Document standalone-backend mode for : how to point `apiHost` at a non-Lux endpoint, what server API contract `app/server/` exposes, what's pluggable. | New doc under `docs/content/docs/`. |
+| 3.7 | Confirm  can render their own securities (AAPL, etc.) via the existing tokens/assets registry (`@luxbridge/settings`) without forking. If not, add an injection point. | May surface a `tokens?` field on `BridgeConfig`. |
 
 **Acceptance criteria**
 
 - `npm install @luxfi/bridge` from a fresh project succeeds; the Quick Start in `pkg/bridge/README.md` produces a running bridge in <5 minutes.
 - A third party can stand up a bridge with their own `apiHost` and `BrandConfig` without modifying SDK source.
-- A new standalone-backend doc clearly describes the third-party adopter path.
+- A new standalone-backend doc clearly describes the  path.
 - The cosigner layer has been exercised end-to-end against at least one real external custodian on testnet.
 
 ## 10. Outstanding Tenant Work
@@ -364,13 +364,13 @@ The next outstanding SDK work is **Phase 3.1** (compile to `dist/`) so external 
 | R1 | Build step still emits no `dist/`. Publishing today would ship `src/*.ts` directly — works for workspace consumers (since pnpm hoists transitive deps locally), breaks downstream type resolution for non-pnpm users and forces tenants to re-declare web3 deps. | Blocks Phase 3.1 / 3.4. | SDK |
 | R2 | `@luxfi/threshold` is a `workspace:*` runtime dep of `@luxfi/bridge`. Publishing `@luxfi/bridge` without first publishing (or vendoring) threshold will produce an unresolvable install for external consumers. | Blocks Phase 3.3 / 3.4. | SDK |
 | R3 | The cosigner layer (`mpc.utila` / `mpc.fireblocks`) is declarative on the SDK side and secret-holding on the server side. A future implementer must not move secret material client-side. The SDK type surface deliberately omits any field that would carry a secret. | Security regression. | SDK + server, Phase 3.5 e2e. |
-| R4 | Third-party securities tenants (AAPL, etc.) may require asset-registry injection points the current `@luxbridge/settings` does not expose. | Could force a SDK breaking change. | Investigate during Phase 3.7. |
+| R4 | 's securities (AAPL, etc.) may require asset-registry injection points the current `@luxbridge/settings` does not expose. | Could force a SDK breaking change. | Investigate during Phase 3.7. |
 | R5 | New `auth` / `kms` / `wallet` / cosigner blocks are not yet exercised end-to-end by a non-Lux tenant; behavior under Zoo/Hanzo branding is unverified. | Auth + cosigner break for Zoo/Hanzo. | Phase 2 e2e. |
 | R6 | `app/bridge/package.json` currently re-declares deps that morally belong to `@luxfi/bridge` (web3 trio + `@hanzogui/config-default` + `@luxfi/threshold`). If a tenant lags an SDK upgrade, version drift between the tenant's declared pins and what the SDK actually uses can cause subtle runtime breaks. Phase 3.1 retires this risk. | Drift between tenant and SDK pins. | SDK, Phase 3.1. |
 
 **Open questions for sponsor:**
 
-1. Is Hanzo a tenant in this round, or only Lux + Zoo + (later) third-party adopters?
+1. Is Hanzo a tenant in this round, or only Lux + Zoo + (later) ?
 2. Target date / acceptance bar for the Phase 3.5 cosigner e2e soak (Utila + Fireblocks on testnet).
 3. Should `pkg/utila/` (and any equivalent `pkg/fireblocks/` if added) ship as published `@luxfi/*` packages, or stay private workspace helpers consumed only by `app/server/`?
 4. Publication timing for `@luxfi/threshold` (gates SDK publication — see R2).

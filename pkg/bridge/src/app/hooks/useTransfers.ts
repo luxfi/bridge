@@ -19,16 +19,21 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAccount } from 'wagmi'
 
 import { getConfig } from '../../config'
-import { DEFAULT_ASSETS } from '../lib/assets'
-import { DEFAULT_CHAINS, findChain } from '../lib/chains'
+import { findChain } from '../lib/chains'
 import {
   BridgeApiError,
-  chainIdToInternalName,
   createSwap,
   getSwap,
+  type CosignerIntent,
   type ServerSwap,
 } from '../lib/bridge-api'
 import { runMpcSignSession, type MpcProgress } from '../lib/mpc-session'
+import {
+  isActive,
+  loadTransfers,
+  saveTransfers,
+} from '../lib/transfer-storage'
+import { useNetworks } from './useNetworks'
 
 export type TransferPhase =
   | 'pending'       // submitted, waiting for source chain inclusion
@@ -39,6 +44,8 @@ export type TransferPhase =
 
 export interface Transfer {
   id: string
+  /** Server swap id once createSwap returns. Used to resume polling after a refresh. */
+  serverId?: string
   fromChainId: string
   toChainId: string
   fromAssetId: string
@@ -62,11 +69,15 @@ export interface TransferState {
    * `destinationAddress` defaults to the currently-connected wallet address
    * — the common case is a self-send across chains. Tenants needing
    * sweep-to-treasury flows pass an explicit address.
+   *
+   * `refuel` requests a destination-gas top-up alongside the bridged asset
+   * (server-side feature; the SDK just forwards the flag).
    */
   initiate: (
     t: Omit<Transfer, 'id' | 'phase' | 'createdAt' | 'mpc' | 'error'> & {
       destinationAddress?: string
       appName?: string
+      refuel?: boolean
     },
   ) => Promise<Transfer>
   /**
@@ -104,12 +115,20 @@ function nextLocalId(): string {
 export function useTransfers(): TransferState {
   const cfg = getConfig()
   const account = useAccount()
+  const { chains, assets } = useNetworks()
 
   const [transfers, setTransfers] = useState<Transfer[]>([])
   const [active, setActive] = useState<Transfer | null>(null)
 
   // AbortControllers per transfer — torn down on unmount + on `clear()`.
   const controllersRef = useRef<Map<string, AbortController>>(new Map())
+
+  // `subscribe` indirection — hydration effect references the latest closure
+  // without forcing the effect to re-run on every render. (useCallback's
+  // dependencies make `subscribe` stable per-mount but it changes any time
+  // cfg.apiHost / cfg.mpc / patch change; we don't want hydration to fire
+  // on those.)
+  const subscribeRef = useRef<((tid: string, sid: string) => void) | null>(null)
 
   useEffect(() => {
     return () => {
@@ -167,7 +186,10 @@ export function useTransfers(): TransferState {
         }
 
         // Kick off MPC session on first entry into the signing phase.
-        if (phase === 'signing' && !mpcStarted && cfg.mpc) {
+        // `publicUrl` is required for the native threshold sign; tenants
+        // running pure-external custody (utila/fireblocks only) skip this
+        // — the backend assembles cosign without a client-side session.
+        if (phase === 'signing' && !mpcStarted && cfg.mpc?.publicUrl) {
           mpcStarted = true
           // The bridge backend supplies the messageHash + keyId in the swap
           // record. We don't fail the transfer if those fields are absent;
@@ -222,6 +244,47 @@ export function useTransfers(): TransferState {
     [cfg.apiHost, cfg.mpc, patch],
   )
 
+  // Keep subscribeRef pointing at the latest closure so the hydration
+  // effect can fire-and-forget without taking subscribe as a dep.
+  useEffect(() => {
+    subscribeRef.current = (tid, sid) => {
+      void subscribe(tid, sid)
+    }
+  }, [subscribe])
+
+  // Hydrate from localStorage on wallet change. We abort any in-flight
+  // controllers for the *prior* wallet so they don't keep writing into
+  // the new wallet's state, then load the persisted list for the new
+  // wallet and re-subscribe to anything that wasn't terminal.
+  useEffect(() => {
+    for (const c of controllersRef.current.values()) c.abort()
+    controllersRef.current.clear()
+
+    if (!account.address) {
+      setTransfers([])
+      setActive(null)
+      return
+    }
+
+    const hydrated = loadTransfers(cfg.apiHost, account.address)
+    setTransfers(hydrated)
+    setActive(hydrated.find(isActive) ?? null)
+
+    // Resume polling for non-terminal transfers that still have a server id.
+    for (const t of hydrated) {
+      if (!isActive(t) || !t.serverId) continue
+      const controller = new AbortController()
+      controllersRef.current.set(t.id, controller)
+      subscribeRef.current?.(t.id, t.serverId)
+    }
+  }, [account.address, cfg.apiHost])
+
+  // Persist on every transfer-list change. Cheap (one JSON.stringify per
+  // change) and bounded by the MAX_TRANSFERS cap in transfer-storage.ts.
+  useEffect(() => {
+    saveTransfers(cfg.apiHost, account.address, transfers)
+  }, [transfers, cfg.apiHost, account.address])
+
   const initiate = useCallback<TransferState['initiate']>(
     async (input) => {
       const id = nextLocalId()
@@ -242,13 +305,14 @@ export function useTransfers(): TransferState {
       const controller = new AbortController()
       controllersRef.current.set(id, controller)
 
-      // Map bridge IDs → server enum + symbol.
-      const sourceNetwork = chainIdToInternalName(input.fromChainId, cfg.env)
-      const destinationNetwork = chainIdToInternalName(input.toChainId, cfg.env)
-      const fromAsset = DEFAULT_ASSETS.find((a) => a.id === input.fromAssetId)
-      const toAsset = DEFAULT_ASSETS.find((a) => a.id === input.toAssetId)
-      const fromChain = findChain(DEFAULT_CHAINS, input.fromChainId)
-      const toChain = findChain(DEFAULT_CHAINS, input.toChainId)
+      // Resolve chain / asset records from the live registry (or the
+      // bundled static fallback when the API is still loading).
+      const fromChain = findChain(chains, input.fromChainId)
+      const toChain = findChain(chains, input.toChainId)
+      const fromAsset = assets.find((a) => a.id === input.fromAssetId)
+      const toAsset = assets.find((a) => a.id === input.toAssetId)
+      const sourceNetwork = fromChain?.internalName
+      const destinationNetwork = toChain?.internalName
 
       if (!sourceNetwork || !destinationNetwork || !fromAsset || !toAsset || !fromChain || !toChain) {
         patch(id, { phase: 'failed', error: 'Unsupported chain or asset for current environment' })
@@ -263,6 +327,30 @@ export function useTransfers(): TransferState {
         return x
       }
 
+      // Layered cosigners — when tenants configure `mpc.utila` or
+      // `mpc.fireblocks` (or both) the SDK forwards PUBLIC identifiers
+      // only; the bridge backend pairs them with secret material in KMS.
+      const cosigners: CosignerIntent[] = []
+      if (cfg.mpc?.utila) {
+        const u = cfg.mpc.utila
+        cosigners.push({
+          kind: 'utila',
+          orgId: u.orgId,
+          clientId: u.clientId,
+          ...(u.apiHost ? { apiHost: u.apiHost } : {}),
+          ...(u.vaultId ? { vaultId: u.vaultId } : {}),
+        })
+      }
+      if (cfg.mpc?.fireblocks) {
+        const f = cfg.mpc.fireblocks
+        cosigners.push({
+          kind: 'fireblocks',
+          apiKey: f.apiKey,
+          ...(f.apiHost ? { apiHost: f.apiHost } : {}),
+          ...(f.vaultAccountId ? { vaultAccountId: f.vaultAccountId } : {}),
+        })
+      }
+
       try {
         const swap = await createSwap(
           cfg.apiHost,
@@ -273,14 +361,20 @@ export function useTransfers(): TransferState {
             destinationNetwork,
             destinationAsset: toAsset.symbol,
             destinationAddress,
-            refuel: false,
+            // Sender = connected wallet (self-bridge default). Used only by
+            // the RPC transport; REST derives sender from the deposit tx.
+            ...(account.address ? { sender: account.address } : {}),
+            refuel: input.refuel ?? false,
             useDepositAddress: false,
             useTeleporter: fromChain.family === 'lux' || toChain.family === 'lux',
             appName: input.appName ?? cfg.brand?.name ?? '@luxfi/bridge',
+            ...(cosigners.length > 0 ? { cosigners } : {}),
           },
           { idempotencyKey: id, signal: controller.signal },
         )
-        // Begin polling.
+        // Patch the local record with the server id so hydration after a
+        // refresh can resume polling, then begin polling.
+        patch(id, { serverId: swap.id })
         void subscribe(id, swap.id)
       } catch (err) {
         if (controller.signal.aborted) return x
@@ -290,7 +384,7 @@ export function useTransfers(): TransferState {
 
       return x
     },
-    [account.address, cfg.apiHost, cfg.brand?.name, cfg.env, patch, subscribe],
+    [account.address, cfg.apiHost, cfg.brand?.name, cfg.env, cfg.mpc?.utila, cfg.mpc?.fireblocks, chains, assets, patch, subscribe],
   )
 
   const clear = useCallback(() => {
@@ -298,7 +392,10 @@ export function useTransfers(): TransferState {
     controllersRef.current.clear()
     setTransfers([])
     setActive(null)
-  }, [])
+    // Drop the persisted list too — `clear()` is a deliberate user action,
+    // not just an unmount. Future refresh starts from a clean slate.
+    saveTransfers(cfg.apiHost, account.address, [])
+  }, [cfg.apiHost, account.address])
 
   return {
     transfers,

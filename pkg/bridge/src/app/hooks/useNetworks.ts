@@ -46,15 +46,9 @@ export function useNetworks(): NetworksState {
   const cfg = getConfig()
 
   const query = useQuery({
-    queryKey: ['bridge-networks', cfg.apiHost, cfg.env],
+    queryKey: ['bridge-networks', cfg.apiHost],
     queryFn: async ({ signal }): Promise<ApiNetwork[]> => {
       const url = new URL('/api/networks', cfg.apiHost)
-      // app/server (routes/networks.ts) selects between mainnetSettings,
-      // testnetSettings, devnetSettings based on ?version. Without this
-      // query param the server defaults to mainnet, so a testnet env build
-      // would silently fetch the mainnet registry and then filter to 0
-      // rows. Pin the param to cfg.env so the boundary stays explicit.
-      url.searchParams.set('version', cfg.env)
       const resp = await fetch(url.toString(), { signal })
       if (!resp.ok) {
         throw new Error(`networks fetch failed: HTTP ${resp.status}`)
