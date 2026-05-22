@@ -1,6 +1,7 @@
 packages:
   - 'app/*'
   - 'pkg/*'
+  - 'e2e'
 
 catalog:
   '@hanzo/ui': 4.4.1
