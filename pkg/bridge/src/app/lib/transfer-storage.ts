@@ -81,9 +81,5 @@ export function saveTransfers(
  * polling on it). Terminal phases never need polling.
  */
 export function isActive(t: Transfer): boolean {
-  return (
-    t.phase !== 'completed' &&
-    t.phase !== 'failed' &&
-    t.phase !== 'refunded'
-  )
+  return t.phase !== 'completed' && t.phase !== 'failed'
 }

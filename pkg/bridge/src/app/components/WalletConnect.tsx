@@ -1,7 +1,9 @@
 // WalletConnect — connect / disconnect button + connected address pill.
 //
-// Today this stubs the connection (see useWallet.ts). Phase 3 R3 wires
-// the real threshold-MPC session — the *button* contract here stays.
+// Drives the real wagmi connect/disconnect flow exposed by useWallet (which
+// picks injected → coinbase → WalletConnect in that order). The button is
+// the only user-side affordance for the *user* signing leg; the bridge leg
+// is signed by the MPC threshold network independently.
 
 import type { CSSProperties, FC } from 'react'
 import type { WalletState } from '../hooks/useWallet'
