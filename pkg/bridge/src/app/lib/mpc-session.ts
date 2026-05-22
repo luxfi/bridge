@@ -73,6 +73,14 @@ export async function runMpcSignSession(
   opts: MpcSessionOptions,
 ): Promise<MpcProgress> {
   const protocol: Protocol = opts.mpc.protocol ?? 'cggmp21'
+  // `publicUrl` is optional on BridgeMPCConfig to support pure-external
+  // custody (utila/fireblocks only, no native threshold). The native MPC
+  // sign session can only run when publicUrl is provided.
+  if (!opts.mpc.publicUrl) {
+    throw new Error(
+      'runMpcSignSession requires mpc.publicUrl; pure-external custody flows must skip the native sign step',
+    )
+  }
   const client = new ThresholdClient({
     endpoint: opts.mpc.publicUrl,
     ...(opts.chainId ? { chainId: opts.chainId } : {}),
