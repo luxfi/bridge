@@ -23,6 +23,7 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc --project tsconfig.cjs.json",
+    "prepare": "test -d dist || pnpm build",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "lat": "npm show @luxfi/threshold version",
