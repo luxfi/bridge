@@ -30,6 +30,12 @@
 // Read this with `pkg/bridge/src/app/lib/bridge-api.ts::serializeCosigner`
 // open — that's the source of truth for the wire shape this module accepts.
 
+import {
+  FireblocksSDK,
+  PeerType,
+  TransactionOperation,
+} from "fireblocks-sdk"
+
 import logger from "@/logger"
 
 // ────────────────────────────────────────────────────────────────────────
@@ -171,13 +177,22 @@ export function validateCosigners(raw: unknown): CosignerIntent[] {
  * the primary-signer mode and replace this stub with a KMS GET on the
  * paths above.
  */
+/** Normalise a public identifier for use as an env var suffix. POSIX
+ *  shells reject hyphens / dots in env var names, so we map every
+ *  non-alphanumeric character to underscore. Lossy by design — the env
+ *  var fallback is for local dev only; production uses KMS paths that
+ *  preserve the original public id verbatim. */
+function envSafe(s: string): string {
+  return s.toUpperCase().replace(/[^A-Z0-9]/g, "_")
+}
+
 export async function fetchCosignerSecret(
   intent: CosignerIntent,
 ): Promise<string> {
   // TEMPORARY — env-var fallback so local dev / tests can wire one tenant
   // without the KMS round-trip. Production MUST take the KMS branch.
   if (intent.kind === "utila") {
-    const envKey = `UTILA_COSIGNER_PEM__${intent.org_id.toUpperCase()}`
+    const envKey = `UTILA_COSIGNER_PEM__${envSafe(intent.org_id)}`
     const pem = process.env[envKey]
     if (!pem) {
       throw new Error(
@@ -186,7 +201,7 @@ export async function fetchCosignerSecret(
     }
     return pem
   }
-  const envKey = `FIREBLOCKS_COSIGNER_PEM__${intent.api_key.toUpperCase()}`
+  const envKey = `FIREBLOCKS_COSIGNER_PEM__${envSafe(intent.api_key)}`
   const pem = process.env[envKey]
   if (!pem) {
     throw new Error(
@@ -291,34 +306,147 @@ async function runUtila(
 }
 
 // ────────────────────────────────────────────────────────────────────────
-//  Fireblocks cosign — uses fireblocks-sdk (npm)
+//  Fireblocks cosign — real impl via fireblocks-sdk
 // ────────────────────────────────────────────────────────────────────────
+
+/**
+ * Polling cadence + ceiling for Fireblocks RAW-sign approval flow.
+ * Fireblocks transactions move through:
+ *   SUBMITTED → QUEUED → PENDING_AUTHORIZATION
+ *     → PENDING_SIGNATURE → COMPLETED        (happy path)
+ *     → REJECTED | CANCELLED | BLOCKED       (denied)
+ *     → FAILED | TIMEOUT                     (transient / config error)
+ *
+ * 60s ceiling matches the SDK-side mpc-session timeout default; long
+ * Fireblocks TAP workflows that exceed this are surfaced as `failed` so
+ * the bridge state machine can retry rather than hold a swap open
+ * indefinitely. The exact ceiling is overridable via env for tenants
+ * with slower approval SLAs. Read on each call rather than at module
+ * load so tests / config changes are picked up without a restart.
+ */
+const FIREBLOCKS_POLL_INTERVAL_MS = 1500
+function fireblocksPollTimeoutMs(): number {
+  return Number(process.env.FIREBLOCKS_COSIGNER_TIMEOUT_MS ?? 60_000)
+}
+
+/**
+ * Terminal Fireblocks statuses, partitioned by how we surface them to
+ * the bridge state machine. Anything in `complete` releases settlement;
+ * anything in `reject` fails the swap with a clear user-visible reason;
+ * anything in `transient` fails the swap but in a way that should be
+ * retryable at the operator's discretion.
+ *
+ * Note Fireblocks's enum is wide (some statuses are deprecated, some
+ * are AML-screening intermediates). We treat unknown statuses as
+ * non-terminal and keep polling — Fireblocks will eventually reach
+ * one of the values below or hit the timeout ceiling.
+ */
+const FB_STATUS_COMPLETE = new Set([
+  "COMPLETED",
+  "BROADCASTING", // tx accepted, on-chain; for RAW-sign this is effectively terminal
+  "CONFIRMING",
+])
+const FB_STATUS_REJECT = new Set(["REJECTED", "CANCELLED", "BLOCKED"])
+const FB_STATUS_TRANSIENT = new Set(["FAILED", "TIMEOUT"])
 
 async function runFireblocks(
   intent: FireblocksCosignerIntent,
-  _secretPem: string,
-  _opts: DispatchCosignersOptions,
+  secretPem: string,
+  opts: DispatchCosignersOptions,
 ): Promise<CosignResult> {
-  // TODO(#386):
-  //   0. `pnpm add fireblocks-sdk -F @luxbridge/server`
-  //   1. Build a Fireblocks SDK client:
-  //        new FireblocksSDK(_secretPem, intent.api_key, intent.api_host ?? "https://api.fireblocks.io")
-  //   2. Call `createTransaction({
-  //        operation: TransactionOperation.RAW,
-  //        source: { type: PeerType.VAULT_ACCOUNT, id: intent.vault_account_id },
-  //        extraParameters: { rawMessageData: { messages: [{ content: _opts.txHash }] } },
-  //      })` — Fireblocks raw-sign mode attests to the txHash.
-  //   3. Poll `getTransactionById` until terminal status:
-  //        - COMPLETED → approved (signature in tx.signedMessages[0].signature.fullSig)
-  //        - REJECTED  → rejected (reason in tx.subStatus)
-  //        - FAILED    → failed (reason in tx.subStatus)
-  //   4. Return CosignResult with externalId = tx.id.
-  logger.warn(
-    `[cosigners.fireblocks] STUB — would cosign swap via apiKey=${intent.api_key} vaultAccount=${intent.vault_account_id ?? "(default)"}`,
+  const client = new FireblocksSDK(
+    secretPem,
+    intent.api_key,
+    intent.api_host ?? "https://api.fireblocks.io",
   )
+
+  // RAW-sign mode: Fireblocks signs the raw txHash bytes without
+  // submitting an on-chain transfer. This is exactly what a layered
+  // cosigner is supposed to do — attest to "this exact tx hash is
+  // approved" without moving funds itself.
+  let created
+  try {
+    created = await client.createTransaction({
+      operation: TransactionOperation.RAW,
+      source: {
+        type: PeerType.VAULT_ACCOUNT,
+        id: intent.vault_account_id ?? "0",
+      },
+      note: `lux-bridge cosign swap=${opts.swapId}`,
+      extraParameters: {
+        rawMessageData: {
+          messages: [{ content: opts.txHash }],
+        },
+      },
+    })
+  } catch (err) {
+    return {
+      intent,
+      status: "failed",
+      reason: `fireblocks createTransaction failed: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
+
+  const txId = created.id
+  const timeoutMs = fireblocksPollTimeoutMs()
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() < deadline) {
+    let tx
+    try {
+      tx = await client.getTransactionById(txId)
+    } catch (err) {
+      // Transient transport error — log + keep polling until deadline.
+      logger.warn(
+        `[cosigners.fireblocks] getTransactionById transient error on tx=${txId}: ${err instanceof Error ? err.message : String(err)}`,
+      )
+      await sleep(FIREBLOCKS_POLL_INTERVAL_MS)
+      continue
+    }
+
+    if (FB_STATUS_COMPLETE.has(tx.status)) {
+      const sig = tx.signedMessages?.[0]?.signature?.fullSig
+      if (!sig) {
+        return {
+          intent,
+          status: "failed",
+          reason: `fireblocks tx ${txId} reached ${tx.status} but no signature in signedMessages[0]`,
+          externalId: txId,
+        }
+      }
+      return { intent, status: "approved", signature: sig, externalId: txId }
+    }
+
+    if (FB_STATUS_REJECT.has(tx.status)) {
+      return {
+        intent,
+        status: "rejected",
+        reason: `fireblocks status=${tx.status}${tx.subStatus ? ` subStatus=${tx.subStatus}` : ""}`,
+        externalId: txId,
+      }
+    }
+
+    if (FB_STATUS_TRANSIENT.has(tx.status)) {
+      return {
+        intent,
+        status: "failed",
+        reason: `fireblocks status=${tx.status}${tx.subStatus ? ` subStatus=${tx.subStatus}` : ""}`,
+        externalId: txId,
+      }
+    }
+
+    // Still in flight (SUBMITTED, QUEUED, PENDING_*, etc.) — wait.
+    await sleep(FIREBLOCKS_POLL_INTERVAL_MS)
+  }
+
   return {
     intent,
     status: "failed",
-    reason: "Fireblocks cosigner not implemented yet — see issue #386",
+    reason: `fireblocks tx ${txId} timed out after ${timeoutMs}ms; manual check via getTransactionById may still resolve`,
+    externalId: txId,
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
