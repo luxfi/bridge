@@ -1,0 +1,199 @@
+# Lux Explorer — single Go binary at ~/work/lux/explorer.
+#
+# Replaces the legacy Next.js app/explorer/ (@luxbridge/explorer). The new
+# binary embeds three Lux libraries via go:embed:
+#   - luxfi/indexer  →  EVM chain indexer
+#   - luxfi/graph    →  per-chain GraphQL engine
+#   - luxfi/explore  →  Next.js SPA frontend
+#
+# Routes (served from one process, see ~/work/lux/explorer/README.md):
+#   /                                    SPA (embedded, SPA-routing fallback)
+#   /envs.js                             Runtime window.ENV = {...}
+#   /healthz                             Service health
+#   /v1/indexer/{slug}/*                 Per-chain explorer REST API
+#   /v1/graph/{slug}/{subgraph}/graphql  Per-chain, per-subgraph GraphQL
+#   /v1/explorer/realtime                WebSocket realtime hub
+#   /v1/explorer/admin/chains[/{slug}]   Runtime registry CRUD
+#
+# Migration plan (issue #387):
+#   1. Deploy this manifest alongside the legacy app/explorer/ (different host).
+#   2. One-week QA soak — compare GraphQL responses against legacy.
+#   3. Flip bridge-explorer.lux.network ingress from legacy → this.
+#   4. Scale legacy to 0, hold for one-week rollback window.
+#   5. Delete app/explorer/ and this comment's "luxfi-explorer-v2" hostname.
+#
+# Status as of v1.1.12: DRAFT — not yet applied. New bridge dev confirms
+# image tag + chain config, applies via the standard kubectl flow.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: luxfi-explorer-chains
+  namespace: lux-bridge
+  labels:
+    app: luxfi-explorer
+data:
+  # Maps explorer slug → indexer config. The Go binary reads this at
+  # startup. See ~/work/lux/explorer/chains.example.yaml for the schema.
+  chains.yaml: |
+    chains:
+      - slug: lux
+        name: Lux Network
+        chain_id: 96369
+        rpc_url: http://lux-c-chain:9650/ext/bc/C/rpc
+        subgraphs:
+          - name: bridge
+            schema: bridge
+      - slug: ethereum
+        name: Ethereum Mainnet
+        chain_id: 1
+        rpc_url: ${ETHEREUM_RPC_URL}
+        subgraphs:
+          - name: bridge
+            schema: bridge
+      # Add chains here — the registry is hot-reloadable via the
+      # /v1/explorer/admin/chains API; this ConfigMap is for the
+      # cold-start set.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: luxfi-explorer
+  namespace: lux-bridge
+  labels:
+    app: luxfi-explorer
+spec:
+  # Single-writer at the start. Scale to 2+ replicas after confirming
+  # the embedded index store (SQLite + ZapDB per docs) handles read
+  # replication cleanly; the bridge backend doesn't depend on it being
+  # multi-writer.
+  replicas: 1
+  strategy:
+    # Recreate because the embedded chain index sits on a single PVC.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: luxfi-explorer
+  template:
+    metadata:
+      labels:
+        app: luxfi-explorer
+    spec:
+      containers:
+        - name: explorer
+          # TODO(#387): pin to a specific semver once the luxfi/explorer
+          # release cadence stabilises. `:latest` is fine for the soak
+          # window but switch to `:vX.Y.Z` before the legacy delete step.
+          image: ghcr.io/luxfi/explorer:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: EXPLORER_BIND
+              value: ":3000"
+            - name: EXPLORER_CHAINS_CONFIG
+              value: /etc/luxfi-explorer/chains.yaml
+            - name: EXPLORER_DATA_DIR
+              value: /var/lib/luxfi-explorer
+            # Per-chain RPC URLs injected via env so secrets stay out of
+            # the ConfigMap. The chains.yaml above references ${ENV}.
+            - name: ETHEREUM_RPC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: luxfi-explorer-secrets
+                  key: ethereum_rpc_url
+                  optional: true
+          volumeMounts:
+            - name: chains-config
+              mountPath: /etc/luxfi-explorer
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/luxfi-explorer
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+      volumes:
+        - name: chains-config
+          configMap:
+            name: luxfi-explorer-chains
+        - name: data
+          persistentVolumeClaim:
+            claimName: luxfi-explorer-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: luxfi-explorer-data
+  namespace: lux-bridge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: luxfi-explorer
+  namespace: lux-bridge
+  labels:
+    app: luxfi-explorer
+spec:
+  type: ClusterIP
+  selector:
+    app: luxfi-explorer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+
+---
+# Side-by-side host during the soak. Cut over bridge-explorer.lux.network
+# to this Service after one-week QA against the legacy app/explorer/.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: luxfi-explorer
+  namespace: lux-bridge
+  labels:
+    app: luxfi-explorer
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - bridge-explorer-v2.lux.network
+      secretName: luxfi-explorer-tls
+  rules:
+    - host: bridge-explorer-v2.lux.network
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: luxfi-explorer
+                port:
+                  number: 80
