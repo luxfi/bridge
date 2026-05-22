@@ -37,5 +37,11 @@ compose*.yml
 config.yaml
 config.kms.yaml
 scripts
+# Allow the one script that root package.json's postinstall hook needs.
+# patch-hanzogui-exports.cjs is a workaround for the broken @hanzo/gui@7.0.0
+# upstream publish — pnpm install fails inside the container without it. See
+# the script's header for the full explanation + the "remove this file"
+# condition.
+!scripts/patch-hanzogui-exports.cjs
 check-ci-status.sh
 push-and-release.sh
