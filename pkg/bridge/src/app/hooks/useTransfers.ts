@@ -26,6 +26,7 @@ import {
   chainIdToInternalName,
   createSwap,
   getSwap,
+  type CosignerIntent,
   type ServerSwap,
 } from '../lib/bridge-api'
 import { runMpcSignSession, type MpcProgress } from '../lib/mpc-session'
@@ -167,7 +168,10 @@ export function useTransfers(): TransferState {
         }
 
         // Kick off MPC session on first entry into the signing phase.
-        if (phase === 'signing' && !mpcStarted && cfg.mpc) {
+        // `publicUrl` is required for the native threshold sign; tenants
+        // running pure-external custody (utila/fireblocks only) skip this
+        // — the backend assembles cosign without a client-side session.
+        if (phase === 'signing' && !mpcStarted && cfg.mpc?.publicUrl) {
           mpcStarted = true
           // The bridge backend supplies the messageHash + keyId in the swap
           // record. We don't fail the transfer if those fields are absent;
@@ -263,6 +267,30 @@ export function useTransfers(): TransferState {
         return x
       }
 
+      // Layered cosigners — when tenants configure `mpc.utila` or
+      // `mpc.fireblocks` (or both) the SDK forwards PUBLIC identifiers
+      // only; the bridge backend pairs them with secret material in KMS.
+      const cosigners: CosignerIntent[] = []
+      if (cfg.mpc?.utila) {
+        const u = cfg.mpc.utila
+        cosigners.push({
+          kind: 'utila',
+          orgId: u.orgId,
+          clientId: u.clientId,
+          ...(u.apiHost ? { apiHost: u.apiHost } : {}),
+          ...(u.vaultId ? { vaultId: u.vaultId } : {}),
+        })
+      }
+      if (cfg.mpc?.fireblocks) {
+        const f = cfg.mpc.fireblocks
+        cosigners.push({
+          kind: 'fireblocks',
+          apiKey: f.apiKey,
+          ...(f.apiHost ? { apiHost: f.apiHost } : {}),
+          ...(f.vaultAccountId ? { vaultAccountId: f.vaultAccountId } : {}),
+        })
+      }
+
       try {
         const swap = await createSwap(
           cfg.apiHost,
@@ -277,6 +305,7 @@ export function useTransfers(): TransferState {
             useDepositAddress: false,
             useTeleporter: fromChain.family === 'lux' || toChain.family === 'lux',
             appName: input.appName ?? cfg.brand?.name ?? '@luxfi/bridge',
+            ...(cosigners.length > 0 ? { cosigners } : {}),
           },
           { idempotencyKey: id, signal: controller.signal },
         )
@@ -290,7 +319,7 @@ export function useTransfers(): TransferState {
 
       return x
     },
-    [account.address, cfg.apiHost, cfg.brand?.name, cfg.env, patch, subscribe],
+    [account.address, cfg.apiHost, cfg.brand?.name, cfg.env, cfg.mpc?.utila, cfg.mpc?.fireblocks, patch, subscribe],
   )
 
   const clear = useCallback(() => {
