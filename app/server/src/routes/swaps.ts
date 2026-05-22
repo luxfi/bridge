@@ -2,17 +2,18 @@ import { Router, Request, Response } from "express"
 import { check, validationResult, ValidationError, Result } from "express-validator"
 
 import { completeSwapWithMpc, getSigFromMpcOracleNetwork } from "@/domain/mpc-modern"
-import { 
-  handleSwapCreation, 
-  handlerCheckDeposit, 
-  handlerGetSwap, 
-  handlerGetSwaps, 
-  handlerSwapExpire, 
-  handlerUpdateMpcSignAction, 
-  handlerUpdatePayoutAction, 
-  handlerUpdateUserTransferAction, 
-  handlerUtilaPayoutAction 
+import {
+  handleSwapCreation,
+  handlerCheckDeposit,
+  handlerGetSwap,
+  handlerGetSwaps,
+  handlerSwapExpire,
+  handlerUpdateMpcSignAction,
+  handlerUpdatePayoutAction,
+  handlerUpdateUserTransferAction,
+  handlerUtilaPayoutAction
 } from "@/domain/swaps"
+import { BadCosignerIntent, validateCosigners } from "@/domain/cosigners"
 
 const router: Router = Router()
 
@@ -74,9 +75,22 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() })
     }
+    // Validate optional layered cosigners before touching the DB.
+    // Rejects secret-like fields up front so any consumer that mis-forwards
+    // a private key fails loudly here rather than getting persisted.
+    let cosigners
+    try {
+      cosigners = validateCosigners(req.body?.cosigners)
+    } catch (err) {
+      if (err instanceof BadCosignerIntent) {
+        return res.status(400).json({ error: err.message })
+      }
+      throw err
+    }
     try {
       const result = await handleSwapCreation({
-        ...req.body
+        ...req.body,
+        cosigners,
       })
       res.status(200).json({ data: { ...result } })
     } catch (error: any) {
