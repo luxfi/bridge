@@ -1,7 +1,7 @@
 {
   "name": "@luxfi/bridge",
-  "version": "1.0.1",
-  "description": "Lux Bridge SDK — embed bridge.lux.network into any host application",
+  "version": "1.0.3",
+  "description": "Lux Bridge SDK \u2014 embed bridge.lux.network into any host application",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
@@ -47,16 +47,21 @@
     "pub": "npm publish"
   },
   "dependencies": {
-    "@luxfi/brand": "^1.0.0",
     "@hanzo/gui": "^7.0.0",
-    "@hanzogui/core": "^7.0.0",
-    "@hanzogui/helpers": "^7.0.0",
-    "@hanzogui/constants": "^7.0.0",
-    "@hanzogui/themes": "^7.0.0",
     "@hanzogui/animate": "^7.0.0",
     "@hanzogui/animate-presence": "^7.0.0",
     "@hanzogui/button": "^7.0.0",
-    "@hanzogui/input": "^7.0.0"
+    "@hanzogui/config-default": "^7.0.0",
+    "@hanzogui/constants": "^7.0.0",
+    "@hanzogui/core": "^7.0.0",
+    "@hanzogui/helpers": "^7.0.0",
+    "@hanzogui/input": "^7.0.0",
+    "@hanzogui/themes": "^7.0.0",
+    "@luxfi/brand": "^1.0.0",
+    "@luxfi/threshold": "workspace:*",
+    "@tanstack/react-query": "5.90.20",
+    "viem": "2.30.5",
+    "wagmi": "2.15.5"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -84,31 +89,76 @@
     "@hanzogui/sheet": "^7.0.0"
   },
   "peerDependenciesMeta": {
-    "@hanzogui/popover": { "optional": true },
-    "@hanzogui/select": { "optional": true },
-    "@hanzogui/dialog": { "optional": true },
-    "@hanzogui/card": { "optional": true },
-    "@hanzogui/text": { "optional": true },
-    "@hanzogui/stacks": { "optional": true },
-    "@hanzogui/spinner": { "optional": true },
-    "@hanzogui/toast": { "optional": true },
-    "@hanzogui/tabs": { "optional": true },
-    "@hanzogui/label": { "optional": true },
-    "@hanzogui/form": { "optional": true },
-    "@hanzogui/list-item": { "optional": true },
-    "@hanzogui/separator": { "optional": true },
-    "@hanzogui/tooltip": { "optional": true },
-    "@hanzogui/avatar": { "optional": true },
-    "@hanzogui/image": { "optional": true },
-    "@hanzogui/group": { "optional": true },
-    "@hanzogui/progress": { "optional": true },
-    "@hanzogui/visually-hidden": { "optional": true },
-    "@hanzogui/portal": { "optional": true },
-    "@hanzogui/sheet": { "optional": true }
+    "@hanzogui/popover": {
+      "optional": true
+    },
+    "@hanzogui/select": {
+      "optional": true
+    },
+    "@hanzogui/dialog": {
+      "optional": true
+    },
+    "@hanzogui/card": {
+      "optional": true
+    },
+    "@hanzogui/text": {
+      "optional": true
+    },
+    "@hanzogui/stacks": {
+      "optional": true
+    },
+    "@hanzogui/spinner": {
+      "optional": true
+    },
+    "@hanzogui/toast": {
+      "optional": true
+    },
+    "@hanzogui/tabs": {
+      "optional": true
+    },
+    "@hanzogui/label": {
+      "optional": true
+    },
+    "@hanzogui/form": {
+      "optional": true
+    },
+    "@hanzogui/list-item": {
+      "optional": true
+    },
+    "@hanzogui/separator": {
+      "optional": true
+    },
+    "@hanzogui/tooltip": {
+      "optional": true
+    },
+    "@hanzogui/avatar": {
+      "optional": true
+    },
+    "@hanzogui/image": {
+      "optional": true
+    },
+    "@hanzogui/group": {
+      "optional": true
+    },
+    "@hanzogui/progress": {
+      "optional": true
+    },
+    "@hanzogui/visually-hidden": {
+      "optional": true
+    },
+    "@hanzogui/portal": {
+      "optional": true
+    },
+    "@hanzogui/sheet": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "happy-dom": "^20.9.0",
+    "jsdom": "^29.1.1",
     "typescript": "catalog:",
     "vitest": "^2.1.0"
   }
