@@ -36,7 +36,12 @@ declare global {
   }
 }
 
-const luxBrand = luxBrandJson.brand
+// Pick only the fields we actually consume, so the bundle doesn't ship the
+// full brand block (legalEntity, complianceEmail, social handles, the brand
+// chain registry, etc.). Cuts bundle bloat and prevents accidental tenant-
+// metadata leakage if a future SDK feature ever reads `window`-attached
+// brand state.
+const { shortName, primaryColor, supportEmail } = luxBrandJson.brand
 
 const runtime: Partial<Record<string, string>> =
   (typeof window !== 'undefined' && window.__ENV) || {}
@@ -56,12 +61,10 @@ const env = (key: string, fallback?: string): string | undefined => {
 
 const luxLogoDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(getColorSVG())}`
 
-const fallbackApiHost = luxBrand.appDomain
-  ? `https://api.bridge.${luxBrand.appDomain}`
-  : 'https://api.bridge.lux.network'
-const fallbackDocsUrl = luxBrand.docsDomain
-  ? `https://${luxBrand.docsDomain}/bridge`
-  : 'https://docs.lux.network/bridge'
+// Bridge endpoints belong to the bridge subdomain — independent of
+// @luxfi/brand's appDomain (which is "lux.exchange" for the exchange).
+const fallbackApiHost = 'https://api.bridge.lux.network'
+const fallbackDocsUrl = 'https://docs.lux.network/bridge'
 
 export const bridgeConfig: BridgeConfig = {
   apiHost: env('BRIDGE_API_HOST', fallbackApiHost)!,
@@ -69,12 +72,16 @@ export const bridgeConfig: BridgeConfig = {
   clientId: env('BRIDGE_CLIENT_ID'),
   iamOrg: env('BRIDGE_IAM_ORG', 'lux'),
   brand: {
-    name: `${luxBrand.shortName ?? 'Lux'} Bridge`,
+    name: `${shortName ?? 'Lux'} Bridge`,
     logoUrl: env('BRIDGE_LOGO_URL') || luxLogoDataUrl,
-    primaryColor: luxBrand.primaryColor ?? '#000000',
-    secondaryColor:
-      luxBrand.theme?.dark?.accent1 ?? luxBrand.theme?.light?.accent1,
-    supportEmail: luxBrand.supportEmail ?? 'support@lux.network',
+    primaryColor: primaryColor ?? '#000000',
+    // secondaryColor intentionally omitted. brand.json's theme.{light,dark}.accent1
+    // is a per-theme foreground (white on dark / black on light), NOT a brand
+    // accent — wiring it to --brand-secondary breaks hover-color on the
+    // opposite-theme surface. Fall back to the SDK's compiled default
+    // (`var(--brand-secondary, #7a9ff5)` in pkg/bridge/src/app/styles/theme.css)
+    // until @luxfi/brand exposes a real brand-accent field.
+    supportEmail: supportEmail ?? 'support@lux.network',
     docsUrl: fallbackDocsUrl,
   },
 }
