@@ -49,6 +49,7 @@
   "dependencies": {
     "@luxfi/brand": "^1.0.0",
     "@hanzo/gui": "^7.0.0",
+    "@hanzogui/config-default": "^7.0.0",
     "@hanzogui/core": "^7.0.0",
     "@hanzogui/helpers": "^7.0.0",
     "@hanzogui/constants": "^7.0.0",
