@@ -19,11 +19,24 @@
 // page). The bridge UI is now inlined under `./app/`, so there is no
 // runtime dependency on any sibling workspace package.
 
-import { useEffect, type FC } from 'react'
+import { useEffect, type FC, type ReactNode } from 'react'
+// @hanzo/gui source exports `GuiProvider` (after the monorepo's postinstall
+// rename) but its shipped .d.ts files still carry the upstream
+// `HanzoguiProvider` name. We pull the runtime symbol directly from the
+// untyped re-export module to avoid forcing every consumer of @luxfi/bridge
+// to also ship the rename patch.
+import * as gui from '@hanzo/gui'
 
 import { applyBrandMetadata, setConfig } from './config'
 import type { BridgeConfig } from './types'
 import { BridgeApp } from './app/BridgeApp'
+
+const GuiProvider: FC<{
+  children: ReactNode
+  defaultTheme?: 'light' | 'dark'
+}> = (gui as unknown as {
+  GuiProvider: FC<{ children: ReactNode; defaultTheme?: 'light' | 'dark' }>
+}).GuiProvider
 
 export interface BridgeProps {
   /** Runtime config. Seeded into the SDK config cache on first render. */
@@ -41,7 +54,16 @@ export const Bridge: FC<BridgeProps> = ({ config }) => {
     applyBrandMetadata(config.brand)
   }, [config.brand])
 
-  return <BridgeApp />
+  // `GuiProvider` is required for @hanzo/gui's `Button` / `Input` primitives
+  // (used in SwapForm, WalletConnect, AssetInput) to find their theme. The
+  // SDK owns this wrapper so consumers don't have to know it exists — the
+  // runtime config is configured separately by `mountBridge` via
+  // `createGui(getDefaultGuiConfig())`.
+  return (
+    <GuiProvider defaultTheme="dark">
+      <BridgeApp />
+    </GuiProvider>
+  )
 }
 
 export default Bridge
