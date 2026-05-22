@@ -1,0 +1,20 @@
+{
+  "name": "@luxbridge/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright smoke + multi-tenant specs for bridge.lux.network and downstream tenants (Zoo, etc).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke.spec.ts",
+    "test:multi-tenant": "playwright test tests/multi-tenant.spec.ts",
+    "test:headed": "playwright test --headed",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "20.14.15",
+    "typescript": "5.7.2"
+  }
+}
