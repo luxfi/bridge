@@ -19,7 +19,8 @@ const header: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '14px 20px',
+  gap: 10,
+  padding: 'var(--bridge-header-padding-y) var(--bridge-header-padding-x)',
   borderBottom: '1px solid var(--bridge-border)',
   background: 'var(--bridge-bg)',
   position: 'sticky',
@@ -31,6 +32,8 @@ const brand: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 10,
+  minWidth: 0,
+  flex: '0 1 auto',
 }
 
 const brandLogo: CSSProperties = {
@@ -48,8 +51,11 @@ const brandLogo: CSSProperties = {
 }
 
 const brandName: CSSProperties = {
-  fontSize: 15,
+  fontSize: 'var(--bridge-brand-name-size)',
   fontWeight: 600,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
 }
 
 const chipRow: CSSProperties = {
@@ -57,9 +63,11 @@ const chipRow: CSSProperties = {
   alignItems: 'center',
   gap: 6,
   marginLeft: 8,
+  minWidth: 0,
 }
 
 const chipBase: CSSProperties = {
+  display: 'var(--bridge-chip-display)',
   fontSize: 10,
   fontWeight: 600,
   letterSpacing: '0.05em',
@@ -69,6 +77,7 @@ const chipBase: CSSProperties = {
   border: '1px solid var(--bridge-border)',
   color: 'var(--bridge-text-muted)',
   background: 'var(--bridge-bg-input)',
+  whiteSpace: 'nowrap',
 }
 
 const envMainnet: CSSProperties = {
@@ -85,10 +94,19 @@ const envTestnet: CSSProperties = {
   background: 'rgba(91, 141, 239, 0.08)',
 }
 
+// The MPC protocol chip is secondary information (ops + dev focus) — hide
+// it on phone-sized viewports to free header width for the wallet pill.
+// Driven by --bridge-mpc-chip-display so theme.css owns the breakpoint.
+const mpcChip: CSSProperties = {
+  ...chipBase,
+  display: 'var(--bridge-mpc-chip-display)' as CSSProperties['display'],
+}
+
 const right: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 10,
+  flex: '0 0 auto',
 }
 
 export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
@@ -119,7 +137,7 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
           <span style={envStyle} title={`Bridge environment: ${cfg.env}`}>
             {cfg.env}
           </span>
-          <span style={chipBase} title={`MPC threshold protocol: ${protocol}`}>
+          <span style={mpcChip} title={`MPC threshold protocol: ${protocol}`}>
             mpc · {protocol}
           </span>
         </div>
