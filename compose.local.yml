@@ -30,7 +30,7 @@ services:
       - POSTGRES_PASSWORD=${CASDOOR_DB_PASSWORD:-changeme}
       - POSTGRES_DB=casdoor
     volumes:
-      - lux-id-db-data:/var/lib/postgresql/data
+      - lux-id-db-data:/var/lib/postgresql
     ports:
       - "5434:5432"
     networks:
@@ -106,7 +106,7 @@ services:
       - POSTGRES_PASSWORD=bridge
       - POSTGRES_DB=bridge
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5433:5432"
