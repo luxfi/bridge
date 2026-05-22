@@ -5,6 +5,13 @@
 // `app/server/src/routes/quote.ts`), debounced 300ms so typing doesn't
 // flood the backend.
 //
+// Selection state is stored as IDs (`fromChainId`, `fromAssetId`, …) and
+// the actual Chain / Asset objects are looked up on every render from the
+// `useNetworks()` registry. This means: the chain list can change under us
+// (DEFAULT_CHAINS → API response → manual refetch) and the selection
+// survives — only the resolved objects change. Without this, a chain
+// stored by reference would silently disappear when the registry refreshed.
+//
 // Trust model:
 //   - The quote is *advisory* — the user signs the final amount when they
 //     submit the transfer. The server is not trusted to set the price; the
@@ -16,9 +23,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { getConfig } from '../../config'
-import { DEFAULT_ASSETS, type Asset, assetsForChain } from '../lib/assets'
-import { BridgeApiError, chainIdToInternalName, fetchQuote } from '../lib/bridge-api'
-import { DEFAULT_CHAINS, type Chain, findChain } from '../lib/chains'
+import { type Asset, assetsForChain } from '../lib/assets'
+import { BridgeApiError, fetchQuote } from '../lib/bridge-api'
+import { type Chain, findChain } from '../lib/chains'
+import { useNetworks } from './useNetworks'
 
 export interface Quote {
   /** Amount the user receives on the destination chain. */
@@ -48,11 +56,21 @@ export interface SwapState {
   quoting: boolean
   /** Last-fetched quote error, when applicable. */
   quoteError: string | null
+  /**
+   * Whether the quote / swap should include destination-chain gas top-up
+   * ("refuel"). The server treats this as a hint that the user wants to
+   * receive a small amount of native gas on the destination chain alongside
+   * the bridged asset — useful when the user has zero balance there.
+   */
+  refuel: boolean
+  /** True until useNetworks() has populated the registry from the API. */
+  networksLoading: boolean
   setFromChain: (c: Chain) => void
   setToChain: (c: Chain) => void
   setFromAsset: (a: Asset) => void
   setToAsset: (a: Asset) => void
   setAmount: (s: string) => void
+  setRefuel: (b: boolean) => void
   reverse: () => void
   fromAssetOptions: Asset[]
   toAssetOptions: Asset[]
@@ -75,72 +93,159 @@ function formatEta(raw: string): string {
   return '<1 min'
 }
 
+/**
+ * Pick a sensible default chain ID — Lux first (the canonical source),
+ * Ethereum second (the canonical destination), else the first chain in the
+ * registry. Falls back to a benign string when the registry is empty so
+ * upstream lookups don't throw.
+ */
+function pickDefaultId(chains: Chain[], preferredId: string): string {
+  if (findChain(chains, preferredId)) return preferredId
+  return chains[0]?.id ?? preferredId
+}
+
 export function useSwap(): SwapState {
   const cfg = getConfig()
+  const { chains, assets, isLoading: networksLoading } = useNetworks()
 
-  const chains = DEFAULT_CHAINS
-  const assets = DEFAULT_ASSETS
+  // Selection state is stored as IDs, not full Chain/Asset objects. The
+  // resolved objects are derived via useMemo over the registry so they
+  // stay fresh even when DEFAULT_CHAINS swaps in for the API response.
+  const [fromChainId, setFromChainId] = useState<string>(() =>
+    pickDefaultId(chains, 'lux:96369'),
+  )
+  const [toChainId, setToChainId] = useState<string>(() =>
+    pickDefaultId(chains, 'evm:1'),
+  )
 
-  const initFrom = findChain(chains, 'lux:96369') ?? chains[0]
-  const initTo = findChain(chains, 'evm:1') ?? chains[1] ?? chains[0]
-  if (!initFrom || !initTo) {
-    throw new Error('useSwap: DEFAULT_CHAINS is empty')
-  }
+  // Initial asset choice — first asset on each chain. Same ID-based pattern.
+  const [fromAssetId, setFromAssetId] = useState<string>(() =>
+    assetsForChain(assets, fromChainId)[0]?.id ?? '',
+  )
+  const [toAssetId, setToAssetId] = useState<string>(() =>
+    assetsForChain(assets, toChainId)[0]?.id ?? '',
+  )
 
-  const [fromChain, setFromChain] = useState<Chain>(initFrom)
-  const [toChain, setToChain] = useState<Chain>(initTo)
-  const initFromAsset = assetsForChain(assets, initFrom.id)[0]
-  const initToAsset = assetsForChain(assets, initTo.id)[0]
-  if (!initFromAsset || !initToAsset) {
-    throw new Error('useSwap: DEFAULT_ASSETS missing entries for default chains')
-  }
-  const [fromAsset, setFromAsset] = useState<Asset>(initFromAsset)
-  const [toAsset, setToAsset] = useState<Asset>(initToAsset)
   const [amount, setAmount] = useState<string>('')
+  const [refuel, setRefuel] = useState<boolean>(false)
 
   const [quote, setQuote] = useState<Quote | null>(null)
   const [quoting, setQuoting] = useState(false)
   const [quoteError, setQuoteError] = useState<string | null>(null)
 
-  const fromAssetOptions = useMemo(
+  // Resolved (Chain, Asset) objects from the current registry.
+  const fromChain = useMemo<Chain>(
+    () =>
+      findChain(chains, fromChainId) ??
+      chains[0] ?? {
+        id: fromChainId,
+        internalName: fromChainId,
+        name: fromChainId,
+        symbol: '',
+        decimals: 18,
+        family: 'evm',
+      },
+    [chains, fromChainId],
+  )
+  const toChain = useMemo<Chain>(
+    () =>
+      findChain(chains, toChainId) ??
+      chains[1] ??
+      chains[0] ??
+      fromChain,
+    [chains, toChainId, fromChain],
+  )
+
+  const fromAssetOptions = useMemo<Asset[]>(
     () => assetsForChain(assets, fromChain.id),
     [assets, fromChain.id],
   )
-  const toAssetOptions = useMemo(
+  const toAssetOptions = useMemo<Asset[]>(
     () => assetsForChain(assets, toChain.id),
     [assets, toChain.id],
   )
 
-  // Keep selected asset in sync with chain change.
-  const setFromChainSafe = useCallback(
-    (c: Chain) => {
-      setFromChain(c)
-      const opts = assetsForChain(assets, c.id)
-      const first = opts[0]
-      if (first && opts.findIndex((a) => a.id === fromAsset.id) < 0) {
-        setFromAsset(first)
+  const fromAsset = useMemo<Asset>(() => {
+    const exact = fromAssetOptions.find((a) => a.id === fromAssetId)
+    if (exact) return exact
+    return (
+      fromAssetOptions[0] ?? {
+        id: fromAssetId || `${fromChain.id}:?`,
+        symbol: fromChain.symbol,
+        name: fromChain.symbol,
+        chainId: fromChain.id,
+        decimals: fromChain.decimals,
       }
-    },
-    [assets, fromAsset.id],
-  )
-  const setToChainSafe = useCallback(
-    (c: Chain) => {
-      setToChain(c)
-      const opts = assetsForChain(assets, c.id)
-      const first = opts[0]
-      if (first && opts.findIndex((a) => a.id === toAsset.id) < 0) {
-        setToAsset(first)
+    )
+  }, [fromAssetOptions, fromAssetId, fromChain])
+
+  const toAsset = useMemo<Asset>(() => {
+    const exact = toAssetOptions.find((a) => a.id === toAssetId)
+    if (exact) return exact
+    return (
+      toAssetOptions[0] ?? {
+        id: toAssetId || `${toChain.id}:?`,
+        symbol: toChain.symbol,
+        name: toChain.symbol,
+        chainId: toChain.id,
+        decimals: toChain.decimals,
       }
-    },
-    [assets, toAsset.id],
-  )
+    )
+  }, [toAssetOptions, toAssetId, toChain])
+
+  // When the registry first resolves (DEFAULT → API) and an entry's ID
+  // doesn't exist in the new list, snap to the first available so we don't
+  // leave the picker showing a stale selection. This only fires on real
+  // registry changes (chains.length, not chain reference identity).
+  useEffect(() => {
+    if (chains.length === 0) return
+    if (!findChain(chains, fromChainId)) {
+      const next = pickDefaultId(chains, 'lux:96369')
+      if (next !== fromChainId) setFromChainId(next)
+    }
+    if (!findChain(chains, toChainId)) {
+      const next = pickDefaultId(chains, 'evm:1')
+      if (next !== toChainId) setToChainId(next)
+    }
+  }, [chains, fromChainId, toChainId])
+
+  // When fromChain's asset options change and the current selection isn't
+  // valid, drop to the first option. Same on toChain. (Asset ID embeds the
+  // chain ID, so a chain swap always invalidates the asset selection.)
+  useEffect(() => {
+    if (fromAssetOptions.length === 0) return
+    if (!fromAssetOptions.some((a) => a.id === fromAssetId)) {
+      const first = fromAssetOptions[0]
+      if (first) setFromAssetId(first.id)
+    }
+  }, [fromAssetOptions, fromAssetId])
+  useEffect(() => {
+    if (toAssetOptions.length === 0) return
+    if (!toAssetOptions.some((a) => a.id === toAssetId)) {
+      const first = toAssetOptions[0]
+      if (first) setToAssetId(first.id)
+    }
+  }, [toAssetOptions, toAssetId])
+
+  const setFromChainSafe = useCallback((c: Chain) => {
+    setFromChainId(c.id)
+  }, [])
+  const setToChainSafe = useCallback((c: Chain) => {
+    setToChainId(c.id)
+  }, [])
+  const setFromAssetSafe = useCallback((a: Asset) => {
+    setFromAssetId(a.id)
+  }, [])
+  const setToAssetSafe = useCallback((a: Asset) => {
+    setToAssetId(a.id)
+  }, [])
 
   const reverse = useCallback(() => {
-    setFromChain(toChain)
-    setToChain(fromChain)
-    setFromAsset(toAsset)
-    setToAsset(fromAsset)
-  }, [fromChain, toChain, fromAsset, toAsset])
+    setFromChainId(toChainId)
+    setToChainId(fromChainId)
+    setFromAssetId(toAssetId)
+    setToAssetId(fromAssetId)
+  }, [fromChainId, toChainId, fromAssetId, toAssetId])
 
   // ─── Quote effect ────────────────────────────────────────────────────
   // Debounced fetch. Cleanup aborts the in-flight request so rapid input
@@ -163,12 +268,12 @@ export function useSwap(): SwapState {
       return
     }
 
-    const sourceNetwork = chainIdToInternalName(fromChain.id, cfg.env)
-    const destinationNetwork = chainIdToInternalName(toChain.id, cfg.env)
+    const sourceNetwork = fromChain.internalName
+    const destinationNetwork = toChain.internalName
     if (!sourceNetwork || !destinationNetwork) {
-      // Unsupported chain pair on this env — clear quote, surface error.
+      // Chain still resolving (registry not yet loaded) or missing
+      // internalName field — quietly back off and let the next render retry.
       setQuote(null)
-      setQuoteError('Unsupported chain pair for current environment')
       setQuoting(false)
       return
     }
@@ -188,6 +293,7 @@ export function useSwap(): SwapState {
           destinationNetwork,
           destinationToken: toAsset.symbol,
           amount: n,
+          refuel,
         },
         ctl.signal,
       )
@@ -230,7 +336,19 @@ export function useSwap(): SwapState {
       // tearing down the in-flight request when React fires unrelated
       // re-renders (e.g. parent state changes that don't touch our deps).
     }
-  }, [amount, fromChain.id, toChain.id, fromAsset.id, toAsset.id, fromAsset.symbol, toAsset.symbol, cfg.apiHost, cfg.env])
+  }, [
+    amount,
+    refuel,
+    fromChain.id,
+    toChain.id,
+    fromChain.internalName,
+    toChain.internalName,
+    fromAsset.id,
+    toAsset.id,
+    fromAsset.symbol,
+    toAsset.symbol,
+    cfg.apiHost,
+  ])
 
   return {
     chains,
@@ -243,11 +361,14 @@ export function useSwap(): SwapState {
     quote,
     quoting,
     quoteError,
+    refuel,
+    networksLoading,
     setFromChain: setFromChainSafe,
     setToChain: setToChainSafe,
-    setFromAsset,
-    setToAsset,
+    setFromAsset: setFromAssetSafe,
+    setToAsset: setToAssetSafe,
     setAmount,
+    setRefuel,
     reverse,
     fromAssetOptions,
     toAssetOptions,
