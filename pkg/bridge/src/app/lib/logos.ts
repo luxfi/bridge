@@ -81,6 +81,49 @@ const XRP_SVG = svg(
   '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M22.5 9.5h2.2l-4.6 4.7c-2.3 2.3-6 2.3-8.2 0L7.3 9.5h2.2l3.5 3.5c1.7 1.7 4.5 1.7 6.1 0l3.4-3.5zM7.3 22.5l4.6-4.7c2.3-2.3 6-2.3 8.2 0l4.6 4.7h-2.2l-3.5-3.5c-1.7-1.7-4.5-1.7-6.1 0l-3.4 3.5H7.3z" fill="#fff"/></svg>',
 )
 
+// Round 2: bundled marks for the chains the API exposes that we didn't ship
+// in the initial set. Letter-glyphs in brand-coloured circles — same visual
+// language as BTC/BNB/AVAX above. Production CDN URLs (cdn.lux.network) all
+// 522 for these chains so the bundled fallback is the only thing that
+// renders today; if/when the CDN comes back, the mapper still prefers
+// these (CHAIN_LOGOS lookup wins over the API URL).
+
+const ZOO_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#2e7d32"/><text x="16" y="22" font-family="Arial Black, sans-serif" font-weight="900" font-size="16" fill="#fff" text-anchor="middle">Z</text></svg>',
+)
+
+const CELO_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#fbcc5c"/><rect x="8" y="8" width="12" height="12" stroke="#000" stroke-width="2.4" fill="none"/><rect x="12" y="12" width="12" height="12" stroke="#000" stroke-width="2.4" fill="none"/></svg>',
+)
+
+const GNO_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#133629"/><circle cx="16" cy="16" r="6" fill="none" stroke="#fff" stroke-width="2"/><circle cx="13" cy="14" r="1.4" fill="#fff"/><circle cx="19" cy="14" r="1.4" fill="#fff"/></svg>',
+)
+
+const FTM_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#1969ff"/><path d="M16.5 7l6 3.5v11l-6 3.5-6-3.5v-11l6-3.5zm-4.5 5.6v6.8l4.5 2.6V8L12 11.6z" fill="#fff" fill-rule="evenodd"/></svg>',
+)
+
+const AURORA_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="aurg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#70d44b"/><stop offset="1" stop-color="#3aa653"/></linearGradient></defs><circle cx="16" cy="16" r="16" fill="url(#aurg)"/><path d="M16 8l5 12h-2.5l-1-2.5h-3l-1 2.5H11L16 8zm-.7 7.5h1.4L16 12.5l-.7 3z" fill="#fff"/></svg>',
+)
+
+const ZORA_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="zorag" cx=".5" cy=".5" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#ffd166"/><stop offset=".7" stop-color="#ef476f"/><stop offset="1" stop-color="#7209b7"/></radialGradient></defs><circle cx="16" cy="16" r="16" fill="url(#zorag)"/></svg>',
+)
+
+const BLAST_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#fcfc03"/><text x="16" y="22" font-family="Arial Black, sans-serif" font-weight="900" font-size="16" fill="#000" text-anchor="middle">B</text></svg>',
+)
+
+const LINEA_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#000"/><path d="M10 9h3v11h9v3H10V9z" fill="#61dfff"/></svg>',
+)
+
+const XDAI_SVG = svg(
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#133629"/><text x="16" y="22" font-family="Arial, sans-serif" font-weight="700" font-size="12" fill="#fff" text-anchor="middle">xDAI</text></svg>',
+)
+
 export const CHAIN_LOGOS: Record<string, string> = {
   'lux:96369': LUX_SVG,
   'evm:1': ETH_SVG,
@@ -94,8 +137,16 @@ export const CHAIN_LOGOS: Record<string, string> = {
   'xrp:mainnet': XRP_SVG,
   'polkadot:mainnet': DOT_SVG,
   'cardano:mainnet': ADA_SVG,
-  'evm:56': BNB_SVG,        // Binance Smart Chain
-  'evm:43114': AVAX_SVG,    // Avalanche C-Chain
+  'evm:56': BNB_SVG,            // Binance Smart Chain
+  'evm:43114': AVAX_SVG,        // Avalanche C-Chain
+  'evm:200200': ZOO_SVG,        // Zoo
+  'evm:42220': CELO_SVG,        // Celo
+  'evm:100': GNO_SVG,           // Gnosis Chain
+  'evm:250': FTM_SVG,           // Fantom Opera
+  'evm:1313161554': AURORA_SVG, // Aurora (NEAR)
+  'evm:7777777': ZORA_SVG,      // Zora
+  'evm:81457': BLAST_SVG,       // Blast
+  'evm:59144': LINEA_SVG,       // Linea
 }
 
 export const ASSET_LOGOS: Record<string, string> = {
@@ -116,4 +167,9 @@ export const ASSET_LOGOS: Record<string, string> = {
   DOT: DOT_SVG,
   ADA: ADA_SVG,
   XRP: XRP_SVG,
+  ZOO: ZOO_SVG,
+  CELO: CELO_SVG,
+  XDAI: XDAI_SVG,
+  FTM: FTM_SVG,
+  BLAST: BLAST_SVG,
 }
