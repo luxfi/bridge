@@ -7,18 +7,25 @@
 // build cycle — producing the blank-page bug Phase 1.5 fixes by inlining
 // here.
 //
+// Phase 3 R3 wraps the inner tree in `<WagmiProvider>` + `<QueryClientProvider>`
+// so the wallet hooks have a wagmi context. The Config is built from
+// `BridgeConfig.wallet` and is stable for the lifetime of this mount.
+//
 // Design notes:
 //   - No central authority. Chain + asset lists are static client-side data
 //     today; in production the bridge backend serves them, but the trust
 //     model is the same — the user signs every transfer via threshold MPC.
-//   - PQ-safe. The signing layer (wired by Phase 3 R3) uses Ringtail-lattice
-//     + ECDSA-CMP hybrid; nothing in this file makes a classical-only
-//     assumption.
+//   - PQ-safe. The signing layer uses Ringtail-lattice + ECDSA-CMP hybrid;
+//     nothing in this file makes a classical-only assumption. Wagmi handles
+//     the user leg (classical secp256k1); MPC handles the bridge leg (any
+//     protocol cfg.mpc.protocol specifies).
 //   - Tamagui swap. Phase 3 R2 replaces inline styles + native `<select>`
 //     with `@hanzo/gui` primitives. This file's shape is stable across
 //     that swap — the components in `./components/` are the seams.
 
-import { useEffect, type FC } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useEffect, useMemo, type FC } from 'react'
+import { WagmiProvider } from 'wagmi'
 
 import { getConfig } from '../config'
 import { Header } from './components/Header'
@@ -27,6 +34,7 @@ import { TransferStatus } from './components/TransferStatus'
 import { useSwap } from './hooks/useSwap'
 import { useTransfers } from './hooks/useTransfers'
 import { useWallet } from './hooks/useWallet'
+import { buildWagmiConfig } from './lib/wagmi-config'
 
 import './styles/theme.css'
 
@@ -61,8 +69,11 @@ const footer: React.CSSProperties = {
   borderTop: '1px solid var(--bridge-border)',
 }
 
-export const BridgeApp: FC = () => {
-  // Read SDK config — Bridge.tsx guarantees setConfig() ran first.
+/**
+ * Inner BridgeApp tree — runs *inside* WagmiProvider so the wallet hooks
+ * have a wagmi context to read.
+ */
+const BridgeAppInner: FC = () => {
   const cfg = getConfig()
 
   const wallet = useWallet()
@@ -120,6 +131,40 @@ export const BridgeApp: FC = () => {
         ) : null}
       </footer>
     </div>
+  )
+}
+
+export const BridgeApp: FC = () => {
+  const cfg = getConfig()
+
+  // Build wagmi config + react-query client once per mount. Both are stable
+  // singletons for the lifetime of the BridgeApp instance — wagmi's `Config`
+  // is not designed to mutate at runtime; reconfiguring requires unmount.
+  const wagmiConfig = useMemo(() => buildWagmiConfig(cfg), [cfg])
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // Bridge data (quotes, swaps) is request-scoped and changes fast.
+            // Disable refetch-on-mount/focus so we don't surprise the user
+            // with a fresh quote after switching tabs.
+            staleTime: 30_000,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+            retry: 1,
+          },
+        },
+      }),
+    [],
+  )
+
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <BridgeAppInner />
+      </QueryClientProvider>
+    </WagmiProvider>
   )
 }
 

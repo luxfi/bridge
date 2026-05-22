@@ -3,9 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%235b8def'/></svg>" />
+    <!--
+      Favicon is the canonical Lux mark from @luxfi/logo (getFaviconSVG):
+      white triangle on a black rounded square. This is hardcoded in
+      index.html because favicons must be present in the static HTML
+      (the bundler can't inject them into <link rel="icon"> at runtime).
+      Logo OTHER than the favicon comes from @luxfi/logo at runtime via
+      bridge.config.ts. Source: ~/work/lux/logo/dist/logos.js#getFaviconSVG.
+    -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='8' fill='%23000000'/><path d='M32 52 L12 18 L52 18 Z' fill='%23ffffff'/></svg>" />
     <title>Lux Bridge</title>
     <meta name="description" content="Cross-chain bridge for the Lux Network." />
+    <!--
+      Runtime env: /__ENV.js sets window.__ENV before the main bundle
+      loads. Serving image templates this file at boot from BRIDGE_*
+      env vars; bridge.config.ts reads window.__ENV first, then falls
+      back to Vite's import.meta.env. One image, N envs.
+
+      Placed in <head> (and before the module script) so the synchronous
+      parser-blocking load happens before any deferred module executes —
+      the ordering is unambiguous regardless of how Vite reorganises
+      the bundle.
+    -->
+    <script src="/__ENV.js"></script>
   </head>
   <body>
     <div id="bridge-root"></div>
