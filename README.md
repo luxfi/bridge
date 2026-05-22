@@ -113,14 +113,34 @@ cd app/bridge && pnpm dev
 ## Architecture
 
 ```
-Bridge UI → Bridge Server → MPC Nodes → Blockchain Networks
-                               ↓
-                    KMS + Lux ID + Consul
+Tenant app (Lux, Hanzo, Zoo, …)
+  imports @luxfi/bridge  +  @<org>/brand
+                │
+                ▼
+    @luxfi/bridge (pkg/bridge)
+    Bridge UI inlined under src/app/
+    Direct deps: @hanzo/gui, @luxfi/threshold, wagmi, viem
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+   app/server      @luxfi/threshold
+   Express+Prisma  MPC SDK (also consumed by app/server)
+                          │
+                          ▼
+                  m-chain (public MPC, 2-of-3 threshold)
+                  + optional private cluster (treasury fees)
+                  + optional layered cosigners (Utila / Fireblocks)
 ```
+
+See [`docs/LLM.md`](docs/LLM.md) for the full topology, MPC protocol list
+(`cggmp21`, `frost`, `bls`, `doerner`, `pulsar`, `corona`, `magnetar`),
+layered-cosigner pattern, and explorer-migration plan.
 
 ## Key Features
 
-- **MPC Security**: 2-of-3 threshold signatures
+- **MPC Security**: 2-of-3 threshold signatures (also PQ-safe lattice variants)
+- **Layered cosigners** (since SDK v1.0.3): optional Utila / Fireblocks
+  cosign on top of native MPC for institutional flows
 - **Multi-Chain**: Support for EVM and non-EVM chains
 - **Unified Auth**: Lux ID (Casdoor) integration
 - **Key Management**: Secure key storage in KMS
@@ -145,9 +165,16 @@ make down           # Stop infrastructure
 
 ## Documentation
 
-- [MPC Go Integration](docs/MPC-GO-INTEGRATION.md)
-- [Lux ID Integration](docs/LUX-ID-INTEGRATION.md)
-- [CI/CD Docker Images](docs/CI-CD-DOCKER-IMAGES.md)
+- [`docs/LLM.md`](docs/LLM.md) — canonical AI/onboarding doc: architecture,
+  package layout, MPC topology, runtime config, publishing status, layered
+  cosigners, explorer migration plan
+- [`docs/LUX-ID-INTEGRATION.md`](docs/LUX-ID-INTEGRATION.md) — Lux ID
+  (Casdoor) auth integration
+- [`pkg/bridge/README.md`](pkg/bridge/README.md) — consumer-facing SDK
+  README (`mountBridge`, `BridgeConfig`, all config blocks)
+
+For the new bridge dev: [issue #392](https://github.com/luxfi/bridge/issues/392)
+is the entry point — read order, repo map, open issues by priority.
 
 ## Tips
 

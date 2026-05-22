@@ -17,39 +17,58 @@ The Lux Bridge architecture consists of several interconnected layers:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Bridge UI                             │
-│                   (React/Next.js Frontend)                   │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                     Bridge Server                            │
-│                  (API & Business Logic)                      │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                    MPC Node Network                          │
-│              (3-node threshold signature)                    │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                 Infrastructure Services                      │
-│         (KMS, Lux ID, NATS, Consul, PostgreSQL)             │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                   Blockchain Networks                        │
-│     (Lux, Ethereum, BSC, Polygon, Arbitrum, zkSync, etc)    │
+│  Tenant app (Lux, Hanzo, Zoo, …) — ~120 LOC Vite SPA        │
+│  imports @luxfi/bridge + @<org>/brand                        │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  @luxfi/bridge  — public SDK (pkg/bridge)                   │
+│  Bridge UI INLINED under src/app/ (no lazy workspace deps)  │
+│  Direct deps: @hanzo/gui (Tamagui), @luxfi/threshold,       │
+│               wagmi, viem, @tanstack/react-query            │
+└─────────────┬────────────────────────────┬──────────────────┘
+              │                            │
+┌─────────────▼──────────────┐   ┌─────────▼──────────────────┐
+│ app/server                 │   │ @luxfi/threshold (T-Chain) │
+│ Bridge API                 │   │ MPC threshold-sign SDK     │
+│ Express + Prisma           │   │ (consumed by BOTH the      │
+│ api.bridge.lux.network     │   │  bridge SDK + app/server)  │
+└─────────────┬──────────────┘   └─────────┬──────────────────┘
+              │                            │
+┌─────────────▼──────────────┐   ┌─────────▼──────────────────┐
+│ Infrastructure             │   │ m-chain — public MPC       │
+│ KMS, Lux ID (Casdoor),     │   │ 2-of-3 threshold network   │
+│ NATS, Consul, PostgreSQL   │   │ + optional private cluster │
+└─────────────┬──────────────┘   │ + optional layered cosign  │
+              │                  │   (Utila / Fireblocks)     │
+              │                  └────────────────────────────┘
+┌─────────────▼───────────────────────────────────────────────┐
+│  Blockchain Networks                                         │
+│  (Lux, Ethereum, BSC, Polygon, Arbitrum, zkSync, etc)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Multi-Party Computation (MPC)
 
-The bridge employs a 2-of-3 threshold signature scheme using MPC technology:
+The bridge employs a 2-of-3 threshold signature scheme using MPC technology.
+Native protocol set (`BridgeMPCConfig.protocol`):
+
+| Class | Protocols |
+|---|---|
+| Classical ECDSA | `cggmp21` (default), `doerner` |
+| Classical EdDSA | `frost` |
+| Classical BLS | `bls` |
+| **PQ-safe lattice** | `pulsar`, `corona`, `magnetar` |
+
+The last three are post-quantum-safe and leaderless by construction.
 
 - **Distributed Key Generation**: Private keys are never fully reconstructed
 - **Threshold Signatures**: Any 2 of 3 nodes can sign transactions
 - **No Single Point of Failure**: Compromise of one node doesn't affect security
 - **Cryptographic Validation**: All operations verified through zero-knowledge proofs
+- **Optional layered cosigners** (since SDK v1.0.3): Utila or Fireblocks
+  as additional cosigners on top of native MPC; backend enforces 2-of-2
+  (native + listed) before releasing settlement
 
 ### Security Model
 
