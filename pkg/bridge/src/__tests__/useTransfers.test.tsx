@@ -13,6 +13,23 @@ vi.mock('wagmi', () => ({
   useAccount: () => accountState,
 }))
 
+// Stub useNetworks to return the bundled static defaults so the test's
+// fetch matcher only sees /api/swaps + /api/swaps/:id (not the
+// /api/networks call useNetworks would otherwise fire on mount).
+vi.mock('../app/hooks/useNetworks', async () => {
+  const { DEFAULT_CHAINS } = await import('../app/lib/chains')
+  const { DEFAULT_ASSETS } = await import('../app/lib/assets')
+  return {
+    useNetworks: () => ({
+      chains: DEFAULT_CHAINS,
+      assets: DEFAULT_ASSETS,
+      isLoading: false,
+      isError: false,
+      refetch: () => {},
+    }),
+  }
+})
+
 import { setConfig } from '../config'
 import { useTransfers } from '../app/hooks/useTransfers'
 
