@@ -17,10 +17,10 @@ const base: CSSProperties = {
   background: 'var(--bridge-bg-elevated)',
   border: '1px solid var(--bridge-border)',
   borderRadius: 'var(--bridge-radius)',
-  padding: '20px',
+  padding: 'var(--bridge-card-padding)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '14px',
+  gap: 'var(--bridge-card-gap)',
   boxShadow: 'var(--bridge-shadow-card)',
 }
 
