@@ -1,17 +1,23 @@
 // Swap form state hook for the inlined bridge UI.
 //
-// Owns the from/to chain selection, asset selection, amount, and a derived
-// quote. The quote here is a deterministic display-only mock — Phase 3 R3
-// wires the real cross-chain quote against the bridge backend (which itself
-// is permissionless: rates are computed from on-chain reserves + MPC node
-// attestations, no central pricing authority).
+// Owns chain/asset selection + the live quote against the bridge backend.
+// The quote is fetched from `${cfg.apiHost}/api/quote` (server route
+// `app/server/src/routes/quote.ts`), debounced 300ms so typing doesn't
+// flood the backend.
+//
+// Trust model:
+//   - The quote is *advisory* — the user signs the final amount when they
+//     submit the transfer. The server is not trusted to set the price; the
+//     MPC threshold layer enforces min_receive_amount on settlement.
+//   - Permissionless-by-design: any consumer can hit the same endpoint. The
+//     server is a read-only price oracle; the bridge has no central pricing
+//     authority.
 
-import { useState, useMemo, useCallback } from 'react'
-import {
-  DEFAULT_ASSETS,
-  type Asset,
-  assetsForChain,
-} from '../lib/assets'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import { getConfig } from '../../config'
+import { DEFAULT_ASSETS, type Asset, assetsForChain } from '../lib/assets'
+import { BridgeApiError, chainIdToInternalName, fetchQuote } from '../lib/bridge-api'
 import { DEFAULT_CHAINS, type Chain, findChain } from '../lib/chains'
 
 export interface Quote {
@@ -25,6 +31,8 @@ export interface Quote {
   etaText: string
   /** Implied effective rate, `outAmount / inAmount`. */
   rate: number
+  /** Minimum receive amount the user has consented to (slippage protected). */
+  minOut: number
 }
 
 export interface SwapState {
@@ -36,6 +44,10 @@ export interface SwapState {
   toAsset: Asset
   amount: string
   quote: Quote | null
+  /** True while a quote request is in flight. */
+  quoting: boolean
+  /** Last-fetched quote error, when applicable. */
+  quoteError: string | null
   setFromChain: (c: Chain) => void
   setToChain: (c: Chain) => void
   setFromAsset: (a: Asset) => void
@@ -46,61 +58,49 @@ export interface SwapState {
   toAssetOptions: Asset[]
 }
 
+const QUOTE_DEBOUNCE_MS = 300
+
 /**
- * Compute a deterministic display-only quote from an input amount.
- *
- * Replaced by `useQuote(backend, from, to, amount)` once Phase 3 R3 ships
- * the API client.
+ * Format the server's `avg_completion_time` (e.g. `00:03:00`) as a short
+ * UI string (`~3 min`). Falls back to the raw string when the format is
+ * unrecognized.
  */
-function computeQuote(amountStr: string, from: Asset, to: Asset): Quote | null {
-  const n = Number(amountStr)
-  if (!isFinite(n) || n <= 0) return null
-  // Tiny mock rate matrix — stable but obviously placeholder.
-  const stableSym = (s: string) =>
-    s === 'USDC' || s === 'USDT' || s === 'USDL' || s === 'DAI'
-  const usd = (sym: string) => {
-    switch (sym) {
-      case 'ETH':
-        return 3500
-      case 'LUX':
-        return 12
-      case 'MATIC':
-        return 0.6
-      case 'SOL':
-        return 175
-      default:
-        return stableSym(sym) ? 1 : 1
-    }
-  }
-  const inUsd = n * usd(from.symbol)
-  const out = (inUsd / usd(to.symbol)) * 0.998 // 0.2% bridge fee
-  const fee = inUsd * 0.002
-  const rate = out / n
-  return {
-    outAmount: out,
-    feeUsd: fee,
-    destGas: 0.0008,
-    etaText: '~3 min',
-    rate,
-  }
+function formatEta(raw: string): string {
+  const m = /^(\d+):(\d+):/.exec(raw)
+  if (!m) return raw || '—'
+  const hours = Number(m[1])
+  const mins = Number(m[2])
+  if (hours > 0) return `~${hours}h ${mins}m`
+  if (mins > 0) return `~${mins} min`
+  return '<1 min'
 }
 
 export function useSwap(): SwapState {
+  const cfg = getConfig()
+
   const chains = DEFAULT_CHAINS
   const assets = DEFAULT_ASSETS
 
   const initFrom = findChain(chains, 'lux:96369') ?? chains[0]
   const initTo = findChain(chains, 'evm:1') ?? chains[1] ?? chains[0]
+  if (!initFrom || !initTo) {
+    throw new Error('useSwap: DEFAULT_CHAINS is empty')
+  }
 
   const [fromChain, setFromChain] = useState<Chain>(initFrom)
   const [toChain, setToChain] = useState<Chain>(initTo)
-  const [fromAsset, setFromAsset] = useState<Asset>(
-    assetsForChain(assets, initFrom.id)[0]!,
-  )
-  const [toAsset, setToAsset] = useState<Asset>(
-    assetsForChain(assets, initTo.id)[0]!,
-  )
+  const initFromAsset = assetsForChain(assets, initFrom.id)[0]
+  const initToAsset = assetsForChain(assets, initTo.id)[0]
+  if (!initFromAsset || !initToAsset) {
+    throw new Error('useSwap: DEFAULT_ASSETS missing entries for default chains')
+  }
+  const [fromAsset, setFromAsset] = useState<Asset>(initFromAsset)
+  const [toAsset, setToAsset] = useState<Asset>(initToAsset)
   const [amount, setAmount] = useState<string>('')
+
+  const [quote, setQuote] = useState<Quote | null>(null)
+  const [quoting, setQuoting] = useState(false)
+  const [quoteError, setQuoteError] = useState<string | null>(null)
 
   const fromAssetOptions = useMemo(
     () => assetsForChain(assets, fromChain.id),
@@ -116,8 +116,9 @@ export function useSwap(): SwapState {
     (c: Chain) => {
       setFromChain(c)
       const opts = assetsForChain(assets, c.id)
-      if (opts[0] && opts.findIndex((a) => a.id === fromAsset.id) < 0) {
-        setFromAsset(opts[0])
+      const first = opts[0]
+      if (first && opts.findIndex((a) => a.id === fromAsset.id) < 0) {
+        setFromAsset(first)
       }
     },
     [assets, fromAsset.id],
@@ -126,8 +127,9 @@ export function useSwap(): SwapState {
     (c: Chain) => {
       setToChain(c)
       const opts = assetsForChain(assets, c.id)
-      if (opts[0] && opts.findIndex((a) => a.id === toAsset.id) < 0) {
-        setToAsset(opts[0])
+      const first = opts[0]
+      if (first && opts.findIndex((a) => a.id === toAsset.id) < 0) {
+        setToAsset(first)
       }
     },
     [assets, toAsset.id],
@@ -140,10 +142,95 @@ export function useSwap(): SwapState {
     setToAsset(fromAsset)
   }, [fromChain, toChain, fromAsset, toAsset])
 
-  const quote = useMemo(
-    () => computeQuote(amount, fromAsset, toAsset),
-    [amount, fromAsset, toAsset],
-  )
+  // ─── Quote effect ────────────────────────────────────────────────────
+  // Debounced fetch. Cleanup aborts the in-flight request so rapid input
+  // changes don't pile up requests against the backend.
+  const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    setQuoteError(null)
+
+    const n = Number(amount)
+    if (!isFinite(n) || n <= 0) {
+      setQuote(null)
+      setQuoting(false)
+      return
+    }
+    if (fromChain.id === toChain.id && fromAsset.id === toAsset.id) {
+      // Same source + destination is meaningless — clear quote, no fetch.
+      setQuote(null)
+      setQuoting(false)
+      return
+    }
+
+    const sourceNetwork = chainIdToInternalName(fromChain.id, cfg.env)
+    const destinationNetwork = chainIdToInternalName(toChain.id, cfg.env)
+    if (!sourceNetwork || !destinationNetwork) {
+      // Unsupported chain pair on this env — clear quote, surface error.
+      setQuote(null)
+      setQuoteError('Unsupported chain pair for current environment')
+      setQuoting(false)
+      return
+    }
+
+    const timer = setTimeout(() => {
+      // Abort any prior in-flight request.
+      abortRef.current?.abort()
+      const ctl = new AbortController()
+      abortRef.current = ctl
+      setQuoting(true)
+
+      fetchQuote(
+        cfg.apiHost,
+        {
+          sourceNetwork,
+          sourceToken: fromAsset.symbol,
+          destinationNetwork,
+          destinationToken: toAsset.symbol,
+          amount: n,
+        },
+        ctl.signal,
+      )
+        .then((sq) => {
+          if (ctl.signal.aborted) return
+          const out = sq.receive_amount
+          const fee = sq.total_fee_in_usd
+          const rate = n > 0 ? out / n : 0
+          setQuote({
+            outAmount: out,
+            feeUsd: fee,
+            destGas: sq.blockchain_fee,
+            etaText: formatEta(sq.avg_completion_time),
+            rate,
+            minOut: sq.min_receive_amount,
+          })
+          setQuoteError(null)
+        })
+        .catch((err: unknown) => {
+          if (ctl.signal.aborted) return
+          if (err instanceof BridgeApiError) {
+            setQuoteError(`Quote failed (${err.status})`)
+          } else if (err instanceof Error && err.name === 'AbortError') {
+            // Aborted by a newer keystroke — silent.
+            return
+          } else {
+            const msg = err instanceof Error ? err.message : 'Quote failed'
+            setQuoteError(msg)
+          }
+          setQuote(null)
+        })
+        .finally(() => {
+          if (!ctl.signal.aborted) setQuoting(false)
+        })
+    }, QUOTE_DEBOUNCE_MS)
+
+    return () => {
+      clearTimeout(timer)
+      // Do NOT abort here — the next effect run will abort. This avoids
+      // tearing down the in-flight request when React fires unrelated
+      // re-renders (e.g. parent state changes that don't touch our deps).
+    }
+  }, [amount, fromChain.id, toChain.id, fromAsset.id, toAsset.id, fromAsset.symbol, toAsset.symbol, cfg.apiHost, cfg.env])
 
   return {
     chains,
@@ -154,6 +241,8 @@ export function useSwap(): SwapState {
     toAsset,
     amount,
     quote,
+    quoting,
+    quoteError,
     setFromChain: setFromChainSafe,
     setToChain: setToChainSafe,
     setFromAsset,
