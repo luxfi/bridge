@@ -74,15 +74,74 @@ export interface BridgeWalletConfig {
 }
 
 /**
+ * Utila cosigner block.
+ *
+ * Layers a Utila vault on top of the native Lux MPC cluster — the bridge
+ * backend collects BOTH a native MPC threshold sign AND a Utila approval
+ * before releasing settlement. Useful for tenants who already custody
+ * with Utila and want regulated-cosigner gating without giving up the
+ * native threshold property.
+ *
+ * The SDK declares the block; the actual Utila API client lives on the
+ * bridge backend (browser never holds the Utila JWT or service-account
+ * credentials). All fields here are tenant-visible identifiers safe to
+ * ship in the page bundle.
+ */
+export interface BridgeUtilaConfig {
+  /** Utila tenant org slug. */
+  orgId: string
+  /** OAuth client id (delegated auth — server completes the exchange). */
+  clientId: string
+  /** Optional Utila API host override. Defaults to `https://api.utila.io`. */
+  apiHost?: string
+  /** Optional vault id pinning a specific Utila vault. */
+  vaultId?: string
+}
+
+/**
+ * Fireblocks cosigner block.
+ *
+ * Layers a Fireblocks vault on top of the native Lux MPC cluster — same
+ * pattern as `utila` (backend holds the secret, SDK only declares config).
+ * Use when tenants are already on Fireblocks for institutional custody.
+ *
+ * The Fireblocks secret key NEVER lives in the browser; the API key id
+ * here is the *public* tenant identifier registered with Fireblocks. The
+ * bridge backend holds the matching secret in KMS and completes the
+ * cosign on behalf of the tenant.
+ */
+export interface BridgeFireblocksConfig {
+  /** Fireblocks tenant API key id (public — NOT the secret). */
+  apiKey: string
+  /** Optional Fireblocks API host override. Defaults to `https://api.fireblocks.io`. */
+  apiHost?: string
+  /** Optional vault account id pinning a specific Fireblocks vault. */
+  vaultAccountId?: string
+}
+
+/**
  * MPC cluster config block.
  *
- * The bridge co-signs cross-chain settlement via Lux MPC (CGGMP21 / FROST).
- * Public cluster (m-chain) handles user wallets; the optional private cluster
- * is reserved for treasury / fee accounts.
+ * The bridge co-signs cross-chain settlement via Lux MPC (CGGMP21 / FROST
+ * / lattice-based PQ variants). Public cluster (m-chain) handles user
+ * wallets; the optional private cluster is reserved for treasury / fee
+ * accounts.
+ *
+ * Optionally layers external MPC custodians (Utila, Fireblocks) as
+ * additional cosigners alongside the native threshold network — both
+ * blocks are independent and may be enabled together for belt-and-
+ * suspenders institutional flows. Native Lux MPC remains the primary
+ * signer; external custodians sit on top.
  */
 export interface BridgeMPCConfig {
-  /** Public MPC cluster URL (m-chain). */
-  publicUrl: string
+  /**
+   * Public MPC cluster URL (m-chain).
+   *
+   * Optional only when a tenant runs pure-external custody (utila or
+   * fireblocks block set, no native threshold). Recommended layered
+   * mode keeps this set so native MPC remains the primary signer.
+   */
+  publicUrl?: string
   /** Optional private MPC cluster URL (treasury fees). */
   privateUrl?: string
   /**
@@ -102,6 +161,16 @@ export interface BridgeMPCConfig {
     | 'pulsar'
     | 'corona'
     | 'magnetar'
+  /**
+   * Optional Utila cosigner. Layers on top of native MPC.
+   * Backend enforces 2-of-2 (native + utila) before releasing settlement.
+   */
+  utila?: BridgeUtilaConfig
+  /**
+   * Optional Fireblocks cosigner. Layers on top of native MPC.
+   * Backend enforces 2-of-2 (native + fireblocks) before releasing settlement.
+   */
+  fireblocks?: BridgeFireblocksConfig
 }
 
 /**
