@@ -23,6 +23,40 @@ import type { MountBridgeOptions } from './types'
 const DEFAULT_ROOT_ID = 'bridge-root'
 
 /**
+ * Boot the @hanzo/gui runtime once globally. The library's `Button` and
+ * `Input` primitives (used by Phase 3 R2's SwapForm / WalletConnect /
+ * AssetInput) read from `globalThis.__guiConfig` at render time and throw
+ * `Error("Err0")` when it's null. The SDK owns this initialisation so
+ * every consumer doesn't have to know that detail.
+ *
+ * Idempotent — `createGui` is safe to call multiple times (later calls
+ * overwrite the global config, which is fine because the default config
+ * is deterministic).
+ */
+async function ensureGuiConfigured(): Promise<void> {
+  if (
+    typeof globalThis !== 'undefined' &&
+    (globalThis as { __guiConfig?: unknown }).__guiConfig
+  ) {
+    return
+  }
+  // The @hanzo/gui package's source exports `createGui` (after the monorepo's
+  // postinstall rename of upstream `createHanzogui` → `createGui`), but its
+  // shipped .d.ts files still carry the original Hanzogui name. The runtime
+  // export name is canonical here — we widen the import type to `any` so
+  // tsc resolves the type-only mismatch without forcing every consumer to
+  // ship the same rename patch.
+  const [gui, cfgDefault] = await Promise.all([
+    import('@hanzo/gui'),
+    import('@hanzogui/config-default'),
+  ])
+  const createGui = (gui as unknown as {
+    createGui: (c: unknown) => unknown
+  }).createGui
+  createGui(cfgDefault.getDefaultGuiConfig())
+}
+
+/**
  * Boot the bridge UI inside the host page.
  *
  * Boot order:
@@ -30,7 +64,8 @@ const DEFAULT_ROOT_ID = 'bridge-root'
  *      optional auth / kms / wallet / mpc blocks when present).
  *   2. Apply brand metadata to `document` (title, favicon, CSS variables).
  *   3. Resolve the DOM mount element (`#bridge-root` by default).
- *   4. Lazy-import `react-dom/client` and `react`, then render `<Bridge />`.
+ *   4. Configure @hanzo/gui's global runtime so Button/Input render.
+ *   5. Lazy-import `react-dom/client` and `react`, then render `<Bridge />`.
  *
  * The dynamic imports keep `react-dom` out of the SDK's main-bundle critical
  * path; consumers that only import types pay nothing for the runtime.
@@ -48,6 +83,8 @@ export async function mountBridge(opts: MountBridgeOptions): Promise<void> {
   if (!el) {
     throw new Error(`mountBridge: #${rootId} not found in document`)
   }
+
+  await ensureGuiConfigured()
 
   const [{ createRoot }, react] = await Promise.all([
     import('react-dom/client'),
