@@ -74,6 +74,55 @@
   /* Motion. */
   --bridge-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
   --bridge-transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── Responsive tokens ─────────────────────────────────────────────
+   * Inline-style call sites reference these via `var(...)` so a single
+   * @media breakpoint controls layout sizing across the SDK. Defaults
+   * here are desktop-sized; the (max-width: 640px) and (max-width: 480px)
+   * overrides below tighten the values for tablet and phone.
+   */
+  --bridge-page-padding-x: 16px;
+  --bridge-page-padding-y: 32px;
+  --bridge-card-padding: 20px;
+  --bridge-card-gap: 14px;
+  --bridge-stack-gap: 16px;
+  --bridge-stack-max-width: 480px;
+  --bridge-header-padding-x: 20px;
+  --bridge-header-padding-y: 14px;
+  --bridge-asset-select-width: 140px;
+  --bridge-input-font-size: 24px;
+  --bridge-brand-name-size: 15px;
+  --bridge-chip-display: inline-flex;
+  --bridge-mpc-chip-display: inline-flex;
+}
+
+/* Tablet — slightly tighter spacing, identical layout structure. */
+@media (max-width: 640px) {
+  :root {
+    --bridge-page-padding-x: 14px;
+    --bridge-page-padding-y: 20px;
+    --bridge-card-padding: 16px;
+    --bridge-card-gap: 12px;
+    --bridge-stack-gap: 12px;
+    --bridge-header-padding-x: 14px;
+    --bridge-header-padding-y: 12px;
+    --bridge-asset-select-width: 120px;
+    --bridge-input-font-size: 22px;
+  }
+}
+
+/* Phone — MPC chip hidden to free header width for the wallet pill, amount
+ * input shrunk a notch, page padding reduced to its iOS-safe minimum. */
+@media (max-width: 480px) {
+  :root {
+    --bridge-page-padding-x: 12px;
+    --bridge-page-padding-y: 16px;
+    --bridge-card-padding: 14px;
+    --bridge-asset-select-width: 110px;
+    --bridge-input-font-size: 20px;
+    --bridge-brand-name-size: 14px;
+    --bridge-mpc-chip-display: none;
+  }
 }
 
 .bridge-root {
