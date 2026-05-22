@@ -93,7 +93,7 @@ const inputStyle: CSSProperties = {
   background: 'transparent',
   border: 'none',
   color: 'var(--bridge-text)',
-  fontSize: 24,
+  fontSize: 'var(--bridge-input-font-size)',
   fontWeight: 500,
   outline: 'none',
   minWidth: 0,
@@ -102,7 +102,7 @@ const inputStyle: CSSProperties = {
 }
 
 const assetSelectWrap: CSSProperties = {
-  width: 140,
+  width: 'var(--bridge-asset-select-width)',
   flex: 'none',
 }
 
