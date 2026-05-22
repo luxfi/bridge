@@ -45,6 +45,9 @@ importers:
 
   app/bridge:
     dependencies:
+      '@hanzogui/config-default':
+        specifier: ^7.0.0
+        version: 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
       '@luxfi/brand':
         specifier: ^1.0.0
         version: 1.0.0
@@ -54,6 +57,12 @@ importers:
       '@luxfi/logo':
         specifier: ^1.0.0
         version: 1.0.0(react@18.3.1)
+      '@luxfi/threshold':
+        specifier: workspace:*
+        version: link:../../pkg/threshold
+      '@tanstack/react-query':
+        specifier: 5.90.20
+        version: 5.90.20(react@18.3.1)
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -63,6 +72,12 @@ importers:
       react-native-web:
         specifier: ^0.19.0
         version: 0.19.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      viem:
+        specifier: 2.30.5
+        version: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      wagmi:
+        specifier: 2.15.5
+        version: 2.15.5(@tanstack/query-core@5.90.20)(@tanstack/react-query@5.90.20(react@18.3.1))(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
     devDependencies:
       '@types/react':
         specifier: 'catalog:'
@@ -8377,6 +8392,29 @@ snapshots:
 
   '@hanzogui/animation-helpers@7.0.0': {}
 
+  '@hanzogui/animations-css@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/animation-helpers': 7.0.0
+      '@hanzogui/constants': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/cubic-bezier-animator': 7.0.0
+      '@hanzogui/use-presence': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react-native
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
+
   '@hanzogui/animations-css@7.0.0(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
       '@hanzogui/animation-helpers': 7.0.0
@@ -8390,6 +8428,28 @@ snapshots:
       - '@react-native-menu/menu'
       - burnt
       - react-native
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
+
+  '@hanzogui/animations-react-native@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/animation-helpers': 7.0.0
+      '@hanzogui/constants': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/use-presence': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      react: 18.3.1
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react-dom
       - react-native-gesture-handler
       - react-native-ios-context-menu
       - react-native-ios-utilities
@@ -8630,9 +8690,36 @@ snapshots:
       - sf-symbols-typescript
       - zeego
 
+  '@hanzogui/compose-refs@7.0.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+
   '@hanzogui/compose-refs@7.0.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
+
+  '@hanzogui/config-default@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/animations-css': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/animations-react-native': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/core': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/shorthands': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react
+      - react-dom
+      - react-native
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
 
   '@hanzogui/config-default@7.0.0(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
@@ -8657,6 +8744,11 @@ snapshots:
       - sf-symbols-typescript
       - zeego
 
+  '@hanzogui/constants@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
+
   '@hanzogui/constants@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
       react: 19.2.6
@@ -8675,6 +8767,30 @@ snapshots:
       - burnt
       - react-dom
       - react-native
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
+
+  '@hanzogui/core@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/helpers': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/react-native-media-driver': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/react-native-use-pressable': 7.0.0(react@18.3.1)
+      '@hanzogui/use-element-layout': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/use-event': 7.0.0(react@18.3.1)
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      react: 18.3.1
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react-dom
       - react-native-gesture-handler
       - react-native-ios-context-menu
       - react-native-ios-utilities
@@ -9027,6 +9143,14 @@ snapshots:
       - sf-symbols-typescript
       - zeego
 
+  '@hanzogui/helpers@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/constants': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/simple-hash': 7.0.0
+      react: 18.3.1
+    transitivePeerDependencies:
+      - react-native
+
   '@hanzogui/helpers@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
       '@hanzogui/constants': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)
@@ -9085,6 +9209,10 @@ snapshots:
       - react-native-worklets-core
       - sf-symbols-typescript
       - zeego
+
+  '@hanzogui/is-equal-shallow@7.0.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
 
   '@hanzogui/is-equal-shallow@7.0.0(react@19.2.6)':
     dependencies:
@@ -9187,6 +9315,11 @@ snapshots:
       - react-native-worklets-core
       - sf-symbols-typescript
       - zeego
+
+  '@hanzogui/native@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
 
   '@hanzogui/native@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
@@ -9370,6 +9503,25 @@ snapshots:
       - sf-symbols-typescript
       - zeego
 
+  '@hanzogui/react-native-media-driver@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react
+      - react-dom
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
+
   '@hanzogui/react-native-media-driver@7.0.0(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
       '@hanzogui/web': 7.0.0(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)
@@ -9388,6 +9540,10 @@ snapshots:
       - react-native-worklets-core
       - sf-symbols-typescript
       - zeego
+
+  '@hanzogui/react-native-use-pressable@7.0.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
 
   '@hanzogui/react-native-use-pressable@7.0.0(react@19.2.6)':
     dependencies:
@@ -9553,6 +9709,25 @@ snapshots:
       - '@react-native-menu/menu'
       - burnt
       - react-dom
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
+
+  '@hanzogui/shorthands@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react
+      - react-dom
+      - react-native
+      - react-native-gesture-handler
       - react-native-ios-context-menu
       - react-native-ios-utilities
       - react-native-keyboard-controller
@@ -9985,6 +10160,10 @@ snapshots:
     dependencies:
       react: 19.2.6
 
+  '@hanzogui/use-did-finish-ssr@7.0.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+
   '@hanzogui/use-did-finish-ssr@7.0.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
@@ -9992,6 +10171,14 @@ snapshots:
   '@hanzogui/use-direction@7.0.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
+
+  '@hanzogui/use-element-layout@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/constants': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/is-equal-shallow': 7.0.0(react@18.3.1)
+      react: 18.3.1
+    transitivePeerDependencies:
+      - react-native
 
   '@hanzogui/use-element-layout@7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
@@ -10006,9 +10193,17 @@ snapshots:
       '@hanzogui/use-callback-ref': 7.0.0(react@19.2.6)
       react: 19.2.6
 
+  '@hanzogui/use-event@7.0.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+
   '@hanzogui/use-event@7.0.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
+
+  '@hanzogui/use-force-update@7.0.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
 
   '@hanzogui/use-force-update@7.0.0(react@19.2.6)':
     dependencies:
@@ -10018,6 +10213,25 @@ snapshots:
     dependencies:
       react: 19.2.6
       react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10)
+
+  '@hanzogui/use-presence@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/web': 7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      react: 18.3.1
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
+      - react-dom
+      - react-native
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
 
   '@hanzogui/use-presence@7.0.0(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
@@ -10057,6 +10271,35 @@ snapshots:
       - burnt
       - react-dom
       - react-native
+      - react-native-gesture-handler
+      - react-native-ios-context-menu
+      - react-native-ios-utilities
+      - react-native-keyboard-controller
+      - react-native-safe-area-context
+      - react-native-teleport
+      - react-native-worklets-core
+      - sf-symbols-typescript
+      - zeego
+
+  '@hanzogui/web@7.0.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      '@hanzogui/compose-refs': 7.0.0(react@18.3.1)
+      '@hanzogui/constants': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/helpers': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/is-equal-shallow': 7.0.0(react@18.3.1)
+      '@hanzogui/native': 7.0.0(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@hanzogui/normalize-css-color': 7.0.0
+      '@hanzogui/timer': 7.0.0
+      '@hanzogui/types': 7.0.0
+      '@hanzogui/use-did-finish-ssr': 7.0.0(react@18.3.1)
+      '@hanzogui/use-event': 7.0.0(react@18.3.1)
+      '@hanzogui/use-force-update': 7.0.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - '@react-native-menu/menu'
+      - burnt
       - react-native-gesture-handler
       - react-native-ios-context-menu
       - react-native-ios-utilities
@@ -11263,6 +11506,15 @@ snapshots:
 
   '@react-native/normalize-colors@0.85.3': {}
 
+  '@react-native/virtualized-lists@0.85.3(@types/react@18.3.12)(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)':
+    dependencies:
+      invariant: 2.2.4
+      nullthrows: 1.1.1
+      react: 18.3.1
+      react-native: 0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
+    optionalDependencies:
+      '@types/react': 18.3.12
+
   '@react-native/virtualized-lists@0.85.3(@types/react@18.3.12)(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)':
     dependencies:
       invariant: 2.2.4
@@ -11294,6 +11546,41 @@ snapshots:
       - utf-8-validate
       - zod
 
+  '@reown/appkit-controllers@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-wallet': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)
+      '@walletconnect/universal-provider': 2.21.0(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      valtio: 1.13.2(@types/react@18.3.12)(react@18.3.1)
+      viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - zod
+
   '@reown/appkit-controllers@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -11301,6 +11588,42 @@ snapshots:
       '@walletconnect/universal-provider': 2.21.0(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
       valtio: 1.13.2(@types/react@18.3.12)(react@19.2.6)
       viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - zod
+
+  '@reown/appkit-pay@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-controllers': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-ui': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-utils': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))(zod@3.25.76)
+      lit: 3.3.0
+      valtio: 1.13.2(@types/react@18.3.12)(react@18.3.1)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -11369,6 +11692,43 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
+  '@reown/appkit-scaffold-ui@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-controllers': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-ui': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-utils': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))(zod@3.25.76)
+      '@reown/appkit-wallet': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)
+      lit: 3.3.0
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - valtio
+      - zod
+
   '@reown/appkit-scaffold-ui@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@19.2.6))(zod@3.25.76)':
     dependencies:
       '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -11406,6 +11766,41 @@ snapshots:
       - valtio
       - zod
 
+  '@reown/appkit-ui@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-controllers': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-wallet': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)
+      lit: 3.3.0
+      qrcode: 1.5.3
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - zod
+
   '@reown/appkit-ui@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -11413,6 +11808,44 @@ snapshots:
       '@reown/appkit-wallet': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)
       lit: 3.3.0
       qrcode: 1.5.3
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - zod
+
+  '@reown/appkit-utils@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-controllers': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-polyfills': 1.7.8
+      '@reown/appkit-wallet': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)
+      '@walletconnect/logger': 2.1.2
+      '@walletconnect/universal-provider': 2.21.0(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      valtio: 1.13.2(@types/react@18.3.12)(react@18.3.1)
+      viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -11489,6 +11922,49 @@ snapshots:
       - bufferutil
       - typescript
       - utf-8-validate
+
+  '@reown/appkit@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit-common': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-controllers': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-pay': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-polyfills': 1.7.8
+      '@reown/appkit-scaffold-ui': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))(zod@3.25.76)
+      '@reown/appkit-ui': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-utils': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))(zod@3.25.76)
+      '@reown/appkit-wallet': 1.7.8(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)
+      '@walletconnect/types': 2.21.0
+      '@walletconnect/universal-provider': 2.21.0(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      bs58: 6.0.0
+      valtio: 1.13.2(@types/react@18.3.12)(react@18.3.1)
+      viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - zod
 
   '@reown/appkit@1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
@@ -11817,6 +12293,11 @@ snapshots:
       tailwindcss: 3.4.14(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.7.2))
 
   '@tanstack/query-core@5.90.20': {}
+
+  '@tanstack/react-query@5.90.20(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-core': 5.90.20
+      react: 18.3.1
 
   '@tanstack/react-query@5.90.20(react@19.2.6)':
     dependencies:
@@ -12279,6 +12760,46 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 1.2.0
 
+  '@wagmi/connectors@5.8.4(@types/react@18.3.12)(@wagmi/core@2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@18.3.1)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
+    dependencies:
+      '@coinbase/wallet-sdk': 4.3.0
+      '@metamask/sdk': 0.32.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@safe-global/safe-apps-provider': 0.18.6(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@safe-global/safe-apps-sdk': 9.1.0(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@wagmi/core': 2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@18.3.1)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))
+      '@walletconnect/ethereum-provider': 2.21.1(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      cbw-sdk: '@coinbase/wallet-sdk@3.9.3'
+      viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+    optionalDependencies:
+      typescript: 5.7.2
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - supports-color
+      - uploadthing
+      - utf-8-validate
+      - zod
+
   '@wagmi/connectors@5.8.4(@types/react@18.3.12)(@wagmi/core@2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@19.2.6)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@19.2.6))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@coinbase/wallet-sdk': 4.3.0
@@ -12318,6 +12839,21 @@ snapshots:
       - uploadthing
       - utf-8-validate
       - zod
+
+  '@wagmi/core@2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@18.3.1)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))':
+    dependencies:
+      eventemitter3: 5.0.1
+      mipd: 0.0.7(typescript@5.7.2)
+      viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      zustand: 5.0.0(@types/react@18.3.12)(react@18.3.1)(use-sync-external-store@1.4.0(react@18.3.1))
+    optionalDependencies:
+      '@tanstack/query-core': 5.90.20
+      typescript: 5.7.2
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+      - react
+      - use-sync-external-store
 
   '@wagmi/core@2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@19.2.6)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@19.2.6))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))':
     dependencies:
@@ -12425,6 +12961,47 @@ snapshots:
   '@walletconnect/environment@1.0.1':
     dependencies:
       tslib: 1.14.1
+
+  '@walletconnect/ethereum-provider@2.21.1(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
+    dependencies:
+      '@reown/appkit': 1.7.8(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/jsonrpc-http-connection': 1.0.8
+      '@walletconnect/jsonrpc-provider': 1.0.14
+      '@walletconnect/jsonrpc-types': 1.0.4
+      '@walletconnect/jsonrpc-utils': 1.0.8
+      '@walletconnect/keyvaluestorage': 1.1.1
+      '@walletconnect/sign-client': 2.21.1(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/types': 2.21.1
+      '@walletconnect/universal-provider': 2.21.1(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/utils': 2.21.1(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      events: 3.3.0
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - react
+      - typescript
+      - uploadthing
+      - utf-8-validate
+      - zod
 
   '@walletconnect/ethereum-provider@2.21.1(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
@@ -13552,6 +14129,10 @@ snapshots:
   depd@2.0.0: {}
 
   dequal@2.0.3: {}
+
+  derive-valtio@0.1.0(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1)):
+    dependencies:
+      valtio: 1.13.2(@types/react@18.3.12)(react@18.3.1)
 
   derive-valtio@0.1.0(valtio@1.13.2(@types/react@18.3.12)(react@19.2.6)):
     dependencies:
@@ -16297,6 +16878,51 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10):
+    dependencies:
+      '@react-native/assets-registry': 0.85.3
+      '@react-native/codegen': 0.85.3(@babel/core@7.29.0)
+      '@react-native/community-cli-plugin': 0.85.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@react-native/gradle-plugin': 0.85.3
+      '@react-native/js-polyfills': 0.85.3
+      '@react-native/normalize-colors': 0.85.3
+      '@react-native/virtualized-lists': 0.85.3(@types/react@18.3.12)(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      abort-controller: 3.0.0
+      anser: 1.4.10
+      ansi-regex: 5.0.1
+      babel-plugin-syntax-hermes-parser: 0.33.3
+      base64-js: 1.5.1
+      commander: 12.1.0
+      flow-enums-runtime: 0.0.6
+      hermes-compiler: 250829098.0.10
+      invariant: 2.2.4
+      memoize-one: 5.2.1
+      metro-runtime: 0.84.4
+      metro-source-map: 0.84.4
+      nullthrows: 1.1.1
+      pretty-format: 29.7.0
+      promise: 8.3.0
+      react: 18.3.1
+      react-devtools-core: 6.1.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      react-refresh: 0.14.2
+      regenerator-runtime: 0.13.11
+      scheduler: 0.27.0
+      semver: 7.8.1
+      stacktrace-parser: 0.1.11
+      tinyglobby: 0.2.16
+      whatwg-fetch: 3.6.20
+      ws: 7.5.10(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      yargs: 17.7.2
+    optionalDependencies:
+      '@types/react': 18.3.12
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@react-native-community/cli'
+      - '@react-native/metro-config'
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
   react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10):
     dependencies:
       '@react-native/assets-registry': 0.85.3
@@ -17219,9 +17845,17 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.12
 
+  use-sync-external-store@1.2.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+
   use-sync-external-store@1.2.0(react@19.2.6):
     dependencies:
       react: 19.2.6
+
+  use-sync-external-store@1.4.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   use-sync-external-store@1.4.0(react@19.2.6):
     dependencies:
@@ -17262,6 +17896,15 @@ snapshots:
       convert-source-map: 2.0.0
 
   validator@13.15.35: {}
+
+  valtio@1.13.2(@types/react@18.3.12)(react@18.3.1):
+    dependencies:
+      derive-valtio: 0.1.0(valtio@1.13.2(@types/react@18.3.12)(react@18.3.1))
+      proxy-compare: 2.6.0
+      use-sync-external-store: 1.2.0(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 18.3.12
+      react: 18.3.1
 
   valtio@1.13.2(@types/react@18.3.12)(react@19.2.6):
     dependencies:
@@ -17489,6 +18132,45 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+
+  wagmi@2.15.5(@tanstack/query-core@5.90.20)(@tanstack/react-query@5.90.20(react@18.3.1))(@types/react@18.3.12)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76):
+    dependencies:
+      '@tanstack/react-query': 5.90.20(react@18.3.1)
+      '@wagmi/connectors': 5.8.4(@types/react@18.3.12)(@wagmi/core@2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@18.3.1)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(react@18.3.1)(typescript@5.7.2)(utf-8-validate@5.0.10)(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@wagmi/core': 2.17.2(@tanstack/query-core@5.90.20)(@types/react@18.3.12)(react@18.3.1)(typescript@5.7.2)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))
+      react: 18.3.1
+      use-sync-external-store: 1.4.0(react@18.3.1)
+      viem: 2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+    optionalDependencies:
+      typescript: 5.7.2
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@tanstack/query-core'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - immer
+      - ioredis
+      - supports-color
+      - uploadthing
+      - utf-8-validate
+      - zod
 
   wagmi@2.15.5(@tanstack/query-core@5.90.20)(@tanstack/react-query@5.90.20(react@19.2.6))(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(typescript@5.7.2)(utf-8-validate@5.0.10)(viem@2.30.5(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76):
     dependencies:
@@ -17930,6 +18612,12 @@ snapshots:
   zod@3.22.4: {}
 
   zod@3.25.76: {}
+
+  zustand@5.0.0(@types/react@18.3.12)(react@18.3.1)(use-sync-external-store@1.4.0(react@18.3.1)):
+    optionalDependencies:
+      '@types/react': 18.3.12
+      react: 18.3.1
+      use-sync-external-store: 1.4.0(react@18.3.1)
 
   zustand@5.0.0(@types/react@18.3.12)(react@19.2.6)(use-sync-external-store@1.4.0(react@19.2.6)):
     optionalDependencies:
