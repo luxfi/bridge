@@ -208,18 +208,20 @@ services:
       timeout: 5s
       retries: 3
 
-  # Bridge UI - Testnet
+  # Bridge UI - Testnet — Vite SPA (ghcr.io/hanzoai/spa serves /dist on :80).
+  # BRIDGE_* env documents what the image was built with; the values
+  # become real only when baked at build time (app/bridge/Dockerfile).
   bridge-ui:
     image: ghcr.io/luxfi/bridge-ui:latest
     container_name: bridge-ui
     restart: always
     environment:
-      - NEXT_PUBLIC_API_URL=https://bridge-api-testnet.lux.network
-      - NEXT_PUBLIC_CHAIN_ENV=testnet
-      - NEXT_PUBLIC_ENABLE_TEST_MODE=true
-      - NEXT_PUBLIC_SHOW_FAUCET=true
+      - BRIDGE_API_HOST=https://bridge-api-testnet.lux.network
+      - BRIDGE_ENV=testnet
+      - BRIDGE_CLIENT_ID=lux-bridge
+      - BRIDGE_IAM_ORG=lux-network
     ports:
-      - "3001:3000"
+      - "3001:80"
     networks:
       - bridge-network
     depends_on:
