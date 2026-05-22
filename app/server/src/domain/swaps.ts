@@ -3,6 +3,7 @@ import { TransactionType, swapStatusByIndex, SwapStatus, utilaTransactionStatusB
 
 import { UTILA_NETWORKS } from "@/domain/constants"
 import ERC20B_ABI from "@/domain/constants/ERC20B.json"
+import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
 
@@ -10,6 +11,8 @@ import { getTokenPrice } from "./tokens"
 import { isExitFromLux, BRIDGE_FEE_RATE } from "./quote"
 import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWORK_ASSET_MAP } from "./mpc-wallet"
 import { isMPCSigningEnabled, mpcBridgeMint, mpcSendNative } from "./mpc-signer"
+
+import type { CosignerIntent } from "./cosigners"
 
 export interface SwapData {
   amount: number
@@ -25,6 +28,21 @@ export interface SwapData {
   use_deposit_address: boolean
   deposit_address?: string
   use_teleporter: boolean
+  /**
+   * Optional layered cosigner intents (issue #386). The SDK forwards
+   * public identifiers only; secret material is fetched from KMS in
+   * `domain/cosigners.ts::fetchCosignerSecret`. When non-empty, the swap
+   * state machine MUST gate `broadcasting` on every listed cosigner
+   * returning `approved` in addition to the native MPC sign.
+   *
+   * Persistence: not yet wired to Prisma. The intent currently flows
+   * into the in-process logger via `handleSwapCreation`, and the
+   * `dispatchCosigners` call site (after native sign completes) is
+   * where the new dev needs to add `await dispatchCosigners({ swapId,
+   * nativeSignature, txHash, cosigners })` once a CosignerStep model
+   * (or Swap.metadata JSON column) lands.
+   */
+  cosigners?: CosignerIntent[]
   [property: string]: any
 }
 /* TODO
@@ -46,7 +64,19 @@ export type UpdateSwapData = {
  * @returns swap result
  */
 export async function handleSwapCreation(data: SwapData) {
-  const { amount, source_network, source_exchange, source_asset, source_address, destination_network, destination_exchange, destination_asset, destination_address, refuel, use_deposit_address, use_teleporter } = data
+  const { amount, source_network, source_exchange, source_asset, source_address, destination_network, destination_exchange, destination_asset, destination_address, refuel, use_deposit_address, use_teleporter, cosigners } = data
+
+  // Layered cosigners — log + thread the intent. TODO(#386): persist on
+  // the swap record (Prisma `Swap.metadata` JSON column or a related
+  // `CosignerStep` model) so the post-native-sign step can read it back.
+  // The validator in routes/swaps.ts has already rejected secret-like
+  // fields, so anything that reaches here is safe to log.
+  if (cosigners && cosigners.length > 0) {
+    logger.info(
+      `[swaps] layered cosigners requested (${cosigners.length}): ` +
+        cosigners.map((c) => c.kind).join(", "),
+    )
+  }
 
   try {
     // source network
