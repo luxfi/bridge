@@ -12,6 +12,11 @@ interface ImportMetaEnv {
   readonly VITE_BRIDGE_IAM_ORG?: string
   readonly VITE_BRIDGE_LOGO_URL?: string
   readonly VITE_WC_PROJECT_ID?: string
+  readonly VITE_BRIDGE_WALLET_DEFAULT_CHAIN?: string
+  readonly VITE_BRIDGE_WALLET_SUPPORTED_CHAINS?: string
+  readonly VITE_BRIDGE_MPC_PUBLIC_URL?: string
+  readonly VITE_BRIDGE_MPC_PRIVATE_URL?: string
+  readonly VITE_BRIDGE_MPC_PROTOCOL?: string
 }
 
 interface ImportMeta {

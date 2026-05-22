@@ -16,6 +16,22 @@ vi.mock('wagmi', () => ({
   useAccount: () => accountState,
 }))
 
+// Stub useNetworks → DEFAULT_CHAINS / DEFAULT_ASSETS so the fetch matcher
+// here only handles /api/swaps (the surface under test).
+vi.mock('../app/hooks/useNetworks', async () => {
+  const { DEFAULT_CHAINS } = await import('../app/lib/chains')
+  const { DEFAULT_ASSETS } = await import('../app/lib/assets')
+  return {
+    useNetworks: () => ({
+      chains: DEFAULT_CHAINS,
+      assets: DEFAULT_ASSETS,
+      isLoading: false,
+      isError: false,
+      refetch: () => {},
+    }),
+  }
+})
+
 import { setConfig } from '../config'
 import { useTransfers } from '../app/hooks/useTransfers'
 
