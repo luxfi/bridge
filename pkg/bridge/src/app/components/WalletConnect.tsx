@@ -1,7 +1,9 @@
 // WalletConnect — connect / disconnect button + connected address pill.
 //
-// Today this stubs the connection (see useWallet.ts). Phase 3 R3 wires
-// the real threshold-MPC session — the *button* contract here stays.
+// Drives the real wagmi connect/disconnect flow exposed by useWallet (which
+// picks injected → coinbase → WalletConnect in that order). The button is
+// the only user-side affordance for the *user* signing leg; the bridge leg
+// is signed by the MPC threshold network independently.
 
 import type { CSSProperties, FC } from 'react'
 import { Button } from '@hanzo/gui'
@@ -14,8 +16,6 @@ export interface WalletConnectProps {
   defaultChainId: string
 }
 
-// Phase 3 R2 swap: `<button>` → @hanzo/gui's `Button`. Inline styles are
-// preserved verbatim; Phase 3 R2.5 will move them to Tamagui theme tokens.
 const buttonBase: CSSProperties = {
   background: 'var(--bridge-accent)',
   color: 'white',
