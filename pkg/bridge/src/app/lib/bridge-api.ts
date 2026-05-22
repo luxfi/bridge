@@ -247,34 +247,6 @@ export interface ServerSwap {
   status?: string
   source_network?: string
   destination_network?: string
-  /**
-   * Deposit address the user must send funds to. Populated by the server
-   * when the swap was created with `useDepositAddress: true` (required for
-   * non-EVM source chains where the user can't sign a contract call from
-   * the connected wagmi wallet). Field name is snake_case to match the
-   * server's wire format.
-   */
-  deposit_address?: string
-  /** Source-chain tx hash, populated by the deposit watcher when found. */
-  source_tx_hash?: string
-  /** Destination-chain tx hash, populated by the broadcast driver on completion. */
-  dest_tx_hash?: string
-  /**
-   * Most-recent transient error from the bridge's signing or broadcast
-   * driver. Cleared on advance to a new phase / success. The bridge
-   * keeps retrying — surface this so the UI can tell the user WHY a
-   * swap is stalled (e.g. "Insufficient funds in release address")
-   * instead of letting them stare at a spinner until the 5-min UI
-   * timeout fires.
-   */
-  last_error?: string
-  /**
-   * Source-chain transaction hash of the auto-refund sweep, populated
-   * by the bridge's refund driver when a stuck-broadcasting swap is
-   * reverted (e.g. release address never got funded). Set together
-   * with status === 'refunded'.
-   */
-  refund_tx_hash?: string
   [k: string]: unknown
 }
 
@@ -427,9 +399,6 @@ function bridgeRequestToServerSwap(req: BridgeRequest): ServerSwap {
     status: bridgeStatusToServerStatus(req.status),
     source_network: req.sourceChain,
     destination_network: req.destChain,
-    // BridgeVM's submitBridgeRequest doesn't currently return a deposit
-    // address — that's a REST-backend concept for non-EVM sources. When
-    // both transports are in play, the REST path supplies this field.
   }
 }
 
