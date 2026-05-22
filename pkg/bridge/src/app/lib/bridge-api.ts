@@ -87,6 +87,29 @@ export async function fetchQuote(
   return quote
 }
 
+/**
+ * Optional layered-cosigner intent.
+ *
+ * The SDK forwards PUBLIC identifiers only — `orgId`, `clientId`, `apiKey`,
+ * vault ids. The bridge backend uses these to look up the corresponding
+ * secret half from KMS and complete the cosign on behalf of the tenant.
+ * No secret material ever leaves the browser bundle.
+ */
+export type CosignerIntent =
+  | {
+      kind: 'utila'
+      orgId: string
+      clientId: string
+      apiHost?: string
+      vaultId?: string
+    }
+  | {
+      kind: 'fireblocks'
+      apiKey: string
+      apiHost?: string
+      vaultAccountId?: string
+    }
+
 /** POST `/api/swaps` payload. */
 export interface CreateSwapParams {
   amount: number
@@ -99,6 +122,12 @@ export interface CreateSwapParams {
   useDepositAddress: boolean
   useTeleporter: boolean
   appName: string
+  /**
+   * Optional layered cosigners. When non-empty, the bridge backend
+   * enforces (native MPC sign) AND (every listed cosigner approves)
+   * before releasing settlement.
+   */
+  cosigners?: CosignerIntent[]
 }
 
 /** Server swap envelope (loose shape — wraps the underlying swap record). */
@@ -134,6 +163,9 @@ export async function createSwap(
       use_deposit_address: params.useDepositAddress,
       use_teleporter: params.useTeleporter,
       app_name: params.appName,
+      ...(params.cosigners && params.cosigners.length > 0
+        ? { cosigners: params.cosigners.map(serializeCosigner) }
+        : {}),
     }),
     signal: opts.signal,
   })
@@ -174,6 +206,24 @@ async function safeJson(resp: Response): Promise<unknown> {
     return await resp.json()
   } catch {
     return await resp.text().catch(() => null)
+  }
+}
+
+function serializeCosigner(c: CosignerIntent): Record<string, unknown> {
+  if (c.kind === 'utila') {
+    return {
+      kind: 'utila',
+      org_id: c.orgId,
+      client_id: c.clientId,
+      ...(c.apiHost ? { api_host: c.apiHost } : {}),
+      ...(c.vaultId ? { vault_id: c.vaultId } : {}),
+    }
+  }
+  return {
+    kind: 'fireblocks',
+    api_key: c.apiKey,
+    ...(c.apiHost ? { api_host: c.apiHost } : {}),
+    ...(c.vaultAccountId ? { vault_account_id: c.vaultAccountId } : {}),
   }
 }
 
