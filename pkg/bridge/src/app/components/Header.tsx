@@ -1,7 +1,9 @@
-// Header — brand area + wallet connect.
+// Header — brand area + env/protocol chips + wallet connect.
 //
 // Reads brand metadata from the SDK config (which downstream consumers set
-// once at mount time via setConfig). Phase 3 R2 swaps the styling layer.
+// once at mount time via setConfig). The env + MPC protocol chips make
+// the active deploy target explicit so users can tell mainnet from testnet
+// at a glance and ops can verify the post-quantum protocol is wired right.
 
 import type { CSSProperties, FC } from 'react'
 import { getConfig } from '../../config'
@@ -50,6 +52,45 @@ const brandName: CSSProperties = {
   fontWeight: 600,
 }
 
+const chipRow: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  marginLeft: 8,
+}
+
+const chipBase: CSSProperties = {
+  fontSize: 10,
+  fontWeight: 600,
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
+  padding: '2px 6px',
+  borderRadius: 4,
+  border: '1px solid var(--bridge-border)',
+  color: 'var(--bridge-text-muted)',
+  background: 'var(--bridge-bg-input)',
+}
+
+const envMainnet: CSSProperties = {
+  ...chipBase,
+  color: 'var(--bridge-success)',
+  borderColor: 'rgba(76, 175, 80, 0.32)',
+  background: 'rgba(76, 175, 80, 0.08)',
+}
+
+const envTestnet: CSSProperties = {
+  ...chipBase,
+  color: 'var(--bridge-accent)',
+  borderColor: 'rgba(91, 141, 239, 0.32)',
+  background: 'rgba(91, 141, 239, 0.08)',
+}
+
+const right: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+}
+
 export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
   // Safe read — getConfig() throws only if BridgeApp renders before setConfig;
   // the Bridge.tsx wrapper guarantees order, so we can read directly.
@@ -57,6 +98,8 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
   const name = cfg.brand?.name ?? 'Bridge'
   const logo = cfg.brand?.logoUrl
   const initial = name.charAt(0).toUpperCase()
+  const envStyle = cfg.env === 'mainnet' ? envMainnet : envTestnet
+  const protocol = cfg.mpc?.protocol ?? 'cggmp21'
   return (
     <header style={header}>
       <div style={brand}>
@@ -72,8 +115,18 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
           </span>
         )}
         <span style={brandName}>{name}</span>
+        <div style={chipRow}>
+          <span style={envStyle} title={`Bridge environment: ${cfg.env}`}>
+            {cfg.env}
+          </span>
+          <span style={chipBase} title={`MPC threshold protocol: ${protocol}`}>
+            mpc · {protocol}
+          </span>
+        </div>
       </div>
-      <WalletConnect wallet={wallet} defaultChainId={defaultChainId} />
+      <div style={right}>
+        <WalletConnect wallet={wallet} defaultChainId={defaultChainId} />
+      </div>
     </header>
   )
 }
