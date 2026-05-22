@@ -174,6 +174,40 @@ export interface BridgeMPCConfig {
 }
 
 /**
+ * Direct-RPC config block.
+ *
+ * When `bchainUrl` is set, the SDK tries the Lux BridgeVM JSON-RPC for
+ * quote / submit / status before touching `BridgeConfig.apiHost` (the
+ * legacy REST backend). On RPC error or unreachable host, falls back to
+ * REST so the UI keeps working. This makes the bridge a true dApp without
+ * forfeiting compatibility with hosts that don't expose a public BridgeVM
+ * RPC yet.
+ */
+export interface BridgeRpcConfig {
+  /**
+   * B-Chain (BridgeVM) JSON-RPC URL, e.g.
+   * `https://node.lux.network/ext/bc/B/rpc`. When set, drives the primary
+   * data path (estimate fee / submit request / get status).
+   */
+  bchainUrl?: string
+  /**
+   * Optional T-Chain (ThresholdVM) JSON-RPC URL. When omitted, the SDK
+   * uses `mpc.publicUrl` for MPC operations (they refer to the same
+   * endpoint — kept as separate fields for callers that want to point
+   * them at different proxies).
+   */
+  tchainUrl?: string
+  /**
+   * Behaviour when the RPC call fails or the endpoint is unreachable.
+   * `rest` (default): fall back to the REST `apiHost`. `fail`: surface
+   * the error to the UI.
+   */
+  fallback?: 'rest' | 'fail'
+  /** Per-request RPC timeout in ms. Defaults to 10_000. */
+  timeoutMs?: number
+}
+
+/**
  * Runtime configuration for the bridge SDK.
  *
  * `apiHost` and `env` are required; every other block is optional and
@@ -186,6 +220,8 @@ export interface BridgeConfig {
   apiHost: string
   /** Environment slug (`mainnet`, `testnet`, or a custom env name). */
   env: string
+  /** Optional direct-RPC block. Drives the dApp path against BridgeVM. */
+  rpc?: BridgeRpcConfig
   /** Optional brand overrides for white-label deployments. */
   brand?: BrandConfig
   /** Optional auth (Hanzo IAM) block. Mirrors `<Exchange auth={…} />`. */
