@@ -21,6 +21,9 @@ jobs:
           - image: ghcr.io/luxfi/bridge/server
             dockerfile: app/server/Dockerfile
             context: .
+          - image: ghcr.io/luxfi/bridge-ui
+            dockerfile: app/bridge/Dockerfile
+            context: .
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
       image: ${{ matrix.image }}
