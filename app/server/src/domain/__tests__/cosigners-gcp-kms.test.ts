@@ -250,73 +250,7 @@ describe("runCloudHsm — algorithm allow-list", () => {
   })
 })
 
-// ── other-provider stubs ─────────────────────────────────────────────────
-
-describe("runCloudHsm — aws_kms / azure_key_vault / vault_transit stubs", () => {
-  it("aws_kms stub returns failed/provider_unavailable", async () => {
-    const [result] = await dispatchCosigners({
-      ...opts,
-      cosigners: [
-        {
-          kind: "cloud_hsm",
-          provider: "aws_kms",
-          key_ref:
-            "arn:aws:kms:us-east-1:123:key/00000000-0000-0000-0000-000000000000",
-          algorithm: "secp256k1_ecdsa_sha256",
-        },
-      ],
-    })
-    expect(result?.status).toBe("failed")
-    expect(result?.reason).toMatch(/AWS KMS cosigner not yet implemented/)
-  })
-
-  it("azure_key_vault stub returns failed/provider_unavailable", async () => {
-    const [result] = await dispatchCosigners({
-      ...opts,
-      cosigners: [
-        {
-          kind: "cloud_hsm",
-          provider: "azure_key_vault",
-          key_ref: "https://v.vault.azure.net/keys/k",
-          algorithm: "secp256k1_ecdsa_sha256",
-        },
-      ],
-    })
-    expect(result?.status).toBe("failed")
-    expect(result?.reason).toMatch(/Azure Key Vault cosigner not yet implemented/)
-  })
-
-  it("vault_transit stub returns failed/provider_unavailable", async () => {
-    const [result] = await dispatchCosigners({
-      ...opts,
-      cosigners: [
-        {
-          kind: "cloud_hsm",
-          provider: "vault_transit",
-          key_ref: "transit/keys/k",
-          algorithm: "ed25519",
-        },
-      ],
-    })
-    expect(result?.status).toBe("failed")
-    expect(result?.reason).toMatch(/Vault Transit cosigner not yet implemented/)
-  })
-})
-
-// ── f-chain native cosigner ──────────────────────────────────────────────
-
-describe("runFChain — Lux native FHE cosigner", () => {
-  it("returns failed with the not-implemented marker (no external client yet)", async () => {
-    const [result] = await dispatchCosigners({
-      ...opts,
-      cosigners: [
-        {
-          kind: "fchain",
-          public_url: "https://fchain.lux.network",
-        },
-      ],
-    })
-    expect(result?.status).toBe("failed")
-    expect(result?.reason).toMatch(/fchain cosigner not yet implemented/)
-  })
-})
+// Real-adapter tests for AWS / Azure / Vault Transit / f-chain live in
+// cosigners-aws-azure-vault-fchain.test.ts — they mock the provider SDKs
+// (and globalThis.fetch for the HTTP-direct adapters) the same way this
+// file mocks @google-cloud/kms.
