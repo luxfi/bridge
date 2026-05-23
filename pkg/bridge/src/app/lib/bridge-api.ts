@@ -91,9 +91,15 @@ export async function fetchQuote(
  * Optional layered-cosigner intent.
  *
  * The SDK forwards PUBLIC identifiers only — `orgId`, `clientId`, `apiKey`,
- * vault ids. The bridge backend uses these to look up the corresponding
- * secret half from KMS and complete the cosign on behalf of the tenant.
+ * key references, vault ids. The bridge backend uses these to look up the
+ * corresponding secret half from KMS (or to invoke a workload-identity-
+ * authenticated client) and complete the cosign on behalf of the tenant.
  * No secret material ever leaves the browser bundle.
+ *
+ * Async approval layers (utila, fireblocks) — bridge backend polls.
+ * Synchronous HSM-sign layers (cloud_hsm) — bridge backend signs in one call.
+ * Both shapes collapse into the same `cosigners[]` wire array; the backend
+ * dispatcher handles the timing difference.
  */
 export type CosignerIntent =
   | {
@@ -108,6 +114,18 @@ export type CosignerIntent =
       apiKey: string
       apiHost?: string
       vaultAccountId?: string
+    }
+  | {
+      kind: 'cloud_hsm'
+      provider: 'gcp_kms' | 'aws_kms' | 'azure_key_vault' | 'vault_transit'
+      keyRef: string
+      algorithm: 'secp256k1_ecdsa_sha256' | 'ed25519' | 'rsa_pss_sha256'
+      identityHint?: string
+    }
+  | {
+      kind: 'fchain'
+      publicUrl: string
+      scheme?: 'ckks' | 'bgv' | 'bfv'
     }
 
 /** POST `/api/swaps` payload. */
@@ -219,11 +237,28 @@ function serializeCosigner(c: CosignerIntent): Record<string, unknown> {
       ...(c.vaultId ? { vault_id: c.vaultId } : {}),
     }
   }
+  if (c.kind === 'fireblocks') {
+    return {
+      kind: 'fireblocks',
+      api_key: c.apiKey,
+      ...(c.apiHost ? { api_host: c.apiHost } : {}),
+      ...(c.vaultAccountId ? { vault_account_id: c.vaultAccountId } : {}),
+    }
+  }
+  if (c.kind === 'cloud_hsm') {
+    return {
+      kind: 'cloud_hsm',
+      provider: c.provider,
+      key_ref: c.keyRef,
+      algorithm: c.algorithm,
+      ...(c.identityHint ? { identity_hint: c.identityHint } : {}),
+    }
+  }
+  // fchain — native FHE attestation; no credentials, just a public URL.
   return {
-    kind: 'fireblocks',
-    api_key: c.apiKey,
-    ...(c.apiHost ? { api_host: c.apiHost } : {}),
-    ...(c.vaultAccountId ? { vault_account_id: c.vaultAccountId } : {}),
+    kind: 'fchain',
+    public_url: c.publicUrl,
+    ...(c.scheme ? { scheme: c.scheme } : {}),
   }
 }
 
