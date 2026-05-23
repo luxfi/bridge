@@ -94,7 +94,16 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
             metadata: {
               name: brandName,
               description: `${brandName} cross-chain bridge`,
-              url: typeof window !== 'undefined' ? window.location.origin : 'https://bridge.lux.network',
+              // Brand-agnostic by design — at runtime the browser
+              // window.location.origin resolves to whatever tenant
+              // hostname is loading the bundle. SSR fallback uses
+              // apiHost stripped of its API subdomain, otherwise a
+              // tenant-neutral placeholder. Never bake Lux-specific
+              // URLs into the SDK (jurisdiction neutrality).
+              url:
+                typeof window !== 'undefined'
+                  ? window.location.origin
+                  : deriveAppOrigin(cfg.apiHost),
               icons: brandIcon,
             },
             showQrModal: true,
@@ -113,6 +122,31 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
     connectors,
     transports,
   })
+}
+
+/**
+ * Best-effort SSR fallback for the WalletConnect metadata URL.
+ *
+ *   api.bridge.lux.network → https://bridge.lux.network
+ *   api.bridge.zoo.network → https://bridge.zoo.network
+ *   bridge-api.example.io  → https://example.io      (1-level strip)
+ *
+ * The SDK never makes a real network call against this URL; it's only
+ * the dapp identity card WalletConnect shows to the user mid-handshake.
+ * On client-side hydration, window.location.origin overrides this — so
+ * the fallback only matters for the very first SSR render frame.
+ */
+export function deriveAppOrigin(apiHost: string): string {
+  try {
+    const u = new URL(apiHost)
+    const host = u.hostname
+    if (host.startsWith('api.')) {
+      return `${u.protocol}//${host.slice(4)}`
+    }
+    return `${u.protocol}//${host}`
+  } catch {
+    return 'https://localhost'
+  }
 }
 
 /**

@@ -32,6 +32,52 @@ Rules:
 - `@luxfi/{core,threshold,utila}` are generic Lux building-block libraries —
   bridge-agnostic, may be reused elsewhere in the Lux ecosystem.
 
+### Canonical brand sourcing — `@luxfi/brand` is the only source
+
+Every Lux-ecosystem tenant app — bridge, exchange, id, pay, etc. — pulls
+its brand identity from **one** package: `@luxfi/brand` (source repo:
+`~/work/lux/brand`). No Lux-specific brand strings, colors, logos, or
+support email addresses are baked into the SDK or any other downstream
+artefact.
+
+How the bridge tenant does it (`app/bridge/src/bridge.config.ts`):
+
+```ts
+import luxBrandJson from '@luxfi/brand/brand.json'
+const { shortName, primaryColor, supportEmail } = luxBrandJson.brand
+
+export const bridgeConfig: BridgeConfig = {
+  apiHost: env('BRIDGE_API_HOST', 'https://api.bridge.lux.network')!,
+  brand: {
+    name:         `${shortName ?? 'Lux'} Bridge`,   // composed at runtime
+    primaryColor: primaryColor ?? '#000000',
+    supportEmail: supportEmail ?? 'support@lux.network',
+  },
+  // …
+}
+```
+
+Rules:
+
+- The **SDK** (`pkg/bridge/`) is **jurisdiction-neutral**. It declares
+  *no* Lux-specific brand. Tenants supply brand at mount time via
+  `BridgeConfig.brand`. The SDK has no direct dependency on
+  `@luxfi/brand` — that'd be a layering violation (Zoo, Hanzo, or any
+  white-label tenant must be able to consume `@luxfi/bridge` without
+  pulling Lux brand metadata into their bundle).
+- **App-specific endpoints** (`api.bridge.lux.network`, `docs.lux.network/bridge`)
+  belong to the bridge product and are independent of `@luxfi/brand`'s
+  `appDomain` (`lux.exchange` — that's the exchange product's domain).
+- **SSR / no-window fallbacks** in the SDK derive from `cfg.apiHost`
+  rather than hardcoding a Lux URL — see `deriveAppOrigin` in
+  `pkg/bridge/src/app/lib/wagmi-config.ts`.
+
+Other Lux apps follow the same pattern: `~/work/lux/exchange` reads
+the full brand block; `~/work/lux/id` reads `name` + `primaryColor` +
+`appDomain`; etc. If you find a hardcoded brand string in any Lux app,
+it's a leak — file it as a follow-up issue and route the value through
+`@luxfi/brand`.
+
 ### History — what got folded together
 
 - **`app/bridge3/`** (formerly `@luxbridge/app-v3`) was **folded into
