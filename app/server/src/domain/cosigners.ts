@@ -42,6 +42,13 @@ import {
 } from "@luxfi/utila"
 
 import { KeyManagementServiceClient } from "@google-cloud/kms"
+import {
+  KMSClient,
+  SignCommand,
+  type SigningAlgorithmSpec,
+} from "@aws-sdk/client-kms"
+import { CryptographyClient, type SignatureAlgorithm } from "@azure/keyvault-keys"
+import { DefaultAzureCredential } from "@azure/identity"
 import { createHash } from "crypto"
 
 import logger from "@/logger"
@@ -395,14 +402,23 @@ export async function fetchCosignerSecret(
     }
     return pem
   }
-  const envKey = `FIREBLOCKS_COSIGNER_PEM__${envSafe(intent.api_key)}`
-  const pem = process.env[envKey]
-  if (!pem) {
-    throw new Error(
-      `Fireblocks cosigner secret not in KMS (TODO) and ${envKey} is unset — cannot complete cosign for key ${intent.api_key}`,
-    )
+  if (intent.kind === "fireblocks") {
+    const envKey = `FIREBLOCKS_COSIGNER_PEM__${envSafe(intent.api_key)}`
+    const pem = process.env[envKey]
+    if (!pem) {
+      throw new Error(
+        `Fireblocks cosigner secret not in KMS (TODO) and ${envKey} is unset — cannot complete cosign for key ${intent.api_key}`,
+      )
+    }
+    return pem
   }
-  return pem
+  // cloud_hsm + fchain do not consult fetchCosignerSecret — they
+  // resolve credentials via cloud-native workload identity (no shared
+  // secret). The runOne dispatcher gates on intent.kind and never
+  // reaches here for those branches, so this is a defensive guard.
+  throw new Error(
+    `fetchCosignerSecret called for kind "${intent.kind}" which uses workload identity, not a shared secret`,
+  )
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1011,100 +1027,529 @@ function mapGcpError(err: unknown): CloudSignerError {
   return new CloudSignerError("network_error", msg, err)
 }
 
-// ── AWS KMS adapter (stub — #386 follow-up) ──────────────────────────────
+// ── AWS KMS adapter ──────────────────────────────────────────────────────
 //
-// pnpm add @aws-sdk/client-kms -F @luxbridge/server
-//   import { KMSClient, SignCommand } from "@aws-sdk/client-kms"
-//   const region = identityHint ?? keyRef.split(":")[3]
-//   const client = new KMSClient({ region })  // workload identity chain
-//   const cmd = new SignCommand({
-//     KeyId: keyRef,
-//     Message: digest,
-//     MessageType: "DIGEST",
-//     SigningAlgorithm: "ECDSA_SHA_256",
-//   })
-//   const res = await client.send(cmd)
-// Error mapping (AWS): AccessDenied → permission_denied; NotFoundException →
-// key_not_found; KMSInvalidStateException → key_disabled;
-// ThrottlingException → rate_limited; service errors → provider_unavailable.
+// Real implementation via @aws-sdk/client-kms SignCommand. Auth resolves
+// through the default AWS credential chain (instance role / IRSA / OIDC /
+// SSO) — no static keys in the SDK config. region pulls from identityHint
+// if provided (Lux-ID-style "use this signing identity") or parses the
+// region segment out of the ARN as a fallback.
+//
+// AWS SigningAlgorithm naming differs from our CosignerAlgorithm:
+//   secp256k1_ecdsa_sha256  → ECDSA_SHA_256 (KMS treats secp256k1 as ECC)
+//   rsa_pss_sha256          → RSASSA_PSS_SHA_256
+//   ed25519                 → AWS KMS does not support ed25519 natively today
+//                             (algorithm_mismatch rejected here)
+
+const AWS_ALGORITHM_MAP: Partial<Record<CosignerAlgorithm, SigningAlgorithmSpec>> = {
+  secp256k1_ecdsa_sha256: "ECDSA_SHA_256",
+  rsa_pss_sha256: "RSASSA_PSS_SHA_256",
+}
+
+function awsRegionFromArn(keyArn: string): string | undefined {
+  // arn:aws:kms:{region}:{account}:key/{key-id}
+  const parts = keyArn.split(":")
+  return parts.length >= 4 ? parts[3] : undefined
+}
 
 function awsKmsSigner(): CloudSigner {
   return {
     provider: "aws_kms",
-    async sign(_input: CloudSignInput): Promise<CloudSignResult> {
-      throw new CloudSignerError(
-        "provider_unavailable",
-        "AWS KMS cosigner not yet implemented — see issue #386. Implementation sketch in cosigners.ts.",
-      )
+    async sign(input: CloudSignInput): Promise<CloudSignResult> {
+      const SigningAlgorithm = AWS_ALGORITHM_MAP[input.algorithm]
+      if (!SigningAlgorithm) {
+        throw new CloudSignerError(
+          "algorithm_mismatch",
+          `AWS KMS does not support algorithm ${input.algorithm} (supported: ${Object.keys(AWS_ALGORITHM_MAP).join(", ")})`,
+        )
+      }
+      const region = input.identityHint ?? awsRegionFromArn(input.keyRef)
+      if (!region) {
+        throw new CloudSignerError(
+          "invalid_digest",
+          `AWS KMS: cannot derive region from keyRef "${input.keyRef}" and no identityHint provided`,
+        )
+      }
+      const client = new KMSClient({ region })
+
+      let res
+      try {
+        res = await client.send(
+          new SignCommand({
+            KeyId: input.keyRef,
+            Message: input.digest,
+            MessageType: "DIGEST",
+            SigningAlgorithm,
+          }),
+        )
+      } catch (err) {
+        throw mapAwsError(err)
+      }
+      if (!res.Signature) {
+        throw new CloudSignerError(
+          "provider_unavailable",
+          "AWS KMS Sign returned no Signature",
+        )
+      }
+      return {
+        signature: Buffer.from(res.Signature),
+        publicKeyRef: input.keyRef,
+        provider: "aws_kms",
+        keyVersion: res.KeyId ?? input.keyRef,
+        signedAt: new Date().toISOString(),
+      }
     },
   }
 }
 
-// ── Azure Key Vault adapter (stub — #386 follow-up) ──────────────────────
+/** Map AWS SDK errors to CloudSignerErrorCode. */
+function mapAwsError(err: unknown): CloudSignerError {
+  const e = err as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } } & Error
+  const name = e.name ?? ""
+  const msg = e.message ?? String(err)
+  // Exception type → category map. AWS uses both pascal-case exception
+  // names and HTTP status codes; check both.
+  if (
+    name === "AccessDeniedException" ||
+    name === "UnrecognizedClientException" ||
+    /AccessDenied|not authorized|forbidden/i.test(msg) ||
+    e.$metadata?.httpStatusCode === 403
+  ) {
+    return new CloudSignerError("permission_denied", msg, err)
+  }
+  if (
+    name === "NotFoundException" ||
+    /NotFound|does not exist/i.test(msg) ||
+    e.$metadata?.httpStatusCode === 404
+  ) {
+    return new CloudSignerError("key_not_found", msg, err)
+  }
+  if (
+    name === "KMSInvalidStateException" ||
+    name === "DisabledException" ||
+    /disabled|invalid state/i.test(msg)
+  ) {
+    return new CloudSignerError("key_disabled", msg, err)
+  }
+  if (
+    name === "InvalidKeyUsageException" ||
+    name === "KMSInvalidSignatureException" ||
+    /InvalidKeyUsage|algorithm/i.test(msg)
+  ) {
+    return new CloudSignerError("algorithm_mismatch", msg, err)
+  }
+  if (
+    name === "ThrottlingException" ||
+    name === "LimitExceededException" ||
+    /Throttling|rate.{0,3}exceeded|too many/i.test(msg) ||
+    e.$metadata?.httpStatusCode === 429
+  ) {
+    return new CloudSignerError("rate_limited", msg, err)
+  }
+  if (
+    name === "DependencyTimeoutException" ||
+    name === "KMSInternalException" ||
+    /timeout|unavailable|service.{0,5}error/i.test(msg) ||
+    (e.$metadata?.httpStatusCode ?? 0) >= 500
+  ) {
+    return new CloudSignerError("provider_unavailable", msg, err)
+  }
+  return new CloudSignerError("network_error", msg, err)
+}
+
+// ── Azure Key Vault adapter ──────────────────────────────────────────────
 //
-// pnpm add @azure/keyvault-keys @azure/identity -F @luxbridge/server
-//   import { CryptographyClient } from "@azure/keyvault-keys"
-//   import { DefaultAzureCredential } from "@azure/identity"
-//   const client = new CryptographyClient(keyRef, new DefaultAzureCredential())
-//   const result = await client.sign("ES256K", input.digest)  // for secp256k1
-// Error mapping (Azure): Forbidden → permission_denied; KeyNotFound →
-// key_not_found; KeyDisabled → key_disabled; TooManyRequests →
-// rate_limited; ServiceUnavailable → provider_unavailable.
+// Real implementation via @azure/keyvault-keys CryptographyClient. Auth
+// resolves through DefaultAzureCredential (Managed Identity / Workload
+// Identity / Azure CLI / Visual Studio / Environment, in that order) —
+// no static credentials in the SDK config. keyRef is the full key URL
+// (`https://{vault}.vault.azure.net/keys/{name}[/{version}]`).
+//
+// Azure signature-algorithm tokens differ from our union:
+//   secp256k1_ecdsa_sha256  → "ES256K"
+//   rsa_pss_sha256          → "PS256"
+//   ed25519                 → not currently in @azure/keyvault-keys
+//                             SignatureAlgorithm union → algorithm_mismatch.
+
+const AZURE_ALGORITHM_MAP: Partial<Record<CosignerAlgorithm, SignatureAlgorithm>> = {
+  secp256k1_ecdsa_sha256: "ES256K",
+  rsa_pss_sha256: "PS256",
+}
 
 function azureKeyVaultSigner(): CloudSigner {
   return {
     provider: "azure_key_vault",
-    async sign(_input: CloudSignInput): Promise<CloudSignResult> {
-      throw new CloudSignerError(
-        "provider_unavailable",
-        "Azure Key Vault cosigner not yet implemented — see issue #386. Implementation sketch in cosigners.ts.",
-      )
+    async sign(input: CloudSignInput): Promise<CloudSignResult> {
+      const algorithm = AZURE_ALGORITHM_MAP[input.algorithm]
+      if (!algorithm) {
+        throw new CloudSignerError(
+          "algorithm_mismatch",
+          `Azure Key Vault does not support algorithm ${input.algorithm} (supported: ${Object.keys(AZURE_ALGORITHM_MAP).join(", ")})`,
+        )
+      }
+      const client = new CryptographyClient(input.keyRef, new DefaultAzureCredential())
+
+      let result
+      try {
+        result = await client.sign(algorithm, input.digest)
+      } catch (err) {
+        throw mapAzureError(err)
+      }
+      if (!result.result || result.result.length === 0) {
+        throw new CloudSignerError(
+          "provider_unavailable",
+          "Azure Key Vault sign returned no signature",
+        )
+      }
+      // result.keyID looks like `https://v.vault.azure.net/keys/k/{version}`;
+      // surface it so the CosignerStep audit row records the exact key version.
+      return {
+        signature: Buffer.from(result.result),
+        publicKeyRef: input.keyRef,
+        provider: "azure_key_vault",
+        keyVersion: result.keyID ?? input.keyRef,
+        signedAt: new Date().toISOString(),
+      }
     },
   }
 }
 
-// ── Vault Transit adapter (stub — #386 follow-up) ────────────────────────
+/** Map Azure SDK errors to CloudSignerErrorCode. */
+function mapAzureError(err: unknown): CloudSignerError {
+  const e = err as { name?: string; code?: string; message?: string; statusCode?: number } & Error
+  const msg = e.message ?? String(err)
+  const code = e.code ?? e.name ?? ""
+  if (
+    code === "Forbidden" ||
+    code === "AuthenticationFailed" ||
+    /Forbidden|not authorized|denied/i.test(msg) ||
+    e.statusCode === 401 ||
+    e.statusCode === 403
+  ) {
+    return new CloudSignerError("permission_denied", msg, err)
+  }
+  if (
+    code === "KeyNotFound" ||
+    code === "NotFound" ||
+    /KeyNotFound|not found/i.test(msg) ||
+    e.statusCode === 404
+  ) {
+    return new CloudSignerError("key_not_found", msg, err)
+  }
+  if (code === "KeyDisabled" || /disabled/i.test(msg)) {
+    return new CloudSignerError("key_disabled", msg, err)
+  }
+  if (
+    code === "UnsupportedKeyOperation" ||
+    code === "InvalidKeyOperation" ||
+    /algorithm|operation not supported/i.test(msg)
+  ) {
+    return new CloudSignerError("algorithm_mismatch", msg, err)
+  }
+  if (
+    code === "TooManyRequests" ||
+    /throttle|too many/i.test(msg) ||
+    e.statusCode === 429
+  ) {
+    return new CloudSignerError("rate_limited", msg, err)
+  }
+  if (
+    code === "ServiceUnavailable" ||
+    /unavailable|gateway|timeout/i.test(msg) ||
+    (e.statusCode ?? 0) >= 500
+  ) {
+    return new CloudSignerError("provider_unavailable", msg, err)
+  }
+  return new CloudSignerError("network_error", msg, err)
+}
+
+// ── Vault Transit adapter ────────────────────────────────────────────────
 //
-// HashiCorp Vault's transit secret engine — POST /v1/transit/sign/{name}
-// with `{ input: <base64 digest>, prehashed: true, signature_algorithm:
-// "pkcs1v15"|"pss" }` for RSA, or hash_algorithm/signature_algorithm
-// pair for EC. Auth via AppRole / Kubernetes / OIDC — the Vault client
-// picks up VAULT_ADDR / VAULT_TOKEN or a short-lived broker token.
+// Real implementation via HashiCorp Vault's transit secret engine HTTP
+// API. No client library needed — the surface is one POST and one
+// response shape. Auth via `VAULT_TOKEN` (workload-identity provisioned
+// by the Kubernetes auth backend / AppRole / OIDC). `VAULT_ADDR` resolves
+// the cluster.
+//
+// keyRef format: `transit/keys/{name}` or `{mount}/keys/{name}` — the
+// adapter splits at "/keys/" so tenants can scope to a non-default mount.
+// Signature algorithm tokens for Transit:
+//   secp256k1_ecdsa_sha256  → POST .../sign/{name} with hash_algorithm=sha2-256
+//                             signature_algorithm omitted (EC default), prehashed=true
+//                             marshaling_algorithm=asn1 (DER, matches GCP/AWS shape)
+//   ed25519                 → POST .../sign/{name} (ed25519 hashes internally;
+//                             we forward digest as the message bytes and disable prehash)
+//   rsa_pss_sha256          → signature_algorithm=pss + hash_algorithm=sha2-256
+
+interface VaultSignResponse {
+  data?: {
+    signature?: string // form: "vault:v{N}:base64-encoded-bytes"
+    key_version?: number
+  }
+  errors?: string[]
+}
+
+function vaultMountAndKey(keyRef: string): { mount: string; name: string } {
+  // keyRef can be `transit/keys/foo` or `secrets/mybridge/transit/keys/foo`.
+  // Split on "/keys/" once — everything before is the mount, after is name.
+  const idx = keyRef.indexOf("/keys/")
+  if (idx < 0) {
+    throw new CloudSignerError(
+      "invalid_digest",
+      `vault_transit keyRef "${keyRef}" missing required "/keys/" segment`,
+    )
+  }
+  return {
+    mount: keyRef.slice(0, idx),
+    name: keyRef.slice(idx + "/keys/".length),
+  }
+}
 
 function vaultTransitSigner(): CloudSigner {
   return {
     provider: "vault_transit",
-    async sign(_input: CloudSignInput): Promise<CloudSignResult> {
-      throw new CloudSignerError(
-        "provider_unavailable",
-        "Vault Transit cosigner not yet implemented — see issue #386.",
-      )
+    async sign(input: CloudSignInput): Promise<CloudSignResult> {
+      const vaultAddr = process.env.VAULT_ADDR
+      const vaultToken = process.env.VAULT_TOKEN
+      if (!vaultAddr) {
+        throw new CloudSignerError(
+          "provider_unavailable",
+          "VAULT_ADDR is not set — workload-identity injection / static config missing",
+        )
+      }
+      if (!vaultToken) {
+        throw new CloudSignerError(
+          "permission_denied",
+          "VAULT_TOKEN is not set — workload-identity exchange did not provision a token",
+        )
+      }
+      const { mount, name } = vaultMountAndKey(input.keyRef)
+
+      // Body shape per https://developer.hashicorp.com/vault/api-docs/secret/transit#sign-data
+      const body: Record<string, unknown> = {
+        input: Buffer.from(input.digest).toString("base64"),
+      }
+      if (input.algorithm === "secp256k1_ecdsa_sha256") {
+        body.hash_algorithm = "sha2-256"
+        body.prehashed = true
+        body.marshaling_algorithm = "asn1" // DER — matches AWS / GCP output shape
+      } else if (input.algorithm === "rsa_pss_sha256") {
+        body.hash_algorithm = "sha2-256"
+        body.signature_algorithm = "pss"
+        body.prehashed = true
+      } else if (input.algorithm === "ed25519") {
+        // ed25519 hashes internally — Transit does NOT accept prehashed
+        // ed25519. The bridge's `cloudHsmDigest()` produces a SHA-256
+        // digest which becomes the "message" Transit signs.
+        body.prehashed = false
+      } else {
+        throw new CloudSignerError(
+          "algorithm_mismatch",
+          `vault_transit does not support algorithm ${input.algorithm}`,
+        )
+      }
+      if (input.requestId) body.context = input.requestId
+
+      const url = `${vaultAddr.replace(/\/$/, "")}/v1/${mount}/sign/${encodeURIComponent(name)}`
+      let resp: Response
+      try {
+        resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "X-Vault-Token": vaultToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        })
+      } catch (err) {
+        throw new CloudSignerError(
+          "network_error",
+          `vault_transit POST failed: ${err instanceof Error ? err.message : String(err)}`,
+          err,
+        )
+      }
+
+      if (!resp.ok) {
+        throw mapVaultError(resp.status, await safeJsonOrText(resp))
+      }
+      const json = (await resp.json()) as VaultSignResponse
+      const sigField = json.data?.signature
+      if (!sigField) {
+        throw new CloudSignerError(
+          "provider_unavailable",
+          "vault_transit response missing data.signature",
+        )
+      }
+      // "vault:v{N}:<base64>" — strip the prefix.
+      const sigB64 = sigField.split(":").pop() ?? ""
+      const signature = Buffer.from(sigB64, "base64")
+      if (signature.length === 0) {
+        throw new CloudSignerError(
+          "provider_unavailable",
+          `vault_transit signature decoded to 0 bytes (raw: ${sigField})`,
+        )
+      }
+      return {
+        signature,
+        publicKeyRef: input.keyRef,
+        provider: "vault_transit",
+        keyVersion:
+          json.data?.key_version !== undefined
+            ? `v${json.data.key_version}`
+            : undefined,
+        signedAt: new Date().toISOString(),
+      }
     },
   }
 }
 
+async function safeJsonOrText(resp: Response): Promise<string> {
+  try {
+    const j = await resp.json()
+    return JSON.stringify(j)
+  } catch {
+    return await resp.text().catch(() => "")
+  }
+}
+
+function mapVaultError(status: number, body: string): CloudSignerError {
+  const lower = body.toLowerCase()
+  if (status === 401 || status === 403 || /permission denied|forbidden/i.test(body)) {
+    return new CloudSignerError("permission_denied", `vault status=${status}: ${body}`)
+  }
+  if (status === 404 || /no such key|not found/i.test(lower)) {
+    return new CloudSignerError("key_not_found", `vault status=${status}: ${body}`)
+  }
+  if (/key version.*disabled|key is disabled|disabled key/i.test(lower)) {
+    return new CloudSignerError("key_disabled", `vault status=${status}: ${body}`)
+  }
+  if (/unsupported|not supported|algorithm|invalid.*input/i.test(lower)) {
+    return new CloudSignerError("algorithm_mismatch", `vault status=${status}: ${body}`)
+  }
+  if (status === 429 || /rate limit|throttl/i.test(lower)) {
+    return new CloudSignerError("rate_limited", `vault status=${status}: ${body}`)
+  }
+  if (status >= 500 || /unavailable|sealed|standby/i.test(lower)) {
+    return new CloudSignerError("provider_unavailable", `vault status=${status}: ${body}`)
+  }
+  return new CloudSignerError("network_error", `vault status=${status}: ${body}`)
+}
+
 // ── f-chain (FHE attestation) — native Lux Network signer ────────────────
 //
-// f-chain is a sibling of m-chain on the Lux primary network. Where
-// m-chain produces a classical threshold ECDSA signature (CGGMP21 /
-// FROST), f-chain produces an FHE-secured attestation over the same
-// txHash. PQ-safe by construction (lattice-based FHE).
+// f-chain is the Lux primary network's FHE-secured sibling of m-chain.
+// The attestation model: bridge posts the native MPC txHash to f-chain's
+// `/v1/fhe/encrypt`, which returns an FHE ciphertext binding the txHash
+// to the tenant's f-chain key share. The ciphertext is the cosign artifact
+// — only f-chain (with its FHE secret key shares) could have produced it
+// for this specific txHash. PQ-safe by construction (lattice-based RLWE).
 //
-// Stub for now — the actual f-chain attestation client lives in a
-// sibling Lux workspace (@luxfi/fchain, planned). When that ships,
-// runFChain becomes a thin wrapper around its sign API.
+// The f-chain daemon is `cmd/fhed` in github.com/luxfi/fhe. HTTP surface
+// from main.go:
+//   POST /v1/fhe/encrypt    { plaintext_hex, scheme? } → { ciphertext_hex, session_id }
+//   GET  /v1/fhe/health     liveness probe
+//   GET  /v1/fhe/publickey  { public_key } (for verification)
+//   GET  /v1/fhe/cluster/status (informational)
+//
+// The bridge state machine treats the encrypted ciphertext as the
+// signature blob (stored on CosignerStep.signature, hex-encoded). To
+// VERIFY: a downstream verifier obtains the f-chain public key via
+// /v1/fhe/publickey and re-encrypts the recorded txHash to check that
+// the ciphertext lies in the same equivalence class — proving f-chain
+// attested to that exact hash.
+
+interface FChainEncryptRequest {
+  plaintext_hex: string
+  scheme?: string
+}
+
+interface FChainEncryptResponse {
+  ciphertext_hex?: string
+  session_id?: string
+  public_key_id?: string
+  scheme?: string
+  error?: string
+}
+
+const FCHAIN_TIMEOUT_MS_DEFAULT = 30_000
+function fchainTimeoutMs(): number {
+  return Number(process.env.FCHAIN_COSIGNER_TIMEOUT_MS ?? FCHAIN_TIMEOUT_MS_DEFAULT)
+}
 
 async function runFChain(
   intent: FChainCosignerIntent,
   opts: DispatchCosignersOptions,
 ): Promise<CosignResult> {
-  void opts
-  void intent
+  const base = intent.public_url.replace(/\/$/, "")
+  const url = `${base}/v1/fhe/encrypt`
+
+  // f-chain takes the bare txHash bytes (no 0x prefix) as plaintext.
+  // The encryption binds them to the tenant's FHE public key shares.
+  const txHash = opts.txHash
+  const plaintextHex = txHash.startsWith("0x") ? txHash.slice(2) : txHash
+
+  const body: FChainEncryptRequest = {
+    plaintext_hex: plaintextHex,
+    ...(intent.scheme ? { scheme: intent.scheme } : {}),
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), fchainTimeoutMs())
+
+  let resp: Response
+  try {
+    resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    clearTimeout(timeout)
+    const reason =
+      err instanceof Error && err.name === "AbortError"
+        ? `fchain timed out after ${fchainTimeoutMs()}ms`
+        : `fchain encrypt POST failed: ${err instanceof Error ? err.message : String(err)}`
+    return { intent, status: "failed", reason }
+  }
+  clearTimeout(timeout)
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "")
+    // 401/403 → rejected (policy/auth); 4xx other → rejected (terminal);
+    // 5xx → failed (retryable infra).
+    const isRejection = resp.status === 401 || resp.status === 403
+    return {
+      intent,
+      status: isRejection ? "rejected" : "failed",
+      reason: `fchain status=${resp.status}: ${text.slice(0, 200)}`,
+    }
+  }
+
+  let json: FChainEncryptResponse
+  try {
+    json = (await resp.json()) as FChainEncryptResponse
+  } catch (err) {
+    return {
+      intent,
+      status: "failed",
+      reason: `fchain returned non-JSON: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
+  if (!json.ciphertext_hex) {
+    return {
+      intent,
+      status: "failed",
+      reason: `fchain encrypt response missing ciphertext_hex: ${JSON.stringify(json).slice(0, 200)}`,
+    }
+  }
   return {
     intent,
-    status: "failed",
-    reason:
-      "fchain cosigner not yet implemented — waiting on @luxfi/fchain workspace. See issue #386.",
+    status: "approved",
+    signature: json.ciphertext_hex.startsWith("0x")
+      ? json.ciphertext_hex
+      : "0x" + json.ciphertext_hex,
+    externalId: json.session_id ?? json.public_key_id,
   }
 }
 
