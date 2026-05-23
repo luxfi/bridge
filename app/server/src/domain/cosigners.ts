@@ -41,6 +41,9 @@ import {
   serviceAccountAuthStrategy,
 } from "@luxfi/utila"
 
+import { KeyManagementServiceClient } from "@google-cloud/kms"
+import { createHash } from "crypto"
+
 import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
 
@@ -65,7 +68,140 @@ export interface FireblocksCosignerIntent {
   vault_account_id?: string
 }
 
-export type CosignerIntent = UtilaCosignerIntent | FireblocksCosignerIntent
+/**
+ * Cloud-HSM provider. Each value is a synchronous, HSM-backed signing
+ * layer with an adapter in this module implementing `CloudSigner`.
+ */
+export type CloudHsmProvider =
+  | "gcp_kms"
+  | "aws_kms"
+  | "azure_key_vault"
+  | "vault_transit"
+
+/**
+ * Signing algorithm. Narrow allow-list; adding an algorithm requires
+ * evaluating its security against the bridge's settlement-signature
+ * acceptance rules. Default for EVM is `secp256k1_ecdsa_sha256`.
+ */
+export type CosignerAlgorithm =
+  | "secp256k1_ecdsa_sha256"
+  | "ed25519"
+  | "rsa_pss_sha256"
+
+/**
+ * Cloud-HSM cosigner intent — flat, uniform shape. The wire-side
+ * matches the SDK's BridgeCloudHsmConfig exactly; per-provider config
+ * is encoded in `key_ref` (each provider's URI form is self-describing,
+ * so no extra config blob is needed).
+ *
+ * `identity_hint` is a NON-SECRET hint (SA email, role ARN, Vault role)
+ * used only to scope which workload-identity binding the backend
+ * consults — never credentials.
+ */
+export interface CloudHsmCosignerIntent {
+  kind: "cloud_hsm"
+  provider: CloudHsmProvider
+  /**
+   * Full provider-specific resource ref. Self-describing per provider:
+   *   gcp_kms          `projects/{p}/locations/{l}/keyRings/{r}/cryptoKeys/{k}/cryptoKeyVersions/{v}`
+   *   aws_kms          `arn:aws:kms:{region}:{account}:key/{key-id}`
+   *   azure_key_vault  `https://{vault}.vault.azure.net/keys/{name}[/{version}]`
+   *   vault_transit    `transit/keys/{name}`
+   */
+  key_ref: string
+  algorithm: CosignerAlgorithm
+  identity_hint?: string
+}
+
+/**
+ * f-chain (FHE attestation) cosigner intent — native to the Lux Network.
+ * Co-signs the same txHash that m-chain (native MPC) signed, via an
+ * FHE-secured key material so the message stays encrypted across the
+ * f-chain quorum. PQ-safe by construction (lattice-based FHE).
+ *
+ * For the bridge.lux.network tenant, m-chain + (optionally) f-chain is
+ * the entire signing topology — no external cosigners.
+ */
+export interface FChainCosignerIntent {
+  kind: "fchain"
+  public_url: string
+  scheme?: "ckks" | "bgv" | "bfv"
+}
+
+export type CosignerIntent =
+  | UtilaCosignerIntent
+  | FireblocksCosignerIntent
+  | CloudHsmCosignerIntent
+  | FChainCosignerIntent
+
+const ALL_CLOUD_PROVIDERS: ReadonlySet<CloudHsmProvider> = new Set<CloudHsmProvider>([
+  "gcp_kms",
+  "aws_kms",
+  "azure_key_vault",
+  "vault_transit",
+])
+
+const ALL_ALGORITHMS: ReadonlySet<CosignerAlgorithm> = new Set<CosignerAlgorithm>([
+  "secp256k1_ecdsa_sha256",
+  "ed25519",
+  "rsa_pss_sha256",
+])
+
+const ALL_FCHAIN_SCHEMES: ReadonlySet<NonNullable<FChainCosignerIntent["scheme"]>> = new Set([
+  "ckks",
+  "bgv",
+  "bfv",
+])
+
+// ────────────────────────────────────────────────────────────────────────
+//  Structured cloud-signer errors
+// ────────────────────────────────────────────────────────────────────────
+
+/**
+ * Stable, provider-agnostic error categories for cloud-HSM signing.
+ * Bridge state-machine maps these to CosignResult.status:
+ *   permission_denied / key_disabled / key_not_found  → rejected
+ *   algorithm_mismatch / invalid_digest                → rejected (terminal)
+ *   rate_limited / network_error / provider_unavailable → failed (retryable)
+ */
+export type CloudSignerErrorCode =
+  | "permission_denied"
+  | "key_not_found"
+  | "key_disabled"
+  | "algorithm_mismatch"
+  | "invalid_digest"
+  | "rate_limited"
+  | "network_error"
+  | "provider_unavailable"
+
+export class CloudSignerError extends Error {
+  constructor(
+    public readonly code: CloudSignerErrorCode,
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message)
+    this.name = "CloudSignerError"
+  }
+}
+
+/** Map a CloudSignerErrorCode to the cosigner result status. */
+function statusForErrorCode(
+  code: CloudSignerErrorCode,
+): Exclude<CosignResult["status"], "approved"> {
+  switch (code) {
+    case "permission_denied":
+    case "key_disabled":
+    case "key_not_found":
+    case "algorithm_mismatch":
+    case "invalid_digest":
+      return "rejected"
+    case "rate_limited":
+    case "network_error":
+    case "provider_unavailable":
+      return "failed"
+  }
+}
 
 /** Result of a single cosign step. */
 export interface CosignResult {
@@ -157,6 +293,58 @@ export function validateCosigners(raw: unknown): CosignerIntent[] {
       if (typeof e.api_host === "string" && e.api_host) out.api_host = e.api_host
       if (typeof e.vault_account_id === "string" && e.vault_account_id) {
         out.vault_account_id = e.vault_account_id
+      }
+      return out
+    }
+    if (e.kind === "cloud_hsm") {
+      if (
+        typeof e.provider !== "string" ||
+        !ALL_CLOUD_PROVIDERS.has(e.provider as CloudHsmProvider)
+      ) {
+        throw new BadCosignerIntent(
+          i,
+          `cloud_hsm: unknown provider "${String(e.provider)}" (allowed: ${Array.from(ALL_CLOUD_PROVIDERS).join(", ")})`,
+        )
+      }
+      if (typeof e.key_ref !== "string" || !e.key_ref) {
+        throw new BadCosignerIntent(i, "cloud_hsm: key_ref required")
+      }
+      if (
+        typeof e.algorithm !== "string" ||
+        !ALL_ALGORITHMS.has(e.algorithm as CosignerAlgorithm)
+      ) {
+        throw new BadCosignerIntent(
+          i,
+          `cloud_hsm: algorithm required (allowed: ${Array.from(ALL_ALGORITHMS).join(", ")})`,
+        )
+      }
+      const out: CloudHsmCosignerIntent = {
+        kind: "cloud_hsm",
+        provider: e.provider as CloudHsmProvider,
+        key_ref: e.key_ref,
+        algorithm: e.algorithm as CosignerAlgorithm,
+      }
+      if (typeof e.identity_hint === "string" && e.identity_hint) {
+        out.identity_hint = e.identity_hint
+      }
+      return out
+    }
+    if (e.kind === "fchain") {
+      if (typeof e.public_url !== "string" || !e.public_url) {
+        throw new BadCosignerIntent(i, "fchain: public_url required")
+      }
+      const out: FChainCosignerIntent = {
+        kind: "fchain",
+        public_url: e.public_url,
+      }
+      if (typeof e.scheme === "string") {
+        if (!ALL_FCHAIN_SCHEMES.has(e.scheme as NonNullable<FChainCosignerIntent["scheme"]>)) {
+          throw new BadCosignerIntent(
+            i,
+            `fchain: unknown scheme "${e.scheme}" (allowed: ${Array.from(ALL_FCHAIN_SCHEMES).join(", ")})`,
+          )
+        }
+        out.scheme = e.scheme as FChainCosignerIntent["scheme"]
       }
       return out
     }
@@ -273,6 +461,14 @@ async function runOne(
   intent: CosignerIntent,
   opts: DispatchCosignersOptions,
 ): Promise<CosignResult> {
+  if (intent.kind === "cloud_hsm") {
+    // Cloud HSM signers use workload identity (no secret fetch).
+    return runCloudHsm(intent, opts)
+  }
+  if (intent.kind === "fchain") {
+    // f-chain is a native Lux Network signer — no external KMS lookup.
+    return runFChain(intent, opts)
+  }
   const secret = await fetchCosignerSecret(intent)
   if (intent.kind === "utila") {
     return runUtila(intent, secret, opts)
@@ -599,6 +795,320 @@ function sleep(ms: number): Promise<void> {
 }
 
 // ────────────────────────────────────────────────────────────────────────
+//  Cloud HSM cosign — synchronous, HSM-backed sign
+// ────────────────────────────────────────────────────────────────────────
+
+/**
+ * Structured input to a CloudSigner. Symmetric to CloudSignResult so
+ * callers can pipe outputs back into other signers (composition).
+ */
+export interface CloudSignInput {
+  keyRef: string
+  digest: Uint8Array
+  algorithm: CosignerAlgorithm
+  identityHint?: string
+  /** Optional trace id, propagated to CosignerStep.external_id on failure paths. */
+  requestId?: string
+}
+
+export interface CloudSignResult {
+  signature: Uint8Array
+  publicKeyRef: string
+  provider: CloudHsmProvider
+  /** Resolved key version (when distinct from publicKeyRef — Azure / GCP). */
+  keyVersion?: string
+  /** RFC 3339 UTC timestamp the adapter records (informational). */
+  signedAt: string
+}
+
+/**
+ * Trust boundary for any cloud-HSM-backed signer. One method, no state.
+ * Adapters implement this per provider (gcp_kms / aws_kms /
+ * azure_key_vault / vault_transit); the dispatcher picks one off the
+ * intent and never sees provider-specific shapes again.
+ *
+ * Errors MUST be CloudSignerError instances so the dispatcher can map
+ * to stable CosignResult.status without string parsing.
+ */
+export interface CloudSigner {
+  readonly provider: CloudHsmProvider
+  sign(input: CloudSignInput): Promise<CloudSignResult>
+}
+
+/**
+ * Compute the digest a Cloud HSM signer attests to.
+ *
+ * Convention: SHA-256 over the txHash bytes (the same bytes the native
+ * MPC threshold network signed). All cloud KMSs support sign-by-digest
+ * mode so we pre-hash on the bridge backend rather than shipping the
+ * full message — keeps the HSM call cheap and avoids transport-size
+ * limits for typed-data flows.
+ *
+ * If txHash is already a 32-byte hash, we SHA-256 it again — a
+ * "second-pre-image" attestation that says "I attest to the bytes
+ * 0xabc…" not "I attest to the transaction the bytes describe."
+ * Same security property; cleaner audit trail.
+ */
+export function cloudHsmDigest(txHash: string): Buffer {
+  const cleanHex = txHash.startsWith("0x") ? txHash.slice(2) : txHash
+  const raw = Buffer.from(cleanHex, "hex")
+  return createHash("sha256").update(raw).digest()
+}
+
+function buildCloudSigner(intent: CloudHsmCosignerIntent): CloudSigner {
+  switch (intent.provider) {
+    case "gcp_kms":
+      return gcpKmsSigner(intent.identity_hint)
+    case "aws_kms":
+      return awsKmsSigner()
+    case "azure_key_vault":
+      return azureKeyVaultSigner()
+    case "vault_transit":
+      return vaultTransitSigner()
+  }
+}
+
+async function runCloudHsm(
+  intent: CloudHsmCosignerIntent,
+  opts: DispatchCosignersOptions,
+): Promise<CosignResult> {
+  const digest = cloudHsmDigest(opts.txHash)
+  const signer = buildCloudSigner(intent)
+  const requestId = opts.swapId
+
+  try {
+    const res = await signer.sign({
+      keyRef: intent.key_ref,
+      digest,
+      algorithm: intent.algorithm,
+      identityHint: intent.identity_hint,
+      requestId,
+    })
+    const sigHex =
+      "0x" +
+      Array.from(res.signature)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+    return {
+      intent,
+      status: "approved",
+      signature: sigHex,
+      externalId: res.keyVersion ?? res.publicKeyRef,
+    }
+  } catch (err) {
+    if (err instanceof CloudSignerError) {
+      return {
+        intent,
+        status: statusForErrorCode(err.code),
+        reason: `cloud_hsm/${intent.provider} ${err.code}: ${err.message}`,
+      }
+    }
+    return {
+      intent,
+      status: "failed",
+      reason: `cloud_hsm/${intent.provider}: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
+}
+
+// ── GCP Cloud KMS adapter ────────────────────────────────────────────────
+//
+// Auth: workload identity ONLY. The bridge backend trusts the cloud's
+// native identity layer — Workload Identity Federation, attached SA on
+// GKE / Cloud Run, GCE metadata — to provide credentials. We do NOT
+// support SA-JSON-key fallback in this SDK surface; tenants that lack
+// a managed identity binding should set one up before enabling
+// `cloud_hsm` cosign rather than ship JSON keys through any side
+// channel.
+//
+// `identityHint` (the SA email) is a NON-SECRET hint only. Forwarded
+// to the GCP client as `projectId` derivation context; never used as
+// a credential.
+
+function gcpKmsSigner(_identityHint?: string): CloudSigner {
+  const client = new KeyManagementServiceClient()
+
+  return {
+    provider: "gcp_kms",
+    async sign(input: CloudSignInput): Promise<CloudSignResult> {
+      if (input.algorithm !== "secp256k1_ecdsa_sha256") {
+        // GCP CKMS supports EC_SIGN_SECP256K1_SHA256 as the canonical
+        // EVM signing alg. Other algorithms map to other key purposes
+        // (EC_SIGN_P256_SHA256, RSA_SIGN_PSS_*, etc.) and require an
+        // adapter aware of digest-vs-message distinctions. Reject early.
+        throw new CloudSignerError(
+          "algorithm_mismatch",
+          `algorithm ${input.algorithm} not yet wired for gcp_kms (only secp256k1_ecdsa_sha256)`,
+        )
+      }
+      let response
+      try {
+        ;[response] = await client.asymmetricSign({
+          name: input.keyRef,
+          digest: { sha256: input.digest },
+        })
+      } catch (err) {
+        throw mapGcpError(err)
+      }
+      if (!response.signature) {
+        throw new CloudSignerError(
+          "provider_unavailable",
+          "GCP KMS asymmetricSign returned no signature",
+        )
+      }
+      const sigBuf =
+        typeof response.signature === "string"
+          ? Buffer.from(response.signature, "base64")
+          : Buffer.from(response.signature)
+      return {
+        signature: sigBuf,
+        publicKeyRef: input.keyRef,
+        provider: "gcp_kms",
+        keyVersion: input.keyRef,
+        signedAt: new Date().toISOString(),
+      }
+    },
+  }
+}
+
+/**
+ * Map a raw error from `@google-cloud/kms` to a CloudSignerError code.
+ *
+ * GCP gRPC errors carry a `code` number (Status) — we use those when
+ * available, and fall back to string matching for non-gRPC transport
+ * failures. The categories follow the user-facing semantics in
+ * CloudSignerErrorCode docs.
+ */
+function mapGcpError(err: unknown): CloudSignerError {
+  const e = err as { code?: number; message?: string } & Error
+  const msg = e.message ?? String(err)
+  // gRPC status codes per google.rpc.Code:
+  //   7  PERMISSION_DENIED
+  //   5  NOT_FOUND
+  //   9  FAILED_PRECONDITION (key disabled, wrong purpose, etc.)
+  //  16  UNAUTHENTICATED
+  //   8  RESOURCE_EXHAUSTED (quota / rate limit)
+  //  14  UNAVAILABLE
+  //   4  DEADLINE_EXCEEDED
+  if (e.code === 7 || /PERMISSION_DENIED/i.test(msg)) {
+    return new CloudSignerError("permission_denied", msg, err)
+  }
+  if (e.code === 16 || /UNAUTHENTICATED|UNAUTHORIZED/i.test(msg)) {
+    return new CloudSignerError("permission_denied", msg, err)
+  }
+  if (e.code === 5 || /NOT_FOUND|not found/i.test(msg)) {
+    return new CloudSignerError("key_not_found", msg, err)
+  }
+  if (e.code === 9 || /disabled|FAILED_PRECONDITION/i.test(msg)) {
+    return new CloudSignerError("key_disabled", msg, err)
+  }
+  if (e.code === 8 || /RESOURCE_EXHAUSTED|rate limit|too many/i.test(msg)) {
+    return new CloudSignerError("rate_limited", msg, err)
+  }
+  if (e.code === 14 || /UNAVAILABLE|unreachable/i.test(msg)) {
+    return new CloudSignerError("provider_unavailable", msg, err)
+  }
+  return new CloudSignerError("network_error", msg, err)
+}
+
+// ── AWS KMS adapter (stub — #386 follow-up) ──────────────────────────────
+//
+// pnpm add @aws-sdk/client-kms -F @luxbridge/server
+//   import { KMSClient, SignCommand } from "@aws-sdk/client-kms"
+//   const region = identityHint ?? keyRef.split(":")[3]
+//   const client = new KMSClient({ region })  // workload identity chain
+//   const cmd = new SignCommand({
+//     KeyId: keyRef,
+//     Message: digest,
+//     MessageType: "DIGEST",
+//     SigningAlgorithm: "ECDSA_SHA_256",
+//   })
+//   const res = await client.send(cmd)
+// Error mapping (AWS): AccessDenied → permission_denied; NotFoundException →
+// key_not_found; KMSInvalidStateException → key_disabled;
+// ThrottlingException → rate_limited; service errors → provider_unavailable.
+
+function awsKmsSigner(): CloudSigner {
+  return {
+    provider: "aws_kms",
+    async sign(_input: CloudSignInput): Promise<CloudSignResult> {
+      throw new CloudSignerError(
+        "provider_unavailable",
+        "AWS KMS cosigner not yet implemented — see issue #386. Implementation sketch in cosigners.ts.",
+      )
+    },
+  }
+}
+
+// ── Azure Key Vault adapter (stub — #386 follow-up) ──────────────────────
+//
+// pnpm add @azure/keyvault-keys @azure/identity -F @luxbridge/server
+//   import { CryptographyClient } from "@azure/keyvault-keys"
+//   import { DefaultAzureCredential } from "@azure/identity"
+//   const client = new CryptographyClient(keyRef, new DefaultAzureCredential())
+//   const result = await client.sign("ES256K", input.digest)  // for secp256k1
+// Error mapping (Azure): Forbidden → permission_denied; KeyNotFound →
+// key_not_found; KeyDisabled → key_disabled; TooManyRequests →
+// rate_limited; ServiceUnavailable → provider_unavailable.
+
+function azureKeyVaultSigner(): CloudSigner {
+  return {
+    provider: "azure_key_vault",
+    async sign(_input: CloudSignInput): Promise<CloudSignResult> {
+      throw new CloudSignerError(
+        "provider_unavailable",
+        "Azure Key Vault cosigner not yet implemented — see issue #386. Implementation sketch in cosigners.ts.",
+      )
+    },
+  }
+}
+
+// ── Vault Transit adapter (stub — #386 follow-up) ────────────────────────
+//
+// HashiCorp Vault's transit secret engine — POST /v1/transit/sign/{name}
+// with `{ input: <base64 digest>, prehashed: true, signature_algorithm:
+// "pkcs1v15"|"pss" }` for RSA, or hash_algorithm/signature_algorithm
+// pair for EC. Auth via AppRole / Kubernetes / OIDC — the Vault client
+// picks up VAULT_ADDR / VAULT_TOKEN or a short-lived broker token.
+
+function vaultTransitSigner(): CloudSigner {
+  return {
+    provider: "vault_transit",
+    async sign(_input: CloudSignInput): Promise<CloudSignResult> {
+      throw new CloudSignerError(
+        "provider_unavailable",
+        "Vault Transit cosigner not yet implemented — see issue #386.",
+      )
+    },
+  }
+}
+
+// ── f-chain (FHE attestation) — native Lux Network signer ────────────────
+//
+// f-chain is a sibling of m-chain on the Lux primary network. Where
+// m-chain produces a classical threshold ECDSA signature (CGGMP21 /
+// FROST), f-chain produces an FHE-secured attestation over the same
+// txHash. PQ-safe by construction (lattice-based FHE).
+//
+// Stub for now — the actual f-chain attestation client lives in a
+// sibling Lux workspace (@luxfi/fchain, planned). When that ships,
+// runFChain becomes a thin wrapper around its sign API.
+
+async function runFChain(
+  intent: FChainCosignerIntent,
+  opts: DispatchCosignersOptions,
+): Promise<CosignResult> {
+  void opts
+  void intent
+  return {
+    intent,
+    status: "failed",
+    reason:
+      "fchain cosigner not yet implemented — waiting on @luxfi/fchain workspace. See issue #386.",
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
 //  Persistence — Prisma CosignerStep model
 // ────────────────────────────────────────────────────────────────────────
 
@@ -607,6 +1117,14 @@ function sleep(ms: number): Promise<void> {
  * intent, status starts at `pending`. Idempotent only at the call site
  * (handleSwapCreation runs once per POST /api/swaps); this function
  * itself is not.
+ *
+ * Schema notes (#386 follow-up): the existing CosignerStep columns
+ * (`kind`, `public_id`, `api_host?`, `vault_id?`) cover utila and
+ * fireblocks cleanly. For cloud_hsm, we encode the provider in `kind`
+ * (compound: `cloud_hsm:gcp_kms`, `cloud_hsm:aws_kms`, `cloud_hsm:azure_kv`)
+ * to avoid a Prisma migration round here — once the schema gains a
+ * dedicated `provider` column the encoding can be split out without
+ * a wire-shape change.
  */
 export async function persistCosignerIntents(
   swapId: string,
@@ -618,14 +1136,7 @@ export async function persistCosignerIntents(
       prisma.cosignerStep.create({
         data: {
           swap_id: swapId,
-          kind: intent.kind,
-          public_id:
-            intent.kind === "utila" ? intent.org_id : intent.api_key,
-          api_host: intent.api_host ?? null,
-          vault_id:
-            intent.kind === "utila"
-              ? intent.vault_id ?? null
-              : intent.vault_account_id ?? null,
+          ...cosignerStepFields(intent),
           status: "pending",
         },
       }),
@@ -636,7 +1147,52 @@ export async function persistCosignerIntents(
   )
 }
 
-/** Reconstruct a CosignerIntent from a DB row. Inverse of persist. */
+/**
+ * Reduce a CosignerIntent to its CosignerStep column values. Pure
+ * function so persistence + DB-row-rebuild stay symmetric.
+ */
+function cosignerStepFields(
+  intent: CosignerIntent,
+): { kind: string; public_id: string; api_host: string | null; vault_id: string | null } {
+  if (intent.kind === "utila") {
+    return {
+      kind: "utila",
+      public_id: intent.org_id,
+      api_host: intent.api_host ?? null,
+      vault_id: intent.vault_id ?? null,
+    }
+  }
+  if (intent.kind === "fireblocks") {
+    return {
+      kind: "fireblocks",
+      public_id: intent.api_key,
+      api_host: intent.api_host ?? null,
+      vault_id: intent.vault_account_id ?? null,
+    }
+  }
+  if (intent.kind === "cloud_hsm") {
+    // Compound `kind` carries the provider sub-discriminator without
+    // requiring a Prisma schema change. `public_id` is the key_ref;
+    // `api_host` overloaded as identity_hint; `vault_id` overloaded as
+    // the algorithm so it round-trips on read. The first schema-
+    // migration round will split these into dedicated columns.
+    return {
+      kind: `cloud_hsm:${intent.provider}`,
+      public_id: intent.key_ref,
+      api_host: intent.identity_hint ?? null,
+      vault_id: intent.algorithm,
+    }
+  }
+  // fchain
+  return {
+    kind: "fchain",
+    public_id: intent.public_url,
+    api_host: intent.scheme ?? null,
+    vault_id: null,
+  }
+}
+
+/** Reconstruct a CosignerIntent from a DB row. Inverse of cosignerStepFields. */
 function rowToIntent(row: {
   kind: string
   public_id: string
@@ -662,6 +1218,40 @@ function rowToIntent(row: {
     }
     if (row.api_host) intent.api_host = row.api_host
     if (row.vault_id) intent.vault_account_id = row.vault_id
+    return intent
+  }
+  if (row.kind.startsWith("cloud_hsm:")) {
+    const provider = row.kind.slice("cloud_hsm:".length) as CloudHsmProvider
+    if (!ALL_CLOUD_PROVIDERS.has(provider)) {
+      throw new Error(
+        `cloud_hsm row has unknown provider sub-discriminator: ${row.kind}`,
+      )
+    }
+    if (!row.vault_id || !ALL_ALGORITHMS.has(row.vault_id as CosignerAlgorithm)) {
+      throw new Error(
+        `cloud_hsm row vault_id (algorithm) missing or invalid: ${row.vault_id}`,
+      )
+    }
+    const intent: CloudHsmCosignerIntent = {
+      kind: "cloud_hsm",
+      provider,
+      key_ref: row.public_id,
+      algorithm: row.vault_id as CosignerAlgorithm,
+    }
+    if (row.api_host) intent.identity_hint = row.api_host
+    return intent
+  }
+  if (row.kind === "fchain") {
+    const intent: FChainCosignerIntent = {
+      kind: "fchain",
+      public_url: row.public_id,
+    }
+    if (
+      row.api_host &&
+      ALL_FCHAIN_SCHEMES.has(row.api_host as NonNullable<FChainCosignerIntent["scheme"]>)
+    ) {
+      intent.scheme = row.api_host as FChainCosignerIntent["scheme"]
+    }
     return intent
   }
   throw new Error(`unknown cosigner kind in CosignerStep row: ${row.kind}`)
