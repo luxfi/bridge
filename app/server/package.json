@@ -59,6 +59,9 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
+    "@aws-sdk/client-kms": "^3.1053.0",
+    "@azure/identity": "^4.13.1",
+    "@azure/keyvault-keys": "^4.10.0",
     "@google-cloud/kms": "^5.5.0",
     "@luxfi/core": "workspace:*",
     "@luxfi/utila": "^3.0.0",
