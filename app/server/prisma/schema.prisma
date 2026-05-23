@@ -118,8 +118,46 @@ model Swap {
   quotes          Quote?
   deposit_actions DepositAction[]
   transactions    Transaction[]
+  cosigner_steps  CosignerStep[]
 
   @@index([id])
+}
+
+/// Per-swap cosigner record — layered Utila / Fireblocks cosign on top
+/// of the native MPC threshold network (issue #386). One row per
+/// intent listed in the original POST /api/swaps cosigners[] array.
+/// Lifecycle:
+///   pending  — created at swap-create time alongside the swap row
+///   approved — external custodian signed; `signature` populated
+///   rejected — external denial; `reason` carries subStatus / detail
+///   failed   — transport / config error or terminal Fireblocks FAILED;
+///              also surfaced as fail_reason on the parent Swap
+///
+/// Public IDs only (`public_id` = org_id for utila, api_key for
+/// fireblocks). NEVER stores secret material — secrets stay in KMS,
+/// keyed off `public_id` at dispatch time.
+model CosignerStep {
+  id           Int      @id @default(autoincrement())
+  created_date DateTime @default(now())
+  updated_date DateTime @updatedAt
+
+  swap_id String
+  swap    Swap   @relation(fields: [swap_id], references: [id])
+
+  // Discriminator + public identifiers — match the wire shape exactly.
+  kind             String  // "utila" | "fireblocks"
+  public_id        String  // org_id (utila) or api_key (fireblocks)
+  api_host         String?
+  vault_id         String? // utila vault_id OR fireblocks vault_account_id
+
+  // Step state.
+  status      String  @default("pending") // "pending" | "approved" | "rejected" | "failed"
+  signature   String?
+  reason      String?
+  external_id String? // utila tx name OR fireblocks tx id
+
+  @@index([swap_id])
+  @@index([status])
 }
 
 model Transaction {
