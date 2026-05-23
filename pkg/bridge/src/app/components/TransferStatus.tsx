@@ -7,8 +7,13 @@
 // declares layered cosigners (`cfg.mpc.utila` / `cfg.mpc.fireblocks`),
 // each row gets a small badge so users see the 2-of-2 surface their
 // settlement is gated on.
+//
+// Deposit-address mode (non-EVM source chains): when `transfer.depositAddress`
+// is populated, a prominent panel appears with the address + amount + copy
+// button so the user can pay from any wallet. Without this, the user would
+// click "Generate deposit address" and have nowhere to copy from.
 
-import type { CSSProperties, FC } from 'react'
+import { useCallback, useState, type CSSProperties, type FC } from 'react'
 import { getConfig } from '../../config'
 import type { Transfer, TransferPhase } from '../hooks/useTransfers'
 import { useNetworks } from '../hooks/useNetworks'
@@ -104,6 +109,109 @@ const badge: CSSProperties = {
   border: '1px solid rgba(91, 141, 239, 0.32)',
 }
 
+const depositPanel: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+  padding: 10,
+  background: 'var(--bridge-accent-soft)',
+  border: '1px solid var(--bridge-accent-border)',
+  borderRadius: 'var(--bridge-radius-md)',
+}
+
+const depositHeading: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  fontSize: 11,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'var(--bridge-accent)',
+}
+
+const depositAddressRow: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  padding: '8px 10px',
+  background: 'var(--bridge-bg-input)',
+  border: '1px solid var(--bridge-border)',
+  borderRadius: 'var(--bridge-radius-sm)',
+  fontFamily:
+    'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+  fontSize: 12,
+  color: 'var(--bridge-text)',
+  wordBreak: 'break-all',
+}
+
+const copyBtn: CSSProperties = {
+  marginLeft: 'auto',
+  flexShrink: 0,
+  background: 'var(--bridge-bg-elevated)',
+  color: 'var(--bridge-text)',
+  border: '1px solid var(--bridge-border-strong)',
+  borderRadius: 'var(--bridge-radius-sm)',
+  padding: '4px 8px',
+  fontSize: 10,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  cursor: 'pointer',
+}
+
+const depositHint: CSSProperties = {
+  fontSize: 11,
+  color: 'var(--bridge-text-muted)',
+}
+
+/**
+ * Deposit-address row with a copy button. Renders only when the transfer
+ * carries a `depositAddress` (non-EVM source flow). Copy uses the modern
+ * Clipboard API with a one-shot "Copied" confirmation.
+ */
+const DepositPanel: FC<{ transfer: Transfer; fromChainName: string }> = ({
+  transfer,
+  fromChainName,
+}) => {
+  const [copied, setCopied] = useState(false)
+  const onCopy = useCallback(async () => {
+    if (!transfer.depositAddress) return
+    try {
+      await navigator.clipboard.writeText(transfer.depositAddress)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard API unavailable (insecure context, old browser) — the
+      // address is still visible and selectable for manual copy.
+    }
+  }, [transfer.depositAddress])
+  return (
+    <div style={depositPanel}>
+      <div style={depositHeading}>
+        <span>Send deposit</span>
+        <span style={{ fontWeight: 500, color: 'var(--bridge-text-muted)' }}>
+          {formatAmount(transfer.inAmount, 6)} on {fromChainName}
+        </span>
+      </div>
+      <div style={depositAddressRow}>
+        <span>{transfer.depositAddress}</span>
+        <button type="button" style={copyBtn} onClick={() => void onCopy()}>
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <div style={depositHint}>
+        Send exactly{' '}
+        <strong style={{ color: 'var(--bridge-text)' }}>
+          {formatAmount(transfer.inAmount, 6)}
+        </strong>{' '}
+        from any {fromChainName} wallet to this address. The bridge will
+        detect the deposit and complete the transfer.
+      </div>
+    </div>
+  )
+}
+
 export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => {
   const cfg = getConfig()
   const { chains } = useNetworks()
@@ -155,6 +263,10 @@ export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => {
                   </span>
                 </div>
               </div>
+
+              {t.depositAddress && t.phase !== 'completed' && t.phase !== 'failed' ? (
+                <DepositPanel transfer={t} fromChainName={shortChainName(t.fromChainId)} />
+              ) : null}
 
               {t.mpc ? (
                 <div style={mpcLine}>
