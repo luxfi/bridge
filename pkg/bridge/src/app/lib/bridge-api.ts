@@ -247,6 +247,14 @@ export interface ServerSwap {
   status?: string
   source_network?: string
   destination_network?: string
+  /**
+   * Deposit address the user must send funds to. Populated by the server
+   * when the swap was created with `useDepositAddress: true` (required for
+   * non-EVM source chains where the user can't sign a contract call from
+   * the connected wagmi wallet). Field name is snake_case to match the
+   * server's wire format.
+   */
+  deposit_address?: string
   [k: string]: unknown
 }
 
@@ -399,6 +407,9 @@ function bridgeRequestToServerSwap(req: BridgeRequest): ServerSwap {
     status: bridgeStatusToServerStatus(req.status),
     source_network: req.sourceChain,
     destination_network: req.destChain,
+    // BridgeVM's submitBridgeRequest doesn't currently return a deposit
+    // address — that's a REST-backend concept for non-EVM sources. When
+    // both transports are in play, the REST path supplies this field.
   }
 }
 
