@@ -27,10 +27,18 @@ let accountState: {
   isConnecting: false,
 }
 
+// Mutable so individual tests can simulate EIP-6963 MIPD adding extra
+// connectors at runtime. Reset in beforeEach.
+let connectorList: Array<{ id: string; name: string; type?: string }> = [
+  injectedStub,
+  coinbaseStub,
+  wcStub,
+]
+
 vi.mock('wagmi', () => ({
   useAccount: () => accountState,
   useConnect: () => ({
-    connectors: [injectedStub, coinbaseStub, wcStub],
+    connectors: connectorList,
     connectAsync,
     status: 'idle' as const,
   }),
@@ -43,6 +51,7 @@ import { useWallet } from '../app/hooks/useWallet'
 
 beforeEach(() => {
   accountState = { address: undefined, chainId: undefined, isConnecting: false }
+  connectorList = [injectedStub, coinbaseStub, wcStub]
   vi.clearAllMocks()
 })
 
@@ -69,7 +78,11 @@ describe('useWallet', () => {
     expect(result.current.chainId).toBe('evm:1')
   })
 
-  it('connect() prefers walletConnect connector when available', async () => {
+  it('connect() prefers injected (browser extension) by default', async () => {
+    // Preference order: injected → metaMask → coinbaseWalletSDK →
+    // walletConnect → first available. Desktop users with MetaMask get the
+    // extension popup; mobile/no-extension users get WC via the picker UI
+    // (connectWith), not this legacy entry.
     const { result } = renderHook(() => useWallet())
     connectAsync.mockResolvedValueOnce(undefined)
     await act(async () => {
@@ -77,10 +90,101 @@ describe('useWallet', () => {
     })
     expect(connectAsync).toHaveBeenCalledWith(
       expect.objectContaining({
-        connector: wcStub,
+        connector: injectedStub,
         chainId: 1,
       }),
     )
+  })
+
+  it('exposes a picker-friendly connectors[] with polished names + icons', () => {
+    const { result } = renderHook(() => useWallet())
+    const ids = result.current.connectors.map((c) => c.id)
+    expect(ids).toEqual(['injected', 'coinbaseWalletSDK', 'walletConnect'])
+    const names = result.current.connectors.map((c) => c.name)
+    expect(names).toContain('Browser Wallet')   // injected polished
+    expect(names).toContain('Coinbase Wallet')  // coinbaseWalletSDK polished
+    expect(names).toContain('WalletConnect')
+    // Every connector gets at least a fallback icon
+    expect(result.current.connectors.every((c) => c.icon.length > 0)).toBe(true)
+    // Every connector has an `installed` flag — true only when the wallet
+    // is locally present. In jsdom (no window.ethereum, no EIP-6963) every
+    // connector is remote.
+    expect(
+      result.current.connectors.every((c) => typeof c.installed === 'boolean'),
+    ).toBe(true)
+    expect(result.current.connectors.find((c) => c.id === 'injected')?.installed).toBe(false)
+    expect(result.current.connectors.find((c) => c.id === 'walletConnect')?.installed).toBe(false)
+  })
+
+  it('marks the legacy injected connector as installed when window.ethereum exists', () => {
+    const originalEthereum = (globalThis.window as { ethereum?: unknown } | undefined)?.ethereum
+    if (typeof globalThis.window !== 'undefined') {
+      ;(globalThis.window as { ethereum?: unknown }).ethereum = { isMetaMask: true }
+    }
+    try {
+      const { result } = renderHook(() => useWallet())
+      const injected = result.current.connectors.find((c) => c.id === 'injected')
+      expect(injected?.installed).toBe(true)
+    } finally {
+      if (typeof globalThis.window !== 'undefined') {
+        ;(globalThis.window as { ethereum?: unknown }).ethereum = originalEthereum
+      }
+    }
+  })
+
+  it('hides the legacy injected connector when an EIP-6963 connector announced itself', () => {
+    // MIPD adds a dotted-RDNS connector alongside the legacy `injected`
+    // one — picker should drop the legacy duplicate and keep the named one.
+    connectorList = [
+      injectedStub,
+      { id: 'io.metamask', name: 'MetaMask', type: 'injected' },
+      coinbaseStub,
+      wcStub,
+    ]
+    const { result } = renderHook(() => useWallet())
+    const ids = result.current.connectors.map((c) => c.id)
+    expect(ids).not.toContain('injected')
+    expect(ids).toContain('io.metamask')
+    const mm = result.current.connectors.find((c) => c.id === 'io.metamask')
+    expect(mm?.installed).toBe(true)
+    expect(mm?.name).toBe('MetaMask')
+  })
+
+  it('hides the Coinbase Wallet SDK connector when the Coinbase EIP-6963 extension is present', () => {
+    connectorList = [
+      injectedStub,
+      { id: 'com.coinbase.wallet', name: 'Coinbase Wallet', type: 'injected' },
+      coinbaseStub,
+      wcStub,
+    ]
+    const { result } = renderHook(() => useWallet())
+    const ids = result.current.connectors.map((c) => c.id)
+    // injected is also dropped because an EIP-6963 connector is present;
+    // coinbaseWalletSDK is dropped because the Coinbase extension covers it.
+    expect(ids).not.toContain('coinbaseWalletSDK')
+    expect(ids).toContain('com.coinbase.wallet')
+  })
+
+
+  it('connectWith() routes to the chosen connector', async () => {
+    const { result } = renderHook(() => useWallet())
+    connectAsync.mockResolvedValueOnce(undefined)
+    await act(async () => {
+      await result.current.connectWith('coinbaseWalletSDK', 'evm:8453')
+    })
+    expect(connectAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connector: coinbaseStub,
+        chainId: 8453,
+      }),
+    )
+  })
+
+  it('connectWith() throws when the id is not registered', async () => {
+    const { result } = renderHook(() => useWallet())
+    await expect(
+      result.current.connectWith('does-not-exist'),
+    ).rejects.toThrow(/not registered/)
   })
 
   it('signMessage delegates to wagmi signMessageAsync', async () => {
