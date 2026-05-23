@@ -408,9 +408,6 @@ importers:
       '@hanzogui/visually-hidden':
         specifier: ^7.0.0
         version: 7.0.0(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@18.3.12)(bufferutil@4.1.0)(react@19.2.6)(utf-8-validate@5.0.10))(react@19.2.6)
-      '@luxfi/brand':
-        specifier: ^1.0.0
-        version: 1.0.0
       '@luxfi/threshold':
         specifier: workspace:*
         version: link:../threshold
