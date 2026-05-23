@@ -56,6 +56,14 @@ export interface Transfer {
   createdAt: number
   /** MPC threshold session progress, populated during `signing`. */
   mpc?: MpcProgress
+  /**
+   * Deposit address the user must send the source asset to. Only populated
+   * when the transfer was created with `useDepositAddress: true` (typically
+   * for non-EVM source chains where the wagmi connector can't sign a
+   * deposit tx). The UI surfaces this prominently in TransferStatus until
+   * the deposit is detected on-chain.
+   */
+  depositAddress?: string
   error?: string
 }
 
@@ -72,12 +80,18 @@ export interface TransferState {
    *
    * `refuel` requests a destination-gas top-up alongside the bridged asset
    * (server-side feature; the SDK just forwards the flag).
+   *
+   * `useDepositAddress` flips the source-side flow to "issue a deposit
+   * address, user pays from any wallet" — required for non-EVM source
+   * chains. When false (default), the server expects a wallet-signed
+   * contract call on the source chain.
    */
   initiate: (
-    t: Omit<Transfer, 'id' | 'phase' | 'createdAt' | 'mpc' | 'error'> & {
+    t: Omit<Transfer, 'id' | 'phase' | 'createdAt' | 'mpc' | 'depositAddress' | 'error'> & {
       destinationAddress?: string
       appName?: string
       refuel?: boolean
+      useDepositAddress?: boolean
     },
   ) => Promise<Transfer>
   /**
@@ -183,6 +197,13 @@ export function useTransfers(): TransferState {
         if (phase !== lastPhase) {
           patch(transferId, { phase })
           lastPhase = phase
+        }
+
+        // Deposit address may appear on a later poll (the server can take a
+        // tick to allocate it). Patch unconditionally if present — the patch
+        // is a no-op when nothing changes.
+        if (typeof serverSwap.deposit_address === 'string') {
+          patch(transferId, { depositAddress: serverSwap.deposit_address })
         }
 
         // Kick off MPC session on first entry into the signing phase.
@@ -351,6 +372,14 @@ export function useTransfers(): TransferState {
         })
       }
 
+      // Non-EVM source chains MUST use deposit-address mode (we have no
+      // wagmi connector for Bitcoin/Solana/TON/XRP/Cardano/Polkadot). The
+      // caller can also force it on for EVM sources by passing the flag
+      // explicitly — useful for paste-the-address flows from cold wallets.
+      const useDepositAddress =
+        input.useDepositAddress ??
+        (fromChain.family !== 'evm' && fromChain.family !== 'lux')
+
       try {
         const swap = await createSwap(
           cfg.apiHost,
@@ -365,16 +394,22 @@ export function useTransfers(): TransferState {
             // the RPC transport; REST derives sender from the deposit tx.
             ...(account.address ? { sender: account.address } : {}),
             refuel: input.refuel ?? false,
-            useDepositAddress: false,
+            useDepositAddress,
             useTeleporter: fromChain.family === 'lux' || toChain.family === 'lux',
             appName: input.appName ?? cfg.brand?.name ?? '@luxfi/bridge',
             ...(cosigners.length > 0 ? { cosigners } : {}),
           },
           { idempotencyKey: id, signal: controller.signal },
         )
-        // Patch the local record with the server id so hydration after a
-        // refresh can resume polling, then begin polling.
-        patch(id, { serverId: swap.id })
+        // Patch the local record with the server id + deposit address (when
+        // present) so hydration after a refresh can resume polling AND the
+        // user keeps seeing the address to send to even on page reload.
+        patch(id, {
+          serverId: swap.id,
+          ...(typeof swap.deposit_address === 'string'
+            ? { depositAddress: swap.deposit_address }
+            : {}),
+        })
         void subscribe(id, swap.id)
       } catch (err) {
         if (controller.signal.aborted) return x

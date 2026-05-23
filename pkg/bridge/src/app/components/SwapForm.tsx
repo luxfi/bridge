@@ -158,6 +158,57 @@ const refuelLabel: CSSProperties = {
   gap: 2,
 }
 
+const destWrap: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+}
+
+const destLabelRow: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  fontSize: 11,
+  color: 'var(--bridge-text-muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  fontWeight: 600,
+}
+
+const destUseWalletBtn: CSSProperties = {
+  background: 'var(--bridge-accent-soft)',
+  color: 'var(--bridge-accent)',
+  border: '1px solid var(--bridge-accent-border)',
+  borderRadius: 'var(--bridge-radius-pill)',
+  padding: '2px 8px',
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+}
+
+const destInput: CSSProperties = {
+  width: '100%',
+  background: 'var(--bridge-bg-input)',
+  border: '1px solid var(--bridge-border)',
+  borderRadius: 'var(--bridge-radius-md)',
+  color: 'var(--bridge-text)',
+  padding: '10px 12px',
+  fontSize: 13,
+  outline: 'none',
+  fontFamily:
+    'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+}
+
+const destHint: CSSProperties = {
+  fontSize: 10,
+  color: 'var(--bridge-text-subtle)',
+  letterSpacing: 0,
+  textTransform: 'none',
+  fontWeight: 400,
+}
+
 const refuelTitle: CSSProperties = {
   color: 'var(--bridge-text)',
   fontWeight: 500,
@@ -189,6 +240,7 @@ const toggleKnob = (active: boolean): CSSProperties => ({
 
 export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   const [error, setError] = useState<string | null>(null)
+  const [destinationAddress, setDestinationAddress] = useState<string>('')
   const cfg = getConfig()
 
   // Layered-cosigner indicator. When a tenant has set `mpc.utila` and/or
@@ -200,26 +252,57 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   if (cfg.mpc?.utila) cosigners.push('Utila')
   if (cfg.mpc?.fireblocks) cosigners.push('Fireblocks')
 
+  // Source chain family decides the flow:
+  //   - EVM / Lux: wagmi connector signs the deposit tx; wallet required.
+  //   - Anything else (BTC, Solana, TON, XRP, Cardano, Polkadot): the
+  //     server issues a deposit address and the user pays from any wallet
+  //     they own. No wagmi integration needed for those chains.
+  const sourceIsEvm =
+    swap.fromChain.family === 'evm' || swap.fromChain.family === 'lux'
+  const needsDepositAddressFlow = !sourceIsEvm
+
+  // Destination address resolution. We always need an address to deliver
+  // bridged funds to. EVM destinations default to the connected wallet's
+  // address (typical self-bridge). The user can override at any time —
+  // useful for sending to a cold wallet or a different address.
+  const effectiveDestination = (destinationAddress.trim() || wallet.address || '').trim()
+  const destOk = effectiveDestination.length > 0
+
   const canSubmit =
-    wallet.address !== null &&
     swap.quote !== null &&
     !swap.quoting &&
-    swap.fromChain.id !== swap.toChain.id
+    swap.fromChain.id !== swap.toChain.id &&
+    destOk &&
+    // EVM-source still requires a connected wallet (the user signs the
+    // deposit). Non-EVM source only needs the destination address.
+    (sourceIsEvm ? wallet.address !== null : true)
 
   const submitLabel = (() => {
-    if (!wallet.address) return 'Connect wallet to bridge'
     if (swap.fromChain.id === swap.toChain.id) {
       return 'Source and destination must differ'
     }
     if (swap.quoting) return 'Fetching quote…'
     if (!swap.quote) return 'Enter an amount'
+    if (sourceIsEvm && !wallet.address) return 'Connect wallet to bridge'
+    if (!destOk) return `Enter ${swap.toChain.name} destination address`
+    if (needsDepositAddressFlow) {
+      return `Generate ${swap.fromAsset.symbol} deposit address`
+    }
     return `Bridge ${swap.fromAsset.symbol} → ${swap.toAsset.symbol}`
   })()
 
   const onSubmit = () => {
     setError(null)
-    if (!swap.quote || !wallet.address) {
-      setError('Wallet must be connected with a valid quote.')
+    if (!swap.quote) {
+      setError('Quote required.')
+      return
+    }
+    if (!destOk) {
+      setError('Destination address required.')
+      return
+    }
+    if (sourceIsEvm && !wallet.address) {
+      setError('Wallet must be connected for EVM source chains.')
       return
     }
     transfers.submit({
@@ -230,6 +313,8 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       inAmount: Number(swap.amount),
       outAmount: swap.quote.outAmount,
       refuel: swap.refuel,
+      destinationAddress: effectiveDestination,
+      useDepositAddress: needsDepositAddressFlow,
     })
     // Clear input on successful submit so the next intent starts fresh.
     swap.setAmount('')
@@ -283,6 +368,44 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
         readOnly
         placeholder="—"
       />
+
+      <div style={destWrap}>
+        <div style={destLabelRow}>
+          <span>Destination address</span>
+          {wallet.address && destinationAddress.trim() !== '' && destinationAddress.trim() !== wallet.address ? (
+            <button
+              type="button"
+              style={destUseWalletBtn}
+              onClick={() => setDestinationAddress('')}
+              title="Reset to connected wallet"
+            >
+              Use wallet
+            </button>
+          ) : null}
+        </div>
+        <input
+          type="text"
+          style={destInput}
+          placeholder={
+            wallet.address
+              ? `${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)} (connected wallet)`
+              : `Paste your ${swap.toChain.name} address`
+          }
+          value={destinationAddress}
+          onChange={(e) => setDestinationAddress(e.target.value)}
+          spellCheck={false}
+          autoComplete="off"
+          autoCapitalize="off"
+          aria-label="Destination address"
+        />
+        {needsDepositAddressFlow ? (
+          <span style={destHint}>
+            {swap.fromChain.name} is non-EVM — the bridge will issue a
+            deposit address for you to send {swap.fromAsset.symbol} from any
+            wallet you own.
+          </span>
+        ) : null}
+      </div>
 
       <div style={refuelRow}>
         <div style={refuelLabel}>
