@@ -36,6 +36,11 @@ import {
   TransactionOperation,
 } from "fireblocks-sdk"
 
+import {
+  createGrpcClient,
+  serviceAccountAuthStrategy,
+} from "@luxfi/utila"
+
 import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
 
@@ -279,30 +284,171 @@ async function runOne(
 //  Utila cosign — uses @luxfi/utila Connect-RPC client
 // ────────────────────────────────────────────────────────────────────────
 
+/**
+ * Utila TransactionState_Enum (v1alpha2) partitioned by how we surface
+ * each state to the bridge state machine. Values from
+ * `pkg/utila/src/lib/gen/utila/api/v1/transactions_pb.ts`.
+ *
+ *   approved (signature present): SIGNED=4, AWAITING_PUBLISH=5,
+ *     PUBLISHED=6, MINED=7, CONFIRMED=13
+ *   rejected (Utila policy denial / cancel): DECLINED=9, CANCELED=11,
+ *     EXPIRED=15, DROPPED=12
+ *   failed (transient / on-chain failure): FAILED=8, REPLACED=10
+ *
+ * Non-terminal intermediates (AWAITING_APPROVAL=2, AWAITING_POLICY_CHECK=14,
+ * AWAITING_SIGNATURE=3) keep polling until terminal.
+ */
+const UT_STATE_APPROVED = new Set([4, 5, 6, 7, 13])
+const UT_STATE_REJECTED = new Set([9, 11, 12, 15])
+const UT_STATE_FAILED = new Set([8, 10])
+
+const UTILA_POLL_INTERVAL_MS = 1500
+function utilaPollTimeoutMs(): number {
+  return Number(process.env.UTILA_COSIGNER_TIMEOUT_MS ?? 60_000)
+}
+
+/**
+ * Convert Utila's signature bytes to a 0x-hex string. The proto field
+ * is `optional bytes signature = 3` (Uint8Array on the wire).
+ */
+function utilaSignatureHex(sig: Uint8Array | undefined): string | undefined {
+  if (!sig || sig.length === 0) return undefined
+  let hex = "0x"
+  for (let i = 0; i < sig.length; i++) {
+    hex += sig[i]!.toString(16).padStart(2, "0")
+  }
+  return hex
+}
+
 async function runUtila(
   intent: UtilaCosignerIntent,
-  _serviceAccountPem: string,
-  _opts: DispatchCosignersOptions,
+  serviceAccountPem: string,
+  opts: DispatchCosignersOptions,
 ): Promise<CosignResult> {
-  // TODO(#386):
-  //   1. Build a `@luxfi/utila` gRPC client using `serviceAccountAuthStrategy`
-  //      with { email: derived from intent.client_id, privateKey: _serviceAccountPem }.
-  //      DO NOT reuse the singleton in `domain/utila.ts` — that's the
-  //      primary-signer client, scoped to env vars. This is a per-tenant client.
-  //   2. Submit a transaction-approval request against intent.vault_id (or the
-  //      default vault if unset) referencing _opts.txHash and _opts.nativeSignature.
-  //   3. Poll the approval status (or wait on Utila's webhook — domain/utila.ts
-  //      already verifies Utila webhook signatures; reuse `utilaPublicKey` +
-  //      `verifySignature` from there).
-  //   4. Return CosignResult with status approved/rejected/failed + signature
-  //      (Utila's tx hash on its side) + externalId (Utila's request id).
-  logger.warn(
-    `[cosigners.utila] STUB — would cosign swap via org=${intent.org_id} client=${intent.client_id} vault=${intent.vault_id ?? "(default)"}`,
-  )
+  if (!intent.vault_id) {
+    return {
+      intent,
+      status: "failed",
+      reason: `utila intent missing vault_id — required to scope initiateTransaction for org ${intent.org_id}`,
+    }
+  }
+
+  // Per-tenant client. Mirrors the construction in `domain/utila.ts`
+  // (which holds the env-singleton primary-signer client) but isolates
+  // each tenant's auth context — multiple tenants can cosign in parallel
+  // without singleton contention.
+  let client
+  try {
+    client = createGrpcClient({
+      authStrategy: serviceAccountAuthStrategy({
+        email: intent.org_id,
+        privateKey: async () => serviceAccountPem,
+      }),
+      ...(intent.api_host ? { baseUrl: intent.api_host } : {}),
+    }).version("v1alpha2")
+  } catch (err) {
+    return {
+      intent,
+      status: "failed",
+      reason: `utila client construction failed: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
+
+  // Initiate an evm_personal_sign — Utila's RAW-message-sign mode. The
+  // wallet (`from_address`) is the tenant's client_id; the message hex
+  // is the native MPC txHash. Utila's TAP (Transaction Authorization
+  // Policy) decides whether to approve. NORMAL priority is the default
+  // for cosigner attestations.
+  let initiated
+  try {
+    initiated = await (client as { initiateTransaction: (req: unknown) => Promise<{ transaction?: { name?: string; state?: { state?: number } } }> })
+      .initiateTransaction({
+        parent: `vaults/${intent.vault_id}`,
+        details: {
+          details: {
+            case: "evmPersonalSign",
+            value: {
+              fromAddress: intent.client_id,
+              messageHex: opts.txHash,
+            },
+          },
+        },
+        priority: 2, // NORMAL
+        note: `lux-bridge cosign swap=${opts.swapId}`,
+      })
+  } catch (err) {
+    return {
+      intent,
+      status: "failed",
+      reason: `utila initiateTransaction failed: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
+
+  const txName = initiated.transaction?.name
+  if (!txName) {
+    return {
+      intent,
+      status: "failed",
+      reason: "utila initiateTransaction returned no transaction.name",
+    }
+  }
+
+  const timeoutMs = utilaPollTimeoutMs()
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() < deadline) {
+    let tx
+    try {
+      tx = await (client as { getTransaction: (req: unknown) => Promise<{ name?: string; state?: { state?: number }; evmMessage?: { signature?: Uint8Array } }> })
+        .getTransaction({ name: txName })
+    } catch (err) {
+      logger.warn(
+        `[cosigners.utila] getTransaction transient error on tx=${txName}: ${err instanceof Error ? err.message : String(err)}`,
+      )
+      await sleep(UTILA_POLL_INTERVAL_MS)
+      continue
+    }
+
+    const state = tx.state?.state ?? 0
+
+    if (UT_STATE_APPROVED.has(state)) {
+      const sig = utilaSignatureHex(tx.evmMessage?.signature)
+      if (!sig) {
+        // Approved-state but no signature yet — Utila publishes the
+        // sig in a later state transition. Keep polling.
+        await sleep(UTILA_POLL_INTERVAL_MS)
+        continue
+      }
+      return { intent, status: "approved", signature: sig, externalId: txName }
+    }
+
+    if (UT_STATE_REJECTED.has(state)) {
+      return {
+        intent,
+        status: "rejected",
+        reason: `utila state=${state} (DECLINED/CANCELED/DROPPED/EXPIRED — TAP policy denial)`,
+        externalId: txName,
+      }
+    }
+
+    if (UT_STATE_FAILED.has(state)) {
+      return {
+        intent,
+        status: "failed",
+        reason: `utila state=${state} (FAILED/REPLACED)`,
+        externalId: txName,
+      }
+    }
+
+    // Still in flight (AWAITING_APPROVAL / AWAITING_POLICY_CHECK / etc.) — wait.
+    await sleep(UTILA_POLL_INTERVAL_MS)
+  }
+
   return {
     intent,
     status: "failed",
-    reason: "Utila cosigner not implemented yet — see issue #386",
+    reason: `utila tx ${txName} timed out after ${timeoutMs}ms; manual check via getTransaction may still resolve`,
+    externalId: txName,
   }
 }
 
