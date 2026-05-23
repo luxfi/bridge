@@ -37,6 +37,7 @@ import {
 } from "fireblocks-sdk"
 
 import logger from "@/logger"
+import { prisma } from "@/prisma-instance"
 
 // ────────────────────────────────────────────────────────────────────────
 //  Public types — match SDK shape EXACTLY. Do not drift.
@@ -449,4 +450,153 @@ async function runFireblocks(
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// ────────────────────────────────────────────────────────────────────────
+//  Persistence — Prisma CosignerStep model
+// ────────────────────────────────────────────────────────────────────────
+
+/**
+ * Persist the cosigner intents for a swap at create-time. One row per
+ * intent, status starts at `pending`. Idempotent only at the call site
+ * (handleSwapCreation runs once per POST /api/swaps); this function
+ * itself is not.
+ */
+export async function persistCosignerIntents(
+  swapId: string,
+  intents: CosignerIntent[],
+): Promise<void> {
+  if (intents.length === 0) return
+  await prisma.$transaction(
+    intents.map((intent) =>
+      prisma.cosignerStep.create({
+        data: {
+          swap_id: swapId,
+          kind: intent.kind,
+          public_id:
+            intent.kind === "utila" ? intent.org_id : intent.api_key,
+          api_host: intent.api_host ?? null,
+          vault_id:
+            intent.kind === "utila"
+              ? intent.vault_id ?? null
+              : intent.vault_account_id ?? null,
+          status: "pending",
+        },
+      }),
+    ),
+  )
+  logger.info(
+    `[cosigners] persisted ${intents.length} CosignerStep row(s) for swap=${swapId}`,
+  )
+}
+
+/** Reconstruct a CosignerIntent from a DB row. Inverse of persist. */
+function rowToIntent(row: {
+  kind: string
+  public_id: string
+  api_host: string | null
+  vault_id: string | null
+}): CosignerIntent {
+  if (row.kind === "utila") {
+    const intent: UtilaCosignerIntent = {
+      kind: "utila",
+      org_id: row.public_id,
+      client_id: row.public_id, // TODO(#386): persist client_id separately;
+      // for now we collapse onto public_id since the env-var fallback
+      // doesn't distinguish them. KMS-real version will key off org_id.
+    }
+    if (row.api_host) intent.api_host = row.api_host
+    if (row.vault_id) intent.vault_id = row.vault_id
+    return intent
+  }
+  if (row.kind === "fireblocks") {
+    const intent: FireblocksCosignerIntent = {
+      kind: "fireblocks",
+      api_key: row.public_id,
+    }
+    if (row.api_host) intent.api_host = row.api_host
+    if (row.vault_id) intent.vault_account_id = row.vault_id
+    return intent
+  }
+  throw new Error(`unknown cosigner kind in CosignerStep row: ${row.kind}`)
+}
+
+/**
+ * Dispatch all pending cosigner steps for a swap. Called at the
+ * post-native-sign hook in the swap state machine. Returns an aggregate
+ * verdict so the caller can decide whether to advance the swap or fail it.
+ *
+ *   "all_approved"   — every step returned approved; safe to broadcast
+ *   "any_rejected"   — at least one external denial; fail the swap with
+ *                      a user-visible reason
+ *   "any_failed"     — transport / config error; fail the swap and let
+ *                      the operator retry
+ *   "no_steps"       — no cosigners on this swap; caller proceeds as usual
+ *
+ * Each step's row is updated with its terminal status + signature /
+ * reason / external_id so the trail is queryable post-hoc.
+ */
+export type CosignAggregate =
+  | "all_approved"
+  | "any_rejected"
+  | "any_failed"
+  | "no_steps"
+
+export interface DispatchForSwapResult {
+  aggregate: CosignAggregate
+  results: CosignResult[]
+  failingReasons: string[]
+}
+
+export async function dispatchCosignersForSwap(
+  swapId: string,
+  nativeSignature: string,
+  txHash: string,
+): Promise<DispatchForSwapResult> {
+  const rows = await prisma.cosignerStep.findMany({
+    where: { swap_id: swapId, status: "pending" },
+    orderBy: { id: "asc" },
+  })
+  if (rows.length === 0) {
+    return { aggregate: "no_steps", results: [], failingReasons: [] }
+  }
+
+  const intents = rows.map(rowToIntent)
+  const results = await dispatchCosigners({
+    swapId,
+    nativeSignature,
+    txHash,
+    cosigners: intents,
+  })
+
+  // Persist per-step terminal state. We update rows by index since
+  // dispatchCosigners preserves intent order.
+  await Promise.all(
+    rows.map((row, i) => {
+      const r = results[i]!
+      return prisma.cosignerStep.update({
+        where: { id: row.id },
+        data: {
+          status: r.status,
+          signature: r.signature ?? null,
+          reason: r.reason ?? null,
+          external_id: r.externalId ?? null,
+        },
+      })
+    }),
+  )
+
+  const anyRejected = results.some((r) => r.status === "rejected")
+  const anyFailed = results.some((r) => r.status === "failed")
+  const failingReasons = results
+    .filter((r) => r.status !== "approved" && r.reason)
+    .map((r) => `${r.intent.kind}: ${r.reason!}`)
+
+  if (anyRejected) {
+    return { aggregate: "any_rejected", results, failingReasons }
+  }
+  if (anyFailed) {
+    return { aggregate: "any_failed", results, failingReasons }
+  }
+  return { aggregate: "all_approved", results, failingReasons: [] }
 }
