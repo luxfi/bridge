@@ -120,6 +120,77 @@ export interface BridgeFireblocksConfig {
 }
 
 /**
+ * Cloud-HSM cosigner provider. Each value is a synchronous,
+ * HSM-backed signing layer. Adding a new cloud here is a single
+ * adapter on the bridge backend (`domain/cosigners.ts::CloudSigner`).
+ */
+export type CloudHsmProvider =
+  | "gcp_kms"
+  | "aws_kms"
+  | "azure_key_vault"
+  | "vault_transit"
+
+/**
+ * Signing algorithm. Bridge accepts a narrow allow-list — adding an
+ * algorithm requires evaluating its security against the existing
+ * settlement-signature acceptance rules on `app/server`. The default
+ * for EVM cross-chain settlement is `secp256k1_ecdsa_sha256`.
+ */
+export type CosignerAlgorithm =
+  | "secp256k1_ecdsa_sha256"
+  | "ed25519"
+  | "rsa_pss_sha256"
+
+/**
+ * Cloud-HSM cosigner config — one signer per entry.
+ *
+ * Layers a synchronous HSM-backed signature on top of the native MPC
+ * threshold network. The bridge backend enforces 2-of-2 (or N-of-N
+ * across multiple cloud HSMs + native MPC) before releasing settlement.
+ * Right model when a tenant's policy is "this institutional treasury
+ * key in cloud HSM must attest to every bridge transfer."
+ *
+ * The browser SDK is **declarative only**. It never authenticates to
+ * any cloud KMS directly — the bridge backend resolves identity at
+ * signing time using the cloud's native workload-identity story:
+ *
+ *   GCP:    Workload Identity Federation / attached service account
+ *   AWS:    IAM role / OIDC role assumption
+ *   Azure:  Managed Identity / workload identity
+ *   Vault:  AppRole / Kubernetes auth / short-lived OIDC token
+ *
+ * `identityHint` is a NON-SECRET hint (e.g. a service-account email,
+ * a role ARN, a Vault role name) — never credentials. The backend
+ * uses it only to scope which workload-identity binding to consult.
+ * SA-JSON-key mode is intentionally not supported in the SDK
+ * configuration surface; tenants that lack a managed-identity setup
+ * should bind one before enabling cloud-HSM cosign.
+ */
+export interface BridgeCloudHsmConfig {
+  /** Cloud provider for this signer. */
+  provider: CloudHsmProvider
+  /**
+   * Provider-specific full key reference. All info needed to locate
+   * the key in the cloud lives here — no per-provider config blob is
+   * required because each provider's URI form is self-describing:
+   *
+   *   gcp_kms          `projects/{p}/locations/{l}/keyRings/{r}/cryptoKeys/{k}/cryptoKeyVersions/{v}`
+   *   aws_kms          `arn:aws:kms:{region}:{account}:key/{key-id}`
+   *   azure_key_vault  `https://{vault}.vault.azure.net/keys/{name}[/{version}]`
+   *   vault_transit    `transit/keys/{name}` (within a tenant's mount path)
+   */
+  keyRef: string
+  /** Signing algorithm — required so the backend can reject early. */
+  algorithm: CosignerAlgorithm
+  /**
+   * Optional non-secret identity hint. Backend uses this only to scope
+   * which workload-identity binding to consult; never carries credentials.
+   * Examples: GCP SA email, AWS role ARN, Vault role name.
+   */
+  identityHint?: string
+}
+
+/**
  * MPC cluster config block.
  *
  * The bridge co-signs cross-chain settlement via Lux MPC (CGGMP21 / FROST
@@ -127,11 +198,20 @@ export interface BridgeFireblocksConfig {
  * wallets; the optional private cluster is reserved for treasury / fee
  * accounts.
  *
- * Optionally layers external MPC custodians (Utila, Fireblocks) as
- * additional cosigners alongside the native threshold network — both
+ * Optionally layers external MPC custodians (Utila, Fireblocks) and / or
+ * cloud-HSM signers (GCP Cloud KMS, AWS KMS, Azure Key Vault) as
+ * additional cosigners alongside the native threshold network. All
  * blocks are independent and may be enabled together for belt-and-
  * suspenders institutional flows. Native Lux MPC remains the primary
- * signer; external custodians sit on top.
+ * signer; layered cosigners sit on top — backend enforces "all listed
+ * must approve" before releasing settlement.
+ *
+ * Approval semantics differ by layer:
+ *   - Utila / Fireblocks: async TAP policy, human approval, polling
+ *   - Cloud HSM: synchronous, single API call, sub-second latency
+ *
+ * The SDK collapses both shapes into the same `cosigners[]` wire array;
+ * the backend dispatcher (`domain/cosigners.ts`) handles the difference.
  */
 export interface BridgeMPCConfig {
   /**
@@ -171,6 +251,54 @@ export interface BridgeMPCConfig {
    * Backend enforces 2-of-2 (native + fireblocks) before releasing settlement.
    */
   fireblocks?: BridgeFireblocksConfig
+  /**
+   * Optional cloud-HSM cosigners. Array form so a tenant can layer
+   * multiple cloud KMSs simultaneously (e.g. GCP + AWS for cross-region
+   * redundancy). Each entry is one synchronous HSM signer.
+   *
+   * For the Lux-Network tenant (bridge.lux.network), this is **left
+   * empty** — Lux relies on m-chain (native MPC) and optionally f-chain
+   * (FHE-secured attestation, see `fchain` below) and nothing else.
+   * Other tenants (Zoo / Hanzo / institutional white-labels) opt in
+   * here when their policy requires regulated-custodian cosign.
+   */
+  cloudHsm?: BridgeCloudHsmConfig[]
+
+  /**
+   * Optional f-chain (FHE attestation) cosigner. Native to the Lux
+   * Network — f-chain is the FHE-secured sibling of m-chain, designed
+   * for confidential / leaderless attestation without leaking the
+   * txHash to plaintext quorum. Used as a SECOND native signer
+   * alongside m-chain when a tenant wants PQ-safe cosign without
+   * pulling in an external custodian.
+   *
+   * The Lux-Network bridge tenant may flip this on as the only
+   * "extra" layer beyond m-chain — keeps the signing surface entirely
+   * within the Lux primary network (b-chain ledger, m-chain MPC,
+   * f-chain FHE) with no external dependencies.
+   */
+  fchain?: BridgeFChainConfig
+}
+
+/**
+ * f-chain (FHE attestation) config block.
+ *
+ * f-chain runs alongside m-chain on the Lux primary network. Where
+ * m-chain produces a classical threshold signature (CGGMP21 / FROST),
+ * f-chain produces an FHE-secured attestation over the same txHash —
+ * the cosign property without leaking the message to a plaintext
+ * threshold quorum. Same trust boundary as m-chain (Lux validator set),
+ * different computation model.
+ */
+export interface BridgeFChainConfig {
+  /** f-chain cluster URL. Distinct from m-chain's publicUrl. */
+  publicUrl: string
+  /**
+   * FHE scheme identifier. The default `ckks` works for general
+   * attestation; `bgv` and `bfv` are alternative lattice schemes if
+   * a tenant has cross-vendor interop requirements.
+   */
+  scheme?: "ckks" | "bgv" | "bfv"
 }
 
 /**
