@@ -20,23 +20,20 @@
 // runtime dependency on any sibling workspace package.
 
 import { useEffect, type FC, type ReactNode } from 'react'
-// @hanzo/gui source exports `GuiProvider` (after the monorepo's postinstall
-// rename) but its shipped .d.ts files still carry the upstream
-// `HanzoguiProvider` name. We pull the runtime symbol directly from the
-// untyped re-export module to avoid forcing every consumer of @luxfi/bridge
-// to also ship the rename patch.
+// @hanzo/gui ships two compatible naming surfaces across 7.x dists:
+// 7.0.0 (empty dist, patched in by postinstall) exposes `GuiProvider`;
+// 7.2.x (populated dist) exposes the upstream `HanzoguiProvider`. SDK
+// accepts whichever is present so a tenant on either pin works.
 import * as gui from '@hanzo/gui'
 
 import { applyBrandMetadata, setConfig } from './config'
 import type { BridgeConfig } from './types'
 import { BridgeApp } from './app/BridgeApp'
 
-const GuiProvider: FC<{
-  children: ReactNode
-  defaultTheme?: 'light' | 'dark'
-}> = (gui as unknown as {
-  GuiProvider: FC<{ children: ReactNode; defaultTheme?: 'light' | 'dark' }>
-}).GuiProvider
+const guiAny = gui as unknown as Record<string, unknown>
+const GuiProvider = (guiAny.GuiProvider ?? guiAny.HanzoguiProvider) as
+  | FC<{ children: ReactNode; defaultTheme?: 'light' | 'dark' }>
+  | undefined
 
 export interface BridgeProps {
   /** Runtime config. Seeded into the SDK config cache on first render. */
@@ -59,6 +56,11 @@ export const Bridge: FC<BridgeProps> = ({ config }) => {
   // SDK owns this wrapper so consumers don't have to know it exists — the
   // runtime config is configured separately by `mountBridge` via
   // `createGui(getDefaultGuiConfig())`.
+  if (!GuiProvider) {
+    throw new Error(
+      '@hanzo/gui exports neither GuiProvider nor HanzoguiProvider — install >=7.0.0',
+    )
+  }
   return (
     <GuiProvider defaultTheme="dark">
       <BridgeApp />
