@@ -231,6 +231,48 @@ brand:             │   pkg/bridge/src/app/            │
   `pulsar` (MLWE), `corona` (RLWE), `magnetar` (lattice research variant) —
   PQ-safe, leaderless, permissionless-safe by design.
 
+### Standalone mode — running the bridge without the Lux platform
+
+The bridge can boot with the absolute minimum: Postgres + bridge-server +
+bridge-ui. Every other Lux service (IAM / KMS / m-chain MPC / cosigners)
+is **optional at runtime** — the backend graceful-degrades when the
+corresponding env block is unset and picks up the integration the moment
+the block appears.
+
+```
+docker compose -f compose.standalone.yml up --build
+# bridge UI    http://localhost:3001
+# bridge API   http://localhost:5000/healthz
+# postgres     localhost:5433 (user=bridge, pass=bridge, db=bridge)
+```
+
+What's intentionally NOT in `compose.standalone.yml` (but is in
+`compose.local.yml`):
+
+| Service | Why standalone can skip it |
+|---|---|
+| Casdoor (Lux ID) | bridge does not require auth in dev mode |
+| Vault (KMS) | `fetchCosignerSecret` falls back to env-var pattern when `LUX_KMS_URL` is unset |
+| NATS | only `mpc-service.ts` consumes it; backend logs a warn and skips its initialise() |
+| Consul | same — `mpc-service.ts` only |
+| 3-node MPC cluster | `LuxMPCClient` is constructed on demand; native MPC sign requires it but cosigner-layered swaps don't |
+
+To enable any of the optional layers, set the matching env block on the
+`bridge-server` service in `compose.standalone.yml` (commented stubs are
+already there). The bridge picks them up on next request — no restart
+required for cosigner config, only `LUX_MPC_URL` requires a restart (cached at server start).
+
+### Hanzo-side bridge / teleport — does not exist
+
+There is no `~/work/hanzo/teleport` and no `~/work/hanzo/bridge`. The
+canonical Lux cross-chain bridge protocol lives at `~/work/lux/teleport`
+(Warp 2.0 envelopes + m-chain custody, LP-021v2 / LP-7330). The
+user-facing UI + SDK is `~/work/lux/bridge` (this repo). If you ever
+need a Hanzo-flavored bridge surface for a Hanzo-branded tenant, the
+right play is to add a Hanzo tenant build under `app/` (mirror of
+`app/bridge/`) that consumes `@luxfi/bridge` + `@hanzoai/brand` — not a
+new repo. The SDK is the integration point; tenants are thin.
+
 ### Native Lux services — m-chain (MPC) + KMS + f-chain
 
 The bridge backend talks to the canonical Lux ecosystem services via
