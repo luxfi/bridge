@@ -33,7 +33,6 @@ jobs:
       runner-amd64: lux-build-linux-amd64
       runner-arm64: lux-build-linux-arm64
       runner-deploy: lux-deploy-linux-amd64
-    secrets: inherit
 
   notify-universe:
     needs: docker
