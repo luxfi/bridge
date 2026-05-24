@@ -182,6 +182,6 @@ describe("runFireblocks — failed / transient", () => {
 
     const [result] = await dispatchCosigners(opts)
     expect(result?.status).toBe("failed")
-    expect(result?.reason).toMatch(/secret not in KMS/)
+    expect(result?.reason).toMatch(/cosigner secret unavailable/)
   })
 })
