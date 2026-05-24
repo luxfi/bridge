@@ -1,8 +1,8 @@
 // Lux KMS HTTP client tests.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { KMSError, LuxKMSClient } from "../lux-kms"
-import { LuxIAMClient } from "../lux-iam"
+import { KMSError, KMSSecretClient } from "../kms"
+import { IAMClient } from "../iam"
 
 const ISSUER = "https://iam.lux.network"
 const KMS_URL = "https://kms.lux.network"
@@ -26,15 +26,15 @@ afterEach(() => {
 })
 
 function newClient() {
-  const iam = new LuxIAMClient({
+  const iam = new IAMClient({
     issuer: ISSUER,
     clientId: "lux-bridge",
     clientSecret: "test-secret",
   })
-  return new LuxKMSClient({ url: KMS_URL, org: "lux", iam })
+  return new KMSSecretClient({ url: KMS_URL, org: "lux", iam })
 }
 
-describe("LuxKMSClient.getSecret", () => {
+describe("KMSSecretClient.getSecret", () => {
   it("GETs /v1/kms/orgs/{org}/secrets/{path} with Bearer token", async () => {
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")

@@ -14,13 +14,13 @@
 //
 // Auth: Bearer JWT with `aud` claim matching the bridge's tenant id
 // (e.g. `liquidity-bd`, `lux-bridge`). Token is minted by Lux IAM via
-// `LuxIAMClient.mint('lux-kms')` and cached for its TTL.
+// `IAMClient.mint('kms')` and cached for its TTL.
 //
 // All secrets returned are STRINGS (PEM, JSON, bytes — caller decides
 // how to parse). KMS itself stores them as opaque bytes; the path
 // namespacing reflects the consumer (e.g. `bridge/cosigners/utila/{org}/sa_pem`).
 
-import { LuxIAMClient } from "./lux-iam"
+import { IAMClient } from "./iam"
 
 // Call-time lookup so vi.spyOn(globalThis, 'fetch') intercepts in tests.
 const _fetch = (...args: Parameters<typeof globalThis.fetch>) =>
@@ -32,8 +32,8 @@ export interface KMSConfig {
   /** Org slug whose secret namespace we're reading from. */
   org: string
   /** IAM token minter (shared across KMS / MPC clients). */
-  iam: LuxIAMClient
-  /** Audience the IAM client mints for. Default `lux-kms`. */
+  iam: IAMClient
+  /** Audience the IAM client mints for. Default `kms`. */
   audience?: string
 }
 
@@ -48,16 +48,16 @@ export class KMSError extends Error {
   }
 }
 
-export class LuxKMSClient {
+export class KMSSecretClient {
   private readonly baseUrl: string
   private readonly audience: string
 
   constructor(private readonly cfg: KMSConfig) {
-    if (!cfg.url) throw new Error("lux-kms: url required")
-    if (!cfg.org) throw new Error("lux-kms: org required")
-    if (!cfg.iam) throw new Error("lux-kms: iam client required")
+    if (!cfg.url) throw new Error("kms: url required")
+    if (!cfg.org) throw new Error("kms: org required")
+    if (!cfg.iam) throw new Error("kms: iam client required")
     this.baseUrl = cfg.url.replace(/\/$/, "")
-    this.audience = cfg.audience ?? "lux-kms"
+    this.audience = cfg.audience ?? "kms"
   }
 
   /**
@@ -77,7 +77,7 @@ export class LuxKMSClient {
       })
     } catch (err) {
       throw new KMSError(
-        `lux-kms: GET ${url} failed: ${err instanceof Error ? err.message : String(err)}`,
+        `kms: GET ${url} failed: ${err instanceof Error ? err.message : String(err)}`,
         undefined,
         cleanPath,
       )
@@ -86,14 +86,14 @@ export class LuxKMSClient {
       // Invalidate the cached token so the next call refetches.
       this.cfg.iam.invalidate(this.audience)
       throw new KMSError(
-        "lux-kms: 401 unauthorized — IAM token may have expired or aud mismatch",
+        "kms: 401 unauthorized — IAM token may have expired or aud mismatch",
         401,
         cleanPath,
       )
     }
     if (resp.status === 404) {
       throw new KMSError(
-        `lux-kms: secret not found at ${cleanPath}`,
+        `kms: secret not found at ${cleanPath}`,
         404,
         cleanPath,
       )
@@ -101,7 +101,7 @@ export class LuxKMSClient {
     if (!resp.ok) {
       const text = await resp.text().catch(() => "")
       throw new KMSError(
-        `lux-kms: GET returned ${resp.status}: ${text.slice(0, 300)}`,
+        `kms: GET returned ${resp.status}: ${text.slice(0, 300)}`,
         resp.status,
         cleanPath,
       )
@@ -114,7 +114,7 @@ export class LuxKMSClient {
       const value = json.value ?? json.secret
       if (typeof value !== "string") {
         throw new KMSError(
-          `lux-kms: JSON response missing 'value' / 'secret' field for ${cleanPath}`,
+          `kms: JSON response missing 'value' / 'secret' field for ${cleanPath}`,
           200,
           cleanPath,
         )

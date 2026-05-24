@@ -24,7 +24,7 @@
 #      Postgres:       localhost:5433 (user=bridge, pass=bridge, db=bridge)
 #
 # To enable external services after boot, just set the corresponding env
-# vars (LUX_MPC_URL, LUX_KMS_URL, …) — the bridge backend graceful-degrades
+# vars (BRIDGE_MPC_URL, BRIDGE_KMS_URL, …) — the bridge backend graceful-degrades
 # when they're unset and starts using them when they appear.
 
 services:
@@ -58,12 +58,12 @@ services:
       NODE_ENV: standalone
       LOG_LEVEL: info
       # All external integrations are OPTIONAL — uncomment to enable.
-      # LUX_IAM_ISSUER: https://iam.lux.network
-      # LUX_KMS_URL: https://kms.lux.network
-      # LUX_KMS_ORG: lux
-      # LUX_KMS_CLIENT_ID: lux-bridge
-      # LUX_KMS_CLIENT_SECRET: <fetch from your secret store>
-      # LUX_MPC_URL: https://mpc.lux.network
+      # BRIDGE_IAM_ISSUER: https://iam.lux.network
+      # BRIDGE_KMS_URL: https://kms.lux.network
+      # BRIDGE_KMS_ORG: lux
+      # BRIDGE_IAM_CLIENT_ID: lux-bridge
+      # BRIDGE_IAM_CLIENT_SECRET: <fetch from your secret store>
+      # BRIDGE_MPC_URL: https://mpc.lux.network
     ports:
       - "5000:5000"
     networks: [bridge-standalone]
