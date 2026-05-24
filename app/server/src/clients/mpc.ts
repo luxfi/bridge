@@ -13,8 +13,8 @@
 //   GET  /v1/wallets/{id}               — wallet metadata
 //   GET  /v1/status                     — cluster status (online peers, share counts)
 //
-// Auth: Bearer JWT with `aud=lux-mpc`. The bridge mints via the same
-// LuxIAMClient used by LuxKMSClient. Sign calls are RATE LIMITED at the
+// Auth: Bearer JWT with `aud=mpc`. The bridge mints via the same
+// IAMClient used by KMSSecretClient. Sign calls are RATE LIMITED at the
 // daemon and have a per-call default timeout of 120s (matches mpcd's
 // threshold-completion ceiling).
 //
@@ -22,13 +22,13 @@
 // Corona / Magnetar / Doerner) is per-wallet at keygen time. Sign calls
 // don't re-specify — the wallet record holds the protocol identifier.
 
-import { LuxIAMClient } from "./lux-iam"
+import { IAMClient } from "./iam"
 
 // Call-time lookup so vi.spyOn(globalThis, 'fetch') intercepts in tests.
 const _fetch = (...args: Parameters<typeof globalThis.fetch>) =>
   globalThis.fetch(...args)
 
-export type LuxMpcProtocol =
+export type MpcProtocol =
   | "cggmp21"
   | "frost"
   | "bls"
@@ -38,17 +38,17 @@ export type LuxMpcProtocol =
   | "corona"
   | "magnetar"
 
-export type LuxMpcKeyType =
+export type MpcKeyType =
   | "secp256k1"
   | "ed25519"
   | "bls"
   | "sr25519"
 
-export interface LuxMPCConfig {
+export interface MPCConfig {
   /** mpcd base URL, e.g. `https://mpc.lux.network`. */
   url: string
-  iam: LuxIAMClient
-  /** Audience for IAM token. Default `lux-mpc`. */
+  iam: IAMClient
+  /** Audience for IAM token. Default `mpc`. */
   audience?: string
   /** Per-call timeout (ms). Default 120000 (matches mpcd's ceiling). */
   timeoutMs?: number
@@ -57,8 +57,8 @@ export interface LuxMPCConfig {
 export interface KeygenRequest {
   vaultId: string
   name: string
-  keyType: LuxMpcKeyType
-  protocol: LuxMpcProtocol
+  keyType: MpcKeyType
+  protocol: MpcProtocol
 }
 
 export interface KeygenResult {
@@ -66,8 +66,8 @@ export interface KeygenResult {
   walletId: string
   vaultId: string
   name?: string
-  keyType: LuxMpcKeyType
-  protocol: LuxMpcProtocol
+  keyType: MpcKeyType
+  protocol: MpcProtocol
   publicKey?: string
   address?: string
   status?: string
@@ -75,7 +75,7 @@ export interface KeygenResult {
 
 export interface SignRequest {
   walletId: string
-  keyType: LuxMpcKeyType
+  keyType: MpcKeyType
   /** Bytes to sign — caller decides hashing convention. */
   message: Uint8Array
 }
@@ -92,7 +92,7 @@ export interface SignResult {
 export interface ClusterStatus {
   online: number
   total: number
-  protocols: LuxMpcProtocol[]
+  protocols: MpcProtocol[]
   threshold?: number
 }
 
@@ -107,16 +107,16 @@ export class MPCError extends Error {
   }
 }
 
-export class LuxMPCClient {
+export class MPCClient {
   private readonly baseUrl: string
   private readonly audience: string
   private readonly timeoutMs: number
 
-  constructor(private readonly cfg: LuxMPCConfig) {
-    if (!cfg.url) throw new Error("lux-mpc: url required")
-    if (!cfg.iam) throw new Error("lux-mpc: iam client required")
+  constructor(private readonly cfg: MPCConfig) {
+    if (!cfg.url) throw new Error("mpc: url required")
+    if (!cfg.iam) throw new Error("mpc: iam client required")
     this.baseUrl = cfg.url.replace(/\/$/, "")
-    this.audience = cfg.audience ?? "lux-mpc"
+    this.audience = cfg.audience ?? "mpc"
     this.timeoutMs = cfg.timeoutMs ?? 120_000
   }
 
@@ -165,7 +165,7 @@ export class LuxMPCClient {
         : ""
     if (!sig) {
       throw new MPCError(
-        "lux-mpc: sign response missing signature field",
+        "mpc: sign response missing signature field",
         200,
         "/v1/transactions",
       )
@@ -186,7 +186,7 @@ export class LuxMPCClient {
       online: Number(json.online ?? 0),
       total: Number(json.total ?? 0),
       protocols: Array.isArray(json.protocols)
-        ? (json.protocols as LuxMpcProtocol[])
+        ? (json.protocols as MpcProtocol[])
         : [],
       threshold:
         typeof json.threshold === "number" ? json.threshold : undefined,
@@ -216,8 +216,8 @@ export class LuxMPCClient {
       const isAbort = err instanceof Error && err.name === "AbortError"
       throw new MPCError(
         isAbort
-          ? `lux-mpc: ${method} ${url} aborted after ${this.timeoutMs}ms`
-          : `lux-mpc: ${method} ${url} failed: ${err instanceof Error ? err.message : String(err)}`,
+          ? `mpc: ${method} ${url} aborted after ${this.timeoutMs}ms`
+          : `mpc: ${method} ${url} failed: ${err instanceof Error ? err.message : String(err)}`,
         undefined,
         url,
       )
@@ -227,7 +227,7 @@ export class LuxMPCClient {
     if (resp.status === 401) {
       this.cfg.iam.invalidate(this.audience)
       throw new MPCError(
-        "lux-mpc: 401 unauthorized — IAM token expired or aud mismatch",
+        "mpc: 401 unauthorized — IAM token expired or aud mismatch",
         401,
         url,
       )
@@ -235,7 +235,7 @@ export class LuxMPCClient {
     if (!resp.ok) {
       const text = await resp.text().catch(() => "")
       throw new MPCError(
-        `lux-mpc: ${method} returned ${resp.status}: ${text.slice(0, 300)}`,
+        `mpc: ${method} returned ${resp.status}: ${text.slice(0, 300)}`,
         resp.status,
         url,
       )
