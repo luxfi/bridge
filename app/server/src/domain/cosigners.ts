@@ -53,6 +53,8 @@ import { createHash } from "crypto"
 
 import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
+import { LuxIAMClient } from "@/clients/lux-iam"
+import { KMSError, LuxKMSClient } from "@/clients/lux-kms"
 
 // ────────────────────────────────────────────────────────────────────────
 //  Public types — match SDK shape EXACTLY. Do not drift.
@@ -387,30 +389,63 @@ function envSafe(s: string): string {
   return s.toUpperCase().replace(/[^A-Z0-9]/g, "_")
 }
 
+// Lazily-built Lux KMS client. Production sources every cosigner secret
+// from Lux KMS; the env-var fallback exists ONLY for local dev (when
+// `LUX_KMS_URL` is unset). The constructor reads from process.env at
+// first call so test-time env injection works without import-order
+// gymnastics.
+let _kmsClient: LuxKMSClient | undefined
+function kmsClient(): LuxKMSClient | undefined {
+  if (_kmsClient) return _kmsClient
+  const url = process.env.LUX_KMS_URL
+  const org = process.env.LUX_KMS_ORG ?? "lux"
+  const issuer = process.env.LUX_IAM_ISSUER
+  const clientId = process.env.LUX_KMS_CLIENT_ID
+  const clientSecret = process.env.LUX_KMS_CLIENT_SECRET
+  if (!url || !issuer || !clientId || !clientSecret) {
+    return undefined
+  }
+  _kmsClient = new LuxKMSClient({
+    url,
+    org,
+    iam: new LuxIAMClient({ issuer, clientId, clientSecret }),
+  })
+  return _kmsClient
+}
+
+/** For tests — reset the cached KMS client so a fresh env config rebuilds it. */
+export function _resetKmsClientForTests(): void {
+  _kmsClient = undefined
+}
+
+/**
+ * Fetch a cosigner secret from Lux KMS. Production path: a single
+ * authenticated GET. Local-dev fallback: `<KIND>_COSIGNER_PEM__<ID>`
+ * env var. Throws cleanly if neither is reachable.
+ *
+ * KMS path layout (per Hanzo/Lux convention):
+ *   bridge/cosigners/utila/{org_id}/sa_pem
+ *   bridge/cosigners/fireblocks/{api_key}/secret_pem
+ *
+ * Both secrets are PEM-encoded private keys. The KMS stores them as
+ * opaque strings; the bridge backend interprets them per provider.
+ */
 export async function fetchCosignerSecret(
   intent: CosignerIntent,
 ): Promise<string> {
-  // TEMPORARY — env-var fallback so local dev / tests can wire one tenant
-  // without the KMS round-trip. Production MUST take the KMS branch.
   if (intent.kind === "utila") {
-    const envKey = `UTILA_COSIGNER_PEM__${envSafe(intent.org_id)}`
-    const pem = process.env[envKey]
-    if (!pem) {
-      throw new Error(
-        `Utila cosigner secret not in KMS (TODO) and ${envKey} is unset — cannot complete cosign for org ${intent.org_id}`,
-      )
-    }
-    return pem
+    return readSecret(
+      `bridge/cosigners/utila/${envSafe(intent.org_id)}/sa_pem`,
+      `UTILA_COSIGNER_PEM__${envSafe(intent.org_id)}`,
+      `org ${intent.org_id}`,
+    )
   }
   if (intent.kind === "fireblocks") {
-    const envKey = `FIREBLOCKS_COSIGNER_PEM__${envSafe(intent.api_key)}`
-    const pem = process.env[envKey]
-    if (!pem) {
-      throw new Error(
-        `Fireblocks cosigner secret not in KMS (TODO) and ${envKey} is unset — cannot complete cosign for key ${intent.api_key}`,
-      )
-    }
-    return pem
+    return readSecret(
+      `bridge/cosigners/fireblocks/${envSafe(intent.api_key)}/secret_pem`,
+      `FIREBLOCKS_COSIGNER_PEM__${envSafe(intent.api_key)}`,
+      `key ${intent.api_key}`,
+    )
   }
   // cloud_hsm + fchain do not consult fetchCosignerSecret — they
   // resolve credentials via cloud-native workload identity (no shared
@@ -418,6 +453,38 @@ export async function fetchCosignerSecret(
   // reaches here for those branches, so this is a defensive guard.
   throw new Error(
     `fetchCosignerSecret called for kind "${intent.kind}" which uses workload identity, not a shared secret`,
+  )
+}
+
+async function readSecret(
+  kmsPath: string,
+  envVarName: string,
+  subject: string,
+): Promise<string> {
+  // 1. Production path — Lux KMS.
+  const kms = kmsClient()
+  if (kms) {
+    try {
+      return await kms.getSecret(kmsPath)
+    } catch (err) {
+      if (err instanceof KMSError && err.httpStatus === 404) {
+        // Fall through to env-var fallback — the secret simply isn't
+        // provisioned. (404 is non-retryable; transport errors aren't.)
+        logger.warn(
+          `[cosigners] KMS 404 for ${kmsPath} — trying env-var fallback ${envVarName}`,
+        )
+      } else {
+        // Any other KMS error: rethrow so the dispatcher's catch surfaces
+        // it as `failed` (retryable).
+        throw err
+      }
+    }
+  }
+  // 2. Local-dev path — env var.
+  const fromEnv = process.env[envVarName]
+  if (fromEnv) return fromEnv
+  throw new Error(
+    `cosigner secret unavailable for ${subject}: tried Lux KMS path "${kmsPath}" (${kms ? "404 / not provisioned" : "client not configured — set LUX_KMS_URL + LUX_IAM_ISSUER + LUX_KMS_CLIENT_ID + LUX_KMS_CLIENT_SECRET"}) and env "${envVarName}" (unset)`,
   )
 }
 

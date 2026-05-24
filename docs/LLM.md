@@ -231,6 +231,89 @@ brand:             │   pkg/bridge/src/app/            │
   `pulsar` (MLWE), `corona` (RLWE), `magnetar` (lattice research variant) —
   PQ-safe, leaderless, permissionless-safe by design.
 
+### Native Lux services — m-chain (MPC) + KMS + f-chain
+
+The bridge backend talks to the canonical Lux ecosystem services via
+HTTP clients in `app/server/src/clients/`:
+
+- **`lux-iam.ts`** — `LuxIAMClient.mint(audience)` mints OAuth2
+  `client_credentials` JWTs against Lux IAM (`https://iam.lux.network`).
+  Per-audience cache with early refresh. The bridge mints one token for
+  `aud=lux-kms` and another for `aud=lux-mpc`; both rotate independently.
+- **`lux-kms.ts`** — `LuxKMSClient.getSecret(path)` reads from
+  `~/work/lux/kms` (`https://kms.lux.network`). Bearer JWT auth, path
+  layout `bridge/cosigners/{utila|fireblocks}/{publicId}/{sa_pem|secret_pem}`.
+  Replaces every env-var fallback in `domain/cosigners.ts::fetchCosignerSecret`.
+- **`lux-mpc.ts`** — `LuxMPCClient.keygen({...})` / `.sign({...})` /
+  `.status()` against `mpcd` (`https://mpc.lux.network`). This is THE
+  m-chain entrypoint — the canonical Lux MPC daemon at `~/work/lux/mpc`,
+  speaking the same wire protocol as the Go client at
+  `~/work/lux/kms/pkg/mpc/client.go`. Supports the full Lux protocol set
+  (CGGMP21 / FROST / BLS / SR25519 / Pulsar / Corona / Magnetar / Doerner).
+  Per-call 120s timeout matches mpcd's threshold-completion ceiling.
+
+Configuration via env (bridge backend startup):
+
+```
+LUX_IAM_ISSUER        https://iam.lux.network
+LUX_KMS_URL           https://kms.lux.network
+LUX_KMS_ORG           lux
+LUX_KMS_CLIENT_ID     lux-bridge
+LUX_KMS_CLIENT_SECRET (from KMS at boot OR --kms-bootstrap-secret)
+LUX_MPC_URL           https://mpc.lux.network
+```
+
+When `LUX_KMS_URL` is unset (local dev), `fetchCosignerSecret` falls
+back to per-tenant env vars. Production deployments MUST set the KMS
+env block — env-var fallback is dev-only.
+
+### Lux software frontends (administrative UIs)
+
+Three Lux ecosystem services ship their own administrative UIs separate
+from the bridge tenant SDK:
+
+| Service | Frontend repo / path | Stack | Domain |
+|---|---|---|---|
+| **m-chain (mpcd)** | `~/work/lux/mpc/dashboard/` (`@luxfi/mpc-dashboard`) | Next.js 15 + React 19 + zustand | `mpc.lux.network/dashboard` |
+| **KMS** | `~/work/lux/kms/frontend/` (`@hanzo/kms-frontend`) | Vite + React | `kms.lux.network` |
+| **f-chain (fhed)** | **DOES NOT EXIST** — see below | — | — |
+
+The bridge does **not** embed these dashboards; they're separate
+operator surfaces.
+
+### f-chain frontend — what it would look like
+
+`~/work/lux/fhe` (the FHE daemon `fhed`) currently has no dedicated UI.
+The bridge tenant's `TRANSFERS` panel surfaces per-swap f-chain
+attestation status (a `CosignerStep` row when the bridge backend
+processes a swap with `fchain: { publicUrl, scheme }` config), but
+that's per-bridge-tenant, not a cluster-wide operator surface.
+
+A standalone f-chain dashboard, when built, would mirror the
+mpc-dashboard layout and surface:
+
+1. **Cluster status** — `GET /v1/fhe/cluster/status`: peer count, FHE
+   scheme registry, share health per node.
+2. **Public key registry** — `GET /v1/fhe/publickey`: published FHE
+   public keys per scheme (CKKS / BGV / BFV), with an export button.
+3. **Encryption sessions** — recent `/v1/fhe/encrypt` calls and their
+   ciphertext bindings (txHash → ciphertext_hex), filterable by
+   requesting service (bridge / pay / id / ...).
+4. **Reshare history** — `/v1/fhe/cluster/reshare` events.
+5. **Health probe** — `GET /v1/fhe/health` rolled up to per-node status.
+
+Recommended scaffold (when scheduled):
+
+```
+~/work/lux/fhe/dashboard/   # new Next.js app, mirror of mpc/dashboard
+  package.json              @luxfi/fchain-dashboard
+  app/                      # Next.js app router
+  components/cluster/       # ClusterStatus, PeerList
+  components/keys/          # PublicKeyRegistry, ExportButton
+  components/sessions/      # EncryptHistory, CiphertextViewer
+  lib/fchain-client.ts      # mirrors lux-mpc.ts / lux-kms.ts shape
+```
+
 ### Optional layered cosigners (since SDK v1.0.3)
 
 External MPC custodians can be layered ON TOP of the native threshold network
