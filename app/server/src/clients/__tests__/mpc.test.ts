@@ -1,8 +1,8 @@
 // Lux MPC daemon (mpcd) HTTP client tests.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { LuxMPCClient, MPCError } from "../lux-mpc"
-import { LuxIAMClient } from "../lux-iam"
+import { MPCClient, MPCError } from "../mpc"
+import { IAMClient } from "../iam"
 
 const ISSUER = "https://iam.lux.network"
 const MPC_URL = "https://mpc.lux.network"
@@ -15,12 +15,12 @@ function jsonResponse(body: object, status = 200): Response {
 }
 
 function newClient(timeoutMs?: number) {
-  const iam = new LuxIAMClient({
+  const iam = new IAMClient({
     issuer: ISSUER,
     clientId: "lux-bridge",
     clientSecret: "test-secret",
   })
-  return new LuxMPCClient({ url: MPC_URL, iam, ...(timeoutMs ? { timeoutMs } : {}) })
+  return new MPCClient({ url: MPC_URL, iam, ...(timeoutMs ? { timeoutMs } : {}) })
 }
 
 beforeEach(() => {})
@@ -28,7 +28,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe("LuxMPCClient.keygen", () => {
+describe("MPCClient.keygen", () => {
   it("POSTs /v1/vaults/{vaultID}/wallets with key_type + protocol", async () => {
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -78,7 +78,7 @@ describe("LuxMPCClient.keygen", () => {
   })
 })
 
-describe("LuxMPCClient.sign", () => {
+describe("MPCClient.sign", () => {
   it("POSTs /v1/transactions with type=sign and base64 payload", async () => {
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -184,7 +184,7 @@ describe("LuxMPCClient.sign", () => {
   }, 1000)
 })
 
-describe("LuxMPCClient.status", () => {
+describe("MPCClient.status", () => {
   it("returns { online, total, protocols } parsed from /v1/status", async () => {
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
@@ -207,21 +207,21 @@ describe("LuxMPCClient.status", () => {
   })
 })
 
-describe("LuxMPCClient construction", () => {
+describe("MPCClient construction", () => {
   it("rejects construction without required fields", () => {
     expect(() =>
-      new LuxMPCClient({ url: "", iam: {} as never }),
+      new MPCClient({ url: "", iam: {} as never }),
     ).toThrow(/url/)
-    const iamOk = new LuxIAMClient({
+    const iamOk = new IAMClient({
       issuer: ISSUER,
       clientId: "id",
       clientSecret: "s",
     })
     expect(() =>
-      new LuxMPCClient({ url: MPC_URL, iam: undefined as unknown as LuxIAMClient }),
+      new MPCClient({ url: MPC_URL, iam: undefined as unknown as IAMClient }),
     ).toThrow(/iam/)
-    expect(new LuxMPCClient({ url: MPC_URL, iam: iamOk })).toBeInstanceOf(
-      LuxMPCClient,
+    expect(new MPCClient({ url: MPC_URL, iam: iamOk })).toBeInstanceOf(
+      MPCClient,
     )
   })
 })

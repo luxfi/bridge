@@ -35,11 +35,11 @@ beforeEach(() => {
   _resetKmsClientForTests()
 })
 afterEach(() => {
-  delete process.env.LUX_KMS_URL
-  delete process.env.LUX_KMS_ORG
-  delete process.env.LUX_IAM_ISSUER
-  delete process.env.LUX_KMS_CLIENT_ID
-  delete process.env.LUX_KMS_CLIENT_SECRET
+  delete process.env.BRIDGE_KMS_URL
+  delete process.env.BRIDGE_KMS_ORG
+  delete process.env.BRIDGE_IAM_ISSUER
+  delete process.env.BRIDGE_IAM_CLIENT_ID
+  delete process.env.BRIDGE_IAM_CLIENT_SECRET
   delete process.env.UTILA_COSIGNER_PEM__ORG_A
   delete process.env.FIREBLOCKS_COSIGNER_PEM__PUB_KEY
   vi.restoreAllMocks()
@@ -60,11 +60,11 @@ function textResponse(body: string, status = 200): Response {
 
 describe("fetchCosignerSecret — KMS-backed", () => {
   it("reads utila PEM from bridge/cosigners/utila/{org}/sa_pem when KMS is configured", async () => {
-    process.env.LUX_KMS_URL = "https://kms.lux.network"
-    process.env.LUX_KMS_ORG = "lux"
-    process.env.LUX_IAM_ISSUER = "https://iam.lux.network"
-    process.env.LUX_KMS_CLIENT_ID = "lux-bridge"
-    process.env.LUX_KMS_CLIENT_SECRET = "test"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_ORG = "lux"
+    process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
+    process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
+    process.env.BRIDGE_IAM_CLIENT_SECRET = "test"
 
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -86,11 +86,11 @@ describe("fetchCosignerSecret — KMS-backed", () => {
   })
 
   it("reads fireblocks PEM from bridge/cosigners/fireblocks/{api_key}/secret_pem", async () => {
-    process.env.LUX_KMS_URL = "https://kms.lux.network"
-    process.env.LUX_KMS_ORG = "lux"
-    process.env.LUX_IAM_ISSUER = "https://iam.lux.network"
-    process.env.LUX_KMS_CLIENT_ID = "lux-bridge"
-    process.env.LUX_KMS_CLIENT_SECRET = "test"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_ORG = "lux"
+    process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
+    process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
+    process.env.BRIDGE_IAM_CLIENT_SECRET = "test"
 
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -111,11 +111,11 @@ describe("fetchCosignerSecret — KMS-backed", () => {
   })
 
   it("falls back to env var when KMS returns 404", async () => {
-    process.env.LUX_KMS_URL = "https://kms.lux.network"
-    process.env.LUX_KMS_ORG = "lux"
-    process.env.LUX_IAM_ISSUER = "https://iam.lux.network"
-    process.env.LUX_KMS_CLIENT_ID = "lux-bridge"
-    process.env.LUX_KMS_CLIENT_SECRET = "test"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_ORG = "lux"
+    process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
+    process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
+    process.env.BRIDGE_IAM_CLIENT_SECRET = "test"
     process.env.UTILA_COSIGNER_PEM__ORG_A = "DEV-PEM-FROM-ENV"
 
     vi.spyOn(globalThis, "fetch")
@@ -132,7 +132,7 @@ describe("fetchCosignerSecret — KMS-backed", () => {
     expect(pem).toBe("DEV-PEM-FROM-ENV")
   })
 
-  it("uses env-var fallback when KMS is NOT configured (no LUX_KMS_URL)", async () => {
+  it("uses env-var fallback when KMS is NOT configured (no BRIDGE_KMS_URL)", async () => {
     process.env.FIREBLOCKS_COSIGNER_PEM__PUB_KEY = "LOCAL-DEV-PEM"
 
     const fetchSpy = vi.spyOn(globalThis, "fetch")
@@ -156,11 +156,11 @@ describe("fetchCosignerSecret — KMS-backed", () => {
   })
 
   it("non-404 KMS error propagates (retryable on the caller side)", async () => {
-    process.env.LUX_KMS_URL = "https://kms.lux.network"
-    process.env.LUX_KMS_ORG = "lux"
-    process.env.LUX_IAM_ISSUER = "https://iam.lux.network"
-    process.env.LUX_KMS_CLIENT_ID = "lux-bridge"
-    process.env.LUX_KMS_CLIENT_SECRET = "test"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_ORG = "lux"
+    process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
+    process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
+    process.env.BRIDGE_IAM_CLIENT_SECRET = "test"
 
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
