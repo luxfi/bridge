@@ -18,7 +18,6 @@ import rate from "@/routes/rate"
 // import utila from "@/routes/utila"
 import networks from "@/routes/networks"
 import exchanges from "@/routes/exchanges"
-import { mpcService } from "@/services/mpc-service"
 import { bridgeMPC } from "@/domain/mpc-bridge"
 import { startTeleportProcessor } from "@/domain/teleport-processor"
 
@@ -107,20 +106,22 @@ try {
     })
   })
 
-  // Health endpoint
+  // Health endpoint — bridge plus optional MPC status. Never fails the
+  // probe when MPC is unconfigured (standalone mode); just reports
+  // mpc.standalone=true.
   app.get("/health", async (req: Request, res: Response) => {
     try {
-      const mpcStatus = await mpcService.getNetworkStatus()
+      const mpcStatus = await bridgeMPC.getHealthStatus()
       res.json({
         status: "healthy",
         mpc: mpcStatus,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
     } catch (error) {
       res.status(503).json({
         status: "unhealthy",
         error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
     }
   })
@@ -148,15 +149,16 @@ try {
   app.listen(port, async () => {
     logger.info(`>> Server Is Running On Port ${port}`)
     
-    // Initialize MPC signing service (NATS-based, used for bridge getsig endpoint)
-    // Wallet creation uses HTTP to MPC API directly via mpc-wallet.ts
+    // Initialize MPC integration (HTTP to mpcd — no NATS, no Consul).
+    // Standalone-friendly: when BRIDGE_MPC_URL is unset, initialize()
+    // logs a warn and the rest of the server runs normally; sign calls
+    // reject cleanly with a clear error.
     try {
-      logger.info("Initializing MPC signing service...")
-      await mpcService.initialize()
+      logger.info("Initializing MPC integration (HTTP)...")
       await bridgeMPC.initialize()
-      logger.info("MPC signing service initialized successfully")
+      logger.info("MPC integration initialized")
     } catch (error) {
-      logger.warn("MPC signing service initialization failed (wallet creation still works via HTTP):", error)
+      logger.warn("MPC initialization soft-failed (will retry on first sign):", error)
     }
 
     // Start background processor for teleporter swaps stuck in TeleportProcessPending

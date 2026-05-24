@@ -1,7 +1,7 @@
 // Lux IAM token-minting client.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { IAMTokenError, LuxIAMClient } from "../lux-iam"
+import { IAMTokenError, IAMClient } from "../iam"
 
 const ISSUER = "https://iam.lux.network"
 const TOKEN_URL = `${ISSUER}/oauth/token`
@@ -28,14 +28,14 @@ function jsonResponse(body: object, status = 200): Response {
   })
 }
 
-describe("LuxIAMClient.mint", () => {
+describe("IAMClient.mint", () => {
   it("posts client_credentials form to /oauth/token and returns access_token", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       jsonResponse({ access_token: "tok-1", expires_in: 3600 }),
     )
 
-    const c = new LuxIAMClient(cfg)
-    const token = await c.mint("lux-kms")
+    const c = new IAMClient(cfg)
+    const token = await c.mint("kms")
     expect(token).toBe("tok-1")
 
     const [url, init] = fetchSpy.mock.calls[0]!
@@ -49,7 +49,7 @@ describe("LuxIAMClient.mint", () => {
     expect(params.get("grant_type")).toBe("client_credentials")
     expect(params.get("client_id")).toBe("lux-bridge")
     expect(params.get("client_secret")).toBe("test-secret")
-    expect(params.get("audience")).toBe("lux-kms")
+    expect(params.get("audience")).toBe("kms")
   })
 
   it("caches the token until close to expiry, refreshes after", async () => {
@@ -57,7 +57,7 @@ describe("LuxIAMClient.mint", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(jsonResponse({ access_token: "tok-1", expires_in: 120 }))
 
-    const c = new LuxIAMClient(cfg)
+    const c = new IAMClient(cfg)
     expect(await c.mint("a")).toBe("tok-1")
     expect(await c.mint("a")).toBe("tok-1") // cache hit
     expect(fetchSpy).toHaveBeenCalledTimes(1)
@@ -81,10 +81,10 @@ describe("LuxIAMClient.mint", () => {
         jsonResponse({ access_token: "for-mpc", expires_in: 3600 }),
       )
 
-    const c = new LuxIAMClient(cfg)
-    expect(await c.mint("lux-kms")).toBe("for-kms")
-    expect(await c.mint("lux-mpc")).toBe("for-mpc")
-    expect(await c.mint("lux-kms")).toBe("for-kms") // cached
+    const c = new IAMClient(cfg)
+    expect(await c.mint("kms")).toBe("for-kms")
+    expect(await c.mint("mpc")).toBe("for-mpc")
+    expect(await c.mint("kms")).toBe("for-kms") // cached
     expect(fetchSpy).toHaveBeenCalledTimes(2)
   })
 
@@ -98,7 +98,7 @@ describe("LuxIAMClient.mint", () => {
         jsonResponse({ access_token: "tok-2", expires_in: 3600 }),
       )
 
-    const c = new LuxIAMClient(cfg)
+    const c = new IAMClient(cfg)
     expect(await c.mint("a")).toBe("tok-1")
     c.invalidate("a")
     expect(await c.mint("a")).toBe("tok-2")
@@ -109,7 +109,7 @@ describe("LuxIAMClient.mint", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response("invalid_client", { status: 401 }),
     )
-    await expect(new LuxIAMClient(cfg).mint("a")).rejects.toMatchObject({
+    await expect(new IAMClient(cfg).mint("a")).rejects.toMatchObject({
       name: "IAMTokenError",
       httpStatus: 401,
     })
@@ -119,16 +119,16 @@ describe("LuxIAMClient.mint", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       jsonResponse({ expires_in: 3600 }),
     )
-    await expect(new LuxIAMClient(cfg).mint("a")).rejects.toThrow(
+    await expect(new IAMClient(cfg).mint("a")).rejects.toThrow(
       /missing access_token/,
     )
   })
 
   it("rejects construction without required fields", () => {
-    expect(() => new LuxIAMClient({ ...cfg, clientId: "" })).toThrow(/clientId/)
-    expect(() => new LuxIAMClient({ ...cfg, clientSecret: "" })).toThrow(
+    expect(() => new IAMClient({ ...cfg, clientId: "" })).toThrow(/clientId/)
+    expect(() => new IAMClient({ ...cfg, clientSecret: "" })).toThrow(
       /clientSecret/,
     )
-    expect(() => new LuxIAMClient({ ...cfg, issuer: "" })).toThrow(/issuer/)
+    expect(() => new IAMClient({ ...cfg, issuer: "" })).toThrow(/issuer/)
   })
 })
