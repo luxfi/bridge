@@ -96,6 +96,23 @@ export interface ClusterStatus {
   threshold?: number
 }
 
+/** Wallet metadata returned by GET /v1/wallets/{id}. */
+export interface WalletInfo {
+  id: string
+  walletId: string
+  vaultId?: string
+  keyType?: MpcKeyType
+  protocol?: MpcProtocol
+  /** Per-chain-family derived addresses. */
+  ethAddress?: string
+  btcAddress?: string
+  solAddress?: string
+  /** Per-curve public keys. */
+  ecdsaPubKey?: string
+  eddsaPubKey?: string
+  status?: string
+}
+
 export class MPCError extends Error {
   constructor(
     message: string,
@@ -191,6 +208,49 @@ export class MPCClient {
       threshold:
         typeof json.threshold === "number" ? json.threshold : undefined,
     }
+  }
+
+  /**
+   * Look up wallet metadata — derived addresses (per chain family),
+   * public keys, protocol, status. Bridge uses this to resolve the
+   * settlement wallet's EVM address before building an unsigned tx.
+   */
+  async getWallet(walletId: string): Promise<WalletInfo> {
+    const url = `${this.baseUrl}/v1/wallets/${encodeURIComponent(walletId)}`
+    const json = await this.do<Record<string, unknown>>("GET", url)
+    const result: WalletInfo = {
+      id: String(json.id ?? json.wallet_id ?? walletId),
+      walletId: String(
+        json.walletId ?? json.wallet_id ?? json.id ?? walletId,
+      ),
+    }
+    if (typeof json.vaultId === "string") result.vaultId = json.vaultId
+    else if (typeof json.vault_id === "string") result.vaultId = json.vault_id
+    if (typeof json.keyType === "string")
+      result.keyType = json.keyType as MpcKeyType
+    else if (typeof json.key_type === "string")
+      result.keyType = json.key_type as MpcKeyType
+    if (typeof json.protocol === "string")
+      result.protocol = json.protocol as MpcProtocol
+    if (typeof json.ethAddress === "string") result.ethAddress = json.ethAddress
+    else if (typeof json.eth_address === "string")
+      result.ethAddress = json.eth_address
+    if (typeof json.btcAddress === "string") result.btcAddress = json.btcAddress
+    else if (typeof json.btc_address === "string")
+      result.btcAddress = json.btc_address
+    if (typeof json.solAddress === "string") result.solAddress = json.solAddress
+    else if (typeof json.sol_address === "string")
+      result.solAddress = json.sol_address
+    if (typeof json.ecdsaPubKey === "string")
+      result.ecdsaPubKey = json.ecdsaPubKey
+    else if (typeof json.ecdsa_pub_key === "string")
+      result.ecdsaPubKey = json.ecdsa_pub_key
+    if (typeof json.eddsaPubKey === "string")
+      result.eddsaPubKey = json.eddsaPubKey
+    else if (typeof json.eddsa_pub_key === "string")
+      result.eddsaPubKey = json.eddsa_pub_key
+    if (typeof json.status === "string") result.status = json.status
+    return result
   }
 
   private async do<T>(
