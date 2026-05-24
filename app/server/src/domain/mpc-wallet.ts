@@ -1,12 +1,39 @@
 import logger from "@/logger"
+import { IAMClient } from "@/clients/iam"
+import { MPCClient } from "@/clients/mpc"
 import { encodeSubstrateAddress, SUBSTRATE_NETWORKS } from "./substrate-address.js"
 import { checkSubstrateDeposit } from "./substrate-deposit.js"
 
 /**
- * Native MPC wallet integration for Lux Bridge.
- * Replaces Utila/Fireblocks — uses our own MPC API to create wallets
- * and derives addresses for all supported chains from a single keygen.
+ * Native MPC wallet integration for the bridge.
+ *
+ * createMPCWalletForDeposit goes through the canonical MPCClient
+ * (~/work/lux/mpc daemon HTTP API) so per-bridge MPC code is fully
+ * eliminated. Deposit checking continues to hit per-chain blockchain
+ * RPCs directly (no MPC-side dependency).
+ *
+ * Env (brand-neutral):
+ *   BRIDGE_MPC_URL              required for keygen
+ *   BRIDGE_IAM_ISSUER + IAM_CLIENT_ID + IAM_CLIENT_SECRET   required (auth)
+ *   BRIDGE_MPC_VAULT_ID         vault to create wallets under (default "bridge")
  */
+
+let _mpcClient: MPCClient | undefined
+function getMpcClient(): MPCClient | undefined {
+  if (_mpcClient) return _mpcClient
+  const url = process.env.BRIDGE_MPC_URL
+  const issuer = process.env.BRIDGE_IAM_ISSUER
+  const clientId = process.env.BRIDGE_IAM_CLIENT_ID
+  const clientSecret = process.env.BRIDGE_IAM_CLIENT_SECRET
+  if (!url || !issuer || !clientId || !clientSecret) return undefined
+  const iam = new IAMClient({ issuer, clientId, clientSecret })
+  _mpcClient = new MPCClient({ url, iam })
+  return _mpcClient
+}
+
+export function _resetMpcWalletClientForTests(): void {
+  _mpcClient = undefined
+}
 
 // Network type to address field mapping
 const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp' | 'dot'> = {
@@ -55,121 +82,115 @@ const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp'
   CARDANO_MAINNET: 'sol',
 }
 
-interface MPCKeygenResult {
-  wallet_id: string
-  ecdsa_pub_key: string
-  eddsa_pub_key: string
-  eth_address: string
-  btc_address: string
-  sol_address: string
-  result_type?: string
-  error?: string
-}
-
-interface MPCWalletResult {
-  walletId: string
-  address: string
-  ethAddress: string
-  btcAddress: string
-  solAddress: string
-  ecdsaPubKey: string
-  eddsaPubKey: string
-}
-
-function getMpcApiUrl(): string {
-  // Use internal K8s service URL or env override
-  return process.env.MPC_API_URL || 'http://mpc-node-0.mpc-node-headless.lux-mpc.svc:9800'
-}
-
-function getMpcDashboardUrl(): string {
-  return process.env.MPC_DASHBOARD_URL || 'http://mpc-api-svc.lux-mpc.svc:8081'
-}
+// The MPCClient.keygen / getWallet response shapes are defined in
+// clients/mpc.ts. This module just consumes them; no per-bridge type
+// duplication.
 
 /**
- * Create a new MPC wallet for a bridge deposit.
- * Triggers keygen on our MPC cluster and returns the appropriate address
- * for the given network.
+ * Create a new MPC wallet for a bridge deposit via the canonical
+ * MPCClient. Returns the network-appropriate address in the
+ * legacy Utila-compatible `{ name, addresses: [{ address }] }` shape
+ * so existing call-sites in domain/swaps.ts stay unchanged.
+ *
+ * Picks the chain-family-appropriate address from the keygen result:
+ *   eth    → ECDSA derived (EVM, XRPL secp256k1)
+ *   btc    → secp256k1 derived (P2WPKH default)
+ *   sol/ton → ed25519 derived
+ *   dot    → SS58-encoded ed25519 public key
  */
-export async function createMPCWalletForDeposit(networkInternalName: string): Promise<{
+export async function createMPCWalletForDeposit(
+  networkInternalName: string,
+): Promise<{
   name: string
   addresses: { address: string }[]
 }> {
-  const mpcUrl = getMpcApiUrl()
-  const walletId = `bridge-${networkInternalName.toLowerCase()}-${Date.now()}`
+  const client = getMpcClient()
+  if (!client) {
+    throw new Error(
+      "MPC wallet keygen unavailable: BRIDGE_MPC_URL / BRIDGE_IAM_* env block is incomplete",
+    )
+  }
+  const vaultId = process.env.BRIDGE_MPC_VAULT_ID || "bridge"
+  const walletName = `bridge-${networkInternalName.toLowerCase()}-${Date.now()}`
+  const addrType = NETWORK_ADDRESS_TYPE[networkInternalName] || "eth"
 
-  logger.info(`Creating MPC wallet for deposit on ${networkInternalName}`, { walletId, mpcUrl })
+  // Pick the right keygen protocol/curve for the destination chain.
+  // m-chain supports CGGMP21 (secp256k1) and FROST (ed25519); the bridge
+  // picks per-chain-family at keygen time. Each wallet record holds the
+  // protocol; the bridge does NOT mix curves on one wallet.
+  const protocol = addrType === "sol" || addrType === "ton" || addrType === "dot"
+    ? "frost"
+    : "cggmp21"
+  const keyType = addrType === "sol" || addrType === "ton" || addrType === "dot"
+    ? "ed25519"
+    : "secp256k1"
 
-  try {
-    const resp = await fetch(`${mpcUrl}/keygen`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wallet_id: walletId }),
-      signal: AbortSignal.timeout(120_000),
-    })
+  logger.info(
+    `[mpc-wallet] keygen for ${networkInternalName} (vault=${vaultId}, name=${walletName}, protocol=${protocol})`,
+  )
 
-    if (!resp.ok) {
-      const errBody = await resp.text()
-      throw new Error(`MPC keygen failed (${resp.status}): ${errBody}`)
-    }
+  const result = await client.keygen({
+    vaultId,
+    name: walletName,
+    keyType,
+    protocol,
+  })
 
-    const result: MPCKeygenResult = await resp.json()
+  // Fetch the wallet to resolve the per-chain-family address. keygen
+  // returns the protocol-level wallet record; getWallet returns the
+  // chain-family derived addresses.
+  const wallet = await client.getWallet(result.walletId)
 
-    if (result.result_type && result.result_type !== 'success') {
-      throw new Error(`MPC keygen error: ${result.error || 'unknown'}`)
-    }
-
-    // Pick the right address for this network
-    const addrType = NETWORK_ADDRESS_TYPE[networkInternalName] || 'eth'
-    let address: string
-    switch (addrType) {
-      case 'btc':
-        address = result.btc_address
-        break
-      case 'sol':
-      case 'ton':
-        address = result.sol_address
-        break
-      case 'xrp':
-        // XRP uses secp256k1 but with different address derivation
-        // For now, use the ETH address as an identifier;
-        // proper rAddress derivation should be added
-        address = result.eth_address
-        break
-      case 'dot': {
-        // Derive SS58 address from sr25519/ed25519 public key
-        // MPC keygen returns eddsa_pub_key which is ed25519 — usable for SS58
-        const pubKeyHex = result.eddsa_pub_key
-        if (!pubKeyHex) {
-          throw new Error('MPC keygen did not return eddsa_pub_key for Substrate address derivation')
-        }
-        const pubKeyBytes = new Uint8Array(
-          Buffer.from(pubKeyHex.startsWith('0x') ? pubKeyHex.slice(2) : pubKeyHex, 'hex')
+  let address: string | undefined
+  switch (addrType) {
+    case "btc":
+      address = wallet.btcAddress
+      break
+    case "sol":
+    case "ton":
+      address = wallet.solAddress
+      break
+    case "xrp":
+      // XRP uses secp256k1 but with rAddress derivation. mpcd doesn't
+      // currently return rAddress, so use ETH address as the wallet
+      // identifier; bridge-side derivation should be added when XRPL
+      // settlement ships.
+      address = wallet.ethAddress
+      break
+    case "dot": {
+      // SS58-encode the ed25519 public key.
+      const pubKeyHex = wallet.eddsaPubKey
+      if (!pubKeyHex) {
+        throw new Error(
+          "MPC keygen did not return eddsa public key for Substrate address derivation",
         )
-        address = encodeSubstrateAddress(pubKeyBytes, SUBSTRATE_NETWORKS.POLKADOT)
-        break
       }
-      default:
-        address = result.eth_address
+      const pubKeyBytes = new Uint8Array(
+        Buffer.from(
+          pubKeyHex.startsWith("0x") ? pubKeyHex.slice(2) : pubKeyHex,
+          "hex",
+        ),
+      )
+      address = encodeSubstrateAddress(pubKeyBytes, SUBSTRATE_NETWORKS.POLKADOT)
+      break
     }
+    default:
+      address = wallet.ethAddress
+  }
 
-    if (!address) {
-      throw new Error(`No ${addrType} address returned from MPC keygen`)
-    }
+  if (!address) {
+    throw new Error(
+      `MPC keygen returned no ${addrType} address for ${networkInternalName} (wallet=${result.walletId})`,
+    )
+  }
 
-    logger.info(`MPC wallet created for ${networkInternalName}`, {
-      walletId: result.wallet_id,
-      address,
-      addrType,
-    })
+  logger.info(
+    `[mpc-wallet] created wallet=${result.walletId} address=${address} on ${networkInternalName}`,
+  )
 
-    // Return in Utila-compatible format: name###address
-    return {
-      name: result.wallet_id,
-      addresses: [{ address }],
-    }
-  } catch (error) {
-    logger.error(`Failed to create MPC wallet for ${networkInternalName}`, { error })
-    throw error
+  return {
+    name: result.walletId,
+    addresses: [{ address }],
   }
 }
 
