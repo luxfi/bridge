@@ -53,8 +53,8 @@ import { createHash } from "crypto"
 
 import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
-import { LuxIAMClient } from "@/clients/lux-iam"
-import { KMSError, LuxKMSClient } from "@/clients/lux-kms"
+import { IAMClient } from "@/clients/iam"
+import { KMSError, KMSSecretClient } from "@/clients/kms"
 
 // ────────────────────────────────────────────────────────────────────────
 //  Public types — match SDK shape EXACTLY. Do not drift.
@@ -391,24 +391,24 @@ function envSafe(s: string): string {
 
 // Lazily-built Lux KMS client. Production sources every cosigner secret
 // from Lux KMS; the env-var fallback exists ONLY for local dev (when
-// `LUX_KMS_URL` is unset). The constructor reads from process.env at
+// `BRIDGE_KMS_URL` is unset). The constructor reads from process.env at
 // first call so test-time env injection works without import-order
 // gymnastics.
-let _kmsClient: LuxKMSClient | undefined
-function kmsClient(): LuxKMSClient | undefined {
+let _kmsClient: KMSSecretClient | undefined
+function kmsClient(): KMSSecretClient | undefined {
   if (_kmsClient) return _kmsClient
-  const url = process.env.LUX_KMS_URL
-  const org = process.env.LUX_KMS_ORG ?? "lux"
-  const issuer = process.env.LUX_IAM_ISSUER
-  const clientId = process.env.LUX_KMS_CLIENT_ID
-  const clientSecret = process.env.LUX_KMS_CLIENT_SECRET
+  const url = process.env.BRIDGE_KMS_URL
+  const org = process.env.BRIDGE_KMS_ORG ?? "lux"
+  const issuer = process.env.BRIDGE_IAM_ISSUER
+  const clientId = process.env.BRIDGE_IAM_CLIENT_ID
+  const clientSecret = process.env.BRIDGE_IAM_CLIENT_SECRET
   if (!url || !issuer || !clientId || !clientSecret) {
     return undefined
   }
-  _kmsClient = new LuxKMSClient({
+  _kmsClient = new KMSSecretClient({
     url,
     org,
-    iam: new LuxIAMClient({ issuer, clientId, clientSecret }),
+    iam: new IAMClient({ issuer, clientId, clientSecret }),
   })
   return _kmsClient
 }
@@ -484,7 +484,7 @@ async function readSecret(
   const fromEnv = process.env[envVarName]
   if (fromEnv) return fromEnv
   throw new Error(
-    `cosigner secret unavailable for ${subject}: tried Lux KMS path "${kmsPath}" (${kms ? "404 / not provisioned" : "client not configured — set LUX_KMS_URL + LUX_IAM_ISSUER + LUX_KMS_CLIENT_ID + LUX_KMS_CLIENT_SECRET"}) and env "${envVarName}" (unset)`,
+    `cosigner secret unavailable for ${subject}: tried Lux KMS path "${kmsPath}" (${kms ? "404 / not provisioned" : "client not configured — set BRIDGE_KMS_URL + BRIDGE_IAM_ISSUER + BRIDGE_IAM_CLIENT_ID + BRIDGE_IAM_CLIENT_SECRET"}) and env "${envVarName}" (unset)`,
   )
 }
 
