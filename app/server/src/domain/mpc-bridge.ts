@@ -1,10 +1,36 @@
-import { mpcService } from "../services/mpc-service"
-import { logger } from "../utils/logger"
-import { mpcRequestSigner } from "../utils/mpc-signing"
-import Web3 from "web3"
-import { StringCodec } from "nats"
+// Bridge → mpcd integration via HTTP.
+//
+// Replaces the legacy NATS/Consul-coupled BridgeMPCIntegration with a
+// synchronous HTTP call against the canonical mpcd daemon
+// (~/work/lux/mpc, github.com/luxfi/mpc). The bridge no longer needs
+// NATS for pub/sub or Consul for shared state — mpcd's HTTP API does
+// threshold signing in a single round-trip, and per-swap state lives
+// in Postgres via Prisma.
+//
+// Public surface preserved so domain/mpc-modern.ts stays unchanged:
+//   bridgeMPC.initialize()                    — eager IAM warm-up
+//   bridgeMPC.generateMPCSignature(req)       — threshold sign
+//   bridgeMPC.completeSwap(hashedTxId)        — persists completion marker
+//   bridgeMPC.getHealthStatus()               — cluster status
+//
+// Env (brand-neutral):
+//   BRIDGE_MPC_URL              mpcd base URL (required for sign / status)
+//   BRIDGE_IAM_ISSUER           OIDC issuer (required)
+//   BRIDGE_IAM_CLIENT_ID        OAuth2 client id (required)
+//   BRIDGE_IAM_CLIENT_SECRET    OAuth2 client secret (required, from KMS in prod)
+//   BRIDGE_MPC_WALLET_ID        default wallet to sign with (default: bridge-settlement)
+//
+// Standalone-friendly: if any required env is missing, generateMPCSignature
+// returns a clean error rather than crashing the process. The rest of
+// the bridge (deposit ingestion, payout planning, swap-state machine)
+// continues to function.
 
-const sc = StringCodec()
+import Web3 from "web3"
+
+import { IAMClient } from "@/clients/iam"
+import { MPCClient } from "@/clients/mpc"
+import { prisma } from "@/prisma-instance"
+import logger from "@/logger"
 
 interface BridgeSignRequest {
   txId: string
@@ -32,17 +58,17 @@ interface BridgeSignResponse {
 }
 
 /**
- * Bridge MPC Integration — NATS-based
- * Publishes signing requests to NATS JetStream, MPC nodes respond via result topics.
+ * Bridge ↔ mpcd integration. Singleton. Lazy IAM + MPC client init so
+ * the bridge boots cleanly when MPC env is unset (standalone mode).
  */
 export class BridgeMPCIntegration {
   private static instance: BridgeMPCIntegration
   private isInitialized = false
-  private pendingSignatures: Map<string, (result: any) => void> = new Map()
+  private iam?: IAMClient
+  private mpc?: MPCClient
 
   private constructor() {
-    // Setup signature completion handler
-    mpcService.on("signatureComplete", this.handleSignatureComplete.bind(this))
+    // Nothing to do until initialize() runs.
   }
 
   static getInstance(): BridgeMPCIntegration {
@@ -52,77 +78,82 @@ export class BridgeMPCIntegration {
     return BridgeMPCIntegration.instance
   }
 
+  /**
+   * Eagerly resolve env + warm the IAM cache for the `mpc` audience.
+   * No-op when env is unset (standalone mode); callers see a clear
+   * error from generateMPCSignature() instead.
+   */
   async initialize(): Promise<void> {
     if (this.isInitialized) return
-    try {
-      await mpcRequestSigner.loadKey()
-      await mpcService.initialize()
+    const mpcUrl = process.env.BRIDGE_MPC_URL
+    const iamIssuer = process.env.BRIDGE_IAM_ISSUER
+    const clientId = process.env.BRIDGE_IAM_CLIENT_ID
+    const clientSecret = process.env.BRIDGE_IAM_CLIENT_SECRET
+
+    if (!mpcUrl || !iamIssuer || !clientId || !clientSecret) {
+      logger.warn(
+        "[bridge-mpc] env unset (BRIDGE_MPC_URL / BRIDGE_IAM_*) — running in standalone mode; sign calls will reject cleanly",
+      )
       this.isInitialized = true
-      logger.info("Bridge MPC integration initialized")
-      // Subscribe to MPC results now that NATS is connected
-      this.subscribeToMpcResults()
-    } catch (error) {
-      logger.error("Failed to initialize Bridge MPC integration:", error)
-      throw error
+      return
     }
+
+    this.iam = new IAMClient({ issuer: iamIssuer, clientId, clientSecret })
+    this.mpc = new MPCClient({ url: mpcUrl, iam: this.iam })
+    try {
+      await this.iam.mint("mpc")
+      const status = await this.mpc.status()
+      logger.info(
+        `[bridge-mpc] connected to ${mpcUrl} (${status.online}/${status.total} online, protocols=${status.protocols.join(",")})`,
+      )
+    } catch (err) {
+      logger.warn(
+        `[bridge-mpc] connectivity check failed (will retry on first sign): ${err instanceof Error ? err.message : String(err)}`,
+      )
+    }
+    this.isInitialized = true
   }
 
-  async generateMPCSignature(signData: BridgeSignRequest): Promise<BridgeSignResponse> {
+  /**
+   * Threshold sign a bridge settlement message via mpcd.
+   *
+   * `signData.msgSignature` is the bridge's commitment to the
+   * settlement (per-tx digest). We forward it as the sign payload to
+   * the wallet identified by BRIDGE_MPC_WALLET_ID (default
+   * `bridge-settlement`). mpcd handles the threshold round internally
+   * and returns the final signature in one HTTP response.
+   */
+  async generateMPCSignature(
+    signData: BridgeSignRequest,
+  ): Promise<BridgeSignResponse> {
+    if (!signData.txId || !signData.fromNetworkId || !signData.toNetworkId) {
+      return { status: false, msg: "Missing required fields" }
+    }
+    await this.initialize()
+    if (!this.mpc) {
+      return {
+        status: false,
+        msg: "BRIDGE_MPC_URL is not configured — native MPC sign unavailable in standalone mode",
+      }
+    }
+
+    const walletId =
+      process.env.BRIDGE_MPC_WALLET_ID ?? "bridge-settlement"
+    const hashedTxId = Web3.utils.keccak256(signData.txId)
+    // Use the bridge's per-tx commitment as the sign payload. mpcd
+    // accepts an opaque byte payload — the signing algorithm picked at
+    // wallet keygen time determines how it's hashed internally.
+    const message = Buffer.from(
+      signData.msgSignature.replace(/^0x/, ""),
+      "hex",
+    )
+
     try {
-      if (!signData.txId || !signData.fromNetworkId || !signData.toNetworkId) {
-        return { status: false, msg: "Missing required fields" }
-      }
-
-      // Validate request (skip strict validation for now)
-      logger.info("Skipping signature validation for testing")
-
-      // Check MPC network readiness
-      const networkStatus = await mpcService.getNetworkStatus()
-      if (!networkStatus.ready) {
-        return {
-          status: false,
-          msg: `MPC network not ready. Only ${networkStatus.activeNodes}/${networkStatus.threshold} nodes active`,
-        }
-      }
-
-      const sessionId = `bridge-${signData.txId}-${Date.now()}`
-      const hashedTxId = Web3.utils.keccak256(signData.txId)
-
-      // Create promise to wait for signature result
-      const signaturePromise = new Promise<any>((resolve) => {
-        this.pendingSignatures.set(sessionId, resolve)
-        setTimeout(() => {
-          if (this.pendingSignatures.has(sessionId)) {
-            this.pendingSignatures.delete(sessionId)
-            resolve({ error: "Signature timeout" })
-          }
-        }, 60000)
+      const res = await this.mpc.sign({
+        walletId,
+        keyType: "secp256k1",
+        message,
       })
-
-      // Build signing request for Go MPC nodes
-      const msgHash = Web3.utils.keccak256(signData.txId)
-      const signingRequest: any = {
-        key_type: "secp256k1",
-        wallet_id: "bridge-wallet-0",
-        network_internal_code: "ETH",
-        tx_id: signData.txId,
-        tx: Buffer.from(msgHash.replace("0x", ""), "hex").toString("base64"),
-      }
-
-      // Sign with initiator key
-      const signature = await mpcRequestSigner.signSigningRequest(signingRequest)
-      signingRequest.signature = signature
-      logger.info(`Signed request: ${JSON.stringify(signingRequest)}`)
-
-      // Publish to NATS
-      await this.publishSigningRequest(sessionId, signingRequest)
-
-      // Wait for result
-      const result = await signaturePromise
-      if (result.error) {
-        return { status: false, msg: result.error }
-      }
-
       return {
         status: true,
         data: {
@@ -130,127 +161,56 @@ export class BridgeMPCIntegration {
           contract: "",
           from: "",
           tokenAmount: "0",
-          signature: result.signature,
-          mpcSigner: result.mpcSigner || "0x" + "0".repeat(40),
+          signature: res.signature.startsWith("0x")
+            ? res.signature
+            : "0x" + res.signature,
+          mpcSigner: walletId,
           hashedTxId,
           toTokenAddressHash: Web3.utils.keccak256(signData.toTokenAddress),
           vault: false,
         },
       }
-    } catch (error) {
-      logger.error("MPC signature generation failed:", error)
-      return {
-        status: false,
-        msg: `MPC signature failed: ${error instanceof Error ? error.message : String(error)}`,
-      }
-    }
-  }
-
-  async publishSigningRequest(sessionId: string, signedRequest: any): Promise<void> {
-    try {
-      const js = mpcService.nc.jetstream()
-      await js.publish(
-        `mpc.signing_request.${sessionId}`,
-        sc.encode(JSON.stringify(signedRequest))
-      )
-    } catch (pubErr) {
-      logger.warn("JetStream publish failed, using core NATS:", pubErr)
-      await mpcService.nc.publish(
-        `mpc.signing_request.${sessionId}`,
-        sc.encode(JSON.stringify(signedRequest))
-      )
-    }
-    logger.info(`Published signed signing request for session ${sessionId}`)
-  }
-
-  handleSignatureComplete(data: any): void {
-    const resolver = this.pendingSignatures.get(data.sessionId)
-    if (resolver) {
-      this.pendingSignatures.delete(data.sessionId)
-      resolver({ signature: data.signature, participants: data.participants })
-      logger.info(`Signature completed for session ${data.sessionId}`)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      logger.error(`[bridge-mpc] sign failed for tx=${signData.txId}: ${msg}`)
+      return { status: false, msg: `MPC signature failed: ${msg}` }
     }
   }
 
   /**
-   * Subscribe to MPC signing result topics.
-   * MPC nodes publish results with tx_id (not sessionId), so match by tx_id prefix.
+   * Record a completion marker for a swap. Persists to Postgres rather
+   * than to Consul KV — single source of truth per HIP-0105.
    */
-  async subscribeToMpcResults(): Promise<void> {
-    if (!mpcService.nc) {
-      logger.warn("NATS not connected, cannot subscribe to MPC results")
-      return
-    }
-    logger.info("Subscribing to mpc.mpc_signing_result.*")
-    const sub = mpcService.nc.subscribe("mpc.mpc_signing_result.*")
-    ;(async () => {
-      for await (const msg of sub) {
-          try {
-            const result = JSON.parse(sc.decode(msg.data))
-            logger.info("Received MPC signing result:", result)
-
-            // MPC result has tx_id, not sessionId. Match pending signatures by tx_id prefix.
-            const txId = result.tx_id
-            if (!txId) continue
-
-            // Find the pending signature whose sessionId starts with `bridge-${txId}-`
-            for (const [sessionId, resolver] of this.pendingSignatures) {
-              if (sessionId.startsWith(`bridge-${txId}-`)) {
-                this.pendingSignatures.delete(sessionId)
-
-                if (result.result_type === "success") {
-                  // Reconstruct 65-byte Ethereum signature from r, s, recovery
-                  const rBuf = Buffer.from(result.r, "base64")
-                  const sBuf = Buffer.from(result.s, "base64")
-                  const vBuf = result.signature_recovery
-                    ? Buffer.from(result.signature_recovery, "base64")
-                    : Buffer.from([27])
-                  const v = vBuf[0] < 27 ? vBuf[0] + 27 : vBuf[0]
-                  const sigHex =
-                    "0x" +
-                    rBuf.toString("hex") +
-                    sBuf.toString("hex") +
-                    v.toString(16).padStart(2, "0")
-
-                  resolver({ signature: sigHex })
-                } else {
-                  resolver({
-                    error: result.error_reason || "MPC signing failed",
-                  })
-                }
-                break
-              }
-            }
-          } catch (error) {
-            logger.error("Error processing MPC result:", error)
-          }
-        }
-      })()
-  }
-
   async completeSwap(
-    hashedTxId: string
+    hashedTxId: string,
   ): Promise<{ status: boolean; msg: string }> {
     try {
-      await mpcService.consul.kv.set({
-        Key: `bridge/transactions/${hashedTxId}/completed`,
-        Value: JSON.stringify({
-          timestamp: Date.now(),
-          nodeId: mpcService.config.nodeId,
-        }),
+      await prisma.swap.updateMany({
+        where: { id: hashedTxId },
+        data: { metadata_sequence_number: Date.now() },
       })
       return { status: true, msg: "success" }
-    } catch (error) {
-      logger.error("Failed to complete swap:", error)
+    } catch (err) {
+      logger.error(`[bridge-mpc] completeSwap failed for ${hashedTxId}:`, err)
       return {
         status: false,
-        msg: error instanceof Error ? error.message : String(error),
+        msg: err instanceof Error ? err.message : String(err),
       }
     }
   }
 
-  async getHealthStatus(): Promise<any> {
-    return mpcService.getNetworkStatus()
+  /** Cluster status — proxies through MPCClient when configured. */
+  async getHealthStatus(): Promise<{
+    online: number
+    total: number
+    protocols: string[]
+    standalone?: boolean
+  }> {
+    await this.initialize()
+    if (!this.mpc) {
+      return { online: 0, total: 0, protocols: [], standalone: true }
+    }
+    return this.mpc.status()
   }
 }
 
