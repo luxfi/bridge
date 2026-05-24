@@ -1,0 +1,93 @@
+# Lux Bridge — STANDALONE compose.
+#
+# Boots the absolute minimum services for a working bridge: Postgres
+# (state) + bridge-server (API) + bridge-ui (Vite SPA). NO Casdoor /
+# Vault / NATS / Consul / MPC nodes — every external dep is either
+# optional at runtime (m-chain MPC, KMS, cosigners) or absent from this
+# topology entirely.
+#
+# Use when:
+#   - Running on a dev laptop without spinning up the full Lux platform
+#   - Reproducing a swap state for debugging
+#   - White-label tenants who run their own IAM / KMS / MPC out-of-band
+#
+# When you want the full platform, run `docker compose -f compose.local.yml
+# up` instead. That brings up Lux ID + Vault + NATS + Consul + 3-node MPC
+# alongside this one.
+#
+# Quick start:
+#   1. Copy ./config/env.standalone.example → ./config/env.standalone
+#      and fill in the bridge JWT signing key + any cosigner config.
+#   2. docker compose -f compose.standalone.yml up --build
+#   3. Bridge UI:      http://localhost:3001
+#      Bridge API:     http://localhost:5000/healthz
+#      Postgres:       localhost:5433 (user=bridge, pass=bridge, db=bridge)
+#
+# To enable external services after boot, just set the corresponding env
+# vars (LUX_MPC_URL, LUX_KMS_URL, …) — the bridge backend graceful-degrades
+# when they're unset and starts using them when they appear.
+
+services:
+  postgres:
+    image: ghcr.io/hanzoai/sql:latest
+    container_name: bridge-pg-standalone
+    environment:
+      POSTGRES_USER: bridge
+      POSTGRES_PASSWORD: bridge
+      POSTGRES_DB: bridge
+    ports:
+      - "5433:5432"
+    volumes:
+      - bridge-pg-standalone:/var/lib/postgresql/data
+    networks: [bridge-standalone]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bridge"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  bridge-server:
+    image: ghcr.io/luxfi/bridge-server:latest
+    container_name: bridge-server-standalone
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      PORT: "5000"
+      POSTGRES_URL: postgres://bridge:bridge@postgres:5432/bridge
+      DATABASE_URL: postgres://bridge:bridge@postgres:5432/bridge
+      NODE_ENV: standalone
+      LOG_LEVEL: info
+      # All external integrations are OPTIONAL — uncomment to enable.
+      # LUX_IAM_ISSUER: https://iam.lux.network
+      # LUX_KMS_URL: https://kms.lux.network
+      # LUX_KMS_ORG: lux
+      # LUX_KMS_CLIENT_ID: lux-bridge
+      # LUX_KMS_CLIENT_SECRET: <fetch from your secret store>
+      # LUX_MPC_URL: https://mpc.lux.network
+    ports:
+      - "5000:5000"
+    networks: [bridge-standalone]
+    restart: unless-stopped
+
+  bridge-ui:
+    image: ghcr.io/luxfi/bridge:latest
+    container_name: bridge-ui-standalone
+    depends_on:
+      bridge-server: { condition: service_started }
+    environment:
+      # __ENV.js is templated by the SPA serving image at boot from these
+      # BRIDGE_* vars (one image, N envs).
+      BRIDGE_API_HOST: http://localhost:5000
+      BRIDGE_ENV: standalone
+      BRIDGE_IAM_ORG: lux
+    ports:
+      - "3001:80"
+    networks: [bridge-standalone]
+    restart: unless-stopped
+
+volumes:
+  bridge-pg-standalone:
+
+networks:
+  bridge-standalone:
+    driver: bridge
