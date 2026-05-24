@@ -262,6 +262,36 @@ To enable any of the optional layers, set the matching env block on the
 already there). The bridge picks them up on next request — no restart
 required for cosigner config, only `BRIDGE_MPC_URL` requires a restart (cached at server start).
 
+### ZAP serialization — canonical home is `~/work/zap`, npm scope `@zap-proto`
+
+The bridge currently uses plain JSON over HTTP for every wire call (mpcd,
+KMS, IAM, cosigner adapters, f-chain). It does **not** depend on any
+binary RPC codec. If a future surface needs Cap'n-Proto-style binary
+RPC (e.g. mpcd → bridge events stream), use **ZAP** — the canonical
+Lux / Hanzo / Liquidity zero-copy app protocol.
+
+| Aspect | Canonical |
+|---|---|
+| Source repo | **`~/work/zap`** (not `~/work/lux/zap` or `~/work/hanzo/zap` — those are forks / legacy clones being consolidated upstream) |
+| GitHub org | `zap-proto` |
+| npm scope | `@zap-proto/*` |
+| TS package | `@zap-proto/zap` (lives at `~/work/zap/zap-js`) — pure-TS codec, no third-party Cap'n Proto deps. The package.json once listed `capnp-es` in `dependencies` but no source file imports it; that dep is stale and slated for removal in the next ZAP TS publish |
+| WASM binding | `@zap-proto/wasm` (`~/work/zap/zap-wasm`) |
+| Go / Rust | wire-compatible siblings; same ZAP framing |
+
+**Rules for the bridge** (and any other downstream consumer):
+
+- **Never `pnpm add capnp-es`** to add binary RPC. If we need Cap'n-Proto-
+  style framing, use `@zap-proto/zap` (pure TS, no third-party dep).
+  The whole point of ZAP is to be brand-neutral and wire-compatible
+  across Go / Rust / TS without pulling in the upstream Cap'n Proto JS
+  ecosystem.
+- The `@zap-proto/*` scope is brand-neutral. Don't publish `@luxfi/zap-*`
+  or `@hanzoai/zap-*` variants — they'd fork the wire format and break
+  cross-stack RPC.
+- Source of truth for the wire format: `~/work/zap/README.md` (Go) +
+  `~/work/zap/zap-js/src/protocol.ts` (TS). Match either.
+
 ### Hanzo-side bridge / teleport — does not exist
 
 There is no `~/work/hanzo/teleport` and no `~/work/hanzo/bridge`. The
