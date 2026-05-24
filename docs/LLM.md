@@ -252,7 +252,7 @@ What's intentionally NOT in `compose.standalone.yml` (but is in
 | Service | Why standalone can skip it |
 |---|---|
 | Casdoor (Lux ID) | bridge does not require auth in dev mode |
-| Vault (KMS) | `fetchCosignerSecret` falls back to env-var pattern when `LUX_KMS_URL` is unset |
+| Vault (KMS) | `fetchCosignerSecret` falls back to env-var pattern when `BRIDGE_KMS_URL` is unset |
 | NATS | only `mpc-service.ts` consumes it; backend logs a warn and skips its initialise() |
 | Consul | same — `mpc-service.ts` only |
 | 3-node MPC cluster | `LuxMPCClient` is constructed on demand; native MPC sign requires it but cosigner-layered swaps don't |
@@ -260,7 +260,7 @@ What's intentionally NOT in `compose.standalone.yml` (but is in
 To enable any of the optional layers, set the matching env block on the
 `bridge-server` service in `compose.standalone.yml` (commented stubs are
 already there). The bridge picks them up on next request — no restart
-required for cosigner config, only `LUX_MPC_URL` requires a restart (cached at server start).
+required for cosigner config, only `BRIDGE_MPC_URL` requires a restart (cached at server start).
 
 ### Hanzo-side bridge / teleport — does not exist
 
@@ -297,15 +297,15 @@ HTTP clients in `app/server/src/clients/`:
 Configuration via env (bridge backend startup):
 
 ```
-LUX_IAM_ISSUER        https://iam.lux.network
-LUX_KMS_URL           https://kms.lux.network
-LUX_KMS_ORG           lux
-LUX_KMS_CLIENT_ID     lux-bridge
-LUX_KMS_CLIENT_SECRET (from KMS at boot OR --kms-bootstrap-secret)
-LUX_MPC_URL           https://mpc.lux.network
+BRIDGE_IAM_ISSUER        https://iam.lux.network
+BRIDGE_KMS_URL           https://kms.lux.network
+BRIDGE_KMS_ORG           lux
+BRIDGE_IAM_CLIENT_ID     lux-bridge
+BRIDGE_IAM_CLIENT_SECRET (from KMS at boot OR --kms-bootstrap-secret)
+BRIDGE_MPC_URL           https://mpc.lux.network
 ```
 
-When `LUX_KMS_URL` is unset (local dev), `fetchCosignerSecret` falls
+When `BRIDGE_KMS_URL` is unset (local dev), `fetchCosignerSecret` falls
 back to per-tenant env vars. Production deployments MUST set the KMS
 env block — env-var fallback is dev-only.
 
