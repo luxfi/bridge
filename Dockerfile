@@ -9,11 +9,12 @@ RUN corepack enable && corepack prepare pnpm@8.15.9 --activate
 WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install --no-frozen-lockfile
-# Build workspace dep packages before the bridge app — Vite needs dist/ on
-# @luxfi/{threshold,core,utila,bridge} to resolve the exports map. These
-# package builds are tsc-only and fast; failing any of them should fail
-# the image build (no `|| true`).
-RUN pnpm -C pkg/threshold build && pnpm -C pkg/core build && pnpm -C pkg/utila build && pnpm -C pkg/bridge build
+# Build only the workspace deps app/bridge transitively needs whose packages
+# declare exports → dist/ (i.e. require a compile to be resolvable). pkg/bridge
+# itself ships from src/ (exports point at src/*.ts), so Vite consumes its TS
+# directly — no build needed. pkg/utila + pkg/settings + pkg/ui are not in
+# app/bridge's dep graph and are intentionally skipped.
+RUN pnpm -C pkg/threshold build && pnpm -C pkg/core build
 RUN pnpm -C app/bridge build
 
 FROM ghcr.io/hanzoai/spa
