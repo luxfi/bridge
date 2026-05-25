@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   // AWS
   awsSend: vi.fn(),
   KMSClient: vi.fn(),
-  SignCommand: vi.fn((args: unknown) => ({ __cmd: "Sign", args })),
+  SignCommand: vi.fn(function (args: unknown) { return { __cmd: "Sign", args } }),
   // Azure
   azureSign: vi.fn(),
   CryptographyClient: vi.fn(),
@@ -77,12 +77,12 @@ const stubSigHex = "0x" + Buffer.from(stubSig).toString("hex")
 beforeEach(() => {
   mocks.awsSend.mockReset()
   mocks.KMSClient.mockReset()
-  mocks.KMSClient.mockImplementation(() => ({ send: mocks.awsSend }))
+  mocks.KMSClient.mockImplementation(function () { return { send: mocks.awsSend } })
   mocks.azureSign.mockReset()
   mocks.CryptographyClient.mockReset()
-  mocks.CryptographyClient.mockImplementation(() => ({ sign: mocks.azureSign }))
+  mocks.CryptographyClient.mockImplementation(function () { return { sign: mocks.azureSign } })
   mocks.DefaultAzureCredential.mockReset()
-  mocks.DefaultAzureCredential.mockImplementation(() => ({}))
+  mocks.DefaultAzureCredential.mockImplementation(function () { return {} })
 })
 
 afterEach(() => {

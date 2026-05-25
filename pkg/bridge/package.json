@@ -58,9 +58,9 @@
     "@hanzogui/input": "^7.0.0",
     "@hanzogui/themes": "^7.0.0",
     "@luxfi/threshold": "workspace:*",
-    "@tanstack/react-query": "5.90.20",
-    "viem": "2.30.5",
-    "wagmi": "2.15.5"
+    "@tanstack/react-query": "5.100.14",
+    "viem": "2.50.4",
+    "wagmi": "3.6.15"
   },
   "peerDependencies": {
     "@hanzogui/avatar": "^7.0.0",
@@ -159,6 +159,6 @@
     "happy-dom": "^20.9.0",
     "jsdom": "^29.1.1",
     "typescript": "catalog:",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.7"
   }
 }

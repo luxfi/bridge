@@ -1,6 +1,6 @@
 // mountBridge — declarative SDK entrypoint.
 //
-// Mirrors the `mountExchange` pattern from @liquidityio/exchange: the host
+// Mirrors the `mountExchange` pattern from the upstream exchange SDK: the host
 // passes a config and we own the DOM + React root from there.
 //
 //   import { mountBridge } from '@luxfi/bridge'

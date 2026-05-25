@@ -17,14 +17,14 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock("@/clients/mpc", () => ({
-  MPCClient: vi.fn().mockImplementation(() => ({
-    keygen: mocks.keygen,
-    getWallet: mocks.getWallet,
-  })),
+  MPCClient: class {
+    keygen = mocks.keygen
+    getWallet = mocks.getWallet
+  },
 }))
 
 vi.mock("@/clients/iam", () => ({
-  IAMClient: vi.fn(),
+  IAMClient: class {},
 }))
 
 import {
