@@ -1,0 +1,643 @@
+// Tests for the cmd/bridge HTTP layer.
+//
+// After the LP-333 architecture refocus, swap CRUD is native to
+// cmd/bridge — backed by an in-memory SwapStore + QuoteEngine. The
+// b-chain client (when set) is queried only for signer-set introspection
+// via /v1/bridge/info; it does NOT host the quote / submit / status
+// methods (those don't exist on real BridgeVM).
+
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/hanzoai/zip"
+	"github.com/hanzoai/zip/middleware"
+	"github.com/luxfi/bridge/internal/bchain"
+	"github.com/luxfi/bridge/internal/depositcheck"
+	"github.com/luxfi/bridge/internal/mchain"
+)
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+// testRig bundles an app with its underlying store + price feed so
+// individual tests can poke state directly when needed.
+type testRig struct {
+	app   *zip.App
+	store *InMemoryStore
+	feed  *StaticPriceFeed
+	api   *API
+}
+
+// defaultPrices is the seeded price feed for all tests. Round numbers
+// keep the float-comparison assertions readable.
+func defaultPrices() map[string]float64 {
+	return map[string]float64{
+		"ETH":  3500.00,
+		"LUX":  2.50,
+		"ZOO":  0.05,
+		"BTC":  65000.00,
+		"SOL":  150.00,
+		"TON":  6.00,
+		"USDC": 1.00,
+		"USDT": 1.00,
+		"DAI":  1.00,
+		"BNB":  600.00,
+	}
+}
+
+// newRig assembles a fully-wired test app with optional bchain /
+// mchain / depositcheck clients. Store + quote engine are always
+// constructed locally; tests assert against rig.store directly when
+// they need to verify persistence.
+func newRig(t *testing.T, bclient *bchain.Client, mclient *mchain.Client, dc *depositcheck.Client) *testRig {
+	t.Helper()
+	cfg, _ := LoadConfig("")
+	store := NewInMemoryStore()
+	feed := NewStaticPriceFeed(defaultPrices())
+	engine := &QuoteEngine{Feed: feed}
+	api := NewAPI(cfg, "", bclient, mclient, dc, store, engine)
+	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
+	app.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(app)
+	return &testRig{app: app, store: store, feed: feed, api: api}
+}
+
+// fireRequest sends one HTTP request through zip's in-process test
+// transport and returns (status, body).
+func fireRequest(t *testing.T, app *zip.App, method, target string, body []byte) (int, []byte) {
+	t.Helper()
+	var bodyReader io.Reader
+	if body != nil {
+		bodyReader = bytes.NewReader(body)
+	}
+	req := httptest.NewRequest(method, target, bodyReader)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := app.Fiber().Test(req, fiber.TestConfig{Timeout: 2 * time.Second})
+	if err != nil {
+		t.Fatalf("app.Test %s %s: %v", method, target, err)
+	}
+	defer resp.Body.Close()
+	out, _ := io.ReadAll(resp.Body)
+	return resp.StatusCode, out
+}
+
+// =============================================================================
+// Mock services for bchain / mchain
+// =============================================================================
+
+// mockBchain serves a tiny JSON-RPC endpoint that returns the
+// registered method results. Used only by the /v1/bridge/info test —
+// swap CRUD is native and never calls bchain.
+func mockBchain(t *testing.T, on map[string]any) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			ID, Method string
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		w.Header().Set("Content-Type", "application/json")
+		result, ok := on[req.Method]
+		if !ok {
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"jsonrpc": "2.0", "id": req.ID,
+				"error": map[string]any{"code": -32601, "message": "method not found: " + req.Method},
+			})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"jsonrpc": "2.0", "id": req.ID, "result": result})
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// mpcMock serves a fake MPC /keygen endpoint.
+func mpcMock(t *testing.T, eth, btc, sol string) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/keygen" || r.Method != http.MethodPost {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"wallet_id":   "bridge-mock-1718000000",
+			"eth_address": eth,
+			"btc_address": btc,
+			"sol_address": sol,
+			"result_type": "success",
+		})
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// =============================================================================
+// Quote (native, uses QuoteEngine — no bchain)
+// =============================================================================
+
+func TestQuote_ReturnsServerQuoteShape(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+
+	status, body := fireRequest(t, rig.app, http.MethodGet,
+		"/v1/bridge/quote?source_network=ETHEREUM_SEPOLIA&source_token=ETH&destination_network=LUX_TESTNET&destination_token=LUX&amount=1",
+		nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data struct {
+			Quote serverQuote `json:"quote"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatalf("decode: %v\n%s", err, body)
+	}
+	q := resp.Data.Quote
+	// 1 ETH @ $3500 → LUX @ $2.50 → 1400 LUX gross.
+	// No Lux-exit fee on this direction → receive = gross.
+	if q.ReceiveAmount != 1400 {
+		t.Errorf("ReceiveAmount = %v, want 1400", q.ReceiveAmount)
+	}
+	// min_receive = receive * (1 - 0.025) = 1365.
+	if diff := q.MinReceiveAmount - 1365; diff > 0.001 || diff < -0.001 {
+		t.Errorf("MinReceiveAmount = %v, want ~1365", q.MinReceiveAmount)
+	}
+	if q.ServiceFee != 0 {
+		t.Errorf("ServiceFee should be 0 (non-Lux source), got %v", q.ServiceFee)
+	}
+	if q.Slippage != 0.025 {
+		t.Errorf("Slippage = %v, want 0.025", q.Slippage)
+	}
+}
+
+func TestQuote_LuxExitAppliesFee(t *testing.T) {
+	// LUX → ETH = Lux exit, 1% fee applies.
+	rig := newRig(t, nil, nil, nil)
+
+	status, body := fireRequest(t, rig.app, http.MethodGet,
+		"/v1/bridge/quote?source_network=LUX_TESTNET&source_token=LUX&destination_network=ETHEREUM_SEPOLIA&destination_token=ETH&amount=1000",
+		nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data struct {
+			Quote serverQuote `json:"quote"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	// 1000 LUX @ $2.50 = $2500 / $3500/ETH = 0.7142857 ETH gross.
+	// 1% fee on gross = 0.00714... ETH service fee.
+	// net = gross - fee = 0.70714...
+	if resp.Data.Quote.ServiceFee <= 0 {
+		t.Errorf("Lux-source swap should have non-zero ServiceFee, got %v", resp.Data.Quote.ServiceFee)
+	}
+	if resp.Data.Quote.ReceiveAmount >= 0.7142858 {
+		t.Errorf("ReceiveAmount should be < gross (0.7142857) due to fee, got %v", resp.Data.Quote.ReceiveAmount)
+	}
+}
+
+func TestQuote_MissingParams400(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/quote?source_network=ETH", nil)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "missing_params") {
+		t.Errorf("expected missing_params, got %s", body)
+	}
+}
+
+func TestQuote_BadAmount400(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	status, body := fireRequest(t, rig.app, http.MethodGet,
+		"/v1/bridge/quote?source_network=ETHEREUM_SEPOLIA&source_token=ETH&destination_network=LUX_TESTNET&destination_token=LUX&amount=not-a-number",
+		nil)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_amount") {
+		t.Errorf("expected bad_amount, got %s", body)
+	}
+}
+
+func TestQuote_UnknownAsset503(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	status, body := fireRequest(t, rig.app, http.MethodGet,
+		"/v1/bridge/quote?source_network=ETHEREUM_SEPOLIA&source_token=UNOBTAINIUM&destination_network=LUX_TESTNET&destination_token=LUX&amount=1",
+		nil)
+	if status != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "price_unknown") {
+		t.Errorf("expected price_unknown, got %s", body)
+	}
+}
+
+// =============================================================================
+// Swap CRUD (native, uses SwapStore)
+// =============================================================================
+
+func TestSwapsCreate_PersistsToStore(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  false,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(resp.Data.ID, "swap_") {
+		t.Errorf("ID should start with swap_, got %q", resp.Data.ID)
+	}
+	if resp.Data.Status != string(SwapStatusUserDepositPending) {
+		t.Errorf("Status = %q, want user_deposit_pending", resp.Data.Status)
+	}
+	// Verify it persisted by looking up directly in the store.
+	stored, err := rig.store.Get(t.Context(), resp.Data.ID)
+	if err != nil {
+		t.Fatalf("store.Get: %v", err)
+	}
+	if stored.Amount != 0.1 || stored.SourceNetwork != "ETHEREUM_SEPOLIA" {
+		t.Errorf("stored swap incorrect: %+v", stored)
+	}
+}
+
+func TestSwapsCreate_MissingDestAddress400(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		// DestinationAddress empty
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "missing_params") {
+		t.Errorf("expected missing_params, got %s", body)
+	}
+}
+
+func TestSwapsCreate_NegativeAmount400(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             -1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAddress: "0xabc",
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_amount") {
+		t.Errorf("expected bad_amount, got %s", body)
+	}
+}
+
+func TestSwapsGet_ReturnsStored(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	// Seed the store directly.
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		SourceTxHash:       "0xsrctx",
+		DestTxHash:         "0xdsttx",
+		Signature:          "0xsig",
+	}
+	if err := rig.store.Create(t.Context(), sw); err != nil {
+		t.Fatal(err)
+	}
+
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/swaps/"+sw.ID, nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Data.ID != sw.ID || resp.Data.Signature != "0xsig" {
+		t.Errorf("returned swap mismatch: %+v", resp.Data)
+	}
+}
+
+func TestSwapsGet_NotFound404(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/swaps/swap_nonexistent", nil)
+	if status != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "not_found") {
+		t.Errorf("expected not_found, got %s", body)
+	}
+}
+
+func TestSwapsList_NewestFirst(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	for i := 0; i < 3; i++ {
+		_ = rig.store.Create(t.Context(), &Swap{
+			SourceNetwork:      "ETHEREUM_SEPOLIA",
+			DestinationNetwork: "LUX_TESTNET",
+			DestinationAddress: "0xabc",
+			Amount:             float64(i + 1),
+		})
+		time.Sleep(2 * time.Millisecond) // ensure distinct CreatedAt
+	}
+
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/swaps", nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data []serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Data) != 3 {
+		t.Fatalf("expected 3 swaps, got %d", len(resp.Data))
+	}
+}
+
+func TestSwapsList_FilterByStatus(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	_ = rig.store.Create(t.Context(), &Swap{Status: SwapStatusUserDepositPending})
+	_ = rig.store.Create(t.Context(), &Swap{Status: SwapStatusCompleted})
+	_ = rig.store.Create(t.Context(), &Swap{Status: SwapStatusCompleted})
+
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/swaps?status=completed", nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d", status)
+	}
+	var resp struct {
+		Data []serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Data) != 2 {
+		t.Errorf("expected 2 completed swaps, got %d. body=%s", len(resp.Data), body)
+	}
+}
+
+// =============================================================================
+// MPC keygen wiring (use_deposit_address path)
+// =============================================================================
+
+func TestSwapsCreate_UseDepositAddressTrue_MintsMPCAddress(t *testing.T) {
+	mpc := mpcMock(t, "0xMPC0000000000000000000000000000000000001", "", "")
+	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mc, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasSuffix(resp.Data.DepositAddress, "###0xMPC0000000000000000000000000000000000001") {
+		t.Errorf("DepositAddress = %q, want suffix ###0xMPC0…", resp.Data.DepositAddress)
+	}
+	// Verify the address persisted to the store.
+	stored, _ := rig.store.Get(t.Context(), resp.Data.ID)
+	if stored.DepositAddress != resp.Data.DepositAddress {
+		t.Errorf("stored DepositAddress mismatch: %q vs %q", stored.DepositAddress, resp.Data.DepositAddress)
+	}
+}
+
+func TestSwapsCreate_UseDepositAddressFalse_SkipsMPC(t *testing.T) {
+	// No mchain client at all — proves false path doesn't touch it.
+	rig := newRig(t, nil, nil, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xabc",
+		UseDepositAddress:  false,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Data.DepositAddress != "" {
+		t.Errorf("DepositAddress should be empty, got %q", resp.Data.DepositAddress)
+	}
+}
+
+func TestSwapsCreate_UseDepositAddressTrue_NoMPC_Returns503(t *testing.T) {
+	rig := newRig(t, nil, nil, nil) // mchain nil
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAddress: "0xabc",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "mpc_unavailable") {
+		t.Errorf("expected mpc_unavailable, got %s", body)
+	}
+}
+
+func TestSwapsCreate_DOTRequest_Returns501(t *testing.T) {
+	mpc := mpcMock(t, "0xeth", "", "")
+	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mc, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             1,
+		SourceNetwork:      "POLKADOT_MAINNET",
+		DestinationNetwork: "LUX_MAINNET",
+		DestinationAddress: "0xfeed",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusNotImplemented {
+		t.Fatalf("status = %d, want 501. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "unsupported_chain") {
+		t.Errorf("expected unsupported_chain, got %s", body)
+	}
+}
+
+func TestSwapsCreate_MPCKeygenFailure_Returns5xx(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"error":"keygen quorum down"}`))
+	}))
+	t.Cleanup(srv.Close)
+	mc := &mchain.Client{APIURL: srv.URL, OrgID: "test-org", Timeout: time.Second}
+	rig := newRig(t, nil, mc, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAddress: "0xabc",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "keygen_failed") {
+		t.Errorf("expected keygen_failed, got %s", body)
+	}
+}
+
+// =============================================================================
+// /v1/bridge/info — pure bchain passthrough
+// =============================================================================
+
+func TestInfo_PassesBchainResult(t *testing.T) {
+	bc := mockBchain(t, map[string]any{
+		"bridge_getInfo": bchain.BridgeInfo{
+			Version: "1.0", NodeID: "MOCK", MPCReady: true,
+			Threshold: 3, TotalParties: 5,
+		},
+	})
+	client := &bchain.Client{BridgeRPCURL: bc.URL, Timeout: 2 * time.Second}
+	rig := newRig(t, client, nil, nil)
+
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/info", nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	if !strings.Contains(string(body), `"mpcReady":true`) {
+		t.Errorf("expected mpcReady:true, got %s", body)
+	}
+}
+
+// =============================================================================
+// /v1/bridge/check-deposit (ops diagnostic, uses depositcheck)
+// =============================================================================
+
+func TestCheckDeposit_Confirmed(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": 1, "result": "0xDE0B6B3A7640000", // 1 ETH
+		})
+	}))
+	t.Cleanup(srv.Close)
+	dc := &depositcheck.Client{
+		Timeout:         2 * time.Second,
+		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.URL},
+	}
+	rig := newRig(t, nil, nil, dc)
+
+	reqBody, _ := json.Marshal(checkDepositReq{
+		Network: "ETHEREUM_SEPOLIA",
+		Address: "0xabc",
+		Asset:   "ETH",
+		Amount:  0.5,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	if !strings.Contains(string(body), `"confirmed":true`) {
+		t.Errorf("expected confirmed:true, got %s", body)
+	}
+}
+
+func TestCheckDeposit_DOT_501(t *testing.T) {
+	dc := &depositcheck.Client{Timeout: time.Second}
+	rig := newRig(t, nil, nil, dc)
+
+	reqBody, _ := json.Marshal(checkDepositReq{
+		Network: "POLKADOT_MAINNET", Address: "1abc", Amount: 1,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	if status != http.StatusNotImplemented {
+		t.Fatalf("status = %d, want 501. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "substrate") {
+		t.Errorf("expected substrate error, got %s", body)
+	}
+}
+
+func TestCheckDeposit_MissingParams400(t *testing.T) {
+	dc := &depositcheck.Client{Timeout: time.Second}
+	rig := newRig(t, nil, nil, dc)
+
+	reqBody, _ := json.Marshal(checkDepositReq{Amount: 1})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "missing_params") {
+		t.Errorf("expected missing_params, got %s", body)
+	}
+}
+
+func TestCheckDeposit_NotRegistered_WhenDisabled(t *testing.T) {
+	// depcheck nil → handler not registered → 404 on POST.
+	rig := newRig(t, nil, nil, nil)
+
+	reqBody, _ := json.Marshal(checkDepositReq{Network: "ETHEREUM_SEPOLIA", Address: "0xabc", Amount: 1})
+	status, _ := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	if status != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404 (handler not registered when depcheck=nil)", status)
+	}
+}
