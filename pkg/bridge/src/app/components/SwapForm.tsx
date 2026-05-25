@@ -252,14 +252,15 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   if (cfg.mpc?.utila) cosigners.push('Utila')
   if (cfg.mpc?.fireblocks) cosigners.push('Fireblocks')
 
-  // Source chain family decides the flow:
-  //   - EVM / Lux: wagmi connector signs the deposit tx; wallet required.
-  //   - Anything else (BTC, Solana, TON, XRP, Cardano, Polkadot): the
-  //     server issues a deposit address and the user pays from any wallet
-  //     they own. No wagmi integration needed for those chains.
+  // Every source goes through the MPC deposit-address flow: the server
+  // mints a fresh MPC-derived address via createMPCWalletForDeposit() and
+  // the user pays it from any wallet they own (MetaMask for EVM/Lux,
+  // native BTC wallet for Bitcoin, Solana wallet for SOL, etc.). There is
+  // no wagmi writeContract path on the source side — the SDK never holds
+  // a private key and never calls a teleporter contract directly.
   const sourceIsEvm =
     swap.fromChain.family === 'evm' || swap.fromChain.family === 'lux'
-  const needsDepositAddressFlow = !sourceIsEvm
+  const needsDepositAddressFlow = true
 
   // Destination address resolution. We always need an address to deliver
   // bridged funds to. EVM destinations default to the connected wallet's
@@ -285,9 +286,6 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     if (!swap.quote) return 'Enter an amount'
     if (sourceIsEvm && !wallet.address) return 'Connect wallet to bridge'
     if (!destOk) return `Enter ${swap.toChain.name} destination address`
-    if (needsDepositAddressFlow) {
-      return `Generate ${swap.fromAsset.symbol} deposit address`
-    }
     return `Bridge ${swap.fromAsset.symbol} → ${swap.toAsset.symbol}`
   })()
 
@@ -398,13 +396,12 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           autoCapitalize="off"
           aria-label="Destination address"
         />
-        {needsDepositAddressFlow ? (
-          <span style={destHint}>
-            {swap.fromChain.name} is non-EVM — the bridge will issue a
-            deposit address for you to send {swap.fromAsset.symbol} from any
-            wallet you own.
-          </span>
-        ) : null}
+        <span style={destHint}>
+          The bridge will issue an MPC-secured deposit address — send your{' '}
+          {swap.fromAsset.symbol} from any {swap.fromChain.name} wallet to
+          that address and the {swap.toAsset.symbol} will arrive at your
+          destination after the threshold quorum signs.
+        </span>
       </div>
 
       <div style={refuelRow}>
