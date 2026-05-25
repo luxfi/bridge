@@ -36,6 +36,5 @@ k8s
 compose*.yml
 config.yaml
 config.kms.yaml
-scripts
 check-ci-status.sh
 push-and-release.sh
