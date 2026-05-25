@@ -34,10 +34,10 @@ vi.mock("@/prisma-instance", () => ({
 }))
 
 vi.mock("fireblocks-sdk", () => ({
-  FireblocksSDK: vi.fn().mockImplementation(() => ({
-    createTransaction: mocks.fbCreateTx,
-    getTransactionById: mocks.fbGetTx,
-  })),
+  FireblocksSDK: class {
+    createTransaction = mocks.fbCreateTx
+    getTransactionById = mocks.fbGetTx
+  },
   PeerType: { VAULT_ACCOUNT: "VAULT_ACCOUNT" },
   TransactionOperation: { RAW: "RAW" },
 }))
