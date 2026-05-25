@@ -223,7 +223,7 @@ router.put("/expire/:swapId", async (req: Request, res: Response) => {
 // method: PUT and it's public
 router.get("/payout/:swapId", async (req: Request, res: Response) => {
   try {
-    const swapId = req.params.swapId
+    const swapId = req.params.swapId as string
     const data = await handlerUtilaPayoutAction(swapId)
     res.status(200).json(data)
   } catch (err: any) {
@@ -237,7 +237,7 @@ router.get("/payout/:swapId", async (req: Request, res: Response) => {
 // method: PUT and it's public
 router.get("/deposit-check/:swapId", async (req: Request, res: Response) => {
   try {
-    const swapId = req.params.swapId
+    const swapId = req.params.swapId as string
     await handlerCheckDeposit(swapId)
     res.status(200).json({ msg: "success" })
   } catch (err: any) {

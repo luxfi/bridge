@@ -15,10 +15,10 @@ const getTx = vi.fn()
 
 vi.mock("fireblocks-sdk", () => {
   return {
-    FireblocksSDK: vi.fn().mockImplementation(() => ({
-      createTransaction: createTx,
-      getTransactionById: getTx,
-    })),
+    FireblocksSDK: class {
+      createTransaction = createTx
+      getTransactionById = getTx
+    },
     PeerType: { VAULT_ACCOUNT: "VAULT_ACCOUNT" },
     TransactionOperation: { RAW: "RAW" },
   }
