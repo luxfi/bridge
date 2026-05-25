@@ -44,6 +44,22 @@ describe('buildWagmiConfig', () => {
     expect(ids).toContain(8453)
   })
 
+  it('exposes the testnet EVM set when env=testnet', () => {
+    const config = buildWagmiConfig({ ...base, env: 'testnet' })
+    const ids = config.chains.map((c) => c.id)
+    // Sepolia, Base Sepolia, Holesky must all be present; mainnet chains must not.
+    expect(ids).toEqual(expect.arrayContaining([11155111, 84532, 17000]))
+    expect(ids).not.toContain(1)
+    expect(ids).not.toContain(8453)
+  })
+
+  it('treats env=devnet the same as env=testnet for chain set selection', () => {
+    const config = buildWagmiConfig({ ...base, env: 'devnet' })
+    const ids = config.chains.map((c) => c.id)
+    expect(ids).toContain(11155111)
+    expect(ids).not.toContain(1)
+  })
+
   it('narrows chains to supportedChainIds when provided', () => {
     const config = buildWagmiConfig({
       ...base,
