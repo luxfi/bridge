@@ -20,7 +20,7 @@
   "author": "Lux Network",
   "license": "MIT",
   "dependencies": {
-    "@noble/ed25519": "^2.3.0"
+    "@noble/ed25519": "^3.1.0"
   },
   "workspaces": [
     "app/*",
@@ -41,6 +41,6 @@
     }
   },
   "devDependencies": {
-    "playwright": "^1.58.2"
+    "playwright": "^1.60.0"
   }
 }

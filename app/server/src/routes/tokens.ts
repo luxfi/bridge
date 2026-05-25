@@ -8,7 +8,7 @@ const router: Router = Router()
 // method: GET and it's public
 router.get("/price/:token_id", async (req: Request, res: Response) => {
   try {
-    const token_id = req.params.token_id
+    const token_id = req.params.token_id as string
     const price = await getTokenPrice(token_id)
     res.status(200).json({ data: {
       asset: token_id,
