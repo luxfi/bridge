@@ -84,12 +84,21 @@ const fallbackMpcPublicUrl = 'https://mpc.lux.network'
 const fallbackMpcProtocol: NonNullable<BridgeMPCConfig['protocol']> = 'cggmp21'
 
 // Curated EVM allow-list for the Lux tenant. The SDK's full supported set
-// (mainnet, arbitrum, base, polygon, optimism) is intentionally narrowed
-// here so the user wallet only sees chains the bridge backend actually
-// settles to. Non-EVM destinations (Lux native, Solana) are handled by the
-// MPC threshold layer and don't appear in the wagmi connector.
-const fallbackSupportedChainIds = [1, 42161, 8453, 137, 10]
-const fallbackDefaultChainId = 1
+// (mainnet, arbitrum, base, polygon, optimism, bsc for mainnet; sepolia,
+// arbitrumSepolia, baseSepolia, optimismSepolia, polygonAmoy, holesky,
+// bscTestnet for testnet) is intentionally narrowed here so the user wallet
+// only sees chains the bridge backend actually settles to. Non-EVM
+// destinations (Lux native, Solana, BTC, TON, XRP) are handled by the MPC
+// threshold layer and don't appear in the wagmi connector.
+//
+// Env-aware: BRIDGE_ENV=testnet → Sepolia / Base Sepolia / Holesky;
+// BRIDGE_ENV=mainnet (default) → the production EVM allow-list.
+const envSlug = env('BRIDGE_ENV', 'mainnet') ?? 'mainnet'
+const isTestnetEnv = envSlug === 'testnet' || envSlug === 'devnet'
+const fallbackSupportedChainIds = isTestnetEnv
+  ? [11155111, 84532, 17000] // Sepolia, Base Sepolia, Holesky — the testnet pairs the bridge backend currently quotes.
+  : [1, 42161, 8453, 137, 10]
+const fallbackDefaultChainId = isTestnetEnv ? 11155111 : 1
 
 /**
  * Parse a comma-separated list of numeric chain IDs from env, dropping
@@ -157,7 +166,7 @@ const devApiHost =
 
 export const bridgeConfig: BridgeConfig = {
   apiHost: devApiHost ?? env('BRIDGE_API_HOST', fallbackApiHost)!,
-  env: env('BRIDGE_ENV', 'mainnet')!,
+  env: envSlug,
   clientId: env('BRIDGE_CLIENT_ID'),
   iamOrg: env('BRIDGE_IAM_ORG', 'lux'),
   brand: {

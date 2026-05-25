@@ -372,13 +372,14 @@ export function useTransfers(): TransferState {
         })
       }
 
-      // Non-EVM source chains MUST use deposit-address mode (we have no
-      // wagmi connector for Bitcoin/Solana/TON/XRP/Cardano/Polkadot). The
-      // caller can also force it on for EVM sources by passing the flag
-      // explicitly — useful for paste-the-address flows from cold wallets.
-      const useDepositAddress =
-        input.useDepositAddress ??
-        (fromChain.family !== 'evm' && fromChain.family !== 'lux')
+      // Every source uses the MPC-derived deposit address. The server's
+      // createMPCWalletForDeposit() returns a chain-appropriate address
+      // (ETH for EVM, BTC for Bitcoin, SOL for Solana, etc.) via a single
+      // MPC keygen, so we don't need a wagmi writeContract path or
+      // teleporter-contract dispatch on the client. Callers can still pass
+      // `useDepositAddress: false` to opt back into the legacy teleporter
+      // flow on EVM sources, but the SDK default is the MPC flow.
+      const useDepositAddress = input.useDepositAddress ?? true
 
       try {
         const swap = await createSwap(
@@ -395,7 +396,10 @@ export function useTransfers(): TransferState {
             ...(account.address ? { sender: account.address } : {}),
             refuel: input.refuel ?? false,
             useDepositAddress,
-            useTeleporter: fromChain.family === 'lux' || toChain.family === 'lux',
+            // MPC pipeline handles cross-chain delivery end-to-end —
+            // teleport-processor.ts (background loop watching teleporter
+            // contracts) is no longer on our happy path.
+            useTeleporter: false,
             appName: input.appName ?? cfg.brand?.name ?? '@luxfi/bridge',
             ...(cosigners.length > 0 ? { cosigners } : {}),
           },

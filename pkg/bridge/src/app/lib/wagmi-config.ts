@@ -18,10 +18,18 @@
 
 import {
   arbitrum,
+  arbitrumSepolia,
   base,
+  baseSepolia,
+  bsc,
+  bscTestnet,
+  holesky,
   mainnet,
   optimism,
+  optimismSepolia,
   polygon,
+  polygonAmoy,
+  sepolia,
 } from 'viem/chains'
 import type { Chain as ViemChain } from 'viem/chains'
 import { createConfig, http, type Config, type CreateConnectorFn } from 'wagmi'
@@ -30,18 +38,48 @@ import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 import type { BridgeConfig } from '../../types'
 
 /**
- * EVM chains the bridge can talk to out of the box.
+ * EVM chains the bridge can talk to out of the box, partitioned by env.
  *
- * Tenants narrow this via `BridgeConfig.wallet.supportedChainIds`; chains
- * outside the allow-list are dropped from the wagmi config. Non-EVM chains
- * (Lux native, Solana, Bitcoin) don't appear here — they're signed via the
- * MPC threshold layer, not the user wallet.
+ * `mainnet` env builds get production chains; `testnet` env builds get the
+ * testnet/devnet equivalents. The bridge backend's `?version=testnet` filter
+ * gates the chain registry server-side; wagmi must also be configured for
+ * those chains or `switchChain(11155111)` rejects with "chain not configured."
+ *
+ * Tenants narrow either set via `BridgeConfig.wallet.supportedChainIds`;
+ * chains outside the allow-list are dropped from the wagmi config. Non-EVM
+ * chains (Lux native, Solana, Bitcoin) don't appear here — they're signed
+ * via the MPC threshold layer, not the user wallet.
  */
-const ALL_EVM_CHAINS: ViemChain[] = [mainnet, arbitrum, base, polygon, optimism]
+const MAINNET_EVM_CHAINS: ViemChain[] = [mainnet, arbitrum, base, polygon, optimism, bsc]
+const TESTNET_EVM_CHAINS: ViemChain[] = [
+  sepolia,
+  arbitrumSepolia,
+  baseSepolia,
+  optimismSepolia,
+  polygonAmoy,
+  holesky,
+  bscTestnet,
+]
 
-/** Lookup viem Chain by numeric chainId. */
+/**
+ * EVM chains for a given env. `testnet` and `devnet` both use the testnet
+ * set (devnet currently rides Sepolia / Holesky for EVM legs too).
+ */
+function chainsForEnv(env: string): ViemChain[] {
+  return env === 'testnet' || env === 'devnet'
+    ? TESTNET_EVM_CHAINS
+    : MAINNET_EVM_CHAINS
+}
+
+/** Back-compat export — defaults to the mainnet set. */
+const ALL_EVM_CHAINS: ViemChain[] = MAINNET_EVM_CHAINS
+
+/** Lookup viem Chain by numeric chainId across both mainnet + testnet sets. */
 export function viemChainById(chainId: number): ViemChain | undefined {
-  return ALL_EVM_CHAINS.find((c) => c.id === chainId)
+  return (
+    MAINNET_EVM_CHAINS.find((c) => c.id === chainId) ??
+    TESTNET_EVM_CHAINS.find((c) => c.id === chainId)
+  )
 }
 
 /**
@@ -54,16 +92,30 @@ export function viemChainById(chainId: number): ViemChain | undefined {
 export function buildWagmiConfig(cfg: BridgeConfig): Config {
   const wallet = cfg.wallet
   const supported = wallet?.supportedChainIds
+  const envChains = chainsForEnv(cfg.env)
 
-  // Filter to the tenant's allow-list when present; otherwise expose all.
-  const chains = supported && supported.length > 0
-    ? ALL_EVM_CHAINS.filter((c) => supported.includes(c.id))
-    : ALL_EVM_CHAINS
+  // Filter to the tenant's allow-list when present; otherwise expose all
+  // chains appropriate for the current env. The allow-list may legitimately
+  // span both sets (a tenant could allow [1, 11155111] to switch between
+  // mainnet+sepolia for cross-env testing), so we filter the union.
+  //
+  // Crucially: always materialize a fresh array. The hoist step below uses
+  // splice(), which would otherwise mutate the shared MAINNET_/TESTNET_EVM_CHAINS
+  // constants and silently corrupt subsequent buildWagmiConfig() calls in
+  // the same process (this hit the wagmi-config.test.ts suite when default-
+  // chain hoisting reordered the shared array).
+  const chains: ViemChain[] = supported && supported.length > 0
+    ? [...MAINNET_EVM_CHAINS, ...TESTNET_EVM_CHAINS].filter((c) =>
+        supported.includes(c.id),
+      )
+    : [...envChains]
 
   if (chains.length === 0) {
     // Defensive: if the tenant's allow-list excludes every supported chain,
-    // fall back to mainnet so the wagmi createConfig() doesn't reject.
-    chains.push(mainnet)
+    // fall back to env-appropriate chains[0] so wagmi createConfig() doesn't
+    // reject. For testnet env that's sepolia; for mainnet env that's mainnet.
+    const fallback = envChains[0] ?? mainnet
+    chains.push(fallback)
   }
 
   // Order chains so wallet.defaultChainId (when provided + allowed) is first.

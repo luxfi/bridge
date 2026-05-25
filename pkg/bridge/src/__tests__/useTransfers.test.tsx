@@ -120,7 +120,10 @@ describe('useTransfers', () => {
       source_network: 'LUX_MAINNET',
       destination_network: 'ETHEREUM_MAINNET',
       destination_address: '0xabc1234567890abcdef1234567890abcdef12345',
-      use_teleporter: true, // LUX leg → teleporter
+      // Pure MPC flow: every source gets an MPC-derived deposit address;
+      // the teleporter-contract dispatch is off the happy path.
+      use_deposit_address: true,
+      use_teleporter: false,
       app_name: 'TestBridge',
     })
 
