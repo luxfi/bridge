@@ -9,6 +9,11 @@ RUN corepack enable && corepack prepare pnpm@8.15.9 --activate
 WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install --no-frozen-lockfile
+# Build workspace dep packages before the bridge app — Vite needs dist/ on
+# @luxfi/{threshold,core,utila,bridge} to resolve the exports map. These
+# package builds are tsc-only and fast; failing any of them should fail
+# the image build (no `|| true`).
+RUN pnpm -C pkg/threshold build && pnpm -C pkg/core build && pnpm -C pkg/utila build && pnpm -C pkg/bridge build
 RUN pnpm -C app/bridge build
 
 FROM ghcr.io/hanzoai/spa
