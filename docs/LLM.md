@@ -105,7 +105,7 @@ mountBridge({
 })
 ```
 
-Mirrors `mountExchange` from `@partner/exchange`. One declarative entry,
+Mirrors `mountExchange` from the upstream exchange SDK. One declarative entry,
 build-time brand config, no hostname detection inside the SDK.
 
 ## Publishing

@@ -73,9 +73,9 @@ const stubSig = new Uint8Array(64).fill(0xab)
 beforeEach(() => {
   mocks.asymmetricSign.mockReset()
   mocks.KeyManagementServiceClient.mockReset()
-  mocks.KeyManagementServiceClient.mockImplementation(() => ({
-    asymmetricSign: mocks.asymmetricSign,
-  }))
+  mocks.KeyManagementServiceClient.mockImplementation(function () {
+    return { asymmetricSign: mocks.asymmetricSign }
+  })
 })
 
 afterEach(() => {})
