@@ -641,3 +641,91 @@ func TestCheckDeposit_NotRegistered_WhenDisabled(t *testing.T) {
 		t.Fatalf("status = %d, want 404 (handler not registered when depcheck=nil)", status)
 	}
 }
+
+// =============================================================================
+// /api/* SDK aliases
+// =============================================================================
+//
+// The TS SDK (pkg/bridge/src/app/lib/bridge-api.ts) calls
+// /api/quote, /api/swaps and /api/swaps/:id — NOT the /v1/bridge/*
+// paths the public docs advertise. cmd/bridge mounts the native
+// handlers under both prefixes so the embedded SPA (same-origin
+// apiHost = window.location.origin in dev) reaches them without
+// dev-proxy gymnastics. These tests pin that contract.
+
+func TestAPIAlias_QuoteParityWithV1(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+
+	query := "source_network=ETHEREUM_SEPOLIA&source_token=ETH&destination_network=LUX_TESTNET&destination_token=LUX&amount=1"
+	v1Status, v1Body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/quote?"+query, nil)
+	apiStatus, apiBody := fireRequest(t, rig.app, http.MethodGet, "/api/quote?"+query, nil)
+
+	if v1Status != http.StatusOK || apiStatus != http.StatusOK {
+		t.Fatalf("expected both 200, got v1=%d api=%d", v1Status, apiStatus)
+	}
+	if string(v1Body) != string(apiBody) {
+		t.Fatalf("/api/quote body differs from /v1/bridge/quote\nv1:  %s\napi: %s", v1Body, apiBody)
+	}
+}
+
+func TestAPIAlias_SwapsCreateGoesThroughNativeHandler(t *testing.T) {
+	mpc := mpcMock(t, "0xabc", "tb1q", "Sol1111")
+	mclient := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mclient, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xdeadbeef",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/api/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("/api/swaps status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatalf("decode: %v body=%s", err, body)
+	}
+	if resp.Data.ID == "" {
+		t.Fatalf("expected swap id in /api/swaps response: %s", body)
+	}
+	// Must be persisted by the native store — proves we hit the
+	// real handler, not the SPA fallback.
+	if _, err := rig.store.Get(nil, resp.Data.ID); err != nil {
+		t.Fatalf("swap not persisted by /api/swaps alias: %v", err)
+	}
+}
+
+func TestAPIAlias_SwapsGetReturnsPersistedSwap(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	sw := &Swap{
+		Status:             SwapStatusCompleted,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAddress: "0xdeadbeef",
+		Amount:             1,
+	}
+	if err := rig.store.Create(nil, sw); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	status, body := fireRequest(t, rig.app, http.MethodGet, "/api/swaps/"+sw.ID, nil)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatalf("decode: %v body=%s", err, body)
+	}
+	if resp.Data.ID != sw.ID {
+		t.Fatalf("/api/swaps/:id returned id=%q want %q", resp.Data.ID, sw.ID)
+	}
+}

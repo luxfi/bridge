@@ -117,16 +117,35 @@ func (a *API) Register(app *zip.App) {
 	// BridgeVM for swap-API methods — those don't exist on the chain.
 	// BridgeVM is queried only for signer-set introspection via
 	// /v1/bridge/info when a bchain client is wired in.
+	//
+	// We mount each handler at TWO prefixes:
+	//   - /v1/bridge/* — the externally-routed path (ingress, public docs).
+	//   - /api/*       — the path the embedded SPA's TS SDK
+	//                    (pkg/bridge/src/app/lib/bridge-api.ts) actually
+	//                    calls. Same-origin requests from the SPA in
+	//                    cmd/bridge land here directly; without these
+	//                    aliases the SPA's /api/quote and /api/swaps
+	//                    requests would fall through to the SPA catch-all
+	//                    and return HTML instead of JSON.
 	proxied := a.proxied()
 	if a.store != nil && a.quote != nil {
 		app.Get("/v1/bridge/quote", a.quoteNative)
 		app.Post("/v1/bridge/swaps", a.swapsCreateNative)
 		app.Get("/v1/bridge/swaps", a.swapsListNative)
 		app.Get("/v1/bridge/swaps/:id", a.swapsGetNative)
+
+		app.Get("/api/quote", a.quoteNative)
+		app.Post("/api/swaps", a.swapsCreateNative)
+		app.Get("/api/swaps", a.swapsListNative)
+		app.Get("/api/swaps/:id", a.swapsGetNative)
 	} else {
 		app.All("/v1/bridge/quote", proxied)
 		app.All("/v1/bridge/swaps", proxied)
 		app.All("/v1/bridge/swaps/*", proxied)
+
+		app.All("/api/quote", proxied)
+		app.All("/api/swaps", proxied)
+		app.All("/api/swaps/*", proxied)
 	}
 	if a.bchain != nil {
 		// /v1/bridge/info exposes signer-set info from BridgeVM (the
