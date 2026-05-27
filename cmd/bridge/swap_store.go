@@ -89,14 +89,14 @@ type Swap struct {
 	// DestRawTx is the fully-assembled, signed destination-chain raw
 	// transaction (hex-encoded). The broadcast driver consumes this
 	// field to push the tx onto the destination chain. Populated by
-	// chain-specific tx-assembly code that combines Signature with the
-	// swap intent into a wire-ready RLP-encoded (EVM) or chain-native
-	// (BTC/SOL/TON/etc.) blob.
+	// the signing driver when a txassembler.Assembler is attached:
+	// PreSign builds the unsigned RLP, the MPC signs the sighash, then
+	// Finalize re-encodes with the signature into wire-ready bytes.
 	//
-	// As of Phase 4.7 the assembler is NOT implemented — Signature
-	// alone is a placeholder digest, not a real tx. Until the
-	// assembler lands, this field stays empty and the broadcast
-	// driver skips the swap with a "missing tx assembly" debug log.
+	// EVM destinations are fully implemented (EIP-155). Non-EVM
+	// destination chains (BTC/SOL/TON) still need chain-specific
+	// assemblers; until those land their swaps stall here and the
+	// broadcaster skips them with a "missing tx assembly" debug log.
 	DestRawTx string `json:"dest_raw_tx,omitempty"`
 
 	// Destination-side broadcast — tx hash on the destination chain.
