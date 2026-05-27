@@ -10,6 +10,8 @@ import (
 	"sync"
 
 	"golang.org/x/crypto/sha3"
+
+	"github.com/luxfi/bridge/internal/tokens"
 )
 
 // =============================================================================
@@ -100,6 +102,15 @@ func (s *StaticProvider) SuggestGasPrice(_ context.Context, network string) (*bi
 type Assembler struct {
 	Provider Provider
 	Networks map[string]PerNetwork // key = network internal_name
+	// Tokens, when set, drives ERC-20 destination handling. If the
+	// (DestinationNetwork, DestinationAsset) pair resolves to an
+	// ERC-20 entry (non-empty Contract), PreSign builds a
+	// `transfer(recipient, amount)` calldata against that contract
+	// and scales the amount by the token's Decimals. When nil, every
+	// PreSign falls back to native transfers / cfg.BridgeContract
+	// release calls — backward compat for callers that haven't
+	// adopted the registry yet.
+	Tokens *tokens.Registry
 }
 
 // New builds an empty assembler. Populate Networks per-network.
@@ -109,6 +120,11 @@ func New(provider Provider) *Assembler {
 
 // SetNetwork registers a per-chain config. Convenience wrapper.
 func (a *Assembler) SetNetwork(network string, cfg PerNetwork) { a.Networks[network] = cfg }
+
+// erc20TransferSelector is the first 4 bytes of
+// keccak256("transfer(address,uint256)") — the canonical ERC-20
+// selector for sending tokens. Constant per the Solidity ABI.
+var erc20TransferSelector = [4]byte{0xa9, 0x05, 0x9c, 0xbb}
 
 // Unsigned is the intermediate representation between PreSign and
 // Finalize. Callers MUST pass the same instance to Finalize that
@@ -139,11 +155,19 @@ type SwapIntent struct {
 	// DestinationNetwork is the internal_name of the destination
 	// chain (e.g. LUX_TESTNET, ETHEREUM_SEPOLIA).
 	DestinationNetwork string
+	// DestinationAsset is the token ticker on the destination chain
+	// (ETH, LUX, USDC, etc.). When the assembler has a Tokens registry
+	// attached and the asset resolves to an ERC-20, PreSign switches
+	// to `transfer(recipient, amount)` calldata against the token's
+	// contract and uses the token's Decimals. Empty / unknown ⇒
+	// native-token transfer (or BridgeContract-release mode).
+	DestinationAsset string
 	// DestinationAddress is the user's recipient address on the
 	// destination chain (0x-prefixed hex for EVM).
 	DestinationAddress string
 	// Amount is the human-readable amount the user receives
-	// (e.g. 0.1 = 0.1 ETH). Scaled to wei using PerNetwork.NativeDecimals.
+	// (e.g. 0.1 = 0.1 ETH). Scaled to base units using the resolved
+	// asset's decimals (or PerNetwork.NativeDecimals as a fallback).
 	Amount float64
 	// SenderAddress is the MPC-controlled signer address — comes
 	// from the eth_address slot of the keygen response. Used to
@@ -162,9 +186,30 @@ func (a *Assembler) PreSign(ctx context.Context, in SwapIntent) (*Unsigned, erro
 		return nil, fmt.Errorf("txassembler: ChainID required for %s", in.DestinationNetwork)
 	}
 
+	// Resolve destination asset → contract + decimals. Three modes:
+	//   1. ERC-20 transfer:   token.Contract != ""  → tx targets the
+	//                         token contract with transfer() calldata
+	//                         and tx value = 0.
+	//   2. Bridge release:    cfg.BridgeContract != "" (and asset is
+	//                         native or unresolved) → tx targets the
+	//                         per-network bridge contract with
+	//                         release() calldata and tx value = 0.
+	//   3. Pure transfer:     fallback. tx targets the recipient
+	//                         directly with the native amount as
+	//                         tx value and empty calldata.
+	var tokenInfo *tokens.Info
+	if a.Tokens != nil && in.DestinationAsset != "" {
+		if info, ok := a.Tokens.Lookup(in.DestinationNetwork, in.DestinationAsset); ok {
+			tokenInfo = info
+		}
+	}
+
 	decimals := cfg.NativeDecimals
 	if decimals == 0 {
 		decimals = 18 // ETH/LUX/BNB/etc.
+	}
+	if tokenInfo != nil {
+		decimals = tokenInfo.Decimals
 	}
 	value, err := floatToWei(in.Amount, decimals)
 	if err != nil {
@@ -174,7 +219,23 @@ func (a *Assembler) PreSign(ctx context.Context, in SwapIntent) (*Unsigned, erro
 	// Determine `to` + `data` based on mode.
 	var to []byte
 	var data []byte
-	if cfg.BridgeContract != "" {
+	switch {
+	case tokenInfo != nil && !tokenInfo.IsNative():
+		// Mode 1: ERC-20 transfer
+		to, err = parseAddress(tokenInfo.Contract)
+		if err != nil {
+			return nil, fmt.Errorf("ERC-20 contract address %s/%s: %w",
+				in.DestinationNetwork, in.DestinationAsset, err)
+		}
+		recipient, err := parseAddress(in.DestinationAddress)
+		if err != nil {
+			return nil, fmt.Errorf("DestinationAddress: %w", err)
+		}
+		data = buildABIWordCall(erc20TransferSelector[:], recipient, value)
+		value = big.NewInt(0) // ERC-20 tx carries no ETH value
+
+	case cfg.BridgeContract != "":
+		// Mode 2: bridge-contract release
 		to, err = parseAddress(cfg.BridgeContract)
 		if err != nil {
 			return nil, fmt.Errorf("BridgeContract: %w", err)
@@ -183,23 +244,11 @@ func (a *Assembler) PreSign(ctx context.Context, in SwapIntent) (*Unsigned, erro
 		if err != nil {
 			return nil, fmt.Errorf("DestinationAddress: %w", err)
 		}
-		// data = selector || abi.encode(address, uint256)
-		// Both args are 32-byte words: 12 leading zero bytes for the
-		// address, then 20 address bytes; then 32-byte big-endian value.
-		data = make([]byte, 0, 4+32+32)
-		data = append(data, cfg.ReleaseSelector[:]...)
-		var addrWord [32]byte
-		copy(addrWord[12:], recipient)
-		data = append(data, addrWord[:]...)
-		var valueWord [32]byte
-		valueBytes := value.Bytes()
-		copy(valueWord[32-len(valueBytes):], valueBytes)
-		data = append(data, valueWord[:]...)
-		// In contract-call mode the tx value is 0 — funds move via
-		// the contract's internal accounting.
+		data = buildABIWordCall(cfg.ReleaseSelector[:], recipient, value)
 		value = big.NewInt(0)
-	} else {
-		// Pure transfer mode.
+
+	default:
+		// Mode 3: pure native transfer
 		to, err = parseAddress(in.DestinationAddress)
 		if err != nil {
 			return nil, fmt.Errorf("DestinationAddress: %w", err)
@@ -332,6 +381,38 @@ func keccak256(data []byte) [32]byte {
 	_, _ = h.Write(data)
 	var out [32]byte
 	copy(out[:], h.Sum(nil))
+	return out
+}
+
+// buildABIWordCall encodes a function call as
+//   selector(4) || addressWord(32) || uintWord(32).
+//
+// Used by both ERC-20 transfer (selector=0xa9059cbb) and the bridge
+// release path (selector=cfg.ReleaseSelector). Both have the same
+// (address, uint256) argument shape — the ERC-20 spec's
+// `transfer(address,uint256)` and the bridge's `release(address,uint256)`
+// or `mint(address,uint256)` all share this signature.
+func buildABIWordCall(selector []byte, recipient []byte, amount *big.Int) []byte {
+	if len(selector) != 4 {
+		// Shouldn't happen with our callers — guard against silent
+		// corruption if a future caller passes the wrong size.
+		panic("txassembler: buildABIWordCall requires 4-byte selector")
+	}
+	out := make([]byte, 0, 4+32+32)
+	out = append(out, selector...)
+	// recipient word: 12 zero bytes + 20-byte address (right-aligned).
+	var addrWord [32]byte
+	copy(addrWord[12:], recipient)
+	out = append(out, addrWord[:]...)
+	// amount word: right-aligned 32-byte big-endian uint256.
+	var valueWord [32]byte
+	valueBytes := amount.Bytes()
+	if len(valueBytes) > 32 {
+		// uint256 overflow — should never happen for normal amounts.
+		panic(fmt.Sprintf("txassembler: amount %s exceeds uint256", amount))
+	}
+	copy(valueWord[32-len(valueBytes):], valueBytes)
+	out = append(out, valueWord[:]...)
 	return out
 }
 

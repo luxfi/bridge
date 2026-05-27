@@ -25,7 +25,12 @@ WORKDIR /src
 RUN apk add --no-cache git
 COPY go.mod go.sum* ./
 RUN go mod download
+# The binary spans cmd/bridge, the internal/ subpackages it imports, and
+# the root package (profile.go). Keep this list narrow — copying the whole
+# repo would bust the layer cache on every UI edit.
 COPY cmd/ cmd/
+COPY internal/ internal/
+COPY profile.go ./
 # Replace placeholder static/ with the real UI build.
 RUN rm -rf cmd/bridge/static && mkdir -p cmd/bridge/static
 COPY --from=ui-build /ui-out/ cmd/bridge/static/
