@@ -67,6 +67,15 @@ type serverSwap struct {
 	// and verifying ECDSA recovery against the expected sender when
 	// a destination chain rejects with "invalid sender".
 	DestRawTx string `json:"dest_raw_tx,omitempty"`
+	// LastError is the most-recent transient driver error. The swap
+	// is still progressing (the drivers retry); the UI uses this to
+	// tell the user what's blocking — e.g. "insufficient funds for
+	// gas" before they sit through a 5-minute spinner.
+	LastError string `json:"last_error,omitempty"`
+	// RefundTxHash is the source-chain tx hash of the refund sweep
+	// once the refund driver lands it. Populated together with
+	// status=refunded.
+	RefundTxHash string `json:"refund_tx_hash,omitempty"`
 }
 
 // createSwapReq mirrors the POST body sent by the TS SDK
@@ -286,6 +295,8 @@ func swapToServerShape(sw *Swap) serverSwap {
 		SourceTxHash:       sw.SourceTxHash,
 		DestTxHash:         sw.DestTxHash,
 		DestRawTx:          sw.DestRawTx,
+		LastError:          sw.LastError,
+		RefundTxHash:       sw.RefundTxHash,
 	}
 }
 
