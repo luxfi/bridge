@@ -305,6 +305,86 @@ func (a *Assembler) PreSign(ctx context.Context, in SwapIntent) (*Unsigned, erro
 	return unsigned, nil
 }
 
+// PreSignNativeTransfer is the low-level sibling of PreSign for raw
+// native-token transfers expressed in wei rather than human-readable
+// amounts. Used by the refund driver to sweep a deposit address back
+// to its original sender, where the value is computed as
+// "balance − gas" — a quantity only meaningful in base units, never
+// floats.
+//
+// Behaviour vs PreSign:
+//   - Skips the Tokens / BridgeContract / ERC-20 routing entirely.
+//     Native transfer only: `to` is the recipient, `data` empty,
+//     `value` the supplied wei amount.
+//   - Looks up the network's PerNetwork config to source ChainID +
+//     gas defaults; falls back to 21000 gas / SuggestGasPrice when
+//     the per-network values are unset.
+//   - Returns an Unsigned ready for MPC signing → Finalize, same as
+//     PreSign — the refund flow reuses the same signer + assembler
+//     instances as the destination-release flow.
+func (a *Assembler) PreSignNativeTransfer(
+	ctx context.Context,
+	network, fromAddress, toAddress string,
+	valueWei *big.Int,
+) (*Unsigned, error) {
+	cfg, ok := a.Networks[network]
+	if !ok {
+		return nil, fmt.Errorf("txassembler: no config for network %s", network)
+	}
+	if cfg.ChainID == nil || cfg.ChainID.Sign() <= 0 {
+		return nil, fmt.Errorf("txassembler: ChainID required for %s", network)
+	}
+	if valueWei == nil || valueWei.Sign() < 0 {
+		return nil, fmt.Errorf("txassembler: valueWei must be non-negative; got %v", valueWei)
+	}
+	to, err := parseAddress(toAddress)
+	if err != nil {
+		return nil, fmt.Errorf("toAddress: %w", err)
+	}
+
+	nonce, err := a.Provider.PendingNonce(ctx, network, fromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("PendingNonce: %w", err)
+	}
+	var gasPrice *big.Int
+	if cfg.DefaultGasPriceWei != nil && cfg.DefaultGasPriceWei.Sign() > 0 {
+		gasPrice = new(big.Int).Set(cfg.DefaultGasPriceWei)
+	} else {
+		gasPrice, err = a.Provider.SuggestGasPrice(ctx, network)
+		if err != nil {
+			return nil, fmt.Errorf("SuggestGasPrice: %w", err)
+		}
+	}
+	gasLimit := cfg.DefaultGasLimit
+	if gasLimit == 0 {
+		gasLimit = 21000 // pure native transfer.
+	}
+
+	unsigned := &Unsigned{
+		Network:  network,
+		ChainID:  new(big.Int).Set(cfg.ChainID),
+		Nonce:    nonce,
+		GasPrice: gasPrice,
+		GasLimit: gasLimit,
+		To:       to,
+		Value:    new(big.Int).Set(valueWei),
+		Data:     nil,
+	}
+	encoded := rlpList(
+		encodeUint(new(big.Int).SetUint64(unsigned.Nonce)),
+		encodeUint(unsigned.GasPrice),
+		encodeUint(new(big.Int).SetUint64(unsigned.GasLimit)),
+		encodeBytes(unsigned.To),
+		encodeUint(unsigned.Value),
+		encodeBytes(unsigned.Data),
+		encodeUint(unsigned.ChainID),
+		encodeUint(nil),
+		encodeUint(nil),
+	)
+	unsigned.SigHash = keccak256(encoded)
+	return unsigned, nil
+}
+
 // Finalize takes the MPC signature (r, s, recoveryID) and produces
 // the wire-ready RLP-encoded signed transaction as 0x-prefixed hex.
 //
