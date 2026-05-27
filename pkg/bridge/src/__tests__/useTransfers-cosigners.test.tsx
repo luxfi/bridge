@@ -14,6 +14,17 @@ let accountState: { address: string | undefined } = { address: undefined }
 
 vi.mock('wagmi', () => ({
   useAccount: () => accountState,
+  // useTransfers also calls these for the EVM auto-deposit popup path
+  // (native send + ERC-20 transfer + chain switch).
+  useSendTransaction: () => ({
+    sendTransactionAsync: vi.fn(async () => '0xdeadbeef' as `0x${string}`),
+  }),
+  useSwitchChain: () => ({
+    switchChainAsync: vi.fn(async () => undefined),
+  }),
+  useWriteContract: () => ({
+    writeContractAsync: vi.fn(async () => '0xfeed' as `0x${string}`),
+  }),
 }))
 
 // Stub useNetworks → DEFAULT_CHAINS / DEFAULT_ASSETS so the fetch matcher
