@@ -255,6 +255,26 @@ export interface ServerSwap {
    * server's wire format.
    */
   deposit_address?: string
+  /** Source-chain tx hash, populated by the deposit watcher when found. */
+  source_tx_hash?: string
+  /** Destination-chain tx hash, populated by the broadcast driver on completion. */
+  dest_tx_hash?: string
+  /**
+   * Most-recent transient error from the bridge's signing or broadcast
+   * driver. Cleared on advance to a new phase / success. The bridge
+   * keeps retrying — surface this so the UI can tell the user WHY a
+   * swap is stalled (e.g. "Insufficient funds in release address")
+   * instead of letting them stare at a spinner until the 5-min UI
+   * timeout fires.
+   */
+  last_error?: string
+  /**
+   * Source-chain transaction hash of the auto-refund sweep, populated
+   * by the bridge's refund driver when a stuck-broadcasting swap is
+   * reverted (e.g. release address never got funded). Set together
+   * with status === 'refunded'.
+   */
+  refund_tx_hash?: string
   [k: string]: unknown
 }
 

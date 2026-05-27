@@ -42,7 +42,14 @@ const (
 	SwapStatusBroadcasting SwapStatus = "bridge_transfer_pending_broadcasting"
 	// Final settlement: funds arrived at destination address.
 	SwapStatusCompleted SwapStatus = "completed"
-	// Terminal failure (timeout, refund, etc.).
+	// Destination broadcast couldn't land (e.g. insufficient funds at the
+	// MPC release address) and a timeout elapsed; the refund driver is
+	// sweeping the source-chain deposit back to the original sender.
+	SwapStatusRefunding SwapStatus = "refunding"
+	// Refund tx confirmed on the source chain — sender got their funds
+	// back minus source-chain gas. Terminal state.
+	SwapStatusRefunded SwapStatus = "refunded"
+	// Terminal failure (refund attempted but unrecoverable, etc.).
 	SwapStatusFailed SwapStatus = "failed"
 	// User-cancelled before deposit.
 	SwapStatusCancelled SwapStatus = "cancelled"
@@ -101,6 +108,32 @@ type Swap struct {
 
 	// Destination-side broadcast — tx hash on the destination chain.
 	DestTxHash string `json:"dest_tx_hash,omitempty"`
+
+	// LastError holds the most-recent transient error from the signing
+	// or broadcast driver. The drivers keep retrying (the swap is
+	// recoverable — usually a flaky RPC or a release-address that
+	// needs funding), but exposing the error lets the SDK and UI tell
+	// the user WHY progress has stalled instead of letting them stare
+	// at a "broadcasting" spinner for the full 5-minute SPA timeout.
+	//
+	// Drivers MUST clear this field on success (set to ""). Treat it
+	// as transient state, not historical log — once the swap reaches
+	// `completed`, the field should be empty.
+	LastError string `json:"last_error,omitempty"`
+
+	// LastErrorAt is when LastError last transitioned from empty to set.
+	// The refund driver uses elapsed time since this stamp to decide
+	// when a stalled-at-broadcasting swap should be reverted (i.e. the
+	// destination chain has been rejecting "insufficient funds" for
+	// long enough that the user clearly isn't going to fund the
+	// release address). Zero value = no error active.
+	LastErrorAt time.Time `json:"last_error_at,omitempty"`
+
+	// RefundTxHash is the source-chain transaction hash of the refund
+	// sweep (from MPC deposit address back to Sender) once the refund
+	// driver successfully broadcasts. Populated together with
+	// Status=SwapStatusRefunded.
+	RefundTxHash string `json:"refund_tx_hash,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

@@ -275,13 +275,14 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 					"err", aerr,
 				)
 			}
-			// Roll back — the swap is still depositd-confirmed; the
+			// Roll back — the swap is still deposit-confirmed; the
 			// next tick will retry. (Often this means a transient
 			// RPC failure querying nonce / gas price.)
 			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
 				if s.Status == SwapStatusSigning {
 					s.Status = SwapStatusBridgeTransferPending
 				}
+				s.LastError = "Destination RPC unreachable while building tx — retrying"
 			})
 			return
 		}
@@ -310,6 +311,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			if s.Status == SwapStatusSigning {
 				s.Status = SwapStatusBridgeTransferPending
 			}
+			s.LastError = "MPC signing ceremony failed — retrying"
 		})
 		return
 	}
@@ -364,6 +366,11 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			s.DestRawTx = destRawTx
 		}
 		s.Status = SwapStatusBroadcasting
+		// Clear any prior transient error — we're past the signing
+		// stage. The broadcast driver will set a fresh LastError if
+		// the destination chain rejects the raw tx.
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
 	})
 	if err != nil {
 		if d.logger != nil {
