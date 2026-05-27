@@ -62,6 +62,11 @@ type serverSwap struct {
 	Signature          string `json:"signature,omitempty"`
 	SourceTxHash       string `json:"source_tx_hash,omitempty"`
 	DestTxHash         string `json:"dest_tx_hash,omitempty"`
+	// DestRawTx is the wire-ready signed destination tx. Surfaced
+	// for operator diagnostics — useful for decoding the tx fields
+	// and verifying ECDSA recovery against the expected sender when
+	// a destination chain rejects with "invalid sender".
+	DestRawTx string `json:"dest_raw_tx,omitempty"`
 }
 
 // createSwapReq mirrors the POST body sent by the TS SDK
@@ -280,6 +285,7 @@ func swapToServerShape(sw *Swap) serverSwap {
 		Signature:          sw.Signature,
 		SourceTxHash:       sw.SourceTxHash,
 		DestTxHash:         sw.DestTxHash,
+		DestRawTx:          sw.DestRawTx,
 	}
 }
 
@@ -384,6 +390,77 @@ func mpcErrToHTTP(c *zip.Ctx, err error, op string) error {
 		"error":  op + "_keygen_failed",
 		"detail": err.Error(),
 	})
+}
+
+// adminInjectRawTxReq is the body for POST /admin/swaps/:id/inject-raw-tx.
+type adminInjectRawTxReq struct {
+	DestRawTx string `json:"dest_raw_tx"`
+}
+
+// swapsInjectRawTxNative answers POST /admin/swaps/:id/inject-raw-tx
+// by writing a caller-supplied DestRawTx into the swap and advancing
+// status to broadcasting. Used when the bridge's signing driver
+// can't be re-run (e.g. mpcd refuses a duplicate sign request), but
+// the operator has already derived a valid signed raw tx out of
+// band — for example, by canonicalizing a previously-emitted high-s
+// signature to its low-s equivalent.
+//
+// Operator-only; do not expose externally.
+func (a *API) swapsInjectRawTxNative(c *zip.Ctx) error {
+	id := c.Param("id")
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing_id"})
+	}
+	var req adminInjectRawTxReq
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad_request", "detail": err.Error()})
+	}
+	if req.DestRawTx == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "dest_raw_tx required"})
+	}
+	sw, err := a.store.Patch(c.Context(), id, func(s *Swap) {
+		s.DestRawTx = req.DestRawTx
+		s.DestTxHash = ""
+		s.Status = SwapStatusBroadcasting
+	})
+	if err != nil {
+		if errors.Is(err, ErrSwapNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "not_found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, envelope{Data: swapToServerShape(sw)})
+}
+
+// swapsResetNative answers POST /admin/swaps/:id/reset by clearing
+// the swap's Signature, MPCSessionID, DestRawTx, and DestTxHash and
+// transitioning Status back to bridge_transfer_pending. The signing
+// driver will then re-mint the signature on the next tick. Useful
+// when the destination chain rejected a previously-built raw tx
+// (e.g. EIP-2 high-s canonicalization changed) and you want to
+// force a re-sign without recreating the swap from scratch.
+//
+// This is an operator-only endpoint — it has no auth and is intended
+// for local debugging. Do not expose externally.
+func (a *API) swapsResetNative(c *zip.Ctx) error {
+	id := c.Param("id")
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing_id"})
+	}
+	sw, err := a.store.Patch(c.Context(), id, func(s *Swap) {
+		s.Status = SwapStatusBridgeTransferPending
+		s.Signature = ""
+		s.MPCSessionID = ""
+		s.DestRawTx = ""
+		s.DestTxHash = ""
+	})
+	if err != nil {
+		if errors.Is(err, ErrSwapNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "not_found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, envelope{Data: swapToServerShape(sw)})
 }
 
 // swapsGetNative answers GET /v1/bridge/swaps/:id from the swap store.

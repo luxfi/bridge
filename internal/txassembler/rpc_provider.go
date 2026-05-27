@@ -218,6 +218,46 @@ func (p *RPCProvider) jsonRPC(ctx context.Context, url, method string, params an
 		return fmt.Errorf("marshal %s: %w", method, err)
 	}
 
+	// Retry transient upstream failures (502/503/504 + network errors).
+	// Several public RPC gateways (e.g. krakend in front of
+	// api.lux-test.network) return 502 intermittently under bursty
+	// load — without retry, every signing tick that catches a 502
+	// rolls the swap back and waits 5s+ for the next tick. With
+	// retry we usually succeed within the first PreSign call, so
+	// the swap advances on the first signing tick instead of the
+	// 10th. Exponential backoff: 200ms → 400ms → 800ms (max 3 tries).
+	const maxAttempts = 3
+	var lastErr error
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		if attempt > 0 {
+			delay := time.Duration(200*(1<<(attempt-1))) * time.Millisecond
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+		err := p.jsonRPCOnce(ctx, url, method, body, out)
+		if err == nil {
+			return nil
+		}
+		// Don't retry context cancel / deadline.
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		lastErr = err
+		// Only retry transient HTTP errors. JSON decode failures + 4xx
+		// are not transient — bailing fast surfaces the real problem.
+		if !isTransientRPCErr(err) {
+			return err
+		}
+	}
+	return lastErr
+}
+
+// jsonRPCOnce is one attempt of the JSON-RPC call. The wrapper above
+// retries it on transient failures.
+func (p *RPCProvider) jsonRPCOnce(ctx context.Context, url, method string, body []byte, out any) error {
 	callCtx, cancel := context.WithTimeout(ctx, p.timeout())
 	defer cancel()
 
@@ -247,6 +287,21 @@ func (p *RPCProvider) jsonRPC(ctx context.Context, url, method string, params an
 			method, err, truncateRPC(respBody, 200))
 	}
 	return nil
+}
+
+// isTransientRPCErr reports whether err looks like something a quick
+// retry might fix — HTTP 502/503/504 from a gateway, or a generic
+// network-layer transport error. 4xx and decode errors are NOT
+// transient: retrying them just wastes calls.
+func isTransientRPCErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "HTTP 502") ||
+		strings.Contains(msg, "HTTP 503") ||
+		strings.Contains(msg, "HTTP 504") ||
+		strings.Contains(msg, "transport:")
 }
 
 // =============================================================================
