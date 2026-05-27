@@ -9,8 +9,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 let accountState: { address: string | undefined } = { address: undefined }
 
+// Hoisted so the wagmi mock can reference them at module-init time; tests
+// reset and assert call history per-case via the wagmi-mocks export below.
+const wagmiMocks = vi.hoisted(() => ({
+  sendTransactionAsync: vi.fn(async (_args: unknown) => '0xdeadbeef' as `0x${string}`),
+  switchChainAsync: vi.fn(async (_args: unknown) => undefined),
+  writeContractAsync: vi.fn(async (_args: unknown) => '0xfeed' as `0x${string}`),
+}))
+
 vi.mock('wagmi', () => ({
   useAccount: () => accountState,
+  // Auto-deposit (Phase 3 wagmi-push) calls these on EVM swaps.
+  useSendTransaction: () => ({ sendTransactionAsync: wagmiMocks.sendTransactionAsync }),
+  useSwitchChain: () => ({ switchChainAsync: wagmiMocks.switchChainAsync }),
+  useWriteContract: () => ({ writeContractAsync: wagmiMocks.writeContractAsync }),
 }))
 
 // Stub useNetworks to return the bundled static defaults so the test's
@@ -174,6 +186,262 @@ describe('useTransfers', () => {
 
     expect(result.current.active?.phase).toBe('failed')
     expect(result.current.active?.error).toMatch(/Unsupported/)
+  })
+
+  // ───────────────────────────────────────────────────────────────────────
+  // EVM auto-deposit (Phase 3 wagmi-push)
+  // ───────────────────────────────────────────────────────────────────────
+  //
+  // After createSwap returns with a deposit_address, useTransfers tries
+  // to pop the user's wallet via wagmi when the source chain is
+  // EVM-native. ERC-20 and non-EVM sources MUST short-circuit so the
+  // hook stays compatible with chains that don't have a wagmi popup.
+
+  describe('EVM auto-deposit (wagmi-push)', () => {
+    beforeEach(() => {
+      wagmiMocks.sendTransactionAsync.mockClear()
+      wagmiMocks.switchChainAsync.mockClear()
+      wagmiMocks.writeContractAsync.mockClear()
+      accountState = { address: '0xabc1234567890abcdef1234567890abcdef12345' }
+    })
+
+    it('pops the wallet for EVM native source with deposit_address envelope', async () => {
+      global.fetch = fetchMatcher([
+        [
+          /\/api\/swaps$/,
+          {
+            data: {
+              id: 'swap_auto',
+              status: 'pending',
+              // Envelope: walletId###0x-address (the MPC-derived address).
+              deposit_address: 'mpc-wallet-1###0xfeedfacecafebeef0000000000000000deadbeef',
+            },
+          },
+        ],
+        [/\/api\/swaps\//, { data: { id: 'swap_auto', status: 'pending' } }],
+      ])
+
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'evm:1',
+          toChainId: 'lux:96369',
+          fromAssetId: 'evm:1:ETH',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 0.5,
+          outAmount: 0.49,
+        })
+      })
+
+      expect(wagmiMocks.switchChainAsync).toHaveBeenCalledWith({ chainId: 1 })
+      expect(wagmiMocks.sendTransactionAsync).toHaveBeenCalledTimes(1)
+      const args = wagmiMocks.sendTransactionAsync.mock.calls[0]?.[0] as {
+        to: string
+        value: bigint
+        chainId: number
+      }
+      expect(args.to.toLowerCase()).toBe('0xfeedfacecafebeef0000000000000000deadbeef')
+      expect(args.value).toBe(500000000000000000n) // 0.5 ETH in wei
+      expect(args.chainId).toBe(1)
+    })
+
+    it('skips the popup for non-EVM source chains (BTC)', async () => {
+      global.fetch = fetchMatcher([
+        [
+          /\/api\/swaps$/,
+          {
+            data: {
+              id: 'swap_btc',
+              status: 'pending',
+              deposit_address: 'mpc-wallet-2###tb1qexampleexampleexampleexample',
+            },
+          },
+        ],
+        [/\/api\/swaps\//, { data: { id: 'swap_btc', status: 'pending' } }],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'btc:mainnet',
+          toChainId: 'lux:96369',
+          fromAssetId: 'btc:mainnet:BTC',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 0.001,
+          outAmount: 0.0009,
+        })
+      })
+      expect(wagmiMocks.sendTransactionAsync).not.toHaveBeenCalled()
+    })
+
+    it('marks the transfer failed with "Wallet rejected" when MetaMask is rejected', async () => {
+      wagmiMocks.sendTransactionAsync.mockRejectedValueOnce(
+        new Error('User rejected the request'),
+      )
+      global.fetch = fetchMatcher([
+        [
+          /\/api\/swaps$/,
+          {
+            data: {
+              id: 'swap_reject',
+              status: 'pending',
+              deposit_address: 'mpc-wallet-3###0xfeedfacecafebeef0000000000000000deadbeef',
+            },
+          },
+        ],
+        [/\/api\/swaps\//, { data: { id: 'swap_reject', status: 'pending' } }],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'evm:1',
+          toChainId: 'lux:96369',
+          fromAssetId: 'evm:1:ETH',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 0.1,
+          outAmount: 0.09,
+        })
+      })
+      expect(result.current.active?.phase).toBe('failed')
+      expect(result.current.active?.error).toBe('Wallet rejected')
+      // Address still surfaced for the user's own records / manual retry.
+      expect(result.current.active?.depositAddress).toContain('0xfeedface')
+    })
+
+    it('routes ERC-20 sources to writeContract instead of sendTransaction', async () => {
+      // USDC on Ethereum mainnet — a known DEFAULT_ASSETS entry with
+      // contractAddress + decimals=6. The helper should call
+      // writeContractAsync with transfer(deposit, parseUnits(amount, 6)).
+      global.fetch = fetchMatcher([
+        [
+          /\/api\/swaps$/,
+          {
+            data: {
+              id: 'swap_erc20',
+              status: 'pending',
+              deposit_address: 'mpc-wallet-4###0xfeedfacecafebeef0000000000000000deadbeef',
+            },
+          },
+        ],
+        [/\/api\/swaps\//, { data: { id: 'swap_erc20', status: 'pending' } }],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'evm:1',
+          toChainId: 'lux:96369',
+          fromAssetId: 'evm:1:USDC',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 100,
+          outAmount: 99.5,
+        })
+      })
+
+      // Native sendTransaction is NOT called for ERC-20 sources.
+      expect(wagmiMocks.sendTransactionAsync).not.toHaveBeenCalled()
+      // writeContract IS called, with the transfer() shape.
+      expect(wagmiMocks.writeContractAsync).toHaveBeenCalledTimes(1)
+      const args = wagmiMocks.writeContractAsync.mock.calls[0]?.[0] as {
+        address: string
+        functionName: string
+        args: readonly [string, bigint]
+        chainId: number
+      }
+      expect(args.functionName).toBe('transfer')
+      expect(args.address.toLowerCase()).toMatch(/^0x[0-9a-f]{40}$/)
+      expect(args.args[0].toLowerCase()).toBe('0xfeedfacecafebeef0000000000000000deadbeef')
+      expect(args.args[1]).toBe(100_000_000n) // 100 USDC × 10^6
+      expect(args.chainId).toBe(1)
+    })
+
+    it('marks failed when the user rejects the ERC-20 popup', async () => {
+      wagmiMocks.writeContractAsync.mockRejectedValueOnce(
+        // EIP-1193 4001-style error from MetaMask
+        Object.assign(new Error('User denied transaction signature'), {
+          name: 'UserRejectedRequestError',
+        }),
+      )
+      global.fetch = fetchMatcher([
+        [
+          /\/api\/swaps$/,
+          {
+            data: {
+              id: 'swap_erc20_rej',
+              status: 'pending',
+              deposit_address: 'mpc-wallet-5###0xfeedfacecafebeef0000000000000000deadbeef',
+            },
+          },
+        ],
+        [/\/api\/swaps\//, { data: { id: 'swap_erc20_rej', status: 'pending' } }],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'evm:1',
+          toChainId: 'lux:96369',
+          fromAssetId: 'evm:1:USDC',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 50,
+          outAmount: 49.5,
+        })
+      })
+      expect(result.current.active?.phase).toBe('failed')
+      expect(result.current.active?.error).toBe('Wallet rejected')
+    })
+
+    it('marks failed when the user rejects the chain switch', async () => {
+      wagmiMocks.switchChainAsync.mockRejectedValueOnce(
+        new Error('User rejected the request'),
+      )
+      global.fetch = fetchMatcher([
+        [
+          /\/api\/swaps$/,
+          {
+            data: {
+              id: 'swap_chain_rej',
+              status: 'pending',
+              deposit_address: 'mpc-wallet-6###0xfeedfacecafebeef0000000000000000deadbeef',
+            },
+          },
+        ],
+        [/\/api\/swaps\//, { data: { id: 'swap_chain_rej', status: 'pending' } }],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'evm:1',
+          toChainId: 'lux:96369',
+          fromAssetId: 'evm:1:ETH',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 0.1,
+          outAmount: 0.09,
+        })
+      })
+      expect(result.current.active?.phase).toBe('failed')
+      expect(result.current.active?.error).toBe('Wallet rejected')
+      // No tx attempted after a refused chain switch.
+      expect(wagmiMocks.sendTransactionAsync).not.toHaveBeenCalled()
+      expect(wagmiMocks.writeContractAsync).not.toHaveBeenCalled()
+    })
+
+    it('skips the popup when no deposit_address comes back', async () => {
+      global.fetch = fetchMatcher([
+        // No deposit_address field at all — server didn't issue one.
+        [/\/api\/swaps$/, { data: { id: 'swap_nodep', status: 'pending' } }],
+        [/\/api\/swaps\//, { data: { id: 'swap_nodep', status: 'pending' } }],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'evm:1',
+          toChainId: 'lux:96369',
+          fromAssetId: 'evm:1:ETH',
+          toAssetId: 'lux:96369:LUX',
+          inAmount: 0.5,
+          outAmount: 0.49,
+        })
+      })
+      expect(wagmiMocks.sendTransactionAsync).not.toHaveBeenCalled()
+    })
   })
 
   it('clear() removes all transfers and aborts polling', async () => {

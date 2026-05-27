@@ -105,6 +105,15 @@ func (a *API) Register(app *zip.App) {
 	app.Get("/v1/bridge/limits", a.limits)
 	app.Get("/v1/bridge/profile", a.profileGET)
 
+	// /api/* read-side aliases — the embedded SPA's useNetworks /
+	// useAssets / useExchanges all hit /api/<x>, mirroring the
+	// legacy app/server route layout. The /v1/bridge/<x> routes
+	// above remain for external consumers (ingress + docs).
+	app.Get("/api/networks", a.networks)
+	app.Get("/api/tokens", a.tokens)
+	app.Get("/api/exchanges", a.exchanges)
+	app.Get("/api/limits", a.limits)
+
 	// JSON-RPC surface for bridge_getProfile (and future bridge_* methods).
 	app.Post("/v1/bridge/rpc", a.rpc)
 
@@ -138,6 +147,15 @@ func (a *API) Register(app *zip.App) {
 		app.Post("/api/swaps", a.swapsCreateNative)
 		app.Get("/api/swaps", a.swapsListNative)
 		app.Get("/api/swaps/:id", a.swapsGetNative)
+
+		// Admin: force a swap to re-sign (used to recover after a
+		// destination-chain reject of the previously-built raw tx).
+		app.Post("/admin/swaps/:id/reset", a.swapsResetNative)
+		// Admin: inject a caller-supplied DestRawTx so the broadcast
+		// driver can push it on the next tick. Used when mpcd dedupes
+		// a re-sign request but the operator already has a corrected
+		// raw tx (e.g. low-s canonicalization of a prior signature).
+		app.Post("/admin/swaps/:id/inject-raw-tx", a.swapsInjectRawTxNative)
 	} else {
 		app.All("/v1/bridge/quote", proxied)
 		app.All("/v1/bridge/swaps", proxied)
@@ -169,8 +187,118 @@ func (a *API) Register(app *zip.App) {
 	app.All("/v1/bridge/explorer/*", proxied)
 }
 
+// apiNetwork is the on-wire response shape — Network plus a nested
+// currencies array. The SPA's network-mapper.ts expects this exact
+// snake_case shape (display_name, internal_name, is_testnet,
+// transaction_explorer_template, currencies[…]). Building it by
+// composition keeps the YAML config flat (one Token entry per
+// (asset, network) pair) while the API still emits the nested
+// per-chain envelope the SPA was written against.
+type apiNetwork struct {
+	Network
+	Currencies []apiCurrency `json:"currencies"`
+}
+
+// apiCurrency is Token in the wire shape, with the deposit/withdrawal
+// flags forced non-null (Token's *bool fields default-on at marshal
+// time — see normalizeCurrency below).
+type apiCurrency struct {
+	Asset               string `json:"asset"`
+	Name                string `json:"name"`
+	Logo                string `json:"logo,omitempty"`
+	Decimals            int    `json:"decimals"`
+	ContractAddress     string `json:"contract_address,omitempty"`
+	Status              string `json:"status"`
+	IsDepositEnabled    bool   `json:"is_deposit_enabled"`
+	IsWithdrawalEnabled bool   `json:"is_withdrawal_enabled"`
+	IsRefuelEnabled     bool   `json:"is_refuel_enabled"`
+}
+
+// networks answers GET /api/networks (and the /v1/bridge/networks
+// alias) with the {data: [...]} envelope the SPA's useNetworks hook
+// consumes.
+//
+// Query params:
+//
+//	?version=<env>   When set to "testnet" / "devnet", only testnet
+//	                 entries are returned; "mainnet" (or empty) returns
+//	                 mainnet entries. The SPA passes cfg.env here so a
+//	                 BRIDGE_ENV=testnet build sees only testnet rows.
+//
+// The handler joins each Network to its tokens (matched by
+// Token.Network == Network.InternalName) and defaults Status to
+// "active" and the deposit/withdrawal flags to true when YAML omits
+// them — without these defaults the SPA's transformNetworks() filter
+// (status !== "active" || (!is_deposit_enabled && !is_withdrawal_enabled))
+// silently drops every row.
 func (a *API) networks(c *zip.Ctx) error {
-	return c.JSON(http.StatusOK, a.cfg.Networks)
+	version := strings.ToLower(c.Query("version"))
+	wantTestnet := version == "testnet" || version == "devnet"
+	// Empty / unknown / "mainnet" → mainnet rows. We intentionally do
+	// NOT return both — mixing mainnet + testnet in one response
+	// confuses the SPA's chain picker.
+	filterByVersion := version != ""
+
+	out := make([]apiNetwork, 0, len(a.cfg.Networks))
+	for _, net := range a.cfg.Networks {
+		if filterByVersion && net.IsTestnet != wantTestnet {
+			continue
+		}
+		// Default Status="active" so YAML configs that omit it still
+		// surface in the UI.
+		if net.Status == "" {
+			net.Status = "active"
+		}
+		// Initialize as empty slice (not nil) so JSON marshals as
+		// `[]` rather than `null` when a network has no tokens —
+		// keeps the wire shape stable for any consumer that iterates
+		// currencies without a null guard.
+		entry := apiNetwork{Network: net, Currencies: []apiCurrency{}}
+		for _, tok := range a.cfg.Tokens {
+			if tok.Network != net.InternalName {
+				continue
+			}
+			entry.Currencies = append(entry.Currencies, normalizeCurrency(tok))
+		}
+		out = append(out, entry)
+	}
+	return c.JSON(http.StatusOK, envelope{Data: out})
+}
+
+// normalizeCurrency applies the default-on policy for the deposit /
+// withdrawal / refuel flags. A YAML Token that doesn't set
+// isDepositEnabled is treated as deposit-enabled (Token zero value
+// false would make the SPA drop the asset). isRefuelEnabled defaults
+// off — refuel is opt-in (operator must explicitly enable gas
+// top-ups).
+func normalizeCurrency(t Token) apiCurrency {
+	status := t.Status
+	if status == "" {
+		status = "active"
+	}
+	deposit := true
+	if t.IsDepositEnabled != nil {
+		deposit = *t.IsDepositEnabled
+	}
+	withdrawal := true
+	if t.IsWithdrawalEnabled != nil {
+		withdrawal = *t.IsWithdrawalEnabled
+	}
+	refuel := false
+	if t.IsRefuelEnabled != nil {
+		refuel = *t.IsRefuelEnabled
+	}
+	return apiCurrency{
+		Asset:               t.Asset,
+		Name:                t.Name,
+		Logo:                t.Logo,
+		Decimals:            t.Decimals,
+		ContractAddress:     t.Contract,
+		Status:              status,
+		IsDepositEnabled:    deposit,
+		IsWithdrawalEnabled: withdrawal,
+		IsRefuelEnabled:     refuel,
+	}
 }
 
 func (a *API) tokens(c *zip.Ctx) error {

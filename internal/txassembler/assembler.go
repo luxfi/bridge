@@ -341,11 +341,31 @@ func (a *Assembler) Finalize(unsigned *Unsigned, r, s *big.Int, recoveryID byte)
 	return "0x" + hex.EncodeToString(encoded), nil
 }
 
+// secp256k1N is the order of the secp256k1 generator point. Used to
+// canonicalize high-s signatures to their low-s equivalent (EIP-2 +
+// every modern Ethereum-style chain rejects high-s signatures as
+// "invalid sender" because they're malleable).
+var secp256k1N, _ = new(big.Int).SetString(
+	"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
+
+// secp256k1HalfN is n/2 — the threshold above which s is considered
+// "high" and must be flipped.
+var secp256k1HalfN = new(big.Int).Rsh(secp256k1N, 1)
+
 // ParseRSV splits a 65-byte concatenated signature (r || s || v) into
 // (r, s, recoveryID). Accepts hex-encoded input with or without 0x
 // prefix. The `v` byte is interpreted as the recovery id directly —
 // callers passing an EIP-155-adjusted v (already chainID-mangled)
 // should subtract chainID*2 + 35 first.
+//
+// Low-s canonicalization: if s > n/2, ParseRSV replaces it with
+// n - s and flips recoveryID (0 ↔ 1). The result is the same
+// signature in canonical low-s form, which is what every
+// post-EIP-2 chain (geth, coreth, etc.) requires. Without this,
+// MPC implementations that don't pre-canonicalize (CGGMP21 here
+// is one) produce signatures that recover to the correct address
+// but get rejected at the RPC layer as "invalid sender" — exactly
+// the symptom debugged on Lux Testnet.
 func ParseRSV(sigHex string) (r, s *big.Int, recoveryID byte, err error) {
 	sigHex = strings.TrimPrefix(strings.TrimPrefix(sigHex, "0x"), "0X")
 	if len(sigHex) != 130 {
@@ -366,6 +386,11 @@ func ParseRSV(sigHex string) (r, s *big.Int, recoveryID byte, err error) {
 	}
 	if recoveryID > 1 {
 		return nil, nil, 0, fmt.Errorf("txassembler: unexpected recovery id %d (want 0/1 or 27/28)", recoveryID)
+	}
+	// Canonicalize: convert high-s → low-s and flip recID.
+	if s.Cmp(secp256k1HalfN) > 0 {
+		s = new(big.Int).Sub(secp256k1N, s)
+		recoveryID ^= 1
 	}
 	return r, s, recoveryID, nil
 }
