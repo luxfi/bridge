@@ -12,11 +12,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/luxfi/bridge/internal/tokens"
 )
 
 // =============================================================================
@@ -154,6 +158,240 @@ func TestCheck_EVM_LargeBalancePrecision(t *testing.T) {
 		t.Fatal("expected confirmed: 10 ETH >= 9.99")
 	}
 }
+
+// =============================================================================
+// EVM — ERC-20 (eth_call balanceOf)
+// =============================================================================
+
+// erc20BalanceServer returns the configured balance from any
+// eth_call. It records the call params so we can verify the data
+// payload was assembled correctly.
+type erc20BalanceServer struct {
+	server    *httptest.Server
+	balance   string // 0x-prefixed hex of the 32-byte balance
+	lastData  string
+	lastTo    string
+	calls     int
+}
+
+func newERC20BalanceServer(t *testing.T, balance string) *erc20BalanceServer {
+	t.Helper()
+	s := &erc20BalanceServer{balance: balance}
+	s.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.calls++
+		body, _ := io.ReadAll(r.Body)
+		var req struct {
+			Method string `json:"method"`
+			Params []any  `json:"params"`
+		}
+		_ = json.Unmarshal(body, &req)
+		if req.Method != "eth_call" {
+			t.Errorf("expected eth_call, got %q", req.Method)
+		}
+		if len(req.Params) > 0 {
+			if obj, ok := req.Params[0].(map[string]any); ok {
+				s.lastTo, _ = obj["to"].(string)
+				s.lastData, _ = obj["data"].(string)
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": 1, "result": s.balance,
+		})
+	}))
+	t.Cleanup(s.server.Close)
+	return s
+}
+
+func TestCheck_EVM_ERC20_Confirmed(t *testing.T) {
+	// 100 USDC = 100 * 10^6 = 100,000,000 base units = 0x5F5E100.
+	// 32-byte word: pad to 64 hex chars: 000…000005F5E100
+	balance := "0x" + strings.Repeat("0", 56) + "05f5e100"
+	srv := newERC20BalanceServer(t, balance)
+
+	reg := tokens.NewRegistry()
+	usdcContract := "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
+	_ = reg.Register(tokens.Info{
+		Network:  "ETHEREUM_SEPOLIA",
+		Asset:    "USDC",
+		Contract: usdcContract,
+		Decimals: 6,
+	})
+
+	c := &Client{
+		Timeout:         time.Second,
+		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.server.URL},
+		Tokens:          reg,
+	}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "ETHEREUM_SEPOLIA",
+		Address:             "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Asset:               "USDC",
+		RequiredAmount:      50,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatal("expected confirmed (100 USDC ≥ 50 required)")
+	}
+
+	// Verify the wire: `to` is the USDC contract, NOT the holder.
+	if !strings.EqualFold(srv.lastTo, usdcContract) {
+		t.Errorf("to = %q, want USDC contract %q", srv.lastTo, usdcContract)
+	}
+	// Data must start with the balanceOf selector (0x70a08231).
+	if !strings.HasPrefix(strings.ToLower(srv.lastData), "0x70a08231") {
+		t.Errorf("data should start with balanceOf selector 0x70a08231, got %s", srv.lastData)
+	}
+	// Padded holder address: 0x70a08231 + 12 zero bytes + holder = 68 chars hex + 2 prefix.
+	if len(srv.lastData) != 2+(4+32)*2 {
+		t.Errorf("data length wrong: %d", len(srv.lastData))
+	}
+	// Last 40 hex chars should be the holder address (lowercase).
+	wantHolder := strings.ToLower("a28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473")
+	if !strings.HasSuffix(strings.ToLower(srv.lastData), wantHolder) {
+		t.Errorf("holder mismatch in calldata: got %s, want suffix %s", srv.lastData, wantHolder)
+	}
+}
+
+func TestCheck_EVM_ERC20_Insufficient(t *testing.T) {
+	// 25 USDC = 25 * 10^6 = 25,000,000 base units
+	balance := "0x" + strings.Repeat("0", 56) + "017d7840"
+	srv := newERC20BalanceServer(t, balance)
+
+	reg := tokens.NewRegistry()
+	_ = reg.Register(tokens.Info{Network: "ETHEREUM_SEPOLIA", Asset: "USDC", Contract: "0x1c7D", Decimals: 6})
+
+	c := &Client{
+		Timeout:         time.Second,
+		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.server.URL},
+		Tokens:          reg,
+	}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "ETHEREUM_SEPOLIA",
+		Address:             "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Asset:               "USDC",
+		RequiredAmount:      100,
+	})
+	if err != nil || ok {
+		t.Fatalf("expected (false, nil) for 25 USDC < 100 required; got (%v, %v)", ok, err)
+	}
+}
+
+func TestCheck_EVM_ERC20_RPCError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": 1,
+			"error": map[string]any{"code": -32000, "message": "execution reverted"},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	reg := tokens.NewRegistry()
+	_ = reg.Register(tokens.Info{Network: "ETHEREUM_SEPOLIA", Asset: "USDC", Contract: "0x1c7D", Decimals: 6})
+	c := &Client{
+		Timeout:         time.Second,
+		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.URL},
+		Tokens:          reg,
+	}
+	_, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "ETHEREUM_SEPOLIA",
+		Address:             "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Asset:               "USDC",
+		RequiredAmount:      1,
+	})
+	if err == nil || !strings.Contains(err.Error(), "execution reverted") {
+		t.Errorf("expected upstream error to surface, got %v", err)
+	}
+}
+
+func TestCheck_EVM_NativeWithRegistry_UsesAssetDecimals(t *testing.T) {
+	// Native ETH with the registry attached: should STILL use
+	// eth_getBalance (Contract is empty in the registry), and the
+	// asset's Decimals=18 means standard wei → ether scaling.
+	srv := ethBalanceServer(t, "0xDE0B6B3A7640000") // 1 ETH
+	reg := tokens.NewRegistry()
+	_ = reg.Register(tokens.Info{Network: "ETHEREUM_SEPOLIA", Asset: "ETH", Decimals: 18})
+	c := &Client{
+		Timeout:         time.Second,
+		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.URL},
+		Tokens:          reg,
+	}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "ETHEREUM_SEPOLIA",
+		Address:             "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Asset:               "ETH",
+		RequiredAmount:      0.5,
+	})
+	if err != nil || !ok {
+		t.Fatalf("expected confirmed; got (%v, %v)", ok, err)
+	}
+}
+
+func TestCheck_EVM_UnknownAsset_FallsBackToNative(t *testing.T) {
+	// Registry has no entry for "WEIRDO" → falls back to native path
+	// with 18 decimals (backward compat).
+	srv := ethBalanceServer(t, "0xDE0B6B3A7640000") // 1 ETH
+	reg := tokens.NewRegistry() // empty
+	c := &Client{
+		Timeout:         time.Second,
+		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.URL},
+		Tokens:          reg,
+	}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "ETHEREUM_SEPOLIA",
+		Address:             "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Asset:               "WEIRDO", // not in registry
+		RequiredAmount:      0.5,
+	})
+	if err != nil || !ok {
+		t.Fatalf("unknown asset should fall back to native path; got (%v, %v)", ok, err)
+	}
+}
+
+func TestCheck_EVM_NoRegistry_BackwardCompat(t *testing.T) {
+	// Client.Tokens == nil → all EVM checks use the legacy native path.
+	// This proves callers who haven't migrated still get the old behavior.
+	srv := ethBalanceServer(t, "0xDE0B6B3A7640000")
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "ETHEREUM_SEPOLIA",
+		Asset:               "USDC", // would be ERC-20 with registry
+		RequiredAmount:      0.5,
+	})
+	if err != nil || !ok {
+		t.Fatalf("no-registry path should use native; got (%v, %v)", ok, err)
+	}
+}
+
+func TestCompareBalance(t *testing.T) {
+	cases := []struct {
+		name     string
+		bal      int64
+		decimals int
+		req      float64
+		want     bool
+	}{
+		{"USDC 100 ≥ 50", 100_000_000, 6, 50, true},
+		{"USDC 25 < 50", 25_000_000, 6, 50, false},
+		{"1 ETH ≥ 0.5", 1_000_000_000_000_000_000, 18, 0.5, true},
+		{"1 ETH ≥ 1.0", 1_000_000_000_000_000_000, 18, 1.0, true},
+		{"0.1 ETH < 0.5", 100_000_000_000_000_000, 18, 0.5, false},
+		{"required 0", 1, 18, 0, true},
+		{"zero balance", 0, 18, 0.001, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := compareBalance(intBig(tc.bal), tc.decimals, tc.req)
+			if got != tc.want {
+				t.Errorf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func intBig(n int64) *big.Int { return big.NewInt(n) }
 
 // =============================================================================
 // Bitcoin
