@@ -16,10 +16,17 @@
 // `cfg.apiHost` and `cfg.mpc` are passed in by the SDK consumer.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { erc20Abi, parseEther, parseUnits } from 'viem'
+import {
+  useAccount,
+  useSendTransaction,
+  useSwitchChain,
+  useWriteContract,
+} from 'wagmi'
 
 import { getConfig } from '../../config'
-import { findChain } from '../lib/chains'
+import { type Asset } from '../lib/assets'
+import { type Chain, findChain } from '../lib/chains'
 import {
   BridgeApiError,
   createSwap,
@@ -129,6 +136,18 @@ function nextLocalId(): string {
 export function useTransfers(): TransferState {
   const cfg = getConfig()
   const account = useAccount()
+  // EVM auto-deposit hooks. When the source chain is EVM and the user
+  // has a wagmi-connected wallet, we'd rather pop MetaMask after
+  // createSwap returns than make the user copy the deposit address by
+  // hand. switchChainAsync resolves "wrong network" mismatches first;
+  // sendTransactionAsync handles native transfers (ETH / LUX / BNB);
+  // writeContractAsync handles ERC-20 transfers (USDC / USDT / DAI).
+  // All three throw cleanly on user reject — tryAutoDeposit catches
+  // and returns {ok: false} so the caller can mark the transfer
+  // 'failed' instead of leaving it spinning.
+  const { sendTransactionAsync } = useSendTransaction()
+  const { switchChainAsync } = useSwitchChain()
+  const { writeContractAsync } = useWriteContract()
   const { chains, assets } = useNetworks()
 
   const [transfers, setTransfers] = useState<Transfer[]>([])
@@ -414,7 +433,29 @@ export function useTransfers(): TransferState {
             ? { depositAddress: swap.deposit_address }
             : {}),
         })
-        void subscribe(id, swap.id)
+        // EVM auto-deposit. Native + ERC-20 paths both pop the wallet.
+        // Non-EVM sources return null (no wagmi path), keeping the
+        // manual-deposit fallback. On user reject the helper returns
+        // {ok: false, error} so we mark the transfer 'failed' rather
+        // than letting it spin until the SPA-side 5min timer expires.
+        const dep = await tryAutoDeposit({
+          swap,
+          fromChain,
+          fromAsset,
+          inAmount: input.inAmount,
+          switchChainAsync,
+          sendTransactionAsync,
+          writeContractAsync,
+        })
+        if (dep && !dep.ok) {
+          // Local 'failed' is the source of truth here — server-side
+          // the swap is still pending (no deposit detected yet). Don't
+          // subscribe, otherwise the poll would overwrite phase back to
+          // 'pending' on the next tick.
+          patch(id, { phase: 'failed', error: dep.error })
+        } else {
+          void subscribe(id, swap.id)
+        }
       } catch (err) {
         if (controller.signal.aborted) return x
         const msg = err instanceof Error ? err.message : 'Failed to submit transfer'
@@ -423,7 +464,21 @@ export function useTransfers(): TransferState {
 
       return x
     },
-    [account.address, cfg.apiHost, cfg.brand?.name, cfg.env, cfg.mpc?.utila, cfg.mpc?.fireblocks, chains, assets, patch, subscribe],
+    [
+      account.address,
+      cfg.apiHost,
+      cfg.brand?.name,
+      cfg.env,
+      cfg.mpc?.utila,
+      cfg.mpc?.fireblocks,
+      chains,
+      assets,
+      patch,
+      subscribe,
+      switchChainAsync,
+      sendTransactionAsync,
+      writeContractAsync,
+    ],
   )
 
   const clear = useCallback(() => {
@@ -443,6 +498,152 @@ export function useTransfers(): TransferState {
     submit: initiate,
     clear,
   }
+}
+
+/**
+ * Parse the deposit_address envelope returned by createSwap. Format is
+ * `walletId###<chain-native-address>` for MPC-derived addresses; we
+ * only care about the trailing chain address. Returns null when the
+ * envelope is missing or malformed.
+ */
+function extractDepositAddress(raw: unknown): string | null {
+  if (typeof raw !== 'string' || raw.length === 0) return null
+  const i = raw.lastIndexOf('###')
+  const addr = i >= 0 ? raw.slice(i + 3) : raw
+  return addr || null
+}
+
+/**
+ * Result of tryAutoDeposit.
+ *
+ *   null            — didn't attempt (non-EVM source, missing fields,
+ *                     bad envelope). The caller leaves the transfer
+ *                     in 'pending' so the watcher can still pick up a
+ *                     manual deposit if the user sends from a separate
+ *                     wallet.
+ *   {ok: true}      — wallet confirmed; tx is on-chain or in mempool.
+ *                     The deposit watcher will advance state shortly.
+ *   {ok: false, …}  — user rejected, wallet errored, or chain switch
+ *                     was refused. The caller marks the transfer
+ *                     'failed' so the UI doesn't spin until the SPA's
+ *                     5-min deadline elapses.
+ */
+type AutoDepositResult =
+  | null
+  | { ok: true; hash: string }
+  | { ok: false; error: string }
+
+/**
+ * EVM auto-deposit. Pops the user's wallet to either:
+ *   - sendTransaction (native: ETH / LUX / BNB / etc.), or
+ *   - writeContract (ERC-20: USDC / USDT / DAI / etc.)
+ *
+ * so the user can confirm the deposit with one click instead of
+ * copy-pasting the address into a separate wallet.
+ *
+ * Routing:
+ *   - fromAsset.contractAddress set & matches the native symbol mapping
+ *     for the chain → native send (some registries label a chain's
+ *     native asset with the wrapped contract; we treat that as native).
+ *   - fromAsset.contractAddress set → ERC-20 transfer().
+ *   - else → native send.
+ *
+ * Non-EVM sources (BTC / SOL / TON / XRP) return null — the manual
+ * deposit-address path in TransferStatus handles those.
+ */
+async function tryAutoDeposit(args: {
+  swap: ServerSwap
+  fromChain: Chain
+  fromAsset: Asset
+  inAmount: number
+  switchChainAsync: (args: { chainId: number }) => Promise<unknown>
+  sendTransactionAsync: (args: {
+    to: `0x${string}`
+    value: bigint
+    chainId?: number
+  }) => Promise<`0x${string}`>
+  writeContractAsync: (args: {
+    address: `0x${string}`
+    abi: typeof erc20Abi
+    functionName: 'transfer'
+    args: readonly [`0x${string}`, bigint]
+    chainId?: number
+  }) => Promise<`0x${string}`>
+}): Promise<AutoDepositResult> {
+  const {
+    swap, fromChain, fromAsset, inAmount,
+    switchChainAsync, sendTransactionAsync, writeContractAsync,
+  } = args
+
+  if (fromChain.family !== 'evm') return null
+  if (!fromChain.evmChainId) return null
+
+  const onchainAddr = extractDepositAddress(swap.deposit_address)
+  if (!onchainAddr || !/^0x[0-9a-fA-F]{40}$/.test(onchainAddr)) return null
+
+  const isERC20 = Boolean(fromAsset.contractAddress)
+
+  let amountUnits: bigint
+  try {
+    amountUnits = isERC20
+      ? parseUnits(String(inAmount), fromAsset.decimals ?? 18)
+      : parseEther(String(inAmount))
+  } catch {
+    return null
+  }
+
+  try {
+    await switchChainAsync({ chainId: fromChain.evmChainId })
+  } catch (err) {
+    return { ok: false, error: humanizeWalletError(err, 'Network switch rejected') }
+  }
+
+  try {
+    let hash: `0x${string}`
+    if (isERC20 && fromAsset.contractAddress) {
+      hash = await writeContractAsync({
+        address: fromAsset.contractAddress as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [onchainAddr as `0x${string}`, amountUnits],
+        chainId: fromChain.evmChainId,
+      })
+    } else {
+      hash = await sendTransactionAsync({
+        to: onchainAddr as `0x${string}`,
+        value: amountUnits,
+        chainId: fromChain.evmChainId,
+      })
+    }
+    return { ok: true, hash }
+  } catch (err) {
+    return { ok: false, error: humanizeWalletError(err, 'Wallet rejected') }
+  }
+}
+
+/**
+ * Convert wagmi / viem error shapes into a short user-readable string.
+ * Wallet libraries commonly throw with messages like
+ *   "User rejected the request." (rabby / metamask),
+ *   "User denied transaction signature" (older metamask),
+ *   "User cancelled" (ledger live connector),
+ * plus EIP-1193 4001 (UserRejectedRequestError) — collapse all of
+ * them to a single "Wallet rejected" surface and leave the original
+ * message attached for diagnostics.
+ */
+function humanizeWalletError(err: unknown, fallback: string): string {
+  const msg = err instanceof Error ? err.message : String(err)
+  if (
+    /reject|deny|cancel|4001/i.test(msg) ||
+    (err as { name?: string })?.name === 'UserRejectedRequestError'
+  ) {
+    return 'Wallet rejected'
+  }
+  return `${fallback}: ${truncate(msg, 120)}`
+}
+
+function truncate(s: string, n: number): string {
+  return s.length <= n ? s : s.slice(0, n) + '…'
 }
 
 function sleep(ms: number): Promise<void> {
