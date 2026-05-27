@@ -253,6 +253,11 @@ func (w *DepositWatcher) checkOne(ctx context.Context, sw *Swap) {
 		}
 		s.Status = SwapStatusBridgeTransferPending
 		s.DepositedAmount = sw.Amount
+		// Clear any error left from a previous (admin-reset) attempt
+		// so the UI doesn't display a stale "Insufficient funds" while
+		// the new signing leg is in progress.
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
 	})
 	if err != nil {
 		if w.logger != nil {
