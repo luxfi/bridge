@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Tamagui (@hanzo/gui) is a React-Native-first lib; on the web it expects
@@ -9,46 +9,55 @@ import react from '@vitejs/plugin-react'
 // + TAMAGUI_TARGET define, or Rolldown will fail to resolve
 // `react-native` from Tamagui's runtime. See pkg/bridge/README.md
 // ("Consuming this SDK from a Vite app") for the canonical block.
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      'react-native': 'react-native-web',
+export default defineConfig(({ mode }) => {
+  // Load VITE_* env from .env / .env.local / .env.<mode>. Read once so
+  // the proxy target is parameterized — `VITE_BRIDGE_API_PROXY_TARGET`
+  // points the dev proxy at a local cmd/bridge for testnet bring-up:
+  //
+  //   VITE_BRIDGE_API_PROXY_TARGET=http://localhost:8080 pnpm dev
+  //
+  // The default (https://bridge-api.lux.network) preserves the existing
+  // behavior — devs hit the production backend by default, just like before.
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const proxyTarget = env.VITE_BRIDGE_API_PROXY_TARGET || 'https://bridge-api.lux.network'
+  const proxyIsLocal = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)/.test(proxyTarget)
+
+  return {
+    plugins: [react()],
+    resolve: {
+      alias: {
+        'react-native': 'react-native-web',
+      },
+      dedupe: ['react', 'react-dom', 'react-native-web'],
     },
-    dedupe: ['react', 'react-dom', 'react-native-web'],
-  },
-  define: {
-    // Tamagui's runtime reads these flags at module init.
-    'process.env.TAMAGUI_TARGET': JSON.stringify('web'),
-    __DEV__: 'false',
-  },
-  server: {
-    port: 3001,
-    host: true,
-    // Dev-only proxy that fronts the production bridge REST API. Browsers
-    // would otherwise be blocked: bridge-api.lux.network returns
-    // `Access-Control-Allow-Origin: https://bridge.lux.network` and a 500
-    // for any other origin. With this proxy in place the browser sees a
-    // same-origin request (`/api/*` → localhost) and Vite forwards it to
-    // bridge-api.lux.network with `Origin: https://bridge.lux.network`
-    // injected. Production builds talk directly to the API (the prod
-    // origin is whitelisted server-side) so this block has no effect on
-    // the deployed image.
-    proxy: {
-      '/api': {
-        target: 'https://bridge-api.lux.network',
-        changeOrigin: true,
-        secure: true,
-        headers: {
-          // Tell bridge-api.lux.network this request came from the prod
-          // origin so its CORS allow-list passes. changeOrigin already
-          // rewrites the Host header; this overrides the Origin header
-          // that node-http-proxy would otherwise forward verbatim.
-          Origin: 'https://bridge.lux.network',
+    define: {
+      // Tamagui's runtime reads these flags at module init.
+      'process.env.TAMAGUI_TARGET': JSON.stringify('web'),
+      __DEV__: 'false',
+    },
+    server: {
+      port: 3001,
+      host: true,
+      // Dev-only proxy. Default target is bridge-api.lux.network (the
+      // prod backend, which only allow-lists https://bridge.lux.network
+      // — we inject that Origin so its CORS gate passes). Override to a
+      // local cmd/bridge via VITE_BRIDGE_API_PROXY_TARGET; when the
+      // target is on localhost we drop the Origin header rewrite (the
+      // local backend has no CORS allow-list).
+      proxy: {
+        '/api': {
+          target: proxyTarget,
+          changeOrigin: true,
+          secure: !proxyIsLocal,
+          headers: proxyIsLocal
+            ? {}
+            : {
+                Origin: 'https://bridge.lux.network',
+              },
         },
       },
     },
-  },
-  preview: { port: 3001, host: true },
-  build: { outDir: 'dist', sourcemap: true },
+    preview: { port: 3001, host: true },
+    build: { outDir: 'dist', sourcemap: true },
+  }
 })
