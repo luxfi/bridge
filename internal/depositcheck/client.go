@@ -34,6 +34,7 @@ package depositcheck
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -44,6 +45,7 @@ import (
 	"time"
 
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/luxfi/bridge/internal/tokens"
 )
 
 // =============================================================================
@@ -127,6 +129,15 @@ type Client struct {
 	// privately-hosted Sepolia mirror) instead of the public defaults.
 	// Looked up before the package-level table.
 	RPCURLOverrides map[string]string
+
+	// Tokens, when set, drives ERC-20 detection: assets registered
+	// with a non-empty Contract use `eth_call balanceOf(addr)` against
+	// that contract; native-token assets continue to use eth_getBalance.
+	// Asset decimals are pulled from the registry too (no more
+	// hardcoded 18). When nil, every EVM check uses the legacy
+	// native-only path with 18 decimals — backward compat for callers
+	// that haven't migrated to the registry yet.
+	Tokens *tokens.Registry
 }
 
 // New is a convenience constructor.
@@ -182,7 +193,7 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 	addrType := mchain.AddressTypeFor(p.NetworkInternalName)
 	switch addrType {
 	case mchain.AddressTypeETH:
-		return c.checkEVM(ctx, url, p.Address, p.Asset, p.RequiredAmount)
+		return c.checkEVM(ctx, url, p.NetworkInternalName, p.Address, p.Asset, p.RequiredAmount)
 	case mchain.AddressTypeBTC:
 		return c.checkBTC(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeSOL:
@@ -206,19 +217,36 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 }
 
 // =============================================================================
-// EVM — eth_getBalance for native tokens
+// EVM — eth_getBalance for natives, eth_call balanceOf for ERC-20
 // =============================================================================
 
-// weiPerEther is 10^18 as a big.Int — used to scale wei→ether for
-// comparison against human-readable required amounts.
-var weiPerEther = new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+// erc20BalanceOfSelector is the first 4 bytes of
+// keccak256("balanceOf(address)") — the canonical ERC-20 selector for
+// reading a holder's balance. Constant per the Solidity ABI.
+var erc20BalanceOfSelector = [4]byte{0x70, 0xa0, 0x82, 0x31}
 
-func (c *Client) checkEVM(ctx context.Context, rpcURL, address, _asset string, requiredAmount float64) (bool, error) {
-	// Match the TS implementation: native-token check only. ERC-20
-	// support is a separate balanceOf call (eth_call) and is not
-	// implemented in the legacy server either — defer to a follow-up
-	// if/when a tenant needs ERC-20 deposit detection.
+func (c *Client) checkEVM(ctx context.Context, rpcURL, network, address, asset string, requiredAmount float64) (bool, error) {
+	// Decide the path: native (eth_getBalance) vs ERC-20 (eth_call).
+	// Registry lookup gives us the per-asset Contract + Decimals.
+	var (
+		contract string
+		decimals = 18 // default — fits ETH/LUX/BNB/etc. (most native gas tokens)
+	)
+	if c.Tokens != nil {
+		if info, ok := c.Tokens.Lookup(network, asset); ok {
+			contract = info.Contract
+			decimals = info.Decimals
+		}
+	}
 
+	if contract == "" {
+		return c.checkEVMNative(ctx, rpcURL, address, decimals, requiredAmount)
+	}
+	return c.checkEVMERC20(ctx, rpcURL, contract, address, decimals, requiredAmount)
+}
+
+// checkEVMNative queries eth_getBalance for the chain's native asset.
+func (c *Client) checkEVMNative(ctx context.Context, rpcURL, address string, decimals int, requiredAmount float64) (bool, error) {
 	type ethBalanceResp struct {
 		Result string `json:"result"`
 		Error  *struct {
@@ -226,7 +254,6 @@ func (c *Client) checkEVM(ctx context.Context, rpcURL, address, _asset string, r
 			Message string `json:"message"`
 		} `json:"error,omitempty"`
 	}
-
 	var resp ethBalanceResp
 	if err := c.jsonRPC(ctx, rpcURL, "eth_getBalance",
 		[]any{address, "latest"}, &resp); err != nil {
@@ -238,26 +265,103 @@ func (c *Client) checkEVM(ctx context.Context, rpcURL, address, _asset string, r
 	if resp.Result == "" {
 		return false, fmt.Errorf("depositcheck: eth_getBalance: empty result")
 	}
-
-	// Parse the 0x… hex into a big.Int (wei).
-	hexBal := strings.TrimPrefix(resp.Result, "0x")
-	if hexBal == "" {
-		hexBal = "0"
+	bal, err := parseHexBalance(resp.Result)
+	if err != nil {
+		return false, fmt.Errorf("depositcheck: eth_getBalance: %w", err)
 	}
-	balWei, ok := new(big.Int).SetString(hexBal, 16)
+	return compareBalance(bal, decimals, requiredAmount), nil
+}
+
+// checkEVMERC20 queries `balanceOf(address)` on the token contract
+// via eth_call.
+//
+// Call shape:
+//   eth_call({ to: contract, data: 0x70a08231 || <addr_padded_32B> }, "latest")
+// Response: 0x-prefixed hex of the 32-byte balance word.
+func (c *Client) checkEVMERC20(ctx context.Context, rpcURL, contract, holder string, decimals int, requiredAmount float64) (bool, error) {
+	holderBytes, err := parseAddress20(holder)
+	if err != nil {
+		return false, fmt.Errorf("depositcheck: ERC-20 holder address: %w", err)
+	}
+	// data = selector || abi.encode(address) — address is 12 leading zero
+	// bytes followed by the 20-byte address.
+	data := make([]byte, 0, 4+32)
+	data = append(data, erc20BalanceOfSelector[:]...)
+	var addrWord [32]byte
+	copy(addrWord[12:], holderBytes)
+	data = append(data, addrWord[:]...)
+
+	callObj := map[string]string{
+		"to":   contract,
+		"data": "0x" + hex.EncodeToString(data),
+	}
+
+	type ethCallResp struct {
+		Result string `json:"result"`
+		Error  *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error,omitempty"`
+	}
+	var resp ethCallResp
+	if err := c.jsonRPC(ctx, rpcURL, "eth_call",
+		[]any{callObj, "latest"}, &resp); err != nil {
+		return false, err
+	}
+	if resp.Error != nil {
+		return false, fmt.Errorf("depositcheck: eth_call balanceOf rpc %d: %s", resp.Error.Code, resp.Error.Message)
+	}
+	if resp.Result == "" {
+		return false, fmt.Errorf("depositcheck: eth_call balanceOf: empty result")
+	}
+	bal, err := parseHexBalance(resp.Result)
+	if err != nil {
+		return false, fmt.Errorf("depositcheck: eth_call balanceOf: %w", err)
+	}
+	return compareBalance(bal, decimals, requiredAmount), nil
+}
+
+// parseHexBalance decodes a 0x-prefixed hex string into a big.Int.
+// Empty / "0x" / "0x0" → 0. Whitespace tolerated.
+func parseHexBalance(s string) (*big.Int, error) {
+	s = strings.TrimSpace(s)
+	s = strings.TrimPrefix(strings.TrimPrefix(s, "0x"), "0X")
+	if s == "" {
+		return new(big.Int), nil
+	}
+	n, ok := new(big.Int).SetString(s, 16)
 	if !ok {
-		return false, fmt.Errorf("depositcheck: eth_getBalance: invalid hex %q", resp.Result)
+		return nil, fmt.Errorf("invalid hex %q", s)
 	}
+	return n, nil
+}
 
-	// Convert wei to ether (float) only for the comparison. For the
-	// magnitudes the bridge cares about (≤ ~1e9 native units) the
-	// float64 conversion is exact enough.
-	balEth := new(big.Float).Quo(
-		new(big.Float).SetInt(balWei),
-		new(big.Float).SetInt(weiPerEther),
+// compareBalance scales a base-unit balance (wei, base-uint256 token
+// units, etc.) by 10^decimals and compares to requiredAmount.
+func compareBalance(bal *big.Int, decimals int, requiredAmount float64) bool {
+	if requiredAmount <= 0 {
+		return bal.Sign() >= 0
+	}
+	scale := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+	balFloat := new(big.Float).Quo(
+		new(big.Float).SetInt(bal),
+		new(big.Float).SetInt(scale),
 	)
-	balFloat, _ := balEth.Float64()
-	return balFloat >= requiredAmount, nil
+	out, _ := balFloat.Float64()
+	return out >= requiredAmount
+}
+
+// parseAddress20 decodes a 0x-prefixed hex address to 20 bytes.
+func parseAddress20(addr string) ([]byte, error) {
+	addr = strings.TrimPrefix(strings.TrimPrefix(addr, "0x"), "0X")
+	if len(addr) != 40 {
+		return nil, fmt.Errorf("invalid address length %d (want 40 hex chars)", len(addr))
+	}
+	out, err := hex.DecodeString(addr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid hex: %w", err)
+	}
+	return out, nil
 }
 
 // =============================================================================
