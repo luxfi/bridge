@@ -34,11 +34,15 @@ import (
 //   - On tick start, lists swaps in SwapStatusBridgeTransferPending.
 //   - For each, patches to SwapStatusSigning to claim it (so a
 //     restart-mid-ceremony doesn't double-fire).
-//   - Calls mchain.SignForWallet with a deterministic message hash
-//     derived from the swap intent (placeholder — Phase 4.7 should
-//     replace this with the actual destination-chain release tx).
+//   - With an Assembler attached (the production path; see main.go),
+//     calls Assembler.PreSign to build the destination-chain EIP-155
+//     sighash, hands it to mchain.SignForWallet, then calls
+//     Assembler.Finalize to produce the wire-ready signed raw tx
+//     stored on Swap.DestRawTx. Without one, falls back to a synthetic
+//     digest — useful for tests but the resulting signature can't be
+//     broadcast.
 //   - On success: patches to SwapStatusBroadcasting + records
-//     Signature + MPCSessionID.
+//     Signature + MPCSessionID (+ DestRawTx when assembled).
 //   - On failure: patches BACK to bridge_transfer_pending so the next
 //     tick retries (with exponential backoff in future work).
 //
