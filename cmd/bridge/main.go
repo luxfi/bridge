@@ -120,6 +120,12 @@ func main() {
 		"disable the background broadcast driver. Swaps in broadcasting will then stall — useful when destination chains are unreachable.")
 	broadcastTimeout := flag.Duration("broadcast-timeout", broadcast.DefaultTimeout,
 		"per-request timeout for destination-chain RPC broadcasts (eth_sendRawTransaction etc.).")
+	refundInterval := flag.Duration("refund-interval", DefaultRefundInterval,
+		"poll cadence for the refund driver (background loop that sweeps a stuck deposit back to the original sender when destination broadcast can't land).")
+	refundAfter := flag.Duration("refund-after", DefaultRefundAfter,
+		"elapsed-since-last-error window before the refund driver auto-reverts a swap stuck at broadcasting with insufficient-funds errors. Default 90s — long enough for an operator to drip LUX to the release address via lux-faucet.sh.")
+	disableRefundDriver := flag.Bool("disable-refund-driver", false,
+		"disable the background refund driver entirely. Swaps stuck at broadcasting will then never auto-revert — useful when the source chain is unreachable or operators want manual control.")
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
 	dataDir := flag.String("data-dir", envOr("BRIDGE_DATA_DIR", ""),
 		"persistent data directory for the swap store (zapdb). When empty, swaps are stored in-process and lost on restart — only use the in-memory mode for tests + first deploys. In prod, mount a PersistentVolume and point this at it (e.g. /var/lib/lux-bridge).")
@@ -419,6 +425,40 @@ func main() {
 	}
 	defer bcastCancel()
 
+	// Refund driver: sweeps a stuck deposit back to the original
+	// sender on the SOURCE chain when the destination broadcast leg
+	// has been blocked by "insufficient funds" for longer than
+	// --refund-after. Reuses the same MPC signer (same threshold key
+	// signs both legs), the same assembler instance (Networks map
+	// covers both source + destination), and the same broadcast
+	// client (rpcURLs covers both directions).
+	var refundDriver *RefundDriver
+	refundCtx, refundCancel := context.WithCancel(context.Background())
+	if !*disableRefundDriver && mchainClient != nil {
+		refundDriver = NewRefundDriver(
+			swapStore,
+			mchainClient,
+			bcastClient,
+			asm,
+			*refundInterval,
+			*refundAfter,
+			overrides,
+			logger,
+		)
+		go func() {
+			_ = refundDriver.Run(refundCtx)
+		}()
+		logger.Info("refund driver started",
+			"interval", *refundInterval,
+			"refund_after", *refundAfter,
+		)
+	} else if *disableRefundDriver {
+		logger.Info("refund driver disabled by --disable-refund-driver")
+	} else {
+		logger.Info("refund driver skipped (no MPC client configured)")
+	}
+	defer refundCancel()
+
 	app := zip.New(zip.Config{
 		AppName:               "lux-bridge",
 		DisableStartupMessage: true,
@@ -437,6 +477,7 @@ func main() {
 			"deposit_watcher":         watcher != nil && watcher.Running(),
 			"signing_driver":          signer != nil && signer.Running(),
 			"broadcast_driver":        bcastDriver != nil && bcastDriver.Running(),
+			"refund_driver":           refundDriver != nil && refundDriver.Running(),
 			"profile":                 profile.Name,
 			"post_quantum_end_to_end": profile.IsPostQuantumEndToEnd(),
 		}
@@ -448,6 +489,9 @@ func main() {
 		}
 		if bcastDriver != nil {
 			body["broadcast_stats"] = bcastDriver.Stats()
+		}
+		if refundDriver != nil {
+			body["refund_stats"] = refundDriver.Stats()
 		}
 		return c.JSON(200, body)
 	})

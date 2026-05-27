@@ -47,6 +47,9 @@ export type TransferPhase =
   | 'signing'       // MPC threshold ceremony in progress
   | 'broadcasting'  // dest tx broadcast, waiting for finality
   | 'completed'     // dest finality reached
+  | 'refunding'     // dest broadcast couldn't land (insufficient funds, etc.)
+                    // — refund driver is sweeping deposit back to sender
+  | 'refunded'      // refund landed; sender got source-chain funds back
   | 'failed'        // any leg failed; .error has the reason
 
 export interface Transfer {
@@ -71,7 +74,29 @@ export interface Transfer {
    * the deposit is detected on-chain.
    */
   depositAddress?: string
+  /**
+   * Terminal failure reason — set together with `phase: 'failed'`.
+   * Distinct from `lastError`: `error` means the swap is dead, `lastError`
+   * means the swap is still retrying but currently blocked.
+   */
   error?: string
+  /**
+   * Most-recent transient driver error from the bridge — typically a
+   * human-readable label like "Insufficient funds in release address".
+   * The swap is still progressing; the bridge will retry. The UI
+   * surfaces this so the user knows what's blocking before the SPA's
+   * 5-minute deadline elapses. Cleared automatically when the server's
+   * `last_error` field disappears (i.e. the underlying issue
+   * resolved — usually because the user funded the address).
+   */
+  lastError?: string
+  /**
+   * Source-chain transaction hash of the refund sweep, populated by
+   * the bridge's refund driver once it lands. Together with
+   * phase === 'refunded' this lets the UI deep-link to the explorer
+   * tx where the user received their source-chain funds back.
+   */
+  refundTxHash?: string
 }
 
 export interface TransferState {
@@ -120,6 +145,10 @@ const POLL_DEADLINE_MS = 5 * 60_000 // 5 minutes
 function statusToPhase(status: string | undefined): TransferPhase {
   if (!status) return 'pending'
   const s = status.toLowerCase()
+  // Refund phases first — "refunded" must beat "completed"'s loose
+  // heuristic; "refunding" must beat broadcasting/transfer.
+  if (s === 'refunded') return 'refunded'
+  if (s.startsWith('refund')) return 'refunding'
   if (s.includes('complete') || s.includes('payout')) return 'completed'
   if (s.includes('fail') || s.includes('expire') || s.includes('error')) return 'failed'
   if (s.includes('sign') || s.includes('mpc')) return 'signing'
@@ -225,6 +254,23 @@ export function useTransfers(): TransferState {
           patch(transferId, { depositAddress: serverSwap.deposit_address })
         }
 
+        // Mirror server-side LastError to the local Transfer.lastError so
+        // the UI can render the underlying blocker (e.g. "Insufficient
+        // funds in release address") instead of waiting on the 5-minute
+        // SPA deadline. Empty/missing on the wire → clear locally so the
+        // banner disappears as soon as the bridge's next retry succeeds.
+        const wireLastErr =
+          typeof serverSwap.last_error === 'string' ? serverSwap.last_error : ''
+        patch(transferId, { lastError: wireLastErr || undefined })
+
+        // Refund tx hash appears together with phase=refunded — the
+        // refund driver lands the source-chain sweep, then patches
+        // both fields atomically server-side. Mirror it so the UI can
+        // link to the explorer.
+        if (typeof serverSwap.refund_tx_hash === 'string' && serverSwap.refund_tx_hash) {
+          patch(transferId, { refundTxHash: serverSwap.refund_tx_hash })
+        }
+
         // Kick off MPC session on first entry into the signing phase.
         // `publicUrl` is required for the native threshold sign; tenants
         // running pure-external custody (utila/fireblocks only) skip this
@@ -270,7 +316,10 @@ export function useTransfers(): TransferState {
           }
         }
 
-        if (phase === 'completed' || phase === 'failed') {
+        // Terminal phases — stop polling. `refunded` is terminal too:
+        // the bridge has swept the source-chain deposit back to the
+        // sender and the swap will never advance further.
+        if (phase === 'completed' || phase === 'failed' || phase === 'refunded') {
           return
         }
 
