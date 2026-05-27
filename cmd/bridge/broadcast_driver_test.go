@@ -159,6 +159,81 @@ func TestBroadcast_LeavesAtBroadcastingOnFailure(t *testing.T) {
 	}
 }
 
+// TestBroadcast_SurfacesLastErrorOnInsufficientFunds pins the UX
+// contract: when the destination chain rejects with "insufficient
+// funds for gas * price + value", the swap stays at broadcasting
+// (retryable — user just needs to fund the release address) AND
+// LastError gets a clear human label so the SPA / UI can stop
+// spinning blindly and tell the user what's wrong.
+func TestBroadcast_SurfacesLastErrorOnInsufficientFunds(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "LUX_TESTNET", "0xrawtx")
+	bc.failFor("LUX_TESTNET", "0xrawtx",
+		errors.New("eth_sendRawTransaction rpc -32000: insufficient funds for gas * price + value: balance 0, tx cost 1525000000021000, overshot 1525000000021000"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Errorf("status should remain broadcasting (recoverable), got %q", got.Status)
+	}
+	if got.LastError == "" {
+		t.Fatal("expected LastError to be populated on insufficient-funds failure")
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "insufficient funds") {
+		t.Errorf("LastError should label the cause as insufficient funds; got %q", got.LastError)
+	}
+	// Make sure we did NOT pass through the raw geth string — that's
+	// internal noise; the SDK + UI render the human label.
+	if strings.Contains(got.LastError, "tx cost 1525000000021000") {
+		t.Errorf("LastError should be humanized, not the raw geth message; got %q", got.LastError)
+	}
+}
+
+// TestBroadcast_ClearsLastErrorOnSuccess pins that after a previously-
+// failing swap finally lands, the UI no longer shows the stale error.
+func TestBroadcast_ClearsLastErrorOnSuccess(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "LUX_TESTNET", "0xrawtx")
+	// Seed a prior LastError as though the previous tick failed.
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.LastError = "Insufficient funds in release address — fund the MPC address"
+	})
+	bc.okFor("LUX_TESTNET", "0xrawtx", "0xok")
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusCompleted {
+		t.Fatalf("status should be completed, got %q", got.Status)
+	}
+	if got.LastError != "" {
+		t.Errorf("LastError must be cleared on success; got %q", got.LastError)
+	}
+}
+
+// TestBroadcast_HumanizesGatewayFlake confirms a 502 from the krakend
+// gateway becomes a generic transient-RPC label, not the raw HTTP
+// status string. Users shouldn't see internals for what's just retry.
+func TestBroadcast_HumanizesGatewayFlake(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "LUX_TESTNET", "0xrawtx")
+	bc.failFor("LUX_TESTNET", "0xrawtx", errors.New("HTTP 502: gateway error"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if !strings.Contains(strings.ToLower(got.LastError), "unreachable") {
+		t.Errorf("502 should humanize to 'unreachable / retrying'; got %q", got.LastError)
+	}
+}
+
 func TestBroadcast_OnlyTouchesBroadcasting(t *testing.T) {
 	store := NewInMemoryStore()
 	bc := newFakeBroadcaster()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -224,9 +225,23 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 				"err", err,
 			)
 		}
-		// Leave at SwapStatusBroadcasting so the next tick retries.
-		// The destination RPC's idempotency (nonce-already-used,
-		// duplicate-tx-rejected) means re-pushing is safe.
+		// Surface the error so the SDK/UI can show the user what's
+		// blocking (e.g. "insufficient funds for gas" — the release
+		// address needs LUX). The swap stays at SwapStatusBroadcasting
+		// so the next tick retries; once the user funds the address
+		// the next attempt succeeds and LastError is cleared below.
+		//
+		// LastErrorAt stamps the FIRST tick where LastError went
+		// non-empty since last clear. The refund driver uses this to
+		// decide when "stuck at broadcasting" has lasted long enough
+		// to warrant sweeping the deposit back to the original sender.
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			humanized := humanizeBroadcastErr(err)
+			if s.LastError == "" {
+				s.LastErrorAt = time.Now().UTC()
+			}
+			s.LastError = humanized
+		})
 		return
 	}
 
@@ -236,6 +251,8 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 		}
 		s.DestTxHash = res.TxHash
 		s.Status = SwapStatusCompleted
+		s.LastError = "" // clear: terminal success.
+		s.LastErrorAt = time.Time{}
 	})
 	if err != nil {
 		d.failures.Add(1)
@@ -255,6 +272,40 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			"tx_hash", res.TxHash,
 		)
 	}
+}
+
+// humanizeBroadcastErr normalizes the underlying broadcast error into
+// a one-line surface for the SDK + UI. Goals:
+//   - Common chain-side rejections get a short human label so the UI
+//     can render "Insufficient funds in release address" instead of
+//     pasting the full geth error string.
+//   - HTTP / gateway flakes (502 from krakend, network drops) get a
+//     generic "Destination RPC unreachable" so users don't see scary
+//     internals for what's just a transient retry.
+//   - Anything we don't recognize is forwarded verbatim (truncated)
+//     so operator triage isn't blind.
+func humanizeBroadcastErr(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	low := strings.ToLower(msg)
+	switch {
+	case strings.Contains(low, "insufficient funds"):
+		return "Insufficient funds in release address — fund the MPC address with destination-chain gas tokens"
+	case strings.Contains(low, "nonce too low"):
+		return "Nonce stale — release address already has a tx with this nonce; bridge will catch up"
+	case strings.Contains(low, "invalid sender"):
+		return "Destination chain rejected the signature (invalid sender) — possible MPC pubkey mismatch"
+	case strings.Contains(low, "http 502"), strings.Contains(low, "http 503"), strings.Contains(low, "http 504"):
+		return "Destination RPC unreachable (gateway error) — retrying"
+	case strings.Contains(low, "context deadline exceeded"), strings.Contains(low, "timeout"):
+		return "Destination RPC timed out — retrying"
+	}
+	if len(msg) > 160 {
+		return msg[:160] + "…"
+	}
+	return msg
 }
 
 // Compile-time check: *broadcast.Client satisfies Broadcaster.
