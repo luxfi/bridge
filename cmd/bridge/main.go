@@ -46,6 +46,7 @@ import (
 	"github.com/luxfi/bridge/internal/broadcast"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
 )
@@ -120,6 +121,8 @@ func main() {
 	broadcastTimeout := flag.Duration("broadcast-timeout", broadcast.DefaultTimeout,
 		"per-request timeout for destination-chain RPC broadcasts (eth_sendRawTransaction etc.).")
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
+	dataDir := flag.String("data-dir", envOr("BRIDGE_DATA_DIR", ""),
+		"persistent data directory for the swap store (zapdb). When empty, swaps are stored in-process and lost on restart — only use the in-memory mode for tests + first deploys. In prod, mount a PersistentVolume and point this at it (e.g. /var/lib/lux-bridge).")
 	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
 		"bridge security profile: strict-pq | classical-compat")
 	showVersion := flag.Bool("version", false, "print version and exit")
@@ -225,6 +228,17 @@ func main() {
 		logger.Info("source RPC overrides applied", "networks", keys)
 	}
 
+	// Token registry — drives ERC-20 deposit detection (eth_call
+	// balanceOf) AND destination-side tx assembly (transfer() calldata
+	// + per-asset decimals). DefaultRegistry seeds the common bridged
+	// assets (USDC/USDT/DAI on Ethereum + Sepolia, USDC on Base/Polygon,
+	// natives everywhere); operators add custom tokens via a future
+	// config-file flag if needed.
+	tokenRegistry := tokens.DefaultRegistry()
+	logger.Info("token registry loaded",
+		"size", tokenRegistry.Size(),
+	)
+
 	// Deposit-check client (ops diagnostic + deposit watcher backing).
 	// Always-on by default; /v1/bridge/check-deposit is the user-facing
 	// endpoint. Uses the package's RPC_URLs table for upstream URLs;
@@ -235,18 +249,48 @@ func main() {
 		if len(overrides) > 0 {
 			depCheckClient.RPCURLOverrides = overrides
 		}
+		depCheckClient.Tokens = tokenRegistry
 		logger.Info("deposit check endpoint enabled",
 			"path", "/v1/bridge/check-deposit",
 			"timeout", *depCheckTimeout,
 		)
 	}
 
-	// Native swap CRUD: in-memory store + static price feed.
+	// Native swap CRUD: durable swap store + static price feed.
 	// Replaces the legacy app/server Express+Prisma backend for the
 	// /v1/bridge/{quote,swaps,swaps/:id,swaps} routes. Per LP-333 +
 	// LP-134 the b-chain BridgeVM manages the MPC signer set, not the
 	// swap API, so swap state owns its own persistence here.
-	swapStore := NewInMemoryStore()
+	//
+	// Store selection:
+	//   --data-dir empty → InMemoryStore (lossy on restart; dev only)
+	//   --data-dir set   → ZapStore on zapdb (Lux-flavored Badger v4)
+	var (
+		swapStore  SwapStore
+		zapHandle  *ZapStore // for clean shutdown
+		storeLabel string
+	)
+	if *dataDir == "" {
+		swapStore = NewInMemoryStore()
+		storeLabel = "in-memory"
+		logger.Warn("swap store is in-memory — every restart drops in-flight swap state. Set --data-dir for durability.")
+	} else {
+		zs, err := NewZapStore(*dataDir)
+		if err != nil {
+			logger.Error("open swap store", "err", err, "path", *dataDir)
+			os.Exit(1)
+		}
+		swapStore = zs
+		zapHandle = zs
+		storeLabel = "zapdb"
+	}
+	defer func() {
+		if zapHandle != nil {
+			if err := zapHandle.Close(); err != nil {
+				logger.Error("swap store close", "err", err)
+			}
+		}
+	}()
 	// Seed the static price feed with the values used in dev / first
 	// deploys. Real production wiring should swap in a CoinGecko / Pyth
 	// PriceFeed implementation. These match the order-of-magnitude
@@ -265,7 +309,8 @@ func main() {
 	})
 	quoteEngine := &QuoteEngine{Feed: priceFeed}
 	logger.Info("native swap CRUD enabled",
-		"store", "in-memory",
+		"store", storeLabel,
+		"data_dir", *dataDir,
 		"feed", "static",
 		"fee_rate", quoteEngine.FeeRate,
 	)
@@ -294,33 +339,18 @@ func main() {
 
 	// Tx assembler: produces wire-correct EVM EIP-155 sighashes for
 	// the signing driver to feed to the MPC cluster, then finalizes
-	// the signed raw tx for the broadcaster to push. Configured with
-	// per-network defaults below — chain IDs come from
-	// app/server/src/domain/contracts/teleport.ts and
-	// deposit-addresses.json. Production should add a config file
-	// (e.g. JSON) for per-network bridge-contract addresses + gas
-	// price overrides; this default table is suitable for first
-	// testnet swaps.
-	asmProvider := &txassembler.StaticProvider{
-		GasPrice: map[string]*big.Int{
-			// Conservative defaults — let the operator override with
-			// a future --asm-gas-price-overrides flag if needed.
-			"ETHEREUM_SEPOLIA": big.NewInt(20_000_000_000),  // 20 gwei
-			"ETHEREUM_MAINNET": big.NewInt(30_000_000_000),  // 30 gwei
-			"BASE_SEPOLIA":     big.NewInt(1_000_000_000),   // 1 gwei (Base is cheap)
-			"BASE_MAINNET":     big.NewInt(1_000_000_000),
-			"LUX_TESTNET":      big.NewInt(25_000_000_000),
-			"LUX_MAINNET":      big.NewInt(25_000_000_000),
-			"ZOO_TESTNET":      big.NewInt(25_000_000_000),
-			"ZOO_MAINNET":      big.NewInt(25_000_000_000),
-			"BSC_TESTNET":      big.NewInt(10_000_000_000),
-			"BSC_MAINNET":      big.NewInt(5_000_000_000),
-			"POLYGON_MAINNET":  big.NewInt(50_000_000_000),
-			"HOLESKY_TESTNET":  big.NewInt(20_000_000_000),
-		},
-	}
+	// the signed raw tx for the broadcaster to push.
+	//
+	// Provider: live JSON-RPC against the destination chain for nonce
+	// + gas price. Falls back to txassembler.defaultEndpoints when no
+	// override is configured. Operators can shadow specific networks
+	// via --source-rpc-overrides (same flag the deposit watcher uses).
+	//
+	// Chain IDs sourced from app/server/src/domain/contracts/teleport.ts
+	// and the LP-134 chain registry.
+	asmProvider := txassembler.NewRPCProvider(overrides, 8*time.Second)
 	asm := txassembler.New(asmProvider)
-	// Chain IDs sourced from teleport.ts + LP-134 chain registry.
+	asm.Tokens = tokenRegistry
 	asm.SetNetwork("ETHEREUM_SEPOLIA", txassembler.PerNetwork{ChainID: big.NewInt(11155111), NativeDecimals: 18})
 	asm.SetNetwork("ETHEREUM_MAINNET", txassembler.PerNetwork{ChainID: big.NewInt(1), NativeDecimals: 18})
 	asm.SetNetwork("BASE_SEPOLIA", txassembler.PerNetwork{ChainID: big.NewInt(84532), NativeDecimals: 18})
@@ -335,6 +365,7 @@ func main() {
 	asm.SetNetwork("HOLESKY_TESTNET", txassembler.PerNetwork{ChainID: big.NewInt(17000), NativeDecimals: 18})
 	logger.Info("tx assembler configured",
 		"networks", len(asm.Networks),
+		"provider", "rpc",
 		"mode", "pure_transfer",
 	)
 

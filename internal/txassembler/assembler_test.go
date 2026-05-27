@@ -13,6 +13,8 @@ import (
 	"math/big"
 	"strings"
 	"testing"
+
+	"github.com/luxfi/bridge/internal/tokens"
 )
 
 // =============================================================================
@@ -375,6 +377,190 @@ func TestPreSign_BadAddress(t *testing.T) {
 	})
 	if err == nil || !strings.Contains(err.Error(), "DestinationAddress") {
 		t.Errorf("expected DestinationAddress error, got %v", err)
+	}
+}
+
+// =============================================================================
+// ERC-20 destination mode
+// =============================================================================
+
+func TestPreSign_ERC20Mode(t *testing.T) {
+	p := &StaticProvider{
+		GasPrice: map[string]*big.Int{"ETHEREUM_SEPOLIA": big.NewInt(20_000_000_000)},
+	}
+	a := New(p)
+	a.SetNetwork("ETHEREUM_SEPOLIA", txAsmNetwork(11155111))
+
+	// Register USDC on Sepolia: 6 decimals, real contract address.
+	reg := tokens.NewRegistry()
+	usdcContract := "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
+	_ = reg.Register(tokens.Info{
+		Network:  "ETHEREUM_SEPOLIA",
+		Asset:    "USDC",
+		Contract: usdcContract,
+		Decimals: 6,
+	})
+	a.Tokens = reg
+
+	unsigned, err := a.PreSign(context.Background(), SwapIntent{
+		DestinationNetwork: "ETHEREUM_SEPOLIA",
+		DestinationAsset:   "USDC",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Amount:             100, // 100 USDC
+		SenderAddress:      "0x3535353535353535353535353535353535353535",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// to = USDC contract (not the recipient address)
+	wantTo := strings.TrimPrefix(strings.ToLower(usdcContract), "0x")
+	if hex.EncodeToString(unsigned.To) != wantTo {
+		t.Errorf("to = %x, want %s (USDC contract)", unsigned.To, wantTo)
+	}
+	// value = 0 (ERC-20 transfers carry no ETH value)
+	if unsigned.Value.Sign() != 0 {
+		t.Errorf("ERC-20 tx value must be 0, got %s", unsigned.Value.String())
+	}
+	// data = selector(4) || address-word(32) || amount-word(32) = 68 bytes
+	if len(unsigned.Data) != 68 {
+		t.Fatalf("data length = %d, want 68", len(unsigned.Data))
+	}
+	// First 4 bytes are the canonical transfer(address,uint256) selector.
+	if hex.EncodeToString(unsigned.Data[:4]) != "a9059cbb" {
+		t.Errorf("selector = %x, want a9059cbb (transfer)", unsigned.Data[:4])
+	}
+	// Amount word: 100 USDC = 100 * 10^6 = 100_000_000 base units = 0x5F5E100.
+	// Last 32 bytes of data = the amount word. Strip leading zeros.
+	amountWord := unsigned.Data[36:68]
+	amount := new(big.Int).SetBytes(amountWord)
+	want := big.NewInt(100_000_000)
+	if amount.Cmp(want) != 0 {
+		t.Errorf("amount in calldata = %s, want %s (100 USDC at 6 decimals)", amount, want)
+	}
+	// Recipient word: last 20 bytes of bytes 4..36 = the recipient.
+	recipientWord := unsigned.Data[4:36]
+	if !strings.EqualFold(hex.EncodeToString(recipientWord[12:]), "a28fae14eb42e7a5c36ad2d774a2b7eb293c4473") {
+		t.Errorf("recipient in calldata: %x", recipientWord)
+	}
+}
+
+func TestPreSign_ERC20_DecimalsMatter(t *testing.T) {
+	// BSC USDC uses 18 decimals (not 6 like mainnet/sepolia). Make
+	// sure the amount scaling picks up the right decimals.
+	p := &StaticProvider{
+		GasPrice: map[string]*big.Int{"BSC_MAINNET": big.NewInt(5_000_000_000)},
+	}
+	a := New(p)
+	a.SetNetwork("BSC_MAINNET", txAsmNetwork(56))
+	reg := tokens.NewRegistry()
+	_ = reg.Register(tokens.Info{
+		Network:  "BSC_MAINNET",
+		Asset:    "USDC",
+		Contract: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+		Decimals: 18, // BSC convention
+	})
+	a.Tokens = reg
+
+	unsigned, err := a.PreSign(context.Background(), SwapIntent{
+		DestinationNetwork: "BSC_MAINNET",
+		DestinationAsset:   "USDC",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Amount:             1, // 1 USDC at 18 decimals = 10^18 base units
+		SenderAddress:      "0x3535353535353535353535353535353535353535",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	amountWord := unsigned.Data[36:68]
+	amount := new(big.Int).SetBytes(amountWord)
+	want, _ := new(big.Int).SetString("1000000000000000000", 10) // 10^18
+	if amount.Cmp(want) != 0 {
+		t.Errorf("amount = %s, want %s (1 USDC at BSC's 18 decimals)", amount, want)
+	}
+}
+
+func TestPreSign_NativeWithRegistry_StillUsesNativePath(t *testing.T) {
+	// ETH registered with empty contract → IsNative() → pure transfer.
+	p := &StaticProvider{GasPrice: map[string]*big.Int{"LUX_TESTNET": big.NewInt(25_000_000_000)}}
+	a := New(p)
+	a.SetNetwork("LUX_TESTNET", txAsmNetwork(96368))
+	reg := tokens.NewRegistry()
+	_ = reg.Register(tokens.Info{Network: "LUX_TESTNET", Asset: "LUX", Decimals: 18})
+	a.Tokens = reg
+
+	unsigned, err := a.PreSign(context.Background(), SwapIntent{
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Amount:             0.5,
+		SenderAddress:      "0x3535353535353535353535353535353535353535",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(unsigned.Data) != 0 {
+		t.Errorf("native path should have empty data, got %x", unsigned.Data)
+	}
+	if unsigned.Value.String() != "500000000000000000" {
+		t.Errorf("value = %s, want 0.5 ether (5*10^17 wei)", unsigned.Value.String())
+	}
+}
+
+func TestPreSign_ERC20MissingContract_RejectsClean(t *testing.T) {
+	// Registry has the asset entry but with a bad contract string.
+	p := &StaticProvider{GasPrice: map[string]*big.Int{"X": big.NewInt(1)}}
+	a := New(p)
+	a.SetNetwork("X", txAsmNetwork(1))
+	reg := tokens.NewRegistry()
+	_ = reg.Register(tokens.Info{
+		Network:  "X",
+		Asset:    "BADTOKEN",
+		Contract: "0xshort",
+		Decimals: 6,
+	})
+	a.Tokens = reg
+	_, err := a.PreSign(context.Background(), SwapIntent{
+		DestinationNetwork: "X",
+		DestinationAsset:   "BADTOKEN",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Amount:             1,
+		SenderAddress:      "0x3535353535353535353535353535353535353535",
+	})
+	if err == nil || !strings.Contains(err.Error(), "ERC-20 contract") {
+		t.Errorf("expected ERC-20 contract error, got %v", err)
+	}
+}
+
+func TestPreSign_UnknownAsset_FallsBackToNative(t *testing.T) {
+	// DestinationAsset is "UNOBTAINIUM" — not in registry → falls back
+	// to native pure-transfer mode (sanest default, preserves
+	// backward compat for tests that don't seed a registry).
+	p := &StaticProvider{GasPrice: map[string]*big.Int{"LUX_TESTNET": big.NewInt(1)}}
+	a := New(p)
+	a.SetNetwork("LUX_TESTNET", txAsmNetwork(96368))
+	a.Tokens = tokens.NewRegistry() // empty registry
+	unsigned, err := a.PreSign(context.Background(), SwapIntent{
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "UNOBTAINIUM",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Amount:             0.001,
+		SenderAddress:      "0x3535353535353535353535353535353535353535",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(unsigned.Data) != 0 {
+		t.Errorf("unknown asset should fall back to native path; got data=%x", unsigned.Data)
+	}
+}
+
+// txAsmNetwork is a small helper to build a default PerNetwork for tests.
+func txAsmNetwork(chainID int64) PerNetwork {
+	return PerNetwork{
+		ChainID:         big.NewInt(chainID),
+		DefaultGasLimit: 100_000,
+		NativeDecimals:  18,
 	}
 }
 
