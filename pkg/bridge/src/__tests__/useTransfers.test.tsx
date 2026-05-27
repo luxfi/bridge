@@ -444,6 +444,131 @@ describe('useTransfers', () => {
     })
   })
 
+  // ───────────────────────────────────────────────────────────────────────
+  // Server-side LastError propagation
+  // ───────────────────────────────────────────────────────────────────────
+  //
+  // The bridge backend writes a human-readable transient error to
+  // `last_error` on the swap record whenever the broadcast or signing
+  // leg fails recoverably (insufficient funds, RPC gateway flake,
+  // etc.). The SPA polls /api/swaps/:id, mirrors that field to
+  // Transfer.lastError, and TransferStatus renders it as a warning
+  // banner — distinct from `Transfer.error` (terminal failure).
+
+  describe('refund phase propagation', () => {
+    it('maps server refunding/refunded statuses to TransferPhase + surfaces refund_tx_hash', async () => {
+      let serverState = {
+        status: 'bridge_transfer_pending_broadcasting' as string,
+        refund_tx_hash: undefined as string | undefined,
+      }
+      global.fetch = fetchMatcher([
+        [/\/api\/swaps$/, { data: { id: 'swap_refunded', status: 'pending' } }],
+        [
+          /\/api\/swaps\//,
+          () => ({
+            data: {
+              id: 'swap_refunded',
+              status: serverState.status,
+              ...(serverState.refund_tx_hash
+                ? { refund_tx_hash: serverState.refund_tx_hash }
+                : {}),
+            },
+          }),
+        ],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'lux:96369',
+          toChainId: 'evm:1',
+          fromAssetId: 'lux:96369:LUX',
+          toAssetId: 'evm:1:USDC',
+          inAmount: 1,
+          outAmount: 0.99,
+        })
+      })
+
+      // Step 1 — server transitions to refunding.
+      serverState = { status: 'refunding', refund_tx_hash: undefined }
+      await waitFor(
+        () => {
+          expect(result.current.active?.phase).toBe('refunding')
+        },
+        { timeout: 5_000 },
+      )
+
+      // Step 2 — server lands the refund + reports the source-chain tx hash.
+      serverState = { status: 'refunded', refund_tx_hash: '0xrefundhash123' }
+      await waitFor(
+        () => {
+          expect(result.current.active?.phase).toBe('refunded')
+        },
+        { timeout: 5_000 },
+      )
+      expect(result.current.active?.refundTxHash).toBe('0xrefundhash123')
+
+      // 'refunded' is terminal — poll loop stops. The SPA's 5min
+      // timeout should NOT fire (no patch to 'failed'). The phase
+      // staying at 'refunded' after a beat is a regression guard:
+      // if subscribe() kept polling and the next response was missing
+      // refund_tx_hash, refundTxHash would clear here.
+      await new Promise((r) => setTimeout(r, 200))
+      expect(result.current.active?.phase).toBe('refunded')
+      expect(result.current.active?.refundTxHash).toBe('0xrefundhash123')
+    })
+  })
+
+  describe('server-side last_error propagation', () => {
+    it('mirrors last_error from poll into Transfer.lastError', async () => {
+      let lastErr: string | null =
+        'Insufficient funds in release address — fund the MPC address with destination-chain gas tokens'
+      global.fetch = fetchMatcher([
+        [/\/api\/swaps$/, { data: { id: 'swap_lerr', status: 'pending' } }],
+        [
+          /\/api\/swaps\//,
+          () => ({
+            data: {
+              id: 'swap_lerr',
+              status: 'bridge_transfer_pending_broadcasting',
+              ...(lastErr ? { last_error: lastErr } : {}),
+            },
+          }),
+        ],
+      ])
+      const { result } = renderHook(() => useTransfers())
+      await act(async () => {
+        await result.current.initiate({
+          fromChainId: 'lux:96369',
+          toChainId: 'evm:1',
+          fromAssetId: 'lux:96369:LUX',
+          toAssetId: 'evm:1:USDC',
+          inAmount: 1,
+          outAmount: 0.99,
+        })
+      })
+      await waitFor(
+        () => {
+          expect(result.current.active?.lastError).toMatch(/insufficient funds/i)
+        },
+        { timeout: 5_000 },
+      )
+      // Phase stays in broadcasting — last_error is NOT terminal.
+      expect(result.current.active?.phase).toBe('broadcasting')
+      expect(result.current.active?.error).toBeUndefined()
+
+      // Server clears its last_error on the next tick (issue resolved
+      // → user funded address → broadcast accepted). The local
+      // Transfer.lastError should clear too.
+      lastErr = null
+      await waitFor(
+        () => {
+          expect(result.current.active?.lastError).toBeUndefined()
+        },
+        { timeout: 5_000 },
+      )
+    })
+  })
+
   it('clear() removes all transfers and aborts polling', async () => {
     global.fetch = fetchMatcher([
       [/\/api\/swaps$/, { data: { id: 'swap_y', status: 'pending' } }],

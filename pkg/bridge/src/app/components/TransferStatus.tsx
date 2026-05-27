@@ -30,6 +30,8 @@ const phaseLabel: Record<TransferPhase, string> = {
   signing: 'Signing (MPC threshold)',
   broadcasting: 'Broadcasting',
   completed: 'Completed',
+  refunding: 'Refunding',
+  refunded: 'Refunded',
   failed: 'Failed',
 }
 
@@ -38,6 +40,12 @@ const phaseColor: Record<TransferPhase, string> = {
   signing: 'var(--bridge-accent)',
   broadcasting: 'var(--bridge-accent-hover)',
   completed: 'var(--bridge-success)',
+  // Refund phases sit between "still working" and "done" — render in a
+  // warning hue so users can tell they got their funds back but the
+  // intended swap didn't complete. Distinct from completed (green) and
+  // failed (red).
+  refunding: 'var(--bridge-warning, #b45309)',
+  refunded: 'var(--bridge-warning, #b45309)',
   failed: 'var(--bridge-danger)',
 }
 
@@ -299,6 +307,71 @@ export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => {
                       + {b.label}
                     </span>
                   ))}
+                </div>
+              ) : null}
+
+              {/*
+                 Transient retryable error from the bridge — shown only
+                 while the swap is still progressing. Distinct visually
+                 from `t.error` (terminal failure, red): rendered as a
+                 warning banner so the user knows what to fix (e.g.
+                 "Insufficient funds in release address") without
+                 thinking the swap has actually died.
+                 */}
+              {t.lastError && t.phase !== 'failed' && t.phase !== 'completed' && t.phase !== 'refunded' ? (
+                <div
+                  style={{
+                    fontSize: 11,
+                    padding: '6px 8px',
+                    marginTop: 4,
+                    borderRadius: 4,
+                    color: 'var(--bridge-warning, #b45309)',
+                    background: 'var(--bridge-warning-bg, rgba(245, 158, 11, 0.08))',
+                    border: '1px solid var(--bridge-warning-border, rgba(245, 158, 11, 0.25))',
+                  }}
+                >
+                  ⏳ {t.lastError} — bridge is retrying
+                </div>
+              ) : null}
+
+              {/*
+                 Refund-state banner. While refunding: tell the user the
+                 bridge is sweeping their deposit back. After refunded:
+                 surface the source-chain tx hash so they can verify
+                 receipt on the explorer. Distinct from the standard
+                 lastError banner because this is a final-disposition
+                 state rather than transient retry signal.
+                 */}
+              {t.phase === 'refunding' ? (
+                <div
+                  style={{
+                    fontSize: 11,
+                    padding: '6px 8px',
+                    marginTop: 4,
+                    borderRadius: 4,
+                    color: 'var(--bridge-warning, #b45309)',
+                    background: 'var(--bridge-warning-bg, rgba(245, 158, 11, 0.08))',
+                    border: '1px solid var(--bridge-warning-border, rgba(245, 158, 11, 0.25))',
+                  }}
+                >
+                  ↩ Auto-reverting: destination release couldn't land, sweeping deposit back to sender
+                </div>
+              ) : null}
+
+              {t.phase === 'refunded' && t.refundTxHash ? (
+                <div
+                  style={{
+                    fontSize: 11,
+                    padding: '6px 8px',
+                    marginTop: 4,
+                    borderRadius: 4,
+                    color: 'var(--bridge-warning, #b45309)',
+                    background: 'var(--bridge-warning-bg, rgba(245, 158, 11, 0.08))',
+                    border: '1px solid var(--bridge-warning-border, rgba(245, 158, 11, 0.25))',
+                  }}
+                >
+                  ↩ Refunded — source funds returned to sender · tx{' '}
+                  {shortAddress(t.refundTxHash, 6, 4)}
                 </div>
               ) : null}
 
