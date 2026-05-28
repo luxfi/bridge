@@ -63,6 +63,18 @@ type ReleasePoolStore interface {
 	PutEntry(ctx context.Context, idx int, entry ReleasePoolEntry) error
 }
 
+// ReleasePoolStoreWithKeyspace is the multi-pool variant. Stores that
+// implement it support an arbitrary keyspace prefix so a single bridge
+// can run parallel pools (EVM-default + DOT-family + future SOL/TON).
+// Optional — when the swap store satisfies this interface, the bridge
+// passes through to LoadEntriesNS / PutEntryNS; otherwise it falls
+// back to the legacy single-pool methods (DOT pool stays in-memory only).
+type ReleasePoolStoreWithKeyspace interface {
+	ReleasePoolStore
+	LoadEntriesNS(ctx context.Context, keyspace string) ([]ReleasePoolEntry, error)
+	PutEntryNS(ctx context.Context, keyspace string, idx int, entry ReleasePoolEntry) error
+}
+
 // ReleasePoolEntry is one wallet in the pool. JSON-serialized for
 // storage. Network is captured at mint time so a multi-chain
 // deployment can keep separate pools per destination chain in a
@@ -76,6 +88,12 @@ type ReleasePoolEntry struct {
 	Address  string    `json:"address"`
 	Network  string    `json:"network,omitempty"`
 	MintedAt time.Time `json:"minted_at"`
+	// ECDSAPubKey is the 33-byte compressed secp256k1 pubkey, hex-encoded.
+	// Persisted so the DOT signing path can derive AccountId32 +
+	// determine the ECDSA recovery byte without re-keygen'ing.
+	// Optional for EVM-only deployments (the EIP-155 finalize path
+	// derives the address from the signature recovery alone).
+	ECDSAPubKey string `json:"ecdsa_pub_key,omitempty"`
 }
 
 // =============================================================================
@@ -129,6 +147,11 @@ type ReleasePool struct {
 	// vs "LUX_MAINNET" doesn't affect downstream consumers.
 	mintNetwork string
 
+	// keyspace selects a sub-namespace in the persistence layer so a
+	// single bridge can run multiple pools (default EVM pool +
+	// DOT-family pool etc.). Empty ⇒ legacy single-pool path.
+	keyspace string
+
 	// BalanceThresholdWei is the floor below which Acquire logs a
 	// WARN. The bridge does NOT auto-fund; this is purely a heads-up
 	// for the operator. Optional — zero ⇒ alerter disabled.
@@ -158,6 +181,55 @@ func NewReleasePool(store ReleasePoolStore, mintNetwork string, logger luxlog.Lo
 	}
 }
 
+// NewReleasePoolWithKey constructs a pool whose entries live under a
+// distinct keyspace in the persistence layer. Used by the DOT pool
+// to coexist with the default EVM pool without overlapping
+// "releasepool:0", "releasepool:1", … keys.
+//
+// If the underlying store doesn't implement ReleasePoolStoreWithKeyspace,
+// the pool falls back to the legacy single-namespace methods (entries
+// stored in-memory for the lifetime of the process — fine for dev,
+// not durable for a multi-pool prod deployment).
+func NewReleasePoolWithKey(store ReleasePoolStore, mintNetwork, keyspace string, logger luxlog.Logger) *ReleasePool {
+	p := NewReleasePool(store, mintNetwork, logger)
+	p.keyspace = keyspace
+	return p
+}
+
+// loadAll dispatches to the keyspace-aware loader when available,
+// otherwise to the legacy single-pool loader.
+func (p *ReleasePool) loadAll(ctx context.Context) ([]ReleasePoolEntry, error) {
+	if p.keyspace == "" {
+		return p.store.LoadEntries(ctx)
+	}
+	ns, ok := p.store.(ReleasePoolStoreWithKeyspace)
+	if !ok {
+		// Best-effort: namespace-aware store unavailable. The DOT pool
+		// still works in-memory for this process; entries just aren't
+		// persisted across restarts. Operator must accept this in dev.
+		if p.logger != nil {
+			p.logger.Warn("release pool: keyspace requested but store doesn't support it — entries will not persist",
+				"keyspace", p.keyspace,
+			)
+		}
+		return nil, nil
+	}
+	return ns.LoadEntriesNS(ctx, p.keyspace)
+}
+
+// putEntry dispatches to the keyspace-aware writer when available,
+// otherwise to the legacy single-pool writer.
+func (p *ReleasePool) putEntry(ctx context.Context, idx int, entry ReleasePoolEntry) error {
+	if p.keyspace == "" {
+		return p.store.PutEntry(ctx, idx, entry)
+	}
+	ns, ok := p.store.(ReleasePoolStoreWithKeyspace)
+	if !ok {
+		return nil // in-memory only; loadAll already warned.
+	}
+	return ns.PutEntryNS(ctx, p.keyspace, idx, entry)
+}
+
 // Size reports the current pool size.
 func (p *ReleasePool) Size() int {
 	p.mu.RLock()
@@ -176,6 +248,20 @@ func (p *ReleasePool) Entries() []ReleasePoolEntry {
 	return out
 }
 
+// PubKeyHex returns the persisted compressed-secp256k1 pubkey hex for
+// the named wallet. Returns "" if the wallet isn't in the pool or
+// wasn't minted with a pubkey (legacy entries).
+func (p *ReleasePool) PubKeyHex(walletID string) string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	for _, e := range p.entries {
+		if e.WalletID == walletID {
+			return e.ECDSAPubKey
+		}
+	}
+	return ""
+}
+
 // Bootstrap loads existing entries from the store and, if needed,
 // mints fresh ones up to the desired pool size.
 //
@@ -189,7 +275,7 @@ func (p *ReleasePool) Entries() []ReleasePoolEntry {
 // pool — useful for the "operator pre-loaded the pool, bridge just
 // needs to discover" deployment shape.
 func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize int) error {
-	existing, err := p.store.LoadEntries(ctx)
+	existing, err := p.loadAll(ctx)
 	if err != nil {
 		return fmt.Errorf("release pool: load entries: %w", err)
 	}
@@ -220,13 +306,14 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 			return fmt.Errorf("release pool: keygen idx=%d: %w", idx, err)
 		}
 		entry := ReleasePoolEntry{
-			Index:    idx,
-			WalletID: w.Name,
-			Address:  w.Address,
-			Network:  p.mintNetwork,
-			MintedAt: time.Now().UTC(),
+			Index:       idx,
+			WalletID:    w.Name,
+			Address:     w.Address,
+			Network:     p.mintNetwork,
+			MintedAt:    time.Now().UTC(),
+			ECDSAPubKey: w.ECDSAPubKey,
 		}
-		if err := p.store.PutEntry(ctx, idx, entry); err != nil {
+		if err := p.putEntry(ctx, idx, entry); err != nil {
 			return fmt.Errorf("release pool: persist idx=%d: %w", idx, err)
 		}
 		p.mu.Lock()
@@ -312,31 +399,51 @@ func (p *ReleasePool) checkBalance(ctx context.Context, entry *ReleasePoolEntry,
 
 // inMemoryReleasePool is the lossy-on-restart implementation. Lives
 // inside *InMemoryStore so the SwapStore + ReleasePoolStore share
-// one process-local home.
+// one process-local home. Indexed by keyspace ("" = default EVM pool;
+// "releasepool:dot" = the DOT-family pool; future families can pick
+// their own).
 type inMemoryReleasePool struct {
 	mu      sync.Mutex
-	entries map[int]ReleasePoolEntry
+	entries map[string]map[int]ReleasePoolEntry // keyspace → idx → entry
+}
+
+// poolForKeyspace returns the map for the named keyspace, creating it lazily.
+// Caller MUST hold p.mu. Empty keyspace = default pool.
+func (p *inMemoryReleasePool) poolForKeyspace(keyspace string) map[int]ReleasePoolEntry {
+	if p.entries == nil {
+		p.entries = map[string]map[int]ReleasePoolEntry{}
+	}
+	if p.entries[keyspace] == nil {
+		p.entries[keyspace] = map[int]ReleasePoolEntry{}
+	}
+	return p.entries[keyspace]
 }
 
 // LoadReleasePoolEntries implements ReleasePoolStore for the in-memory
-// SwapStore. Returns the entries in ascending index order.
-func (s *InMemoryStore) LoadEntries(_ context.Context) ([]ReleasePoolEntry, error) {
+// SwapStore. Returns the entries in ascending index order, using the
+// default (legacy) keyspace.
+func (s *InMemoryStore) LoadEntries(ctx context.Context) ([]ReleasePoolEntry, error) {
+	return s.LoadEntriesNS(ctx, "")
+}
+
+// LoadEntriesNS is the keyspace-aware variant. Pass "" for the legacy
+// pool, "releasepool:dot" for the DOT pool, etc.
+func (s *InMemoryStore) LoadEntriesNS(_ context.Context, keyspace string) ([]ReleasePoolEntry, error) {
 	s.poolOnce.Do(func() {
-		s.pool = &inMemoryReleasePool{entries: map[int]ReleasePoolEntry{}}
+		s.pool = &inMemoryReleasePool{}
 	})
 	s.pool.mu.Lock()
 	defer s.pool.mu.Unlock()
-	out := make([]ReleasePoolEntry, 0, len(s.pool.entries))
-	// Stable iteration: sort by index ascending so callers see a
-	// canonical order.
+	src := s.pool.poolForKeyspace(keyspace)
+	out := make([]ReleasePoolEntry, 0, len(src))
 	maxIdx := -1
-	for k := range s.pool.entries {
+	for k := range src {
 		if k > maxIdx {
 			maxIdx = k
 		}
 	}
 	for i := 0; i <= maxIdx; i++ {
-		if e, ok := s.pool.entries[i]; ok {
+		if e, ok := src[i]; ok {
 			out = append(out, e)
 		}
 	}
@@ -344,14 +451,21 @@ func (s *InMemoryStore) LoadEntries(_ context.Context) ([]ReleasePoolEntry, erro
 }
 
 // PutEntry implements ReleasePoolStore for the in-memory SwapStore.
-func (s *InMemoryStore) PutEntry(_ context.Context, idx int, entry ReleasePoolEntry) error {
+// Stores into the default keyspace.
+func (s *InMemoryStore) PutEntry(ctx context.Context, idx int, entry ReleasePoolEntry) error {
+	return s.PutEntryNS(ctx, "", idx, entry)
+}
+
+// PutEntryNS is the keyspace-aware variant.
+func (s *InMemoryStore) PutEntryNS(_ context.Context, keyspace string, idx int, entry ReleasePoolEntry) error {
 	s.poolOnce.Do(func() {
-		s.pool = &inMemoryReleasePool{entries: map[int]ReleasePoolEntry{}}
+		s.pool = &inMemoryReleasePool{}
 	})
 	s.pool.mu.Lock()
 	defer s.pool.mu.Unlock()
+	dst := s.pool.poolForKeyspace(keyspace)
 	entry.Index = idx
-	s.pool.entries[idx] = entry
+	dst[idx] = entry
 	return nil
 }
 
