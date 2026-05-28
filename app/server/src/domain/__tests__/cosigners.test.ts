@@ -67,6 +67,121 @@ describe("validateCosigners — happy paths (must pass)", () => {
     expect(out[0]!.kind).toBe("utila")
     expect(out[1]!.kind).toBe("fireblocks")
   })
+
+  it("accepts cloud_hsm/gcp_kms with key_ref + algorithm + identity_hint", () => {
+    const out = validateCosigners([
+      {
+        kind: "cloud_hsm",
+        provider: "gcp_kms",
+        key_ref:
+          "projects/p/locations/global/keyRings/r/cryptoKeys/k/cryptoKeyVersions/1",
+        algorithm: "secp256k1_ecdsa_sha256",
+        identity_hint: "sa@tenant.iam.gserviceaccount.com",
+      },
+    ])
+    expect(out[0]).toMatchObject({
+      kind: "cloud_hsm",
+      provider: "gcp_kms",
+      algorithm: "secp256k1_ecdsa_sha256",
+      identity_hint: "sa@tenant.iam.gserviceaccount.com",
+    })
+  })
+
+  it("accepts cloud_hsm/aws_kms with full ARN as key_ref", () => {
+    const out = validateCosigners([
+      {
+        kind: "cloud_hsm",
+        provider: "aws_kms",
+        key_ref:
+          "arn:aws:kms:us-east-1:123456789012:key/00000000-0000-0000-0000-000000000000",
+        algorithm: "secp256k1_ecdsa_sha256",
+      },
+    ])
+    expect(out[0]).toMatchObject({
+      kind: "cloud_hsm",
+      provider: "aws_kms",
+    })
+  })
+
+  it("accepts cloud_hsm/azure_key_vault with key URL as key_ref", () => {
+    const out = validateCosigners([
+      {
+        kind: "cloud_hsm",
+        provider: "azure_key_vault",
+        key_ref:
+          "https://my-vault.vault.azure.net/keys/my-key/abcdef1234567890",
+        algorithm: "secp256k1_ecdsa_sha256",
+      },
+    ])
+    expect(out[0]).toMatchObject({
+      kind: "cloud_hsm",
+      provider: "azure_key_vault",
+    })
+  })
+
+  it("accepts cloud_hsm/vault_transit", () => {
+    const out = validateCosigners([
+      {
+        kind: "cloud_hsm",
+        provider: "vault_transit",
+        key_ref: "transit/keys/my-bridge-key",
+        algorithm: "ed25519",
+      },
+    ])
+    expect(out[0]).toMatchObject({
+      kind: "cloud_hsm",
+      provider: "vault_transit",
+      algorithm: "ed25519",
+    })
+  })
+
+  it("accepts fchain with scheme", () => {
+    const out = validateCosigners([
+      {
+        kind: "fchain",
+        public_url: "https://fchain.lux.network",
+        scheme: "ckks",
+      },
+    ])
+    expect(out[0]).toMatchObject({
+      kind: "fchain",
+      public_url: "https://fchain.lux.network",
+      scheme: "ckks",
+    })
+  })
+
+  it("accepts every cosigner kind layered together", () => {
+    const out = validateCosigners([
+      { kind: "utila", org_id: "u", client_id: "c" },
+      { kind: "fireblocks", api_key: "f" },
+      {
+        kind: "cloud_hsm",
+        provider: "gcp_kms",
+        key_ref: "k1",
+        algorithm: "secp256k1_ecdsa_sha256",
+      },
+      {
+        kind: "cloud_hsm",
+        provider: "aws_kms",
+        key_ref: "arn:...",
+        algorithm: "secp256k1_ecdsa_sha256",
+      },
+      {
+        kind: "cloud_hsm",
+        provider: "azure_key_vault",
+        key_ref: "https://v.vault.azure.net/keys/k",
+        algorithm: "secp256k1_ecdsa_sha256",
+      },
+      {
+        kind: "cloud_hsm",
+        provider: "vault_transit",
+        key_ref: "transit/keys/k",
+        algorithm: "ed25519",
+      },
+      { kind: "fchain", public_url: "https://fchain.lux.network" },
+    ])
+    expect(out).toHaveLength(7)
+  })
 })
 
 describe("validateCosigners — rejections (must throw BadCosignerIntent)", () => {
@@ -145,6 +260,86 @@ describe("validateCosigners — rejections (must throw BadCosignerIntent)", () =
         { kind: "fireblocks", api_key: "k", token: "..." },
       ]),
     ).toThrowError(/secret-like field/)
+  })
+
+  // — cloud_hsm validation —
+
+  it("rejects cloud_hsm with unknown provider", () => {
+    expect(() =>
+      validateCosigners([
+        {
+          kind: "cloud_hsm",
+          provider: "ibm_zhsm",
+          key_ref: "k",
+          algorithm: "secp256k1_ecdsa_sha256",
+        },
+      ]),
+    ).toThrowError(/cloud_hsm: unknown provider/)
+  })
+
+  it("rejects cloud_hsm missing key_ref", () => {
+    expect(() =>
+      validateCosigners([
+        {
+          kind: "cloud_hsm",
+          provider: "gcp_kms",
+          algorithm: "secp256k1_ecdsa_sha256",
+        },
+      ]),
+    ).toThrowError(/key_ref required/)
+  })
+
+  it("rejects cloud_hsm missing algorithm (required to reject early)", () => {
+    expect(() =>
+      validateCosigners([
+        { kind: "cloud_hsm", provider: "gcp_kms", key_ref: "k" },
+      ]),
+    ).toThrowError(/algorithm required/)
+  })
+
+  it("rejects cloud_hsm with unsupported algorithm", () => {
+    expect(() =>
+      validateCosigners([
+        {
+          kind: "cloud_hsm",
+          provider: "gcp_kms",
+          key_ref: "k",
+          algorithm: "md5_ecdsa", // not in the allow-list
+        },
+      ]),
+    ).toThrowError(/algorithm required/)
+  })
+
+  it("rejects secret-like fields on cloud_hsm too", () => {
+    expect(() =>
+      validateCosigners([
+        {
+          kind: "cloud_hsm",
+          provider: "gcp_kms",
+          key_ref: "k",
+          algorithm: "secp256k1_ecdsa_sha256",
+          private_key: "-----BEGIN PRIVATE KEY-----",
+        },
+      ]),
+    ).toThrowError(/secret-like field/)
+  })
+
+  it("rejects fchain missing public_url", () => {
+    expect(() => validateCosigners([{ kind: "fchain" }])).toThrowError(
+      /public_url required/,
+    )
+  })
+
+  it("rejects fchain with unknown scheme", () => {
+    expect(() =>
+      validateCosigners([
+        {
+          kind: "fchain",
+          public_url: "https://fchain.lux.network",
+          scheme: "snake-oil",
+        },
+      ]),
+    ).toThrowError(/unknown scheme/)
   })
 
   it("reports the offending array index in the error message", () => {

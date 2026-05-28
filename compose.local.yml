@@ -1,19 +1,40 @@
+# Lux Bridge — LOCAL compose.
+#
+# Boots the full local development topology: identity provider (Casdoor)
+# + Postgres for both Casdoor and bridge. NO NATS, NO Consul, NO Vault —
+# the bridge backend no longer needs pub/sub or service discovery for
+# MPC (HTTP to mpcd does it in one round-trip; per-swap state lives in
+# Postgres).
+#
+# For TRUE bare-minimum standalone (just bridge + Postgres, no auth),
+# use compose.standalone.yml instead.
+#
+# To enable native m-chain (threshold MPC) at boot, run the canonical
+# Lux MPC daemon out-of-band:
+#   make install-mpc           # go install github.com/luxfi/mpc/cmd/mpcd
+#   make start-mpc-nodes       # 3-node local cluster
+#   export BRIDGE_MPC_URL=http://localhost:6000
+#
+# Same pattern for Lux KMS (~/work/lux/kms) — point BRIDGE_KMS_URL at it.
+
 services:
-  # Lux ID Service (Casdoor-based unified authentication)
-  lux-id:
+  # Identity provider (Casdoor-based unified authentication).
+  # Brand-neutral container name + service id — tenants can point any
+  # OIDC provider here without renaming.
+  iam:
     image: casbin/casdoor:latest
-    container_name: bridge-lux-id
+    container_name: bridge-iam
     ports:
       - "8000:8000"
     environment:
       - RUNNING_IN_DOCKER=true
     volumes:
       - ./config/casdoor/app.conf:/conf/app.conf
-      - lux-id-data:/var/lib/casdoor
+      - iam-data:/var/lib/casdoor
     networks:
       - bridge-network
     depends_on:
-      lux-id-db:
+      iam-db:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
@@ -21,16 +42,16 @@ services:
       timeout: 3s
       retries: 5
 
-  # Lux ID Database (PostgreSQL for Casdoor)
-  lux-id-db:
+  # Identity provider database.
+  iam-db:
     image: ghcr.io/hanzoai/sql:latest
-    container_name: bridge-lux-id-db
+    container_name: bridge-iam-db
     environment:
       - POSTGRES_USER=casdoor
-      - POSTGRES_PASSWORD=${CASDOOR_DB_PASSWORD:-changeme}
+      - POSTGRES_PASSWORD=${IAM_DB_PASSWORD:-changeme}
       - POSTGRES_DB=casdoor
     volumes:
-      - lux-id-db-data:/var/lib/postgresql
+      - iam-db-data:/var/lib/postgresql/data
     ports:
       - "5434:5432"
     networks:
@@ -41,63 +62,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # KMS Service (Mock for local development)
-  kms:
-    image: hashicorp/vault:1.15
-    container_name: bridge-kms
-    ports:
-      - "8200:8200"
-    environment:
-      - VAULT_DEV_ROOT_TOKEN_ID=myroot
-      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
-    cap_add:
-      - IPC_LOCK
-    networks:
-      - bridge-network
-    healthcheck:
-      test: ["CMD", "vault", "status"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  # Infrastructure Services
-  nats:
-    image: nats:2.10-alpine
-    container_name: bridge-nats
-    ports:
-      - "4223:4222"
-      - "8223:8222"
-    command: "-js -m 8222 --store_dir /data"
-    volumes:
-      - nats-data:/data
-    networks:
-      - bridge-network
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "4222"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  consul:
-    image: hashicorp/consul:1.16
-    container_name: bridge-consul
-    ports:
-      - "8501:8500"
-      - "8602:8600/udp"
-    command: "agent -server -bootstrap-expect=1 -ui -client=0.0.0.0"
-    volumes:
-      - consul-data:/consul/data
-    networks:
-      - bridge-network
-    environment:
-      - CONSUL_BIND_INTERFACE=eth0
-    healthcheck:
-      test: ["CMD", "consul", "members"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  # Database
+  # Bridge swap state (canonical, via Prisma).
   postgres:
     image: ghcr.io/hanzoai/sql:latest
     container_name: bridge-postgres
@@ -118,17 +83,26 @@ services:
       timeout: 3s
       retries: 5
 
-  # MPC nodes are run locally using Go-installed tools:
-  # 1. make install-mpc       # Install MPC tools via go install
-  # 2. make start-mpc-nodes   # Start local MPC network
-  # 3. cd app/server && pnpm dev
-  # 4. cd app/bridge && pnpm dev
+  # mpcd (the canonical Lux threshold-MPC daemon) and the KMS service
+  # are NOT in this compose. Run them out-of-band:
+  #
+  #   # mpcd — github.com/luxfi/mpc
+  #   make install-mpc
+  #   make start-mpc-nodes        # 3-node local cluster on :6000-6002
+  #
+  #   # KMS — github.com/luxfi/kms
+  #   cd ~/work/lux/kms && make dev
+  #
+  # Then point the bridge backend at them:
+  #   export BRIDGE_MPC_URL=http://localhost:6000
+  #   export BRIDGE_KMS_URL=http://localhost:8080
+  #
+  # The bridge runs in standalone mode (clean error on sign calls)
+  # until those are set — no crash at startup.
 
 volumes:
-  lux-id-data:
-  lux-id-db-data:
-  nats-data:
-  consul-data:
+  iam-data:
+  iam-db-data:
   postgres-data:
 
 networks:

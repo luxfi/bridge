@@ -15,10 +15,10 @@ const getTx = vi.fn()
 
 vi.mock("fireblocks-sdk", () => {
   return {
-    FireblocksSDK: vi.fn().mockImplementation(() => ({
-      createTransaction: createTx,
-      getTransactionById: getTx,
-    })),
+    FireblocksSDK: class {
+      createTransaction = createTx
+      getTransactionById = getTx
+    },
     PeerType: { VAULT_ACCOUNT: "VAULT_ACCOUNT" },
     TransactionOperation: { RAW: "RAW" },
   }
@@ -182,6 +182,6 @@ describe("runFireblocks — failed / transient", () => {
 
     const [result] = await dispatchCosigners(opts)
     expect(result?.status).toBe("failed")
-    expect(result?.reason).toMatch(/secret not in KMS/)
+    expect(result?.reason).toMatch(/cosigner secret unavailable/)
   })
 })

@@ -14,6 +14,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(here, "src"),
+      // @luxfi/utila ships from a published rollup-built dist/ to npm,
+      // but the workspace dist/ is not built in-place (the rollup
+      // config has a long-standing outDir-vs-file-path issue). For
+      // tests, point at the TypeScript source directly — vitest can
+      // handle TS imports natively. Production builds resolve through
+      // the package.json main field once the published artifact is
+      // installed from npm.
+      "@luxfi/utila": path.resolve(here, "../../pkg/utila/src/grpc-client.ts"),
     },
   },
 })
