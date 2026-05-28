@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
 	"strings"
 	"syscall"
@@ -129,6 +130,8 @@ func main() {
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
 	dataDir := flag.String("data-dir", envOr("BRIDGE_DATA_DIR", ""),
 		"persistent data directory for the swap store (zapdb). When empty, swaps are stored in-process and lost on restart — only use the in-memory mode for tests + first deploys. In prod, mount a PersistentVolume and point this at it (e.g. /var/lib/lux-bridge).")
+	releaseFile := flag.String("release-wallets-file", envOr("BRIDGE_RELEASE_WALLETS_FILE", ""),
+		"path to a JSON file that persists per-destination-network release wallets (the long-lived MPC addresses that pay out settlements). When set, the bridge mints a release wallet on first need and reuses it across restarts. When empty AND --data-dir is set, defaults to <data-dir>/release-wallets.json. When empty AND --data-dir is empty, runs in-memory — every restart re-mints and any liquidity at the old address is stranded. Required for prod.")
 	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
 		"bridge security profile: strict-pq | classical-compat")
 	showVersion := flag.Bool("version", false, "print version and exit")
@@ -323,6 +326,42 @@ func main() {
 
 	api := NewAPI(cfg, *backend, bchainClient, mchainClient, depCheckClient, swapStore, quoteEngine)
 	api.SetProfile(profile)
+
+	// Per-destination-network release wallets. One MPC wallet per
+	// destination chain, minted lazily on first need and reused across
+	// every swap to that chain. The operator pre-funds each release
+	// wallet's destination-chain address with native gas + bridged
+	// liquidity; the signing driver targets THIS wallet (not the
+	// per-swap deposit wallet) when producing the release tx, because
+	// only this wallet's destination-chain address holds the operator-
+	// funded balance the payout needs.
+	//
+	// Path resolution:
+	//   --release-wallets-file set        → use it verbatim
+	//   --release-wallets-file unset AND
+	//     --data-dir set                  → <data-dir>/release-wallets.json
+	//   both unset                        → in-memory (lossy on restart)
+	if mchainClient != nil {
+		releasePath := *releaseFile
+		if releasePath == "" && *dataDir != "" {
+			releasePath = filepath.Join(*dataDir, "release-wallets.json")
+		}
+		releaseStore, err := mchain.NewFileReleaseStore(mchainClient, releasePath)
+		if err != nil {
+			logger.Error("release wallet store init", "err", err, "path", releasePath)
+			os.Exit(1)
+		}
+		api.SetReleaseStore(releaseStore)
+		if releasePath == "" {
+			logger.Warn("release wallet store is in-memory — every restart re-mints per-network release wallets; set --release-wallets-file (or --data-dir) for durability")
+		} else {
+			logger.Info("release wallet store enabled",
+				"path", releasePath,
+			)
+		}
+	} else {
+		logger.Info("release wallet store skipped — no --mpc-url configured")
+	}
 
 	// Deposit watcher: background goroutine that polls the source chains
 	// for confirmed deposits and advances pending swaps. Only meaningful
