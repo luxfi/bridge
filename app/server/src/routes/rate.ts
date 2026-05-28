@@ -11,12 +11,17 @@ router.get(
   async (req: Request, res: Response) => {
 
   try {
-    const { 
-      source_network, 
-      source_asset, 
-      destination_network, 
-      destination_asset 
-    } = req.params;
+    const {
+      source_network,
+      source_asset,
+      destination_network,
+      destination_asset
+    } = req.params as {
+      source_network: string
+      source_asset: string
+      destination_network: string
+      destination_asset: string
+    };
 
     const {
       amount,

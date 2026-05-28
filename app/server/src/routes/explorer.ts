@@ -25,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
 // method: GET and it's public
 router.get("/:transaction_has", async (req: Request, res: Response) => {
   try {
-    const transaction_has = req.params.transaction_has
+    const transaction_has = req.params.transaction_has as string
     const result = await getHasBySwaps(transaction_has)
     console.log("🚀 ~ result:", result)
     res.status(200).json({ data: result })

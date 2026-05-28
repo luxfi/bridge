@@ -1,6 +1,6 @@
 // mountBridge — declarative SDK entrypoint.
 //
-// Mirrors the `mountExchange` pattern from @liquidityio/exchange: the host
+// Mirrors the `mountExchange` pattern from the upstream exchange SDK: the host
 // passes a config and we own the DOM + React root from there.
 //
 //   import { mountBridge } from '@luxfi/bridge'
@@ -40,20 +40,45 @@ async function ensureGuiConfigured(): Promise<void> {
   ) {
     return
   }
-  // The @hanzo/gui package's source exports `createGui` (after the monorepo's
-  // postinstall rename of upstream `createHanzogui` → `createGui`), but its
-  // shipped .d.ts files still carry the original Hanzogui name. The runtime
-  // export name is canonical here — we widen the import type to `any` so
-  // tsc resolves the type-only mismatch without forcing every consumer to
-  // ship the same rename patch.
+  // @hanzo/gui ships two compatible naming surfaces across its 7.x
+  // dist artefacts:
+  //   - 7.0.0 shipped an empty dist/; the consumer-side postinstall
+  //     (scripts/patch-hanzogui-exports.cjs) rewrites package.json to
+  //     point at src/, where the upstream `createHanzogui` /
+  //     `HanzoguiProvider` / `getDefaultHanzoguiConfig` were renamed
+  //     to `createGui` / `GuiProvider` / `getDefaultGuiConfig`.
+  //   - 7.2.x ships a populated dist/ — the patch script no longer
+  //     rewrites it, so the dist/ exports use the upstream Hanzogui
+  //     symbol names verbatim.
+  //
+  // The SDK accepts whichever pair is present so a tenant can sit on
+  // either 7.0.0 (with the patch) or 7.2.x (without) and mount cleanly.
+  // Helper widens types so tsc doesn't require both names to be present
+  // on the static declaration surface.
   const [gui, cfgDefault] = await Promise.all([
     import('@hanzo/gui'),
     import('@hanzogui/config-default'),
   ])
-  const createGui = (gui as unknown as {
-    createGui: (c: unknown) => unknown
-  }).createGui
-  createGui(cfgDefault.getDefaultGuiConfig())
+  const guiAny = gui as unknown as Record<string, unknown>
+  const cfgAny = cfgDefault as unknown as Record<string, unknown>
+  const createGui =
+    (guiAny.createGui as ((c: unknown) => unknown) | undefined) ??
+    (guiAny.createHanzogui as ((c: unknown) => unknown) | undefined)
+  if (!createGui) {
+    throw new Error(
+      'mountBridge: neither @hanzo/gui.createGui nor createHanzogui is exported — ' +
+        'install @hanzo/gui >=7.0.0 or run the patch-hanzogui-exports.cjs postinstall',
+    )
+  }
+  const getDefaultConfig =
+    (cfgAny.getDefaultGuiConfig as (() => unknown) | undefined) ??
+    (cfgAny.getDefaultHanzoguiConfig as (() => unknown) | undefined)
+  if (!getDefaultConfig) {
+    throw new Error(
+      'mountBridge: neither @hanzogui/config-default.getDefaultGuiConfig nor getDefaultHanzoguiConfig is exported',
+    )
+  }
+  createGui(getDefaultConfig())
 }
 
 /**

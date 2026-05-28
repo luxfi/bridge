@@ -1,4 +1,10 @@
 name: Docker
+
+# Single-arch (linux/amd64) container build on the working `lux-build` ARC label.
+# Multi-arch (arm64) will return once the per-arch `lux-build-linux-arm64`
+# pool is verified online (current per-arch labels did not pick up jobs).
+# No QEMU, no cross-org reusable.
+
 on:
   workflow_dispatch:
   push:
@@ -9,42 +15,41 @@ permissions:
   contents: read
   packages: write
 
-jobs:
-  docker:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - image: ghcr.io/luxfi/bridge
-            dockerfile: Dockerfile
-            context: .
-          - image: ghcr.io/luxfi/bridge/server
-            dockerfile: app/server/Dockerfile
-            context: .
-          - image: ghcr.io/luxfi/bridge-ui
-            dockerfile: app/bridge/Dockerfile
-            context: .
-    uses: hanzoai/.github/.github/workflows/docker-build.yml@main
-    with:
-      image: ${{ matrix.image }}
-      dockerfile: ${{ matrix.dockerfile }}
-      context: ${{ matrix.context }}
-    secrets: inherit
+env:
+  IMAGE: ghcr.io/luxfi/bridge
 
-  notify-universe:
-    needs: docker
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: lux-build
     steps:
-      - uses: peter-evans/repository-dispatch@v3
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
-          token: ${{ secrets.UNIVERSE_PAT }}
-          repository: luxfi/universe
-          event-type: image-published
-          client-payload: |
-            {
-              "service": "bridge",
-              "image": "ghcr.io/luxfi/bridge",
-              "tag": "${{ github.ref_name }}",
-              "sha": "${{ github.sha }}"
-            }
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute tags
+        id: meta
+        run: |
+          set -e
+          tags=""
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            v="${GITHUB_REF#refs/tags/}"
+            tags="ghcr.io/luxfi/bridge:${v},ghcr.io/luxfi/bridge:latest"
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            tags="ghcr.io/luxfi/bridge:main"
+          elif [[ "${GITHUB_REF}" == refs/heads/dev ]]; then
+            tags="ghcr.io/luxfi/bridge:dev"
+          elif [[ "${GITHUB_REF}" == refs/heads/test ]]; then
+            tags="ghcr.io/luxfi/bridge:test"
+          fi
+          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+      - name: Build & push
+        if: steps.meta.outputs.tags != ''
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
