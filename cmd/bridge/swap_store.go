@@ -82,8 +82,35 @@ type Swap struct {
 	ServiceFee       float64 `json:"service_fee,omitempty"`
 
 	// Deposit address — legacy "wallet_name###address" format when
-	// minted via internal/mchain.KeygenForDeposit.
+	// minted via internal/mchain.KeygenForDeposit. This is the
+	// PER-SWAP source-chain receive address. The user sends source
+	// funds here; the refund driver also signs from this address
+	// when sweeping a stuck swap back to its original sender.
 	DepositAddress string `json:"deposit_address,omitempty"`
+
+	// ReleaseWalletID is the MPC wallet identifier for the long-lived
+	// per-DESTINATION-network release wallet. Populated at swap-create
+	// time by mchain.ReleaseWalletStore.GetOrCreate and reused by
+	// every swap to the same destination network. Distinct from
+	// DepositAddress, which is a fresh keygen per swap on the source
+	// side. The signing driver targets this wallet (not the deposit
+	// wallet) when producing the destination-chain release tx, because
+	// only this wallet's destination-chain address holds the
+	// operator-funded liquidity needed to pay the user.
+	//
+	// Empty for swaps created before the release-wallet split landed
+	// (2026-05) and for swaps created against a bridge process that
+	// has no --mpc-url configured. In those legacy paths the signing
+	// driver falls back to the deposit wallet — those swaps will
+	// fail-and-refund unless the operator pre-funded the per-swap
+	// release address out of band.
+	ReleaseWalletID string `json:"release_wallet_id,omitempty"`
+	// ReleaseAddress is the destination-network address controlled by
+	// ReleaseWalletID. The signing driver passes this to the tx
+	// assembler as SenderAddress so the release tx draws from
+	// operator-funded liquidity, not from the (always-empty) per-swap
+	// deposit wallet.
+	ReleaseAddress string `json:"release_address,omitempty"`
 
 	// Source-side observation: tx hash, confirmed amount.
 	SourceTxHash    string  `json:"source_tx_hash,omitempty"`
