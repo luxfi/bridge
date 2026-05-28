@@ -14,7 +14,9 @@
 //     sendTransaction with encoding=base64. The "raw tx" the caller
 //     hands in is the base64-encoded signed transaction produced by
 //     txassembler.SOLAssembler.Finalize.
-//   - Non-EVM, non-BTC, non-SOL (TON / XRP / DOT): returns
+//   - Polkadot / Substrate (POLKADOT_MAINNET / POLKADOT_TESTNET /
+//     KUSAMA_MAINNET): implemented via author_submitExtrinsic. See dot.go.
+//   - Non-EVM, non-BTC, non-SOL, non-DOT (TON / XRP): returns
 //     ErrFamilyNotImplemented. Adding any one is a straightforward
 //     follow-up — different REST/RPC contracts, same shape.
 //
@@ -96,7 +98,7 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (TON, XRP, DOT). EVM + BTC + SOL are wired
+// isn't implemented yet (TON, XRP). EVM + BTC + SOL + DOT are wired
 // in this package today.
 var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
@@ -194,10 +196,12 @@ type BroadcastResult struct {
 //
 // Errors:
 //   - ErrUnsupportedNetwork           network not in the table / overrides.
-//   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP/DOT — TODO.
+//   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP — TODO.
 //   - ErrEmptyRawTx                   rawTxHex == "".
 //   - *RPCError                       upstream returned a JSON-RPC error
 //     or non-2xx HTTP.
+//   - *DOTBroadcastError              Polkadot author_submitExtrinsic rejected
+//     the extrinsic; check Retryable bit.
 //   - context.Canceled/DeadlineExceeded on caller or per-call timeout.
 func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*BroadcastResult, error) {
 	if rawTxHex == "" {
@@ -213,7 +217,7 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 	// truth for which family a network belongs to). EVM uses
 	// eth_sendRawTransaction; BTC uses mempool.space POST /api/tx (or
 	// the operator's own Bitcoin Core via Client.RPCURLOverrides);
-	// SOL uses sendTransaction.
+	// SOL uses sendTransaction; DOT uses author_submitExtrinsic.
 	// Other non-EVM families still pending their own broadcasters.
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
@@ -222,6 +226,8 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 		return c.broadcastBTC(ctx, url, rawTxHex)
 	case mchain.AddressTypeSOL:
 		return c.broadcastSOL(ctx, url, rawTxHex)
+	case mchain.AddressTypeDOT:
+		return c.broadcastDOT(ctx, url, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}

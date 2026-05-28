@@ -419,6 +419,14 @@ func (s *ZapStore) LoadEntries(ctx context.Context, family string) ([]ReleasePoo
 		prefix := releasePoolPrefix(family)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
+			// Defensive: the family prefix is always `releasepool:FAM:`
+			// and entries are zero-padded 6-digit indices. Skip any
+			// keys that don't match — guards against future migrations
+			// that introduce sub-namespaces under a family prefix.
+			suffix := item.Key()[len(prefix):]
+			if !isAllDigits(suffix) {
+				continue
+			}
 			var entry ReleasePoolEntry
 			if err := item.Value(func(val []byte) error {
 				return json.Unmarshal(val, &entry)
@@ -489,6 +497,21 @@ func containsColon(s string) bool {
 		}
 	}
 	return false
+}
+
+// isAllDigits reports whether every byte of b is an ASCII digit.
+// Used in LoadEntries to filter out keys with non-numeric suffixes
+// (sub-namespace migrations, etc.).
+func isAllDigits(b []byte) bool {
+	if len(b) == 0 {
+		return false
+	}
+	for _, c := range b {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // PutEntry persists one pool entry under releasepool:<family>:<index>.
