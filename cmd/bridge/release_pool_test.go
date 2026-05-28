@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -33,11 +34,27 @@ func (k *fakeKeygener) KeygenForDeposit(_ context.Context, network string) (*mch
 		return nil, err
 	}
 	i := k.calls.Add(1)
-	return &mchain.Wallet{
-		Name:        fmt.Sprintf("release-pool-wallet-%d", i),
-		Address:     fmt.Sprintf("0xaddr%d", i),
-		AddressType: mchain.AddressTypeETH,
-	}, nil
+	// Family / address-shape comes from the network name so a single
+	// fake keygener can drive both EVM + XRP pool tests.
+	switch network {
+	case "XRP_MAINNET", "XRP_TESTNET":
+		// Hex-decoded pubkey for testing. The bridge persists the hex
+		// form on ReleasePoolEntry.ECDSAPubKey; the raw bytes go into
+		// Wallet.ECDSAPubKey.
+		pub, _ := hex.DecodeString("0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020")
+		return &mchain.Wallet{
+			Name:        fmt.Sprintf("release-pool-xrp-%d", i),
+			Address:     fmt.Sprintf("rFakeXRPWallet%dabc", i),
+			AddressType: mchain.AddressTypeXRP,
+			ECDSAPubKey: pub,
+		}, nil
+	default:
+		return &mchain.Wallet{
+			Name:        fmt.Sprintf("release-pool-wallet-%d", i),
+			Address:     fmt.Sprintf("0xaddr%d", i),
+			AddressType: mchain.AddressTypeETH,
+		}, nil
+	}
 }
 
 // =============================================================================
@@ -488,4 +505,45 @@ func TestReleasePools_LegacyEntriesMigrateToEVM(t *testing.T) {
 	if btcPool.Size() != 0 {
 		t.Errorf("BTC pool should not inherit legacy EVM entries; got Size=%d", btcPool.Size())
 	}
+}
+
+// TestReleasePool_XRPFamily_BootstrapAndAcquire — XRP-family equivalent
+// of the BTC test: minted entries carry the ECDSA pubkey hex needed by
+// the XRP signing driver to populate SigningPubKey.
+func TestReleasePool_XRPFamily_BootstrapAndAcquire(t *testing.T) {
+	store := NewInMemoryStore()
+	pool := NewReleasePoolForFamily(store, FamilyXRP, "XRP_TESTNET", nil)
+	// fakeXRPKeygener returns wallets tagged AddressTypeXRP plus a
+	// non-empty ECDSAPubKey so the pool can fill ECDSAPubKey hex.
+	kg := &fakeXRPKeygener{}
+	if err := pool.Bootstrap(context.Background(), kg, 3); err != nil {
+		t.Fatalf("Bootstrap: %v", err)
+	}
+	if pool.Size() != 3 {
+		t.Errorf("Size = %d, want 3", pool.Size())
+	}
+	got, err := pool.Acquire(context.Background(), "XRP_TESTNET")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Family != FamilyXRP {
+		t.Errorf("Family = %q, want %q", got.Family, FamilyXRP)
+	}
+	if got.ECDSAPubKey == "" {
+		t.Error("XRP pool entry should carry a non-empty ECDSAPubKey hex from keygen (XRP SigningPubKey depends on it)")
+	}
+}
+
+type fakeXRPKeygener struct {
+	calls atomic.Int64
+}
+
+func (k *fakeXRPKeygener) KeygenForDeposit(_ context.Context, network string) (*mchain.Wallet, error) {
+	i := k.calls.Add(1)
+	return &mchain.Wallet{
+		Name:        fmt.Sprintf("xrp-wallet-%d", i),
+		Address:     fmt.Sprintf("rExample-%d", i),
+		AddressType: mchain.AddressTypeXRP,
+		ECDSAPubKey: []byte{0x02, byte(i), 0xAA, 0xBB}, // non-empty
+	}, nil
 }

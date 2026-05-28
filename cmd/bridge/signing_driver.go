@@ -400,15 +400,20 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// (multi-family routing); single Pool / btcPool / dotPool are
 	// family-specific fallbacks; final fallback is the deposit-as-
 	// release path that handled v1 swaps.
-	var walletID, senderAddr string
-	usingPool := false
-	var releasePoolForSwap *ReleasePool // set when we acquired from a family-specific pool
+	var (
+		walletID           string
+		senderAddr         string
+		poolEntry          *ReleasePoolEntry // threaded into XRP signing path
+		usingPool          bool
+		releasePoolForSwap *ReleasePool // set when we acquired from a family-specific pool
+	)
 
 	if d.poolSet != nil {
 		entry, perr := d.poolSet.Acquire(ctx, sw.DestinationNetwork)
 		if perr == nil && entry != nil {
 			walletID = entry.WalletID
 			senderAddr = entry.Address
+			poolEntry = entry
 			usingPool = true
 			releasePoolForSwap = d.poolSet.PoolFor(sw.DestinationNetwork)
 		} else if d.logger != nil && perr != nil && !errors.Is(perr, ErrEmptyPool) && !errors.Is(perr, ErrNoPoolForFamily) {
@@ -430,6 +435,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			if perr == nil && entry != nil {
 				walletID = entry.WalletID
 				senderAddr = entry.Address
+				poolEntry = entry
 				usingPool = true
 				releasePoolForSwap = fallback
 			} else if d.logger != nil && perr != nil && !errors.Is(perr, ErrEmptyPool) {
@@ -487,12 +493,22 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		return
 	}
 
-	// Step 3 — branch by destination family. SOL has its own message
-	// build + sign + finalize path because the cryptographic primitives
-	// are different (Ed25519 vs ECDSA, 64-byte sig vs 65-byte recoverable,
-	// no nonce/gas concept).
+	// Step 3 — branch by destination family.
+
+	// SOL has its own message build + sign + finalize path because the
+	// cryptographic primitives are different (Ed25519 vs ECDSA, 64-byte
+	// sig vs 65-byte recoverable, no nonce/gas concept).
 	if mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeSOL {
 		d.signOneSOL(ctx, sw, walletID, senderAddr)
+		return
+	}
+
+	// XRP destinations need a completely different transaction shape
+	// (Payment instead of EIP-155, DER signature instead of R||S||V,
+	// drops instead of wei). Route there before the EVM-specific
+	// assembler kicks in.
+	if mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeXRP {
+		d.signOneXRP(ctx, sw, walletID, senderAddr, poolEntry)
 		return
 	}
 
@@ -1108,6 +1124,225 @@ func (d *SigningDriver) gasPrecheck(ctx context.Context, sw *Swap, u *txassemble
 // Compile-time check: *mchain.Client satisfies MPCSigner.
 var _ MPCSigner = (*mchain.Client)(nil)
 
+// =============================================================================
+// XRP signing path
+// =============================================================================
+
+// signOneXRP is the XRP-family equivalent of the EVM signOne logic
+// after the swap has been claimed (status = SwapStatusSigning). It:
+//
+//  1. Builds an XRP Payment via Assembler.PreSignXRP (rippled-side
+//     account_info for Sequence + fee, embeds the SigningPubKey from
+//     the release-pool entry's PubKeyHex).
+//  2. Runs the XRP gas pre-check: AccountBalanceDrops vs
+//     (Amount + Fee + 10-XRP reserve). Short-circuits to
+//     SwapStatusFailedInsufficientReleaseGas when balance falls short.
+//  3. Hands the 32-byte SHA-512Half digest to the MPC signer.
+//  4. Calls Assembler.FinalizeXRP (DER-encodes the signature with
+//     low-s normalization, attaches it to TxnSignature, returns the
+//     wire-ready blob + canonical tx hash).
+//  5. Persists DestRawTx + advances to SwapStatusBroadcasting.
+//
+// On any pre-check / signing / finalize failure the swap rolls back
+// to SwapStatusBridgeTransferPending so the next tick retries (same
+// recovery model as the EVM path).
+func (d *SigningDriver) signOneXRP(ctx context.Context, sw *Swap, walletID, senderAddr string, poolEntry *ReleasePoolEntry) {
+	if d.assembler == nil || d.assembler.XRPProviderFor() == nil {
+		// Without the XRP provider plumbed, we can't safely build the
+		// Payment (no rippled-side Sequence / Fee). Roll back so the
+		// operator's misconfiguration surfaces as a stuck swap with a
+		// readable LastError.
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "XRP tx assembler not configured — refusing to sign without rippled account_info"
+		})
+		if d.logger != nil {
+			d.logger.Warn("XRP signing skipped — no XRPProvider configured",
+				"swap_id", sw.ID,
+			)
+		}
+		return
+	}
+	if poolEntry == nil || poolEntry.ECDSAPubKey == "" {
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "XRP signing requires a release-pool wallet with PubKeyHex (re-bootstrap the pool with an XRP mint network)"
+		})
+		if d.logger != nil {
+			d.logger.Warn("XRP signing skipped — release-pool entry missing PubKeyHex",
+				"swap_id", sw.ID,
+				"wallet_id", walletID,
+			)
+		}
+		return
+	}
+
+	// Step 3 (XRP) — build the Payment.
+	unsigned, aerr := d.assembler.PreSignXRP(ctx, txassembler.XRPSpec{
+		Network:            sw.DestinationNetwork,
+		SenderAddress:      senderAddr,
+		SenderPubKeyHex:    poolEntry.ECDSAPubKey,
+		DestinationAddress: sw.DestinationAddress,
+		AmountXRP:          sw.Amount,
+	})
+	if aerr != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("XRP PreSign failed", "swap_id", sw.ID, "err", aerr)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "rippled unreachable while building XRP tx — retrying"
+		})
+		return
+	}
+
+	// Step 4 (XRP) — gas pre-check via rippled account balance.
+	if reason, ok := d.xrpGasPrecheck(ctx, sw, unsigned, senderAddr); !ok {
+		d.shortCircuited.Add(1)
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusFailedInsufficientReleaseGas
+			}
+			s.LastError = reason
+			s.LastErrorAt = time.Now().UTC()
+		})
+		if d.logger != nil {
+			d.logger.Warn("XRP gas pre-check failed — swap short-circuited",
+				"swap_id", sw.ID,
+				"release_wallet_id", walletID,
+				"release_address", senderAddr,
+				"network", sw.DestinationNetwork,
+				"reason", reason,
+			)
+		}
+		return
+	}
+
+	// Step 5 (XRP) — MPC sign the 32-byte SHA-512Half digest.
+	msgHex := "0x" + hex.EncodeToString(unsigned.SigningPayload[:])
+	sigCtx, cancel := context.WithTimeout(ctx, d.perSignTimeout)
+	defer cancel()
+
+	res, err := d.signer.SignForWallet(sigCtx, walletID, msgHex)
+	if err != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("XRP signing ceremony failed",
+				"swap_id", sw.ID,
+				"wallet_id", walletID,
+				"err", err,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "MPC signing ceremony failed — retrying"
+		})
+		return
+	}
+
+	// Step 6 (XRP) — DER-encode + attach signature, emit wire blob.
+	rawTxHex, txHash, ferr := d.assembler.FinalizeXRP(unsigned, res.Signature)
+	if ferr != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("XRP FinalizeXRP failed", "swap_id", sw.ID, "err", ferr)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+		})
+		return
+	}
+
+	// Step 7 (XRP) — record + advance to broadcasting.
+	_, err = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusSigning {
+			return
+		}
+		s.Signature = res.Signature
+		s.MPCSessionID = res.SessionID
+		s.DestRawTx = rawTxHex
+		s.Status = SwapStatusBroadcasting
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
+	})
+	if err != nil {
+		if d.logger != nil {
+			d.logger.Warn("persist XRP signature", "swap_id", sw.ID, "err", err)
+		}
+		d.failures.Add(1)
+		return
+	}
+	d.successes.Add(1)
+	if d.logger != nil {
+		d.logger.Info("XRP signature received → advanced to broadcasting",
+			"swap_id", sw.ID,
+			"wallet_id", walletID,
+			"session_id", res.SessionID,
+			"xrp_tx_hash", txHash,
+		)
+	}
+}
+
+// xrpGasPrecheck verifies the release wallet's XRPL balance covers
+// (Amount + Fee + 10-XRP reserve). Returns (reason, false) when
+// insufficient; ("", true) when balance is sufficient OR the probe
+// itself failed (probe errors must NOT block the swap — broadcast
+// retries still recover from transient rippled flakes).
+//
+// XRPL accounts must hold at least the base reserve (10 XRP) at all
+// times or rippled deletes the AccountRoot. The pre-check refuses
+// to sign a tx that would drop the wallet below reserve.
+func (d *SigningDriver) xrpGasPrecheck(ctx context.Context, sw *Swap, u *txassembler.XRPUnsigned, releaseAddr string) (string, bool) {
+	prov := d.assembler.XRPProviderFor()
+	if prov == nil {
+		return "", true
+	}
+	probeCtx, cancel := context.WithTimeout(ctx, d.perBalanceTimeout)
+	defer cancel()
+	balance, err := prov.AccountBalanceDrops(probeCtx, sw.DestinationNetwork, releaseAddr)
+	if err != nil {
+		if d.logger != nil {
+			d.logger.Debug("XRP gas pre-check: balance probe failed (non-fatal — pre-check skipped)",
+				"swap_id", sw.ID,
+				"address", releaseAddr,
+				"network", sw.DestinationNetwork,
+				"err", err,
+			)
+		}
+		return "", true
+	}
+	required := u.XRPRequiredDrops()
+	if balance >= required {
+		return "", true
+	}
+	short := required - balance
+	return fmt.Sprintf(
+		"Release wallet %s has insufficient XRP on %s: balance=%d drops, required=%d drops (amount=%d + fee=%d + reserve=%d), short=%d drops. Fund the wallet and trigger a retry.",
+		releaseAddr,
+		sw.DestinationNetwork,
+		balance,
+		required,
+		u.AmountDrops,
+		u.FeeDrops,
+		required-u.AmountDrops-u.FeeDrops,
+		short,
+	), false
+}
+
 // Suppress unused-import warnings on the rare path where fmt isn't
 // directly referenced after future edits. Keeps the import list stable.
 var _ = fmt.Sprintf
+var _ = big.NewInt
+var _ = strconv.Itoa
+var _ = sha256.New
