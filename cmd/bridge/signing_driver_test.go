@@ -793,3 +793,125 @@ func TestSigning_StaleCheck_RunsBeforeWalletResolution(t *testing.T) {
 		t.Errorf("stale counter incremented despite no-wallet skip, stats=%+v", d.Stats())
 	}
 }
+
+// =============================================================================
+// Persistent-failure ceiling — signing-max-attempts
+// =============================================================================
+
+// TestSigning_MaxAttempts_AssemblerErrorIncrementsCounter shows that a
+// PreSign failure (transient destination-RPC outage, or a destination
+// chain with no tx assembler) bumps Swap.SigningAttempts and rolls
+// back to bridge_transfer_pending under the ceiling.
+func TestSigning_MaxAttempts_AssemblerErrorIncrementsCounter(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "wallet-fail", "ETHEREUM_SEPOLIA")
+	signer.ok("wallet-fail", "0x"+strings.Repeat("aa", 65), "sess")
+	asm := txassembler.New(&txassembler.StaticProvider{}) // no network config → PreSign errors
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetAssembler(asm)
+	d.SetMaxSigningAttempts(5)
+
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("under-ceiling failure should roll back to bridge_transfer_pending, got %q", got.Status)
+	}
+	if got.SigningAttempts != 1 {
+		t.Errorf("SigningAttempts should be 1 after 1 PreSign failure, got %d", got.SigningAttempts)
+	}
+	if !strings.Contains(got.LastError, "Destination RPC unreachable") {
+		t.Errorf("LastError should explain the PreSign failure, got %q", got.LastError)
+	}
+}
+
+// TestSigning_MaxAttempts_HitsCeilingMovesToRefundPending verifies the
+// persistent-failure short-circuit: once SigningAttempts reaches
+// maxSigningAttempts, the swap moves to refund_pending so the refund
+// driver returns the deposit (a destination chain with no tx assembler
+// — e.g. BITCOIN_TESTNET today — would otherwise loop forever).
+func TestSigning_MaxAttempts_HitsCeilingMovesToRefundPending(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "wallet-fail", "ETHEREUM_SEPOLIA")
+	signer.ok("wallet-fail", "0x"+strings.Repeat("aa", 65), "sess")
+	asm := txassembler.New(&txassembler.StaticProvider{})
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetAssembler(asm)
+	d.SetMaxSigningAttempts(3)
+
+	// Three ticks → three PreSign failures → ceiling hit.
+	d.Tick(t.Context())
+	d.Tick(t.Context())
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Fatalf("hitting ceiling should move to refund_pending, got %q", got.Status)
+	}
+	if got.SigningAttempts != 3 {
+		t.Errorf("SigningAttempts should be at the ceiling (3), got %d", got.SigningAttempts)
+	}
+	if !strings.Contains(got.LastError, "Signing failed 3 times") {
+		t.Errorf("LastError should explain the ceiling hit, got %q", got.LastError)
+	}
+	if !strings.Contains(got.LastError, "moving to refund") {
+		t.Errorf("LastError should signal refund handoff, got %q", got.LastError)
+	}
+}
+
+// TestSigning_MaxAttempts_ZeroDisablesCeiling preserves the legacy
+// "retry forever" behaviour when operators set
+// --signing-max-attempts=0.
+func TestSigning_MaxAttempts_ZeroDisablesCeiling(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "wallet-fail", "ETHEREUM_SEPOLIA")
+	signer.ok("wallet-fail", "0x"+strings.Repeat("aa", 65), "sess")
+	asm := txassembler.New(&txassembler.StaticProvider{})
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetAssembler(asm)
+	d.SetMaxSigningAttempts(0) // legacy: unbounded
+
+	for i := 0; i < 10; i++ {
+		d.Tick(t.Context())
+	}
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("with ceiling disabled, swap should keep rolling back to bridge_transfer_pending, got %q", got.Status)
+	}
+	if got.SigningAttempts != 10 {
+		t.Errorf("SigningAttempts should still count past the would-be-ceiling, got %d", got.SigningAttempts)
+	}
+}
+
+// TestSigning_MaxAttempts_SuccessResets confirms that a successful
+// signing run clears SigningAttempts.
+func TestSigning_MaxAttempts_SuccessResets(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "wallet-success", "ETHEREUM_SEPOLIA")
+	signer.ok("wallet-success", "0x"+strings.Repeat("bb", 65), "sess-ok")
+	// Pre-seed a non-zero attempt count to simulate prior failures.
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.SigningAttempts = 4
+	})
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetMaxSigningAttempts(5)
+	// No assembler attached → fallback placeholder digest → sign succeeds.
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Fatalf("expected broadcasting, got %q reason=%q", got.Status, got.LastError)
+	}
+	if got.SigningAttempts != 0 {
+		t.Errorf("SigningAttempts should be cleared on success, got %d", got.SigningAttempts)
+	}
+}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hanzoai/zip"
 	"github.com/luxfi/bridge/internal/bchain"
+	"github.com/luxfi/bridge/internal/cosigners"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 )
@@ -104,6 +105,15 @@ type createSwapReq struct {
 	UseDepositAddress  bool    `json:"use_deposit_address"`
 	UseTeleporter      bool    `json:"use_teleporter"`
 	AppName            string  `json:"app_name"`
+	// Cosigners is the SDK's layered-cosigner declaration — `[{kind:
+	// "utila", org_id, client_id, ...}, {kind: "fireblocks", api_key,
+	// ...}]`. PUBLIC identifiers only; the bridge fetches matching
+	// secrets from KMS at dispatch time. Validated at swap-create via
+	// cosigners.ValidateIntents — bad shapes return HTTP 400. Stored
+	// on the Swap row and consumed by the signing driver before
+	// advancing the swap to broadcasting. Empty / absent → no
+	// layered cosign; the native MPC quorum is the only signer.
+	Cosigners []any `json:"cosigners,omitempty"`
 }
 
 // envelope is the canonical `{data: ...}` wrapper the legacy server
@@ -196,10 +206,17 @@ func (a *API) quoteNative(c *zip.Ctx) error {
 // future deposit-watcher will advance them through bridge_transfer_pending
 // → signing → broadcasting → completed.
 //
-// Legacy POST body fields use_teleporter, app_name, cosigners are
-// accepted (so the TS SDK works unchanged) but NOT acted on — the
-// MPC pipeline supersedes the teleporter dispatch (see
-// architecture_mpc_vs_teleporter memory).
+// Layered-cosigner intents (`cosigners[]`) are now honored as of the
+// internal/cosigners port (see SDK v1.0.3 — "since" line in the bridge
+// README). The signing driver invokes the dispatcher AFTER the native
+// MPC sign and BEFORE advancing to broadcasting; any non-approved
+// result fails the swap into refund_pending. Empty / absent cosigners
+// keeps the legacy single-signer path.
+//
+// `use_teleporter` is still accepted but NOT acted on — the MPC
+// pipeline supersedes teleporter dispatch (see the
+// architecture_mpc_vs_teleporter memory). `app_name` is stored only
+// for audit / logging.
 func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	var req createSwapReq
 	if err := c.Bind(&req); err != nil {
@@ -218,6 +235,19 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error":  "bad_amount",
 			"detail": "amount must be > 0",
+		})
+	}
+
+	// Validate cosigner intents up-front. ValidateIntents enforces the
+	// SDK wire shape (kind discriminator, required fields per family,
+	// secret-field deny-list). A malformed entry returns HTTP 400 with
+	// the offending index — the SDK consumer can surface the error to
+	// the developer without leaking server-side detail.
+	cosignerIntents, cosignerErr := cosigners.ValidateIntents(req.Cosigners)
+	if cosignerErr != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":  "bad_cosigners",
+			"detail": cosignerErr.Error(),
 		})
 	}
 
@@ -325,6 +355,7 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		UseDepositAddress:  req.UseDepositAddress,
 		UseTeleporter:      false, // teleporter dispatch is off the happy path per architecture_mpc_vs_teleporter
 		AppName:            req.AppName,
+		Cosigners:          cosignerIntents,
 	}
 	if depositWallet != nil {
 		swap.DepositAddress = depositWallet.LegacyDepositString()

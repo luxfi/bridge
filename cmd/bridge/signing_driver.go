@@ -12,6 +12,7 @@ import (
 
 	luxlog "github.com/luxfi/log"
 
+	"github.com/luxfi/bridge/internal/cosigners"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/txassembler"
 )
@@ -90,6 +91,30 @@ type SigningDriver struct {
 	// behavior: sign at the create-time rate no matter how stale).
 	maxQuoteAge time.Duration
 
+	// cosignerDispatcher, when set, gates the broadcast-advancement on
+	// layered-cosigner approval. After the native MPC quorum signs, the
+	// driver dispatches each intent declared on Swap.Cosigners; only
+	// when every result is StatusApproved does the swap advance to
+	// SwapStatusBroadcasting. Any non-approved result (rejection,
+	// transport failure, KMS miss, "not implemented" stub) transitions
+	// the swap to SwapStatusRefundPending so the refund driver sweeps
+	// the user's deposit back. Nil → cosigner gate disabled; swaps
+	// with Cosigners populated still advance to broadcasting (legacy
+	// behavior, used during the §13.6 cutover when Express is the
+	// authoritative cosigner path).
+	cosignerDispatcher cosigners.Dispatcher
+
+	// maxSigningAttempts caps consecutive signing-driver failures per
+	// swap. When >0 and a swap's SigningAttempts reaches this value
+	// after a PreSign / MPC sign failure, the rollback path moves the
+	// swap to SwapStatusRefundPending so the refund driver can return
+	// the deposit. Catches persistent destination-RPC outages and
+	// the empirical "destination chain has no tx assembler" case
+	// (LUX → BITCOIN_TESTNET etc — txassembler is EVM-only today, so
+	// a non-EVM destination would loop signing forever otherwise).
+	// Zero ⇒ unbounded (legacy "retry forever").
+	maxSigningAttempts int
+
 	running atomic.Bool
 
 	ticks       atomic.Uint64
@@ -116,6 +141,39 @@ func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler =
 // BTC pairs, 30+ min for stable-coin pairs.
 func (d *SigningDriver) SetMaxQuoteAge(age time.Duration) { d.maxQuoteAge = age }
 
+// SetCosignerDispatcher attaches a layered-cosigner dispatcher. When
+// set, every swap with a non-empty Swap.Cosigners list has its
+// declared external custodians (Utila / Fireblocks) consulted AFTER
+// the native MPC sign and BEFORE the swap advances to broadcasting.
+// "All listed must approve" — any non-approved result moves the swap
+// to SwapStatusRefundPending. Nil ⇒ the cosigner gate is bypassed and
+// swaps advance to broadcasting on native sign alone (the legacy
+// behavior; useful during the §13.6 cutover soak when app/server is
+// still the authoritative cosigner path).
+func (d *SigningDriver) SetCosignerDispatcher(disp cosigners.Dispatcher) {
+	d.cosignerDispatcher = disp
+}
+
+// SetMaxSigningAttempts configures the persistent-failure ceiling.
+// After this many consecutive PreSign / MPC sign failures, the swap
+// moves to SwapStatusRefundPending so the refund driver can return
+// the deposit. Zero disables the ceiling (legacy "retry forever").
+// Defaults to DefaultMaxSigningAttempts when not set.
+func (d *SigningDriver) SetMaxSigningAttempts(n int) {
+	if n < 0 {
+		n = 0
+	}
+	d.maxSigningAttempts = n
+}
+
+// DefaultMaxSigningAttempts is the post-rollback ceiling that routes
+// a stuck swap to SwapStatusRefundPending. 10 attempts × ~10 s sign
+// interval ≈ ~100 s of tolerance against transient destination-RPC
+// outages, which is enough headroom for typical RPC flaps. A
+// terminal failure (destination chain has no tx assembler) trips
+// faster — every tick reliably hits the same error.
+const DefaultMaxSigningAttempts = 10
+
 // DefaultSigningInterval is the production-suitable tick cadence for
 // the signing driver. Faster than the deposit watcher because once a
 // swap reaches bridge_transfer_pending the user is actively waiting
@@ -131,11 +189,12 @@ func NewSigningDriver(store SwapStore, signer MPCSigner, interval time.Duration,
 		interval = DefaultSigningInterval
 	}
 	return &SigningDriver{
-		store:          store,
-		signer:         signer,
-		interval:       interval,
-		logger:         logger,
-		perSignTimeout: DefaultPerSignTimeout,
+		store:              store,
+		signer:             signer,
+		interval:           interval,
+		logger:             logger,
+		perSignTimeout:     DefaultPerSignTimeout,
+		maxSigningAttempts: DefaultMaxSigningAttempts,
 	}
 }
 
@@ -326,15 +385,9 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 					"err", aerr,
 				)
 			}
-			// Roll back — the swap is still deposit-confirmed; the
-			// next tick will retry. (Often this means a transient
-			// RPC failure querying nonce / gas price.)
-			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
-				if s.Status == SwapStatusSigning {
-					s.Status = SwapStatusBridgeTransferPending
-				}
-				s.LastError = "Destination RPC unreachable while building tx — retrying"
-			})
+			d.rollbackOrFail(ctx, sw.ID, aerr,
+				"Destination RPC unreachable while building tx — retrying",
+				"PreSign")
 			return
 		}
 		msgHex = "0x" + hex.EncodeToString(unsigned.SigHash[:])
@@ -355,15 +408,9 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 				"err", err,
 			)
 		}
-		// Roll back to bridge_transfer_pending so the next tick retries.
-		// Don't reset to user_deposit_pending — the deposit is still
-		// confirmed; only the signing leg failed.
-		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
-			if s.Status == SwapStatusSigning {
-				s.Status = SwapStatusBridgeTransferPending
-			}
-			s.LastError = "MPC signing ceremony failed — retrying"
-		})
+		d.rollbackOrFail(ctx, sw.ID, err,
+			"MPC signing ceremony failed — retrying",
+			"MPC sign")
 		return
 	}
 
@@ -406,6 +453,68 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		destRawTx = rawTx
 	}
 
+	// Layered-cosigner gate. If the SDK declared external cosigners
+	// (Utila / Fireblocks) on this swap, dispatch them now — between
+	// the native MPC sign and the broadcast advancement. Bridge policy
+	// is "all listed must approve"; any non-approved result (rejection,
+	// transport failure, KMS miss, stub-not-implemented) moves the
+	// swap to SwapStatusRefundPending so the refund driver returns the
+	// deposit. When d.cosignerDispatcher is nil OR sw.Cosigners is
+	// empty, this block is a no-op and the legacy "advance to
+	// broadcasting on native sign alone" behaviour applies.
+	if d.cosignerDispatcher != nil && len(sw.Cosigners) > 0 {
+		results, derr := d.cosignerDispatcher.Dispatch(ctx, cosigners.DispatchOptions{
+			SwapID:          sw.ID,
+			NativeSignature: res.Signature,
+			TxHash:          destRawTx,
+			Cosigners:       sw.Cosigners,
+		})
+		if derr != nil {
+			// Dispatcher-level misconfiguration (e.g. empty SwapID
+			// guard). The bug is on our side, not the swap's — log
+			// and bail without transitioning. Next tick will retry,
+			// giving the operator a chance to fix config.
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Error("cosigner dispatcher error",
+					"swap_id", sw.ID, "err", derr,
+				)
+			}
+			return
+		}
+		// Always persist results for audit, even on approval.
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.CosignerResults = results
+			}
+		})
+		if !cosigners.AllApproved(results) {
+			firstFail := cosigners.FirstNonApproved(results)
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("cosigner denied — refund",
+					"swap_id", sw.ID,
+					"kind", string(firstFail.Intent.Kind),
+					"status", string(firstFail.Status),
+					"reason", firstFail.Reason,
+					"external_id", firstFail.ExternalID,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status != SwapStatusSigning {
+					return
+				}
+				s.Status = SwapStatusRefundPending
+				s.LastError = fmt.Sprintf("cosigner %s %s: %s",
+					firstFail.Intent.Kind, firstFail.Status, firstFail.Reason)
+				s.LastErrorAt = time.Now().UTC()
+			})
+			return
+		}
+		// All approved — fall through to the broadcast-advance Patch
+		// below as usual.
+	}
+
 	// Record signature + raw tx (if any) + advance to broadcasting.
 	_, err = d.store.Patch(ctx, sw.ID, func(s *Swap) {
 		if s.Status != SwapStatusSigning {
@@ -422,6 +531,10 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		// the destination chain rejects the raw tx.
 		s.LastError = ""
 		s.LastErrorAt = time.Time{}
+		// Reset the persistent-failure counter on success so a later
+		// re-entry (which the bridge state machine doesn't currently
+		// produce, but is defensively cheap) starts from zero.
+		s.SigningAttempts = 0
 	})
 	if err != nil {
 		if d.logger != nil {
@@ -514,6 +627,71 @@ func buildSigningMessage(sw *Swap) string {
 	b = append(b, []byte(sw.DestinationAsset)...)
 	sum := sha256.Sum256(b)
 	return "0x" + hex.EncodeToString(sum[:])
+}
+
+// rollbackOrFail is the shared rollback path for signing failures
+// (PreSign + MPC sign). Increments Swap.SigningAttempts; below the
+// d.maxSigningAttempts ceiling, rolls the status back to
+// SwapStatusBridgeTransferPending so the next tick retries. At the
+// ceiling, routes the swap to SwapStatusRefundPending with an
+// operator-actionable LastError so the refund driver returns the
+// user's deposit instead of looping forever — catches both
+// transient destination-RPC outages and terminal cases like a
+// destination chain with no tx assembler (today's BTC / SOL / TON
+// gap surfaces this way).
+//
+// `cause` is the underlying error for logging; `userMsg` is the
+// short string written to Swap.LastError for retries (the SDK shows
+// this to the user). `stage` labels the failure for the ceiling-
+// hit log message.
+func (d *SigningDriver) rollbackOrFail(ctx context.Context, swapID string, cause error, userMsg, stage string) {
+	var maxedOut bool
+	var attempts int
+	patched, _ := d.store.Patch(ctx, swapID, func(s *Swap) {
+		if s.Status != SwapStatusSigning {
+			return
+		}
+		s.SigningAttempts++
+		attempts = s.SigningAttempts
+		if d.maxSigningAttempts > 0 && s.SigningAttempts >= d.maxSigningAttempts {
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf(
+				"Signing failed %d times at %s (max=%d) — moving to refund: %s",
+				s.SigningAttempts, stage, d.maxSigningAttempts, truncSigningErr(cause, 120),
+			)
+			s.LastErrorAt = time.Now().UTC()
+			maxedOut = true
+			return
+		}
+		s.Status = SwapStatusBridgeTransferPending
+		s.LastError = userMsg
+	})
+	if maxedOut && patched != nil && patched.Status == SwapStatusRefundPending {
+		if d.logger != nil {
+			d.logger.Warn("signing maxed out → refund_pending",
+				"swap_id", swapID,
+				"stage", stage,
+				"attempts", attempts,
+				"max", d.maxSigningAttempts,
+				"final_err", cause,
+			)
+		}
+	}
+}
+
+// truncSigningErr formats an error for inclusion in a user-visible
+// LastError, with a length ceiling so we don't blow up the SDK display
+// or the swap-row JSON budget on the rare upstream error that includes
+// a megabyte of stack trace.
+func truncSigningErr(err error, n int) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	if len(msg) <= n {
+		return msg
+	}
+	return msg[:n] + "…"
 }
 
 // Compile-time check: *mchain.Client satisfies MPCSigner.

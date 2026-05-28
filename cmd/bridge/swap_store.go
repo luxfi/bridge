@@ -7,6 +7,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/luxfi/bridge/internal/cosigners"
 )
 
 // swap_store.go: native swap persistence for cmd/bridge.
@@ -168,6 +170,49 @@ type Swap struct {
 	// driver successfully broadcasts. Populated together with
 	// Status=SwapStatusRefunded.
 	RefundTxHash string `json:"refund_tx_hash,omitempty"`
+
+	// Cosigners is the validated set of layered-cosigner intents from
+	// the swap-create POST body. Populated at swap-creation time when
+	// the SDK declared `mpc.utila` / `mpc.fireblocks` blocks. Carries
+	// PUBLIC identifiers only — the corresponding secret material is
+	// fetched from KMS at dispatch time, never persisted on the swap.
+	// Empty slice means no layered cosigners; the native MPC quorum
+	// signs and the swap advances to broadcasting unconditionally.
+	Cosigners []cosigners.Intent `json:"cosigners,omitempty"`
+
+	// CosignerResults captures the per-intent outcome after the signing
+	// driver runs the dispatcher. Populated AFTER the native MPC sign
+	// succeeds, BEFORE the swap transitions to broadcasting. If any
+	// result is non-approved, the swap moves to refund_pending and the
+	// refund driver sweeps the deposit back; if all are approved (or
+	// Cosigners is empty), the swap advances to broadcasting as usual.
+	// Persisted for audit — operators can inspect which cosigner
+	// denied and why.
+	CosignerResults []cosigners.Result `json:"cosigner_results,omitempty"`
+
+	// RefundAttempts counts consecutive refund failures via the
+	// rollback path. Incremented when the refund driver's MPC sign /
+	// broadcast / balance-fetch step fails and the swap is rolled
+	// back to broadcasting. Reset to zero on a successful refund. Used
+	// by the refund driver to detect persistent mpcd / RPC failures
+	// (e.g. wallet rotation, cluster downtime) — after a configurable
+	// threshold (--refund-max-attempts, default 5) the swap is moved
+	// to SwapStatusFailed instead of looping refunding ↔ broadcasting
+	// forever.
+	RefundAttempts int `json:"refund_attempts,omitempty"`
+
+	// SigningAttempts counts consecutive signing-driver failures.
+	// Incremented every time PreSign (destination RPC for nonce / gas
+	// price) or the MPC sign ceremony errors and the swap is rolled
+	// back to bridge_transfer_pending for retry. Reset to zero on
+	// successful sign. Used by the signing driver to detect
+	// persistent failures (the empirical case: destination chain has
+	// no tx assembler — e.g. a Bitcoin / Solana / TON destination
+	// while we only ship EVM tx assembly — the signing driver loops
+	// forever otherwise). After --signing-max-attempts (default 10),
+	// the swap moves to SwapStatusRefundPending so the deposit can be
+	// returned.
+	SigningAttempts int `json:"signing_attempts,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
