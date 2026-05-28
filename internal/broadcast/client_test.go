@@ -114,19 +114,11 @@ func TestBroadcast_UnsupportedNetwork(t *testing.T) {
 	}
 }
 
-func TestBroadcast_FamilyNotImplemented(t *testing.T) {
-	// TON_MAINNET is in mchain's address-type registry as TON, and
-	// broadcast/ doesn't implement TON yet (BTC + SOL are wired; TON
-	// + XRP + DOT remain pending). Need to add the network to the
-	// rpcURLs table so we get past the URL check and hit the family
-	// switch.
-	c := New(time.Second)
-	c.RPCURLOverrides = map[string]string{"TON_MAINNET": "http://unused"}
-	_, err := c.Broadcast(context.Background(), "TON_MAINNET", "0xabc")
-	if !errors.Is(err, ErrFamilyNotImplemented) {
-		t.Errorf("expected ErrFamilyNotImplemented for TON, got %v", err)
-	}
-}
+// TestBroadcast_FamilyNotImplemented intentionally removed —
+// every AddressType (ETH, BTC, SOL, DOT, XRP, TON) now has a
+// concrete broadcaster in this package. Adding a new family will
+// need a fresh test that drives the default switch arm by giving
+// the new AddressType a real registry entry.
 
 func TestBroadcast_RPCError(t *testing.T) {
 	srv := newEthSendServer(t, "")
