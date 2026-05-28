@@ -111,6 +111,7 @@ func (e ReleasePoolEntry) FamilyOrDefault() string {
 const (
 	FamilyEVM = "evm"
 	FamilyBTC = "btc"
+	FamilySOL = "sol"
 )
 
 // =============================================================================
