@@ -86,16 +86,24 @@ func (s *ZapStore) Close() error {
 // Key prefixes. All keys live under a single byte-prefix so iterators
 // can scope by prefix without touching unrelated keyspace.
 const (
-	keyPrefixSwap      = "swap:"
-	keyPrefixIdxStatus = "idx:status:"
-	keyPrefixIdxSrc    = "idx:src:"
+	keyPrefixSwap        = "swap:"
+	keyPrefixIdxStatus   = "idx:status:"
+	keyPrefixIdxSrc      = "idx:src:"
+	keyPrefixReleasePool = "releasepool:"
 )
 
-func swapKey(id string) []byte       { return []byte(keyPrefixSwap + id) }
+func swapKey(id string) []byte { return []byte(keyPrefixSwap + id) }
 func idxStatusKey(status SwapStatus, id string) []byte {
 	return []byte(keyPrefixIdxStatus + string(status) + ":" + id)
 }
 func idxSrcKey(net, id string) []byte { return []byte(keyPrefixIdxSrc + net + ":" + id) }
+
+// releasePoolKey formats the persistence key for one pool entry.
+// Index is zero-padded so iteration order matches sorted-by-index
+// (which matches the round-robin slot ordering ReleasePool expects).
+func releasePoolKey(idx int) []byte {
+	return []byte(fmt.Sprintf("%s%06d", keyPrefixReleasePool, idx))
+}
 
 // Create persists a new swap. Sets ID + timestamps if missing. Returns
 // an error if the id already exists.
@@ -362,6 +370,61 @@ func (s *ZapStore) nowSafe() time.Time {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.now()
+}
+
+// =============================================================================
+// Release-pool persistence (ReleasePoolStore interface)
+// =============================================================================
+
+// LoadEntries returns every persisted release-pool entry in index
+// order. Empty slice on first boot. The key suffix is the index
+// formatted as %06d, so a prefix-iterator naturally yields
+// ascending-index order.
+func (s *ZapStore) LoadEntries(ctx context.Context) ([]ReleasePoolEntry, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	out := make([]ReleasePoolEntry, 0)
+	err := s.db.View(func(txn *zapdb.Txn) error {
+		opt := zapdb.DefaultIteratorOptions
+		opt.PrefetchValues = true
+		it := txn.NewIterator(opt)
+		defer it.Close()
+		prefix := []byte(keyPrefixReleasePool)
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			var entry ReleasePoolEntry
+			if err := item.Value(func(val []byte) error {
+				return json.Unmarshal(val, &entry)
+			}); err != nil {
+				return fmt.Errorf("zap_store: unmarshal pool entry %s: %w", item.Key(), err)
+			}
+			out = append(out, entry)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PutEntry persists one pool entry under releasepool:<index>. Used
+// at startup pool-grow time and during operator-driven adjustments.
+func (s *ZapStore) PutEntry(ctx context.Context, idx int, entry ReleasePoolEntry) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	entry.Index = idx
+	val, err := json.Marshal(&entry)
+	if err != nil {
+		return fmt.Errorf("zap_store: marshal pool entry: %w", err)
+	}
+	return s.withConflictRetry(ctx, func() error {
+		return s.db.Update(func(txn *zapdb.Txn) error {
+			return txn.Set(releasePoolKey(idx), val)
+		})
+	})
 }
 
 // withConflictRetry runs op repeatedly until it either succeeds, returns
