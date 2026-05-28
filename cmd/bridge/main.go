@@ -140,6 +140,12 @@ func main() {
 		"network used for keygen of DOT-family release-pool wallets. Picks the SS58 prefix. Use POLKADOT_MAINNET in prod.")
 	dotPoolThresholdPlanck := flag.String("release-pool-dot-threshold-planck", envOr("BRIDGE_RELEASE_POOL_DOT_THRESHOLD_PLANCK", "100000000000"),
 		"planck balance threshold below which the DOT release pool logs a WARN. Default 10 DOT (1e11 planck on Polkadot mainnet) — well above the 1-DOT existential deposit to leave headroom for a few transfers.")
+	xrpReleasePoolSize := flag.Int("xrp-release-pool-size", envOrInt("BRIDGE_XRP_RELEASE_POOL_SIZE", 5),
+		"size of the XRP-flavored release-wallet pool. XRP wallets need a separate pool because their addresses (r-form) don't share an MPC keygen with EVM (eth_address). Pre-fund each wallet with ≥10 XRP (reserve) + per-payment fee. Default 5. Set 0 to disable.")
+	xrpReleasePoolMintNetwork := flag.String("xrp-release-pool-mint-network", envOr("BRIDGE_XRP_RELEASE_POOL_MINT_NETWORK", "XRP_TESTNET"),
+		"network used for keygen of XRP release-pool wallets. Uses the ECDSAPubKey to derive the r-address.")
+	xrpReleaseBalanceThresholdDrops := flag.Int64("xrp-release-balance-threshold-drops", envOrInt64("BRIDGE_XRP_RELEASE_BALANCE_THRESHOLD_DROPS", 10_000_000),
+		"XRP balance threshold (drops) below which the XRP release pool logs a WARN at Acquire time. Default 10 XRP (the AccountRoot reserve). Set 0 to disable the alerter; the XRP gas pre-check still runs.")
 	disableGasPrecheck := flag.Bool("disable-gas-precheck", false,
 		"disable the signing-driver gas pre-check (eth_getBalance against the release wallet before signing). When enabled, swaps that can't cover destination-chain gas + value short-circuit to failed_insufficient_release_gas BEFORE consuming the 75s MPC ceremony.")
 	btcReleasePoolSize := flag.Int("btc-release-pool-size", envOrInt("BRIDGE_BTC_RELEASE_POOL_SIZE", 0),
@@ -421,8 +427,19 @@ func main() {
 	asm.SetNetwork("BSC_MAINNET", txassembler.PerNetwork{ChainID: big.NewInt(56), NativeDecimals: 18})
 	asm.SetNetwork("POLYGON_MAINNET", txassembler.PerNetwork{ChainID: big.NewInt(137), NativeDecimals: 18})
 	asm.SetNetwork("HOLESKY_TESTNET", txassembler.PerNetwork{ChainID: big.NewInt(17000), NativeDecimals: 18})
+
+	// XRP-side of the assembler. Without an XRPProvider the
+	// PreSignXRP path refuses to build — the signing driver short-
+	// circuits XRP swaps with a readable LastError. The provider
+	// itself is cheap to construct (one http.Client); we always
+	// attach it so XRP networks can be added at runtime.
+	xrpProv := NewXRPProvider(overrides, 8*time.Second)
+	asm.XRP = xrpProv
+	asm.SetXRPNetwork("XRP_MAINNET", txassembler.XRPNetwork{LastLedgerWindow: 20})
+	asm.SetXRPNetwork("XRP_TESTNET", txassembler.XRPNetwork{LastLedgerWindow: 30})
 	logger.Info("tx assembler configured",
 		"networks", len(asm.Networks),
+		"xrp_networks", len(asm.XRPNetworks),
 		"provider", "rpc",
 		"mode", "pure_transfer",
 	)
@@ -679,6 +696,42 @@ func main() {
 		)
 	}
 
+	// XRP-flavored release wallets. Same family-pool shape as BTC/SOL/DOT —
+	// XRP needs its own pool because addresses (r-form) don't share an
+	// MPC keygen with EVM (eth_address). Pool entries carry the ECDSA
+	// pubkey hex so signOneXRP can build the Payment's SigningPubKey.
+	// Operators pre-fund each wallet with ≥10 XRP (the AccountRoot
+	// reserve) + per-payment fee.
+	var xrpReleasePool *ReleasePool
+	if *xrpReleasePoolSize > 0 && mchainClient != nil {
+		if poolStore, ok := swapStore.(ReleasePoolStore); !ok {
+			logger.Warn("XRP release pool requested but swap store does not implement ReleasePoolStore",
+				"size_requested", *xrpReleasePoolSize,
+			)
+		} else {
+			xrpReleasePool = NewReleasePoolForFamily(poolStore, FamilyXRP, *xrpReleasePoolMintNetwork, logger)
+			if *xrpReleaseBalanceThresholdDrops > 0 {
+				xrpReleasePool.BalanceThresholdWei = big.NewInt(*xrpReleaseBalanceThresholdDrops)
+				// No probe — XRP balance check happens in signOneXRP's
+				// dedicated rippled `account_info` lookup, not via the
+				// generic eth_getBalance shape.
+			}
+			bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			if err := xrpReleasePool.Bootstrap(bootstrapCtx, mchainClient, *xrpReleasePoolSize); err != nil {
+				bootstrapCancel()
+				logger.Error("XRP release pool bootstrap failed", "err", err, "desired_size", *xrpReleasePoolSize)
+				os.Exit(1)
+			}
+			bootstrapCancel()
+			releasePoolSet.XRP = xrpReleasePool
+			logger.Info("XRP release pool ready",
+				"size", xrpReleasePool.Size(),
+				"mint_network", *xrpReleasePoolMintNetwork,
+				"balance_threshold_drops", *xrpReleaseBalanceThresholdDrops,
+			)
+		}
+	}
+
 	// Signing driver: background goroutine that drives swaps in
 	// bridge_transfer_pending through MPC threshold signing. Requires
 	// an mchain client; without one the driver has nothing to call.
@@ -829,9 +882,13 @@ func main() {
 		}
 		if releasePool != nil {
 			body["release_pool"] = map[string]any{
-				"size":                  releasePool.Size(),
-				"mint_network":          *releasePoolMintNetwork,
-				"balance_threshold_wei": *releaseBalanceThresholdWei,
+				"size":                        releasePool.Size(),
+				"size_xrp":                    releasePool.SizeByFamily("xrp"),
+				"size_eth":                    releasePool.SizeByFamily("eth"),
+				"mint_network":                *releasePoolMintNetwork,
+				"xrp_mint_network":            *xrpReleasePoolMintNetwork,
+				"balance_threshold_wei":       *releaseBalanceThresholdWei,
+				"xrp_balance_threshold_drops": *xrpReleaseBalanceThresholdDrops,
 			}
 		}
 		if btcReleasePool != nil {
@@ -919,7 +976,9 @@ func envOrInt(k string, fallback int) int {
 
 // envOrInt64 is envOrInt for int64. Used for BTC sat values that
 // exceed the 32-bit range on common amounts (1 BTC = 1e8 sat fits,
-// but multi-BTC reserve thresholds need int64).
+// but multi-BTC reserve thresholds need int64), and for XRP drops
+// thresholds (10 XRP = 10_000_000 drops, comfortably int but the
+// Sequence/Fee shape is int64-uniform across the codebase).
 func envOrInt64(k string, fallback int64) int64 {
 	v := os.Getenv(k)
 	if v == "" {

@@ -63,6 +63,13 @@ type ReleasePoolSet struct {
 	// (z/bridgev2-dot-broadcast).
 	DOT *ReleasePool
 
+	// XRP is the secp256k1 pool for XRP Ledger destinations. Same
+	// curve as EVM but addresses are r-form (base58check of
+	// RIPEMD160(SHA256(pubkey))). Pool entries carry the compressed
+	// pubkey hex because signOneXRP embeds it in the Payment's
+	// SigningPubKey field.
+	XRP *ReleasePool
+
 	logger luxlog.Logger
 }
 
@@ -117,6 +124,11 @@ func (s *ReleasePoolSet) poolFor(network string) (*ReleasePool, error) {
 			return nil, fmt.Errorf("%w: DOT", ErrNoPoolForFamily)
 		}
 		return s.DOT, nil
+	case mchain.AddressTypeXRP:
+		if s.XRP == nil {
+			return nil, fmt.Errorf("%w: XRP", ErrNoPoolForFamily)
+		}
+		return s.XRP, nil
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrNoPoolForFamily,
 			mchain.AddressTypeFor(network))
@@ -137,6 +149,8 @@ func (s *ReleasePoolSet) PoolFor(network string) *ReleasePool {
 		return s.BTC
 	case mchain.AddressTypeDOT:
 		return s.DOT
+	case mchain.AddressTypeXRP:
+		return s.XRP
 	default:
 		return nil
 	}
@@ -159,6 +173,9 @@ func (s *ReleasePoolSet) Size() int {
 	if s.DOT != nil {
 		total += s.DOT.Size()
 	}
+	if s.XRP != nil {
+		total += s.XRP.Size()
+	}
 	return total
 }
 
@@ -177,6 +194,9 @@ func (s *ReleasePoolSet) FamilySizes() map[string]int {
 	}
 	if s.DOT != nil {
 		out["dot"] = s.DOT.Size()
+	}
+	if s.XRP != nil {
+		out["xrp"] = s.XRP.Size()
 	}
 	return out
 }
