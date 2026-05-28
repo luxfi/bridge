@@ -86,16 +86,43 @@ func (s *ZapStore) Close() error {
 // Key prefixes. All keys live under a single byte-prefix so iterators
 // can scope by prefix without touching unrelated keyspace.
 const (
-	keyPrefixSwap      = "swap:"
-	keyPrefixIdxStatus = "idx:status:"
-	keyPrefixIdxSrc    = "idx:src:"
+	keyPrefixSwap        = "swap:"
+	keyPrefixIdxStatus   = "idx:status:"
+	keyPrefixIdxSrc      = "idx:src:"
+	keyPrefixReleasePool = "releasepool:"
 )
 
-func swapKey(id string) []byte       { return []byte(keyPrefixSwap + id) }
+func swapKey(id string) []byte { return []byte(keyPrefixSwap + id) }
 func idxStatusKey(status SwapStatus, id string) []byte {
 	return []byte(keyPrefixIdxStatus + string(status) + ":" + id)
 }
 func idxSrcKey(net, id string) []byte { return []byte(keyPrefixIdxSrc + net + ":" + id) }
+
+// releasePoolKey formats the persistence key for one pool entry.
+// Index is zero-padded so iteration order matches sorted-by-index
+// (which matches the round-robin slot ordering ReleasePool expects).
+//
+// Family is included in the key so EVM and BTC pools share the
+// keyspace without cross-contaminating prefix scans.
+//
+// Legacy (pre-multi-family) entries used `releasepool:NNNNNN`; new
+// writes always use `releasepool:{family}:NNNNNN`. LoadEntries reads
+// BOTH shapes when the family is "evm" so existing zapdb stores
+// keep their pre-family entries.
+func releasePoolKey(family string, idx int) []byte {
+	if family == "" {
+		family = FamilyEVM
+	}
+	return []byte(fmt.Sprintf("%s%s:%06d", keyPrefixReleasePool, family, idx))
+}
+
+// releasePoolPrefix is the iteration prefix for one family's pool.
+func releasePoolPrefix(family string) []byte {
+	if family == "" {
+		family = FamilyEVM
+	}
+	return []byte(keyPrefixReleasePool + family + ":")
+}
 
 // Create persists a new swap. Sets ID + timestamps if missing. Returns
 // an error if the id already exists.
@@ -193,57 +220,57 @@ func (s *ZapStore) Patch(ctx context.Context, id string, fn func(*Swap)) (*Swap,
 	var out Swap
 	err := s.withConflictRetry(ctx, func() error {
 		return s.db.Update(func(txn *zapdb.Txn) error {
-		key := swapKey(id)
-		item, err := txn.Get(key)
-		if err != nil {
-			if errors.Is(err, zapdb.ErrKeyNotFound) {
-				return ErrSwapNotFound
-			}
-			return err
-		}
-		var current Swap
-		if err := item.Value(func(val []byte) error {
-			return json.Unmarshal(val, &current)
-		}); err != nil {
-			return fmt.Errorf("zap_store: unmarshal current: %w", err)
-		}
-		oldStatus := current.Status
-		oldSrc := current.SourceNetwork
-
-		fn(&current)
-		current.UpdatedAt = s.nowSafe()
-
-		val, err := json.Marshal(&current)
-		if err != nil {
-			return fmt.Errorf("zap_store: marshal: %w", err)
-		}
-		if err := txn.Set(key, val); err != nil {
-			return err
-		}
-		// Refresh secondary indexes when keys change. Tombstone the
-		// old entry first, then write the new one.
-		if oldStatus != current.Status {
-			if err := txn.Delete(idxStatusKey(oldStatus, id)); err != nil {
+			key := swapKey(id)
+			item, err := txn.Get(key)
+			if err != nil {
+				if errors.Is(err, zapdb.ErrKeyNotFound) {
+					return ErrSwapNotFound
+				}
 				return err
 			}
-			if err := txn.Set(idxStatusKey(current.Status, id), nil); err != nil {
+			var current Swap
+			if err := item.Value(func(val []byte) error {
+				return json.Unmarshal(val, &current)
+			}); err != nil {
+				return fmt.Errorf("zap_store: unmarshal current: %w", err)
+			}
+			oldStatus := current.Status
+			oldSrc := current.SourceNetwork
+
+			fn(&current)
+			current.UpdatedAt = s.nowSafe()
+
+			val, err := json.Marshal(&current)
+			if err != nil {
+				return fmt.Errorf("zap_store: marshal: %w", err)
+			}
+			if err := txn.Set(key, val); err != nil {
 				return err
 			}
-		}
-		if oldSrc != current.SourceNetwork {
-			if oldSrc != "" {
-				if err := txn.Delete(idxSrcKey(oldSrc, id)); err != nil {
+			// Refresh secondary indexes when keys change. Tombstone the
+			// old entry first, then write the new one.
+			if oldStatus != current.Status {
+				if err := txn.Delete(idxStatusKey(oldStatus, id)); err != nil {
+					return err
+				}
+				if err := txn.Set(idxStatusKey(current.Status, id), nil); err != nil {
 					return err
 				}
 			}
-			if current.SourceNetwork != "" {
-				if err := txn.Set(idxSrcKey(current.SourceNetwork, id), nil); err != nil {
-					return err
+			if oldSrc != current.SourceNetwork {
+				if oldSrc != "" {
+					if err := txn.Delete(idxSrcKey(oldSrc, id)); err != nil {
+						return err
+					}
+				}
+				if current.SourceNetwork != "" {
+					if err := txn.Set(idxSrcKey(current.SourceNetwork, id), nil); err != nil {
+						return err
+					}
 				}
 			}
-		}
-		out = current
-		return nil
+			out = current
+			return nil
 		})
 	})
 	if err != nil {
@@ -362,6 +389,154 @@ func (s *ZapStore) nowSafe() time.Time {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.now()
+}
+
+// =============================================================================
+// Release-pool persistence (ReleasePoolStore interface)
+// =============================================================================
+
+// LoadEntries returns every persisted release-pool entry for the
+// given family in index order. Empty slice on first boot. The key
+// suffix is the index formatted as %06d, so a prefix-iterator
+// naturally yields ascending-index order.
+//
+// Legacy entries (written with the pre-family key shape
+// `releasepool:NNNNNN`) are also surfaced when family==FamilyEVM,
+// so an upgrade from v1 doesn't lose the existing pool.
+func (s *ZapStore) LoadEntries(ctx context.Context, family string) ([]ReleasePoolEntry, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if family == "" {
+		family = FamilyEVM
+	}
+	out := make([]ReleasePoolEntry, 0)
+	err := s.db.View(func(txn *zapdb.Txn) error {
+		opt := zapdb.DefaultIteratorOptions
+		opt.PrefetchValues = true
+		it := txn.NewIterator(opt)
+		defer it.Close()
+		prefix := releasePoolPrefix(family)
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			// Defensive: the family prefix is always `releasepool:FAM:`
+			// and entries are zero-padded 6-digit indices. Skip any
+			// keys that don't match — guards against future migrations
+			// that introduce sub-namespaces under a family prefix.
+			suffix := item.Key()[len(prefix):]
+			if !isAllDigits(suffix) {
+				continue
+			}
+			var entry ReleasePoolEntry
+			if err := item.Value(func(val []byte) error {
+				return json.Unmarshal(val, &entry)
+			}); err != nil {
+				return fmt.Errorf("zap_store: unmarshal pool entry %s: %w", item.Key(), err)
+			}
+			if entry.Family == "" {
+				entry.Family = family
+			}
+			out = append(out, entry)
+		}
+		// Legacy-key compatibility: scan the family-less prefix on EVM
+		// reads only.
+		if family == FamilyEVM {
+			legacyPrefix := []byte(keyPrefixReleasePool)
+			// Build a set of indices we've already emitted from the
+			// family-tagged scan to avoid duplicates.
+			seen := make(map[int]struct{}, len(out))
+			for _, e := range out {
+				seen[e.Index] = struct{}{}
+			}
+			it2 := txn.NewIterator(opt)
+			defer it2.Close()
+			for it2.Seek(legacyPrefix); it2.ValidForPrefix(legacyPrefix); it2.Next() {
+				k := it2.Item().Key()
+				// Skip keys that are family-tagged (e.g. releasepool:btc:000005).
+				suffix := string(k[len(keyPrefixReleasePool):])
+				if containsColon(suffix) {
+					continue
+				}
+				var entry ReleasePoolEntry
+				if err := it2.Item().Value(func(val []byte) error {
+					return json.Unmarshal(val, &entry)
+				}); err != nil {
+					return fmt.Errorf("zap_store: unmarshal legacy pool entry %s: %w", k, err)
+				}
+				if _, dup := seen[entry.Index]; dup {
+					continue
+				}
+				if entry.Family == "" {
+					entry.Family = FamilyEVM
+				}
+				out = append(out, entry)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	// Sort by index ascending. List from the family-tagged scan is
+	// already sorted, but the legacy merge can interleave.
+	for i := 1; i < len(out); i++ {
+		for j := i; j > 0 && out[j-1].Index > out[j].Index; j-- {
+			out[j-1], out[j] = out[j], out[j-1]
+		}
+	}
+	return out, nil
+}
+
+// containsColon reports whether s contains a ':'. Used in LoadEntries
+// to distinguish legacy (no colon after the prefix) from family-tagged
+// keys.
+func containsColon(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] == ':' {
+			return true
+		}
+	}
+	return false
+}
+
+// isAllDigits reports whether every byte of b is an ASCII digit.
+// Used in LoadEntries to filter out keys with non-numeric suffixes
+// (sub-namespace migrations, etc.).
+func isAllDigits(b []byte) bool {
+	if len(b) == 0 {
+		return false
+	}
+	for _, c := range b {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// PutEntry persists one pool entry under releasepool:<family>:<index>.
+// Used at startup pool-grow time and during operator-driven
+// adjustments.
+func (s *ZapStore) PutEntry(ctx context.Context, family string, idx int, entry ReleasePoolEntry) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if family == "" {
+		family = FamilyEVM
+	}
+	entry.Index = idx
+	if entry.Family == "" {
+		entry.Family = family
+	}
+	val, err := json.Marshal(&entry)
+	if err != nil {
+		return fmt.Errorf("zap_store: marshal pool entry: %w", err)
+	}
+	return s.withConflictRetry(ctx, func() error {
+		return s.db.Update(func(txn *zapdb.Txn) error {
+			return txn.Set(releasePoolKey(family, idx), val)
+		})
+	})
 }
 
 // withConflictRetry runs op repeatedly until it either succeeds, returns

@@ -72,8 +72,8 @@ type serverSwap struct {
 	// committed vs delivered amounts after the destination tx lands.
 	ReceiveAmount float64 `json:"receive_amount,omitempty"`
 	Signature     string  `json:"signature,omitempty"`
-	SourceTxHash   string `json:"source_tx_hash,omitempty"`
-	DestTxHash     string `json:"dest_tx_hash,omitempty"`
+	SourceTxHash  string  `json:"source_tx_hash,omitempty"`
+	DestTxHash    string  `json:"dest_tx_hash,omitempty"`
 	// DestRawTx is the wire-ready signed destination tx. Surfaced
 	// for operator diagnostics — useful for decoding the tx fields
 	// and verifying ECDSA recovery against the expected sender when
