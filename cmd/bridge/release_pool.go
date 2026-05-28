@@ -76,6 +76,23 @@ type ReleasePoolEntry struct {
 	Address  string    `json:"address"`
 	Network  string    `json:"network,omitempty"`
 	MintedAt time.Time `json:"minted_at"`
+
+	// AddressType captures the chain family this entry was minted
+	// for. Empty ⇒ legacy assumption of AddressTypeETH (every entry
+	// minted before this field was added).
+	AddressType mchain.AddressType `json:"address_type,omitempty"`
+
+	// ECDSAPubKey is the hex-encoded compressed secp256k1 pubkey the
+	// MPC quorum signs with. Carried for chains where the address is
+	// derived from the pubkey (XRP, etc.) or for refund flows that
+	// need the pubkey to re-derive addresses.
+	ECDSAPubKey string `json:"ecdsa_pub_key,omitempty"`
+
+	// EDDSAPubKey is the hex-encoded 32-byte Ed25519 pubkey the MPC
+	// quorum signs with when the wallet was keygen'd as a TON / SOL
+	// family wallet. Required by the TON txassembler to reconstruct
+	// the v4r2 state_init cell on first send.
+	EDDSAPubKey string `json:"eddsa_pub_key,omitempty"`
 }
 
 // =============================================================================
@@ -220,11 +237,14 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 			return fmt.Errorf("release pool: keygen idx=%d: %w", idx, err)
 		}
 		entry := ReleasePoolEntry{
-			Index:    idx,
-			WalletID: w.Name,
-			Address:  w.Address,
-			Network:  p.mintNetwork,
-			MintedAt: time.Now().UTC(),
+			Index:       idx,
+			WalletID:    w.Name,
+			Address:     w.Address,
+			Network:     p.mintNetwork,
+			MintedAt:    time.Now().UTC(),
+			AddressType: w.AddressType,
+			ECDSAPubKey: w.ECDSAPubKey,
+			EDDSAPubKey: w.EDDSAPubKey,
 		}
 		if err := p.store.PutEntry(ctx, idx, entry); err != nil {
 			return fmt.Errorf("release pool: persist idx=%d: %w", idx, err)
