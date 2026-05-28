@@ -34,6 +34,36 @@ import {
   bridgeIdToWagmiChainId,
   wagmiChainIdToBridgeId,
 } from '../lib/wagmi-config'
+import {
+  INJECTED_FALLBACK,
+  WALLET_DISPLAY_NAMES,
+  WALLET_ICONS,
+} from '../lib/wallet-icons'
+
+/**
+ * Picker-friendly view of a registered wagmi connector. The hook exposes
+ * one entry per connector so the WalletConnect UI can render a chooser
+ * instead of silently picking the first match.
+ */
+export interface WalletConnectorInfo {
+  /** Wagmi connector id (`injected`, `coinbaseWalletSDK`, `walletConnect`, …). */
+  id: string
+  /** User-facing label. Polished from wagmi's `name` when we recognise the id. */
+  name: string
+  /** Data-URL or http(s) icon. Falls back to a generic globe glyph. */
+  icon: string
+  /** Wagmi connector `type` field, exposed for downstream filtering. */
+  type?: string
+  /**
+   * True when this connector points at an extension that has actually
+   * announced itself in the current browser (EIP-6963), or when the legacy
+   * `injected` connector sees a `window.ethereum`. False for popup/QR
+   * connectors like WalletConnect and Coinbase Wallet SDK whose target
+   * doesn't live in this process. Drives the "Installed" vs "Popular"
+   * grouping in the picker modal.
+   */
+  installed: boolean
+}
 
 export interface WalletState {
   /** Connected EOA address, or null when disconnected. */
@@ -44,8 +74,20 @@ export interface WalletState {
   connecting: boolean
   /** True while a sign request is in flight. */
   signing: boolean
-  /** Connect to the wallet, targeting the given bridge chain id. */
+  /** All registered connectors as picker-friendly metadata. */
+  connectors: WalletConnectorInfo[]
+  /**
+   * Connect to the wallet, targeting the given bridge chain id. Uses the
+   * default preference (injected → coinbase → walletConnect). Throws on
+   * failure — caller renders the error.
+   */
   connect: (chainId: string) => Promise<void>
+  /**
+   * Connect with a specific connector by id. Used by the picker UI so the
+   * user chooses their wallet instead of getting the silent first-match.
+   * Throws on failure with a humanised message.
+   */
+  connectWith: (connectorId: string, chainId?: string) => Promise<void>
   /** Disconnect the current wallet. */
   disconnect: () => Promise<void>
   /** Switch active chain. Returns when wagmi reports the switch complete. */
@@ -79,15 +121,17 @@ export function useWallet(): WalletState {
 
   const connecting = connectStatus === 'pending' || account.isConnecting
 
-  // Connector preference: explicit WalletConnect (when configured) → injected
-  // (MetaMask/Rabby/etc) → Coinbase Wallet → first available. Tenants can
-  // override by composing their own wagmi config, but the SDK default picks
-  // the user-friendliest connector at hand.
+  // Connector preference for the legacy `connect()` entry point. Used when
+  // the host doesn't render the picker UI — picks the most-common-desktop
+  // choice first (browser extension), then Coinbase Wallet SDK, then
+  // WalletConnect as the mobile fallback. The picker UI in WalletConnect.tsx
+  // bypasses this entirely via `connectWith()`.
   const pickConnector = useCallback(() => {
     return (
-      connectors.find((c) => c.id === 'walletConnect') ??
       connectors.find((c) => c.id === 'injected') ??
+      connectors.find((c) => c.id === 'metaMask') ??
       connectors.find((c) => c.id === 'coinbaseWalletSDK') ??
+      connectors.find((c) => c.id === 'walletConnect') ??
       connectors[0]
     )
   }, [connectors])
@@ -122,6 +166,95 @@ export function useWallet(): WalletState {
     [connectAsync, pickConnector],
   )
 
+  // Picker-driven explicit connect. The connector id comes from the
+  // WalletConnectorInfo[] exposed below — no preference logic, the user
+  // chose deliberately.
+  const connectWith = useCallback(
+    async (connectorId: string, bridgeId?: string): Promise<void> => {
+      const connector = connectors.find((c) => c.id === connectorId)
+      if (!connector) {
+        throw new Error(`useWallet: connector "${connectorId}" not registered`)
+      }
+      const wantChain = bridgeId
+        ? bridgeIdToWagmiChainId(bridgeId) ?? undefined
+        : undefined
+      await connectAsync({
+        connector,
+        ...(wantChain ? { chainId: wantChain } : {}),
+      })
+    },
+    [connectAsync, connectors],
+  )
+
+  // Picker-friendly view of every registered connector. Wagmi's `name` and
+  // `icon` are inconsistent across connectors; we polish via static lookups
+  // keyed by id, falling back to wagmi's own values when we don't know the
+  // id (e.g. a third-party connector the tenant composed in).
+  //
+  // Dedup pass: wagmi v2 MIPD auto-creates one connector per EIP-6963
+  // announcement *in addition to* whatever we manually register. With
+  // MetaMask installed, both `io.metamask` (EIP-6963) and `injected` (legacy)
+  // appear and target the same provider — the picker would show two rows
+  // for the same wallet. Same story for Coinbase: `com.coinbase.wallet`
+  // (EIP-6963 from the extension) overlaps with `coinbaseWalletSDK` (popup
+  // SDK). Strategy: when an EIP-6963 RDNS-style id is present, hide the
+  // overlapping legacy connector.
+  const connectorInfo = useMemo<WalletConnectorInfo[]>(() => {
+    const isRdns = (id: string): boolean => id.includes('.')
+    const has6963Any = connectors.some((c) => isRdns(c.id))
+    const has6963Coinbase = connectors.some(
+      (c) => c.id.toLowerCase() === 'com.coinbase.wallet',
+    )
+
+    // window.ethereum presence — only meaningful for the legacy `injected`
+    // connector. EIP-6963 connectors are installed-by-definition (they
+    // announced themselves) so we don't probe further.
+    const hasWindowEthereum =
+      typeof window !== 'undefined' &&
+      Boolean((window as { ethereum?: unknown }).ethereum)
+
+    return connectors
+      .filter((c) => {
+        // Hide legacy injected when any EIP-6963 provider announced —
+        // they target the same underlying provider.
+        if (c.id === 'injected' && has6963Any) return false
+        // Hide Coinbase SDK popup when the Coinbase extension is present.
+        if (c.id === 'coinbaseWalletSDK' && has6963Coinbase) return false
+        return true
+      })
+      .map((c) => {
+        const display = WALLET_DISPLAY_NAMES[c.id] ?? c.name ?? c.id
+        // Wagmi connector `icon` field is officially optional and not part
+        // of the public type signature; accessed via a soft cast so a
+        // connector without one cleanly falls through to the bundled icon.
+        const wagmiIcon = (c as { icon?: unknown }).icon
+        // Prefer the connector's own icon (EIP-6963 providers announce a
+        // high-quality data URL of their official logo) over our bundled
+        // SVG. Bundled icons remain the fallback for legacy connectors and
+        // anything wagmi didn't surface an icon for.
+        const icon =
+          (typeof wagmiIcon === 'string' && wagmiIcon) ||
+          WALLET_ICONS[c.id] ||
+          INJECTED_FALLBACK
+
+        // Installed = "the wallet is locally available right now". EIP-6963
+        // connectors qualify by definition; legacy injected qualifies iff
+        // window.ethereum exists; everything else is remote (popup/QR/SDK).
+        let installed: boolean
+        if (isRdns(c.id)) installed = true
+        else if (c.id === 'injected') installed = hasWindowEthereum
+        else installed = false
+
+        return {
+          id: c.id,
+          name: display,
+          icon,
+          installed,
+          ...(c.type ? { type: c.type } : {}),
+        }
+      })
+  }, [connectors])
+
   const disconnect = useCallback(async (): Promise<void> => {
     await disconnectAsync()
   }, [disconnectAsync])
@@ -149,7 +282,9 @@ export function useWallet(): WalletState {
     chainId: bridgeChainId,
     connecting,
     signing,
+    connectors: connectorInfo,
     connect,
+    connectWith,
     disconnect,
     switchChain,
     signMessage,

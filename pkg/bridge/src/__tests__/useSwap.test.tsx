@@ -2,13 +2,36 @@
 // See the file LICENSE for licensing terms.
 //
 // useSwap is wagmi-free (the swap form doesn't need a connected wallet to
-// preview a quote), so we can test it without a WagmiProvider.
+// preview a quote). It now uses useNetworks() → useQuery() so each test
+// renders inside a QueryClientProvider; the dynamic registry falls back to
+// DEFAULT_CHAINS when the networks fetch errors, so the assertions about
+// default IDs ('lux:96369', 'evm:1') still hold.
 
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+// Stub useNetworks to return the bundled defaults synchronously. This
+// keeps the fetch counter focused on /api/quote (the surface under test)
+// — without the stub, useNetworks fires a /api/networks request on mount
+// and the test's single-response mock would account for it ahead of the
+// quote call.
+vi.mock('../app/hooks/useNetworks', async () => {
+  const { DEFAULT_CHAINS } = await import('../app/lib/chains')
+  const { DEFAULT_ASSETS } = await import('../app/lib/assets')
+  return {
+    useNetworks: () => ({
+      chains: DEFAULT_CHAINS,
+      assets: DEFAULT_ASSETS,
+      isLoading: false,
+      isError: false,
+      refetch: () => {},
+    }),
+  }
+})
+
 import { setConfig } from '../config'
 import { useSwap } from '../app/hooks/useSwap'
+import { makeTestWrapper } from './test-providers'
 
 const originalFetch = global.fetch
 
@@ -36,7 +59,7 @@ afterEach(() => {
 
 describe('useSwap', () => {
   it('initializes with default chain pair + null quote', () => {
-    const { result } = renderHook(() => useSwap())
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
     expect(result.current.fromChain.id).toBe('lux:96369')
     expect(result.current.toChain.id).toBe('evm:1')
     expect(result.current.quote).toBeNull()
@@ -45,7 +68,7 @@ describe('useSwap', () => {
   })
 
   it('reverse() swaps from/to chains and assets', () => {
-    const { result } = renderHook(() => useSwap())
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
     const before = {
       from: result.current.fromChain.id,
       to: result.current.toChain.id,
@@ -76,7 +99,7 @@ describe('useSwap', () => {
         },
       },
     })
-    const { result } = renderHook(() => useSwap())
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
 
     act(() => {
       result.current.setAmount('100')
@@ -100,7 +123,7 @@ describe('useSwap', () => {
 
   it('clears the quote when amount is invalid or zero', async () => {
     mockOnce({ data: { quote: { receive_amount: 50, min_receive_amount: 49, blockchain_fee: 0, service_fee: 0.01, avg_completion_time: '00:03:00', total_fee: 0, total_fee_in_usd: 0, slippage: 0.025 } } })
-    const { result } = renderHook(() => useSwap())
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
 
     act(() => result.current.setAmount('10'))
     await waitFor(() => expect(result.current.quote).not.toBeNull(), { timeout: 1_000 })
@@ -113,7 +136,7 @@ describe('useSwap', () => {
 
   it('surfaces quoteError on server 5xx', async () => {
     mockOnce({ error: 'boom' }, false)
-    const { result } = renderHook(() => useSwap())
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
 
     act(() => result.current.setAmount('5'))
     await waitFor(() => expect(result.current.quoteError).not.toBeNull(), {
