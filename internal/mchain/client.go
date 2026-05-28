@@ -130,6 +130,8 @@ var networkAddressType = map[string]AddressType{
 	"XRP_TESTNET": AddressTypeXRP,
 	// Polkadot / Substrate
 	"POLKADOT_MAINNET": AddressTypeDOT,
+	"POLKADOT_TESTNET": AddressTypeDOT,
+	"KUSAMA_MAINNET":   AddressTypeDOT,
 	// Cardano — placeholder (Ed25519); use the sol address slot until a
 	// proper Cardano encoder lands. Matches TS mpc-wallet.ts behaviour.
 	"CARDANO_MAINNET": AddressTypeSOL,
@@ -193,10 +195,14 @@ type Wallet struct {
 	// that needs to render or validate the address.
 	AddressType AddressType
 	// ECDSAPubKey is the 33-byte compressed secp256k1 public key the
-	// MPC quorum produced. The BTC release flow needs it for the
-	// witness stack on Finalize (P2WPKH spends include the pubkey
-	// alongside the DER signature). Empty when the keygen result didn't
-	// carry an ECDSA pubkey (Ed25519-only paths).
+	// MPC quorum produced. Required by:
+	//   - BTC release: witness stack on Finalize (P2WPKH spends include
+	//     the pubkey alongside the DER signature).
+	//   - DOT release: assembler derives the AccountId32 + picks the
+	//     ECDSA recovery byte at Finalize time.
+	//   - XRP release: same ECDSA-derived family.
+	// Empty when the keygen result didn't carry an ECDSA pubkey
+	// (Ed25519-only paths: SOL, TON).
 	ECDSAPubKey []byte
 }
 
@@ -226,13 +232,26 @@ func (e *MPCError) Error() string {
 	return fmt.Sprintf("mchain: %s: %s", e.Op, e.Message)
 }
 
-// ErrSubstrateNotImplemented is returned when a Polkadot/Substrate
-// keygen is requested. Substrate addresses require SS58 encoding from
-// the ed25519 public key; the Go bridge doesn't depend on an SS58
-// library yet. Surfaces as a clear error so callers know to wait or
-// route the swap through a different path.
+// ErrSubstrateNotImplemented historically signalled "DOT keygen
+// unsupported by the bridge". As of the DOT integration the bridge
+// derives the SS58 address client-side from the cluster's
+// ecdsa_pub_key, so this error is no longer returned by KeygenForDeposit.
+// Kept exported for callers that historically branched on errors.Is —
+// they'll never see it return now, but the symbol stays a stable
+// part of the API.
+//
+// Deprecated: as of bridge v2.x.x DOT is supported; do not branch on
+// errors.Is against this value any more.
 var ErrSubstrateNotImplemented = errors.New(
 	"mchain: substrate (dot) address derivation not implemented; needs SS58 encoder",
+)
+
+// ErrMissingPubKey is returned when a substrate (DOT) keygen succeeds
+// but the cluster didn't populate ecdsa_pub_key — substrate ECDSA
+// AccountId derivation needs the compressed pubkey. Surfaces clearly
+// so the operator knows the MPC cluster's response shape changed.
+var ErrMissingPubKey = errors.New(
+	"mchain: substrate keygen response missing ecdsa_pub_key — cluster cannot derive SS58 address",
 )
 
 // =============================================================================
@@ -423,14 +442,7 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 	if c.APIURL == "" {
 		return nil, &MPCError{Op: "keygen", Message: "APIURL not configured"}
 	}
-
-	// DOT check fires BEFORE the org_id check: a DOT keygen can't
-	// succeed regardless of auth, so the more informative
-	// ErrSubstrateNotImplemented wins.
 	addrType := AddressTypeFor(networkInternalName)
-	if addrType == AddressTypeDOT {
-		return nil, ErrSubstrateNotImplemented
-	}
 	if orgID == "" {
 		return nil, &MPCError{Op: "keygen", Message: "org_id required (set Client.OrgID or pass per-call)"}
 	}
@@ -721,9 +733,9 @@ func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, mess
 // *MPCError when the chosen slot is empty.
 //
 // networkInternalName is required for BTC so the bech32 hrp matches the
-// destination (BITCOIN_MAINNET → "bc"; BITCOIN_TESTNET → "tb"). For
-// every other family it's currently ignored but threaded so the API
-// is uniform.
+// destination (BITCOIN_MAINNET → "bc"; BITCOIN_TESTNET → "tb") and for
+// substrate / DOT so the SS58 prefix matches the network. For every
+// other family it's currently ignored but threaded so the API is uniform.
 //
 // BTC handling: mpcd's btc_address field is a legacy P2PKH "1..." Base58
 // address. The bridge release flow uses bech32 P2WPKH, derived locally
@@ -731,6 +743,10 @@ func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, mess
 // ECDSAPubKey we ALWAYS prefer the locally-derived P2WPKH; otherwise we
 // fall back to the legacy form so SDK callers that read the wire
 // `btc_address` slot still get something.
+//
+// DOT handling: Substrate ECDSA AccountId = blake2_256(compressed_pubkey),
+// then SS58-encoded with the network-specific prefix (Polkadot mainnet
+// vs Kusama vs Westend/generic testnet).
 func pickAddress(r *keygenResult, t AddressType, networkInternalName string) (string, error) {
 	var addr string
 	switch t {
@@ -752,8 +768,21 @@ func pickAddress(r *keygenResult, t AddressType, networkInternalName string) (st
 		// explicit placeholder in mpc-wallet.ts.
 		addr = preferEVMAddress(r)
 	case AddressTypeDOT:
-		// Should never be reached — caller guards via ErrSubstrateNotImplemented.
-		return "", ErrSubstrateNotImplemented
+		// Substrate ECDSA AccountId = blake2_256(compressed_pubkey),
+		// then SS58-encoded with the network-specific prefix. Derive
+		// client-side from the ecdsa_pub_key the cluster returns —
+		// the mpcd daemon doesn't (yet) emit SS58 strings natively.
+		if r.ECDSAPubKey == "" {
+			return "", ErrMissingPubKey
+		}
+		ss58, err := deriveSubstrateSS58(r.ECDSAPubKey, networkInternalName)
+		if err != nil {
+			return "", &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("derive SS58 address: %v", err),
+			}
+		}
+		addr = ss58
 	default: // AddressTypeETH or unknown → eth
 		addr = preferEVMAddress(r)
 	}

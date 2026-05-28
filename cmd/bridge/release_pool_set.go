@@ -57,6 +57,12 @@ type ReleasePoolSet struct {
 	// without conflict.
 	BTC *ReleasePool
 
+	// DOT is the secp256k1 pool for Polkadot / Substrate destinations.
+	// Same curve as EVM but different address derivation (SS58 with
+	// AccountId32 from blake2b(pubkey)). Populated by the DOT PR
+	// (z/bridgev2-dot-broadcast).
+	DOT *ReleasePool
+
 	logger luxlog.Logger
 }
 
@@ -106,6 +112,11 @@ func (s *ReleasePoolSet) poolFor(network string) (*ReleasePool, error) {
 			return nil, fmt.Errorf("%w: BTC", ErrNoPoolForFamily)
 		}
 		return s.BTC, nil
+	case mchain.AddressTypeDOT:
+		if s.DOT == nil {
+			return nil, fmt.Errorf("%w: DOT", ErrNoPoolForFamily)
+		}
+		return s.DOT, nil
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrNoPoolForFamily,
 			mchain.AddressTypeFor(network))
@@ -124,6 +135,8 @@ func (s *ReleasePoolSet) PoolFor(network string) *ReleasePool {
 		return s.SOL
 	case mchain.AddressTypeBTC:
 		return s.BTC
+	case mchain.AddressTypeDOT:
+		return s.DOT
 	default:
 		return nil
 	}
@@ -143,6 +156,9 @@ func (s *ReleasePoolSet) Size() int {
 	if s.BTC != nil {
 		total += s.BTC.Size()
 	}
+	if s.DOT != nil {
+		total += s.DOT.Size()
+	}
 	return total
 }
 
@@ -158,6 +174,9 @@ func (s *ReleasePoolSet) FamilySizes() map[string]int {
 	}
 	if s.BTC != nil {
 		out["btc"] = s.BTC.Size()
+	}
+	if s.DOT != nil {
+		out["dot"] = s.DOT.Size()
 	}
 	return out
 }
