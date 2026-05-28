@@ -89,6 +89,8 @@ func TestAddressTypeFor_Coverage(t *testing.T) {
 		{"TON_MAINNET", AddressTypeTON},
 		{"XRP_TESTNET", AddressTypeXRP},
 		{"POLKADOT_MAINNET", AddressTypeDOT},
+		{"POLKADOT_TESTNET", AddressTypeDOT},
+		{"KUSAMA_MAINNET", AddressTypeDOT},
 		{"CARDANO_MAINNET", AddressTypeSOL}, // placeholder slot
 		{"UNKNOWN_NETWORK", AddressTypeETH}, // default fallback
 	}
@@ -223,18 +225,67 @@ func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
 	}
 }
 
-func TestKeygen_DOT_ReturnsErrSubstrateNotImplemented(t *testing.T) {
-	// Important: we should NOT hit the cluster — fail fast in the
-	// AddressTypeDOT branch.
+func TestKeygen_DOT_DerivesSS58FromPubKey(t *testing.T) {
+	// The cluster returns a 33-byte compressed ECDSA pubkey; the bridge
+	// derives the SS58 address client-side.
+	//
+	// Pin a deterministic pubkey so the test asserts on a fixed SS58.
+	const pub = "02bf3e72a73be7a3a1b9b7872c7e3a7bf1c5e22f4e7f2a73be7a3a1b9b7872c7e3"
 	m := newMockCluster(t)
-	c := clientFor(m)
-
-	_, err := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
-	if !errors.Is(err, ErrSubstrateNotImplemented) {
-		t.Fatalf("expected ErrSubstrateNotImplemented, got %v", err)
+	m.result = &keygenResult{
+		WalletID:    "bridge-polkadot_mainnet-1",
+		ECDSAPubKey: pub,
+		ResultType:  "success",
 	}
-	if len(m.lastBody) != 0 {
-		t.Errorf("cluster should not have been hit for DOT request, body=%s", m.lastBody)
+	c := clientFor(m)
+	w, err := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
+	if err != nil {
+		t.Fatalf("KeygenForDeposit: %v", err)
+	}
+	if w.AddressType != AddressTypeDOT {
+		t.Errorf("AddressType = %v", w.AddressType)
+	}
+	if !strings.HasPrefix(w.Address, "1") {
+		t.Errorf("Polkadot SS58 should start with '1', got %q", w.Address)
+	}
+	if w.ECDSAPubKey != pub {
+		t.Errorf("ECDSAPubKey = %q", w.ECDSAPubKey)
+	}
+	// Second call with the same pubkey is deterministic.
+	w2, _ := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
+	if w2.Address != w.Address {
+		t.Error("SS58 derivation should be deterministic")
+	}
+}
+
+func TestKeygen_DOT_MissingPubKeyErrors(t *testing.T) {
+	// If the cluster returns no ecdsa_pub_key, we can't derive an SS58
+	// and surface ErrMissingPubKey.
+	m := newMockCluster(t)
+	m.result = &keygenResult{
+		WalletID:   "bridge-dot-1",
+		ResultType: "success",
+		// no ECDSAPubKey
+	}
+	c := clientFor(m)
+	_, err := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
+	if !errors.Is(err, ErrMissingPubKey) {
+		t.Errorf("expected ErrMissingPubKey, got %v", err)
+	}
+}
+
+func TestKeygen_DOT_TestnetPrefix(t *testing.T) {
+	const pub = "02bf3e72a73be7a3a1b9b7872c7e3a7bf1c5e22f4e7f2a73be7a3a1b9b7872c7e3"
+	m := newMockCluster(t)
+	m.result = &keygenResult{ECDSAPubKey: pub, ResultType: "success"}
+	c := clientFor(m)
+	w, err := c.KeygenForDeposit(context.Background(), "POLKADOT_TESTNET")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Westend (generic) addresses start with '5'.
+	if !strings.HasPrefix(w.Address, "5") {
+		t.Errorf("Westend SS58 should start with '5', got %q", w.Address)
 	}
 }
 
