@@ -80,12 +80,31 @@ type SigningDriver struct {
 	// stored but no raw tx assembled — broadcaster will skip).
 	assembler *txassembler.Assembler
 
+	// dotAssembler is the Polkadot / Substrate analogue. Same shape:
+	// PreSign returns a DOTUnsigned + blake2_256 signing payload, the
+	// MPC signs that hash over the cluster's secp256k1 share, Finalize
+	// wraps the signature into a v4 signed extrinsic for the
+	// broadcaster to push via author_submitExtrinsic.
+	dotAssembler *txassembler.DOTAssembler
+
+	// dotChainCtx queries chain-side runtime parameters (nonce,
+	// spec/transaction version, genesis hash, fee) needed by the
+	// substrate signing payload. Nil disables DOT signing.
+	dotChainCtx DOTChainContext
+
 	// pool, when set, rotates release wallets per-swap instead of
 	// reusing the deposit wallet. The deposit wallet has no
 	// guaranteed funding on the destination chain; the pool wallets
 	// are pre-funded by the operator. Optional — nil keeps the
 	// legacy deposit-as-release semantics for backward compat.
 	pool *ReleasePool
+
+	// dotPool, when set, is the family-specific pool used when the
+	// destination network is DOT-family. Substrate accounts need an
+	// existential-deposit floor that EVM pools don't worry about; the
+	// dedicated pool lets the operator fund the two families
+	// independently. Falls back to `pool` if unset.
+	dotPool *ReleasePool
 
 	// gasProbe, when set, runs an eth_getBalance check against the
 	// release wallet's destination-chain balance before signing.
@@ -125,11 +144,26 @@ type SigningDriver struct {
 // Optional — leaving it nil retains the v1 placeholder behavior.
 func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler = asm }
 
+// SetDOTAssembler wires the Polkadot / Substrate assembler. With a DOT
+// assembler + chain-context attached, swaps with destination network
+// in the substrate family get a real v4 signed extrinsic instead of
+// the placeholder EVM-only path.
+func (d *SigningDriver) SetDOTAssembler(asm *txassembler.DOTAssembler, ctx DOTChainContext) {
+	d.dotAssembler = asm
+	d.dotChainCtx = ctx
+}
+
 // SetReleasePool wires the static release pool. With a pool attached,
 // signOne rotates wallets per-swap and persists ReleaseWalletID on
 // the Swap record so the broadcaster + refund driver know which
 // pool wallet holds the funds.
 func (d *SigningDriver) SetReleasePool(pool *ReleasePool) { d.pool = pool }
+
+// SetDOTReleasePool wires a family-specific pool for DOT swaps.
+// Optional — when unset, DOT swaps borrow from the default EVM pool
+// (which produces correct ECDSA pubkeys but no SS58 address, so the
+// signing driver derives one client-side).
+func (d *SigningDriver) SetDOTReleasePool(pool *ReleasePool) { d.dotPool = pool }
 
 // SetGasProbe attaches a destination-chain balance probe. With a
 // probe set, signOne queries the release wallet's balance BEFORE
@@ -286,11 +320,17 @@ func (d *SigningDriver) tick(ctx context.Context) {
 func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// Step 1 — pick a signing wallet. Pool path takes precedence
 	// when configured; otherwise fall back to the deposit-as-release
-	// path that handled v1 swaps.
+	// path that handled v1 swaps. DOT-family swaps pull from the
+	// dedicated DOT pool when wired.
 	var walletID, senderAddr string
 	usingPool := false
-	if d.pool != nil && d.pool.Size() > 0 {
-		entry, perr := d.pool.Acquire(ctx, sw.DestinationNetwork)
+	releasePoolForSwap := d.pool
+	if d.dotPool != nil && d.dotPool.Size() > 0 &&
+		mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeDOT {
+		releasePoolForSwap = d.dotPool
+	}
+	if releasePoolForSwap != nil && releasePoolForSwap.Size() > 0 {
+		entry, perr := releasePoolForSwap.Acquire(ctx, sw.DestinationNetwork)
 		if perr == nil && entry != nil {
 			walletID = entry.WalletID
 			senderAddr = entry.Address
@@ -322,6 +362,15 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// bridge_transfer_pending anymore and will skip it. We persist
 	// the chosen release-wallet metadata here so the broadcast +
 	// refund drivers can read it back later.
+	//
+	// For DOT-family swaps we also persist the ECDSA pubkey at claim
+	// time — the substrate Finalize path needs it to determine the
+	// recovery byte. EVM swaps don't strictly need it (the EIP-155
+	// finalize derives the sender from the signature itself).
+	pubKeyHex := ""
+	if usingPool {
+		pubKeyHex = releasePoolForSwap.PubKeyHex(walletID)
+	}
 	claimed, err := d.store.Patch(ctx, sw.ID, func(s *Swap) {
 		if s.Status != SwapStatusBridgeTransferPending {
 			return
@@ -330,6 +379,9 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		if usingPool {
 			s.ReleaseWalletID = walletID
 			s.ReleaseAddress = senderAddr
+			if pubKeyHex != "" {
+				s.ReleasePubKey = pubKeyHex
+			}
 		}
 	})
 	if err != nil || claimed == nil || claimed.Status != SwapStatusSigning {
@@ -337,15 +389,61 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		return
 	}
 
-	// Step 3 — compute the signing message. With an assembler attached,
-	// this is the actual destination-chain tx sighash (a real EVM
-	// EIP-155 digest the destination chain will validate). Without
-	// one, fall back to the placeholder synthetic digest — useful
-	// for early integration testing but the resulting signature
-	// can't be broadcast as a real tx.
+	// Step 3 — compute the signing message + capture per-family
+	// assembly state. With an EVM assembler attached, this is the
+	// actual EIP-155 sighash; with a DOT assembler attached, it's
+	// blake2_256 of the substrate signing payload. Without one,
+	// fall back to the placeholder synthetic digest.
 	var msgHex string
-	var unsigned *txassembler.Unsigned
-	if d.assembler != nil && senderAddr != "" {
+	var unsigned *txassembler.Unsigned       // EVM
+	var dotUnsigned *txassembler.DOTUnsigned // DOT
+
+	destFamily := mchain.AddressTypeFor(sw.DestinationNetwork)
+	switch {
+	case destFamily == mchain.AddressTypeDOT && d.dotAssembler != nil && d.dotChainCtx != nil && senderAddr != "":
+		u, msg, aerr := d.preSignDOT(ctx, sw, walletID)
+		if aerr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("DOT assembler PreSign failed",
+					"swap_id", sw.ID,
+					"err", aerr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status == SwapStatusSigning {
+					s.Status = SwapStatusBridgeTransferPending
+				}
+				s.LastError = "Substrate RPC unreachable while building extrinsic — retrying"
+			})
+			return
+		}
+		dotUnsigned = u
+		msgHex = msg
+		// DOT gas pre-check: query system.account for the release
+		// wallet's free balance and compare against (value + fee +
+		// existential_deposit).
+		if reason, ok := d.dotGasPrecheck(ctx, sw, u, senderAddr); !ok {
+			d.shortCircuited.Add(1)
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status == SwapStatusSigning {
+					s.Status = SwapStatusFailedInsufficientReleaseGas
+				}
+				s.LastError = reason
+				s.LastErrorAt = time.Now().UTC()
+			})
+			if d.logger != nil {
+				d.logger.Warn("DOT gas pre-check failed — swap short-circuited",
+					"swap_id", sw.ID,
+					"release_wallet_id", walletID,
+					"release_address", senderAddr,
+					"network", sw.DestinationNetwork,
+					"reason", reason,
+				)
+			}
+			return
+		}
+	case d.assembler != nil && senderAddr != "":
 		var aerr error
 		unsigned, aerr = d.assembler.PreSign(ctx, txassembler.SwapIntent{
 			DestinationNetwork: sw.DestinationNetwork,
@@ -402,7 +500,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 				return
 			}
 		}
-	} else {
+	default:
 		msgHex = buildSigningMessage(sw)
 	}
 
@@ -431,10 +529,45 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		return
 	}
 
-	// When the assembler was used, finalize the signed raw tx so the
+	// When an assembler was used, finalize the signed raw tx so the
 	// broadcaster has something wire-ready to push.
 	var destRawTx string
-	if unsigned != nil {
+	switch {
+	case dotUnsigned != nil:
+		r, s, v, perr := txassembler.ParseDOTSignature(res.Signature)
+		if perr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("parse MPC DOT signature failed",
+					"swap_id", sw.ID,
+					"err", perr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		rawTx, _, ferr := d.dotAssembler.Finalize(dotUnsigned, r, s, v)
+		if ferr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("DOT assembler Finalize failed",
+					"swap_id", sw.ID,
+					"err", ferr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		destRawTx = rawTx
+	case unsigned != nil:
 		r, s, v, perr := txassembler.ParseRSV(res.Signature)
 		if perr != nil {
 			d.failures.Add(1)

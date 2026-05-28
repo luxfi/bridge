@@ -105,6 +105,16 @@ func releasePoolKey(idx int) []byte {
 	return []byte(fmt.Sprintf("%s%06d", keyPrefixReleasePool, idx))
 }
 
+// releasePoolNSKey formats a per-keyspace pool entry key. Empty
+// keyspace falls back to the legacy single-pool key prefix so existing
+// data stays addressable.
+func releasePoolNSKey(keyspace string, idx int) []byte {
+	if keyspace == "" {
+		return releasePoolKey(idx)
+	}
+	return []byte(fmt.Sprintf("%s:%06d", keyspace, idx))
+}
+
 // Create persists a new swap. Sets ID + timestamps if missing. Returns
 // an error if the id already exists.
 //
@@ -381,8 +391,27 @@ func (s *ZapStore) nowSafe() time.Time {
 // formatted as %06d, so a prefix-iterator naturally yields
 // ascending-index order.
 func (s *ZapStore) LoadEntries(ctx context.Context) ([]ReleasePoolEntry, error) {
+	return s.LoadEntriesNS(ctx, "")
+}
+
+// LoadEntriesNS is the keyspace-aware variant. Pass "" for the legacy
+// pool, "releasepool:dot" (or other) for additional families.
+//
+// Legacy quirk: the default pool's prefix "releasepool:" is also a
+// prefix of namespaced pools like "releasepool:dot:..." — when called
+// for the default namespace, we filter out anything whose suffix
+// isn't a pure 6-digit index. Namespaced pools use exact prefix
+// matching against "releasepool:dot:" etc., which doesn't suffer
+// the issue.
+func (s *ZapStore) LoadEntriesNS(ctx context.Context, keyspace string) ([]ReleasePoolEntry, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
+	}
+	var prefix []byte
+	if keyspace == "" {
+		prefix = []byte(keyPrefixReleasePool)
+	} else {
+		prefix = []byte(keyspace + ":")
 	}
 	out := make([]ReleasePoolEntry, 0)
 	err := s.db.View(func(txn *zapdb.Txn) error {
@@ -390,9 +419,18 @@ func (s *ZapStore) LoadEntries(ctx context.Context) ([]ReleasePoolEntry, error) 
 		opt.PrefetchValues = true
 		it := txn.NewIterator(opt)
 		defer it.Close()
-		prefix := []byte(keyPrefixReleasePool)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
+			// For the default namespace, the iterator picks up
+			// keys from namespaced pools (releasepool:dot:000000)
+			// because "releasepool:" is a substring of them. Skip
+			// anything where the suffix isn't a pure 6-digit index.
+			if keyspace == "" {
+				suffix := item.Key()[len(prefix):]
+				if !isAllDigits(suffix) {
+					continue
+				}
+			}
 			var entry ReleasePoolEntry
 			if err := item.Value(func(val []byte) error {
 				return json.Unmarshal(val, &entry)
@@ -409,9 +447,26 @@ func (s *ZapStore) LoadEntries(ctx context.Context) ([]ReleasePoolEntry, error) 
 	return out, nil
 }
 
+func isAllDigits(b []byte) bool {
+	if len(b) == 0 {
+		return false
+	}
+	for _, c := range b {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 // PutEntry persists one pool entry under releasepool:<index>. Used
 // at startup pool-grow time and during operator-driven adjustments.
 func (s *ZapStore) PutEntry(ctx context.Context, idx int, entry ReleasePoolEntry) error {
+	return s.PutEntryNS(ctx, "", idx, entry)
+}
+
+// PutEntryNS is the keyspace-aware variant.
+func (s *ZapStore) PutEntryNS(ctx context.Context, keyspace string, idx int, entry ReleasePoolEntry) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -420,9 +475,10 @@ func (s *ZapStore) PutEntry(ctx context.Context, idx int, entry ReleasePoolEntry
 	if err != nil {
 		return fmt.Errorf("zap_store: marshal pool entry: %w", err)
 	}
+	key := releasePoolNSKey(keyspace, idx)
 	return s.withConflictRetry(ctx, func() error {
 		return s.db.Update(func(txn *zapdb.Txn) error {
-			return txn.Set(releasePoolKey(idx), val)
+			return txn.Set(key, val)
 		})
 	})
 }
