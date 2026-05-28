@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/luxfi/bridge/internal/tenant"
+	"github.com/luxfi/bridge/pkg/tenant"
 )
 
 // applyTenantOverrides patches flag pointers with values from the
