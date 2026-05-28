@@ -207,6 +207,14 @@ type Wallet struct {
 	// Empty when the keygen result didn't carry an ECDSA pubkey
 	// (Ed25519-only paths: SOL, TON).
 	ECDSAPubKey []byte
+
+	// EDDSAPubKeyHex is the hex-encoded 32-byte Ed25519 public key.
+	// Used by TON (where the address is derived from the wallet
+	// contract's state_init cell, which embeds this pubkey). Empty
+	// for non-Ed25519 wallets. SOL also signs with Ed25519 but the
+	// address IS the pubkey base58-encoded, so SOL doesn't need this
+	// field — the address slot carries everything.
+	EDDSAPubKeyHex string
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
@@ -550,10 +558,11 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 	}
 
 	return &Wallet{
-		Name:        name,
-		Address:     address,
-		AddressType: addrType,
-		ECDSAPubKey: ecdsaPubKey,
+		Name:           name,
+		Address:        address,
+		AddressType:    addrType,
+		ECDSAPubKey:    ecdsaPubKey,
+		EDDSAPubKeyHex: result.EDDSAPubKey,
 	}, nil
 }
 
@@ -762,10 +771,22 @@ func pickAddress(r *keygenResult, t AddressType, networkInternalName string) (st
 		} else {
 			addr = r.BTCAddress
 		}
-	case AddressTypeSOL, AddressTypeTON:
-		// TON shares the SOL keygen slot in the current cluster output.
-		// Long-term TON needs its own address derivation from the
-		// ed25519 pubkey, but for now match TS placeholder behaviour.
+	case AddressTypeTON:
+		// TON v4r2 address = state_init_hash(workchain=0, subwallet, pubkey).
+		// Prefer the proper derivation when the cluster surfaced the
+		// Ed25519 pubkey; otherwise fall back to whatever the cluster
+		// put in the SOL slot (legacy mpcd that doesn't yet derive
+		// chain-specific addresses).
+		if r.EDDSAPubKey != "" {
+			derived, err := deriveTONAddressFromHex(r.EDDSAPubKey)
+			if err == nil {
+				return derived, nil
+			}
+			// On derivation failure, fall through to the legacy slot —
+			// don't refuse keygens just because the new path glitched.
+		}
+		addr = r.SOLAddress
+	case AddressTypeSOL:
 		addr = r.SOLAddress
 	case AddressTypeXRP:
 		// XRP r-address derivation: take the compressed-secp256k1 ECDSA
