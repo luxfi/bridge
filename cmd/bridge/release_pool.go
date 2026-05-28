@@ -77,12 +77,12 @@ type ReleasePoolStore interface {
 // dev, LUX_MAINNET in prod) and the EVM address works across all
 // EVM chains because the MPC produces a deterministic eth_address.
 //
-// Family is the canonical chain family the entry belongs to ("evm",
-// "btc"). For BTC, Address is the bech32 P2WPKH and Pubkey carries
-// the compressed secp256k1 pubkey the witness stack will include at
-// Finalize time — without Pubkey, the BTC release flow can't sign.
-// EVM entries leave Pubkey empty (the recovery id reconstructs the
-// signer address from the signature).
+// Family is the canonical chain family the entry belongs to
+// ("evm", "btc", "sol", "dot", "xrp"). For BTC, Address is the bech32
+// P2WPKH and Pubkey carries the compressed secp256k1 pubkey the
+// witness stack will include at Finalize time — without Pubkey, the
+// BTC release flow can't sign. EVM entries leave Pubkey empty (the
+// recovery id reconstructs the signer address from the signature).
 //
 // Empty Family in deserialized entries means "evm" — kept for
 // backward compat with stores written before multi-family support.
@@ -96,7 +96,8 @@ type ReleasePoolEntry struct {
 	// Required by:
 	//   - BTC release: witness stack on Finalize includes it alongside
 	//     the DER signature for P2WPKH spends.
-	//   - XRP release: same ECDSA-derived family.
+	//   - XRP release: same ECDSA-derived family — embedded in the
+	//     Payment's SigningPubKey field at Finalize time.
 	// Empty for EVM-only deployments (the EIP-155 finalize path derives
 	// the address from the signature recovery alone) and for Ed25519
 	// families (SOL, TON).
@@ -105,10 +106,10 @@ type ReleasePoolEntry struct {
 	// ECDSAPubKey is the hex-encoded compressed-secp256k1 public key
 	// (33 bytes → 66 hex chars). Persisted by the DOT signing path so
 	// the substrate assembler can derive AccountId32 + pick the ECDSA
-	// recovery byte without re-keygen'ing. Distinct from Pubkey (raw
-	// bytes) because the DOT path threads it through txassembler and
-	// Swap.ReleasePubKey as a string. The two fields hold equivalent
-	// data; populate whichever your release path consumes.
+	// recovery byte without re-keygen'ing. The XRP path also reads this
+	// (when Pubkey is empty) to populate SigningPubKey. Distinct from
+	// Pubkey (raw bytes); the two fields hold equivalent data —
+	// populate whichever your release path consumes.
 	ECDSAPubKey string `json:"ecdsa_pub_key,omitempty"`
 }
 
@@ -130,6 +131,7 @@ const (
 	FamilyBTC = "btc"
 	FamilySOL = "sol"
 	FamilyDOT = "dot"
+	FamilyXRP = "xrp"
 )
 
 // =============================================================================
@@ -252,6 +254,37 @@ func (p *ReleasePool) Size() int {
 	return len(p.entries)
 }
 
+// SizeByFamily returns the number of entries whose Family field
+// equals `family`. Empty family ⇒ count all entries.
+func (p *ReleasePool) SizeByFamily(family string) int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	if family == "" {
+		return len(p.entries)
+	}
+	n := 0
+	for _, e := range p.entries {
+		if e.Family == family {
+			n++
+		}
+	}
+	return n
+}
+
+// Reload re-reads the underlying store for THIS pool's family. Useful
+// when a parallel helper has minted new entries directly into the
+// store and the in-memory view of this pool needs to catch up.
+func (p *ReleasePool) Reload(ctx context.Context) error {
+	entries, err := p.store.LoadEntries(ctx, p.family)
+	if err != nil {
+		return err
+	}
+	p.mu.Lock()
+	p.entries = entries
+	p.mu.Unlock()
+	return nil
+}
+
 // Entries returns a snapshot copy of the current entries. Useful for
 // /health diagnostics — never expose the slice directly because
 // callers might mutate.
@@ -366,18 +399,46 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 // WARN line is logged. Balance probe errors are logged at debug —
 // they're best-effort and must NOT block a swap from progressing.
 func (p *ReleasePool) Acquire(ctx context.Context, destinationNetwork string) (*ReleasePoolEntry, error) {
+	return p.AcquireForFamily(ctx, destinationNetwork, "")
+}
+
+// AcquireForFamily is the family-aware variant of Acquire. When
+// family != "", entries with Family != family are skipped. Useful
+// for multi-family deployments (EVM pool + XRP pool sharing one
+// ReleasePool instance) so a swap to an XRP network always gets an
+// XRP-family wallet.
+//
+// Empty family ⇒ same behaviour as Acquire (round-robin across all
+// entries). When NO entry of the requested family exists, returns
+// ErrEmptyPool — caller should fall back to deposit-as-release.
+func (p *ReleasePool) AcquireForFamily(ctx context.Context, destinationNetwork, family string) (*ReleasePoolEntry, error) {
 	p.mu.RLock()
 	n := len(p.entries)
 	if n == 0 {
 		p.mu.RUnlock()
 		return nil, ErrEmptyPool
 	}
-	idx := int(p.cursor.Add(1)-1) % n
-	if idx < 0 {
-		idx = -idx % n
+	// Build a family-filtered view. Cheap — pools are 5-20 entries.
+	var candidates []ReleasePoolEntry
+	if family == "" {
+		candidates = make([]ReleasePoolEntry, len(p.entries))
+		copy(candidates, p.entries)
+	} else {
+		for _, e := range p.entries {
+			if e.Family == family {
+				candidates = append(candidates, e)
+			}
+		}
 	}
-	entry := p.entries[idx]
 	p.mu.RUnlock()
+	if len(candidates) == 0 {
+		return nil, ErrEmptyPool
+	}
+	idx := int(p.cursor.Add(1)-1) % len(candidates)
+	if idx < 0 {
+		idx = -idx % len(candidates)
+	}
+	entry := candidates[idx]
 
 	// Best-effort low-balance alert. We DON'T short-circuit the swap
 	// here — the signing-driver gas pre-check does that with a
@@ -385,7 +446,11 @@ func (p *ReleasePool) Acquire(ctx context.Context, destinationNetwork string) (*
 	// operator observability so a slowly-draining release wallet
 	// surfaces in logs before it fails its first swap.
 	if p.Probe != nil && p.BalanceThresholdWei != nil && p.BalanceThresholdWei.Sign() > 0 {
-		p.checkBalance(ctx, &entry, destinationNetwork)
+		// Balance probe only meaningful for EVM today. XRP families
+		// have their own pre-check in the signing driver.
+		if family == "" || family == "eth" {
+			p.checkBalance(ctx, &entry, destinationNetwork)
+		}
 	}
 
 	return &entry, nil

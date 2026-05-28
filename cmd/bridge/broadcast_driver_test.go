@@ -530,3 +530,48 @@ func TestEndToEnd_AllDriversChained(t *testing.T) {
 		t.Errorf("DestTxHash = %q, want 0xfinal-tx-hash-e2e", got.DestTxHash)
 	}
 }
+
+// =============================================================================
+// humanizeBroadcastErr — XRP engine_result mapping
+// =============================================================================
+
+func TestHumanizeBroadcastErr_XRPEngineResults(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+	}{
+		// XRP-specific mappings.
+		{"submit rpc 0: fatal engine_result=tecINSUFFICIENT_FUNDS: insufficient", "Insufficient funds in release address"},
+		{"submit rpc 0: fatal engine_result=tecNO_DST: destination not found", "destination account is not activated"},
+		{"submit rpc 0: fatal engine_result=tefPAST_SEQ: sequence already used", "sequence already used"},
+		{"submit rpc 0: fatal engine_result=temBAD_AMOUNT: bad amount", "malformed"},
+		{"submit rpc 0: retryable engine_result=telINSUF_FEE_P: fee too low", "fee too low for current load"},
+		// Existing EVM behaviour preserved.
+		{"insufficient funds for gas * price + value", "Insufficient funds in release address"},
+		{"nonce too low", "Nonce stale"},
+		{"HTTP 503: gateway", "Destination RPC unreachable"},
+	}
+	for _, c := range cases {
+		got := humanizeBroadcastErr(stringErr(c.in))
+		if !contains(got, c.want) {
+			t.Errorf("humanizeBroadcastErr(%q) = %q\n want substring %q", c.in, got, c.want)
+		}
+	}
+}
+
+func contains(haystack, needle string) bool {
+	return haystack != "" && (haystack == needle || (len(needle) > 0 && stringIndex(haystack, needle) >= 0))
+}
+
+func stringIndex(s, sub string) int {
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return i
+		}
+	}
+	return -1
+}
+
+type stringErr string
+
+func (s stringErr) Error() string { return string(s) }
