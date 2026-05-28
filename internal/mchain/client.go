@@ -53,6 +53,39 @@ const (
 	AddressTypeDOT AddressType = "dot"
 )
 
+// Curve names the threshold-signature scheme the MPC cluster keygens /
+// signs under. The lux-mpc dashboard (mpcd v2026-05+) accepts a
+// per-request curve switch; default is ECDSA/secp256k1 for backwards
+// compatibility with the original ETH/BTC pipeline. Solana / Cardano
+// / Polkadot need Ed25519 (FROST). Each address type maps to exactly
+// one curve — CurveFor() is the source of truth.
+type Curve string
+
+const (
+	// CurveSecp256k1 = ECDSA on secp256k1. ETH + BTC.
+	CurveSecp256k1 Curve = "secp256k1"
+	// CurveEd25519 = EdDSA on Ed25519 via FROST. SOL + TON + DOT + Cardano.
+	CurveEd25519 Curve = "ed25519"
+)
+
+// CurveFor returns the canonical curve for a given address family.
+// Used to populate the `curve` field on the keygen + sign request
+// bodies — the dashboard hands back the curve-appropriate pubkey slot
+// (eddsa_pub_key for Ed25519, ecdsa_pub_key otherwise).
+//
+// XRP is secp256k1 with rAddress derivation; the bridge tracks it as
+// AddressTypeXRP but the underlying key is the same as ETH today, so
+// it lands on secp256k1. Cardano shares the SOL slot per the legacy
+// TS mapping — its underlying key is Ed25519.
+func CurveFor(t AddressType) Curve {
+	switch t {
+	case AddressTypeSOL, AddressTypeTON, AddressTypeDOT:
+		return CurveEd25519
+	default:
+		return CurveSecp256k1
+	}
+}
+
 // networkAddressType mirrors NETWORK_ADDRESS_TYPE in mpc-wallet.ts.
 // Unknown networks default to AddressTypeETH (matches TS behavior).
 var networkAddressType = map[string]AddressType{
@@ -403,10 +436,19 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 	}
 
 	walletID := c.buildWalletID(networkInternalName)
+	curve := CurveFor(addrType)
 
 	body, err := json.Marshal(map[string]string{
 		"org_id":    orgID,
 		"wallet_id": walletID,
+		// curve switches the cluster between ECDSA/secp256k1 and
+		// Ed25519/FROST. The live mpcd daemon ignores unknown keys, so
+		// older deployments that don't yet honour curve will fall back
+		// to their compile-time default (secp256k1) — that produces an
+		// EVM-shaped keygen which the SOL address picker then rejects
+		// downstream with a clear error. New deployments honour the
+		// hint and return an eddsa_pub_key + sol_address slot.
+		"curve": string(curve),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("mchain: marshal keygen body: %w", err)
@@ -548,8 +590,30 @@ func (c *Client) SignForWallet(ctx context.Context, walletID, messageHex string)
 	return c.SignForWalletWithOrg(ctx, walletID, messageHex, c.OrgID)
 }
 
+// SignForWalletOnCurve is SignForWallet with an explicit curve hint. The
+// caller (signing driver) knows the destination address family and so
+// the curve. The hint is forwarded to the dashboard so it routes the
+// session to the matching threshold-signature stack: ECDSA/secp256k1
+// for ETH/BTC, EdDSA/Ed25519 (FROST) for SOL/TON/DOT/Cardano.
+//
+// On the wire: an extra "curve" field in the POST body. Older
+// dashboards ignore unknown fields, so the call degrades to whatever
+// the cluster's default curve is (secp256k1) — that returns a 65-byte
+// ECDSA signature which the SOL finalizer will reject with a clear
+// error.
+func (c *Client) SignForWalletOnCurve(ctx context.Context, walletID, messageHex string, curve Curve) (*SignResult, error) {
+	return c.SignForWalletOnCurveWithOrg(ctx, walletID, messageHex, c.OrgID, curve)
+}
+
 // SignForWalletWithOrg is SignForWallet with an explicit per-call orgID.
 func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex, orgID string) (*SignResult, error) {
+	return c.SignForWalletOnCurveWithOrg(ctx, walletID, messageHex, orgID, CurveSecp256k1)
+}
+
+// SignForWalletOnCurveWithOrg is the canonical implementation. All
+// other variants funnel through here with curve defaulting to
+// CurveSecp256k1 for backward compat.
+func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, messageHex, orgID string, curve Curve) (*SignResult, error) {
 	if walletID == "" {
 		return nil, &MPCError{Op: "sign", Message: "wallet_id required"}
 	}
@@ -565,7 +629,7 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 	// gated by JWT or X-API-Key. EnsureDashboardSession lazily mints
 	// a per-(wallet, org) signing grant that signViaDashboard reuses.
 	if c.DashboardSigning() {
-		return c.signViaDashboard(ctx, walletID, messageHex, orgID)
+		return c.signViaDashboard(ctx, walletID, messageHex, orgID, curve)
 	}
 
 	// Legacy path: ${APIURL}/sign — kept for in-process mocks and any
@@ -580,6 +644,9 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 		"org_id":    orgID,
 		"wallet_id": walletID,
 		"message":   messageHex,
+		// curve is forwarded so legacy mocks can branch on it. Production
+		// runs through the dashboard path above.
+		"curve": string(curve),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("mchain: marshal sign body: %w", err)

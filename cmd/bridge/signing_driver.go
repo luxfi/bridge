@@ -61,8 +61,21 @@ import (
 // MPCSigner is the 1-method interface the driver consumes. Pulls the
 // dependency to an interface for testability (a fake satisfies it
 // without spinning up HTTP). *mchain.Client satisfies natively.
+//
+// SignForWallet defaults to ECDSA/secp256k1 — preserved for legacy
+// callers that don't know about curves. The driver routes Solana (and
+// future Ed25519 destinations) through CurveSigner.SignForWalletOnCurve
+// when the dependency is available.
 type MPCSigner interface {
 	SignForWallet(ctx context.Context, walletID, messageHex string) (*mchain.SignResult, error)
+}
+
+// CurveSigner is the wider interface that routes signing requests with
+// an explicit curve hint. *mchain.Client satisfies it natively; tests
+// implement it directly. The driver checks for this at runtime and
+// only requires it for non-secp256k1 destinations.
+type CurveSigner interface {
+	SignForWalletOnCurve(ctx context.Context, walletID, messageHex string, curve mchain.Curve) (*mchain.SignResult, error)
 }
 
 // SigningDriver polls bridge_transfer_pending swaps and drives them
@@ -80,22 +93,33 @@ type SigningDriver struct {
 	// stored but no raw tx assembled — broadcaster will skip).
 	assembler *txassembler.Assembler
 
-	// pool, when set, rotates release wallets per-swap instead of
-	// reusing the deposit wallet. The deposit wallet has no
-	// guaranteed funding on the destination chain; the pool wallets
-	// are pre-funded by the operator. Optional — nil keeps the
-	// legacy deposit-as-release semantics for backward compat.
-	//
-	// pool is the EVM-family pool. btcPool is the BTC-family
-	// equivalent; signOne dispatches by destination network's family.
-	pool    *ReleasePool
-	btcPool *ReleasePool
-
 	// btcAssembler is the BTC-side counterpart to assembler. When
 	// signing a BTC swap, signOne uses this to PreSign+Finalize a
 	// P2WPKH transaction. Optional — when nil, BTC swaps stall
 	// without a tx assembly.
 	btcAssembler *txassembler.BTCAssembler
+
+	// solAssembler is the Solana counterpart of `assembler`. When the
+	// destination network is in the SOL family, PreSign returns a v0
+	// message + payer + recent blockhash, and Finalize slots the
+	// Ed25519 signature into the wire-ready transaction. Optional —
+	// when nil, SOL destinations stall in bridge_transfer_pending until
+	// an operator configures one (matches the existing EVM-without-
+	// assembler behaviour).
+	solAssembler *txassembler.SOLAssembler
+
+	// pool / btcPool / poolSet wire the release-wallet pool(s).
+	//
+	// pool is the legacy single-pool field (EVM family). btcPool is
+	// the BTC-family equivalent — kept as a separate field for the
+	// historical BTC wiring. poolSet is the new multi-family router;
+	// when set it takes precedence over both pool and btcPool — the
+	// driver routes Acquire by destination family. All three can
+	// coexist: pool/btcPool serve as fallbacks for callers that
+	// haven't migrated to the per-family shape.
+	pool    *ReleasePool
+	btcPool *ReleasePool
+	poolSet *ReleasePoolSet
 
 	// gasProbe, when set, runs an eth_getBalance check against the
 	// release wallet's destination-chain balance before signing.
@@ -163,6 +187,18 @@ func (d *SigningDriver) SetBTCAssembler(asm *txassembler.BTCAssembler) { d.btcAs
 // SetBTCBalanceProbe wires the BTC balance probe used by the gas
 // pre-check on BTC swaps.
 func (d *SigningDriver) SetBTCBalanceProbe(p txassembler.BTCBalanceProbe) { d.btcBalanceProbe = p }
+
+// SetReleasePoolSet wires the multi-family release-pool router. With
+// a set attached, signOne routes Acquire by destination network family
+// (EVM vs SOL vs BTC) — each family gets its own rotation cursor and
+// its own keygen curve. Takes precedence over SetReleasePool when both
+// are configured.
+func (d *SigningDriver) SetReleasePoolSet(set *ReleasePoolSet) { d.poolSet = set }
+
+// SetSOLAssembler wires the Solana destination assembler. Without this,
+// SOL destinations stall in bridge_transfer_pending — the driver has
+// no way to build a v0 message to sign.
+func (d *SigningDriver) SetSOLAssembler(asm *txassembler.SOLAssembler) { d.solAssembler = asm }
 
 // SetGasProbe attaches a destination-chain balance probe. With a
 // probe set, signOne queries the release wallet's balance BEFORE
@@ -326,12 +362,26 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		return
 	}
 
-	// Step 1 — pick a signing wallet. Pool path takes precedence
-	// when configured; otherwise fall back to the deposit-as-release
-	// path that handled v1 swaps.
+	// Step 1 — pick a signing wallet. PoolSet path takes precedence
+	// (multi-family routing); single Pool is the legacy single-family
+	// path; final fallback is the deposit-as-release path that handled
+	// v1 swaps.
 	var walletID, senderAddr string
 	usingPool := false
-	if d.pool != nil && d.pool.Size() > 0 {
+	if d.poolSet != nil {
+		entry, perr := d.poolSet.Acquire(ctx, sw.DestinationNetwork)
+		if perr == nil && entry != nil {
+			walletID = entry.WalletID
+			senderAddr = entry.Address
+			usingPool = true
+		} else if d.logger != nil && perr != nil && !errors.Is(perr, ErrEmptyPool) && !errors.Is(perr, ErrNoPoolForFamily) {
+			d.logger.Warn("release pool set acquire failed; falling back to single pool / deposit wallet",
+				"swap_id", sw.ID,
+				"err", perr,
+			)
+		}
+	}
+	if walletID == "" && d.pool != nil && d.pool.Size() > 0 {
 		entry, perr := d.pool.Acquire(ctx, sw.DestinationNetwork)
 		if perr == nil && entry != nil {
 			walletID = entry.WalletID
@@ -376,6 +426,15 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	})
 	if err != nil || claimed == nil || claimed.Status != SwapStatusSigning {
 		// Race with another driver / state already advanced — let it go.
+		return
+	}
+
+	// Step 3 — branch by destination family. SOL has its own message
+	// build + sign + finalize path because the cryptographic primitives
+	// are different (Ed25519 vs ECDSA, 64-byte sig vs 65-byte recoverable,
+	// no nonce/gas concept).
+	if mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeSOL {
+		d.signOneSOL(ctx, sw, walletID, senderAddr)
 		return
 	}
 
@@ -548,6 +607,283 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			"raw_tx_assembled", destRawTx != "",
 		)
 	}
+}
+
+// =============================================================================
+// SOL signing path
+// =============================================================================
+
+// SOL fee constants. Solana's base transaction fee is 5_000 lamports
+// per signature; the rent-exempt minimum for a token account is
+// ~2_039_280 lamports (refreshed periodically by the cluster, but
+// pinned here for the gas pre-check approximation). The real
+// rent-exempt floor can be queried via
+// getMinimumBalanceForRentExemption; we keep a constant for the
+// pre-check because a stale read would only over-fund slightly.
+const (
+	solBaseFeeLamports     uint64 = 5_000
+	solATARentExemptApprox uint64 = 2_039_280
+)
+
+// signOneSOL is the Solana branch of signOne. Builds a v0 message via
+// SOLAssembler.PreSign, gas-prechecks against the release wallet's
+// lamport balance, runs the Ed25519 MPC ceremony with curve hint, then
+// finalizes the wire-ready transaction and persists.
+func (d *SigningDriver) signOneSOL(ctx context.Context, sw *Swap, walletID, senderAddr string) {
+	if d.solAssembler == nil {
+		// SOL destination but no assembler configured — roll back so
+		// the swap stays at bridge_transfer_pending, and surface a
+		// clear LastError so the operator knows to wire one up.
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "SOL destination requires SOLAssembler — bridge not configured for Solana yet"
+		})
+		d.failures.Add(1)
+		return
+	}
+
+	// Resolve human-readable amount → lamports. Native SOL uses 9
+	// decimals; SPL tokens vary. For now the bridge assumes native SOL
+	// unless DestinationAsset is something other than "SOL". The token
+	// registry should grow SPL metadata as part of the SPL release work.
+	decimals := 9
+	if d.assembler != nil && d.assembler.Tokens != nil && sw.DestinationAsset != "" {
+		if info, ok := d.assembler.Tokens.Lookup(sw.DestinationNetwork, sw.DestinationAsset); ok {
+			decimals = info.Decimals
+		}
+	}
+	lamports, err := txassembler.LamportsFromFloat(sw.Amount, decimals)
+	if err != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("SOL lamport conversion failed",
+				"swap_id", sw.ID,
+				"amount", sw.Amount,
+				"decimals", decimals,
+				"err", err,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "SOL amount conversion failed: " + err.Error()
+		})
+		return
+	}
+
+	// Look up SPL mint when the asset isn't native SOL.
+	mint := ""
+	if d.assembler != nil && d.assembler.Tokens != nil && sw.DestinationAsset != "" && sw.DestinationAsset != "SOL" {
+		if info, ok := d.assembler.Tokens.Lookup(sw.DestinationNetwork, sw.DestinationAsset); ok && info.Contract != "" {
+			mint = info.Contract
+		}
+	}
+
+	unsigned, aerr := d.solAssembler.PreSign(ctx, txassembler.SOLSpec{
+		Network:          sw.DestinationNetwork,
+		PayerAddress:     senderAddr,
+		RecipientAddress: sw.DestinationAddress,
+		LamportsAmount:   lamports,
+		SourceMint:       mint,
+	})
+	if aerr != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("SOL assembler PreSign failed",
+				"swap_id", sw.ID,
+				"err", aerr,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "SOL RPC unreachable while building tx — retrying"
+		})
+		return
+	}
+
+	// Gas pre-check (lamport balance). Skip when no probe is configured.
+	if d.gasProbe != nil {
+		reason, ok := d.gasPrecheckSOL(ctx, sw, senderAddr, lamports, mint != "")
+		if !ok {
+			d.shortCircuited.Add(1)
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status == SwapStatusSigning {
+					s.Status = SwapStatusFailedInsufficientReleaseGas
+				}
+				s.LastError = reason
+				s.LastErrorAt = time.Now().UTC()
+			})
+			if d.logger != nil {
+				d.logger.Warn("SOL gas pre-check failed — swap short-circuited",
+					"swap_id", sw.ID,
+					"release_wallet_id", walletID,
+					"release_address", senderAddr,
+					"network", sw.DestinationNetwork,
+					"reason", reason,
+				)
+			}
+			return
+		}
+	}
+
+	// Run the MPC ceremony on the Ed25519 curve. The message bytes
+	// (NOT a digest) get hex-encoded as the cluster expects.
+	msgHex := "0x" + hex.EncodeToString(unsigned.MessageBytes)
+	sigCtx, cancel := context.WithTimeout(ctx, d.perSignTimeout)
+	defer cancel()
+	res, err := d.signOnCurve(sigCtx, walletID, msgHex, mchain.CurveEd25519)
+	if err != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("SOL signing ceremony failed",
+				"swap_id", sw.ID,
+				"wallet_id", walletID,
+				"err", err,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "SOL MPC signing ceremony failed — retrying"
+		})
+		return
+	}
+
+	// Parse the 64-byte Ed25519 signature and finalize.
+	sigBytes, perr := txassembler.ParseSOLSignatureHex(res.Signature)
+	if perr != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("SOL signature parse failed",
+				"swap_id", sw.ID,
+				"err", perr,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "SOL MPC returned malformed signature"
+		})
+		return
+	}
+	rawTxB64, sigStr, ferr := d.solAssembler.Finalize(unsigned, sigBytes)
+	if ferr != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("SOL assembler Finalize failed",
+				"swap_id", sw.ID,
+				"err", ferr,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusBridgeTransferPending
+			}
+			s.LastError = "SOL tx finalize failed: " + ferr.Error()
+		})
+		return
+	}
+
+	_, err = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusSigning {
+			return
+		}
+		s.Signature = sigStr // base58, doubles as the canonical SOL tx-hash identifier
+		s.MPCSessionID = res.SessionID
+		s.DestRawTx = rawTxB64
+		s.Status = SwapStatusBroadcasting
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
+	})
+	if err != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("SOL persist signature",
+				"swap_id", sw.ID,
+				"err", err,
+			)
+		}
+		return
+	}
+	d.successes.Add(1)
+	if d.logger != nil {
+		d.logger.Info("SOL signature received → advanced to broadcasting",
+			"swap_id", sw.ID,
+			"wallet_id", walletID,
+			"session_id", res.SessionID,
+			"signature", sigStr,
+			"blockhash", unsigned.Blockhash,
+		)
+	}
+}
+
+// signOnCurve routes the sign call through CurveSigner when the
+// underlying *mchain.Client supports it. Falls back to SignForWallet
+// (secp256k1) for mocks that haven't grown the curve hint — the SOL
+// finalizer will then reject the result with a clear "signature must
+// be 64 bytes" error, so a deployment mismatch fails fast.
+func (d *SigningDriver) signOnCurve(ctx context.Context, walletID, messageHex string, curve mchain.Curve) (*mchain.SignResult, error) {
+	if cs, ok := d.signer.(CurveSigner); ok {
+		return cs.SignForWalletOnCurve(ctx, walletID, messageHex, curve)
+	}
+	return d.signer.SignForWallet(ctx, walletID, messageHex)
+}
+
+// gasPrecheckSOL verifies the release wallet's lamport balance covers
+// the fee + (when SPL with ATA creation) the rent-exempt minimum.
+// Native SOL transfers also need the LamportsAmount itself on top of
+// the fee. Returns (reason, false) when insufficient; (empty, true)
+// otherwise (or on probe failure — best-effort).
+func (d *SigningDriver) gasPrecheckSOL(ctx context.Context, sw *Swap, releaseAddr string, lamports uint64, isSPL bool) (string, bool) {
+	probeCtx, cancel := context.WithTimeout(ctx, d.perBalanceTimeout)
+	defer cancel()
+	balance, err := d.gasProbe.BalanceAt(probeCtx, sw.DestinationNetwork, releaseAddr)
+	if err != nil {
+		if d.logger != nil {
+			d.logger.Debug("SOL gas pre-check: balance probe failed (non-fatal — skipped)",
+				"swap_id", sw.ID,
+				"address", releaseAddr,
+				"network", sw.DestinationNetwork,
+				"err", err,
+			)
+		}
+		return "", true
+	}
+	required := solBaseFeeLamports
+	if !isSPL {
+		// Native SOL: pay the lamports out of the release wallet too.
+		required += lamports
+	} else {
+		// SPL: lamports come from the source ATA, not the wallet's
+		// native balance. The wallet only pays the fee + (potentially)
+		// the destination-ATA rent-exempt minimum. We don't know
+		// whether the assembler ended up prepending the ATA-create
+		// instruction without re-running PreSign, but we provision for
+		// the worst case here so the pre-check stays conservative.
+		required += solATARentExemptApprox
+	}
+	if balance.Uint64() >= required {
+		return "", true
+	}
+	short := required - balance.Uint64()
+	return fmt.Sprintf(
+		"SOL release wallet %s has insufficient lamport balance on %s: balance=%d lamports, required=%d lamports (baseFee=%d, value=%d, splATARent=%d), short=%d lamports. Fund the wallet and trigger a retry.",
+		releaseAddr,
+		sw.DestinationNetwork,
+		balance.Uint64(),
+		required,
+		solBaseFeeLamports,
+		map[bool]uint64{true: 0, false: lamports}[isSPL],
+		map[bool]uint64{true: solATARentExemptApprox, false: 0}[isSPL],
+		short,
+	), false
 }
 
 // extractWalletID pulls the wallet-id half from the "wallet_name###address"
