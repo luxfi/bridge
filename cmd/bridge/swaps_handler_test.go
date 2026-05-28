@@ -158,6 +158,12 @@ func (s *stubReleaseStore) GetOrCreate(_ context.Context, network string) (*mcha
 
 // mpcMock serves a fake MPC /keygen endpoint.
 func mpcMock(t *testing.T, eth, btc, sol string) *httptest.Server {
+	return mpcMockFull(t, eth, btc, sol, "")
+}
+
+// mpcMockFull is mpcMock with an explicit ecdsa_pub_key — needed for
+// substrate (DOT) tests where the bridge derives SS58 client-side.
+func mpcMockFull(t *testing.T, eth, btc, sol, ecdsaPub string) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/keygen" || r.Method != http.MethodPost {
@@ -166,11 +172,12 @@ func mpcMock(t *testing.T, eth, btc, sol string) *httptest.Server {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"wallet_id":   "bridge-mock-1718000000",
-			"eth_address": eth,
-			"btc_address": btc,
-			"sol_address": sol,
-			"result_type": "success",
+			"wallet_id":     "bridge-mock-1718000000",
+			"eth_address":   eth,
+			"btc_address":   btc,
+			"sol_address":   sol,
+			"ecdsa_pub_key": ecdsaPub,
+			"result_type":   "success",
 		})
 	}))
 	t.Cleanup(srv.Close)
@@ -534,8 +541,12 @@ func TestSwapsCreate_UseDepositAddressTrue_NoMPC_Returns503(t *testing.T) {
 	}
 }
 
-func TestSwapsCreate_DOTRequest_Returns501(t *testing.T) {
-	mpc := mpcMock(t, "0xeth", "", "")
+func TestSwapsCreate_DOTRequest_Succeeds(t *testing.T) {
+	// As of the DOT integration, substrate keygens succeed: bridge derives
+	// SS58 client-side from the cluster's ecdsa_pub_key. Verify the swap
+	// is created with a Polkadot-style address.
+	const pub = "02bf3e72a73be7a3a1b9b7872c7e3a7bf1c5e22f4e7f2a73be7a3a1b9b7872c7e3"
+	mpc := mpcMockFull(t, "0xeth", "", "", pub)
 	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
 	rig := newRig(t, nil, mc, nil)
 
@@ -549,11 +560,16 @@ func TestSwapsCreate_DOTRequest_Returns501(t *testing.T) {
 		UseDepositAddress:  true,
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
-	if status != http.StatusNotImplemented {
-		t.Fatalf("status = %d, want 501. body=%s", status, body)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, want 200. body=%s", status, body)
 	}
-	if !strings.Contains(string(body), "unsupported_chain") {
-		t.Errorf("expected unsupported_chain, got %s", body)
+	if !strings.Contains(string(body), `"source_network":"POLKADOT_MAINNET"`) {
+		t.Errorf("response missing source_network=POLKADOT_MAINNET: %s", body)
+	}
+	// Deposit address should be the SS58 string after the legacy ### separator.
+	// For Polkadot mainnet, SS58 starts with '1'.
+	if !strings.Contains(string(body), `###1`) {
+		t.Errorf("expected SS58 deposit_address (starts with '1' after ###), got %s", body)
 	}
 }
 
