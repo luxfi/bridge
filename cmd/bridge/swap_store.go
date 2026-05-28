@@ -215,6 +215,14 @@ type InMemoryStore struct {
 	// single NewInMemoryStore() call.
 	poolOnce sync.Once
 	pool     *inMemoryReleasePool
+
+	// Per-family release pool persistence. Layered alongside the
+	// single-pool slot above so the legacy EVM-only pool path keeps
+	// working unchanged; multi-family deployments populate familyPools
+	// via the InMemoryStoreFamily adapter.
+	familyPoolsOnce sync.Once
+	familyMu        sync.Mutex
+	familyPools     map[FamilyCode]*inMemoryReleasePool
 }
 
 // NewInMemoryStore returns an empty in-memory store.
