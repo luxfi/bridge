@@ -439,6 +439,36 @@ export function useTransfers(): TransferState {
           ...(f.vaultAccountId ? { vaultAccountId: f.vaultAccountId } : {}),
         })
       }
+      // Cloud HSM cosigners — synchronous HSM-backed sign layers.
+      // Browser SDK declares the key reference + algorithm + optional
+      // identity hint only. The bridge backend resolves credentials via
+      // the cloud's native workload-identity mechanism (no secrets on
+      // the wire). For the Lux-Network tenant this array is empty —
+      // Lux uses m-chain + optional f-chain (see below) and nothing else.
+      if (cfg.mpc?.cloudHsm && cfg.mpc.cloudHsm.length > 0) {
+        for (const h of cfg.mpc.cloudHsm) {
+          cosigners.push({
+            kind: 'cloud_hsm',
+            provider: h.provider,
+            keyRef: h.keyRef,
+            algorithm: h.algorithm,
+            ...(h.identityHint ? { identityHint: h.identityHint } : {}),
+          })
+        }
+      }
+      // f-chain (FHE attestation) — native Lux Network signer alongside
+      // m-chain. Cosigns the same txHash via FHE-secured key material,
+      // so the layer is entirely within the Lux primary network (no
+      // external custodians, no cloud HSM dependency). PQ-safe by
+      // construction (lattice-based FHE schemes).
+      if (cfg.mpc?.fchain) {
+        const f = cfg.mpc.fchain
+        cosigners.push({
+          kind: 'fchain',
+          publicUrl: f.publicUrl,
+          ...(f.scheme ? { scheme: f.scheme } : {}),
+        })
+      }
 
       // Every source uses the MPC-derived deposit address. The server's
       // createMPCWalletForDeposit() returns a chain-appropriate address
@@ -520,6 +550,8 @@ export function useTransfers(): TransferState {
       cfg.env,
       cfg.mpc?.utila,
       cfg.mpc?.fireblocks,
+      cfg.mpc?.cloudHsm,
+      cfg.mpc?.fchain,
       chains,
       assets,
       patch,
