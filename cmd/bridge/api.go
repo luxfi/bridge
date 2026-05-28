@@ -53,13 +53,11 @@ type API struct {
 	// store fixes).
 	releaseStore mchain.ReleaseWalletStore
 
-	// Native swap CRUD. The Go binary owns these — BridgeVM is the
-	// LP-333 signer-set manager, not a swap API (see
-	// architecture_go_bridge_stack memory). When both store and
-	// quote are non-nil the native handlers register and replace the
-	// legacy reverse-proxy.
+	// Native swap CRUD. The B-Chain VM owns authoritative settlement;
+	// this store is a UX cache (see swap_store.go). When store and
+	// bchain are both non-nil the native handlers register and replace
+	// the legacy reverse-proxy.
 	store SwapStore
-	quote *QuoteEngine
 }
 
 func NewAPI(
@@ -69,7 +67,6 @@ func NewAPI(
 	mchainClient *mchain.Client,
 	depCheckClient *depositcheck.Client,
 	store SwapStore,
-	quote *QuoteEngine,
 ) *API {
 	a := &API{
 		cfg:      cfg,
@@ -78,7 +75,6 @@ func NewAPI(
 		mchain:   mchainClient,
 		depcheck: depCheckClient,
 		store:    store,
-		quote:    quote,
 	}
 	if backendURL != "" {
 		u, err := url.Parse(backendURL)
@@ -139,12 +135,11 @@ func (a *API) Register(app *zip.App) {
 	// Prometheus metrics including bridge_classical_compat_total.
 	app.Get("/metrics", a.metrics)
 
-	// Native swap CRUD takes precedence when a SwapStore + QuoteEngine
-	// are configured. Falls back to the legacy reverse-proxy / 503
-	// otherwise. Per LP-134 / LP-333 the native handlers DO NOT call
-	// BridgeVM for swap-API methods — those don't exist on the chain.
-	// BridgeVM is queried only for signer-set introspection via
-	// /v1/bridge/info when a bchain client is wired in.
+	// Native swap CRUD takes precedence when a SwapStore + bchain
+	// client are configured. Falls back to the legacy reverse-proxy /
+	// 503 otherwise. The B-Chain VM (chains/bridgevm) owns
+	// authoritative quote + settlement; native handlers cache locally
+	// and refresh from chain on demand.
 	//
 	// We mount each handler at TWO prefixes:
 	//   - /v1/bridge/* — the externally-routed path (ingress, public docs).
@@ -156,7 +151,7 @@ func (a *API) Register(app *zip.App) {
 	//                    requests would fall through to the SPA catch-all
 	//                    and return HTML instead of JSON.
 	proxied := a.proxied()
-	if a.store != nil && a.quote != nil {
+	if a.store != nil && a.bchain != nil {
 		app.Get("/v1/bridge/quote", a.quoteNative)
 		app.Post("/v1/bridge/swaps", a.swapsCreateNative)
 		app.Get("/v1/bridge/swaps", a.swapsListNative)

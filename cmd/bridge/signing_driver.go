@@ -20,19 +20,49 @@ import (
 	"github.com/luxfi/bridge/internal/txassembler"
 )
 
-// signing_driver.go: background goroutine that drives the MPC signing
-// ceremony for swaps that have transitioned to bridge_transfer_pending.
+// signing_driver.go: OBSERVE + BROADCAST shim for the cmd/bridge daemon.
 //
-// Pipeline position (relative to the other watchers):
+// PERMISSIONLESS + NON-CUSTODIAL. The MPC threshold quorum IS the
+// authority — this driver does NOT orchestrate sign sessions, it
+// observes deposits and asks the quorum (via mchain) to sign the
+// destination-chain release tx. Any client that can reach the B-Chain
+// + T-Chain RPCs can do the same work; this daemon exists only as a
+// UX convenience.
 //
-//   user_deposit_pending      ── DepositWatcher (Phase 4.5) ──┐
-//                                                              ▼
-//   bridge_transfer_pending   ── SigningDriver (this file) ───┐
-//                                                              ▼
-//   bridge_transfer_pending_signing                             │
-//                              (ceremony in progress)           ▼
-//   bridge_transfer_pending_broadcasting                       ─┘
-//                              (signature stored; ready for Phase 4.7)
+// What the driver does:
+//   1. Observe — list swaps the local store believes are at
+//      bridge_transfer_pending. (Authoritative state lives in
+//      chains/bridgevm — local store is a cache, see swap_store.go.)
+//   2. Assemble — build the destination-chain unsigned tx via
+//      txassembler (chain-specific: EVM EIP-155, BTC P2WPKH, SOL,
+//      DOT, TON, XRP).
+//   3. Threshold-sign — submit the sighash to the MPC threshold
+//      quorum (mchain) and wait for the aggregated signature. The
+//      daemon holds NO key material; key shares live in T-Chain
+//      across the validator set.
+//   4. Broadcast — patch the signed raw tx into the store; the
+//      broadcast driver pushes it to the destination chain on the
+//      next tick.
+//
+// What the driver does NOT do:
+//   - Approve or refuse swaps. Any P3Q-verified envelope from the
+//     B-Chain quorum is claimable.
+//   - Custody funds. Operator-funded release wallets are held by the
+//     MPC quorum, not by the daemon.
+//   - Be load-bearing. Killing the daemon does not invalidate any
+//     in-flight swap; the next process restart picks up where it left
+//     off (durable swap store) or any other client running the same
+//     observe-and-broadcast loop can complete the swap.
+//
+// Pipeline position:
+//
+//   user_deposit_pending      ── DepositWatcher ──┐
+//                                                  ▼
+//   bridge_transfer_pending   ── this driver ────┐
+//                                                  ▼
+//   bridge_transfer_pending_signing                │
+//                                                  ▼
+//   bridge_transfer_pending_broadcasting          ─┘
 //
 // State transitions and idempotency:
 //   - On tick start, lists swaps in SwapStatusBridgeTransferPending.
@@ -49,16 +79,6 @@ import (
 //     Signature + MPCSessionID (+ DestRawTx when assembled).
 //   - On failure: patches BACK to bridge_transfer_pending so the next
 //     tick retries (with exponential backoff in future work).
-//
-// Trust model + scope:
-//   - The MPC cluster is the threshold-signing authority. This driver
-//     is a thin orchestrator; it does not hold any key material.
-//   - As of 2026-05 the live lux-mpc cluster (mpcd) doesn't expose a
-//     /sign REST endpoint — only /keygen. SignForWallet targets the
-//     expected REST shape; live validation is gated on the cluster
-//     growing that endpoint or the operator pointing --mpc-url at a
-//     proxy that bridges to the dashboard /v1/mpc/wallets/{id}/sessions
-//     path (which IS implemented but requires JWT auth).
 
 // MPCSigner is the 1-method interface the driver consumes. Pulls the
 // dependency to an interface for testability (a fake satisfies it
