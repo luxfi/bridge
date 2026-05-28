@@ -51,7 +51,7 @@ import (
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/substrate"
-	"github.com/luxfi/bridge/internal/tenant"
+	"github.com/luxfi/bridge/pkg/tenant"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
