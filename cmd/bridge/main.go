@@ -28,11 +28,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"math/big"
+	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -175,8 +178,20 @@ func main() {
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
 	dataDir := flag.String("data-dir", envOr("BRIDGE_DATA_DIR", ""),
 		"persistent data directory for the swap store (zapdb). When empty, swaps are stored in-process and lost on restart — only use the in-memory mode for tests + first deploys. In prod, mount a PersistentVolume and point this at it (e.g. /var/lib/lux-bridge).")
+	releaseFile := flag.String("release-wallets-file", envOr("BRIDGE_RELEASE_WALLETS_FILE", ""),
+		"path to a JSON file that persists per-destination-network release wallets (the long-lived MPC addresses that pay out settlements). When set, the bridge mints a release wallet on first need and reuses it across restarts. When empty AND --data-dir is set, defaults to <data-dir>/release-wallets.json. When empty AND --data-dir is empty, runs in-memory — every restart re-mints and any liquidity at the old address is stranded. Required for prod.")
 	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
 		"bridge security profile: strict-pq | classical-compat")
+	coingeckoEnabled := flag.Bool("coingecko", envBool("BRIDGE_COINGECKO", false),
+		"enable CoinGecko HTTP price feed (wrapped over the static feed as a fallback for LUX/ZOO and outages). When disabled (default), the static feed is the sole source of prices.")
+	coingeckoURL := flag.String("coingecko-url", envOr("BRIDGE_COINGECKO_URL", DefaultCoinGeckoBaseURL),
+		"CoinGecko API base URL")
+	coingeckoAPIKey := flag.String("coingecko-api-key", envOr("BRIDGE_COINGECKO_API_KEY", ""),
+		"CoinGecko Pro API key (empty for the free tier)")
+	coingeckoTTL := flag.Duration("coingecko-cache-ttl", DefaultCoinGeckoCacheTTL,
+		"how long CoinGecko prices are cached before re-fetching. The fetch batches every configured symbol into one HTTP call.")
+	coingeckoTimeout := flag.Duration("coingecko-timeout", DefaultCoinGeckoTimeout,
+		"per-request HTTP timeout for CoinGecko calls")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -355,11 +370,12 @@ func main() {
 			}
 		}
 	}()
-	// Seed the static price feed with the values used in dev / first
-	// deploys. Real production wiring should swap in a CoinGecko / Pyth
-	// PriceFeed implementation. These match the order-of-magnitude
-	// prices the TS app/server queries via getTokenPrice.
-	priceFeed := NewStaticPriceFeed(map[string]float64{
+	// Static feed seeds the assets CoinGecko doesn't list (LUX, ZOO) and
+	// serves as the fallback when CoinGecko is unreachable. Order-of-
+	// magnitude values matching the TS app/server's getTokenPrice — the
+	// CG-backed entries are overridden at runtime, the rest are the
+	// permanent source for LUX/ZOO.
+	staticFeed := NewStaticPriceFeed(map[string]float64{
 		"ETH":  3500.00,
 		"LUX":  2.50,
 		"ZOO":  0.05,
@@ -371,16 +387,72 @@ func main() {
 		"DAI":  1.00,
 		"BNB":  600.00,
 	})
+
+	var priceFeed PriceFeed = staticFeed
+	feedLabel := "static"
+	if *coingeckoEnabled {
+		cg := NewCoinGeckoFeed(*coingeckoURL, *coingeckoAPIKey, nil)
+		cg.CacheTTL = *coingeckoTTL
+		cg.HTTPClient = &http.Client{Timeout: *coingeckoTimeout}
+		priceFeed = &FallbackFeed{
+			Primary:   cg,
+			Secondary: staticFeed,
+			OnFallback: func(asset string, err error) {
+				if errors.Is(err, ErrPriceUnknown) {
+					return // expected for LUX/ZOO — not worth a log line per quote
+				}
+				logger.Warn("coingecko price fallback", "asset", asset, "err", err)
+			},
+		}
+		feedLabel = "coingecko+static"
+	}
+
 	quoteEngine := &QuoteEngine{Feed: priceFeed}
 	logger.Info("native swap CRUD enabled",
 		"store", storeLabel,
 		"data_dir", *dataDir,
-		"feed", "static",
+		"feed", feedLabel,
 		"fee_rate", quoteEngine.FeeRate,
 	)
 
 	api := NewAPI(cfg, *backend, bchainClient, mchainClient, depCheckClient, swapStore, quoteEngine)
 	api.SetProfile(profile)
+
+	// Per-destination-network release wallets. One MPC wallet per
+	// destination chain, minted lazily on first need and reused across
+	// every swap to that chain. The operator pre-funds each release
+	// wallet's destination-chain address with native gas + bridged
+	// liquidity; the signing driver targets THIS wallet (not the
+	// per-swap deposit wallet) when producing the release tx, because
+	// only this wallet's destination-chain address holds the operator-
+	// funded balance the payout needs.
+	//
+	// Path resolution:
+	//   --release-wallets-file set        → use it verbatim
+	//   --release-wallets-file unset AND
+	//     --data-dir set                  → <data-dir>/release-wallets.json
+	//   both unset                        → in-memory (lossy on restart)
+	if mchainClient != nil {
+		releasePath := *releaseFile
+		if releasePath == "" && *dataDir != "" {
+			releasePath = filepath.Join(*dataDir, "release-wallets.json")
+		}
+		releaseStore, err := mchain.NewFileReleaseStore(mchainClient, releasePath)
+		if err != nil {
+			logger.Error("release wallet store init", "err", err, "path", releasePath)
+			os.Exit(1)
+		}
+		api.SetReleaseStore(releaseStore)
+		if releasePath == "" {
+			logger.Warn("release wallet store is in-memory — every restart re-mints per-network release wallets; set --release-wallets-file (or --data-dir) for durability")
+		} else {
+			logger.Info("release wallet store enabled",
+				"path", releasePath,
+			)
+		}
+	} else {
+		logger.Info("release wallet store skipped — no --mpc-url configured")
+	}
 
 	// Deposit watcher: background goroutine that polls the source chains
 	// for confirmed deposits and advances pending swaps. Only meaningful
@@ -1041,6 +1113,21 @@ func envOrInt64(k string, fallback int64) int64 {
 		return fallback
 	}
 	return n
+}
+
+// envBool parses a boolean env var with a fallback.
+func envBool(k string, fallback bool) bool {
+	v := os.Getenv(k)
+	if v == "" {
+		return fallback
+	}
+	switch strings.ToLower(v) {
+	case "1", "t", "true", "yes", "y", "on":
+		return true
+	case "0", "f", "false", "no", "n", "off":
+		return false
+	}
+	return fallback
 }
 
 // selectProfile resolves the --profile flag value to a bridge profile

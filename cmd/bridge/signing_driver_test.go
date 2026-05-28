@@ -377,6 +377,209 @@ func TestSigning_BadSignatureFromMPC_RollsBack(t *testing.T) {
 }
 
 // =============================================================================
+// releaseAmount — input-vs-output amount plumbing
+// =============================================================================
+
+func TestReleaseAmount_PrefersReceiveAmount(t *testing.T) {
+	sw := &Swap{Amount: 0.01, ReceiveAmount: 14}
+	if got := releaseAmount(sw); got != 14 {
+		t.Errorf("releaseAmount=%v, want 14 (the destination-asset output)", got)
+	}
+}
+
+func TestReleaseAmount_FallsBackToInputAmount(t *testing.T) {
+	// Legacy row with no ReceiveAmount snapshot — fall back to the
+	// raw input amount so in-flight pre-fix swaps don't ship a
+	// zero-value release tx.
+	sw := &Swap{Amount: 0.01}
+	if got := releaseAmount(sw); got != 0.01 {
+		t.Errorf("releaseAmount=%v, want 0.01 (input-amount fallback)", got)
+	}
+}
+
+// TestSigning_SendsReceiveAmountToAssembler verifies the assembler is
+// fed the destination-asset OUTPUT amount, not the input. This is the
+// regression test for the "swap completed but I got 0.01 LUX instead
+// of 14" bug — caught when the user's wallet balance didn't move as
+// expected after the release-wallet split fix.
+func TestSigning_SendsReceiveAmountToAssembler(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+
+	const (
+		releaseWalletID = "wallet-release"
+		releaseAddr     = "0x5050505050505050505050505050505050505050"
+	)
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		Amount:             0.01, // input ETH
+		ReceiveAmount:      14,   // output LUX (the user-facing committed amount)
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		ReleaseWalletID:    releaseWalletID,
+		ReleaseAddress:     releaseAddr,
+		UseDepositAddress:  true,
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatal(err)
+	}
+
+	prov := &txassembler.StaticProvider{
+		Nonces: map[string]uint64{
+			"LUX_TESTNET|" + strings.ToLower(strings.TrimPrefix(releaseAddr, "0x")): 0,
+		},
+		GasPrice: map[string]*big.Int{"LUX_TESTNET": big.NewInt(25_000_000_000)},
+	}
+	asm := txassembler.New(prov)
+	asm.SetNetwork("LUX_TESTNET", txassembler.PerNetwork{
+		ChainID: big.NewInt(96368), DefaultGasLimit: 21000, NativeDecimals: 18,
+	})
+
+	sigHex := "0x" + strings.Repeat("01", 32) + strings.Repeat("02", 32) + "00"
+	signer.ok(releaseWalletID, sigHex, "sess-amt")
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetAssembler(asm)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Fatalf("status = %q, want broadcasting; last_error=%q", got.Status, got.LastError)
+	}
+	rawTx := strings.TrimPrefix(got.DestRawTx, "0x")
+	if rawTx == "" {
+		t.Fatal("DestRawTx empty")
+	}
+	// Decode the RLP and inspect the value field. 14 LUX with 18
+	// decimals = 14 * 1e18 wei = 0xc249fdd327780000.
+	rlpBytes, err := hex.DecodeString(rawTx)
+	if err != nil {
+		t.Fatalf("rawtx not hex: %v", err)
+	}
+	const wantValueHex = "c249fdd327780000" // 14 * 1e18 wei
+	if !strings.Contains(strings.ToLower(hex.EncodeToString(rlpBytes)), wantValueHex) {
+		t.Errorf("release tx does not carry 14 LUX (0x%s) — bridge sent the input amount instead.\nrlp=%s",
+			wantValueHex, hex.EncodeToString(rlpBytes))
+	}
+}
+
+// =============================================================================
+// resolveReleaseSigning — the release-wallet vs deposit-wallet split
+// =============================================================================
+
+func TestResolveReleaseSigning_PrefersReleaseWallet(t *testing.T) {
+	sw := &Swap{
+		DepositAddress:  "wallet-deposit###0xDEP",
+		ReleaseWalletID: "wallet-release",
+		ReleaseAddress:  "0xREL",
+	}
+	id, addr := resolveReleaseSigning(sw)
+	if id != "wallet-release" || addr != "0xREL" {
+		t.Errorf("expected release wallet to win, got id=%q addr=%q", id, addr)
+	}
+}
+
+func TestResolveReleaseSigning_FallsBackToDeposit(t *testing.T) {
+	// Legacy swap row: ReleaseWalletID/Address empty. Must fall back
+	// to the deposit-address envelope so in-flight pre-split swaps
+	// still drain through the signing driver.
+	sw := &Swap{DepositAddress: "wallet-legacy###0xLEGACY"}
+	id, addr := resolveReleaseSigning(sw)
+	if id != "wallet-legacy" || addr != "0xLEGACY" {
+		t.Errorf("expected deposit fallback, got id=%q addr=%q", id, addr)
+	}
+}
+
+func TestResolveReleaseSigning_PartialReleaseFallsBack(t *testing.T) {
+	// Defensive: a swap with only one of the release fields populated
+	// shouldn't half-sign with a half-set wallet. Fall back to the
+	// deposit envelope.
+	sw := &Swap{
+		DepositAddress: "wallet-legacy###0xLEGACY",
+		ReleaseAddress: "0xREL", // ReleaseWalletID missing
+	}
+	id, addr := resolveReleaseSigning(sw)
+	if id != "wallet-legacy" || addr != "0xLEGACY" {
+		t.Errorf("expected deposit fallback when ReleaseWalletID is empty, got id=%q addr=%q", id, addr)
+	}
+}
+
+// TestSigning_AdvancesUsingReleaseWallet end-to-ends the signing driver
+// against a swap row carrying the release-wallet fields. Proves the
+// driver calls the signer with the RELEASE wallet ID (not the deposit
+// one) and feeds the RELEASE address into the assembler as
+// SenderAddress.
+func TestSigning_AdvancesUsingReleaseWallet(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+
+	const (
+		depositWalletID = "wallet-deposit"
+		depositAddr     = "0x4040404040404040404040404040404040404040"
+		releaseWalletID = "wallet-release"
+		releaseAddr     = "0x5050505050505050505050505050505050505050"
+	)
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		DepositAddress:     depositWalletID + "###" + depositAddr,
+		ReleaseWalletID:    releaseWalletID,
+		ReleaseAddress:     releaseAddr,
+		UseDepositAddress:  true,
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatal(err)
+	}
+
+	// Provider keyed by RELEASE address (the driver should pass the
+	// release address as SenderAddress to PendingNonce). If the driver
+	// accidentally fed the deposit address instead, the lookup misses
+	// and PreSign fails — making this an executable assertion.
+	prov := &txassembler.StaticProvider{
+		Nonces: map[string]uint64{
+			"LUX_TESTNET|" + strings.ToLower(strings.TrimPrefix(releaseAddr, "0x")): 0,
+		},
+		GasPrice: map[string]*big.Int{"LUX_TESTNET": big.NewInt(25_000_000_000)},
+	}
+	asm := txassembler.New(prov)
+	asm.SetNetwork("LUX_TESTNET", txassembler.PerNetwork{
+		ChainID: big.NewInt(96368), DefaultGasLimit: 21000, NativeDecimals: 18,
+	})
+
+	sigHex := "0x" + strings.Repeat("01", 32) + strings.Repeat("02", 32) + "00"
+	signer.ok(releaseWalletID, sigHex, "sess-release")
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetAssembler(asm)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Fatalf("status = %q, want broadcasting (sign + finalize must succeed against release wallet)", got.Status)
+	}
+	if got.DestRawTx == "" {
+		t.Fatal("DestRawTx empty — assembler did not produce a raw tx")
+	}
+	// Verify the signer was invoked with the RELEASE wallet ID, not
+	// the deposit one.
+	if signer.calls.Load() != 1 {
+		t.Fatalf("signer should be called once, got %d", signer.calls.Load())
+	}
+	if signer.lastReq[0].walletID != releaseWalletID {
+		t.Errorf("signer was called with walletID=%q, want %q (the release wallet)",
+			signer.lastReq[0].walletID, releaseWalletID)
+	}
+}
+
+// =============================================================================
 // extractWalletID
 // =============================================================================
 
