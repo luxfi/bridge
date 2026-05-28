@@ -85,7 +85,17 @@ type SigningDriver struct {
 	// guaranteed funding on the destination chain; the pool wallets
 	// are pre-funded by the operator. Optional — nil keeps the
 	// legacy deposit-as-release semantics for backward compat.
-	pool *ReleasePool
+	//
+	// pool is the EVM-family pool. btcPool is the BTC-family
+	// equivalent; signOne dispatches by destination network's family.
+	pool    *ReleasePool
+	btcPool *ReleasePool
+
+	// btcAssembler is the BTC-side counterpart to assembler. When
+	// signing a BTC swap, signOne uses this to PreSign+Finalize a
+	// P2WPKH transaction. Optional — when nil, BTC swaps stall
+	// without a tx assembly.
+	btcAssembler *txassembler.BTCAssembler
 
 	// gasProbe, when set, runs an eth_getBalance check against the
 	// release wallet's destination-chain balance before signing.
@@ -93,6 +103,12 @@ type SigningDriver struct {
 	// if balance < (gasLimit * gasPrice + value). Optional — nil
 	// disables the gas pre-check entirely.
 	gasProbe BalanceProbe
+
+	// btcBalanceProbe is the BTC-side analogue. Returns the release
+	// wallet's spendable confirmed balance in satoshis. When set,
+	// signOneBTC short-circuits swaps whose value+fee exceeds the
+	// release wallet's BTC balance.
+	btcBalanceProbe txassembler.BTCBalanceProbe
 
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
@@ -129,7 +145,24 @@ func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler =
 // signOne rotates wallets per-swap and persists ReleaseWalletID on
 // the Swap record so the broadcaster + refund driver know which
 // pool wallet holds the funds.
+//
+// SetReleasePool binds the EVM-family pool. SetBTCReleasePool binds
+// the BTC equivalent. The driver dispatches by destination network's
+// family at signOne time.
 func (d *SigningDriver) SetReleasePool(pool *ReleasePool) { d.pool = pool }
+
+// SetBTCReleasePool wires the BTC-family release pool.
+func (d *SigningDriver) SetBTCReleasePool(pool *ReleasePool) { d.btcPool = pool }
+
+// SetBTCAssembler attaches a BTC tx assembler. Required for BTC
+// destination swaps to advance — without one, signOne falls back to
+// the placeholder digest and the broadcaster skips for lack of
+// DestRawTx.
+func (d *SigningDriver) SetBTCAssembler(asm *txassembler.BTCAssembler) { d.btcAssembler = asm }
+
+// SetBTCBalanceProbe wires the BTC balance probe used by the gas
+// pre-check on BTC swaps.
+func (d *SigningDriver) SetBTCBalanceProbe(p txassembler.BTCBalanceProbe) { d.btcBalanceProbe = p }
 
 // SetGasProbe attaches a destination-chain balance probe. With a
 // probe set, signOne queries the release wallet's balance BEFORE
@@ -284,6 +317,15 @@ func (d *SigningDriver) tick(ctx context.Context) {
 // MPC ceremony is skipped entirely. Saves the 75s sign-then-fail
 // dance the broadcast driver previously had to absorb.
 func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
+	// Dispatch by destination network's family. BTC swaps run a
+	// per-input loop that the EVM single-sighash flow doesn't need;
+	// keeping them in separate functions stops the EVM path from
+	// drifting into BTC-specific branches.
+	if isBTCNetwork(sw.DestinationNetwork) {
+		d.signOneBTC(ctx, sw)
+		return
+	}
+
 	// Step 1 — pick a signing wallet. Pool path takes precedence
 	// when configured; otherwise fall back to the deposit-as-release
 	// path that handled v1 swaps.
