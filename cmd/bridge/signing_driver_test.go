@@ -683,7 +683,113 @@ func TestSigningDriver_Stop_Idempotent(t *testing.T) {
 func TestSigningDriverStats_StartsZero(t *testing.T) {
 	d := NewSigningDriver(NewInMemoryStore(), newFakeSigner(), time.Second, nil)
 	s := d.Stats()
-	if s.Ticks != 0 || s.Attempts != 0 || s.Successes != 0 || s.Failures != 0 || s.ListErrors != 0 {
+	if s.Ticks != 0 || s.Attempts != 0 || s.Successes != 0 || s.Failures != 0 || s.ListErrors != 0 || s.Stale != 0 {
 		t.Errorf("expected zero stats, got %+v", s)
+	}
+}
+
+// =============================================================================
+// Quote staleness guard
+// =============================================================================
+
+func TestSigning_StaleQuote_MovesToRefundPendingAndSkipsSigning(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "bridge-wallet-1", "ETHEREUM_SEPOLIA")
+	// Force CreatedAt into the past.
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.CreatedAt = time.Now().Add(-2 * time.Hour)
+	})
+	signer.ok("bridge-wallet-1", "0xsig", "sess_1") // would succeed if called
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetMaxQuoteAge(30 * time.Minute)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Errorf("status = %q, want %q", got.Status, SwapStatusRefundPending)
+	}
+	if !strings.Contains(got.LastError, "quote_stale") {
+		t.Errorf("expected LastError to mention quote_stale, got %q", got.LastError)
+	}
+	if signer.calls.Load() != 0 {
+		t.Errorf("signer should not have been called for stale swap, got %d calls", signer.calls.Load())
+	}
+	if s := d.Stats(); s.Stale != 1 || s.Attempts != 0 {
+		t.Errorf("stats = %+v, want stale=1 attempts=0", s)
+	}
+}
+
+func TestSigning_FreshQuote_SignsNormally(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "bridge-wallet-1", "ETHEREUM_SEPOLIA")
+	signer.ok("bridge-wallet-1", "0xsig", "sess_1")
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetMaxQuoteAge(30 * time.Minute)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Errorf("status = %q, want broadcasting", got.Status)
+	}
+	if s := d.Stats(); s.Stale != 0 || s.Successes != 1 {
+		t.Errorf("stats = %+v, want stale=0 successes=1", s)
+	}
+}
+
+func TestSigning_MaxQuoteAgeZero_DisablesGuard(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "bridge-wallet-1", "ETHEREUM_SEPOLIA")
+	// Ancient swap.
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.CreatedAt = time.Now().Add(-365 * 24 * time.Hour)
+	})
+	signer.ok("bridge-wallet-1", "0xsig", "sess_1")
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	// MaxQuoteAge intentionally not set (zero = disabled)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Errorf("with guard disabled, status = %q, want broadcasting", got.Status)
+	}
+}
+
+func TestSigning_StaleCheck_RunsBeforeWalletResolution(t *testing.T) {
+	// A swap with no wallet ID is normally skipped silently. With the
+	// staleness guard, we still want to skip — but the staleness check
+	// happens AFTER the wallet check, so the swap stays untouched.
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		Amount:             0.1,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAddress: "0xrecipient",
+		DepositAddress:     "", // no wallet
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.CreatedAt = time.Now().Add(-2 * time.Hour)
+	})
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.SetMaxQuoteAge(30 * time.Minute)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("status = %q, want unchanged bridge_transfer_pending (no wallet to refund)", got.Status)
+	}
+	if d.Stats().Stale != 0 {
+		t.Errorf("stale counter incremented despite no-wallet skip, stats=%+v", d.Stats())
 	}
 }

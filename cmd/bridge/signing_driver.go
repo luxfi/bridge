@@ -83,6 +83,13 @@ type SigningDriver struct {
 	// headroom — matches the mchain client's keygen timeout.
 	perSignTimeout time.Duration
 
+	// maxQuoteAge caps the elapsed time between Swap.CreatedAt and the
+	// signing moment. When > 0, swaps older than this are transitioned to
+	// SwapStatusRefundPending instead of signed — the refund driver then
+	// returns the user's source-chain deposit. Zero ⇒ disabled (legacy
+	// behavior: sign at the create-time rate no matter how stale).
+	maxQuoteAge time.Duration
+
 	running atomic.Bool
 
 	ticks       atomic.Uint64
@@ -90,6 +97,7 @@ type SigningDriver struct {
 	successes   atomic.Uint64
 	failures    atomic.Uint64
 	listErrors  atomic.Uint64
+	stale       atomic.Uint64
 
 	stopOnce      sync.Once
 	cancelRunning context.CancelFunc
@@ -100,6 +108,13 @@ type SigningDriver struct {
 // digests) and finalize a wire-ready raw tx into Swap.DestRawTx.
 // Optional — leaving it nil retains the v1 placeholder behavior.
 func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler = asm }
+
+// SetMaxQuoteAge configures the staleness guard. Swaps older than this
+// at signing time are kicked to SwapStatusRefundPending instead of
+// signed. Zero disables the guard (legacy behavior). Use a value
+// matched to your destination asset's volatility — 5–15 min for ETH /
+// BTC pairs, 30+ min for stable-coin pairs.
+func (d *SigningDriver) SetMaxQuoteAge(age time.Duration) { d.maxQuoteAge = age }
 
 // DefaultSigningInterval is the production-suitable tick cadence for
 // the signing driver. Faster than the deposit watcher because once a
@@ -134,6 +149,7 @@ type SigningDriverStats struct {
 	Successes  uint64 `json:"successes"`
 	Failures   uint64 `json:"failures"`
 	ListErrors uint64 `json:"list_errors"`
+	Stale      uint64 `json:"stale"`
 }
 
 // Stats snapshots the counters. Safe for concurrent reads.
@@ -144,6 +160,7 @@ func (d *SigningDriver) Stats() SigningDriverStats {
 		Successes:  d.successes.Load(),
 		Failures:   d.failures.Load(),
 		ListErrors: d.listErrors.Load(),
+		Stale:      d.stale.Load(),
 	}
 }
 
@@ -230,6 +247,41 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		// use_deposit_address=false). The signing flow doesn't apply
 		// — that swap must complete via a different mechanism. Skip
 		// silently.
+		return
+	}
+
+	// Quote staleness guard. If the create-time quote is older than
+	// MaxQuoteAge, the locked rate may have drifted enough that paying
+	// out at that rate is operator-unfavorable (or user-unfavorable).
+	// Refuse to sign and hand off to the refund driver instead.
+	//
+	// Order matters: this runs BEFORE the claim transition so a stale
+	// swap never enters SwapStatusSigning — the refund driver picks it
+	// up from SwapStatusRefundPending cleanly.
+	if d.maxQuoteAge > 0 && !sw.CreatedAt.IsZero() && time.Since(sw.CreatedAt) > d.maxQuoteAge {
+		age := time.Since(sw.CreatedAt).Round(time.Second)
+		now := time.Now().UTC()
+		claimed, err := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status != SwapStatusBridgeTransferPending {
+				return
+			}
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf("quote_stale: created %s ago, max age %s", age, d.maxQuoteAge)
+			s.LastErrorAt = now
+		})
+		if err != nil || claimed == nil || claimed.Status != SwapStatusRefundPending {
+			// Race with another transition (deposit re-confirmed, etc.)
+			// — leave it alone for the next tick.
+			return
+		}
+		d.stale.Add(1)
+		if d.logger != nil {
+			d.logger.Info("quote stale — handing off to refund driver",
+				"swap_id", sw.ID,
+				"age", age,
+				"max_age", d.maxQuoteAge,
+			)
+		}
 		return
 	}
 
