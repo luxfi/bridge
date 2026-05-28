@@ -85,8 +85,10 @@ func (c *BalanceProbeClient) rpcURL(network string) string {
 	return depositcheck.RPCURLFor(network)
 }
 
-// BalanceAt implements BalanceProbe. Returns the wei balance at
-// `address` on `network` (latest block). EVM networks only.
+// BalanceAt implements BalanceProbe. Returns the native-token balance
+// at `address` on `network`, in the chain's base unit (wei for EVM,
+// lamports for Solana). The unit is consistent with the assembler's
+// gas calculation for that family — see signing_driver.gasPrecheck.
 func (c *BalanceProbeClient) BalanceAt(ctx context.Context, network, address string) (*big.Int, error) {
 	if network == "" {
 		return nil, errors.New("balance_probe: empty network")
@@ -94,19 +96,25 @@ func (c *BalanceProbeClient) BalanceAt(ctx context.Context, network, address str
 	if address == "" {
 		return nil, errors.New("balance_probe: empty address")
 	}
-	// EVM gate. AddressTypeFor lives in mchain — reuse it via the
-	// broadcast.RPCURLFor table check below. Non-EVM networks have
-	// no entry there, which falls through to the depositcheck table;
-	// a non-EVM network with a depositcheck entry would still return
-	// data shaped wrong for eth_getBalance, so refuse explicitly
-	// for the well-known non-EVM families. (Keeping the EVM gate
-	// inline rather than importing mchain.AddressTypeFor — avoids a
-	// circular-import risk and keeps balance_probe a leaf package
-	// consumer.)
-	if isLikelyNonEVMNetwork(network) {
+	// Branch on family. Solana speaks getBalance (lamports as JSON
+	// number, not hex). Other non-EVM families don't have a gas pre-
+	// check implementation yet — return ErrFamilyNotSupportedForBalance
+	// and the signing driver skips the pre-check.
+	switch {
+	case strings.HasPrefix(network, "SOLANA_"):
+		return c.balanceSOL(ctx, network, address)
+	case strings.HasPrefix(network, "BITCOIN_"),
+		strings.HasPrefix(network, "TON_"),
+		strings.HasPrefix(network, "XRP_"),
+		strings.HasPrefix(network, "POLKADOT_"),
+		strings.HasPrefix(network, "CARDANO_"):
 		return nil, ErrFamilyNotSupportedForBalance
 	}
+	return c.balanceEVM(ctx, network, address)
+}
 
+// balanceEVM is the eth_getBalance path. Returns wei.
+func (c *BalanceProbeClient) balanceEVM(ctx context.Context, network, address string) (*big.Int, error) {
 	url := c.rpcURL(network)
 	if url == "" {
 		return nil, fmt.Errorf("balance_probe: no RPC URL configured for %s", network)
@@ -119,28 +127,12 @@ func (c *BalanceProbeClient) BalanceAt(ctx context.Context, network, address str
 		"params":  []any{address, "latest"},
 	})
 
-	callCtx, cancel := context.WithTimeout(ctx, c.Timeout)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(callCtx, http.MethodPost, url, bytes.NewReader(body))
+	respBody, status, err := c.doRPC(ctx, url, body)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := c.HTTPClient
-	if client == nil {
-		client = &http.Client{Timeout: c.Timeout}
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("balance_probe: %s transport: %w", url, err)
-	}
-	defer resp.Body.Close()
-	respBody, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("balance_probe: HTTP %d: %s", resp.StatusCode, truncBP(respBody, 200))
+	if status < 200 || status >= 300 {
+		return nil, fmt.Errorf("balance_probe: HTTP %d: %s", status, truncBP(respBody, 200))
 	}
 	var parsed struct {
 		Result string `json:"result"`
@@ -166,11 +158,87 @@ func (c *BalanceProbeClient) BalanceAt(ctx context.Context, network, address str
 	return n, nil
 }
 
-// isLikelyNonEVMNetwork is a fast gate for the well-known non-EVM
-// families. The bridge supports BTC/SOL/TON/XRP/DOT keygen but does
-// NOT support those broadcast paths today, so the gas pre-check is
-// inapplicable. Returning ErrFamilyNotSupportedForBalance from
-// BalanceAt lets the caller skip the pre-check rather than choking.
+// balanceSOL is the getBalance path for Solana. Returns lamports.
+// Wire shape:
+//
+//	{"jsonrpc":"2.0","id":N,"method":"getBalance","params":["<pubkey>"]}
+//	→ {"jsonrpc":"2.0","id":N,"result":{"context":{...},"value":<lamports as JSON number>}}
+//
+// Note: value is a plain JSON number, not hex. Solana's lamports easily
+// fit in a uint64; we decode through json.Number → *big.Int for safety
+// against any unusual fixture sizes.
+func (c *BalanceProbeClient) balanceSOL(ctx context.Context, network, address string) (*big.Int, error) {
+	url := c.rpcURL(network)
+	if url == "" {
+		return nil, fmt.Errorf("balance_probe: no RPC URL configured for %s", network)
+	}
+	body, _ := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      c.callSeq.Add(1),
+		"method":  "getBalance",
+		"params":  []any{address, map[string]any{"commitment": "confirmed"}},
+	})
+	respBody, status, err := c.doRPC(ctx, url, body)
+	if err != nil {
+		return nil, err
+	}
+	if status < 200 || status >= 300 {
+		return nil, fmt.Errorf("balance_probe: HTTP %d: %s", status, truncBP(respBody, 200))
+	}
+	var parsed struct {
+		Result struct {
+			Value json.Number `json:"value"`
+		} `json:"result"`
+		Error *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error,omitempty"`
+	}
+	if err := json.Unmarshal(respBody, &parsed); err != nil {
+		return nil, fmt.Errorf("balance_probe: decode: %w (body=%s)", err, truncBP(respBody, 200))
+	}
+	if parsed.Error != nil {
+		return nil, fmt.Errorf("balance_probe: rpc %d: %s", parsed.Error.Code, parsed.Error.Message)
+	}
+	if parsed.Result.Value == "" {
+		return big.NewInt(0), nil
+	}
+	n, ok := new(big.Int).SetString(parsed.Result.Value.String(), 10)
+	if !ok {
+		return nil, fmt.Errorf("balance_probe: invalid lamports result %q", parsed.Result.Value)
+	}
+	return n, nil
+}
+
+// doRPC is the shared JSON-RPC POST. Extracted so balanceEVM and
+// balanceSOL can share transport boilerplate without duplicating http
+// client management.
+func (c *BalanceProbeClient) doRPC(ctx context.Context, url string, body []byte) ([]byte, int, error) {
+	callCtx, cancel := context.WithTimeout(ctx, c.Timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(callCtx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	client := c.HTTPClient
+	if client == nil {
+		client = &http.Client{Timeout: c.Timeout}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, 0, fmt.Errorf("balance_probe: %s transport: %w", url, err)
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	return respBody, resp.StatusCode, nil
+}
+
+// isLikelyNonEVMNetwork remains as a documentation hook for callers
+// outside this file. With SOL plumbed in BalanceAt branches by network
+// prefix directly, but callers (e.g. external probes) may still want
+// the historical predicate.
 func isLikelyNonEVMNetwork(network string) bool {
 	switch {
 	case strings.HasPrefix(network, "BITCOIN_"),
