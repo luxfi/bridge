@@ -180,22 +180,25 @@ type keygenResult struct {
 	Error       string `json:"error"`
 }
 
-// Wallet is the public result of a keygen for one bridge deposit.
-// Caller stores Name + Address; Name doubles as the MPC wallet
-// identifier that the deposit-watcher and signing-session code use to
-// recover the underlying key shares.
+// Wallet is the public result of a keygen for one bridge deposit OR for
+// a long-lived per-network release wallet. Caller stores Name + Address;
+// Name doubles as the MPC wallet identifier that the deposit-watcher and
+// signing-session code use to recover the underlying key shares.
+//
+// JSON tags are present because FileReleaseStore serializes Wallet to
+// disk so per-network release wallets survive bridge restarts.
 type Wallet struct {
 	// Name is the MPC wallet identifier (e.g. "bridge-ethereum_sepolia-1718000000").
-	Name string
+	Name string `json:"name"`
 	// Address is the source-chain receive address derived from the
 	// keygen output, picked according to AddressTypeFor(network). For
 	// BTC, this is the bech32 P2WPKH derived locally from ECDSAPubKey
 	// (mpcd's legacy P2PKH form is intentionally not used — P2WPKH is
 	// what the bridge release flow consumes).
-	Address string
+	Address string `json:"address"`
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
-	AddressType AddressType
+	AddressType AddressType `json:"address_type"`
 	// ECDSAPubKey is the 33-byte compressed secp256k1 public key the
 	// MPC quorum produced. Required by:
 	//   - BTC release: witness stack on Finalize (P2WPKH spends include
@@ -206,7 +209,7 @@ type Wallet struct {
 	//     reconstruct the address from it.
 	// Empty when the keygen result didn't carry an ECDSA pubkey
 	// (Ed25519-only paths: SOL, TON).
-	ECDSAPubKey []byte
+	ECDSAPubKey []byte `json:"ecdsa_pub_key,omitempty"`
 
 	// EDDSAPubKeyHex is the hex-encoded 32-byte Ed25519 public key.
 	// Used by TON (where the address is derived from the wallet
@@ -214,7 +217,7 @@ type Wallet struct {
 	// for non-Ed25519 wallets. SOL also signs with Ed25519 but the
 	// address IS the pubkey base58-encoded, so SOL doesn't need this
 	// field — the address slot carries everything.
-	EDDSAPubKeyHex string
+	EDDSAPubKeyHex string `json:"eddsa_pub_key_hex,omitempty"`
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
