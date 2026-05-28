@@ -43,6 +43,16 @@ type API struct {
 	mchain   *mchain.Client       // optional; when set, swap creation with use_deposit_address=true mints an MPC address
 	depcheck *depositcheck.Client // optional; powers the /v1/bridge/check-deposit diagnostic endpoint
 
+	// releaseStore is the per-destination-network release-wallet
+	// registry. Optional: when set, swapsCreateNative stamps the new
+	// swap with the long-lived MPC wallet that will pay out the
+	// destination-chain settlement. When nil, the signing driver
+	// falls back to the per-swap deposit wallet (the legacy path —
+	// works only if the operator pre-funded each per-swap address,
+	// which is impractical for testnet/prod and is the bug this
+	// store fixes).
+	releaseStore mchain.ReleaseWalletStore
+
 	// Native swap CRUD. The Go binary owns these — BridgeVM is the
 	// LP-333 signer-set manager, not a swap API (see
 	// architecture_go_bridge_stack memory). When both store and
@@ -94,6 +104,15 @@ func (a *API) SetProfile(p *bridge.BridgeProfile) {
 	if p != nil {
 		a.profile = p
 	}
+}
+
+// SetReleaseStore wires the per-destination-network release-wallet
+// registry. Called from main.go after the mchain client + persistence
+// path are resolved. Kept as a setter (not a NewAPI parameter) so the
+// 20+ existing test callers of NewAPI don't need to change signature
+// when they don't exercise the release-wallet path.
+func (a *API) SetReleaseStore(rs mchain.ReleaseWalletStore) {
+	a.releaseStore = rs
 }
 
 // Register mounts handlers on the given zip.App. The /v1/bridge prefix
