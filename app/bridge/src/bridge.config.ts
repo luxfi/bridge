@@ -26,7 +26,11 @@
 //   3. @luxfi/brand defaults — final fallback to the canonical Lux brand
 //                              package's brand.json values.
 
-import type { BridgeConfig } from '@luxfi/bridge'
+import type {
+  BridgeConfig,
+  BridgeMPCConfig,
+  BridgeWalletConfig,
+} from '@luxfi/bridge'
 import luxBrandJson from '@luxfi/brand/brand.json'
 import { getColorSVG } from '@luxfi/logo'
 
@@ -61,14 +65,108 @@ const env = (key: string, fallback?: string): string | undefined => {
 
 const luxLogoDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(getColorSVG())}`
 
-// Bridge endpoints belong to the bridge subdomain — independent of
-// @luxfi/brand's appDomain (which is "lux.exchange" for the exchange).
-const fallbackApiHost = 'https://api.bridge.lux.network'
+// Live bridge REST endpoint. Note the hostname is `bridge-api.lux.network`
+// (hyphenated) — this is the same Express backend the production
+// bridge.lux.network frontend uses today. The previous `api.bridge.lux.network`
+// fallback never resolved in DNS, which is why the UI used to surface
+// "Failed to fetch" on first load. When a public B-Chain (BridgeVM) JSON-RPC
+// endpoint is exposed, the SDK will try that first via `BridgeConfig.rpc`
+// and only fall back to this REST host on RPC failure.
+const fallbackApiHost = 'https://bridge-api.lux.network'
 const fallbackDocsUrl = 'https://docs.lux.network/bridge'
 
+// MPC endpoints. publicUrl is the m-chain (public threshold network, used
+// for user wallets); privateUrl is the treasury cluster (used for fee
+// collection only and not always reachable from the tenant). Protocol
+// defaults to cggmp21 — the canonical classical ECDSA-CMP variant called
+// out as leaderless / permissionless-safe in REQUIREMENTS.md §5.3.
+const fallbackMpcPublicUrl = 'https://mpc.lux.network'
+const fallbackMpcProtocol: NonNullable<BridgeMPCConfig['protocol']> = 'cggmp21'
+
+// Curated EVM allow-list for the Lux tenant. The SDK's full supported set
+// (mainnet, arbitrum, base, polygon, optimism, bsc for mainnet; sepolia,
+// arbitrumSepolia, baseSepolia, optimismSepolia, polygonAmoy, holesky,
+// bscTestnet for testnet) is intentionally narrowed here so the user wallet
+// only sees chains the bridge backend actually settles to. Non-EVM
+// destinations (Lux native, Solana, BTC, TON, XRP) are handled by the MPC
+// threshold layer and don't appear in the wagmi connector.
+//
+// Env-aware: BRIDGE_ENV=testnet → Sepolia / Base Sepolia / Holesky;
+// BRIDGE_ENV=mainnet (default) → the production EVM allow-list.
+const envSlug = env('BRIDGE_ENV', 'mainnet') ?? 'mainnet'
+const isTestnetEnv = envSlug === 'testnet' || envSlug === 'devnet'
+const fallbackSupportedChainIds = isTestnetEnv
+  ? [11155111, 84532, 17000] // Sepolia, Base Sepolia, Holesky — the testnet pairs the bridge backend currently quotes.
+  : [1, 42161, 8453, 137, 10]
+const fallbackDefaultChainId = isTestnetEnv ? 11155111 : 1
+
+/**
+ * Parse a comma-separated list of numeric chain IDs from env, dropping
+ * non-numeric entries. Empty / unset → `undefined` so the caller can fall
+ * back to the static allow-list.
+ */
+const parseChainIds = (raw: string | undefined): number[] | undefined => {
+  if (!raw) return undefined
+  const ids = raw
+    .split(',')
+    .map((s) => Number.parseInt(s.trim(), 10))
+    .filter((n) => Number.isFinite(n))
+  return ids.length > 0 ? ids : undefined
+}
+
+const parseChainId = (raw: string | undefined): number | undefined => {
+  if (!raw) return undefined
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) ? n : undefined
+}
+
+const wallet: BridgeWalletConfig = {
+  walletConnectProjectId: env('WC_PROJECT_ID'),
+  defaultChainId: parseChainId(env('BRIDGE_WALLET_DEFAULT_CHAIN')) ?? fallbackDefaultChainId,
+  supportedChainIds:
+    parseChainIds(env('BRIDGE_WALLET_SUPPORTED_CHAINS')) ?? fallbackSupportedChainIds,
+}
+
+// MPC protocol must be one of the union values in BridgeMPCConfig.protocol.
+// Anything else from env → fall back to cggmp21 rather than producing a
+// type-cast lie.
+const ALLOWED_MPC_PROTOCOLS: readonly NonNullable<BridgeMPCConfig['protocol']>[] = [
+  'cggmp21',
+  'frost',
+  'bls',
+  'doerner',
+  'pulsar',
+  'corona',
+  'magnetar',
+]
+
+const parseMpcProtocol = (
+  raw: string | undefined,
+): NonNullable<BridgeMPCConfig['protocol']> => {
+  if (!raw) return fallbackMpcProtocol
+  const match = ALLOWED_MPC_PROTOCOLS.find((p) => p === raw)
+  return match ?? fallbackMpcProtocol
+}
+
+const mpc: BridgeMPCConfig = {
+  publicUrl: env('BRIDGE_MPC_PUBLIC_URL', fallbackMpcPublicUrl),
+  privateUrl: env('BRIDGE_MPC_PRIVATE_URL'),
+  protocol: parseMpcProtocol(env('BRIDGE_MPC_PROTOCOL')),
+}
+
+// In Vite dev mode we want apiHost to be same-origin so /api/* routes through
+// the Vite dev proxy (which injects the production Origin header — see
+// vite.config.ts). In production builds we use the explicit env value or the
+// canonical bridge-api.lux.network fallback (where the prod origin is on
+// the server's CORS allow-list).
+const devApiHost =
+  import.meta.env.DEV && typeof window !== 'undefined'
+    ? window.location.origin
+    : undefined
+
 export const bridgeConfig: BridgeConfig = {
-  apiHost: env('BRIDGE_API_HOST', fallbackApiHost)!,
-  env: env('BRIDGE_ENV', 'mainnet')!,
+  apiHost: devApiHost ?? env('BRIDGE_API_HOST', fallbackApiHost)!,
+  env: envSlug,
   clientId: env('BRIDGE_CLIENT_ID'),
   iamOrg: env('BRIDGE_IAM_ORG', 'lux'),
   brand: {
@@ -84,4 +182,6 @@ export const bridgeConfig: BridgeConfig = {
     supportEmail: supportEmail ?? 'support@lux.network',
     docsUrl: fallbackDocsUrl,
   },
+  wallet,
+  mpc,
 }

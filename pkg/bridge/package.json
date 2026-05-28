@@ -5,7 +5,34 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
-    "scope": "@luxfi"
+    "scope": "@luxfi",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./Bridge": {
+        "types": "./dist/Bridge.d.ts",
+        "import": "./dist/Bridge.js",
+        "default": "./dist/Bridge.js"
+      },
+      "./config": {
+        "types": "./dist/config.d.ts",
+        "import": "./dist/config.js",
+        "default": "./dist/config.js"
+      },
+      "./types": {
+        "types": "./dist/types.d.ts",
+        "import": "./dist/types.js",
+        "default": "./dist/types.js"
+      },
+      "./styles.css": "./dist/app/styles/theme.css",
+      "./package.json": "./package.json"
+    }
   },
   "author": "Lux Industries, Inc.",
   "license": "MIT",
@@ -33,17 +60,20 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "dist",
     "src",
     "public",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "build": "pnpm run clean && tsc -p tsconfig.build.json && cp -r src/app/styles dist/app/styles",
     "tc": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lat": "npm show @luxfi/bridge version",
+    "prepublishOnly": "pnpm run build",
     "pub": "npm publish"
   },
   "dependencies": {
