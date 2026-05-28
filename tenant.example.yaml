@@ -1,0 +1,162 @@
+# tenant.example.yaml — declarative tenant config for luxfi/bridge.
+#
+# Mount this file at /etc/bridge/tenant.yaml in the K8s deployment, then
+# pass --tenant-config /etc/bridge/tenant.yaml on the daemon command
+# line. When set, brand + IAM + KMS + MPC + PQ-profile +
+# supportedChains + ingress + basket allowlist all come from this file
+# — flag-driven defaults stay available as overrides.
+#
+# White-label shim repos (liquidity/bridge, hanzo/bridge-shim,
+# zoo/bridge-shim, pars/bridge-shim) each ship their own tenant.yaml
+# and import luxfi/bridge as the upstream OSS dep. See those shim
+# repos for production examples.
+
+# ─── brand ────────────────────────────────────────────────────────────────
+#
+# Drives the SPA's window.ENV, the embedded app <title>, per-host
+# /logo.svg + /icon.svg, the daemon log "service" tag, and the
+# Fiber AppName.
+brand:
+  name:         "Lux Bridge"                # human-readable label
+  slug:         "lux-bridge"                # lowercase-hyphenated, used as service tag
+  primaryColor: "#7547ff"                   # SPA theme accent (hex)
+  logoURL:      "/logo.svg"                 # absolute or scheme-relative
+  faviconURL:   "/icon.svg"
+  docsURL:      "https://docs.lux.network"
+  title:        "Lux Bridge"                # defaults to .name when empty
+
+# ─── network ──────────────────────────────────────────────────────────────
+#
+# The tenant's primary L1 EVM (where bridged collateral mints land).
+# NetworkID here is the EVM chainId, NOT the Lux primary-network ID.
+# Per CLAUDE.md "Network ID vs EVM Chain ID — NEVER CONFLATE":
+#   primary networkID is shared across all Lux-derived L1s (1/2/3/1337)
+#   EVM chainId is per-subnet, per-env (96369 = Lux Mainnet, etc.)
+network:
+  id:          96369
+  name:        "Lux Mainnet"
+  rpcURL:      "https://api.lux.network"
+  explorerURL: "https://explorer.lux.network"
+
+# ─── iam ──────────────────────────────────────────────────────────────────
+#
+# Federated identity binding. Required — the bridge MUST NOT ship local
+# auth. Every authenticated route resolves identity via the tenant's IAM
+# (hanzo.id, lux.id, zoo.id, pars.id, liquidity.id).
+iam:
+  endpoint:     "https://lux.id"
+  clientID:     "lux-bridge"
+  organization: "lux"
+
+# ─── kms ──────────────────────────────────────────────────────────────────
+#
+# All secrets (MPC bearer token, CoinGecko API key, release-wallet seed
+# material) MUST come from KMS via Universal Auth. NEVER from env vars
+# in production.
+kms:
+  endpoint:    "https://kms.lux.network"
+  projectID:   "lux-bridge"
+  environment: "prod"                       # prod | staging | dev
+
+# ─── mpc ──────────────────────────────────────────────────────────────────
+#
+# The tenant's threshold-signing cluster. Operators list is
+# audit-display only — the actual key shares live in the MPC cluster.
+mpc:
+  url:          "http://mpc-node-0.mpc-node-headless.lux-mpc.svc:9800"
+  orgID:        "bridge"
+  dashboardURL: "http://mpc-dashboard.lux-mpc.svc:8081"
+  operators:
+    - "lux-mpc-node-0"
+    - "lux-mpc-node-1"
+    - "lux-mpc-node-2"
+    - "lux-mpc-node-3"
+    - "lux-mpc-node-4"
+  threshold: 3                              # 3-of-5
+
+# ─── pqProfile ────────────────────────────────────────────────────────────
+#
+# strict-pq        — refuse classical-only envelopes at the P3Q
+#                    precompile layer (set for internal tenants whose
+#                    destination is a Lux-derived L1)
+# classical-compat — permit ECDSA-only envelopes inside the governance-
+#                    set 30-day window (required when the tenant
+#                    routinely bridges to external L1s like Ethereum)
+pqProfile: "strict-pq"
+
+# ─── supportedChains ──────────────────────────────────────────────────────
+#
+# Allowlist of chain families this tenant will mount handlers for.
+# Anything not listed will not get a release-pool, will not appear in
+# /v1/bridge/networks, and will refuse swap creates. Subset of:
+#   eth, btc, sol, ton, xrp, dot, liquid, hanzo, zoo, pars, spc, lux
+supportedChains: ["eth", "btc", "sol", "ton", "xrp", "dot", "lux"]
+
+# ─── basketAllowlist ──────────────────────────────────────────────────────
+#
+# Per-basket collateral set. Maps basket symbol → list of asset
+# symbols permitted as backing. Consumed by:
+#  - the BridgeV4 BasketRegistry deployment (Part 2 — DeployTenant.s.sol)
+#  - the bridge's quote engine (refuses quotes mixing collateral
+#    outside the allowlist)
+basketAllowlist:
+  USD: ["USDC", "USDT", "DAI"]
+  BTC: ["WBTC", "tBTC"]
+  ETH: ["WETH", "stETH"]
+
+# ─── feeReceiverAddr ──────────────────────────────────────────────────────
+#
+# Destination of the per-claim fee skim (BridgeV4.feeReceiver). Must be
+# 0x-prefixed 20-byte hex. OPERATOR_ROLE drains this vault — privilege-
+# separated from the main vault so an operator-key compromise can't
+# touch user funds.
+feeReceiverAddr: "0xdEaD000000000000000000000000000000000000"
+
+# ─── domain ───────────────────────────────────────────────────────────────
+#
+# Public DNS host the SPA + API serve on. Used for og:metadata absolute
+# URLs and as the IngressRoute Host() match.
+domain: "bridge.lux.network"
+
+# ─── releasePool ──────────────────────────────────────────────────────────
+#
+# Per-family release-wallet pools. Each family is a static set of MPC
+# wallets the signing driver rotates through so a single under-funded
+# wallet can't block all subsequent swaps.
+#
+# size: 0 disables the family entirely.
+# mintNetwork: keygen target network — per-family.
+# balanceThreshold: low-balance WARN threshold, per-family unit
+#   (wei for EVM, lamports for SOL, sat for BTC, drops for XRP,
+#   planck for DOT, nano for TON).
+releasePool:
+  evm:
+    size:             10
+    mintNetwork:      "LUX_MAINNET"
+    balanceThreshold: "100000000000000000"       # 0.1 native (1e17 wei)
+  sol:
+    size:             5
+    mintNetwork:      "SOLANA_MAINNET"
+    balanceThreshold: "1000000000"               # 1 SOL (1e9 lamports)
+  btc:
+    size:             5
+    mintNetwork:      "BITCOIN_MAINNET"
+    balanceThreshold: "100000"                   # 0.001 BTC (1e5 sat)
+  xrp:
+    size:             5
+    mintNetwork:      "XRP_MAINNET"
+    balanceThreshold: "10000000"                 # 10 XRP (1e7 drops)
+  dot:
+    size:             3
+    mintNetwork:      "POLKADOT_MAINNET"
+    balanceThreshold: "100000000000"             # 10 DOT (1e11 planck)
+  ton:
+    size:             0
+    mintNetwork:      ""
+    balanceThreshold: ""
+
+# ─── plumbing defaults ────────────────────────────────────────────────────
+#
+# Optional — apply when omitted from the operator CLI invocation.
+listen:             ":8080"
+networksConfigPath: "/etc/bridge/networks.yaml"
