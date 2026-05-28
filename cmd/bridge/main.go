@@ -513,10 +513,43 @@ func main() {
 		"chain_context", "live",
 	)
 
+	// TON tx assembler: produces wallet-v4r2 external messages for
+	// the signing driver to feed to the MPC Ed25519 quorum, then
+	// finalizes the signed BOC for the broadcaster to push to TON
+	// Center. Independent of the EVM assembler — different cell
+	// schema, different signature scheme, different broadcast wire.
+	tonAsm := txassembler.NewTONAssembler()
+	logger.Info("ton tx assembler configured",
+		"wallet_version", "v4r2",
+		"subwallet_id", txassembler.TONSubwalletID,
+	)
+
 	// Balance probe: shared by the release-pool low-balance alerter
 	// and the signing-driver gas pre-check. One http.Client per
 	// process is plenty.
 	balanceProbe := NewBalanceProbe(overrides, 8*time.Second)
+	// Wire TON balance lookup endpoints + API keys. Operators set
+	// these via networks.yaml; the bridge picks them up at startup.
+	for _, n := range cfg.Networks {
+		if n.Broadcast != nil && n.Broadcast.URL != "" {
+			// Translate the sendBoc URL to the corresponding
+			// getAddressBalance URL by swapping the path. Both live
+			// under the same toncenter base.
+			if strings.Contains(n.Broadcast.URL, "/sendBoc") {
+				if balanceProbe.TONBalanceURLs == nil {
+					balanceProbe.TONBalanceURLs = map[string]string{}
+				}
+				balanceProbe.TONBalanceURLs[n.InternalName] = strings.Replace(
+					n.Broadcast.URL, "/sendBoc", "/getAddressBalance", 1)
+			}
+		}
+		if n.Broadcast != nil && n.Broadcast.APIKey != "" {
+			if balanceProbe.TONAPIKeys == nil {
+				balanceProbe.TONAPIKeys = map[string]string{}
+			}
+			balanceProbe.TONAPIKeys[n.InternalName] = n.Broadcast.APIKey
+		}
+	}
 
 	// Release pool: static set of MPC release wallets the signing
 	// driver rotates through, so a single under-funded wallet can't
@@ -742,6 +775,7 @@ func main() {
 		signer.SetAssembler(asm)       // produces wire-correct EVM txs
 		signer.SetSOLAssembler(solAsm) // produces wire-correct SOL txs
 		signer.SetDOTAssembler(dotAsm, dotChainCtx)
+		signer.SetTONAssembler(tonAsm) // produces TON v4r2 BOCs
 		// PoolSet wins when present; the legacy single-pool stays as
 		// the fallback for callers that haven't migrated.
 		if releasePoolSet != nil && releasePoolSet.Size() > 0 {
@@ -795,6 +829,24 @@ func main() {
 		// and the destination for LUX releases) so a single flag is
 		// the right operator UX.
 		bcastClient.RPCURLOverrides = overrides
+	}
+	// Wire TON broadcast endpoints + API keys from networks.yaml. The
+	// broadcast package's default rpcURLs table doesn't include TON
+	// (the toncenter gateway requires an API key for production use),
+	// so operators MUST opt in here.
+	for _, n := range cfg.Networks {
+		if n.Broadcast == nil {
+			continue
+		}
+		if n.Broadcast.URL != "" {
+			if bcastClient.RPCURLOverrides == nil {
+				bcastClient.RPCURLOverrides = map[string]string{}
+			}
+			bcastClient.RPCURLOverrides[n.InternalName] = n.Broadcast.URL
+		}
+		if n.Broadcast.APIKey != "" {
+			bcastClient.SetTONAPIKey(n.InternalName, n.Broadcast.APIKey)
+		}
 	}
 	var bcastDriver *BroadcastDriver
 	bcastCtx, bcastCancel := context.WithCancel(context.Background())

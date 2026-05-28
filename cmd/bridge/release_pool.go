@@ -103,14 +103,28 @@ type ReleasePoolEntry struct {
 	// families (SOL, TON).
 	Pubkey   []byte    `json:"pubkey,omitempty"`
 	MintedAt time.Time `json:"minted_at"`
+
+	// AddressType captures the chain family this entry was minted
+	// for. Empty ⇒ legacy assumption of AddressTypeETH (every entry
+	// minted before this field was added). Family above is the
+	// short-form code used in keyspace; AddressType is the long-form
+	// mchain type used by signing paths that need to dispatch on it.
+	AddressType mchain.AddressType `json:"address_type,omitempty"`
+
 	// ECDSAPubKey is the hex-encoded compressed-secp256k1 public key
 	// (33 bytes → 66 hex chars). Persisted by the DOT signing path so
 	// the substrate assembler can derive AccountId32 + pick the ECDSA
 	// recovery byte without re-keygen'ing. The XRP path also reads this
-	// (when Pubkey is empty) to populate SigningPubKey. Distinct from
-	// Pubkey (raw bytes); the two fields hold equivalent data —
-	// populate whichever your release path consumes.
+	// to populate SigningPubKey. Distinct from Pubkey (raw bytes); the
+	// two fields hold equivalent data — populate whichever your release
+	// path consumes.
 	ECDSAPubKey string `json:"ecdsa_pub_key,omitempty"`
+
+	// EDDSAPubKey is the hex-encoded 32-byte Ed25519 pubkey the MPC
+	// quorum signs with when the wallet was keygen'd as a TON / SOL
+	// family wallet. Required by the TON txassembler to reconstruct
+	// the v4r2 state_init cell on first send.
+	EDDSAPubKey string `json:"eddsa_pub_key,omitempty"`
 }
 
 // FamilyOrDefault returns Family or "evm" when the field is empty.
@@ -132,6 +146,7 @@ const (
 	FamilySOL = "sol"
 	FamilyDOT = "dot"
 	FamilyXRP = "xrp"
+	FamilyTON = "ton"
 )
 
 // =============================================================================
@@ -369,7 +384,9 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 			Network:     p.mintNetwork,
 			Pubkey:      append([]byte(nil), w.ECDSAPubKey...),
 			MintedAt:    time.Now().UTC(),
+			AddressType: w.AddressType,
 			ECDSAPubKey: hex.EncodeToString(w.ECDSAPubKey),
+			EDDSAPubKey: w.EDDSAPubKeyHex,
 		}
 		if err := p.store.PutEntry(ctx, p.family, idx, entry); err != nil {
 			return fmt.Errorf("release pool [%s]: persist idx=%d: %w", p.family, idx, err)

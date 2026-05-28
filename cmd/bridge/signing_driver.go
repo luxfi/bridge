@@ -6,8 +6,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -120,6 +122,12 @@ type SigningDriver struct {
 	// substrate signing payload. Nil disables DOT signing.
 	dotChainCtx DOTChainContext
 
+	// tonAssembler is the TON-family equivalent of assembler. Picked
+	// when the destination is a TON_* network. nil ⇒ TON destinations
+	// fall back to placeholder mode (same behaviour as EVM without an
+	// assembler attached).
+	tonAssembler *txassembler.TONAssembler
+
 	// pool / btcPool / poolSet wire the release-wallet pool(s).
 	//
 	// pool is the legacy single-pool field (EVM family). btcPool is
@@ -192,6 +200,11 @@ func (d *SigningDriver) SetDOTAssembler(asm *txassembler.DOTAssembler, ctx DOTCh
 	d.dotAssembler = asm
 	d.dotChainCtx = ctx
 }
+
+// SetTONAssembler attaches a TON-family tx assembler. The driver
+// uses this when the destination is a TON network (TON_MAINNET /
+// TON_TESTNET) and a pool entry of AddressTypeTON has been minted.
+func (d *SigningDriver) SetTONAssembler(asm *txassembler.TONAssembler) { d.tonAssembler = asm }
 
 // SetReleasePool wires the static release pool. With a pool attached,
 // signOne rotates wallets per-swap and persists ReleaseWalletID on
@@ -515,11 +528,13 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// Step 3 — compute the signing message + capture per-family
 	// assembly state. With an EVM assembler attached, this is the
 	// actual EIP-155 sighash; with a DOT assembler attached, it's
-	// blake2_256 of the substrate signing payload. Without one,
+	// blake2_256 of the substrate signing payload; with a TON
+	// assembler attached, it's the v4r2 body sighash. Without one,
 	// fall back to the placeholder synthetic digest.
 	var msgHex string
 	var unsigned *txassembler.Unsigned       // EVM
 	var dotUnsigned *txassembler.DOTUnsigned // DOT
+	var tonUnsigned *txassembler.TONUnsigned // TON
 
 	destFamily := mchain.AddressTypeFor(sw.DestinationNetwork)
 	switch {
@@ -565,6 +580,92 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 				)
 			}
 			return
+		}
+	case destFamily == mchain.AddressTypeTON && d.tonAssembler != nil:
+		// TON path. Need the source pubkey + address — pool entry
+		// carries both since the keygen surface was extended.
+		entry := d.lookupPoolEntry(walletID)
+		if entry == nil || entry.EDDSAPubKey == "" {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("TON signing requires EDDSAPubKey on release pool entry",
+					"swap_id", sw.ID,
+					"wallet_id", walletID,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status == SwapStatusSigning {
+					s.Status = SwapStatusBridgeTransferPending
+				}
+				s.LastError = "Release wallet missing TON ed25519 pubkey — operator must re-keygen with Ed25519 curve"
+			})
+			return
+		}
+		pubkey, perr := hex.DecodeString(strings.TrimPrefix(strings.TrimPrefix(entry.EDDSAPubKey, "0x"), "0X"))
+		if perr != nil {
+			d.failures.Add(1)
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status == SwapStatusSigning {
+					s.Status = SwapStatusBridgeTransferPending
+				}
+				s.LastError = "Release wallet has malformed ed25519 pubkey: " + perr.Error()
+			})
+			return
+		}
+		amountNano := tonAmountToNano(sw.Amount)
+		spec := txassembler.TONSpec{
+			Network:            sw.DestinationNetwork,
+			SourcePubKey:       pubkey,
+			SourceAddress:      entry.Address,
+			DestinationAddress: sw.DestinationAddress,
+			Asset:              sw.DestinationAsset,
+			AmountNano:         amountNano,
+		}
+		tu, terr := d.tonAssembler.PreSignTON(ctx, spec)
+		if terr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("TON tx assembler PreSign failed",
+					"swap_id", sw.ID,
+					"err", terr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				if s.Status == SwapStatusSigning {
+					s.Status = SwapStatusBridgeTransferPending
+				}
+				s.LastError = "TON tx assembly failed — retrying: " + terr.Error()
+			})
+			return
+		}
+		tonUnsigned = tu
+		msgHex = "0x" + hex.EncodeToString(tu.SigHash[:])
+
+		// Gas pre-check for TON: balance is in nanoton; required
+		// includes the user value plus a small gas estimate (~0.05
+		// TON native, ~0.15 TON for jetton transfers because the
+		// jetton call carries forward TON + gas).
+		if d.gasProbe != nil {
+			if reason, ok := d.gasPrecheckTON(ctx, sw, spec, entry.Address); !ok {
+				d.shortCircuited.Add(1)
+				_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+					if s.Status == SwapStatusSigning {
+						s.Status = SwapStatusFailedInsufficientReleaseGas
+					}
+					s.LastError = reason
+					s.LastErrorAt = time.Now().UTC()
+				})
+				if d.logger != nil {
+					d.logger.Warn("gas pre-check failed — TON swap short-circuited",
+						"swap_id", sw.ID,
+						"release_wallet_id", walletID,
+						"release_address", entry.Address,
+						"network", sw.DestinationNetwork,
+						"reason", reason,
+					)
+				}
+				return
+			}
 		}
 	case d.assembler != nil && senderAddr != "":
 		var aerr error
@@ -653,7 +754,11 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	}
 
 	// When an assembler was used, finalize the signed raw tx so the
-	// broadcaster has something wire-ready to push.
+	// broadcaster has something wire-ready to push. Each family
+	// diverges on signature shape (65-byte secp256k1 r||s||v vs
+	// 64-byte Ed25519) and finalization (EIP-155 RLP, DOT extrinsic,
+	// TON BOC), but all produce a Swap.DestRawTx value the broadcast
+	// layer consumes uniformly.
 	var destRawTx string
 	switch {
 	case dotUnsigned != nil:
@@ -690,6 +795,24 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			return
 		}
 		destRawTx = rawTx
+	case tonUnsigned != nil:
+		bocB64, _, ferr := d.tonAssembler.FinalizeTONHex(tonUnsigned, res.Signature)
+		if ferr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("TON tx assembler Finalize failed",
+					"swap_id", sw.ID,
+					"err", ferr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		destRawTx = bocB64
 	case unsigned != nil:
 		r, s, v, perr := txassembler.ParseRSV(res.Signature)
 		if perr != nil {
@@ -1338,6 +1461,132 @@ func (d *SigningDriver) xrpGasPrecheck(ctx context.Context, sw *Swap, u *txassem
 		required-u.AmountDrops-u.FeeDrops,
 		short,
 	), false
+}
+
+// =============================================================================
+// TON helpers
+// =============================================================================
+
+// lookupPoolEntry returns the pool entry matching `walletID`, or nil
+// when the pool is unset / the wallet isn't in the pool. Used by the
+// TON signing path to fetch the EDDSAPubKey + canonical address that
+// the EVM path doesn't need.
+func (d *SigningDriver) lookupPoolEntry(walletID string) *ReleasePoolEntry {
+	if d.pool == nil {
+		return nil
+	}
+	for _, e := range d.pool.Entries() {
+		if e.WalletID == walletID {
+			cp := e
+			return &cp
+		}
+	}
+	return nil
+}
+
+// tonAmountToNano converts a human-readable TON amount (e.g. 1.5)
+// into nanoton (1e9 base units). Defensive against IEEE-754 wobble
+// by formatting + parsing as fixed-point.
+func tonAmountToNano(amount float64) *big.Int {
+	if amount <= 0 || math.IsNaN(amount) || math.IsInf(amount, 0) {
+		return big.NewInt(0)
+	}
+	// 9 decimal places of precision — exactly the nanoton resolution.
+	formatted := strconv.FormatFloat(amount, 'f', 9, 64)
+	intPart, fracPart := formatted, ""
+	if idx := strings.Index(formatted, "."); idx >= 0 {
+		intPart = formatted[:idx]
+		fracPart = formatted[idx+1:]
+	}
+	if pad := 9 - len(fracPart); pad > 0 {
+		fracPart += strings.Repeat("0", pad)
+	} else if pad < 0 {
+		fracPart = fracPart[:9]
+	}
+	combined := intPart + fracPart
+	combined = strings.TrimLeft(combined, "0")
+	if combined == "" {
+		return big.NewInt(0)
+	}
+	n, ok := new(big.Int).SetString(combined, 10)
+	if !ok {
+		return big.NewInt(0)
+	}
+	return n
+}
+
+// gasPrecheckTON verifies the release wallet has enough nanoton to
+// cover (amount + gas) on a TON send. The signing-driver's general
+// gasPrecheck is EVM-shaped (wei + gasLimit*gasPrice + value), so the
+// TON branch needs its own.
+//
+// Gas estimate: 0.05 TON for a native transfer, 0.15 TON for a
+// jetton transfer (which carries forward-TON + master-call gas).
+// These are conservative — actual production costs hover around half
+// these values on testnet.
+func (d *SigningDriver) gasPrecheckTON(
+	ctx context.Context,
+	sw *Swap,
+	spec txassembler.TONSpec,
+	releaseAddr string,
+) (string, bool) {
+	probeCtx, cancel := context.WithTimeout(ctx, d.perBalanceTimeout)
+	defer cancel()
+	balance, err := d.gasProbe.BalanceAt(probeCtx, sw.DestinationNetwork, releaseAddr)
+	if err != nil {
+		// Best-effort: log + skip. Same policy as the EVM pre-check —
+		// don't refuse to sign a swap we can't verify.
+		if d.logger != nil {
+			d.logger.Debug("ton gas pre-check: balance probe failed (non-fatal — pre-check skipped)",
+				"swap_id", sw.ID,
+				"address", releaseAddr,
+				"network", sw.DestinationNetwork,
+				"err", err,
+			)
+		}
+		return "", true
+	}
+	var gasEstimate *big.Int
+	if isTONNativeAsset(spec.Asset) {
+		gasEstimate = big.NewInt(txassembler.TONJettonBodyValueNano) // 0.05 TON
+	} else {
+		// Jetton: body carries 0.05 TON to the master + 0.05 TON
+		// forward to the destination jetton wallet ⇒ ~0.10 TON net,
+		// pad to 0.15 for storage rounding.
+		gasEstimate = big.NewInt(txassembler.TONJettonBodyValueNano + txassembler.TONJettonForwardNano + 50_000_000)
+	}
+	// For native transfers, the user value also leaves the wallet.
+	// For jetton transfers, the user value moves between jetton
+	// wallets, NOT out of our release wallet — only gas leaves.
+	required := new(big.Int).Set(gasEstimate)
+	if isTONNativeAsset(spec.Asset) {
+		required.Add(required, spec.AmountNano)
+	}
+	if balance.Cmp(required) >= 0 {
+		return "", true
+	}
+	short := new(big.Int).Sub(required, balance)
+	return fmt.Sprintf(
+		"Release wallet %s has insufficient nanoton balance on %s: balance=%s nanoton, required=%s nanoton (gas=%s + value=%s), short=%s nanoton. Fund the wallet and trigger a retry.",
+		releaseAddr,
+		sw.DestinationNetwork,
+		balance.String(),
+		required.String(),
+		gasEstimate.String(),
+		spec.AmountNano.String(),
+		short.String(),
+	), false
+}
+
+// isTONNativeAsset duplicates the txassembler heuristic so the
+// signing driver doesn't need to call into the assembler just for
+// this branch.
+func isTONNativeAsset(asset string) bool {
+	switch strings.ToUpper(strings.TrimSpace(asset)) {
+	case "", "TON", "TONCOIN":
+		return true
+	}
+	return false
 }
 
 // Suppress unused-import warnings on the rare path where fmt isn't

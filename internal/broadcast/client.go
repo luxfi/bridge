@@ -18,9 +18,13 @@
 //     KUSAMA_MAINNET): implemented via author_submitExtrinsic. See dot.go.
 //   - XRP Ledger (XRP_MAINNET / XRP_TESTNET): implemented via rippled's
 //     `submit` JSON-RPC. See xrp.go for the engine_result classification.
-//   - Non-EVM remaining (TON): returns
-//     ErrFamilyNotImplemented. Adding any one is a straightforward
-//     follow-up — different REST/RPC contracts, same shape.
+//   - TON (mainnet / testnet): implemented via TON Center sendBoc.
+//     See ton.go.
+//
+// All families above are implemented today. Adding a new family is
+// a straightforward follow-up — different REST/RPC contracts, same
+// shape: register a default URL, add a case to the Broadcast switch,
+// implement the chain-specific submit.
 //
 // Trust model: the destination RPC is treated as untrusted transport.
 // A 200 response means the node ACCEPTED the tx — it does NOT mean
@@ -107,8 +111,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (TON). EVM + BTC + SOL + DOT + XRP are wired
-// in this package today.
+// isn't implemented yet. All five non-EVM families (BTC, SOL, DOT,
+// XRP, TON) plus EVM itself are wired in this package today; this
+// error is reserved for new families added in the future.
 var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
@@ -154,6 +159,13 @@ type Client struct {
 	// RPCURLOverrides shadows specific networks with custom URLs (e.g.
 	// an authenticated provider). Checked before the package table.
 	RPCURLOverrides map[string]string
+
+	// TONAPIKeys maps a TON network name (TON_MAINNET / TON_TESTNET) to
+	// the X-API-Key value used when calling TON Center. Required at
+	// production rates — TON Center throttles unauthenticated callers
+	// to ~1 req/s. Populated via SetTONAPIKey (see ton.go) or directly
+	// by main.go from networks.yaml.
+	TONAPIKeys map[string]string
 
 	// callSeq is a monotonic JSON-RPC `id` counter. Atomic — safe for
 	// concurrent use without external locking.
@@ -227,8 +239,7 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 	// eth_sendRawTransaction; BTC uses mempool.space POST /api/tx (or
 	// the operator's own Bitcoin Core via Client.RPCURLOverrides);
 	// SOL uses sendTransaction; DOT uses author_submitExtrinsic;
-	// XRP uses rippled's `submit` JSON-RPC.
-	// Other non-EVM families still pending their own broadcasters.
+	// XRP uses rippled's `submit` JSON-RPC; TON uses TON Center sendBoc.
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
@@ -240,6 +251,8 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 		return c.broadcastDOT(ctx, url, rawTxHex)
 	case mchain.AddressTypeXRP:
 		return c.broadcastXRPDirect(ctx, url, rawTxHex)
+	case mchain.AddressTypeTON:
+		return c.broadcastTON(ctx, url, network, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
