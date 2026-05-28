@@ -23,8 +23,9 @@ import (
 func mintSinglePool(t *testing.T, store *InMemoryStore, walletID, address string) *ReleasePool {
 	t.Helper()
 	pool := NewReleasePool(store, "LUX_TESTNET", nil)
-	if err := store.PutEntry(context.Background(), 0, ReleasePoolEntry{
+	if err := store.PutEntry(context.Background(), FamilyEVM, 0, ReleasePoolEntry{
 		Index:    0,
+		Family:   FamilyEVM,
 		WalletID: walletID,
 		Address:  address,
 		Network:  "LUX_TESTNET",
