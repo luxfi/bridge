@@ -32,11 +32,23 @@ func (k *fakeKeygener) KeygenForDeposit(_ context.Context, network string) (*mch
 		return nil, err
 	}
 	i := k.calls.Add(1)
-	return &mchain.Wallet{
-		Name:        fmt.Sprintf("release-pool-wallet-%d", i),
-		Address:     fmt.Sprintf("0xaddr%d", i),
-		AddressType: mchain.AddressTypeETH,
-	}, nil
+	// Family / address-shape comes from the network name so a single
+	// fake keygener can drive both EVM + XRP pool tests.
+	switch network {
+	case "XRP_MAINNET", "XRP_TESTNET":
+		return &mchain.Wallet{
+			Name:           fmt.Sprintf("release-pool-xrp-%d", i),
+			Address:        fmt.Sprintf("rFakeXRPWallet%dabc", i),
+			AddressType:    mchain.AddressTypeXRP,
+			ECDSAPubKeyHex: "0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020",
+		}, nil
+	default:
+		return &mchain.Wallet{
+			Name:        fmt.Sprintf("release-pool-wallet-%d", i),
+			Address:     fmt.Sprintf("0xaddr%d", i),
+			AddressType: mchain.AddressTypeETH,
+		}, nil
+	}
 }
 
 // =============================================================================
@@ -264,5 +276,113 @@ func TestReleasePoolEntry_Roundtrip(t *testing.T) {
 		// Comparing time.Time would require special handling; we don't
 		// set MintedAt above so the zero value should round-trip.
 		t.Errorf("roundtrip mismatch: in=%+v out=%+v", in, out)
+	}
+}
+
+// =============================================================================
+// XRP-family pool tests
+// =============================================================================
+
+func TestReleasePool_BootstrapMintsXRPEntries(t *testing.T) {
+	store := NewInMemoryStore()
+	pool := NewReleasePool(store, "XRP_TESTNET", nil)
+	kg := &fakeKeygener{}
+
+	if err := pool.Bootstrap(context.Background(), kg, 3); err != nil {
+		t.Fatalf("Bootstrap: %v", err)
+	}
+	if pool.Size() != 3 {
+		t.Errorf("Size = %d, want 3", pool.Size())
+	}
+	if got := pool.SizeByFamily("xrp"); got != 3 {
+		t.Errorf("SizeByFamily(xrp) = %d, want 3", got)
+	}
+	if got := pool.SizeByFamily("eth"); got != 0 {
+		t.Errorf("SizeByFamily(eth) = %d, want 0", got)
+	}
+	// Each XRP entry should carry the compressed pubkey for signing.
+	for _, e := range pool.Entries() {
+		if e.Family != "xrp" {
+			t.Errorf("entry %d family = %q, want xrp", e.Index, e.Family)
+		}
+		if e.PubKeyHex == "" {
+			t.Errorf("entry %d PubKeyHex empty — signing will fail", e.Index)
+		}
+	}
+}
+
+func TestReleasePool_AcquireForFamily_FiltersByFamily(t *testing.T) {
+	store := NewInMemoryStore()
+	pool := NewReleasePool(store, "LUX_TESTNET", nil)
+	kg := &fakeKeygener{}
+	// Mint two EVM entries.
+	if err := pool.Bootstrap(context.Background(), kg, 2); err != nil {
+		t.Fatal(err)
+	}
+	// Mint two XRP entries on top via a helper bound to the same store.
+	xrpHelper := NewReleasePool(store, "XRP_TESTNET", nil)
+	if err := xrpHelper.Bootstrap(context.Background(), kg, 4); err != nil {
+		t.Fatal(err)
+	}
+	// Reload the main pool so it sees all 4.
+	if err := pool.Reload(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if pool.Size() != 4 {
+		t.Fatalf("Size = %d, want 4", pool.Size())
+	}
+	// AcquireForFamily(xrp) must only return XRP entries.
+	for i := 0; i < 6; i++ {
+		entry, err := pool.AcquireForFamily(context.Background(), "XRP_TESTNET", "xrp")
+		if err != nil {
+			t.Fatalf("AcquireForFamily(xrp): %v", err)
+		}
+		if entry.Family != "xrp" {
+			t.Errorf("got entry family=%q, want xrp", entry.Family)
+		}
+	}
+	// AcquireForFamily(eth) must only return EVM entries.
+	for i := 0; i < 6; i++ {
+		entry, err := pool.AcquireForFamily(context.Background(), "LUX_TESTNET", "eth")
+		if err != nil {
+			t.Fatalf("AcquireForFamily(eth): %v", err)
+		}
+		if entry.Family != "eth" {
+			t.Errorf("got entry family=%q, want eth", entry.Family)
+		}
+	}
+}
+
+func TestReleasePool_AcquireForFamily_NoMatch_ReturnsEmptyPool(t *testing.T) {
+	store := NewInMemoryStore()
+	pool := NewReleasePool(store, "LUX_TESTNET", nil)
+	if err := pool.Bootstrap(context.Background(), &fakeKeygener{}, 2); err != nil {
+		t.Fatal(err)
+	}
+	// Pool has only EVM entries — request XRP.
+	if _, err := pool.AcquireForFamily(context.Background(), "XRP_TESTNET", "xrp"); !errors.Is(err, ErrEmptyPool) {
+		t.Errorf("expected ErrEmptyPool, got %v", err)
+	}
+}
+
+func TestReleasePoolEntry_RoundtripWithFamilyAndPubKey(t *testing.T) {
+	in := ReleasePoolEntry{
+		Index:     12,
+		WalletID:  "wid-xrp",
+		Address:   "rFakeAddress",
+		Network:   "XRP_TESTNET",
+		Family:    "xrp",
+		PubKeyHex: "0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020",
+	}
+	b, err := encodeEntry(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := decodeEntry(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != in {
+		t.Errorf("roundtrip mismatch:\n in  = %+v\n out = %+v", in, out)
 	}
 }
