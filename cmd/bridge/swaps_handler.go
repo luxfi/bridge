@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/hanzoai/zip"
 	"github.com/luxfi/bridge/internal/bchain"
@@ -15,17 +14,21 @@ import (
 
 // swaps_handler.go wires the native swap CRUD into cmd/bridge.
 //
-// Native handlers OWN swap state:
-//   - GET  /v1/bridge/quote       quoteNative       — QuoteEngine
-//   - POST /v1/bridge/swaps       swapsCreateNative — SwapStore + mchain
-//   - GET  /v1/bridge/swaps       swapsListNative   — SwapStore
-//   - GET  /v1/bridge/swaps/:id   swapsGetNative    — SwapStore
-//   - POST /v1/bridge/check-deposit checkDepositNative — depositcheck
-//   - GET  /v1/bridge/info        infoNative        — bchain (signer-set info)
+// Architectural truth: the bridge is permissionless and non-custodial.
+// Authoritative quote + swap settlement live in chains/bridgevm (the
+// B-Chain VM the validator quorum runs collectively). The daemon's
+// swap store is a UX cache — see swap_store.go for the contract.
 //
-// BridgeVM (b-chain) does NOT host swap CRUD per LP-333 — those
-// methods don't exist on the chain. The legacy reverse-proxy still
-// runs only when no SwapStore/QuoteEngine are configured.
+// Native handlers:
+//   - GET  /v1/bridge/quote          quoteNative         — bchain pass-through (quote_handler.go)
+//   - POST /v1/bridge/swaps          swapsCreateNative   — local SwapStore + B-Chain quote snapshot
+//   - GET  /v1/bridge/swaps          swapsListNative     — local SwapStore
+//   - GET  /v1/bridge/swaps/:id      swapsGetNative      — local SwapStore
+//   - POST /v1/bridge/check-deposit  checkDepositNative  — depositcheck
+//   - GET  /v1/bridge/info           infoNative          — bchain (signer-set info)
+//
+// The legacy reverse-proxy still runs only when no SwapStore + bchain
+// client are configured.
 
 // Wire contract: the legacy app/server REST shape is preserved so the
 // existing TS SDK (pkg/bridge/src/app/lib/bridge-api.ts) works against
@@ -66,8 +69,8 @@ type serverSwap struct {
 	// before the release-wallet split landed.
 	ReleaseAddress string `json:"release_address,omitempty"`
 	// ReceiveAmount is the destination-asset amount the bridge
-	// committed to delivering at create time (snapshot of the
-	// QuoteEngine output). The signing driver scales the release tx
+	// committed to delivering at create time (snapshot from the
+	// B-Chain quote engine). The signing driver scales the release tx
 	// value to match. Surfaced so the SDK + ops tooling can compare
 	// committed vs delivered amounts after the destination tx lands.
 	ReceiveAmount float64 `json:"receive_amount,omitempty"`
@@ -115,74 +118,9 @@ type envelope struct {
 // =============================================================================
 // Native handlers (bchain-backed)
 // =============================================================================
-
-// quoteNative answers GET /v1/bridge/quote by running the native
-// QuoteEngine over the configured PriceFeed. The legacy ServerQuote
-// envelope is preserved so the TS SDK consumes it unchanged.
 //
-// Required query params: source_network, source_token,
-// destination_network, destination_token, amount. Optional: refuel.
-func (a *API) quoteNative(c *zip.Ctx) error {
-	src := c.Query("source_network")
-	srcTok := c.Query("source_token")
-	dst := c.Query("destination_network")
-	dstTok := c.Query("destination_token")
-	amt := c.Query("amount")
-	refuel := c.Query("refuel") == "1" || strings.EqualFold(c.Query("refuel"), "true")
-
-	if src == "" || srcTok == "" || dst == "" || dstTok == "" || amt == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error":  "missing_params",
-			"detail": "required: source_network, source_token, destination_network, destination_token, amount",
-		})
-	}
-	amountF, err := strconv.ParseFloat(amt, 64)
-	if err != nil || amountF <= 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error":  "bad_amount",
-			"detail": "amount must be a positive number",
-		})
-	}
-
-	res, err := a.quote.Quote(c.Context(), QuoteInput{
-		Amount:             amountF,
-		SourceNetwork:      src,
-		SourceAsset:        srcTok,
-		DestinationNetwork: dst,
-		DestinationAsset:   dstTok,
-		Refuel:             refuel,
-	})
-	if err != nil {
-		// Unknown price → 503 (transient — feed may rehydrate);
-		// other errors → 400 (validation).
-		if errors.Is(err, ErrPriceUnknown) {
-			return c.JSON(http.StatusServiceUnavailable, map[string]string{
-				"error":  "price_unknown",
-				"detail": err.Error(),
-			})
-		}
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error":  "quote_failed",
-			"detail": err.Error(),
-		})
-	}
-
-	q := serverQuote{
-		ReceiveAmount:    res.ReceiveAmount,
-		MinReceiveAmount: res.MinReceiveAmount,
-		BlockchainFee:    0,
-		ServiceFee:       res.ServiceFee,
-		AvgCompletion:    res.AvgCompletion,
-		TotalFee:         res.TotalFee,
-		TotalFeeInUsd:    0,
-		Slippage:         res.Slippage,
-	}
-	return c.JSON(http.StatusOK, envelope{Data: map[string]any{
-		"quote":  q,
-		"refuel": nil,
-		"reward": struct{}{},
-	}})
-}
+// quoteNative lives in quote_handler.go — thin REST → JSON-RPC
+// pass-through to the B-Chain VM's authoritative quote engine.
 
 // swapsCreateNative answers POST /v1/bridge/swaps by:
 //  1. Validating the request.
@@ -221,15 +159,15 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		})
 	}
 
-	// Step 0 — snapshot the quote.
+	// Step 0 — snapshot the quote from the B-Chain.
 	//
-	// The QuoteEngine output (ReceiveAmount + MinReceiveAmount +
-	// ServiceFee) is the source of truth for what the destination-side
-	// release tx will actually pay the user. Without this snapshot the
-	// signing driver would fall back to the raw input amount (sw.Amount)
-	// and the destination chain would receive 0.01-units-of-native
-	// regardless of source/destination price difference — i.e. 0.01 LUX
-	// for a 0.01 ETH input, not the ~14 LUX the quote endpoint promised.
+	// The B-Chain RPC's bridge_estimateFee is the source of truth for
+	// what the destination-side release tx will actually pay the user.
+	// Without this snapshot the signing driver would fall back to the
+	// raw input amount (sw.Amount) and the destination chain would
+	// receive 0.01-units-of-native regardless of source/destination
+	// price difference — i.e. 0.01 LUX for a 0.01 ETH input, not the
+	// ~14 LUX the quote endpoint promised.
 	//
 	// We fail at create time rather than at signing time: the user has
 	// already accepted a quote via GET /v1/bridge/quote, so refusing
@@ -237,32 +175,25 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	// during the round-trip — better surfaced now (the SDK can retry)
 	// than silently mis-paid later.
 	//
-	// When a.quote is nil (test rigs that didn't wire one), the snapshot
-	// is skipped and the signing driver falls back to sw.Amount —
-	// preserves the pre-fix path for tests that don't exercise pricing.
-	var quoteRes *QuoteResult
-	if a.quote != nil {
-		qr, err := a.quote.Quote(c.Context(), QuoteInput{
-			Amount:             req.Amount,
-			SourceNetwork:      req.SourceNetwork,
-			SourceAsset:        req.SourceAsset,
-			DestinationNetwork: req.DestinationNetwork,
-			DestinationAsset:   req.DestinationAsset,
-			Refuel:             req.Refuel,
+	// When a.bchain is nil (test rigs that didn't wire one), the
+	// snapshot is skipped and the signing driver falls back to
+	// sw.Amount — preserves the pre-fix path for tests that don't
+	// exercise pricing.
+	var quoteSnap *bchain.FeeEstimate
+	if a.bchain != nil {
+		amtStr := strconv.FormatFloat(req.Amount, 'f', -1, 64)
+		est, err := a.bchain.EstimateFee(c.Context(), bchain.EstimateFeeParams{
+			SourceChain: req.SourceNetwork,
+			DestChain:   req.DestinationNetwork,
+			SourceAsset: req.SourceAsset,
+			DestAsset:   req.DestinationAsset,
+			Amount:      amtStr,
+			Refuel:      req.Refuel,
 		})
 		if err != nil {
-			if errors.Is(err, ErrPriceUnknown) {
-				return c.JSON(http.StatusServiceUnavailable, map[string]string{
-					"error":  "price_unknown",
-					"detail": err.Error(),
-				})
-			}
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error":  "quote_failed",
-				"detail": err.Error(),
-			})
+			return rpcErrToHTTP(c, err, "estimateFee")
 		}
-		quoteRes = qr
+		quoteSnap = est
 	}
 
 	// Step 1 — optional MPC keygen for the deposit address.
@@ -333,10 +264,11 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		swap.ReleaseWalletID = releaseWallet.Name
 		swap.ReleaseAddress = releaseWallet.Address
 	}
-	if quoteRes != nil {
-		swap.ReceiveAmount = quoteRes.ReceiveAmount
-		swap.MinReceiveAmount = quoteRes.MinReceiveAmount
-		swap.ServiceFee = quoteRes.ServiceFee
+	if quoteSnap != nil {
+		net := parseAmount(quoteSnap.NetAmount)
+		swap.ReceiveAmount = net
+		swap.MinReceiveAmount = net * (1 - DefaultSlippage)
+		swap.ServiceFee = parseAmount(quoteSnap.FeeAmount)
 	}
 	if err := a.store.Create(c.Context(), swap); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{

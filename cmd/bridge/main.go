@@ -1,10 +1,16 @@
-// Package main is the unified Lux bridge: a single Go binary that embeds
-// the SPA, serves the bridge API natively for read paths (networks, tokens,
-// quotes), and proxies MPC-heavy paths (swap orchestration, signer state)
-// to the legacy Node backend during the migration to a fully native impl.
+// Package main is the Lux bridge daemon — a thin REST/observer shim
+// that serves the bridge SPA, embeds the daemon's UX cache, and
+// observes source chains so the validator quorum running B-Chain +
+// T-Chain can settle bridge requests permissionlessly.
+//
+// The bridge is permissionless and non-custodial. Authoritative state
+// lives on the B-Chain VM (chains/bridgevm); threshold key shares
+// live in T-Chain across the validator set. This daemon is a UX
+// convenience — anyone with a B-Chain RPC URL can build the same
+// observer/broadcaster loop and complete an in-flight bridge.
 //
 // Build: go build -o bridge ./cmd/bridge
-// Run:   bridge --config /etc/bridge/networks.yaml
+// Run:   bridge --config /etc/bridge/networks.yaml --bchain-url …
 //
 // Routes:
 //
@@ -12,13 +18,13 @@
 //	/envs.js                                runtime config window.ENV = {...}
 //	/icon.svg, /logo.svg                    per-host brand assets (disk override)
 //	/health                                 service health
-//	/v1/bridge/networks                     supported chains
-//	/v1/bridge/tokens                       tokens per chain
-//	/v1/bridge/quote                        price quote (proxied)
-//	/v1/bridge/rate                         exchange rate (proxied)
-//	/v1/bridge/limits                       swap limits (proxied)
-//	/v1/bridge/swaps/*                      swap CRUD (proxied)
-//	/v1/bridge/explorer/*                   tx lookup (proxied)
+//	/v1/bridge/networks                     supported chains (local config)
+//	/v1/bridge/tokens                       tokens per chain (local config)
+//	/v1/bridge/quote                        thin pass-through to B-Chain bridge_estimateFee
+//	/v1/bridge/swaps/*                      swap CRUD (local UX cache; B-Chain wins on conflict)
+//	/v1/bridge/info                         B-Chain signer-set info
+//	/v1/bridge/check-deposit                ops diagnostic (source-chain RPC poll)
+//	/v1/bridge/rate, /settings, /explorer/* legacy reverse-proxy (when --backend is set)
 //
 // HTTP framework: github.com/hanzoai/zip (Sinatra-style on Fiber v3 /
 // fasthttp). Logging: github.com/luxfi/log. This is the canonical Hanzo
@@ -28,11 +34,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"math/big"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -51,9 +55,9 @@ import (
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/substrate"
-	"github.com/luxfi/bridge/pkg/tenant"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
+	"github.com/luxfi/bridge/pkg/tenant"
 	luxlog "github.com/luxfi/log"
 )
 
@@ -187,16 +191,8 @@ func main() {
 		"path to a JSON file that persists per-destination-network release wallets (the long-lived MPC addresses that pay out settlements). When set, the bridge mints a release wallet on first need and reuses it across restarts. When empty AND --data-dir is set, defaults to <data-dir>/release-wallets.json. When empty AND --data-dir is empty, runs in-memory — every restart re-mints and any liquidity at the old address is stranded. Required for prod.")
 	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
 		"bridge security profile: strict-pq | classical-compat")
-	coingeckoEnabled := flag.Bool("coingecko", envBool("BRIDGE_COINGECKO", false),
-		"enable CoinGecko HTTP price feed (wrapped over the static feed as a fallback for LUX/ZOO and outages). When disabled (default), the static feed is the sole source of prices.")
-	coingeckoURL := flag.String("coingecko-url", envOr("BRIDGE_COINGECKO_URL", DefaultCoinGeckoBaseURL),
-		"CoinGecko API base URL")
-	coingeckoAPIKey := flag.String("coingecko-api-key", envOr("BRIDGE_COINGECKO_API_KEY", ""),
-		"CoinGecko Pro API key (empty for the free tier)")
-	coingeckoTTL := flag.Duration("coingecko-cache-ttl", DefaultCoinGeckoCacheTTL,
-		"how long CoinGecko prices are cached before re-fetching. The fetch batches every configured symbol into one HTTP call.")
-	coingeckoTimeout := flag.Duration("coingecko-timeout", DefaultCoinGeckoTimeout,
-		"per-request HTTP timeout for CoinGecko calls")
+	resyncSwapsOnBoot := flag.Bool("resync-swaps", envBool("BRIDGE_RESYNC_SWAPS", false),
+		"on startup, reconcile the local swap cache against authoritative B-Chain state before serving traffic. Use when the local store diverged from chain (operator restored a stale backup, switched data-dirs, or a node was offline through a chain reorg). Idempotent — runs to completion and exits the reconcile path, then continues normal startup.")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -410,53 +406,32 @@ func main() {
 			}
 		}
 	}()
-	// Static feed seeds the assets CoinGecko doesn't list (LUX, ZOO) and
-	// serves as the fallback when CoinGecko is unreachable. Order-of-
-	// magnitude values matching the TS app/server's getTokenPrice — the
-	// CG-backed entries are overridden at runtime, the rest are the
-	// permanent source for LUX/ZOO.
-	staticFeed := NewStaticPriceFeed(map[string]float64{
-		"ETH":  3500.00,
-		"LUX":  2.50,
-		"ZOO":  0.05,
-		"BTC":  65000.00,
-		"SOL":  150.00,
-		"TON":  6.00,
-		"USDC": 1.00,
-		"USDT": 1.00,
-		"DAI":  1.00,
-		"BNB":  600.00,
-	})
-
-	var priceFeed PriceFeed = staticFeed
-	feedLabel := "static"
-	if *coingeckoEnabled {
-		cg := NewCoinGeckoFeed(*coingeckoURL, *coingeckoAPIKey, nil)
-		cg.CacheTTL = *coingeckoTTL
-		cg.HTTPClient = &http.Client{Timeout: *coingeckoTimeout}
-		priceFeed = &FallbackFeed{
-			Primary:   cg,
-			Secondary: staticFeed,
-			OnFallback: func(asset string, err error) {
-				if errors.Is(err, ErrPriceUnknown) {
-					return // expected for LUX/ZOO — not worth a log line per quote
-				}
-				logger.Warn("coingecko price fallback", "asset", asset, "err", err)
-			},
-		}
-		feedLabel = "coingecko+static"
-	}
-
-	quoteEngine := &QuoteEngine{Feed: priceFeed}
+	// Native swap CRUD. Quotes and authoritative swap state live on
+	// the B-Chain (chains/bridgevm); the local swap store is a UX
+	// cache. No price feed is wired here — pricing is a chain concern.
 	logger.Info("native swap CRUD enabled",
 		"store", storeLabel,
 		"data_dir", *dataDir,
-		"feed", feedLabel,
-		"fee_rate", quoteEngine.FeeRate,
+		"quote_source", "bchain",
 	)
 
-	api := NewAPI(cfg, *backend, bchainClient, mchainClient, depCheckClient, swapStore, quoteEngine)
+	api := NewAPI(cfg, *backend, bchainClient, mchainClient, depCheckClient, swapStore)
 	api.SetProfile(profile)
+
+	// Optional: reconcile the local swap cache against authoritative
+	// B-Chain state before serving traffic. Idempotent — operators can
+	// run this on every restart without consequence.
+	if *resyncSwapsOnBoot {
+		if bchainClient == nil {
+			logger.Error("--resync-swaps requires --bchain-url (B-Chain RPC is the source of truth)")
+			os.Exit(1)
+		}
+		if err := ResyncSwapsFromChain(context.Background(), swapStore, bchainClient, logger); err != nil {
+			logger.Error("swap resync failed", "err", err)
+			os.Exit(1)
+		}
+		logger.Info("swap resync complete")
+	}
 
 	// Per-destination-network release wallets. One MPC wallet per
 	// destination chain, minted lazily on first need and reused across

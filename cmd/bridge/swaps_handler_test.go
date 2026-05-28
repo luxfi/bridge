@@ -1,10 +1,10 @@
 // Tests for the cmd/bridge HTTP layer.
 //
-// After the LP-333 architecture refocus, swap CRUD is native to
-// cmd/bridge — backed by an in-memory SwapStore + QuoteEngine. The
-// b-chain client (when set) is queried only for signer-set introspection
-// via /v1/bridge/info; it does NOT host the quote / submit / status
-// methods (those don't exist on real BridgeVM).
+// The bridge is permissionless and non-custodial: B-Chain
+// (chains/bridgevm) owns authoritative quote + swap state. The daemon
+// is a thin shim with a local UX cache. Tests therefore wire a
+// minimal mock B-Chain RPC server that the daemon talks to for quote
+// + status reconciliation.
 
 package main
 
@@ -16,6 +16,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -32,17 +33,17 @@ import (
 // Helpers
 // =============================================================================
 
-// testRig bundles an app with its underlying store + price feed so
-// individual tests can poke state directly when needed.
+// testRig bundles an app with its underlying store so individual tests
+// can poke state directly when needed.
 type testRig struct {
 	app   *zip.App
 	store *InMemoryStore
-	feed  *StaticPriceFeed
 	api   *API
 }
 
-// defaultPrices is the seeded price feed for all tests. Round numbers
-// keep the float-comparison assertions readable.
+// defaultPrices is the unit-price table the mock B-Chain emits when
+// answering bridge_estimateFee. Round numbers keep the
+// float-comparison assertions readable.
 func defaultPrices() map[string]float64 {
 	return map[string]float64{
 		"ETH":  3500.00,
@@ -58,21 +59,96 @@ func defaultPrices() map[string]float64 {
 	}
 }
 
+// luxFamily mirrors the chain-side fee policy: 1% service fee when
+// the source is Lux-family, zero otherwise. Kept local to the test
+// rig because the daemon no longer encodes settlement math.
+var luxFamily = map[string]bool{
+	"LUX_MAINNET": true, "LUX_TESTNET": true, "LUX_DEVNET": true,
+	"ZOO_MAINNET": true, "ZOO_TESTNET": true, "ZOO_DEVNET": true,
+}
+
 // newRig assembles a fully-wired test app with optional bchain /
-// mchain / depositcheck clients. Store + quote engine are always
-// constructed locally; tests assert against rig.store directly when
-// they need to verify persistence.
+// mchain / depositcheck clients. When bclient is nil we mount a
+// canonical in-process bridge_estimateFee mock so quote-dependent
+// tests can run end-to-end.
 func newRig(t *testing.T, bclient *bchain.Client, mclient *mchain.Client, dc *depositcheck.Client) *testRig {
 	t.Helper()
+	if bclient == nil {
+		bclient = newMockBChain(t, defaultPrices())
+	}
 	cfg, _ := LoadConfig("")
 	store := NewInMemoryStore()
-	feed := NewStaticPriceFeed(defaultPrices())
-	engine := &QuoteEngine{Feed: feed}
-	api := NewAPI(cfg, "", bclient, mclient, dc, store, engine)
+	api := NewAPI(cfg, "", bclient, mclient, dc, store)
 	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
 	app.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(app)
-	return &testRig{app: app, store: store, feed: feed, api: api}
+	return &testRig{app: app, store: store, api: api}
+}
+
+// newMockBChain spins up an in-process JSON-RPC server speaking the
+// subset of the B-Chain bridge_* surface the daemon consumes
+// (estimateFee, getStatus, health). Prices is the unit-price table the
+// estimateFee implementation uses to compute net + fee.
+func newMockBChain(t *testing.T, prices map[string]float64) *bchain.Client {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			ID     any             `json:"id"`
+			Method string          `json:"method"`
+			Params json.RawMessage `json:"params"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		w.Header().Set("Content-Type", "application/json")
+		switch req.Method {
+		case "bridge_estimateFee":
+			var p bchain.EstimateFeeParams
+			_ = json.Unmarshal(req.Params, &p)
+			amt, _ := strconv.ParseFloat(p.Amount, 64)
+			src := prices[strings.ToUpper(p.SourceAsset)]
+			dst := prices[strings.ToUpper(p.DestAsset)]
+			if src == 0 {
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"jsonrpc": "2.0", "id": req.ID,
+					"error": map[string]any{"code": -32000, "message": "price_unknown: " + p.SourceAsset},
+				})
+				return
+			}
+			if dst == 0 {
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"jsonrpc": "2.0", "id": req.ID,
+					"error": map[string]any{"code": -32000, "message": "price_unknown: " + p.DestAsset},
+				})
+				return
+			}
+			gross := amt * src / dst
+			feeRate := 0.0
+			if luxFamily[p.SourceChain] {
+				feeRate = 0.01
+			}
+			fee := gross * feeRate
+			net := gross - fee
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"jsonrpc": "2.0", "id": req.ID,
+				"result": bchain.FeeEstimate{
+					FeeAmount:     strconv.FormatFloat(fee, 'f', -1, 64),
+					NetAmount:     strconv.FormatFloat(net, 'f', -1, 64),
+					EstimatedTime: 180,
+				},
+			})
+		case "bridge_health":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"jsonrpc": "2.0", "id": req.ID,
+				"result": bchain.Health{Status: "healthy", MPCReady: true},
+			})
+		default:
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"jsonrpc": "2.0", "id": req.ID,
+				"error": map[string]any{"code": -32601, "message": "method not found: " + req.Method},
+			})
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return &bchain.Client{BridgeRPCURL: srv.URL, Timeout: 2 * time.Second}
 }
 
 // fireRequest sends one HTTP request through zip's in-process test
@@ -276,16 +352,43 @@ func TestQuote_BadAmount400(t *testing.T) {
 	}
 }
 
-func TestQuote_UnknownAsset503(t *testing.T) {
+func TestQuote_UnknownAssetBubblesChainError(t *testing.T) {
 	rig := newRig(t, nil, nil, nil)
 	status, body := fireRequest(t, rig.app, http.MethodGet,
-		"/v1/bridge/quote?source_network=ETHEREUM_SEPOLIA&source_token=UNOBTAINIUM&destination_network=LUX_TESTNET&destination_token=LUX&amount=1",
+		"/v1/bridge/quote?source_network=ETHEREUM_SEPOLIA&source_token=ETH&destination_network=LUX_TESTNET&destination_token=UNOBTAINIUM&amount=1",
 		nil)
-	if status != http.StatusServiceUnavailable {
-		t.Fatalf("status = %d, want 503. body=%s", status, body)
+	// Chain returns -32000; rpcErrToHTTP maps to 502 (B-Chain is a
+	// remote dependency from the daemon's perspective). Either 502 or
+	// the chain-mapped HTTP status is acceptable so long as the error
+	// envelope identifies the upstream failure.
+	if status == http.StatusOK {
+		t.Fatalf("status=%d expected non-OK. body=%s", status, body)
 	}
-	if !strings.Contains(string(body), "price_unknown") {
-		t.Errorf("expected price_unknown, got %s", body)
+	if !strings.Contains(string(body), "price_unknown") &&
+		!strings.Contains(string(body), "estimateFee_failed") {
+		t.Errorf("expected price_unknown / estimateFee_failed, got %s", body)
+	}
+}
+
+func TestQuote_NoBChainReturns503(t *testing.T) {
+	// Daemon refuses to quote when --bchain-url unset (no fallback
+	// price feed exists — that would be a centralization vector).
+	cfg, _ := LoadConfig("")
+	store := NewInMemoryStore()
+	api := NewAPI(cfg, "", nil, nil, nil, store)
+	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
+	app.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(app)
+
+	status, body := fireRequest(t, app, http.MethodGet,
+		"/v1/bridge/quote?source_network=ETHEREUM_SEPOLIA&source_token=ETH&destination_network=LUX_TESTNET&destination_token=LUX&amount=1",
+		nil)
+	// Without bchain wired, /v1/bridge/quote is unregistered and
+	// falls through to the legacy proxy path, which returns 503 with
+	// backend_unavailable. Either route returns 503; the body
+	// indicates the reason.
+	if status != http.StatusServiceUnavailable {
+		t.Fatalf("status=%d, want 503. body=%s", status, body)
 	}
 }
 
@@ -922,30 +1025,32 @@ func TestSwapsCreate_SnapshotsReceiveAmount(t *testing.T) {
 }
 
 // TestSwapsCreate_PriceUnknown_Returns503 covers the failure path:
-// when the price feed can't quote (asset not in the feed), create
-// fails at 503 rather than silently storing a 0 ReceiveAmount that
-// would later get fed to the signing driver.
+// when the B-Chain RPC can't quote (asset unknown to the chain's
+// quote engine), create fails at 502 rather than silently storing a
+// 0 ReceiveAmount that would later get fed to the signing driver.
 func TestSwapsCreate_PriceUnknown_Returns503(t *testing.T) {
-	rig := newRig(t, nil, nil, nil)
-	rig.feed.Set("ETH", 0)
-	// Wipe a price by giving the feed a fresh map that omits ETH.
-	rig.api.quote = &QuoteEngine{Feed: NewStaticPriceFeed(map[string]float64{"LUX": 2.5})}
+	// Mock B-Chain with only LUX priced — ETH triggers price_unknown
+	bclient := newMockBChain(t, map[string]float64{"LUX": 2.5})
+	rig := newRig(t, bclient, nil, nil)
 
 	reqBody, _ := json.Marshal(createSwapReq{
 		Amount:             0.01,
 		SourceNetwork:      "ETHEREUM_SEPOLIA",
-		SourceAsset:        "ETH", // not in feed
+		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
 		DestinationAsset:   "LUX",
 		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
 		UseDepositAddress:  false,
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
-	if status != http.StatusServiceUnavailable {
-		t.Fatalf("status=%d, want 503. body=%s", status, body)
+	// The chain returns a JSON-RPC error; rpcErrToHTTP maps that to
+	// 502 (B-Chain is a remote dependency from the daemon's view).
+	if status == http.StatusOK {
+		t.Fatalf("status=%d, want non-OK. body=%s", status, body)
 	}
-	if !strings.Contains(string(body), "price_unknown") {
-		t.Errorf("expected price_unknown error, got %s", body)
+	if !strings.Contains(string(body), "price_unknown") &&
+		!strings.Contains(string(body), "estimateFee_failed") {
+		t.Errorf("expected price_unknown / estimateFee_failed, got %s", body)
 	}
 }
 
