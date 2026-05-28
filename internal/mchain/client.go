@@ -129,19 +129,22 @@ type keygenResult struct {
 	Error        string `json:"error"`
 }
 
-// Wallet is the public result of a keygen for one bridge deposit.
-// Caller stores Name + Address; Name doubles as the MPC wallet
-// identifier that the deposit-watcher and signing-session code use to
-// recover the underlying key shares.
+// Wallet is the public result of a keygen for one bridge deposit OR for
+// a long-lived per-network release wallet. Caller stores Name + Address;
+// Name doubles as the MPC wallet identifier that the deposit-watcher and
+// signing-session code use to recover the underlying key shares.
+//
+// JSON tags are present because FileReleaseStore serializes Wallet to
+// disk so per-network release wallets survive bridge restarts.
 type Wallet struct {
 	// Name is the MPC wallet identifier (e.g. "bridge-ethereum_sepolia-1718000000").
-	Name string
-	// Address is the source-chain receive address derived from the
-	// keygen output, picked according to AddressTypeFor(network).
-	Address string
+	Name string `json:"name"`
+	// Address is the chain-appropriate receive/payout address derived
+	// from the keygen output, picked according to AddressTypeFor(network).
+	Address string `json:"address"`
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
-	AddressType AddressType
+	AddressType AddressType `json:"address_type"`
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the

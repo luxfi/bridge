@@ -59,9 +59,21 @@ type serverSwap struct {
 	SourceNetwork      string `json:"source_network,omitempty"`
 	DestinationNetwork string `json:"destination_network,omitempty"`
 	DepositAddress     string `json:"deposit_address,omitempty"`
-	Signature          string `json:"signature,omitempty"`
-	SourceTxHash       string `json:"source_tx_hash,omitempty"`
-	DestTxHash         string `json:"dest_tx_hash,omitempty"`
+	// ReleaseAddress is the destination-network MPC address from which
+	// the bridge will pay the user. Surfaced for operator diagnostics
+	// (e.g. faucet/funder dashboards) and for the SDK to display the
+	// "paid from" leg of the release tx. Empty for swaps created
+	// before the release-wallet split landed.
+	ReleaseAddress string `json:"release_address,omitempty"`
+	// ReceiveAmount is the destination-asset amount the bridge
+	// committed to delivering at create time (snapshot of the
+	// QuoteEngine output). The signing driver scales the release tx
+	// value to match. Surfaced so the SDK + ops tooling can compare
+	// committed vs delivered amounts after the destination tx lands.
+	ReceiveAmount float64 `json:"receive_amount,omitempty"`
+	Signature     string  `json:"signature,omitempty"`
+	SourceTxHash   string `json:"source_tx_hash,omitempty"`
+	DestTxHash     string `json:"dest_tx_hash,omitempty"`
 	// DestRawTx is the wire-ready signed destination tx. Surfaced
 	// for operator diagnostics — useful for decoding the tx fields
 	// and verifying ECDSA recovery against the expected sender when
@@ -209,6 +221,50 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		})
 	}
 
+	// Step 0 — snapshot the quote.
+	//
+	// The QuoteEngine output (ReceiveAmount + MinReceiveAmount +
+	// ServiceFee) is the source of truth for what the destination-side
+	// release tx will actually pay the user. Without this snapshot the
+	// signing driver would fall back to the raw input amount (sw.Amount)
+	// and the destination chain would receive 0.01-units-of-native
+	// regardless of source/destination price difference — i.e. 0.01 LUX
+	// for a 0.01 ETH input, not the ~14 LUX the quote endpoint promised.
+	//
+	// We fail at create time rather than at signing time: the user has
+	// already accepted a quote via GET /v1/bridge/quote, so refusing
+	// to commit a fresh server-side quote here means prices flapped
+	// during the round-trip — better surfaced now (the SDK can retry)
+	// than silently mis-paid later.
+	//
+	// When a.quote is nil (test rigs that didn't wire one), the snapshot
+	// is skipped and the signing driver falls back to sw.Amount —
+	// preserves the pre-fix path for tests that don't exercise pricing.
+	var quoteRes *QuoteResult
+	if a.quote != nil {
+		qr, err := a.quote.Quote(c.Context(), QuoteInput{
+			Amount:             req.Amount,
+			SourceNetwork:      req.SourceNetwork,
+			SourceAsset:        req.SourceAsset,
+			DestinationNetwork: req.DestinationNetwork,
+			DestinationAsset:   req.DestinationAsset,
+			Refuel:             req.Refuel,
+		})
+		if err != nil {
+			if errors.Is(err, ErrPriceUnknown) {
+				return c.JSON(http.StatusServiceUnavailable, map[string]string{
+					"error":  "price_unknown",
+					"detail": err.Error(),
+				})
+			}
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error":  "quote_failed",
+				"detail": err.Error(),
+			})
+		}
+		quoteRes = qr
+	}
+
 	// Step 1 — optional MPC keygen for the deposit address.
 	var depositWallet *mchain.Wallet
 	if req.UseDepositAddress {
@@ -223,6 +279,32 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 			return mpcErrToHTTP(c, err, "createSwap")
 		}
 		depositWallet = w
+	}
+
+	// Step 1b — resolve the destination-side release wallet.
+	//
+	// Release wallets are long-lived (one per destination network) and
+	// pay out from operator-funded liquidity. Unlike the deposit
+	// wallet — which is a fresh per-swap keygen — the release wallet
+	// is reused across every swap to the same destination network. The
+	// store's GetOrCreate mints on first use and caches thereafter, so
+	// at most one keygen per network for the lifetime of the bridge
+	// process (persisted across restarts when --release-wallets-file
+	// is set).
+	//
+	// Skipped when the release store isn't configured. The signing
+	// driver's resolveReleaseSigning() falls back to the deposit
+	// wallet in that case — preserves the legacy path so an operator
+	// who hasn't migrated their config yet sees the old behavior
+	// (which still works for any destination address the operator
+	// pre-funded out of band) rather than a hard failure.
+	var releaseWallet *mchain.Wallet
+	if req.UseDepositAddress && a.releaseStore != nil {
+		rw, err := a.releaseStore.GetOrCreate(c.Context(), req.DestinationNetwork)
+		if err != nil {
+			return mpcErrToHTTP(c, err, "createSwap_release")
+		}
+		releaseWallet = rw
 	}
 
 	// Step 2 — persist the swap. ID is assigned by the store.
@@ -246,6 +328,15 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	}
 	if depositWallet != nil {
 		swap.DepositAddress = depositWallet.LegacyDepositString()
+	}
+	if releaseWallet != nil {
+		swap.ReleaseWalletID = releaseWallet.Name
+		swap.ReleaseAddress = releaseWallet.Address
+	}
+	if quoteRes != nil {
+		swap.ReceiveAmount = quoteRes.ReceiveAmount
+		swap.MinReceiveAmount = quoteRes.MinReceiveAmount
+		swap.ServiceFee = quoteRes.ServiceFee
 	}
 	if err := a.store.Create(c.Context(), swap); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -291,6 +382,8 @@ func swapToServerShape(sw *Swap) serverSwap {
 		SourceNetwork:      sw.SourceNetwork,
 		DestinationNetwork: sw.DestinationNetwork,
 		DepositAddress:     sw.DepositAddress,
+		ReleaseAddress:     sw.ReleaseAddress,
+		ReceiveAmount:      sw.ReceiveAmount,
 		Signature:          sw.Signature,
 		SourceTxHash:       sw.SourceTxHash,
 		DestTxHash:         sw.DestTxHash,
