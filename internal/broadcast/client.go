@@ -8,9 +8,13 @@
 //   - EVM (Ethereum / Sepolia / Lux / Base / Polygon / Arbitrum /
 //     Optimism / Avalanche / BSC / Holesky / Zora / Blast / Linea):
 //     implemented via JSON-RPC eth_sendRawTransaction.
-//   - Non-EVM (BTC / SOL / TON / XRP / DOT): returns
-//     ErrFamilyNotImplemented. Adding any one is a straightforward
-//     follow-up — different REST/RPC contracts, same shape.
+//   - Solana (mainnet / devnet / testnet): implemented via JSON-RPC
+//     sendTransaction with encoding=base64. The "raw tx" the caller
+//     hands in is the base64-encoded signed transaction produced by
+//     txassembler.SOLAssembler.Finalize.
+//   - Non-EVM (BTC / TON / XRP / DOT): returns ErrFamilyNotImplemented.
+//     Adding any one is a straightforward follow-up — different REST/RPC
+//     contracts, same shape.
 //
 // Trust model: the destination RPC is treated as untrusted transport.
 // A 200 response means the node ACCEPTED the tx — it does NOT mean
@@ -64,11 +68,16 @@ var rpcURLs = map[string]string{
 	"ZORA_MAINNET":     "https://rpc.zora.energy",
 	"BLAST_MAINNET":    "https://rpc.blast.io",
 	"LINEA_MAINNET":    "https://rpc.linea.build",
-	// Non-EVM are intentionally absent — they need chain-specific
-	// broadcast handlers (Bitcoin REST API, Solana JSON-RPC with a
-	// different method name, TON Center push endpoint, etc.). Adding
-	// any one is a separate impl in this file plus a switch case in
-	// Broadcast.
+	// Solana — JSON-RPC with sendTransaction. Default to devnet for
+	// safety on first deploys; operators flip via --release-pool-mint-
+	// network=SOLANA_MAINNET + a real mainnet provider URL through
+	// --source-rpc-overrides.
+	"SOLANA_MAINNET": "https://api.mainnet-beta.solana.com",
+	"SOLANA_DEVNET":  "https://api.devnet.solana.com",
+	"SOLANA_TESTNET": "https://api.testnet.solana.com",
+	// Other non-EVM (BTC / TON / XRP / DOT) still need chain-specific
+	// broadcast handlers. Adding any one is a separate impl in this
+	// file plus a switch case in Broadcast.
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -83,8 +92,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, SOL, TON, XRP, DOT).
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (only EVM today)")
+// isn't implemented yet (BTC, TON, XRP, DOT). Solana is supported via
+// the broadcastSOL path; EVM via broadcastEVM.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (only EVM + SOL today)")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -196,11 +206,12 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 
 	// Family dispatch. We use mchain.AddressTypeFor as the canonical
 	// network→family mapping (it's already the project's source of
-	// truth for which family a network belongs to). For broadcast,
-	// only AddressTypeETH is implemented today.
+	// truth for which family a network belongs to).
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
+	case mchain.AddressTypeSOL:
+		return c.broadcastSOL(ctx, url, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
