@@ -47,12 +47,87 @@ import (
 	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/broadcast"
+	"github.com/luxfi/bridge/internal/cosigners"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
 )
+
+// buildCosignerDispatcher constructs the layered-cosigner dispatcher
+// for the signing driver. Returns nil when --disable-cosigners is set
+// (the caller skips the SetCosignerDispatcher injection; swaps with
+// cosigners[] are still validated + persisted but never gated on
+// external approval — useful during the §13.6 cutover soak).
+//
+// SecretStore: EnvSecretStore reads UTILA_COSIGNER_PEM__<envSafe(org_id)>
+// and FIREBLOCKS_COSIGNER_PEM__<envSafe(api_key)>. Production swap-in
+// is a KMS-backed store keyed by the same public identifiers (Vault
+// integration is the next README feature to wire).
+//
+// FamilyDispatcher selection:
+//
+//   - Default: StubFamilyDispatcher. Both Utila and Fireblocks intents
+//     return StatusFailed with a "use app/server" reason → swap moves
+//     to refund_pending. Closes the silent-drop regression that
+//     previously let swaps reach broadcasting without any cosigner
+//     attestation.
+//   - With --enable-fireblocks-cosigner: FireblocksRESTFamily for the
+//     Fireblocks half (real RAW-sign flow + JWT auth), UtilaDelegate
+//     still the stub. Fireblocks intents go end-to-end; Utila intents
+//     still fail with the stub reason. Timeout is read from
+//     FIREBLOCKS_COSIGNER_TIMEOUT_MS (default 60000 ms, matches the
+//     TS impl).
+//
+// Future: when the Utila Connect-RPC port lands, wire it as
+// FireblocksRESTFamily.UtilaDelegate to get both families real.
+func buildCosignerDispatcher(disabled bool, enableFireblocks bool, logger luxlog.Logger) cosigners.Dispatcher {
+	if disabled {
+		if logger != nil {
+			logger.Info("cosigner gate disabled by --disable-cosigners; swaps with cosigners[] will advance to broadcasting on native MPC alone")
+		}
+		return nil
+	}
+
+	// CompositeFamilyDispatcher routes per-family calls to separately
+	// configured runners. Today the Fireblocks half is opt-in real
+	// (FireblocksRESTFamily) and the Utila half is always the
+	// scaffold (UtilaConnectRPCFamily — currently returns
+	// StatusFailed but reserves the wire shape). When the real Utila
+	// Connect-RPC port lands, swap UtilaFamily to the real
+	// UtilaConnectRPCFamily without changing main.go's wiring.
+	composite := cosigners.CompositeFamilyDispatcher{
+		UtilaFamily: cosigners.UtilaConnectRPCFamily{},
+	}
+	if enableFireblocks {
+		timeout := envInt64("FIREBLOCKS_COSIGNER_TIMEOUT_MS", 60_000)
+		composite.FireblocksFamily = cosigners.FireblocksRESTFamily{
+			Timeout: time.Duration(timeout) * time.Millisecond,
+		}
+		if logger != nil {
+			logger.Info("fireblocks cosigner REST client enabled",
+				"timeout_ms", timeout,
+			)
+		}
+	}
+	return cosigners.NewDefault(cosigners.EnvSecretStore{}, composite)
+}
+
+// envInt64 reads a positive int64 from env, falling back to def on
+// missing / unparseable. Used for FIREBLOCKS_COSIGNER_TIMEOUT_MS and
+// any future integer-env knobs.
+func envInt64(name string, def int64) int64 {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return def
+	}
+	var v int64
+	if _, err := fmt.Sscanf(raw, "%d", &v); err != nil || v <= 0 {
+		return def
+	}
+	return v
+}
 
 // parseRPCOverrides parses --source-rpc-overrides into a map.
 // Format: NETWORK1=URL1,NETWORK2=URL2 — comma-separated, equals-delimited.
@@ -83,6 +158,111 @@ func parseRPCOverrides(raw string) (map[string]string, error) {
 	return out, nil
 }
 
+// resolveMPCToken returns either the explicit token, or — when token is
+// empty and an identity file is provided — derives the bearer token
+// deterministically via SHA-256(seed || "mpc-internal-api"). Empty
+// token + empty identity file returns "" (works only against
+// unauthenticated dev clusters). Errors only on file-read failure or
+// malformed identity JSON.
+func resolveMPCToken(token, identityFile, label string, logger luxlog.Logger) (string, error) {
+	if token != "" {
+		return token, nil
+	}
+	if identityFile == "" {
+		return "", nil
+	}
+	identityJSON, err := os.ReadFile(identityFile)
+	if err != nil {
+		return "", fmt.Errorf("read %s mpc identity file %q: %w", label, identityFile, err)
+	}
+	derived, err := mchain.DeriveInternalKey(identityJSON)
+	if err != nil {
+		return "", fmt.Errorf("derive %s mpc internal key from %q: %w", label, identityFile, err)
+	}
+	logger.Info("derived mpc bearer token from identity file",
+		"cluster", label,
+		"path", identityFile,
+		"token_prefix", derived[:8]+"…",
+	)
+	return derived, nil
+}
+
+// buildMPCPool assembles the layered MPC pool from the parsed flags.
+//
+// publicURL empty → returns nil, nil (MPC disabled, /v1/bridge/swaps
+// with use_deposit_address=true will 503). Matches the legacy "no
+// --mpc-url" behaviour.
+//
+// publicURL set, privateURL empty → single-cluster pool. Pool.Public
+// == Pool.Private == the public client. Existing single-cluster
+// deploys hit this path unchanged.
+//
+// publicURL set, privateURL set → split pool. Each cluster gets its
+// own *mchain.Client. Private-side auth (token / identity file /
+// org-id) falls back to the public-side values when the private
+// flag is empty — minimizes per-cluster flag duplication when both
+// clusters share an auth boundary.
+func buildMPCPool(
+	publicURL, publicToken, publicIdentityFile, publicOrgID string,
+	privateURL, privateToken, privateIdentityFile, privateOrgID string,
+	timeout time.Duration,
+	logger luxlog.Logger,
+) (*mchain.Pool, error) {
+	if publicURL == "" {
+		return nil, nil
+	}
+
+	pubToken, err := resolveMPCToken(publicToken, publicIdentityFile, "public", logger)
+	if err != nil {
+		return nil, err
+	}
+	publicClient := mchain.NewAuthed(publicURL, pubToken, publicOrgID, timeout)
+
+	if privateURL == "" {
+		logger.Info("mpc pool enabled",
+			"split", false,
+			"public_url", publicClient.APIURL,
+			"org_id", publicClient.OrgID,
+			"with_token", pubToken != "",
+			"timeout", timeout,
+		)
+		return mchain.NewPool(publicClient), nil
+	}
+
+	// Private cluster gets its own client. Auth defaults to public
+	// values when the private flag is empty.
+	effPrivToken := privateToken
+	effPrivIdentity := privateIdentityFile
+	effPrivOrg := privateOrgID
+	if effPrivToken == "" && effPrivIdentity == "" {
+		// Both auth knobs empty → fall back to public token outright.
+		// (We don't re-derive from publicIdentityFile here — it was
+		// already resolved above and we have the literal token.)
+		effPrivToken = pubToken
+	}
+	if effPrivOrg == "" {
+		effPrivOrg = publicOrgID
+	}
+	privToken, err := resolveMPCToken(effPrivToken, effPrivIdentity, "private", logger)
+	if err != nil {
+		return nil, err
+	}
+	privateClient := mchain.NewAuthed(privateURL, privToken, effPrivOrg, timeout)
+
+	pool := mchain.NewSplitPool(publicClient, privateClient)
+	logger.Info("mpc pool enabled",
+		"split", true,
+		"public_url", publicClient.APIURL,
+		"public_org_id", publicClient.OrgID,
+		"public_with_token", pubToken != "",
+		"private_url", privateClient.APIURL,
+		"private_org_id", privateClient.OrgID,
+		"private_with_token", privToken != "",
+		"timeout", timeout,
+	)
+	return pool, nil
+}
+
 var version = "dev"
 
 func main() {
@@ -93,14 +273,29 @@ func main() {
 		"BridgeVM (b-chain) JSON-RPC base URL, e.g. https://api.lux-test.network — empty disables native bchain handlers and falls back to the legacy backend proxy")
 	bchainTimeout := flag.Duration("bchain-timeout", 10*time.Second, "per-request timeout for bchain RPC calls")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
-		"MPC keygen service URL (e.g. http://mpc-node-0.mpc-node-headless.lux-mpc.svc:9800) — required when SDK requests carry use_deposit_address=true; empty disables MPC keygen and those requests 503")
+		"MPC keygen service URL for the PUBLIC cluster (m-chain) — used for per-swap deposit-wallet keygen and refund signing. Required when SDK requests carry use_deposit_address=true; empty disables MPC keygen and those requests 503. Single-cluster deploys leave --mpc-private-url empty and this URL serves both roles (back-compat).")
 	mpcTimeout := flag.Duration("mpc-timeout", 120*time.Second, "per-request timeout for MPC keygen calls (matches mpc-wallet.ts)")
 	mpcToken := flag.String("mpc-token", envOr("BRIDGE_MPC_TOKEN", ""),
-		"Bearer token for the MPC internal API. The live mpcd daemon protects every endpoint except /health behind Authorization: Bearer <token>. Either pass an explicit token or derive one from --mpc-identity-file.")
+		"Bearer token for the MPC internal API (public cluster). The live mpcd daemon protects every endpoint except /health behind Authorization: Bearer <token>. Either pass an explicit token or derive one from --mpc-identity-file. Used for the private cluster too unless --mpc-private-token overrides it.")
 	mpcIdentityFile := flag.String("mpc-identity-file", envOr("BRIDGE_MPC_IDENTITY_FILE", ""),
-		"Path to a node identity JSON (e.g. data/mpc/node0/keys/node0_identity.json). When set and --mpc-token is empty, derives the bearer token deterministically via SHA-256(seed || \"mpc-internal-api\"). Convenience for local dev — prod should set --mpc-token explicitly.")
+		"Path to a node identity JSON (e.g. data/mpc/node0/keys/node0_identity.json). When set and --mpc-token is empty, derives the bearer token deterministically via SHA-256(seed || \"mpc-internal-api\"). Convenience for local dev — prod should set --mpc-token explicitly. Applies to the public cluster (and the private cluster too unless --mpc-private-identity-file overrides).")
 	mpcOrgID := flag.String("mpc-org-id", envOr("BRIDGE_MPC_ORG_ID", "bridge"),
-		"Tenant identifier the MPC daemon multiplexes keygen by. Default \"bridge\".")
+		"Tenant identifier the MPC daemon multiplexes keygen by. Default \"bridge\". Applies to the public cluster (and the private cluster too unless --mpc-private-org-id overrides).")
+	// Layered MPC: the SDK's BridgeMPCConfig declares both publicUrl
+	// (m-chain user-facing MPC) and privateUrl (Lux treasury cluster).
+	// When --mpc-private-url is unset, the bridge runs single-cluster
+	// and both roles target --mpc-url (back-compat). When set, the
+	// bridge routes per-swap deposit-wallet keygen + refund signing
+	// to --mpc-url and release-wallet keygen + settlement signing to
+	// --mpc-private-url. See REQUIREMENTS.md §6 + §13.4.
+	mpcPrivateURL := flag.String("mpc-private-url", envOr("BRIDGE_MPC_PRIVATE_URL", ""),
+		"MPC keygen service URL for the PRIVATE treasury cluster. When set, release-wallet keygen + settlement signing run here instead of --mpc-url. Smaller-quorum cluster holding operator-funded liquidity. Empty (default) = single-cluster mode: both roles use --mpc-url.")
+	mpcPrivateToken := flag.String("mpc-private-token", envOr("BRIDGE_MPC_PRIVATE_TOKEN", ""),
+		"Bearer token for the private (treasury) MPC cluster. Empty falls back to --mpc-token. Useful when the private cluster runs on a separate authentication boundary.")
+	mpcPrivateIdentityFile := flag.String("mpc-private-identity-file", envOr("BRIDGE_MPC_PRIVATE_IDENTITY_FILE", ""),
+		"Identity file for the private cluster (same derivation as --mpc-identity-file). Empty falls back to --mpc-identity-file.")
+	mpcPrivateOrgID := flag.String("mpc-private-org-id", envOr("BRIDGE_MPC_PRIVATE_ORG_ID", ""),
+		"Tenant identifier for the private cluster. Empty falls back to --mpc-org-id.")
 	depCheckTimeout := flag.Duration("deposit-check-timeout", 10*time.Second,
 		"per-request timeout for the /v1/bridge/check-deposit ops endpoint (source-chain RPC poll)")
 	disableDepositCheck := flag.Bool("disable-deposit-check", false,
@@ -119,6 +314,12 @@ func main() {
 		"max age of a create-time quote before the signing driver refuses to sign. Stale swaps are kicked to the refund driver so the user gets their deposit back rather than executing at a drifted rate. Zero disables — only use for stablecoin-only deployments.")
 	disableSigningDriver := flag.Bool("disable-signing-driver", false,
 		"disable the background MPC signing driver. Swaps in bridge_transfer_pending will then stall — useful when no MPC cluster is reachable.")
+	maxSigningAttempts := flag.Int("signing-max-attempts", DefaultMaxSigningAttempts,
+		"max consecutive signing failures per swap before the signing driver moves it to refund_pending. Catches both transient destination-RPC outages and terminal cases like a destination chain with no tx assembler (BTC / SOL / TON today). Zero disables — legacy 'retry forever' behaviour.")
+	disableCosigners := flag.Bool("disable-cosigners", false,
+		"disable the layered-cosigner gate (Utila / Fireblocks). When false (default), swaps with a non-empty cosigners[] in the create body have each external custodian consulted after the native MPC sign and before broadcasting; any non-approved result moves the swap to refund_pending. When true, cosigner intents are still validated + persisted on the swap but NOT dispatched — useful during the §13.6 cutover soak when app/server is still the authoritative cosigner path.")
+	enableFireblocksCosigner := flag.Bool("enable-fireblocks-cosigner", false,
+		"opt into the real Fireblocks REST cosigner client (internal/cosigners.FireblocksRESTFamily). Default false leaves Fireblocks intents on the StubFamilyDispatcher path (StatusFailed with 'use app/server' reason) — same as today. Flip on once your Fireblocks tenant secret PEM is loadable via UTILA_COSIGNER_PEM__/FIREBLOCKS_COSIGNER_PEM__<envSafe(api_key)> (env-var fallback) and you've verified the JWT auth against your sandbox tenant. Tenant timeout overridable via FIREBLOCKS_COSIGNER_TIMEOUT_MS env (default 60000 ms).")
 	broadcastInterval := flag.Duration("broadcast-interval", DefaultBroadcastInterval,
 		"poll cadence for the broadcast driver (final stage: push signed raw destination txs onto the destination chain RPC, advance to completed).")
 	disableBroadcastDriver := flag.Bool("disable-broadcast-driver", false,
@@ -129,6 +330,10 @@ func main() {
 		"poll cadence for the refund driver (background loop that sweeps a stuck deposit back to the original sender when destination broadcast can't land).")
 	refundAfter := flag.Duration("refund-after", DefaultRefundAfter,
 		"elapsed-since-last-error window before the refund driver auto-reverts a swap stuck at broadcasting with insufficient-funds errors. Default 90s — long enough for an operator to drip LUX to the release address via lux-faucet.sh.")
+	maxRefundAttempts := flag.Int("refund-max-attempts", DefaultMaxRefundAttempts,
+		"max consecutive refund-rollback iterations per swap before the refund driver gives up and moves the swap to SwapStatusFailed. Catches persistent mpcd failures (e.g. MPC sign returning 504 because the wallet's session state was lost on rotation) that would otherwise oscillate refunding ↔ broadcasting forever. Zero disables the ceiling — legacy 'retry forever' behaviour.")
+	orphanRefundingAfter := flag.Duration("orphan-refunding-after", DefaultOrphanRefundingAfter,
+		"how long a swap can sit in SwapStatusRefunding before the refund driver reclaims it as an orphan (rolls back to refund_pending so the next tick can retry). Orphans happen when the bridge process is killed mid-refund — without this recovery the swap is stuck forever since neither broadcast nor refund driver scans `refunding` on subsequent ticks. Default 5m; zero disables orphan recovery entirely.")
 	disableRefundDriver := flag.Bool("disable-refund-driver", false,
 		"disable the background refund driver entirely. Swaps stuck at broadcasting will then never auto-revert — useful when the source chain is unreachable or operators want manual control.")
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
@@ -196,40 +401,31 @@ func main() {
 		)
 	}
 
-	// Construct the optional MPC keygen client. When --mpc-url is set,
-	// swap creates with use_deposit_address=true mint a chain-appropriate
-	// deposit address before forwarding to b-chain. When unset, those
-	// requests 503 — surface the missing dep clearly.
-	var mchainClient *mchain.Client
-	if *mpcURL != "" {
-		// Resolve the bearer token: explicit --mpc-token wins; otherwise
-		// derive it from the identity file if --mpc-identity-file is set;
-		// otherwise leave empty (works only against unauthenticated dev clusters).
-		token := *mpcToken
-		if token == "" && *mpcIdentityFile != "" {
-			identityJSON, err := os.ReadFile(*mpcIdentityFile)
-			if err != nil {
-				logger.Error("read mpc identity file", "err", err, "path", *mpcIdentityFile)
-				os.Exit(1)
-			}
-			derived, err := mchain.DeriveInternalKey(identityJSON)
-			if err != nil {
-				logger.Error("derive mpc internal key", "err", err, "path", *mpcIdentityFile)
-				os.Exit(1)
-			}
-			token = derived
-			logger.Info("derived mpc bearer token from identity file",
-				"path", *mpcIdentityFile,
-				"token_prefix", token[:8]+"…",
-			)
-		}
-		mchainClient = mchain.NewAuthed(*mpcURL, token, *mpcOrgID, *mpcTimeout)
-		logger.Info("mpc keygen enabled",
-			"api_url", mchainClient.APIURL,
-			"org_id", mchainClient.OrgID,
-			"auth", map[string]bool{"with_token": token != ""},
-			"timeout", *mpcTimeout,
-		)
+	// Construct the optional MPC keygen client(s). Per REQUIREMENTS.md §6
+	// the bridge supports a two-cluster layered model:
+	//
+	//   --mpc-url         → public cluster (m-chain). Per-swap deposit
+	//                       keygen + refund signing route here. Wide,
+	//                       permissionless quorum; single-swap blast
+	//                       radius because every wallet is ephemeral.
+	//
+	//   --mpc-private-url → private treasury cluster. Release-wallet
+	//                       keygen + settlement signing route here.
+	//                       Smaller, tighter-access quorum because these
+	//                       wallets hold operator liquidity.
+	//
+	// Single-cluster deploys leave --mpc-private-url unset; the pool
+	// then runs Public == Private == the --mpc-url client (back-compat
+	// for every existing deploy).
+	mchainPool, err := buildMPCPool(
+		*mpcURL, *mpcToken, *mpcIdentityFile, *mpcOrgID,
+		*mpcPrivateURL, *mpcPrivateToken, *mpcPrivateIdentityFile, *mpcPrivateOrgID,
+		*mpcTimeout,
+		logger,
+	)
+	if err != nil {
+		logger.Error("build mpc pool", "err", err)
+		os.Exit(1)
 	}
 
 	// Parse --source-rpc-overrides once and reuse for both the
@@ -359,7 +555,15 @@ func main() {
 		"fee_rate", quoteEngine.FeeRate,
 	)
 
-	api := NewAPI(cfg, *backend, bchainClient, mchainClient, depCheckClient, swapStore, quoteEngine)
+	// API uses the PUBLIC client for per-swap deposit-wallet keygen
+	// (swaps_handler.go:swapsCreateNative → mchain.KeygenForDeposit).
+	// Per-swap deposit wallets are user-funded ephemeral addresses —
+	// they belong on the wide public quorum, not the treasury cluster.
+	var depositKeygenClient *mchain.Client
+	if mchainPool != nil {
+		depositKeygenClient = mchainPool.Public
+	}
+	api := NewAPI(cfg, *backend, bchainClient, depositKeygenClient, depCheckClient, swapStore, quoteEngine)
 	api.SetProfile(profile)
 
 	// Per-destination-network release wallets. One MPC wallet per
@@ -376,12 +580,18 @@ func main() {
 	//   --release-wallets-file unset AND
 	//     --data-dir set                  → <data-dir>/release-wallets.json
 	//   both unset                        → in-memory (lossy on restart)
-	if mchainClient != nil {
+	if mchainPool != nil {
 		releasePath := *releaseFile
 		if releasePath == "" && *dataDir != "" {
 			releasePath = filepath.Join(*dataDir, "release-wallets.json")
 		}
-		releaseStore, err := mchain.NewFileReleaseStore(mchainClient, releasePath)
+		// Release wallets are LONG-LIVED treasury wallets — they hold
+		// operator-funded liquidity and must be minted on the private
+		// cluster so the smaller-quorum threshold and tighter access
+		// boundary apply. Single-cluster pool? mchainPool.Private ==
+		// mchainPool.Public, so this routes to the same place as
+		// before (back-compat).
+		releaseStore, err := mchain.NewFileReleaseStore(mchainPool.Private, releasePath)
 		if err != nil {
 			logger.Error("release wallet store init", "err", err, "path", releasePath)
 			os.Exit(1)
@@ -454,10 +664,40 @@ func main() {
 	// an mchain client; without one the driver has nothing to call.
 	var signer *SigningDriver
 	signerCtx, signerCancel := context.WithCancel(context.Background())
-	if !*disableSigningDriver && mchainClient != nil {
-		signer = NewSigningDriver(swapStore, mchainClient, *signingInterval, logger)
+	if !*disableSigningDriver && mchainPool != nil {
+		// Settlement leg signs FROM the release wallet (treasury) on the
+		// destination chain — route the SignForWallet call to the PRIVATE
+		// cluster. Single-cluster pool: Private == Public, no behaviour
+		// change for legacy deploys.
+		signer = NewSigningDriver(swapStore, mchainPool.Private, *signingInterval, logger)
 		signer.SetAssembler(asm) // produces wire-correct EVM txs
 		signer.SetMaxQuoteAge(*quoteMaxAge)
+		signer.SetMaxSigningAttempts(*maxSigningAttempts)
+
+		// Layered-cosigner gate (Utila / Fireblocks). Defaults to ON so
+		// swaps declaring cosigners[] in their POST body trigger an
+		// external-custodian approval flow after the native MPC sign.
+		//
+		// Family runners are pluggable:
+		//   - Utila: always the stub today (Connect-RPC client port
+		//     pending). RunUtila returns StatusFailed with a
+		//     "use app/server" reason.
+		//   - Fireblocks: pass --enable-fireblocks-cosigner to swap in
+		//     the real REST client (internal/cosigners.FireblocksRESTFamily).
+		//     Default is the stub — flip on after verifying your
+		//     tenant secret PEM loads cleanly via the env-var
+		//     fallback and the JWT auth succeeds against your
+		//     Fireblocks sandbox.
+		//
+		// --disable-cosigners bypasses the gate entirely (intents are
+		// still validated + persisted on the swap, just not dispatched
+		// — useful during the §13.6 cutover soak when app/server is
+		// authoritative).
+		cosignerDisp := buildCosignerDispatcher(*disableCosigners, *enableFireblocksCosigner, logger)
+		if cosignerDisp != nil {
+			signer.SetCosignerDispatcher(cosignerDisp)
+		}
+
 		go func() {
 			_ = signer.Run(signerCtx)
 		}()
@@ -465,6 +705,8 @@ func main() {
 			"interval", *signingInterval,
 			"assembler", "evm-eip155",
 			"quote_max_age", *quoteMaxAge,
+			"max_attempts", *maxSigningAttempts,
+			"cosigners_gate", cosignerDisp != nil,
 		)
 	} else if *disableSigningDriver {
 		logger.Info("signing driver disabled by --disable-signing-driver")
@@ -510,10 +752,14 @@ func main() {
 	// client (rpcURLs covers both directions).
 	var refundDriver *RefundDriver
 	refundCtx, refundCancel := context.WithCancel(context.Background())
-	if !*disableRefundDriver && mchainClient != nil {
+	if !*disableRefundDriver && mchainPool != nil {
+		// Refund leg signs FROM the per-swap deposit wallet (ephemeral,
+		// user-funded) — route the SignForWallet call to the PUBLIC
+		// cluster. Single-cluster pool: Public == Private, no behaviour
+		// change for legacy deploys.
 		refundDriver = NewRefundDriver(
 			swapStore,
-			mchainClient,
+			mchainPool.Public,
 			bcastClient,
 			asm,
 			*refundInterval,
@@ -521,12 +767,16 @@ func main() {
 			overrides,
 			logger,
 		)
+		refundDriver.SetMaxRefundAttempts(*maxRefundAttempts)
+		refundDriver.SetOrphanRefundingAfter(*orphanRefundingAfter)
 		go func() {
 			_ = refundDriver.Run(refundCtx)
 		}()
 		logger.Info("refund driver started",
 			"interval", *refundInterval,
 			"refund_after", *refundAfter,
+			"max_attempts", *maxRefundAttempts,
+			"orphan_after", *orphanRefundingAfter,
 		)
 	} else if *disableRefundDriver {
 		logger.Info("refund driver disabled by --disable-refund-driver")
@@ -548,7 +798,8 @@ func main() {
 			"version":                 version,
 			"backend_proxy":           *backend != "",
 			"bchain_rpc":              *bchainURL != "",
-			"mpc_keygen":              *mpcURL != "",
+			"mpc_keygen":              mchainPool != nil,
+			"mpc_pool_split":          mchainPool.IsSplit(),
 			"deposit_check":           !*disableDepositCheck,
 			"deposit_watcher":         watcher != nil && watcher.Running(),
 			"signing_driver":          signer != nil && signer.Running(),

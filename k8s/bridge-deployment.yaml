@@ -28,6 +28,12 @@ data:
     # Source of truth for the SPA + API's supported chains + tokens.
     # Edit this ConfigMap and roll the deployment to add/remove networks
     # without rebuilding the image.
+    #
+    # Internal names use the uppercase-with-underscore convention the
+    # bridge's internal lookup tables (internal/mchain,
+    # internal/depositcheck, internal/broadcast, internal/txassembler,
+    # internal/tokens) key off. Don't switch to lowercase-dashed — the
+    # chain wouldn't route.
     brand:
       name: Lux Bridge
       title: Lux Bridge
@@ -36,7 +42,7 @@ data:
       brandHost: bridge.lux.network
 
     networks:
-      - internalName: lux-mainnet
+      - internalName: LUX_MAINNET
         displayName: Lux
         nativeCurrency: LUX
         chainId: "96369"
@@ -46,25 +52,54 @@ data:
         txExplorerTpl: https://explore.lux.network/tx/{tx}
         addrExplorerTpl: https://explore.lux.network/address/{addr}
 
-      - internalName: ethereum-mainnet
+      - internalName: ETHEREUM_MAINNET
         displayName: Ethereum
         nativeCurrency: ETH
         chainId: "1"
         type: evm
+        isFeatured: true
         avgCompletion: 5m
         txExplorerTpl: https://etherscan.io/tx/{tx}
         addrExplorerTpl: https://etherscan.io/address/{addr}
 
-      - internalName: base-mainnet
+      - internalName: ARBITRUM_MAINNET
+        displayName: Arbitrum
+        nativeCurrency: ETH
+        chainId: "42161"
+        type: evm
+        avgCompletion: 2m
+        txExplorerTpl: https://arbiscan.io/tx/{tx}
+        addrExplorerTpl: https://arbiscan.io/address/{addr}
+
+      - internalName: OPTIMISM_MAINNET
+        displayName: Optimism
+        nativeCurrency: ETH
+        chainId: "10"
+        type: evm
+        avgCompletion: 2m
+        txExplorerTpl: https://optimistic.etherscan.io/tx/{tx}
+        addrExplorerTpl: https://optimistic.etherscan.io/address/{addr}
+
+      - internalName: BASE_MAINNET
         displayName: Base
         nativeCurrency: ETH
         chainId: "8453"
         type: evm
+        isFeatured: true
         avgCompletion: 2m
         txExplorerTpl: https://basescan.org/tx/{tx}
         addrExplorerTpl: https://basescan.org/address/{addr}
 
-      - internalName: bsc-mainnet
+      - internalName: POLYGON_MAINNET
+        displayName: Polygon
+        nativeCurrency: MATIC
+        chainId: "137"
+        type: evm
+        avgCompletion: 2m
+        txExplorerTpl: https://polygonscan.com/tx/{tx}
+        addrExplorerTpl: https://polygonscan.com/address/{addr}
+
+      - internalName: BSC_MAINNET
         displayName: BNB Chain
         nativeCurrency: BNB
         chainId: "56"
@@ -73,34 +108,175 @@ data:
         txExplorerTpl: https://bscscan.com/tx/{tx}
         addrExplorerTpl: https://bscscan.com/address/{addr}
 
+      - internalName: AVAX_MAINNET
+        displayName: Avalanche
+        nativeCurrency: AVAX
+        chainId: "43114"
+        type: evm
+        avgCompletion: 2m
+        txExplorerTpl: https://snowtrace.io/tx/{tx}
+        addrExplorerTpl: https://snowtrace.io/address/{addr}
+
+      # Non-EVM mainnet — registry-visible with gating. BTC enabled
+      # source-only (mpcd's mainnet keygen produces correct addresses;
+      # the testnet re-encoder in internal/mchain/btc_address.go is
+      # a no-op on mainnet input). Settlement on Bitcoin still requires
+      # a BTC tx assembler + Schnorr signing in mpcd. SOL/TON both
+      # disabled pending mpcd FROST Ed25519 keygen (§13.6 step 6).
+      - internalName: BITCOIN_MAINNET
+        displayName: Bitcoin
+        nativeCurrency: BTC
+        type: bitcoin
+        avgCompletion: 1h
+        txExplorerTpl: https://blockstream.info/tx/{tx}
+        addrExplorerTpl: https://blockstream.info/address/{addr}
+
+      - internalName: SOLANA_MAINNET
+        displayName: Solana
+        nativeCurrency: SOL
+        type: solana
+        avgCompletion: 1m
+        txExplorerTpl: https://explorer.solana.com/tx/{tx}
+        addrExplorerTpl: https://explorer.solana.com/address/{addr}
+
+      - internalName: TON_MAINNET
+        displayName: TON
+        nativeCurrency: TON
+        type: ton
+        avgCompletion: 10m
+        txExplorerTpl: https://tonscan.org/tx/{tx}
+        addrExplorerTpl: https://tonscan.org/address/{addr}
+
     tokens:
+      # LUX
       - asset: LUX
         name: Lux
         decimals: 18
-        network: lux-mainnet
+        network: LUX_MAINNET
 
+      # Ethereum mainnet — ETH + 3 major stablecoins
       - asset: ETH
         name: Ether
         decimals: 18
-        network: ethereum-mainnet
-
+        network: ETHEREUM_MAINNET
       - asset: USDC
         name: USD Coin
         decimals: 6
         contract: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-        network: ethereum-mainnet
-
+        network: ETHEREUM_MAINNET
       - asset: USDT
         name: Tether USD
         decimals: 6
         contract: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-        network: ethereum-mainnet
+        network: ETHEREUM_MAINNET
+      - asset: DAI
+        name: Dai Stablecoin
+        decimals: 18
+        contract: "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+        network: ETHEREUM_MAINNET
 
+      # Arbitrum mainnet — Circle's canonical native USDC
+      - asset: ETH
+        name: Ether
+        decimals: 18
+        network: ARBITRUM_MAINNET
+      - asset: USDC
+        name: USD Coin
+        decimals: 6
+        contract: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        network: ARBITRUM_MAINNET
+
+      # Optimism mainnet
+      - asset: ETH
+        name: Ether
+        decimals: 18
+        network: OPTIMISM_MAINNET
+      - asset: USDC
+        name: USD Coin
+        decimals: 6
+        contract: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+        network: OPTIMISM_MAINNET
+
+      # Base mainnet
+      - asset: ETH
+        name: Ether
+        decimals: 18
+        network: BASE_MAINNET
       - asset: USDC
         name: USD Coin
         decimals: 6
         contract: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-        network: base-mainnet
+        network: BASE_MAINNET
+
+      # Polygon mainnet — native is MATIC for registry consistency
+      # (Polygon ecosystem rebranded to POL in late 2024; the ticker
+      # change is not reflected here yet to match internal/tokens.go).
+      - asset: MATIC
+        name: Polygon
+        decimals: 18
+        network: POLYGON_MAINNET
+      - asset: USDC
+        name: USD Coin
+        decimals: 6
+        contract: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        network: POLYGON_MAINNET
+      - asset: USDT
+        name: Tether USD
+        decimals: 6
+        contract: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+        network: POLYGON_MAINNET
+
+      # BSC mainnet — USDC/USDT are 18 decimals here (BSC convention),
+      # NOT 6 like other chains. Wrong decimals would credit users with
+      # 10^12× the expected amount — sanity-check before adding any
+      # other BSC tokens.
+      - asset: BNB
+        name: BNB
+        decimals: 18
+        network: BSC_MAINNET
+      - asset: USDC
+        name: USD Coin
+        decimals: 18
+        contract: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"
+        network: BSC_MAINNET
+      - asset: USDT
+        name: Tether USD
+        decimals: 18
+        contract: "0x55d398326f99059fF775485246999027B3197955"
+        network: BSC_MAINNET
+
+      # Avalanche mainnet
+      - asset: AVAX
+        name: Avalanche
+        decimals: 18
+        network: AVAX_MAINNET
+      - asset: USDC
+        name: USD Coin
+        decimals: 6
+        contract: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"
+        network: AVAX_MAINNET
+
+      # Non-EVM mainnet — BTC source-only. SOL/TON both gated.
+      - asset: BTC
+        name: Bitcoin
+        decimals: 8
+        network: BITCOIN_MAINNET
+        isDepositEnabled: true
+        isWithdrawalEnabled: false
+
+      - asset: SOL
+        name: Solana
+        decimals: 9
+        network: SOLANA_MAINNET
+        isDepositEnabled: false
+        isWithdrawalEnabled: false
+
+      - asset: TON
+        name: Toncoin
+        decimals: 9
+        network: TON_MAINNET
+        isDepositEnabled: false
+        isWithdrawalEnabled: false
 
     limits:
       minUSD: 10
@@ -108,6 +284,7 @@ data:
       per:
         USDT: {minUSD: 10, maxUSD: 100000}
         USDC: {minUSD: 10, maxUSD: 100000}
+        DAI:  {minUSD: 10, maxUSD: 100000}
 ---
 # PersistentVolumeClaim — the swap store (zapdb / Lux-flavored Badger v4)
 # lives here. Single-writer: zapdb takes an exclusive directory lock,
