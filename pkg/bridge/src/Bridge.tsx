@@ -29,6 +29,8 @@ import * as gui from '@hanzo/gui'
 import { applyBrandMetadata, setConfig } from './config'
 import type { BridgeConfig } from './types'
 import { BridgeApp } from './app/BridgeApp'
+import { setRpcClient } from './app/lib/bridge-api'
+import { BridgeRPCClient } from './app/lib/bridge-rpc'
 
 const guiAny = gui as unknown as Record<string, unknown>
 const GuiProvider = (guiAny.GuiProvider ?? guiAny.HanzoguiProvider) as
@@ -50,6 +52,40 @@ export const Bridge: FC<BridgeProps> = ({ config }) => {
   useEffect(() => {
     applyBrandMetadata(config.brand)
   }, [config.brand])
+
+  // Install (or tear down) the direct-RPC client based on cfg.rpc. When
+  // bchainUrl is set, the bridge-api dispatcher routes quote/submit/status
+  // through BridgeVM JSON-RPC and falls back to REST on failure (default
+  // policy). When bchainUrl is absent the SDK runs in pure-REST mode.
+  useEffect(() => {
+    const bchain = config.rpc?.bchainUrl
+    if (!bchain) {
+      setRpcClient(null)
+      return
+    }
+    const init = {
+      bridgeRpcUrl: bchain,
+      ...(config.rpc?.tchainUrl
+        ? { thresholdRpcUrl: config.rpc.tchainUrl }
+        : config.mpc?.publicUrl
+          ? { thresholdRpcUrl: config.mpc.publicUrl }
+          : {}),
+      ...(config.rpc?.timeoutMs !== undefined
+        ? { timeoutMs: config.rpc.timeoutMs }
+        : {}),
+    }
+    const client = new BridgeRPCClient(init)
+    setRpcClient(client, config.rpc?.fallback ?? 'rest')
+    return () => {
+      setRpcClient(null)
+    }
+  }, [
+    config.rpc?.bchainUrl,
+    config.rpc?.tchainUrl,
+    config.rpc?.fallback,
+    config.rpc?.timeoutMs,
+    config.mpc?.publicUrl,
+  ])
 
   // `GuiProvider` is required for @hanzo/gui's `Button` / `Input` primitives
   // (used in SwapForm, WalletConnect, AssetInput) to find their theme. The

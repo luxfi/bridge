@@ -1,0 +1,88 @@
+# Testnet networks config for cmd/bridge.
+#
+# Drop in: bridge --config cmd/bridge/networks.testnet.yaml
+#
+# Internal names use the uppercase-with-underscore convention the
+# bridge's internal lookup tables (internal/mchain, internal/depositcheck,
+# internal/broadcast, internal/txassembler) key off. Don't switch to
+# lowercase — the chain wouldn't route.
+#
+# Renders in the SPA when:
+#   - the SPA build runs with VITE_BRIDGE_ENV=testnet, AND
+#   - cmd/bridge is queried with ?version=testnet (useNetworks does this
+#     automatically when cfg.env === 'testnet').
+
+brand:
+  name: Lux Bridge (testnet)
+  title: Lux Bridge — Testnet
+  logoUrl: /logo.svg
+  iconUrl: /icon.svg
+  brandHost: bridge.lux.network
+
+networks:
+  - internalName: ETHEREUM_SEPOLIA
+    displayName: Ethereum Sepolia
+    nativeCurrency: ETH
+    chainId: "11155111"
+    type: evm
+    isTestnet: true
+    isFeatured: true
+    avgCompletion: 3m
+    txExplorerTpl: https://sepolia.etherscan.io/tx/{tx}
+    addrExplorerTpl: https://sepolia.etherscan.io/address/{addr}
+
+  - internalName: LUX_TESTNET
+    displayName: Lux Testnet
+    nativeCurrency: LUX
+    chainId: "96368"
+    type: evm
+    isTestnet: true
+    isFeatured: true
+    avgCompletion: 1m
+    txExplorerTpl: https://explore.lux-test.network/tx/{tx}
+    addrExplorerTpl: https://explore.lux-test.network/address/{addr}
+
+  - internalName: BASE_SEPOLIA
+    displayName: Base Sepolia
+    nativeCurrency: ETH
+    chainId: "84532"
+    type: evm
+    isTestnet: true
+    avgCompletion: 3m
+    txExplorerTpl: https://sepolia.basescan.org/tx/{tx}
+    addrExplorerTpl: https://sepolia.basescan.org/address/{addr}
+
+  - internalName: HOLESKY_TESTNET
+    displayName: Holesky
+    nativeCurrency: ETH
+    chainId: "17000"
+    type: evm
+    isTestnet: true
+    avgCompletion: 3m
+    txExplorerTpl: https://holesky.etherscan.io/tx/{tx}
+    addrExplorerTpl: https://holesky.etherscan.io/address/{addr}
+
+tokens:
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: ETHEREUM_SEPOLIA
+
+  - asset: LUX
+    name: Lux
+    decimals: 18
+    network: LUX_TESTNET
+
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: BASE_SEPOLIA
+
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: HOLESKY_TESTNET
+
+limits:
+  minUSD: 1
+  maxUSD: 100000

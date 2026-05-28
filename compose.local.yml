@@ -71,7 +71,7 @@ services:
       - POSTGRES_PASSWORD=bridge
       - POSTGRES_DB=bridge
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5433:5432"
