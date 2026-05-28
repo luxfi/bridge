@@ -32,6 +32,52 @@ Rules:
 - `@luxfi/{core,threshold,utila}` are generic Lux building-block libraries —
   bridge-agnostic, may be reused elsewhere in the Lux ecosystem.
 
+### Canonical brand sourcing — `@luxfi/brand` is the only source
+
+Every Lux-ecosystem tenant app — bridge, exchange, id, pay, etc. — pulls
+its brand identity from **one** package: `@luxfi/brand` (source repo:
+`~/work/lux/brand`). No Lux-specific brand strings, colors, logos, or
+support email addresses are baked into the SDK or any other downstream
+artefact.
+
+How the bridge tenant does it (`app/bridge/src/bridge.config.ts`):
+
+```ts
+import luxBrandJson from '@luxfi/brand/brand.json'
+const { shortName, primaryColor, supportEmail } = luxBrandJson.brand
+
+export const bridgeConfig: BridgeConfig = {
+  apiHost: env('BRIDGE_API_HOST', 'https://api.bridge.lux.network')!,
+  brand: {
+    name:         `${shortName ?? 'Lux'} Bridge`,   // composed at runtime
+    primaryColor: primaryColor ?? '#000000',
+    supportEmail: supportEmail ?? 'support@lux.network',
+  },
+  // …
+}
+```
+
+Rules:
+
+- The **SDK** (`pkg/bridge/`) is **jurisdiction-neutral**. It declares
+  *no* Lux-specific brand. Tenants supply brand at mount time via
+  `BridgeConfig.brand`. The SDK has no direct dependency on
+  `@luxfi/brand` — that'd be a layering violation (Zoo, Hanzo, or any
+  white-label tenant must be able to consume `@luxfi/bridge` without
+  pulling Lux brand metadata into their bundle).
+- **App-specific endpoints** (`api.bridge.lux.network`, `docs.lux.network/bridge`)
+  belong to the bridge product and are independent of `@luxfi/brand`'s
+  `appDomain` (`lux.exchange` — that's the exchange product's domain).
+- **SSR / no-window fallbacks** in the SDK derive from `cfg.apiHost`
+  rather than hardcoding a Lux URL — see `deriveAppOrigin` in
+  `pkg/bridge/src/app/lib/wagmi-config.ts`.
+
+Other Lux apps follow the same pattern: `~/work/lux/exchange` reads
+the full brand block; `~/work/lux/id` reads `name` + `primaryColor` +
+`appDomain`; etc. If you find a hardcoded brand string in any Lux app,
+it's a leak — file it as a follow-up issue and route the value through
+`@luxfi/brand`.
+
 ### History — what got folded together
 
 - **`app/bridge3/`** (formerly `@luxbridge/app-v3`) was **folded into
@@ -59,7 +105,7 @@ mountBridge({
 })
 ```
 
-Mirrors `mountExchange` from `@/exchange`. One declarative entry,
+Mirrors `mountExchange` from the upstream exchange SDK. One declarative entry,
 build-time brand config, no hostname detection inside the SDK.
 
 ## Publishing
@@ -184,6 +230,161 @@ brand:             │   pkg/bridge/src/app/            │
 - **Protocols**: `cggmp21` (default), `frost`, `bls`, `doerner` (classical);
   `pulsar` (MLWE), `corona` (RLWE), `magnetar` (lattice research variant) —
   PQ-safe, leaderless, permissionless-safe by design.
+
+### Standalone mode — running the bridge without the Lux platform
+
+The bridge can boot with the absolute minimum: Postgres + bridge-server +
+bridge-ui. Every other Lux service (IAM / KMS / m-chain MPC / cosigners)
+is **optional at runtime** — the backend graceful-degrades when the
+corresponding env block is unset and picks up the integration the moment
+the block appears.
+
+```
+docker compose -f compose.standalone.yml up --build
+# bridge UI    http://localhost:3001
+# bridge API   http://localhost:5000/healthz
+# postgres     localhost:5433 (user=bridge, pass=bridge, db=bridge)
+```
+
+What's intentionally NOT in `compose.standalone.yml` (but is in
+`compose.local.yml`):
+
+| Service | Why standalone can skip it |
+|---|---|
+| Casdoor (Lux ID) | bridge does not require auth in dev mode |
+| Vault (KMS) | `fetchCosignerSecret` falls back to env-var pattern when `BRIDGE_KMS_URL` is unset |
+| NATS | only `mpc-service.ts` consumes it; backend logs a warn and skips its initialise() |
+| Consul | same — `mpc-service.ts` only |
+| 3-node MPC cluster | `LuxMPCClient` is constructed on demand; native MPC sign requires it but cosigner-layered swaps don't |
+
+To enable any of the optional layers, set the matching env block on the
+`bridge-server` service in `compose.standalone.yml` (commented stubs are
+already there). The bridge picks them up on next request — no restart
+required for cosigner config, only `BRIDGE_MPC_URL` requires a restart (cached at server start).
+
+### ZAP serialization — canonical home is `~/work/zap`, npm scope `@zap-proto`
+
+The bridge currently uses plain JSON over HTTP for every wire call (mpcd,
+KMS, IAM, cosigner adapters, f-chain). It does **not** depend on any
+binary RPC codec. If a future surface needs Cap'n-Proto-style binary
+RPC (e.g. mpcd → bridge events stream), use **ZAP** — the canonical
+Lux / Hanzo / Liquidity zero-copy app protocol.
+
+| Aspect | Canonical |
+|---|---|
+| Source repo | **`~/work/zap`** (not `~/work/lux/zap` or `~/work/hanzo/zap` — those are forks / legacy clones being consolidated upstream) |
+| GitHub org | `zap-proto` |
+| npm scope | `@zap-proto/*` |
+| TS package | `@zap-proto/zap` (lives at `~/work/zap/zap-js`) — pure-TS codec, no third-party Cap'n Proto deps. The package.json once listed `capnp-es` in `dependencies` but no source file imports it; that dep is stale and slated for removal in the next ZAP TS publish |
+| WASM binding | `@zap-proto/wasm` (`~/work/zap/zap-wasm`) |
+| Go / Rust | wire-compatible siblings; same ZAP framing |
+
+**Rules for the bridge** (and any other downstream consumer):
+
+- **Never `pnpm add capnp-es`** to add binary RPC. If we need Cap'n-Proto-
+  style framing, use `@zap-proto/zap` (pure TS, no third-party dep).
+  The whole point of ZAP is to be brand-neutral and wire-compatible
+  across Go / Rust / TS without pulling in the upstream Cap'n Proto JS
+  ecosystem.
+- The `@zap-proto/*` scope is brand-neutral. Don't publish `@luxfi/zap-*`
+  or `@hanzoai/zap-*` variants — they'd fork the wire format and break
+  cross-stack RPC.
+- Source of truth for the wire format: `~/work/zap/README.md` (Go) +
+  `~/work/zap/zap-js/src/protocol.ts` (TS). Match either.
+
+### Hanzo-side bridge / teleport — does not exist
+
+There is no `~/work/hanzo/teleport` and no `~/work/hanzo/bridge`. The
+canonical Lux cross-chain bridge protocol lives at `~/work/lux/teleport`
+(Warp 2.0 envelopes + m-chain custody, LP-021v2 / LP-7330). The
+user-facing UI + SDK is `~/work/lux/bridge` (this repo). If you ever
+need a Hanzo-flavored bridge surface for a Hanzo-branded tenant, the
+right play is to add a Hanzo tenant build under `app/` (mirror of
+`app/bridge/`) that consumes `@luxfi/bridge` + `@hanzoai/brand` — not a
+new repo. The SDK is the integration point; tenants are thin.
+
+### Native Lux services — m-chain (MPC) + KMS + f-chain
+
+The bridge backend talks to the canonical Lux ecosystem services via
+HTTP clients in `app/server/src/clients/`:
+
+- **`lux-iam.ts`** — `LuxIAMClient.mint(audience)` mints OAuth2
+  `client_credentials` JWTs against Lux IAM (`https://iam.lux.network`).
+  Per-audience cache with early refresh. The bridge mints one token for
+  `aud=lux-kms` and another for `aud=lux-mpc`; both rotate independently.
+- **`lux-kms.ts`** — `LuxKMSClient.getSecret(path)` reads from
+  `~/work/lux/kms` (`https://kms.lux.network`). Bearer JWT auth, path
+  layout `bridge/cosigners/{utila|fireblocks}/{publicId}/{sa_pem|secret_pem}`.
+  Replaces every env-var fallback in `domain/cosigners.ts::fetchCosignerSecret`.
+- **`lux-mpc.ts`** — `LuxMPCClient.keygen({...})` / `.sign({...})` /
+  `.status()` against `mpcd` (`https://mpc.lux.network`). This is THE
+  m-chain entrypoint — the canonical Lux MPC daemon at `~/work/lux/mpc`,
+  speaking the same wire protocol as the Go client at
+  `~/work/lux/kms/pkg/mpc/client.go`. Supports the full Lux protocol set
+  (CGGMP21 / FROST / BLS / SR25519 / Pulsar / Corona / Magnetar / Doerner).
+  Per-call 120s timeout matches mpcd's threshold-completion ceiling.
+
+Configuration via env (bridge backend startup):
+
+```
+BRIDGE_IAM_ISSUER        https://iam.lux.network
+BRIDGE_KMS_URL           https://kms.lux.network
+BRIDGE_KMS_ORG           lux
+BRIDGE_IAM_CLIENT_ID     lux-bridge
+BRIDGE_IAM_CLIENT_SECRET (from KMS at boot OR --kms-bootstrap-secret)
+BRIDGE_MPC_URL           https://mpc.lux.network
+```
+
+When `BRIDGE_KMS_URL` is unset (local dev), `fetchCosignerSecret` falls
+back to per-tenant env vars. Production deployments MUST set the KMS
+env block — env-var fallback is dev-only.
+
+### Lux software frontends (administrative UIs)
+
+Three Lux ecosystem services ship their own administrative UIs separate
+from the bridge tenant SDK:
+
+| Service | Frontend repo / path | Stack | Domain |
+|---|---|---|---|
+| **m-chain (mpcd)** | `~/work/lux/mpc/dashboard/` (`@luxfi/mpc-dashboard`) | Next.js 15 + React 19 + zustand | `mpc.lux.network/dashboard` |
+| **KMS** | `~/work/lux/kms/frontend/` (`@hanzo/kms-frontend`) | Vite + React | `kms.lux.network` |
+| **f-chain (fhed)** | **DOES NOT EXIST** — see below | — | — |
+
+The bridge does **not** embed these dashboards; they're separate
+operator surfaces.
+
+### f-chain frontend — what it would look like
+
+`~/work/lux/fhe` (the FHE daemon `fhed`) currently has no dedicated UI.
+The bridge tenant's `TRANSFERS` panel surfaces per-swap f-chain
+attestation status (a `CosignerStep` row when the bridge backend
+processes a swap with `fchain: { publicUrl, scheme }` config), but
+that's per-bridge-tenant, not a cluster-wide operator surface.
+
+A standalone f-chain dashboard, when built, would mirror the
+mpc-dashboard layout and surface:
+
+1. **Cluster status** — `GET /v1/fhe/cluster/status`: peer count, FHE
+   scheme registry, share health per node.
+2. **Public key registry** — `GET /v1/fhe/publickey`: published FHE
+   public keys per scheme (CKKS / BGV / BFV), with an export button.
+3. **Encryption sessions** — recent `/v1/fhe/encrypt` calls and their
+   ciphertext bindings (txHash → ciphertext_hex), filterable by
+   requesting service (bridge / pay / id / ...).
+4. **Reshare history** — `/v1/fhe/cluster/reshare` events.
+5. **Health probe** — `GET /v1/fhe/health` rolled up to per-node status.
+
+Recommended scaffold (when scheduled):
+
+```
+~/work/lux/fhe/dashboard/   # new Next.js app, mirror of mpc/dashboard
+  package.json              @luxfi/fchain-dashboard
+  app/                      # Next.js app router
+  components/cluster/       # ClusterStatus, PeerList
+  components/keys/          # PublicKeyRegistry, ExportButton
+  components/sessions/      # EncryptHistory, CiphertextViewer
+  lib/fchain-client.ts      # mirrors lux-mpc.ts / lux-kms.ts shape
+```
 
 ### Optional layered cosigners (since SDK v1.0.3)
 

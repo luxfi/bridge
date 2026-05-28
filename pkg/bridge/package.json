@@ -1,7 +1,7 @@
 {
   "name": "@luxfi/bridge",
-  "version": "1.0.3",
-  "description": "Lux Bridge SDK \u2014 embed bridge.lux.network into any host application",
+  "version": "1.0.5",
+  "description": "Lux Bridge SDK — embed bridge.lux.network into any host application",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
@@ -77,7 +77,7 @@
     "pub": "npm publish"
   },
   "dependencies": {
-    "@hanzo/gui": "^7.0.0",
+    "@hanzo/gui": "^7.2.2",
     "@hanzogui/animate": "^7.0.0",
     "@hanzogui/animate-presence": "^7.0.0",
     "@hanzogui/button": "^7.0.0",
@@ -87,36 +87,35 @@
     "@hanzogui/helpers": "^7.0.0",
     "@hanzogui/input": "^7.0.0",
     "@hanzogui/themes": "^7.0.0",
-    "@luxfi/brand": "^1.0.0",
     "@luxfi/threshold": "workspace:*",
-    "@tanstack/react-query": "5.90.20",
-    "viem": "2.30.5",
-    "wagmi": "2.15.5"
+    "@tanstack/react-query": "5.100.14",
+    "viem": "2.50.4",
+    "wagmi": "3.6.15"
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
-    "@hanzogui/popover": "^7.0.0",
-    "@hanzogui/select": "^7.0.0",
-    "@hanzogui/dialog": "^7.0.0",
-    "@hanzogui/card": "^7.0.0",
-    "@hanzogui/text": "^7.0.0",
-    "@hanzogui/stacks": "^7.0.0",
-    "@hanzogui/spinner": "^7.0.0",
-    "@hanzogui/toast": "^7.0.0",
-    "@hanzogui/tabs": "^7.0.0",
-    "@hanzogui/label": "^7.0.0",
-    "@hanzogui/form": "^7.0.0",
-    "@hanzogui/list-item": "^7.0.0",
-    "@hanzogui/separator": "^7.0.0",
-    "@hanzogui/tooltip": "^7.0.0",
     "@hanzogui/avatar": "^7.0.0",
-    "@hanzogui/image": "^7.0.0",
+    "@hanzogui/card": "^7.0.0",
+    "@hanzogui/dialog": "^7.0.0",
+    "@hanzogui/form": "^7.0.0",
     "@hanzogui/group": "^7.0.0",
-    "@hanzogui/progress": "^7.0.0",
-    "@hanzogui/visually-hidden": "^7.0.0",
+    "@hanzogui/image": "^7.0.0",
+    "@hanzogui/label": "^7.0.0",
+    "@hanzogui/list-item": "^7.0.0",
+    "@hanzogui/popover": "^7.0.0",
     "@hanzogui/portal": "^7.0.0",
-    "@hanzogui/sheet": "^7.0.0"
+    "@hanzogui/progress": "^7.0.0",
+    "@hanzogui/select": "^7.0.0",
+    "@hanzogui/separator": "^7.0.0",
+    "@hanzogui/sheet": "^7.0.0",
+    "@hanzogui/spinner": "^7.0.0",
+    "@hanzogui/stacks": "^7.0.0",
+    "@hanzogui/tabs": "^7.0.0",
+    "@hanzogui/text": "^7.0.0",
+    "@hanzogui/toast": "^7.0.0",
+    "@hanzogui/tooltip": "^7.0.0",
+    "@hanzogui/visually-hidden": "^7.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "peerDependenciesMeta": {
     "@hanzogui/popover": {
@@ -190,6 +189,6 @@
     "happy-dom": "^20.9.0",
     "jsdom": "^29.1.1",
     "typescript": "catalog:",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.7"
   }
 }
