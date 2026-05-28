@@ -51,6 +51,17 @@ const (
 	SwapStatusRefunded SwapStatus = "refunded"
 	// Terminal failure (refund attempted but unrecoverable, etc.).
 	SwapStatusFailed SwapStatus = "failed"
+	// Terminal failure: gas pre-check in the signing driver determined
+	// the release wallet does not hold enough native token to cover
+	// (gasLimit * gasPrice + value) on the destination chain. The
+	// signing driver writes this state BEFORE spending the 75s
+	// signing-ceremony budget — operator must fund the wallet listed
+	// in Swap.ReleaseWalletID, then a follow-up manual nudge can
+	// resurrect the swap. Distinct from SwapStatusBroadcasting +
+	// "Insufficient funds" LastError (which can self-recover on
+	// next tick once funds arrive); this state is pre-sign and the
+	// swap deliberately does NOT retry until an operator intervenes.
+	SwapStatusFailedInsufficientReleaseGas SwapStatus = "failed_insufficient_release_gas"
 	// User-cancelled before deposit.
 	SwapStatusCancelled SwapStatus = "cancelled"
 )
@@ -92,6 +103,21 @@ type Swap struct {
 	// Signing — populated when the MPC ceremony emits a signature.
 	MPCSessionID string `json:"mpc_session_id,omitempty"`
 	Signature    string `json:"signature,omitempty"`
+
+	// ReleaseWalletID is the MPC wallet id from the static release
+	// pool selected to sign + broadcast the destination tx. Captured
+	// at signing time so the broadcaster + refund driver know which
+	// key holds the funds and how to refund them. Empty for swaps
+	// that pre-date pool-based release (deposit wallet doubled as
+	// the release wallet) — those fall back to the legacy
+	// extractWalletID(DepositAddress) path.
+	ReleaseWalletID string `json:"release_wallet_id,omitempty"`
+	// ReleaseAddress is the on-chain address (0x-prefixed for EVM)
+	// derived from ReleaseWalletID's keygen output. The signing
+	// driver uses this as the tx sender for nonce + gas pre-check
+	// purposes; persisting it on the swap means the broadcast +
+	// refund drivers don't need to re-key the wallet later.
+	ReleaseAddress string `json:"release_address,omitempty"`
 
 	// DestRawTx is the fully-assembled, signed destination-chain raw
 	// transaction (hex-encoded). The broadcast driver consumes this
@@ -182,6 +208,13 @@ type InMemoryStore struct {
 	swaps   map[string]*Swap
 	now     func() time.Time // overridable in tests
 	idMaker func() string    // overridable in tests
+
+	// Release-pool persistence — lazily initialized on first
+	// LoadEntries/PutEntry call. Lives here (rather than as a
+	// separate type) so the in-memory test setup boots with a
+	// single NewInMemoryStore() call.
+	poolOnce sync.Once
+	pool     *inMemoryReleasePool
 }
 
 // NewInMemoryStore returns an empty in-memory store.
