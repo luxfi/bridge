@@ -270,13 +270,20 @@ func (c *Client) createDashboardSession(ctx context.Context, walletID, orgID str
 // It expects EnsureDashboardSession has already been called to seed
 // the per-wallet session cache; if missing it bootstraps one inline.
 //
-// Wire shape: {message:"<hex>", encoding:"hex", walletId:"...", sessionId:"...", value:"0"}.
+// Wire shape: {message:"<hex>", encoding:"hex", walletId:"...", sessionId:"...", value:"0", curve:"..."}.
 // Successful response shape: {signature:"<hex>", r:"<hex>", s:"<hex>"}.
 //
 // "value" is required by the dashboard's session accounting; we pass
 // "0" because the bridge attaches no separate value-based session limit
 // (the gas pre-check at the signing driver layer is the real cap).
-func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, orgID string) (*SignResult, error) {
+//
+// "curve" hints which threshold-signature scheme to use. The dashboard
+// routes to ECDSA/secp256k1 by default; SOL/TON/DOT need Ed25519/FROST.
+// Older dashboards that don't recognize the field fall back to their
+// compile-time default (secp256k1) — the SOL finalizer rejects the
+// resulting ECDSA-shaped signature with a clear error, so a deployment
+// mismatch surfaces immediately.
+func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, orgID string, curve Curve) (*SignResult, error) {
 	sessionID, err := c.EnsureDashboardSessionWithOrg(ctx, walletID, orgID)
 	if err != nil {
 		return nil, err
@@ -288,6 +295,7 @@ func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, org
 		"walletId":  walletID,
 		"sessionId": sessionID,
 		"value":     "0",
+		"curve":     string(curve),
 	}
 	buf, _ := json.Marshal(body)
 
@@ -332,7 +340,7 @@ func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, org
 				Message:    fmt.Sprintf("HTTP 403 + session renew failed: %v", sErr),
 			}
 		}
-		return c.signViaDashboardWithSession(ctx, walletID, messageHex, newSession)
+		return c.signViaDashboardWithSession(ctx, walletID, messageHex, newSession, curve)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
@@ -349,13 +357,14 @@ func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, org
 // signViaDashboardWithSession is the inner sign call once a session ID
 // is known. Pulled out so the 403-retry path doesn't recurse through
 // EnsureDashboardSession's cache-fill side effect twice.
-func (c *Client) signViaDashboardWithSession(ctx context.Context, walletID, messageHex, sessionID string) (*SignResult, error) {
+func (c *Client) signViaDashboardWithSession(ctx context.Context, walletID, messageHex, sessionID string, curve Curve) (*SignResult, error) {
 	body := map[string]any{
 		"message":   strings.TrimPrefix(strings.TrimPrefix(messageHex, "0x"), "0X"),
 		"encoding":  "hex",
 		"walletId":  walletID,
 		"sessionId": sessionID,
 		"value":     "0",
+		"curve":     string(curve),
 	}
 	buf, _ := json.Marshal(body)
 
