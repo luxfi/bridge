@@ -32,6 +32,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -223,6 +224,30 @@ type Client struct {
 	// Clock is the time source for wallet-id construction. Tests
 	// override; production leaves it nil.
 	Clock func() time.Time
+
+	// DashboardURL points at the lux-mpc dashboard listener (typically
+	// port 8081). When set, SignForWallet routes through
+	// POST /v1/mpc/sign there instead of the legacy ${APIURL}/sign
+	// path (which the live mpcd v2026-05 daemon does NOT expose on
+	// the internal port). EnsureDashboardSession lazily mints a
+	// signing session on first use per (wallet, org).
+	DashboardURL string
+
+	// DashboardToken is a JWT for the dashboard API. Bridge gets one
+	// via /v1/auth/login or /v1/auth/oidc and refreshes it itself;
+	// pass the most-recent value via this field. Mutually exclusive
+	// with DashboardAPIKey — Bearer wins if both are set.
+	DashboardToken string
+
+	// DashboardAPIKey is an X-API-Key for the dashboard API. Bridge
+	// callers without OIDC plumbing can mint an API key once on the
+	// MPC dashboard with permissions=["sign"] and pass it here.
+	DashboardAPIKey string
+
+	// sessions caches dashboard session IDs by (walletID, orgID).
+	// Lazily initialized — sessionsOnce guards the first access.
+	sessions     *sessionCache
+	sessionsOnce sync.Once
 }
 
 // New constructs a Client pointing at apiURL with no Bearer token and
@@ -490,9 +515,6 @@ func (c *Client) SignForWallet(ctx context.Context, walletID, messageHex string)
 
 // SignForWalletWithOrg is SignForWallet with an explicit per-call orgID.
 func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex, orgID string) (*SignResult, error) {
-	if c.APIURL == "" {
-		return nil, &MPCError{Op: "sign", Message: "APIURL not configured"}
-	}
 	if walletID == "" {
 		return nil, &MPCError{Op: "sign", Message: "wallet_id required"}
 	}
@@ -501,6 +523,22 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 	}
 	if orgID == "" {
 		return nil, &MPCError{Op: "sign", Message: "org_id required (set Client.OrgID or pass per-call)"}
+	}
+
+	// Production path: dashboard API. The live mpcd v2026-05 daemon
+	// only serves /sign through the dashboard listener (port 8081),
+	// gated by JWT or X-API-Key. EnsureDashboardSession lazily mints
+	// a per-(wallet, org) signing grant that signViaDashboard reuses.
+	if c.DashboardSigning() {
+		return c.signViaDashboard(ctx, walletID, messageHex, orgID)
+	}
+
+	// Legacy path: ${APIURL}/sign — kept for in-process mocks and any
+	// future internal-API rev that grows a /sign route. The live
+	// cluster does NOT serve this; configuring only APIURL is a
+	// misconfiguration we surface clearly.
+	if c.APIURL == "" {
+		return nil, &MPCError{Op: "sign", Message: "neither APIURL nor DashboardURL configured"}
 	}
 
 	body, err := json.Marshal(map[string]string{
