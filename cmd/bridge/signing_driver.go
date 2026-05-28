@@ -411,8 +411,9 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 
 	// Step 1 — pick a signing wallet. PoolSet path takes precedence
 	// (multi-family routing); single Pool / btcPool / dotPool are
-	// family-specific fallbacks; final fallback is the deposit-as-
-	// release path that handled v1 swaps.
+	// family-specific fallbacks; then the long-lived per-swap
+	// ReleaseWalletID/Address (release-wallet split, 2026-05); final
+	// fallback is the deposit-as-release path that handled v1 swaps.
 	var (
 		walletID           string
 		senderAddr         string
@@ -459,9 +460,12 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			}
 		}
 	}
+	// Fall back to the long-lived per-swap release wallet (set when the
+	// bridge runs with --release-wallets-file). Prefer this over the
+	// deposit-as-release path; the deposit-as-release path only handles
+	// v1 swaps created before the release-wallet split landed.
 	if walletID == "" {
-		walletID = extractWalletID(sw.DepositAddress)
-		senderAddr = extractDepositAddress(sw.DepositAddress)
+		walletID, senderAddr = resolveReleaseSigning(sw)
 	}
 	if walletID == "" {
 		// Swap was created without a minted MPC wallet (likely
@@ -673,7 +677,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			DestinationNetwork: sw.DestinationNetwork,
 			DestinationAsset:   sw.DestinationAsset,
 			DestinationAddress: sw.DestinationAddress,
-			Amount:             sw.Amount,
+			Amount:             releaseAmount(sw),
 			SenderAddress:      senderAddr,
 		})
 		if aerr != nil {
@@ -1162,6 +1166,42 @@ func (d *SigningDriver) gasPrecheckSOL(ctx context.Context, sw *Swap, releaseAdd
 		map[bool]uint64{true: solATARentExemptApprox, false: 0}[isSPL],
 		short,
 	), false
+}
+
+// resolveReleaseSigning picks the MPC wallet that signs (and pays for)
+// the destination-chain release tx. Prefers the long-lived per-network
+// ReleaseWalletID/Address stored on the swap (added 2026-05 with the
+// release-wallet split). Falls back to the per-swap deposit wallet for
+// swaps created before the split landed AND for bridges running
+// without --release-wallets-file. Fallback swaps will broadcast-fail
+// with "insufficient funds in release address" unless the operator
+// pre-funded the per-swap address — that's the bug the release wallet
+// fixes, and the fallback only exists so legacy in-flight swaps don't
+// stall the driver loop.
+func resolveReleaseSigning(sw *Swap) (walletID, address string) {
+	if sw.ReleaseWalletID != "" && sw.ReleaseAddress != "" {
+		return sw.ReleaseWalletID, sw.ReleaseAddress
+	}
+	return extractWalletID(sw.DepositAddress), extractDepositAddress(sw.DepositAddress)
+}
+
+// releaseAmount picks the destination-asset amount the release tx
+// should carry. Prefers the quote-snapshot ReceiveAmount (added
+// 2026-05 alongside the release-wallet split — see swap_store.go
+// docs) which is what the user was promised at swap-create time.
+// Falls back to the raw input amount only when ReceiveAmount is zero
+// — i.e. legacy swap rows created before the snapshot was wired, or
+// swaps created against a bridge running without a quote engine.
+//
+// The fallback is a safety net for in-flight legacy rows. New swaps
+// always have ReceiveAmount populated (swapsCreateNative now fails
+// loudly if pricing isn't available), so the fallback path should
+// rarely fire after the migration.
+func releaseAmount(sw *Swap) float64 {
+	if sw.ReceiveAmount > 0 {
+		return sw.ReceiveAmount
+	}
+	return sw.Amount
 }
 
 // extractWalletID pulls the wallet-id half from the "wallet_name###address"
