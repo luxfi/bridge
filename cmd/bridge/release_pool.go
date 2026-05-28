@@ -70,12 +70,20 @@ type ReleasePoolStore interface {
 // "primary" network (the bridge's main destination — LUX_TESTNET in
 // dev, LUX_MAINNET in prod) and the EVM address works across all
 // EVM chains because the MPC produces a deterministic eth_address.
+//
+// XRP-flavored pool entries (Family="xrp") carry the compressed-
+// secp256k1 pubkey as PubKeyHex so the signing driver can embed it
+// in the XRPL Payment's SigningPubKey field. EVM entries leave
+// PubKeyHex empty — the EVM path doesn't need the compressed pubkey
+// (ecrecover handles verification).
 type ReleasePoolEntry struct {
-	Index    int       `json:"index"`
-	WalletID string    `json:"wallet_id"`
-	Address  string    `json:"address"`
-	Network  string    `json:"network,omitempty"`
-	MintedAt time.Time `json:"minted_at"`
+	Index     int       `json:"index"`
+	WalletID  string    `json:"wallet_id"`
+	Address   string    `json:"address"`
+	Network   string    `json:"network,omitempty"`
+	Family    string    `json:"family,omitempty"`     // "eth" | "xrp" | "btc" | …
+	PubKeyHex string    `json:"pubkey_hex,omitempty"` // compressed ECDSA pubkey (XRP needs this)
+	MintedAt  time.Time `json:"minted_at"`
 }
 
 // =============================================================================
@@ -165,6 +173,37 @@ func (p *ReleasePool) Size() int {
 	return len(p.entries)
 }
 
+// SizeByFamily returns the number of entries whose Family field
+// equals `family`. Empty family ⇒ count all entries.
+func (p *ReleasePool) SizeByFamily(family string) int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	if family == "" {
+		return len(p.entries)
+	}
+	n := 0
+	for _, e := range p.entries {
+		if e.Family == family {
+			n++
+		}
+	}
+	return n
+}
+
+// Reload re-reads the underlying store. Useful when a parallel helper
+// has minted new entries directly into the store and the in-memory
+// view of THIS pool needs to catch up.
+func (p *ReleasePool) Reload(ctx context.Context) error {
+	entries, err := p.store.LoadEntries(ctx)
+	if err != nil {
+		return err
+	}
+	p.mu.Lock()
+	p.entries = entries
+	p.mu.Unlock()
+	return nil
+}
+
 // Entries returns a snapshot copy of the current entries. Useful for
 // /health diagnostics — never expose the slice directly because
 // callers might mutate.
@@ -220,11 +259,13 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 			return fmt.Errorf("release pool: keygen idx=%d: %w", idx, err)
 		}
 		entry := ReleasePoolEntry{
-			Index:    idx,
-			WalletID: w.Name,
-			Address:  w.Address,
-			Network:  p.mintNetwork,
-			MintedAt: time.Now().UTC(),
+			Index:     idx,
+			WalletID:  w.Name,
+			Address:   w.Address,
+			Network:   p.mintNetwork,
+			Family:    string(w.AddressType),
+			PubKeyHex: w.ECDSAPubKeyHex,
+			MintedAt:  time.Now().UTC(),
 		}
 		if err := p.store.PutEntry(ctx, idx, entry); err != nil {
 			return fmt.Errorf("release pool: persist idx=%d: %w", idx, err)
@@ -252,18 +293,46 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 // WARN line is logged. Balance probe errors are logged at debug —
 // they're best-effort and must NOT block a swap from progressing.
 func (p *ReleasePool) Acquire(ctx context.Context, destinationNetwork string) (*ReleasePoolEntry, error) {
+	return p.AcquireForFamily(ctx, destinationNetwork, "")
+}
+
+// AcquireForFamily is the family-aware variant of Acquire. When
+// family != "", entries with Family != family are skipped. Useful
+// for multi-family deployments (EVM pool + XRP pool sharing one
+// ReleasePool instance) so a swap to an XRP network always gets an
+// XRP-family wallet.
+//
+// Empty family ⇒ same behaviour as Acquire (round-robin across all
+// entries). When NO entry of the requested family exists, returns
+// ErrEmptyPool — caller should fall back to deposit-as-release.
+func (p *ReleasePool) AcquireForFamily(ctx context.Context, destinationNetwork, family string) (*ReleasePoolEntry, error) {
 	p.mu.RLock()
 	n := len(p.entries)
 	if n == 0 {
 		p.mu.RUnlock()
 		return nil, ErrEmptyPool
 	}
-	idx := int(p.cursor.Add(1)-1) % n
-	if idx < 0 {
-		idx = -idx % n
+	// Build a family-filtered view. Cheap — pools are 5-20 entries.
+	var candidates []ReleasePoolEntry
+	if family == "" {
+		candidates = make([]ReleasePoolEntry, len(p.entries))
+		copy(candidates, p.entries)
+	} else {
+		for _, e := range p.entries {
+			if e.Family == family {
+				candidates = append(candidates, e)
+			}
+		}
 	}
-	entry := p.entries[idx]
 	p.mu.RUnlock()
+	if len(candidates) == 0 {
+		return nil, ErrEmptyPool
+	}
+	idx := int(p.cursor.Add(1)-1) % len(candidates)
+	if idx < 0 {
+		idx = -idx % len(candidates)
+	}
+	entry := candidates[idx]
 
 	// Best-effort low-balance alert. We DON'T short-circuit the swap
 	// here — the signing-driver gas pre-check does that with a
@@ -271,7 +340,11 @@ func (p *ReleasePool) Acquire(ctx context.Context, destinationNetwork string) (*
 	// operator observability so a slowly-draining release wallet
 	// surfaces in logs before it fails its first swap.
 	if p.Probe != nil && p.BalanceThresholdWei != nil && p.BalanceThresholdWei.Sign() > 0 {
-		p.checkBalance(ctx, &entry, destinationNetwork)
+		// Balance probe only meaningful for EVM today. XRP families
+		// have their own pre-check in the signing driver.
+		if family == "" || family == "eth" {
+			p.checkBalance(ctx, &entry, destinationNetwork)
+		}
 	}
 
 	return &entry, nil
