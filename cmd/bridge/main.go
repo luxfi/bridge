@@ -135,6 +135,14 @@ func main() {
 		"native-token balance threshold below which the release pool logs a WARN at Acquire time. Default 0.1 native (1e17 wei). Set to 0 to disable the alerter; the gas pre-check in the signing driver still runs and short-circuits swaps that would actually fail.")
 	disableGasPrecheck := flag.Bool("disable-gas-precheck", false,
 		"disable the signing-driver gas pre-check (eth_getBalance against the release wallet before signing). When enabled, swaps that can't cover destination-chain gas + value short-circuit to failed_insufficient_release_gas BEFORE consuming the 75s MPC ceremony.")
+	releasePoolSizeSOL := flag.Int("release-pool-size-sol", envOrInt("BRIDGE_RELEASE_POOL_SIZE_SOL", 5),
+		"size of the Solana (Ed25519) release-wallet pool. The signing driver rotates SOL wallets per swap independently of the EVM pool — different keygen curve, different address space. Default 5. Set 0 to disable SOL destinations entirely.")
+	releasePoolMintNetworkSOL := flag.String("release-pool-mint-network-sol", envOr("BRIDGE_RELEASE_POOL_MINT_NETWORK_SOL", "SOLANA_DEVNET"),
+		"network used for SOL release-pool keygen. The MPC produces a deterministic Ed25519 sol_address that works across every Solana network, so this only picks the address slot. Use SOLANA_MAINNET in prod.")
+	releaseBalanceThresholdLamports := flag.String("release-balance-threshold-lamports", envOr("BRIDGE_RELEASE_BALANCE_THRESHOLD_LAMPORTS", "1000000000"),
+		"lamport balance threshold below which the SOL release pool logs a WARN at Acquire time. Default 1 SOL (1e9 lamports). Set to 0 to disable the alerter; the SOL gas pre-check in the signing driver still runs.")
+	solBlockhashURL := flag.String("sol-blockhash-url", envOr("BRIDGE_SOL_BLOCKHASH_URL", ""),
+		"Override URL for the Solana getLatestBlockhash + getAccountInfo calls used by the assembler. When empty, defaults to txassembler.SOLDefaultBlockhashURL(--release-pool-mint-network-sol).")
 	mpcDashboardURL := flag.String("mpc-dashboard-url", envOr("BRIDGE_MPC_DASHBOARD_URL", ""),
 		"MPC dashboard API base URL (e.g. http://mpc-dashboard.lux-mpc.svc:8081). When set, SignForWallet routes through POST /v1/mpc/sign there. Required for live signing — the legacy ${MPC_URL}/sign path is NOT served by the live mpcd v2026-05 daemon.")
 	mpcDashboardToken := flag.String("mpc-dashboard-token", envOr("BRIDGE_MPC_DASHBOARD_TOKEN", ""),
@@ -402,6 +410,35 @@ func main() {
 		"mode", "pure_transfer",
 	)
 
+	// SOL assembler: counterpart of the EVM assembler for Solana
+	// destinations. Each registered network has its own blockhash URL
+	// + commitment level. Default to confirmed (fresh, low-risk).
+	solAsm := txassembler.NewSOLAssembler()
+	// Resolve the blockhash URL: explicit flag wins; otherwise pick
+	// the public RPC for whichever network the operator pinned the
+	// SOL pool to.
+	solBhURL := *solBlockhashURL
+	if solBhURL == "" {
+		solBhURL = txassembler.SOLDefaultBlockhashURL(*releasePoolMintNetworkSOL)
+	}
+	for _, net := range []string{"SOLANA_MAINNET", "SOLANA_DEVNET", "SOLANA_TESTNET"} {
+		u := solBhURL
+		if net != *releasePoolMintNetworkSOL {
+			// Other Solana networks get their public RPC default. The
+			// override only affects the operator-pinned network.
+			u = txassembler.SOLDefaultBlockhashURL(net)
+		}
+		if u == "" {
+			continue
+		}
+		solAsm.SetNetwork(net, txassembler.SOLNetworkConfig{BlockhashURL: u})
+	}
+	logger.Info("SOL assembler configured",
+		"networks", len(solAsm.Networks),
+		"mint_network", *releasePoolMintNetworkSOL,
+		"blockhash_url", solBhURL,
+	)
+
 	// Balance probe: shared by the release-pool low-balance alerter
 	// and the signing-driver gas pre-check. One http.Client per
 	// process is plenty.
@@ -448,6 +485,65 @@ func main() {
 		)
 	}
 
+	// SOL release pool: companion of the EVM pool, scoped to the
+	// Solana family. Family-namespaced persistence (releasepool:sol:NNNNNN)
+	// keeps it disjoint from the legacy EVM keyspace so an operator can
+	// grow or wipe one family independently of the other.
+	releasePoolSet := NewReleasePoolSet(logger)
+	if releasePool != nil {
+		releasePoolSet.EVM = releasePool
+	}
+	if *releasePoolSizeSOL > 0 && mchainClient != nil {
+		var solStore ReleasePoolStore
+		switch s := swapStore.(type) {
+		case *ZapStore:
+			fs, ferr := NewZapStoreFamily(s, FamilySOL)
+			if ferr != nil {
+				logger.Error("zap store family wrap (sol) failed", "err", ferr)
+				os.Exit(1)
+			}
+			solStore = fs
+		case *InMemoryStore:
+			fs, ferr := NewInMemoryStoreFamily(s, FamilySOL)
+			if ferr != nil {
+				logger.Error("inmem store family wrap (sol) failed", "err", ferr)
+				os.Exit(1)
+			}
+			solStore = fs
+		}
+		if solStore == nil {
+			logger.Warn("SOL release pool requested but swap store does not support family scoping",
+				"size_requested", *releasePoolSizeSOL,
+			)
+		} else {
+			thresholdLamports := new(big.Int)
+			if _, parseOK := thresholdLamports.SetString(*releaseBalanceThresholdLamports, 10); !parseOK {
+				logger.Error("invalid --release-balance-threshold-lamports",
+					"value", *releaseBalanceThresholdLamports,
+				)
+				os.Exit(1)
+			}
+			solPool := NewReleasePool(solStore, *releasePoolMintNetworkSOL, logger)
+			if thresholdLamports.Sign() > 0 {
+				solPool.BalanceThresholdWei = thresholdLamports // unit is per-family (lamports for SOL)
+				solPool.Probe = balanceProbe
+			}
+			bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			if err := solPool.Bootstrap(bootstrapCtx, mchainClient, *releasePoolSizeSOL); err != nil {
+				bootstrapCancel()
+				logger.Error("SOL release pool bootstrap failed", "err", err, "desired_size", *releasePoolSizeSOL)
+				os.Exit(1)
+			}
+			bootstrapCancel()
+			releasePoolSet.SOL = solPool
+			logger.Info("SOL release pool ready",
+				"size", solPool.Size(),
+				"mint_network", *releasePoolMintNetworkSOL,
+				"balance_threshold_lamports", thresholdLamports.String(),
+			)
+		}
+	}
+
 	// Signing driver: background goroutine that drives swaps in
 	// bridge_transfer_pending through MPC threshold signing. Requires
 	// an mchain client; without one the driver has nothing to call.
@@ -455,7 +551,13 @@ func main() {
 	signerCtx, signerCancel := context.WithCancel(context.Background())
 	if !*disableSigningDriver && mchainClient != nil {
 		signer = NewSigningDriver(swapStore, mchainClient, *signingInterval, logger)
-		signer.SetAssembler(asm) // produces wire-correct EVM txs
+		signer.SetAssembler(asm)       // produces wire-correct EVM txs
+		signer.SetSOLAssembler(solAsm) // produces wire-correct SOL txs
+		// PoolSet wins when present; the legacy single-pool stays as
+		// the fallback for callers that haven't migrated.
+		if releasePoolSet != nil && releasePoolSet.Size() > 0 {
+			signer.SetReleasePoolSet(releasePoolSet)
+		}
 		if releasePool != nil && releasePool.Size() > 0 {
 			signer.SetReleasePool(releasePool)
 		}
@@ -467,8 +569,9 @@ func main() {
 		}()
 		logger.Info("signing driver started",
 			"interval", *signingInterval,
-			"assembler", "evm-eip155",
+			"assembler", "evm-eip155+sol-v0",
 			"release_pool", releasePool != nil && releasePool.Size() > 0,
+			"release_pool_set_sizes", releasePoolSet.FamilySizes(),
 			"gas_precheck", !*disableGasPrecheck,
 		)
 	} else if *disableSigningDriver {
@@ -579,6 +682,13 @@ func main() {
 				"size":                  releasePool.Size(),
 				"mint_network":          *releasePoolMintNetwork,
 				"balance_threshold_wei": *releaseBalanceThresholdWei,
+			}
+		}
+		if releasePoolSet != nil && releasePoolSet.Size() > 0 {
+			body["release_pool_set"] = map[string]any{
+				"family_sizes":                    releasePoolSet.FamilySizes(),
+				"sol_mint_network":                *releasePoolMintNetworkSOL,
+				"sol_balance_threshold_lamports":  *releaseBalanceThresholdLamports,
 			}
 		}
 		return c.JSON(200, body)
