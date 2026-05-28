@@ -9,13 +9,21 @@ import (
 	"time"
 )
 
-// swap_store.go: native swap persistence for cmd/bridge.
+// swap_store.go: denormalized UX cache for the cmd/bridge daemon.
 //
-// The Go binary owns swap CRUD now — BridgeVM is the LP-333 signer-set
-// manager, not a swap API. This store is the source of truth for
-// pending / in-flight / completed bridge requests; `cmd/bridge` is the
-// "centralized helper" the boss described, with state durably (well,
-// in-memory for now) tracked here.
+// AUTHORITATIVE STATE LIVES ON THE B-CHAIN. The bridge is
+// permissionless and non-custodial — chains/bridgevm's swap store
+// (built atop the validator quorum's consensus) is the source of truth
+// for pending / in-flight / completed bridge requests. This local
+// store is a cache so the daemon's HTTP API can answer reads quickly
+// without round-tripping to /ext/bc/B/rpc for every request.
+//
+// ON CONFLICT, B-CHAIN WINS. Run `bridge --resync-swaps` to rebuild
+// the local cache from authoritative chain state. The daemon refuses
+// to mutate swap state in a way that contradicts what B-Chain has
+// already accepted; pending writes that haven't yet been observed on
+// chain are best-effort and will be reconciled by --resync-swaps or
+// by the deposit-watcher's next tick (whichever happens first).
 //
 // The `SwapStore` interface is the seam where hanzoai/base or another
 // durable backend slots in later. `InMemoryStore` is the dev default:
