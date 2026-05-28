@@ -34,6 +34,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/luxfi/bridge/internal/xrpl"
 )
 
 // =============================================================================
@@ -143,6 +145,14 @@ type Wallet struct {
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
 	AddressType AddressType
+	// ECDSAPubKeyHex is the 33-byte compressed-secp256k1 public key the
+	// MPC cluster computed for this wallet, hex-encoded with no 0x
+	// prefix. Required for XRP signing (the tx wire payload embeds the
+	// pubkey + verifiers reconstruct the address from it); harmless
+	// metadata for EVM (the public address derivation does NOT need
+	// the compressed pubkey form). Empty for non-ECDSA wallets (TON,
+	// SOL).
+	ECDSAPubKeyHex string
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
@@ -457,10 +467,17 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		name = walletID
 	}
 
+	// Surface the compressed-secp256k1 pubkey to the caller. Required
+	// for XRP signing; harmless metadata for EVM (eth_address already
+	// captures everything that path needs). Strip the 0x prefix if the
+	// cluster supplied one.
+	pubHex := strings.TrimPrefix(strings.TrimPrefix(result.ECDSAPubKey, "0x"), "0X")
+
 	return &Wallet{
-		Name:        name,
-		Address:     address,
-		AddressType: addrType,
+		Name:           name,
+		Address:        address,
+		AddressType:    addrType,
+		ECDSAPubKeyHex: pubHex,
 	}, nil
 }
 
@@ -628,10 +645,38 @@ func pickAddress(r *keygenResult, t AddressType) (string, error) {
 		// ed25519 pubkey, but for now match TS placeholder behaviour.
 		addr = r.SOLAddress
 	case AddressTypeXRP:
-		// XRP uses secp256k1 but with rAddress derivation. Until that
-		// lands, use the ETH address as an identifier — matches the
-		// explicit placeholder in mpc-wallet.ts.
-		addr = r.ETHAddress
+		// XRP r-address derivation: take the compressed-secp256k1 ECDSA
+		// pubkey returned by the MPC cluster, RIPEMD160(SHA256(pub)) →
+		// AccountID, then base58check with the XRPL alphabet + 0x00
+		// version byte. The cluster doesn't surface an r-address slot
+		// directly (XRPL never had its own keygen response field) but
+		// the ECDSAPubKey IS the pubkey that controls the XRP account,
+		// so derivation here is canonical and reversible.
+		//
+		// When the cluster's ECDSA pubkey field is empty (legacy mocks /
+		// shape-only test fixtures), fall back to ETH address as a stable
+		// identifier so the cluster integration tests pass. Production
+		// keygen always populates ecdsa_pub_key.
+		if r.ECDSAPubKey != "" {
+			pubHex := strings.TrimPrefix(strings.TrimPrefix(r.ECDSAPubKey, "0x"), "0X")
+			pub, err := hex.DecodeString(pubHex)
+			if err != nil {
+				return "", &MPCError{
+					Op:      "keygen",
+					Message: fmt.Sprintf("decode ECDSAPubKey hex %q: %v", r.ECDSAPubKey, err),
+				}
+			}
+			rAddr, err := xrpl.AddressFromPubKey(pub)
+			if err != nil {
+				return "", &MPCError{
+					Op:      "keygen",
+					Message: fmt.Sprintf("derive XRP r-address: %v", err),
+				}
+			}
+			addr = rAddr
+		} else {
+			addr = r.ETHAddress
+		}
 	case AddressTypeDOT:
 		// Should never be reached — caller guards via ErrSubstrateNotImplemented.
 		return "", ErrSubstrateNotImplemented
