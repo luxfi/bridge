@@ -28,33 +28,72 @@ type Brand struct {
 	BrandHost string `yaml:"brandHost"`
 }
 
-// Network is a supported chain. internalName is the slug used by the SPA;
-// chainID is the EVM chain ID (or substrate paraID); explorerTpl is the
-// {tx} / {addr} URL template the SPA renders.
+// Network is a supported chain. JSON tags use snake_case to match the
+// wire contract the SPA's network-mapper consumes
+// (pkg/bridge/src/app/lib/network-mapper.ts::ApiNetwork). The legacy
+// app/server emitted snake_case (Prisma JSON convention); the embedded
+// SPA was written against that shape, so cmd/bridge has to honor it
+// even though Go-side fields are PascalCase.
 type Network struct {
-	InternalName     string `yaml:"internalName"`
-	DisplayName      string `yaml:"displayName"`
-	NativeCurrency   string `yaml:"nativeCurrency"`
-	IsTestnet        bool   `yaml:"isTestnet"`
-	IsFeatured       bool   `yaml:"isFeatured"`
-	Logo             string `yaml:"logo"`
-	ChainID          string `yaml:"chainId"`
-	Type             string `yaml:"type"` // evm | substrate | bitcoin
-	AvgCompletion    string `yaml:"avgCompletion"`
-	TxExplorerTpl    string `yaml:"txExplorerTpl"`
-	AddrExplorerTpl  string `yaml:"addrExplorerTpl"`
+	InternalName    string `yaml:"internalName"      json:"internal_name"`
+	DisplayName     string `yaml:"displayName"       json:"display_name"`
+	NativeCurrency  string `yaml:"nativeCurrency"    json:"native_currency"`
+	IsTestnet       bool   `yaml:"isTestnet"         json:"is_testnet"`
+	IsFeatured      bool   `yaml:"isFeatured"        json:"is_featured"`
+	Logo            string `yaml:"logo"              json:"logo,omitempty"`
+	ChainID         string `yaml:"chainId"           json:"chain_id"`
+	Type            string `yaml:"type"              json:"type"` // evm | substrate | bitcoin | solana | ton | xrp | cardano
+	AvgCompletion   string `yaml:"avgCompletion"     json:"average_completion_time"`
+	TxExplorerTpl   string `yaml:"txExplorerTpl"     json:"transaction_explorer_template"`
+	AddrExplorerTpl string `yaml:"addrExplorerTpl"   json:"account_explorer_template"`
+	// Status defaults to "active" at marshal time when empty. The SPA's
+	// transformNetworks() drops anything that isn't "active", so an
+	// unset status without this default would zero out the chain list.
+	Status string `yaml:"status"            json:"status,omitempty"`
+
+	// Broadcast is the per-network broadcast-endpoint configuration.
+	// Optional — when unset the bridge falls back to internal default
+	// URL tables (see internal/broadcast/client.go::rpcURLs). Today
+	// the only consumer is the TON family: TON Center requires an
+	// authenticated URL + API key, and the broadcast layer reads
+	// both from here.
+	Broadcast *NetworkBroadcast `yaml:"broadcast,omitempty" json:"-"`
 }
 
-// Token is an asset bridged on one or more networks. The `decimals` and
-// `contract` fields are per-network; expand these once we add multi-chain
-// token mapping (matches the Node backend's `Currency` model).
+// NetworkBroadcast captures the destination-side broadcast endpoint
+// for non-EVM networks. EVM networks use the legacy rpc fields and
+// the package's URL table — see internal/broadcast.
+type NetworkBroadcast struct {
+	// URL is the broadcast endpoint. For TON, the toncenter sendBoc
+	// URL (e.g. https://toncenter.com/api/v2/sendBoc). The balance
+	// probe derives the getAddressBalance URL by string-replacing
+	// /sendBoc → /getAddressBalance, so the same base configures both.
+	URL string `yaml:"url" json:"-"`
+	// APIKey is the X-API-Key for authenticated requests. Empty ⇒
+	// no auth header — works against unauthenticated dev gateways,
+	// hits TON Center's 1 req/s rate-limit at production scale.
+	APIKey string `yaml:"apiKey" json:"-"`
+}
+
+// Token is an asset bridged on one or more networks. JSON tags mirror
+// the SPA's ApiCurrency shape so cmd/bridge can synthesize the nested
+// `currencies` array on /api/networks responses without a transform
+// layer in the handler.
 type Token struct {
-	Asset    string `yaml:"asset"`
-	Name     string `yaml:"name"`
-	Logo     string `yaml:"logo"`
-	Decimals int    `yaml:"decimals"`
-	Contract string `yaml:"contract"`
-	Network  string `yaml:"network"`
+	Asset    string `yaml:"asset"    json:"asset"`
+	Name     string `yaml:"name"     json:"name"`
+	Logo     string `yaml:"logo"     json:"logo,omitempty"`
+	Decimals int    `yaml:"decimals" json:"decimals"`
+	Contract string `yaml:"contract" json:"contract_address,omitempty"`
+	Network  string `yaml:"network"  json:"-"` // server-side join key; not surfaced in the per-currency JSON
+	// Status defaults to "active" at marshal time when empty.
+	Status string `yaml:"status"   json:"status,omitempty"`
+	// Deposit / withdrawal flags default to true when YAML omits them
+	// (handled in the /networks handler — Go zero-value for bool is
+	// false, which would silently disable every currency).
+	IsDepositEnabled    *bool `yaml:"isDepositEnabled"    json:"is_deposit_enabled,omitempty"`
+	IsWithdrawalEnabled *bool `yaml:"isWithdrawalEnabled" json:"is_withdrawal_enabled,omitempty"`
+	IsRefuelEnabled     *bool `yaml:"isRefuelEnabled"     json:"is_refuel_enabled,omitempty"`
 }
 
 // Limits are per-token min/max swap caps. Real impl reads from KMS/admin,

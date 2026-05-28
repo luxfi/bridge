@@ -1,0 +1,406 @@
+// Package broadcast pushes a signed destination-chain transaction
+// onto its target RPC and returns the transaction hash. Wraps the
+// chain-specific submission format (EVM eth_sendRawTransaction,
+// Bitcoin sendrawtransaction, Solana sendTransaction, etc.) so the
+// rest of cmd/bridge can stay chain-agnostic.
+//
+// Scope:
+//   - EVM (Ethereum / Sepolia / Lux / Base / Polygon / Arbitrum /
+//     Optimism / Avalanche / BSC / Holesky / Zora / Blast / Linea):
+//     implemented via JSON-RPC eth_sendRawTransaction.
+//   - BTC (mainnet / testnet): implemented via mempool.space's REST
+//     POST /api/tx (or a Bitcoin Core override). See btc.go.
+//   - Solana (mainnet / devnet / testnet): implemented via JSON-RPC
+//     sendTransaction with encoding=base64. The "raw tx" the caller
+//     hands in is the base64-encoded signed transaction produced by
+//     txassembler.SOLAssembler.Finalize.
+//   - Polkadot / Substrate (POLKADOT_MAINNET / POLKADOT_TESTNET /
+//     KUSAMA_MAINNET): implemented via author_submitExtrinsic. See dot.go.
+//   - XRP Ledger (XRP_MAINNET / XRP_TESTNET): implemented via rippled's
+//     `submit` JSON-RPC. See xrp.go for the engine_result classification.
+//   - TON (mainnet / testnet): implemented via TON Center sendBoc.
+//     See ton.go.
+//
+// All families above are implemented today. Adding a new family is
+// a straightforward follow-up — different REST/RPC contracts, same
+// shape: register a default URL, add a case to the Broadcast switch,
+// implement the chain-specific submit.
+//
+// Trust model: the destination RPC is treated as untrusted transport.
+// A 200 response means the node ACCEPTED the tx — it does NOT mean
+// the tx will be included. Callers should still poll for inclusion;
+// that's outside this package's job.
+//
+// Concurrency: a *Client is safe for concurrent use.
+package broadcast
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"sync/atomic"
+	"time"
+
+	"github.com/luxfi/bridge/internal/mchain"
+)
+
+// =============================================================================
+// RPC endpoints — destination-chain targets
+// =============================================================================
+
+// rpcURLs maps a network internal_name to the JSON-RPC endpoint used
+// to broadcast its signed transactions. Distinct from
+// depositcheck.rpcURLs because the destination side may use a
+// different node (e.g. a write-permissioned validator instead of a
+// public read-only endpoint).
+var rpcURLs = map[string]string{
+	// EVM
+	"ETHEREUM_MAINNET": "https://eth.llamarpc.com",
+	"ETHEREUM_SEPOLIA": "https://rpc.sepolia.org",
+	"BASE_MAINNET":     "https://mainnet.base.org",
+	"BASE_SEPOLIA":     "https://sepolia.base.org",
+	"LUX_MAINNET":      "https://api.lux.network/ext/bc/C/rpc",
+	"LUX_TESTNET":      "https://api.lux-test.network/ext/bc/C/rpc",
+	"ZOO_MAINNET":      "https://api.zoo.network/ext/bc/Z/rpc",
+	"ZOO_TESTNET":      "https://api.zoo-test.network/ext/bc/Z/rpc",
+	"BSC_MAINNET":      "https://bsc-dataseed.binance.org",
+	"BSC_TESTNET":      "https://data-seed-prebsc-1-s1.binance.org:8545",
+	"POLYGON_MAINNET":  "https://polygon-rpc.com",
+	"ARBITRUM_MAINNET": "https://arb1.arbitrum.io/rpc",
+	"OPTIMISM_MAINNET": "https://mainnet.optimism.io",
+	"AVAX_MAINNET":     "https://api.avax.network/ext/bc/C/rpc",
+	"HOLESKY_TESTNET":  "https://ethereum-holesky-rpc.publicnode.com",
+	"ZORA_MAINNET":     "https://rpc.zora.energy",
+	"BLAST_MAINNET":    "https://rpc.blast.io",
+	"LINEA_MAINNET":    "https://rpc.linea.build",
+	// BTC is registered by an init() in btc.go (so the BTC defaults
+	// live alongside the BTC broadcaster).
+	// Solana — JSON-RPC with sendTransaction. Default to devnet for
+	// safety on first deploys; operators flip via --release-pool-mint-
+	// network=SOLANA_MAINNET + a real mainnet provider URL through
+	// --source-rpc-overrides.
+	"SOLANA_MAINNET": "https://api.mainnet-beta.solana.com",
+	"SOLANA_DEVNET":  "https://api.devnet.solana.com",
+	"SOLANA_TESTNET": "https://api.testnet.solana.com",
+	// XRP Ledger — rippled JSON-RPC ports (not WebSocket).
+	// Mainnet `s1.ripple.com` is the public load-balanced cluster;
+	// testnet `s.altnet.rippletest.net` is the Ripple-hosted testnet.
+	// Both are HTTP+TLS (https), with the rippled-default JSON-RPC
+	// port :51234 explicitly. Operators wanting a private node should
+	// shadow via --source-rpc-overrides.
+	"XRP_MAINNET": "https://s1.ripple.com:51234/",
+	"XRP_TESTNET": "https://s.altnet.rippletest.net:51234/",
+	// TON still needs a chain-specific broadcast handler. Adding it
+	// is a separate impl in this file plus a switch case in Broadcast.
+}
+
+// RPCURLFor returns the configured upstream URL for a network. "" if
+// not configured.
+func RPCURLFor(network string) string { return rpcURLs[network] }
+
+// =============================================================================
+// Errors
+// =============================================================================
+
+// ErrUnsupportedNetwork — the network isn't in the rpcURLs table.
+var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
+
+// ErrFamilyNotImplemented — the network's address-family broadcaster
+// isn't implemented yet. All five non-EVM families (BTC, SOL, DOT,
+// XRP, TON) plus EVM itself are wired in this package today; this
+// error is reserved for new families added in the future.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
+
+// ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
+// this distinctly so the broadcast driver can tell "missing tx
+// assembly" from "RPC failure" and skip rather than retry forever.
+var ErrEmptyRawTx = errors.New("broadcast: empty rawTxHex (the tx assembler hasn't populated swap.DestRawTx yet)")
+
+// RPCError surfaces upstream JSON-RPC failures (e.g. nonce already
+// used, gas too low, invalid signature). Inspect Code/HTTPStatus.
+type RPCError struct {
+	Method     string
+	Code       int
+	HTTPStatus int
+	Message    string
+	Data       json.RawMessage
+}
+
+func (e *RPCError) Error() string {
+	if e.HTTPStatus != 0 {
+		return fmt.Sprintf("broadcast: %s HTTP %d: %s", e.Method, e.HTTPStatus, e.Message)
+	}
+	return fmt.Sprintf("broadcast: %s rpc %d: %s", e.Method, e.Code, e.Message)
+}
+
+// =============================================================================
+// Client
+// =============================================================================
+
+// DefaultTimeout is the per-call timeout for a single broadcast.
+// 15 s is generous — most destination RPCs respond in <500 ms but
+// some testnets are slow.
+const DefaultTimeout = 15 * time.Second
+
+// Client is the broadcast client. Zero-value usable; populate URL
+// overrides for production keys / private endpoints.
+type Client struct {
+	// Timeout bounds each individual broadcast call. Zero ⇒ DefaultTimeout.
+	Timeout time.Duration
+
+	// HTTPClient is the underlying http.Client. Zero ⇒ http.DefaultClient.
+	HTTPClient *http.Client
+
+	// RPCURLOverrides shadows specific networks with custom URLs (e.g.
+	// an authenticated provider). Checked before the package table.
+	RPCURLOverrides map[string]string
+
+	// TONAPIKeys maps a TON network name (TON_MAINNET / TON_TESTNET) to
+	// the X-API-Key value used when calling TON Center. Required at
+	// production rates — TON Center throttles unauthenticated callers
+	// to ~1 req/s. Populated via SetTONAPIKey (see ton.go) or directly
+	// by main.go from networks.yaml.
+	TONAPIKeys map[string]string
+
+	// callSeq is a monotonic JSON-RPC `id` counter. Atomic — safe for
+	// concurrent use without external locking.
+	callSeq atomic.Uint64
+}
+
+// New is a convenience constructor.
+func New(timeout time.Duration) *Client { return &Client{Timeout: timeout} }
+
+func (c *Client) httpClient() *http.Client {
+	if c.HTTPClient != nil {
+		return c.HTTPClient
+	}
+	return http.DefaultClient
+}
+
+func (c *Client) timeout() time.Duration {
+	if c.Timeout > 0 {
+		return c.Timeout
+	}
+	return DefaultTimeout
+}
+
+func (c *Client) rpcURL(network string) string {
+	if u, ok := c.RPCURLOverrides[network]; ok && u != "" {
+		return u
+	}
+	return rpcURLs[network]
+}
+
+// =============================================================================
+// Broadcast — top-level dispatch
+// =============================================================================
+
+// BroadcastResult is the success payload — the destination-chain
+// transaction hash returned by the upstream node. Callers store this
+// in Swap.DestTxHash for SDK consumption.
+type BroadcastResult struct {
+	// TxHash is the destination-chain transaction hash (0x-prefixed
+	// for EVM; chain-specific format otherwise).
+	TxHash string `json:"tx_hash"`
+}
+
+// Broadcast pushes a signed, raw destination-chain transaction to the
+// network's RPC and returns the transaction hash on success.
+//
+// For EVM, rawTxHex must be the 0x-prefixed RLP-encoded signed tx
+// (i.e. the value you'd pass to `eth_sendRawTransaction`).
+//
+// Errors:
+//   - ErrUnsupportedNetwork           network not in the table / overrides.
+//   - ErrFamilyNotImplemented         TON — TODO. EVM/BTC/SOL/DOT/XRP implemented.
+//   - ErrEmptyRawTx                   rawTxHex == "".
+//   - *RPCError                       upstream returned a JSON-RPC error
+//     or non-2xx HTTP.
+//   - *DOTBroadcastError              Polkadot author_submitExtrinsic rejected
+//     the extrinsic; check Retryable bit.
+//   - context.Canceled/DeadlineExceeded on caller or per-call timeout.
+func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*BroadcastResult, error) {
+	if rawTxHex == "" {
+		return nil, ErrEmptyRawTx
+	}
+	url := c.rpcURL(network)
+	if url == "" {
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, network)
+	}
+
+	// Family dispatch. We use mchain.AddressTypeFor as the canonical
+	// network→family mapping (it's already the project's source of
+	// truth for which family a network belongs to). EVM uses
+	// eth_sendRawTransaction; BTC uses mempool.space POST /api/tx (or
+	// the operator's own Bitcoin Core via Client.RPCURLOverrides);
+	// SOL uses sendTransaction; DOT uses author_submitExtrinsic;
+	// XRP uses rippled's `submit` JSON-RPC; TON uses TON Center sendBoc.
+	switch mchain.AddressTypeFor(network) {
+	case mchain.AddressTypeETH:
+		return c.broadcastEVM(ctx, url, rawTxHex)
+	case mchain.AddressTypeBTC:
+		return c.broadcastBTC(ctx, url, rawTxHex)
+	case mchain.AddressTypeSOL:
+		return c.broadcastSOL(ctx, url, rawTxHex)
+	case mchain.AddressTypeDOT:
+		return c.broadcastDOT(ctx, url, rawTxHex)
+	case mchain.AddressTypeXRP:
+		return c.broadcastXRPDirect(ctx, url, rawTxHex)
+	case mchain.AddressTypeTON:
+		return c.broadcastTON(ctx, url, network, rawTxHex)
+	default:
+		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
+	}
+}
+
+// =============================================================================
+// EVM — eth_sendRawTransaction
+// =============================================================================
+
+func (c *Client) broadcastEVM(ctx context.Context, url, rawTxHex string) (*BroadcastResult, error) {
+	// Normalize to 0x-prefixed.
+	if !strings.HasPrefix(rawTxHex, "0x") && !strings.HasPrefix(rawTxHex, "0X") {
+		rawTxHex = "0x" + rawTxHex
+	}
+
+	type ethSendResp struct {
+		Result string `json:"result"`
+		Error  *struct {
+			Code    int             `json:"code"`
+			Message string          `json:"message"`
+			Data    json.RawMessage `json:"data,omitempty"`
+		} `json:"error,omitempty"`
+	}
+
+	var resp ethSendResp
+	if err := c.jsonRPC(ctx, url, "eth_sendRawTransaction",
+		[]any{rawTxHex}, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, &RPCError{
+			Method:  "eth_sendRawTransaction",
+			Code:    resp.Error.Code,
+			Message: resp.Error.Message,
+			Data:    resp.Error.Data,
+		}
+	}
+	if resp.Result == "" {
+		return nil, &RPCError{
+			Method:  "eth_sendRawTransaction",
+			Code:    -32603,
+			Message: "empty tx hash",
+		}
+	}
+	return &BroadcastResult{TxHash: resp.Result}, nil
+}
+
+// =============================================================================
+// HTTP helper
+// =============================================================================
+
+// jsonRPC POSTs a JSON-RPC 2.0 call and decodes into out.
+func (c *Client) jsonRPC(ctx context.Context, url, method string, params any, out any) error {
+	body, err := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      c.callSeq.Add(1),
+		"method":  method,
+		"params":  params,
+	})
+	if err != nil {
+		return fmt.Errorf("broadcast: marshal %s: %w", method, err)
+	}
+
+	callCtx, cancel := context.WithTimeout(ctx, c.timeout())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(callCtx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		return &RPCError{Method: method, Code: -32000, Message: err.Error()}
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return &RPCError{
+			Method:     method,
+			HTTPStatus: resp.StatusCode,
+			Message:    fmt.Sprintf("HTTP %d: %s", resp.StatusCode, truncate(respBody, 200)),
+		}
+	}
+	if err := json.Unmarshal(respBody, out); err != nil {
+		return &RPCError{
+			Method:     method,
+			HTTPStatus: resp.StatusCode,
+			Message:    fmt.Sprintf("decode response: %v (body=%s)", err, truncate(respBody, 200)),
+		}
+	}
+	return nil
+}
+
+func truncate(b []byte, n int) string {
+	if len(b) <= n {
+		return string(b)
+	}
+	return string(b[:n]) + "…"
+}
+
+// doPlainJSON POSTs `body` as application/json to `url` and decodes
+// the response into `out`. Used by non-JSON-RPC-2.0 endpoints — most
+// notably rippled, which speaks a {method,params}/{result} envelope
+// rather than {jsonrpc:"2.0",id,result,error}.
+//
+// Returns *RPCError on transport failure or non-2xx response.
+func doPlainJSON(ctx context.Context, client *http.Client, timeout time.Duration, url string, body []byte, out any) error {
+	callCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(callCtx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	if client == nil {
+		client = http.DefaultClient
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		return &RPCError{Method: "submit", Code: -32000, Message: err.Error()}
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return &RPCError{
+			Method:     "submit",
+			HTTPStatus: resp.StatusCode,
+			Message:    fmt.Sprintf("HTTP %d: %s", resp.StatusCode, truncate(respBody, 200)),
+		}
+	}
+	if err := json.Unmarshal(respBody, out); err != nil {
+		return &RPCError{
+			Method:     "submit",
+			HTTPStatus: resp.StatusCode,
+			Message:    fmt.Sprintf("decode response: %v (body=%s)", err, truncate(respBody, 200)),
+		}
+	}
+	return nil
+}

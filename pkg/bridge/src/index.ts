@@ -26,6 +26,7 @@ export type {
   BridgeConfig,
   BridgeKMSConfig,
   BridgeMPCConfig,
+  BridgeRpcConfig,
   BridgeWalletConfig,
   MountBridgeOptions,
 } from './types'

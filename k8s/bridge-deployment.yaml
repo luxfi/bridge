@@ -1,0 +1,308 @@
+---
+# Lux Bridge — unified Go binary (cmd/bridge).
+#
+# Replaces the legacy split of:
+#   - bridge-server   (Express + Prisma Node API)
+#   - bridge-ui       (Vite SPA on ghcr.io/hanzoai/spa)
+# with a single image (ghcr.io/luxfi/bridge:<tag>) that embeds the SPA
+# via go:embed and serves the /v1/bridge/* API natively.
+#
+# Assumes the lux-bridge namespace + bridge-secrets Secret already exist
+# (created by k8s/mpc-deployment.yaml). Required secret keys:
+#   - bridge-secrets.mpc-api-token   bearer token for the MPC daemon
+# Optional secret keys (referenced only if you uncomment the env entry):
+#   - bridge-secrets.bchain-rpc-url  BridgeVM JSON-RPC base URL
+#
+# Apply:
+#   kubectl apply -f k8s/bridge-deployment.yaml
+#
+# The MPC StatefulSet + Service from k8s/mpc-deployment.yaml must already
+# be running — this deployment talks to mpc-api-svc.lux-bridge.svc:8081.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lux-bridge-config
+  namespace: lux-bridge
+data:
+  networks.yaml: |
+    # Source of truth for the SPA + API's supported chains + tokens.
+    # Edit this ConfigMap and roll the deployment to add/remove networks
+    # without rebuilding the image.
+    brand:
+      name: Lux Bridge
+      title: Lux Bridge
+      logoUrl: /logo.svg
+      iconUrl: /icon.svg
+      brandHost: bridge.lux.network
+
+    networks:
+      - internalName: lux-mainnet
+        displayName: Lux
+        nativeCurrency: LUX
+        chainId: "96369"
+        type: evm
+        isFeatured: true
+        avgCompletion: 1m
+        txExplorerTpl: https://explore.lux.network/tx/{tx}
+        addrExplorerTpl: https://explore.lux.network/address/{addr}
+
+      - internalName: ethereum-mainnet
+        displayName: Ethereum
+        nativeCurrency: ETH
+        chainId: "1"
+        type: evm
+        avgCompletion: 5m
+        txExplorerTpl: https://etherscan.io/tx/{tx}
+        addrExplorerTpl: https://etherscan.io/address/{addr}
+
+      - internalName: base-mainnet
+        displayName: Base
+        nativeCurrency: ETH
+        chainId: "8453"
+        type: evm
+        avgCompletion: 2m
+        txExplorerTpl: https://basescan.org/tx/{tx}
+        addrExplorerTpl: https://basescan.org/address/{addr}
+
+      - internalName: bsc-mainnet
+        displayName: BNB Chain
+        nativeCurrency: BNB
+        chainId: "56"
+        type: evm
+        avgCompletion: 2m
+        txExplorerTpl: https://bscscan.com/tx/{tx}
+        addrExplorerTpl: https://bscscan.com/address/{addr}
+
+    tokens:
+      - asset: LUX
+        name: Lux
+        decimals: 18
+        network: lux-mainnet
+
+      - asset: ETH
+        name: Ether
+        decimals: 18
+        network: ethereum-mainnet
+
+      - asset: USDC
+        name: USD Coin
+        decimals: 6
+        contract: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        network: ethereum-mainnet
+
+      - asset: USDT
+        name: Tether USD
+        decimals: 6
+        contract: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        network: ethereum-mainnet
+
+      - asset: USDC
+        name: USD Coin
+        decimals: 6
+        contract: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        network: base-mainnet
+
+    limits:
+      minUSD: 10
+      maxUSD: 100000
+      per:
+        USDT: {minUSD: 10, maxUSD: 100000}
+        USDC: {minUSD: 10, maxUSD: 100000}
+---
+# PersistentVolumeClaim — the swap store (zapdb / Lux-flavored Badger v4)
+# lives here. Single-writer: zapdb takes an exclusive directory lock,
+# which is why the Deployment is pinned to replicas: 1 with Recreate.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lux-bridge-data
+  namespace: lux-bridge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lux-bridge
+  namespace: lux-bridge
+  labels:
+    app: lux-bridge
+    component: api
+spec:
+  # Single-writer: zapdb takes an exclusive dir lock. Scale-out
+  # requires migrating swap state to a shared external store first.
+  replicas: 1
+  # Recreate (not RollingUpdate) — the new pod can't claim the PV
+  # lock while the old pod still holds it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: lux-bridge
+  template:
+    metadata:
+      labels:
+        app: lux-bridge
+        component: api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bridge
+          image: ghcr.io/luxfi/bridge:latest
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: BRIDGE_ADDR
+              value: ":8080"
+            - name: BRIDGE_CONFIG
+              value: /etc/bridge/networks.yaml
+            # Persistent swap store. The PVC mounted at this path
+            # holds the zapdb files (memtable, vlog, sst). Removing
+            # this env var falls back to the in-memory store —
+            # restart loses state.
+            - name: BRIDGE_DATA_DIR
+              value: /var/lib/lux-bridge
+            # Empty disables the legacy Node backend reverse proxy. All
+            # /v1/bridge/* routes resolve through native handlers.
+            - name: BRIDGE_BACKEND_URL
+              value: ""
+            # BridgeVM (b-chain) RPC. Leave unset until the BridgeVM is
+            # available — the swap/quote routes still serve from native
+            # state when bchain is offline.
+            - name: BRIDGE_BCHAIN_URL
+              value: ""
+            # MPC keygen + signing daemon (mpcd) exposed by the StatefulSet
+            # in mpc-deployment.yaml. The service forwards :8081 → :8080.
+            - name: BRIDGE_MPC_URL
+              value: http://mpc-api-svc.lux-bridge.svc:8081
+            - name: BRIDGE_MPC_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-secrets
+                  key: mpc-api-token
+            - name: BRIDGE_MPC_ORG_ID
+              value: bridge
+            # Bridge security profile. classical-compat = user-facing UI to
+            # external L1s. Pin strict-pq for internal Lux↔Lux only.
+            - name: BRIDGE_PROFILE
+              value: classical-compat
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bridge
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/lux-bridge
+            - name: tmp
+              mountPath: /tmp
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 2
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: config
+          configMap:
+            name: lux-bridge-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: lux-bridge-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 50Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lux-bridge
+  namespace: lux-bridge
+  labels:
+    app: lux-bridge
+spec:
+  type: ClusterIP
+  selector:
+    app: lux-bridge
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+---
+# Ingress for the unified binary. Routes both the SPA (/) and the API
+# (/v1/bridge/*) to the same Service — the binary serves both. Replaces
+# the legacy split routing in mpc-deployment.yaml's bridge-ingress, which
+# fanned /v1/ to opnet-watcher and / to bridge-ui.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lux-bridge
+  namespace: lux-bridge
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: ingress
+  tls:
+    - hosts:
+        - bridge.lux.network
+        - bridge-api.lux.network
+      secretName: lux-bridge-tls
+  rules:
+    - host: bridge.lux.network
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lux-bridge
+                port:
+                  number: 80
+    - host: bridge-api.lux.network
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lux-bridge
+                port:
+                  number: 80
+---
+# NOTE: no HorizontalPodAutoscaler. The swap store is a single-writer
+# embedded KV (zapdb with exclusive dir lock). Scaling beyond 1 pod
+# requires migrating swap state to a shared external store first.
+#
+# NOTE: no PodDisruptionBudget. With replicas=1 a PDB would either
+# block drains entirely (minAvailable=1) or be a no-op (minAvailable=0).
+# Operators scale to 0 manually for planned maintenance.
