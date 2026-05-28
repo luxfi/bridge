@@ -223,13 +223,15 @@ func (d *RefundDriver) Tick(ctx context.Context) { d.tick(ctx) }
 
 func (d *RefundDriver) tick(ctx context.Context) {
 	d.ticks.Add(1)
+
+	// Path 1: legacy — broadcasting swaps stuck on insufficient funds.
+	// Trigger requires the 90 s grace window since LastErrorAt.
 	swaps, err := d.store.List(ctx, SwapFilter{Status: SwapStatusBroadcasting})
 	if err != nil {
 		d.listErrors.Add(1)
 		if d.logger != nil {
 			d.logger.Warn("refund driver: list broadcasting swaps", "err", err)
 		}
-		return
 	}
 	now := time.Now().UTC()
 	for _, sw := range swaps {
@@ -241,6 +243,28 @@ func (d *RefundDriver) tick(ctx context.Context) {
 		}
 		d.candidates.Add(1)
 		d.refundOne(ctx, sw)
+	}
+
+	// Path 2: stale-quote handoff from the signing driver. These swaps
+	// are already tagged for refund — no insufficient-funds gate, no
+	// grace window. Refund immediately.
+	pending, err := d.store.List(ctx, SwapFilter{Status: SwapStatusRefundPending})
+	if err != nil {
+		d.listErrors.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("refund driver: list refund_pending swaps", "err", err)
+		}
+		return
+	}
+	for _, sw := range pending {
+		if ctx.Err() != nil {
+			return
+		}
+		if sw.Sender == "" || sw.DepositAddress == "" {
+			continue
+		}
+		d.candidates.Add(1)
+		d.refundPending(ctx, sw)
 	}
 }
 
@@ -299,6 +323,46 @@ func (d *RefundDriver) refundOne(ctx context.Context, sw *Swap) {
 		)
 	}
 
+	d.executeRefund(ctx, sw, walletID, depositAddr)
+}
+
+// refundPending handles the stale-quote entry into the refund pipeline.
+// The signing driver has already moved the swap to SwapStatusRefundPending
+// (with LastError="quote_stale: ..."); we claim it into SwapStatusRefunding
+// and run the same balance-sweep flow as refundOne.
+func (d *RefundDriver) refundPending(ctx context.Context, sw *Swap) {
+	walletID := extractWalletID(sw.DepositAddress)
+	depositAddr := extractDepositAddress(sw.DepositAddress)
+	if walletID == "" || depositAddr == "" {
+		return
+	}
+
+	claimed, err := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusRefundPending {
+			return
+		}
+		s.Status = SwapStatusRefunding
+	})
+	if err != nil || claimed == nil || claimed.Status != SwapStatusRefunding {
+		return
+	}
+	if d.logger != nil {
+		d.logger.Info("refund triggered (stale quote)",
+			"swap_id", sw.ID,
+			"deposit_addr", depositAddr,
+			"sender", sw.Sender,
+			"quote_age", time.Since(sw.CreatedAt),
+			"last_error", sw.LastError,
+		)
+	}
+
+	d.executeRefund(ctx, sw, walletID, depositAddr)
+}
+
+// executeRefund runs the post-claim refund pipeline: read source-chain
+// balance, build/sign/broadcast a sweep tx, mark the swap refunded.
+// Caller must have already transitioned the swap to SwapStatusRefunding.
+func (d *RefundDriver) executeRefund(ctx context.Context, sw *Swap, walletID, depositAddr string) {
 	// Step 1 — get source-chain balance at the deposit address.
 	balanceCtx, cancelBal := context.WithTimeout(ctx, d.perBalanceTimeout)
 	balance, err := d.fetchBalance(balanceCtx, sw.SourceNetwork, depositAddr)

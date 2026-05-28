@@ -328,3 +328,111 @@ func TestRefund_ParsesBalanceHexCorrectly(t *testing.T) {
 		t.Errorf("balance = %s, want 0xabc123 (%d)", bal.String(), 0xabc123)
 	}
 }
+
+// =============================================================================
+// Stale-quote refund path (SwapStatusRefundPending)
+// =============================================================================
+
+// seedRefundPendingSwap creates a swap already tagged for stale-quote refund
+// by the signing driver. No broadcasting state, no insufficient-funds error
+// — the refund driver should sweep on the very next tick.
+func seedRefundPendingSwap(t *testing.T, store *InMemoryStore, mutate func(*Swap)) *Swap {
+	t.Helper()
+	sw := &Swap{
+		Status:             SwapStatusRefundPending,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		DestinationNetwork: "LUX_TESTNET",
+		Sender:             "0xa28fae14eb42e7a5c36ad2d774a2b7eb293c4473",
+		DepositAddress:     "wallet-x###0x9d6afe4e71184d8bd2972fc5a8b63ca257fb7383",
+		LastError:          "quote_stale: created 2h0m0s ago, max age 30m0s",
+		LastErrorAt:        time.Now().UTC(),
+	}
+	if mutate != nil {
+		mutate(sw)
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatalf("seed refund_pending: %v", err)
+	}
+	return sw
+}
+
+func TestRefund_StaleQuote_RefundsImmediately(t *testing.T) {
+	d, store, bc := newRefundRig(t, "0xDE0B6B3A7640000") // 1 ETH
+	sw := seedRefundPendingSwap(t, store, nil)
+
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefunded {
+		t.Fatalf("status = %q, want refunded", got.Status)
+	}
+	if got.RefundTxHash != "0xrefundtxhash" {
+		t.Errorf("RefundTxHash = %q, want 0xrefundtxhash", got.RefundTxHash)
+	}
+	if bc.calls.Load() != 1 {
+		t.Errorf("expected 1 broadcast, got %d", bc.calls.Load())
+	}
+	if d.Stats().Successes != 1 {
+		t.Errorf("expected 1 success, got %+v", d.Stats())
+	}
+}
+
+func TestRefund_StaleQuote_NoSender_Skips(t *testing.T) {
+	d, store, bc := newRefundRig(t, "0xDE0B6B3A7640000")
+	sw := seedRefundPendingSwap(t, store, func(s *Swap) {
+		s.Sender = ""
+	})
+
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Errorf("status should stay refund_pending without sender, got %q", got.Status)
+	}
+	if bc.calls.Load() != 0 {
+		t.Errorf("broadcaster called despite missing sender")
+	}
+}
+
+func TestRefund_StaleQuote_IdempotentAcrossTicks(t *testing.T) {
+	d, store, bc := newRefundRig(t, "0xDE0B6B3A7640000")
+	sw := seedRefundPendingSwap(t, store, nil)
+
+	d.Tick(t.Context()) // refunds
+	d.Tick(t.Context()) // refunded state — no further work
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefunded {
+		t.Errorf("status = %q, want refunded", got.Status)
+	}
+	if bc.calls.Load() != 1 {
+		t.Errorf("broadcaster called %d times across two ticks, want 1", bc.calls.Load())
+	}
+}
+
+func TestRefund_StaleQuote_AndLegacy_BothProcessedInOneTick(t *testing.T) {
+	// Cover that the refund driver still processes legacy broadcasting-
+	// stuck swaps in the same tick that it processes stale-quote swaps.
+	d, store, bc := newRefundRig(t, "0xDE0B6B3A7640000")
+
+	staleSwap := seedRefundPendingSwap(t, store, func(s *Swap) {
+		s.Sender = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		s.DepositAddress = "wallet-a###0x1111111111111111111111111111111111111111"
+	})
+	legacySwap := seedBlockedSwap(t, store, 2*time.Minute, func(s *Swap) {
+		s.Sender = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+		s.DepositAddress = "wallet-b###0x2222222222222222222222222222222222222222"
+	})
+
+	d.Tick(t.Context())
+
+	for _, id := range []string{staleSwap.ID, legacySwap.ID} {
+		got, _ := store.Get(t.Context(), id)
+		if got.Status != SwapStatusRefunded {
+			t.Errorf("swap %s status = %q, want refunded", id, got.Status)
+		}
+	}
+	if bc.calls.Load() != 2 {
+		t.Errorf("expected 2 source-chain broadcasts (one per swap), got %d", bc.calls.Load())
+	}
+}

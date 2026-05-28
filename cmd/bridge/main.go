@@ -115,6 +115,8 @@ func main() {
 		"disable the background deposit watcher entirely. Swaps will then never advance state automatically — useful for tests + manual operation.")
 	signingInterval := flag.Duration("signing-interval", DefaultSigningInterval,
 		"poll cadence for the MPC signing driver (background loop that drives swaps from bridge_transfer_pending through MPC signing → broadcasting).")
+	quoteMaxAge := flag.Duration("quote-max-age", 30*time.Minute,
+		"max age of a create-time quote before the signing driver refuses to sign. Stale swaps are kicked to the refund driver so the user gets their deposit back rather than executing at a drifted rate. Zero disables — only use for stablecoin-only deployments.")
 	disableSigningDriver := flag.Bool("disable-signing-driver", false,
 		"disable the background MPC signing driver. Swaps in bridge_transfer_pending will then stall — useful when no MPC cluster is reachable.")
 	broadcastInterval := flag.Duration("broadcast-interval", DefaultBroadcastInterval,
@@ -455,12 +457,14 @@ func main() {
 	if !*disableSigningDriver && mchainClient != nil {
 		signer = NewSigningDriver(swapStore, mchainClient, *signingInterval, logger)
 		signer.SetAssembler(asm) // produces wire-correct EVM txs
+		signer.SetMaxQuoteAge(*quoteMaxAge)
 		go func() {
 			_ = signer.Run(signerCtx)
 		}()
 		logger.Info("signing driver started",
 			"interval", *signingInterval,
 			"assembler", "evm-eip155",
+			"quote_max_age", *quoteMaxAge,
 		)
 	} else if *disableSigningDriver {
 		logger.Info("signing driver disabled by --disable-signing-driver")

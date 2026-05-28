@@ -5,9 +5,9 @@
 | Repository | `github.com/luxfi/bridge` |
 | Owner | Lux Industries, Inc. |
 | Author of doc | Jackson Mori |
-| Date | 2026-05-22 |
-| Status | Draft for review (R5 — refresh after R3 merge into `whispers/bridgev2`) |
-| Supersedes | R4 (pre-merge dep layout + pre-doc-cleanup; treated R3 client-side MPC as pending). R5 re-pins against `pkg/bridge` v1.0.3 + the now-merged client-side MPC / cosigner stack, and reflects the deletion of the legacy `docs/*.md` set. |
+| Date | 2026-05-28 |
+| Status | Draft for review (R6 — adds §13 documenting the in-progress `cmd/bridge` Go binary that is porting swap / quote / MPC orchestration off `app/server`. Phases 1–3 above are unchanged.) |
+| Supersedes | R4 (pre-merge dep layout + pre-doc-cleanup; treated R3 client-side MPC as pending). R5 re-pinned against `pkg/bridge` v1.0.3 + the merged client-side MPC / cosigner stack, and reflected the deletion of the legacy `docs/*.md` set. R6 adds §13 (Go bridge migration) without modifying the existing SDK / Express story — both tracks ship. |
 
 ---
 
@@ -129,7 +129,8 @@ Notable removals from prior drafts:
 | Component | Status | Location |
 |---|---|---|
 | Lux primary network (validators) | Live | `github.com/luxfi/node`, `luxfi/chains` |
-| Bridge API server (b-chain backend) | Live | `app/server/` |
+| Bridge API server (b-chain backend) | Live (Express + Prisma) | `app/server/` |
+| `cmd/bridge` Go binary (migration in progress) | **In progress** (R6, see §13). Native: networks/tokens/limits, quote engine (CoinGecko + static fallback), swap store, deposit watcher, signing driver, refund driver, MPC dispatch via `mpcd`. Proxied: explorer + settings. Working end-to-end on testnet for Sepolia → LUX as of 2026-05-28; **not yet in any `compose.*.yml`**. | `cmd/bridge/` |
 | Public MPC (m-chain) | Live | `pkg/threshold/` SDK + `k8s/mpc-deployment.yaml` |
 | Private MPC (treasury fees) | Live | same code, separate cluster, `config/mpc/config.yaml` |
 | r-chain relay (optional helper) | Live (in repo) | `app/server/cmd/`, hooks |
@@ -283,8 +284,8 @@ Status of original Phase 1 line items:
 |---|---|---|
 | 1.1 | Bridge UI compiles and runs against `apiHost: api.bridge.lux.network` in `env: mainnet`. | ✅ — UI is inlined under `pkg/bridge/src/app/` and consumed by `app/bridge/`. |
 | 1.2 | Commit the in-flight SDK edits that resolved the `@luxbridge/app` workspace cycle. | ✅ — see Phase 1.5 history note in `pkg/bridge/src/Bridge.tsx`. |
-| 1.3 | Run the SDK end-to-end against Lux testnet. | 🟡 — verify on current branch before mainnet cutover. |
-| 1.4 | Deploy the Lux tenant app to `bridge.lux.network`. | 🟡 — `app/bridge/` shape is final (`Dockerfile`, `docker-entrypoint.sh`, `__ENV.js` template all merged); deploy pipeline TBC. |
+| 1.3 | Run the SDK end-to-end against Lux testnet. | 🟡 — **Sepolia → LUX signed bridge tx working end-to-end on the `cmd/bridge` Go path (2026-05-28)**; quote-at-create + receive-amount + CoinGecko pricing + MPC deposit wallet + signing + broadcast all verified live. The Express-path Phase 1.3 sign-off per `app/bridge/TESTNET-E2E.md` is still 🟡 (separate gate). |
+| 1.4 | Deploy the Lux tenant app to `bridge.lux.network`. | 🟡 — As of 2026-05-28, the chosen production deploy is the unified **Go binary** (`cmd/bridge` → `ghcr.io/luxfi/bridge:latest`) per §13, **not** the legacy Express + Vite SPA split. `k8s/bridge-deployment.yaml` is complete (Deployment + Service + Ingress + PVC + ConfigMap, ingress at `bridge.lux.network` + `bridge-api.lux.network` with cert-manager TLS); `.github/workflows/docker.yml` builds + pushes the image. Operator-side gating items: (1) populate `bridge-secrets` Secret with `mpc-api-token` (+ DB / wallet keys) in the `lux-bridge` namespace, (2) `kubectl apply -f k8s/bridge-deployment.yaml`, (3) DNS A-records for both hostnames → cluster LB, (4) hand-fund the release wallets auto-minted on first swap per destination network. See deploy runbook (`docs/operator-deploy-phase-1-4.md` — pending). |
 | 1.5 | Refresh / fold the legacy `docs/*.md` (`BRIDGE-STATUS`, `LOCAL-SETUP`, etc.). | ✅ — the loose top-level set was deleted in the merge from main; only `docs/LLM.md` and `docs/LUX-ID-INTEGRATION.md` remain at docs root, and active docs now live under `docs/content/docs/`. |
 | 1.6 | Keep `pkg/bridge/README.md` accurate (it was updated through R2/R3). | ✅ — consumer-facing README documents `Bridge`, `mountBridge`, `applyBrandMetadata`, `getConfig`, `setConfig`. |
 
@@ -387,6 +388,88 @@ The next outstanding SDK work is **Phase 3.1** (compile to `dist/`) so external 
 | Bridge API docker image | `ghcr.io/luxbridge/bridge-server` |
 | Exchange SDK pattern (precedent) | `github.com/luxfi/exchange`, `github.com/zooai/exchange` |
 | FHE chain (not in scope v1) | `github.com/luxfhe` |
+
+## 13. Go bridge migration (`cmd/bridge`)
+
+The Node backend's heavy paths (swap orchestration, quote engine, MPC dispatch, deposit watching) are being ported into a single Go binary at `cmd/bridge/` that also embeds the SPA via `go:embed`. Goal: eliminate Express + Prisma + Postgres from the bridge core path and collapse the runtime to one image + one config file. The migration is in progress on `whispers/bridgev2` — the binary builds, the orchestrator drives real swaps against testnet, but it is not yet wired into the production compose files.
+
+This section documents the Go binary as a parallel track. Phases 1–3 above continue to describe the TypeScript SDK + Express backend deliverable, and remain canonical until cutover (§13.6 step 5).
+
+### 13.1 Status (verified 2026-05-28 against working tree on `whispers/bridgev2`)
+
+| Component | State | Notes |
+|---|---|---|
+| Networks / tokens / limits / exchanges | ✅ native | Served from YAML (`cmd/bridge/networks.testnet.yaml`, `networks.example.yaml`). No DB. |
+| Quote engine | ✅ native | `quote_engine.go` + `coingecko_price_feed.go`. CoinGecko primary + static fallback (LUX/ZOO live in static permanently — neither is listed on CoinGecko). Receive amount is snapshot-stamped on the `Swap` row at create time. |
+| Swap store | ✅ native | `swap_store.go` (in-memory map; `zap_store.go` is the Hanzo Base / SQLite-embedded backing, not yet the default). Status set: `user_deposit_pending → bridge_transfer_pending → broadcasting → completed`, plus `refund_pending` (stale-quote handoff) and `refunding` (legacy insufficient-funds path). |
+| Deposit watcher | ✅ native | `deposit_watcher.go`, 15s poll loop. Advances `user_deposit_pending → bridge_transfer_pending_signing` once the source-chain deposit confirms. |
+| Signing driver | ✅ native | `signing_driver.go`. Drives `bridge_transfer_pending_signing` → MPC sign → `broadcasting`. Quote-staleness guard via `--quote-max-age` (default 30 m) — stale swaps are kicked to the refund driver so the user gets their deposit back rather than executing at a drifted rate. |
+| Refund driver | ✅ native | `refund_driver.go`. Handles both legacy insufficient-funds refunds *and* stale-quote handoffs (`refund_pending`). Builds + MPC-signs + broadcasts the refund tx. |
+| MPC dispatch | ✅ native | Calls `mpcd` directly over HTTP (`/keygen`, `/sign`) via `--mpc-url`. Per-swap deposit wallet (created lazily on first quote) plus a long-lived release wallet per destination network. No intermediate Node MPC service. |
+| Explorer / settings / auth | 🟡 proxied | Falls back to `app/server` via `--backend`. |
+| Storage durability | 🟡 in-memory | Default store is `swap_store.go` (process-local map). `zap_store.go` SQLite backing exists but is not the default — a binary restart drops in-flight swaps. |
+| Deployment | 🟡 manifest ready, not yet applied | `k8s/bridge-deployment.yaml` is the production-grade manifest for `ghcr.io/luxfi/bridge:latest` — Deployment + Service + Ingress (`bridge.lux.network` + `bridge-api.lux.network`, cert-manager TLS) + PVC (20Gi for zapdb) + ConfigMap (mainnet networks + USDC/USDT). `.github/workflows/docker.yml` already builds + pushes the image. `compose.testnet.yml` ships a `bridge-go` service alongside `bridge-server` (added 2026-05-28) for local soak. `compose.mainnet.yml` still legacy-only. **Outstanding gating items are operator-side**: Secret creation, cluster apply, DNS cutover, mainnet release wallet funding — not blocking from the engineering side. |
+
+### 13.2 Tech stack
+
+- **HTTP framework**: `github.com/hanzoai/zip` (Sinatra-style on Fiber v3 / fasthttp). New handlers must use `zip.Ctx`; do not introduce stdlib `net/http` handlers on the request path.
+- **Logging**: `github.com/luxfi/log` (`luxlog`). No `slog`, no direct `zap`.
+- **Storage**: Hanzo Base (SQLite-embedded via `zap_store.go`) is the target backing; today the default is the in-memory map in `swap_store.go`.
+- **MPC**: HTTP calls to `mpcd`. The cluster enforces 2-of-3 threshold and is authenticated via bearer token (`--mpc-token`) — for local dev the token can be derived from a node identity file via `SHA-256(seed ‖ "mpc-internal-api")`.
+- **Pricing**: CoinGecko `simple/price` API with 30 s TTL cache + single-flight batched fetches. `FallbackFeed` composite falls through to a static feed for assets CoinGecko does not list (LUX, ZOO).
+
+### 13.3 Architectural conventions
+
+- **Deposit wallet vs release wallet split.** Per-swap MPC wallets receive deposits; one long-lived release wallet per destination network pays out settlements from operator-funded liquidity. Refunds flow back from the deposit wallet, not the release wallet.
+- **MPC-only, no teleporter.** Every swap goes through `createMPCWalletForDeposit`; the legacy teleporter contracts in `teleport.ts` are off the happy path on this branch.
+- **Quote locked at create time.** `Swap.ReceiveAmount` is stamped on the row when the user creates the swap, then enforced at signing time via `--quote-max-age`. Stale quotes never execute at the new price; they refund.
+
+### 13.4 Configuration surface (selected flags)
+
+| Flag | Purpose |
+|---|---|
+| `--config` | Networks/tokens/limits YAML path. |
+| `--backend` | Legacy Node backend URL for the still-proxied paths (`/explorer/*`, `/settings`). |
+| `--mpc-url` | `mpcd` keygen + sign endpoint. Required when SDK requests carry `use_deposit_address=true`. |
+| `--mpc-token` / `--mpc-identity-file` | Bearer auth for `mpcd`. Identity file derives the token deterministically — convenience for local dev; prod sets the token explicitly. |
+| `--source-rpc-overrides` | Per-network RPC overrides for the deposit watcher and `/v1/bridge/check-deposit` (e.g. `ETHEREUM_SEPOLIA=https://ethereum-sepolia-rpc.publicnode.com`). |
+| `--coingecko` (+ `--coingecko-api-key`, `--coingecko-cache-ttl`, `--coingecko-timeout`) | Layer CoinGecko in front of the static feed. Default off. |
+| `--quote-max-age` | Max age (default 30 m) of a create-time quote before the signing driver refuses to sign and hands off to the refund driver. Zero disables — only safe for stablecoin-only deployments. |
+| `--disable-deposit-watcher` / `--disable-signing-driver` | Disable background loops (testing / manual operation). |
+
+### 13.5 Current testnet scope
+
+`cmd/bridge/networks.testnet.yaml` ships **4 EVM testnet chains**: `ETHEREUM_SEPOLIA`, `LUX_TESTNET`, `BASE_SEPOLIA`, `HOLESKY_TESTNET`, with native gas tokens only (ETH, LUX). No ERC-20s yet. End-to-end signed swaps are working for Sepolia → LUX as of 2026-05-28.
+
+This is narrower than what `app/bridge/TESTNET-E2E.md` §2 asserts the chain picker should show ("at least: … Solana Devnet, Bitcoin Testnet, Ton Testnet, XRP Testnet, BSC Testnet, Zoo Testnet"). TESTNET-E2E.md is written against the Express backend at `bridge-api.lux.network`; the Go binary's chain set is intentionally smaller while EVM↔EVM is being hardened. Reconciliation happens at cutover (§13.6 step 5).
+
+### 13.6 Cutover plan
+
+| # | Step | Acceptance |
+|---|---|---|
+| 1 | EVM↔EVM hardening | 🟡 partial — Sepolia → LUX completes end-to-end (2026-05-28). Remaining matrix: Sepolia↔Base Sepolia, Sepolia↔Holesky, Base Sepolia↔LUX, Holesky↔LUX, and reverse-direction LUX → {Sepolia, Base Sepolia, Holesky}. |
+| 2 | Persistence default | ⬜ pending — `zap_store.go` (SQLite) promoted to the default store so binary restarts don't drop in-flight swaps. |
+| 3 | ERC-20 path | 🟡 partial — `internal/tokens/tokens.go` registry, `internal/depositcheck` ERC-20 `balanceOf` probe, and `internal/txassembler` ERC-20 `transfer(addr,uint256)` calldata mode were already implemented and unit-tested before this revision; on 2026-05-28 USDC entries were exposed in `networks.testnet.yaml` for ETHEREUM_SEPOLIA (Circle contract `0x1c7D…7238`) and BASE_SEPOLIA (`0x036C…CF7e`) so the SPA picker offers them. Quote pricing verified for both source (`10 USDC → 3.998 LUX`) and destination (`10 LUX → 24.76 USDC`) roles. Live end-to-end deposit + signed release with USDC on either chain is still pending — needs a real on-chain USDC deposit to close. |
+| 4 | Compose wiring | 🟡 partial — `compose.testnet.yml` now ships a `bridge-go` service alongside `bridge-server` (2026-05-28), volume-backed zapdb data dir, networks YAML mounted from `cmd/bridge/networks.testnet.yaml`. `compose.mainnet.yml` still legacy-only — add equivalent service for production parity once §13.6 step 5 is signed off. K8s side (`k8s/bridge-deployment.yaml`) was already complete before this revision. |
+| 5 | DNS cutover | ⬜ pending — operator handoff. Required steps: (1) populate `bridge-secrets` Secret in `lux-bridge` namespace with `mpc-api-token` etc., (2) `kubectl apply -f k8s/bridge-deployment.yaml`, (3) repoint `bridge.lux.network` + `bridge-api.lux.network` DNS A-records to cluster LB after ingress cert is issued, (4) fund per-destination-network release wallets after first swap auto-mints each. See `docs/operator-deploy-phase-1-4.md` (pending). After 1-week soak, retire `bridge-server` + `bridge-ui` images. |
+| 6 | Non-EVM (Solana, BTC, TON) | ⬜ pending — bridge-side `txassembler` + `broadcast` family dispatch implemented **only after** `mpcd` ships FROST Ed25519 (and Schnorr for BTC). See `manifests/chains/solana.yaml` for the planned promotion path (`locale_only → inbound_only → bidirectional`). |
+
+### 13.7 Known gaps
+
+| # | Gap | Impact |
+|---|---|---|
+| G1 | `broadcast/client.go` returns `ErrFamilyNotImplemented` for every non-EVM chain family. Signature parsing assumes ECDSA `R∥S∥V`. | Blocks Bitcoin, TON, XRP, Solana even once `mpcd` ships the additional signature curves. |
+| G2 | Only native gas tokens in `networks.testnet.yaml` (closed 2026-05-28 for USDC on Sepolia + Base Sepolia; USDT/DAI still pending). | Was: "No ERC-20 testnet path yet." Now: ERC-20 wired end-to-end through quote / swap-create / deposit-watch / tx-assembly; pending only a real USDC on-chain deposit to close the live-validation gap. |
+| G3 | `cmd/bridge` not referenced from any `compose.*.yml` or `k8s/` manifest. | Production deploy targets are still the Express + bridge-ui pair. |
+| G4 | Default store is in-memory (`swap_store.go`). | Binary restart drops in-flight swaps. |
+| G5 | `app/bridge/TESTNET-E2E.md` Phase 1.3 sign-off runs against `bridge-api.lux.network` (Express). | Closing Phase 1.3 does not automatically validate the Go binary; the Go binary needs its own sign-off doc. |
+
+### 13.8 Open questions for sponsor
+
+1. Is the Go binary expected to replace `app/server/` *entirely*, or only the heavy paths (swap / quote / MPC) while Express continues to host explorer + settings + auth long-term?
+2. Acceptance bar for the testnet soak in §13.6 step 4 — number of completed swaps, span in days, failure-rate ceiling.
+3. Mainnet cutover timing: tied to a specific Phase 3 milestone (e.g. SDK publication), or independent?
+4. Does §3 Non-Goals ("Rewriting `app/server/` routes, schema, or Prisma layer beyond what's needed for chain rewiring") need to be relaxed for R6, given the Go binary's swap-store / quote-engine / driver-loop ports overlap with `app/server/` routes by design?
 
 ---
 

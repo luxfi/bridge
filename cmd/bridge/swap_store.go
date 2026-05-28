@@ -42,6 +42,13 @@ const (
 	SwapStatusBroadcasting SwapStatus = "bridge_transfer_pending_broadcasting"
 	// Final settlement: funds arrived at destination address.
 	SwapStatusCompleted SwapStatus = "completed"
+	// Quote committed at create time has aged past the configured
+	// max-quote-age. The signing driver refuses to sign and tags the
+	// swap for the refund driver to pick up. Distinct from Refunding
+	// because the user's deposit is intact and the refund hasn't started
+	// — only this state's filter is scanned by the refund driver as a
+	// fast-path entry (no insufficient-funds gate).
+	SwapStatusRefundPending SwapStatus = "refund_pending"
 	// Destination broadcast couldn't land (e.g. insufficient funds at the
 	// MPC release address) and a timeout elapsed; the refund driver is
 	// sweeping the source-chain deposit back to the original sender.
