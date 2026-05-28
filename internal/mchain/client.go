@@ -143,6 +143,17 @@ type Wallet struct {
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
 	AddressType AddressType
+	// ECDSAPubKey is the hex-encoded compressed secp256k1 public key
+	// that the threshold wallet signs against. Used by chains that
+	// derive their address from the pubkey but don't surface a
+	// chain-specific address slot in the keygen response (XRP, soon
+	// SUI, etc.).
+	ECDSAPubKey string
+	// EDDSAPubKey is the hex-encoded 32-byte Ed25519 public key. Used
+	// by TON (where the address is derived from the wallet contract's
+	// state_init cell, which embeds this pubkey) and by SOL (where
+	// the address IS the pubkey base58-encoded).
+	EDDSAPubKey string
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
@@ -461,6 +472,8 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		Name:        name,
 		Address:     address,
 		AddressType: addrType,
+		ECDSAPubKey: result.ECDSAPubKey,
+		EDDSAPubKey: result.EDDSAPubKey,
 	}, nil
 }
 
@@ -622,10 +635,22 @@ func pickAddress(r *keygenResult, t AddressType) (string, error) {
 	switch t {
 	case AddressTypeBTC:
 		addr = r.BTCAddress
-	case AddressTypeSOL, AddressTypeTON:
-		// TON shares the SOL keygen slot in the current cluster output.
-		// Long-term TON needs its own address derivation from the
-		// ed25519 pubkey, but for now match TS placeholder behaviour.
+	case AddressTypeTON:
+		// TON v4r2 address = state_init_hash(workchain=0, subwallet, pubkey).
+		// Prefer the proper derivation when the cluster surfaced the
+		// Ed25519 pubkey; otherwise fall back to whatever the cluster
+		// put in the SOL slot (legacy mpcd that doesn't yet derive
+		// chain-specific addresses).
+		if r.EDDSAPubKey != "" {
+			derived, err := deriveTONAddressFromHex(r.EDDSAPubKey)
+			if err == nil {
+				return derived, nil
+			}
+			// On derivation failure, fall through to the legacy slot —
+			// don't refuse keygens just because the new path glitched.
+		}
+		addr = r.SOLAddress
+	case AddressTypeSOL:
 		addr = r.SOLAddress
 	case AddressTypeXRP:
 		// XRP uses secp256k1 but with rAddress derivation. Until that
