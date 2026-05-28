@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -53,10 +54,10 @@ type Broadcaster interface {
 // BroadcastDriver polls SwapStatusBroadcasting swaps and pushes them
 // to the destination chain. Concurrency-safe.
 type BroadcastDriver struct {
-	store     SwapStore
-	bcaster   Broadcaster
-	interval  time.Duration
-	logger    luxlog.Logger
+	store    SwapStore
+	bcaster  Broadcaster
+	interval time.Duration
+	logger   luxlog.Logger
 
 	// perBroadcastTimeout caps one push call. Destination chain RPCs
 	// are typically fast (<500 ms) but congested testnets stretch
@@ -225,6 +226,12 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 				"err", err,
 			)
 		}
+		// BTC fatal errors (mempool-conflict, dust, missing inputs)
+		// can never broadcast in their current shape — advance the
+		// swap to SwapStatusFailed instead of looping forever. The
+		// refund driver will sweep the deposit back to the sender.
+		var btcErr *broadcast.BTCBroadcastError
+		fatalBTC := errors.As(err, &btcErr) && !btcErr.Retryable
 		// Surface the error so the SDK/UI can show the user what's
 		// blocking (e.g. "insufficient funds for gas" — the release
 		// address needs LUX). The swap stays at SwapStatusBroadcasting
@@ -241,6 +248,9 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 				s.LastErrorAt = time.Now().UTC()
 			}
 			s.LastError = humanized
+			if fatalBTC {
+				s.Status = SwapStatusFailed
+			}
 		})
 		return
 	}
@@ -284,6 +294,13 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 //     internals for what's just a transient retry.
 //   - Anything we don't recognize is forwarded verbatim (truncated)
 //     so operator triage isn't blind.
+//
+// BTC-specific rejections (txn-already-known, txn-mempool-conflict,
+// etc.) are typed as *broadcast.BTCBroadcastError upstream. The
+// retryable flag is preserved through the error chain. The driver
+// can call errors.As against BTCBroadcastError to inspect Retryable
+// directly when deciding between "leave at broadcasting" vs "advance
+// to a terminal state".
 func humanizeBroadcastErr(err error) string {
 	if err == nil {
 		return ""
@@ -291,6 +308,18 @@ func humanizeBroadcastErr(err error) string {
 	msg := err.Error()
 	low := strings.ToLower(msg)
 	switch {
+	// BTC-specific rejections.
+	case strings.Contains(low, "txn-mempool-conflict"),
+		strings.Contains(low, "bad-txns-inputs-missingorspent"),
+		strings.Contains(low, "missing inputs"):
+		return "BTC inputs are spent / double-spent — release pool wallet UTXOs changed under us, swap must re-assemble"
+	case strings.Contains(low, "txn-already-known"),
+		strings.Contains(low, "already in mempool"),
+		strings.Contains(low, "transaction already in block chain"):
+		return "BTC tx already broadcast (recovering txid)"
+	case strings.Contains(low, "bad-txns-in-belowout"), strings.Contains(low, "dust"):
+		return "BTC tx output is dust — value too small to be economically spendable"
+	// EVM-specific rejections.
 	case strings.Contains(low, "insufficient funds"):
 		return "Insufficient funds in release address — fund the MPC address with destination-chain gas tokens"
 	case strings.Contains(low, "nonce too low"):
