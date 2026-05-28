@@ -50,6 +50,29 @@ type Network struct {
 	// transformNetworks() drops anything that isn't "active", so an
 	// unset status without this default would zero out the chain list.
 	Status string `yaml:"status"            json:"status,omitempty"`
+
+	// Broadcast is the per-network broadcast-endpoint configuration.
+	// Optional — when unset the bridge falls back to internal default
+	// URL tables (see internal/broadcast/client.go::rpcURLs). Today
+	// the only consumer is the TON family: TON Center requires an
+	// authenticated URL + API key, and the broadcast layer reads
+	// both from here.
+	Broadcast *NetworkBroadcast `yaml:"broadcast,omitempty" json:"-"`
+}
+
+// NetworkBroadcast captures the destination-side broadcast endpoint
+// for non-EVM networks. EVM networks use the legacy rpc fields and
+// the package's URL table — see internal/broadcast.
+type NetworkBroadcast struct {
+	// URL is the broadcast endpoint. For TON, the toncenter sendBoc
+	// URL (e.g. https://toncenter.com/api/v2/sendBoc). The balance
+	// probe derives the getAddressBalance URL by string-replacing
+	// /sendBoc → /getAddressBalance, so the same base configures both.
+	URL string `yaml:"url" json:"-"`
+	// APIKey is the X-API-Key for authenticated requests. Empty ⇒
+	// no auth header — works against unauthenticated dev gateways,
+	// hits TON Center's 1 req/s rate-limit at production scale.
+	APIKey string `yaml:"apiKey" json:"-"`
 }
 
 // Token is an asset bridged on one or more networks. JSON tags mirror
