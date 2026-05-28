@@ -51,6 +51,18 @@ type BalanceProbeClient struct {
 	// builds from --source-rpc-overrides).
 	Overrides map[string]string
 
+	// TONBalanceURLs maps a TON network to its TON Center
+	// /getAddressBalance endpoint. Distinct from Overrides because
+	// the sendBoc URL and the getAddressBalance URL are different
+	// paths under the same toncenter base (e.g.
+	// `https://toncenter.com/api/v2/getAddressBalance` vs
+	// `/api/v2/sendBoc`). Operators configure both via networks.yaml.
+	TONBalanceURLs map[string]string
+
+	// TONAPIKeys mirrors broadcast.Client.TONAPIKeys — the same
+	// X-API-Key value is reused for the balance lookup. Optional.
+	TONAPIKeys map[string]string
+
 	// Timeout caps each individual call. Zero ⇒ 8s.
 	Timeout time.Duration
 
@@ -85,14 +97,23 @@ func (c *BalanceProbeClient) rpcURL(network string) string {
 	return depositcheck.RPCURLFor(network)
 }
 
-// BalanceAt implements BalanceProbe. Returns the wei balance at
-// `address` on `network` (latest block). EVM networks only.
+// BalanceAt implements BalanceProbe. Returns the native-asset balance
+// at `address` on `network`, in base units (wei for EVM, nanoton for
+// TON). The gas pre-check in the signing driver compares this value
+// against the destination tx's gasLimit*gasPrice + value (EVM) or
+// transfer + forward + jetton-gas (TON).
 func (c *BalanceProbeClient) BalanceAt(ctx context.Context, network, address string) (*big.Int, error) {
 	if network == "" {
 		return nil, errors.New("balance_probe: empty network")
 	}
 	if address == "" {
 		return nil, errors.New("balance_probe: empty address")
+	}
+	// TON branch — distinct wire shape (GET getAddressBalance), distinct
+	// units (nanoton ≡ 1e-9 TON), distinct address format. Branch
+	// FIRST so the EVM gate below doesn't refuse the lookup.
+	if strings.HasPrefix(network, "TON_") {
+		return c.balanceAtTON(ctx, network, address)
 	}
 	// EVM gate. AddressTypeFor lives in mchain — reuse it via the
 	// broadcast.RPCURLFor table check below. Non-EVM networks have
@@ -167,21 +188,109 @@ func (c *BalanceProbeClient) BalanceAt(ctx context.Context, network, address str
 }
 
 // isLikelyNonEVMNetwork is a fast gate for the well-known non-EVM
-// families. The bridge supports BTC/SOL/TON/XRP/DOT keygen but does
-// NOT support those broadcast paths today, so the gas pre-check is
-// inapplicable. Returning ErrFamilyNotSupportedForBalance from
-// BalanceAt lets the caller skip the pre-check rather than choking.
+// families. Used to refuse eth_getBalance lookups for non-EVM
+// networks (note: TON is handled by a dedicated branch BEFORE this
+// gate fires, so TON balances DO work via this client — see
+// balanceAtTON).
 func isLikelyNonEVMNetwork(network string) bool {
 	switch {
 	case strings.HasPrefix(network, "BITCOIN_"),
 		strings.HasPrefix(network, "SOLANA_"),
-		strings.HasPrefix(network, "TON_"),
 		strings.HasPrefix(network, "XRP_"),
 		strings.HasPrefix(network, "POLKADOT_"),
 		strings.HasPrefix(network, "CARDANO_"):
 		return true
 	}
 	return false
+}
+
+// balanceAtTON queries TON Center for the nanoton balance at `address`
+// on `network`. Returns *big.Int of nanoton (1 TON = 1e9 nanoton).
+//
+// Wire shape: GET <toncenter>/getAddressBalance?address=<addr>
+//   - X-API-Key from c.TONAPIKeys[network] if configured.
+//   - Response: {"ok":true,"result":"<nanoton as decimal string>"}.
+//   - Errors mirror sendBoc's shape; we surface them as plain errors
+//     since the signing driver already treats balance-probe errors as
+//     best-effort (logs + continues — see gasPrecheck).
+func (c *BalanceProbeClient) balanceAtTON(ctx context.Context, network, addressStr string) (*big.Int, error) {
+	url := c.tonBalanceURL(network)
+	if url == "" {
+		return nil, ErrFamilyNotSupportedForBalance
+	}
+	// Toncenter accepts user-friendly (UQ/EQ) AND raw addresses
+	// transparently. We pass the address through verbatim.
+	sep := "?"
+	if strings.Contains(url, "?") {
+		sep = "&"
+	}
+	full := url + sep + "address=" + addressStr
+
+	callCtx, cancel := context.WithTimeout(ctx, c.tonTimeout())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(callCtx, http.MethodGet, full, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	if k := c.tonAPIKey(network); k != "" {
+		req.Header.Set("X-API-Key", k)
+	}
+
+	client := c.HTTPClient
+	if client == nil {
+		client = &http.Client{Timeout: c.tonTimeout()}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("balance_probe: ton transport: %w", err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("balance_probe: ton HTTP %d: %s", resp.StatusCode, truncBP(body, 200))
+	}
+	var parsed struct {
+		OK     bool   `json:"ok"`
+		Result string `json:"result"`
+		Error  string `json:"error,omitempty"`
+	}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return nil, fmt.Errorf("balance_probe: ton decode: %w (body=%s)", err, truncBP(body, 200))
+	}
+	if !parsed.OK {
+		return nil, fmt.Errorf("balance_probe: ton: %s", parsed.Error)
+	}
+	if parsed.Result == "" {
+		return big.NewInt(0), nil
+	}
+	n, ok := new(big.Int).SetString(parsed.Result, 10)
+	if !ok {
+		return nil, fmt.Errorf("balance_probe: ton: invalid decimal %q", parsed.Result)
+	}
+	return n, nil
+}
+
+func (c *BalanceProbeClient) tonBalanceURL(network string) string {
+	if c.TONBalanceURLs == nil {
+		return ""
+	}
+	return c.TONBalanceURLs[network]
+}
+
+func (c *BalanceProbeClient) tonAPIKey(network string) string {
+	if c.TONAPIKeys == nil {
+		return ""
+	}
+	return c.TONAPIKeys[network]
+}
+
+func (c *BalanceProbeClient) tonTimeout() time.Duration {
+	if c.Timeout > 0 {
+		return c.Timeout
+	}
+	return 8 * time.Second
 }
 
 func truncBP(b []byte, n int) string {
