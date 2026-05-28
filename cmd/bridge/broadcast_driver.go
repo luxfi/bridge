@@ -319,13 +319,23 @@ func humanizeBroadcastErr(err error) string {
 		return "BTC tx already broadcast (recovering txid)"
 	case strings.Contains(low, "bad-txns-in-belowout"), strings.Contains(low, "dust"):
 		return "BTC tx output is dust — value too small to be economically spendable"
-	// EVM-specific rejections.
-	case strings.Contains(low, "insufficient funds"):
+	// EVM + XRP insufficient-funds rejections.
+	case strings.Contains(low, "insufficient funds"),
+		strings.Contains(msg, "tecINSUFFICIENT_FUNDS"),
+		strings.Contains(msg, "tecUNFUNDED"):
 		return "Insufficient funds in release address — fund the MPC address with destination-chain gas tokens"
 	case strings.Contains(low, "nonce too low"):
 		return "Nonce stale — release address already has a tx with this nonce; bridge will catch up"
 	case strings.Contains(low, "invalid sender"):
 		return "Destination chain rejected the signature (invalid sender) — possible MPC pubkey mismatch"
+	case strings.Contains(msg, "tecNO_DST"):
+		return "XRP destination account is not activated — recipient must hold ≥10 XRP reserve"
+	case strings.Contains(msg, "tefPAST_SEQ"):
+		return "XRP sequence already used — bridge will requery account_info and retry"
+	case strings.Contains(msg, "temBAD_AMOUNT"), strings.Contains(msg, "tem"):
+		return "XRP transaction was malformed — bridge will retry with a fresh build"
+	case strings.Contains(msg, "telINSUF_FEE_P"):
+		return "XRP network fee too low for current load — bridge will retry with a higher fee"
 	case strings.Contains(low, "http 502"), strings.Contains(low, "http 503"), strings.Contains(low, "http 504"):
 		return "Destination RPC unreachable (gateway error) — retrying"
 	case strings.Contains(low, "context deadline exceeded"), strings.Contains(low, "timeout"):

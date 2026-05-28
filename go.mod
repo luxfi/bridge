@@ -12,6 +12,7 @@ require (
 	github.com/hanzoai/zip v0.2.0
 	github.com/luxfi/log v1.4.3
 	github.com/luxfi/zapdb v1.8.0
+	github.com/rubblelabs/ripple v0.0.0-20240324121851-6816ca31ba51
 	golang.org/x/crypto v0.50.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -20,6 +21,7 @@ require (
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
+	github.com/bits-and-blooms/bitset v1.2.1 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.5 // indirect
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
