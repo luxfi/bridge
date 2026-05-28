@@ -10,7 +10,11 @@
 //     implemented via JSON-RPC eth_sendRawTransaction.
 //   - BTC (mainnet / testnet): implemented via mempool.space's REST
 //     POST /api/tx (or a Bitcoin Core override). See btc.go.
-//   - Non-EVM, non-BTC (SOL / TON / XRP / DOT): returns
+//   - Solana (mainnet / devnet / testnet): implemented via JSON-RPC
+//     sendTransaction with encoding=base64. The "raw tx" the caller
+//     hands in is the base64-encoded signed transaction produced by
+//     txassembler.SOLAssembler.Finalize.
+//   - Non-EVM, non-BTC, non-SOL (TON / XRP / DOT): returns
 //     ErrFamilyNotImplemented. Adding any one is a straightforward
 //     follow-up — different REST/RPC contracts, same shape.
 //
@@ -67,8 +71,17 @@ var rpcURLs = map[string]string{
 	"BLAST_MAINNET":    "https://rpc.blast.io",
 	"LINEA_MAINNET":    "https://rpc.linea.build",
 	// BTC is registered by an init() in btc.go (so the BTC defaults
-	// live alongside the BTC broadcaster). SOL / TON / XRP / DOT are
-	// still pending their own chain-specific broadcast handlers.
+	// live alongside the BTC broadcaster).
+	// Solana — JSON-RPC with sendTransaction. Default to devnet for
+	// safety on first deploys; operators flip via --release-pool-mint-
+	// network=SOLANA_MAINNET + a real mainnet provider URL through
+	// --source-rpc-overrides.
+	"SOLANA_MAINNET": "https://api.mainnet-beta.solana.com",
+	"SOLANA_DEVNET":  "https://api.devnet.solana.com",
+	"SOLANA_TESTNET": "https://api.testnet.solana.com",
+	// TON / XRP / DOT still need chain-specific broadcast handlers.
+	// Adding any one is a separate impl in this file plus a switch
+	// case in Broadcast.
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -83,8 +96,8 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (SOL, TON, XRP, DOT). EVM + BTC are wired in
-// this package today.
+// isn't implemented yet (TON, XRP, DOT). EVM + BTC + SOL are wired
+// in this package today.
 var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
@@ -199,13 +212,16 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 	// network→family mapping (it's already the project's source of
 	// truth for which family a network belongs to). EVM uses
 	// eth_sendRawTransaction; BTC uses mempool.space POST /api/tx (or
-	// the operator's own Bitcoin Core via Client.RPCURLOverrides).
+	// the operator's own Bitcoin Core via Client.RPCURLOverrides);
+	// SOL uses sendTransaction.
 	// Other non-EVM families still pending their own broadcasters.
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
 	case mchain.AddressTypeBTC:
 		return c.broadcastBTC(ctx, url, rawTxHex)
+	case mchain.AddressTypeSOL:
+		return c.broadcastSOL(ctx, url, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
