@@ -16,7 +16,9 @@
 //     txassembler.SOLAssembler.Finalize.
 //   - Polkadot / Substrate (POLKADOT_MAINNET / POLKADOT_TESTNET /
 //     KUSAMA_MAINNET): implemented via author_submitExtrinsic. See dot.go.
-//   - Non-EVM, non-BTC, non-SOL, non-DOT (TON / XRP): returns
+//   - XRP Ledger (XRP_MAINNET / XRP_TESTNET): implemented via rippled's
+//     `submit` JSON-RPC. See xrp.go for the engine_result classification.
+//   - Non-EVM remaining (TON): returns
 //     ErrFamilyNotImplemented. Adding any one is a straightforward
 //     follow-up — different REST/RPC contracts, same shape.
 //
@@ -81,9 +83,16 @@ var rpcURLs = map[string]string{
 	"SOLANA_MAINNET": "https://api.mainnet-beta.solana.com",
 	"SOLANA_DEVNET":  "https://api.devnet.solana.com",
 	"SOLANA_TESTNET": "https://api.testnet.solana.com",
-	// TON / XRP / DOT still need chain-specific broadcast handlers.
-	// Adding any one is a separate impl in this file plus a switch
-	// case in Broadcast.
+	// XRP Ledger — rippled JSON-RPC ports (not WebSocket).
+	// Mainnet `s1.ripple.com` is the public load-balanced cluster;
+	// testnet `s.altnet.rippletest.net` is the Ripple-hosted testnet.
+	// Both are HTTP+TLS (https), with the rippled-default JSON-RPC
+	// port :51234 explicitly. Operators wanting a private node should
+	// shadow via --source-rpc-overrides.
+	"XRP_MAINNET": "https://s1.ripple.com:51234/",
+	"XRP_TESTNET": "https://s.altnet.rippletest.net:51234/",
+	// TON still needs a chain-specific broadcast handler. Adding it
+	// is a separate impl in this file plus a switch case in Broadcast.
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -98,7 +107,7 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (TON, XRP). EVM + BTC + SOL + DOT are wired
+// isn't implemented yet (TON). EVM + BTC + SOL + DOT + XRP are wired
 // in this package today.
 var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
@@ -196,7 +205,7 @@ type BroadcastResult struct {
 //
 // Errors:
 //   - ErrUnsupportedNetwork           network not in the table / overrides.
-//   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP — TODO.
+//   - ErrFamilyNotImplemented         TON — TODO. EVM/BTC/SOL/DOT/XRP implemented.
 //   - ErrEmptyRawTx                   rawTxHex == "".
 //   - *RPCError                       upstream returned a JSON-RPC error
 //     or non-2xx HTTP.
@@ -217,7 +226,8 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 	// truth for which family a network belongs to). EVM uses
 	// eth_sendRawTransaction; BTC uses mempool.space POST /api/tx (or
 	// the operator's own Bitcoin Core via Client.RPCURLOverrides);
-	// SOL uses sendTransaction; DOT uses author_submitExtrinsic.
+	// SOL uses sendTransaction; DOT uses author_submitExtrinsic;
+	// XRP uses rippled's `submit` JSON-RPC.
 	// Other non-EVM families still pending their own broadcasters.
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
@@ -228,6 +238,8 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 		return c.broadcastSOL(ctx, url, rawTxHex)
 	case mchain.AddressTypeDOT:
 		return c.broadcastDOT(ctx, url, rawTxHex)
+	case mchain.AddressTypeXRP:
+		return c.broadcastXRPDirect(ctx, url, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
@@ -333,4 +345,49 @@ func truncate(b []byte, n int) string {
 		return string(b)
 	}
 	return string(b[:n]) + "…"
+}
+
+// doPlainJSON POSTs `body` as application/json to `url` and decodes
+// the response into `out`. Used by non-JSON-RPC-2.0 endpoints — most
+// notably rippled, which speaks a {method,params}/{result} envelope
+// rather than {jsonrpc:"2.0",id,result,error}.
+//
+// Returns *RPCError on transport failure or non-2xx response.
+func doPlainJSON(ctx context.Context, client *http.Client, timeout time.Duration, url string, body []byte, out any) error {
+	callCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(callCtx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	if client == nil {
+		client = http.DefaultClient
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		return &RPCError{Method: "submit", Code: -32000, Message: err.Error()}
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return &RPCError{
+			Method:     "submit",
+			HTTPStatus: resp.StatusCode,
+			Message:    fmt.Sprintf("HTTP %d: %s", resp.StatusCode, truncate(respBody, 200)),
+		}
+	}
+	if err := json.Unmarshal(respBody, out); err != nil {
+		return &RPCError{
+			Method:     "submit",
+			HTTPStatus: resp.StatusCode,
+			Message:    fmt.Sprintf("decode response: %v (body=%s)", err, truncate(respBody, 200)),
+		}
+	}
+	return nil
 }

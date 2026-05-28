@@ -266,10 +266,11 @@ func TestKeygen_TON_UsesSOLSlot(t *testing.T) {
 	}
 }
 
-func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
-	// XRP placeholder: uses the ETH address until proper rAddress
-	// derivation lands. Match TS exactly so the proxy and legacy
-	// server return the same identifier today.
+func TestKeygen_XRP_FallsBackToETHSlotWhenPubKeyAbsent(t *testing.T) {
+	// Legacy mock cluster fixture without ECDSAPubKey populated → the
+	// XRP branch falls back to ETHAddress so existing shape-only tests
+	// keep working. Production keygen always sets ECDSAPubKey, exercised
+	// in TestKeygen_XRP_DerivesRAddressFromPubKey below.
 	m := newMockCluster(t)
 	m.result = &keygenResult{ETHAddress: "0xeth_for_xrp"}
 	c := clientFor(m)
@@ -283,6 +284,44 @@ func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
 	}
 	if w.Address != "0xeth_for_xrp" {
 		t.Errorf("Address = %q", w.Address)
+	}
+}
+
+func TestKeygen_XRP_DerivesRAddressFromPubKey(t *testing.T) {
+	// Canonical test vector: pubkey 0330... → r-address via the
+	// RIPEMD160(SHA256(pubkey)) + base58check pipeline in internal/xrpl.
+	// The derived address must round-trip parseable.
+	m := newMockCluster(t)
+	m.result = &keygenResult{
+		ETHAddress:  "0xshouldnotbeused",
+		ECDSAPubKey: "0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020",
+	}
+	c := clientFor(m)
+
+	w, err := c.KeygenForDeposit(context.Background(), "XRP_MAINNET")
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if w.AddressType != AddressTypeXRP {
+		t.Errorf("AddressType = %q", w.AddressType)
+	}
+	if w.Address == "" || w.Address[0] != 'r' {
+		t.Errorf("Address should be an r-address; got %q", w.Address)
+	}
+	if w.Address == "0xshouldnotbeused" {
+		t.Error("XRP branch must derive from ECDSAPubKey, not fall back to ETH slot")
+	}
+}
+
+func TestKeygen_XRP_BadPubKeyHex_Errors(t *testing.T) {
+	m := newMockCluster(t)
+	m.result = &keygenResult{
+		ECDSAPubKey: "not-hex",
+	}
+	c := clientFor(m)
+	_, err := c.KeygenForDeposit(context.Background(), "XRP_MAINNET")
+	if err == nil {
+		t.Fatal("expected error for bad ECDSAPubKey hex")
 	}
 }
 
