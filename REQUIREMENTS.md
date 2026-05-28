@@ -437,11 +437,28 @@ This section documents the Go binary as a parallel track. Phases 1–3 above con
 | `--quote-max-age` | Max age (default 30 m) of a create-time quote before the signing driver refuses to sign and hands off to the refund driver. Zero disables — only safe for stablecoin-only deployments. |
 | `--disable-deposit-watcher` / `--disable-signing-driver` | Disable background loops (testing / manual operation). |
 
-### 13.5 Current testnet scope
+### 13.5 Current testnet scope (updated 2026-05-28)
 
-`cmd/bridge/networks.testnet.yaml` ships **4 EVM testnet chains**: `ETHEREUM_SEPOLIA`, `LUX_TESTNET`, `BASE_SEPOLIA`, `HOLESKY_TESTNET`, with native gas tokens only (ETH, LUX). No ERC-20s yet. End-to-end signed swaps are working for Sepolia → LUX as of 2026-05-28.
+`cmd/bridge/networks.testnet.yaml` ships **12 networks** — 9 EVM + 3 non-EVM registry-visible-but-disabled:
 
-This is narrower than what `app/bridge/TESTNET-E2E.md` §2 asserts the chain picker should show ("at least: … Solana Devnet, Bitcoin Testnet, Ton Testnet, XRP Testnet, BSC Testnet, Zoo Testnet"). TESTNET-E2E.md is written against the Express backend at `bridge-api.lux.network`; the Go binary's chain set is intentionally smaller while EVM↔EVM is being hardened. Reconciliation happens at cutover (§13.6 step 5).
+| Network | Type | Native | ERC-20s | Status |
+|---|---|---|---|---|
+| `ETHEREUM_SEPOLIA` | evm | ETH | USDC | ✅ full |
+| `LUX_TESTNET` | evm | LUX | — | ✅ full |
+| `BASE_SEPOLIA` | evm | ETH | USDC | ✅ full |
+| `HOLESKY_TESTNET` | evm | ETH | — | ✅ full |
+| `ARBITRUM_SEPOLIA` | evm | ETH | USDC | ✅ full (added 2026-05-28) |
+| `OPTIMISM_SEPOLIA` | evm | ETH | USDC | ✅ full (added 2026-05-28) |
+| `POLYGON_AMOY` | evm | POL | USDC | ✅ full (added 2026-05-28) |
+| `BSC_TESTNET` | evm | BNB | — | ✅ full (added 2026-05-28) |
+| `AVALANCHE_FUJI` | evm | AVAX | USDC | ✅ full (added 2026-05-28) |
+| `BITCOIN_TESTNET` | bitcoin | BTC | — | 🟡 source-only (deposit enabled 2026-05-28). mpcd still returns mainnet-format P2PKH; `internal/mchain/btc_address.go` re-encodes to testnet (`m…` / `n…`) on the bridge side via base58check version-byte swap (0x00 → 0x6f). Blockstream testnet API recognizes the re-encoded address. Withdrawal still blocked — broadcast needs Schnorr signing in mpcd + a BTC tx assembler. |
+| `SOLANA_DEVNET` | solana | SOL | — | ⬜ deposit + withdrawal disabled (mpcd: `no sol address returned from MPC keygen` — ed25519 / FROST not wired) |
+| `TON_TESTNET` | ton | TON | — | ⬜ deposit + withdrawal disabled (same as SOL; shares the SOL keygen slot per `mchain/client.go:590-594`) |
+
+End-to-end signed swaps verified for Sepolia ↔ LUX directions (both senses). The 5 newly-added EVM chains all return correct CoinGecko-backed quotes and create swaps with valid MPC deposit addresses. The 3 non-EVM chains appear in the registry so the SPA can surface them as "coming soon", but `is_deposit_enabled: false` and `is_withdrawal_enabled: false` block users from selecting them — preventing the dangerous scenario where mpcd would hand out a mainnet-format BTC address that looks valid but can't actually receive testnet funds.
+
+Reconciliation with `app/bridge/TESTNET-E2E.md` §2 (which targets the Express backend) is now closer — most expected chains are wired; the non-EVM rows show but are gated until the mpcd-side fixes land.
 
 ### 13.6 Cutover plan
 
@@ -458,8 +475,8 @@ This is narrower than what `app/bridge/TESTNET-E2E.md` §2 asserts the chain pic
 
 | # | Gap | Impact |
 |---|---|---|
-| G1 | `broadcast/client.go` returns `ErrFamilyNotImplemented` for every non-EVM chain family. Signature parsing assumes ECDSA `R∥S∥V`. | Blocks Bitcoin, TON, XRP, Solana even once `mpcd` ships the additional signature curves. |
-| G2 | Only native gas tokens in `networks.testnet.yaml` (closed 2026-05-28 for USDC on Sepolia + Base Sepolia; USDT/DAI still pending). | Was: "No ERC-20 testnet path yet." Now: ERC-20 wired end-to-end through quote / swap-create / deposit-watch / tx-assembly; pending only a real USDC on-chain deposit to close the live-validation gap. |
+| G1 | Non-EVM remains broken at multiple layers (verified empirically 2026-05-28): (a) `broadcast/client.go` returns `ErrFamilyNotImplemented` for every non-EVM chain family — blocks **withdrawal** to BTC/SOL/TON regardless of mpcd state; (b) signature parsing assumes ECDSA `R∥S∥V`; (c) mpcd keygen returns `"no sol address returned from MPC keygen"` / same for TON — ed25519 + FROST not wired in the cluster, blocks both deposit and withdrawal for SOL/TON; (d) ~~BTC mainnet-format address returned for testnet~~ **fixed in-bridge 2026-05-28** via `internal/mchain/btc_address.go` (base58check re-encoder with version-byte swap; 11 unit tests; empirically verified against Blockstream testnet API). BTC now enabled source-only. | Withdrawal to non-EVM still gated by (a) + (b). SOL/TON deposit still gated by (c). BTC deposit unblocked. |
+| G2 | ERC-20 coverage on testnet (closed 2026-05-28). | USDC wired for 5 chains (Sepolia, Base Sepolia, Arbitrum Sepolia, Optimism Sepolia, Polygon Amoy, Avalanche Fuji) — Circle's canonical testnet contracts in both the YAML registry and `internal/tokens/tokens.go`. Quote + swap-create + deposit-watch + tx-assembly all wired. USDT / DAI on testnet still missing (no Circle-equivalent for those on most testnets). |
 | G3 | `cmd/bridge` not referenced from any `compose.*.yml` or `k8s/` manifest. | Production deploy targets are still the Express + bridge-ui pair. |
 | G4 | Default store is in-memory (`swap_store.go`). | Binary restart drops in-flight swaps. |
 | G5 | `app/bridge/TESTNET-E2E.md` Phase 1.3 sign-off runs against `bridge-api.lux.network` (Express). | Closing Phase 1.3 does not automatically validate the Go binary; the Go binary needs its own sign-off doc. |

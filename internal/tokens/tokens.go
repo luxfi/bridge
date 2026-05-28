@@ -157,6 +157,23 @@ var defaultTokens = []Info{
 	// Holesky
 	{Network: "HOLESKY_TESTNET", Asset: "ETH", Decimals: 18},
 
+	// Arbitrum Sepolia — Circle's canonical USDC testnet contract
+	{Network: "ARBITRUM_SEPOLIA", Asset: "ETH", Decimals: 18},
+	{Network: "ARBITRUM_SEPOLIA", Asset: "USDC", Contract: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d", Decimals: 6},
+
+	// Optimism Sepolia — Circle's canonical USDC testnet contract
+	{Network: "OPTIMISM_SEPOLIA", Asset: "ETH", Decimals: 18},
+	{Network: "OPTIMISM_SEPOLIA", Asset: "USDC", Contract: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7", Decimals: 6},
+
+	// Polygon Amoy — Circle's canonical USDC testnet contract. Native is POL
+	// (Polygon's rebranded native token, ex-MATIC).
+	{Network: "POLYGON_AMOY", Asset: "POL", Decimals: 18},
+	{Network: "POLYGON_AMOY", Asset: "USDC", Contract: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582", Decimals: 6},
+
+	// Avalanche Fuji — Circle's canonical USDC testnet contract.
+	{Network: "AVALANCHE_FUJI", Asset: "AVAX", Decimals: 18},
+	{Network: "AVALANCHE_FUJI", Asset: "USDC", Contract: "0x5425890298aed601595a70AB815c96711a31Bc65", Decimals: 6},
+
 	// Lux — native only at v1; liquid tokens (LBTC, LETH, LUSD, etc.)
 	// get added when the per-asset contract list firms up in pkg/settings.
 	{Network: "LUX_MAINNET", Asset: "LUX", Decimals: 18},

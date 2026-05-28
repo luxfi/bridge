@@ -84,20 +84,44 @@ const fallbackMpcPublicUrl = 'https://mpc.lux.network'
 const fallbackMpcProtocol: NonNullable<BridgeMPCConfig['protocol']> = 'cggmp21'
 
 // Curated EVM allow-list for the Lux tenant. The SDK's full supported set
-// (mainnet, arbitrum, base, polygon, optimism, bsc for mainnet; sepolia,
-// arbitrumSepolia, baseSepolia, optimismSepolia, polygonAmoy, holesky,
-// bscTestnet for testnet) is intentionally narrowed here so the user wallet
-// only sees chains the bridge backend actually settles to. Non-EVM
-// destinations (Lux native, Solana, BTC, TON, XRP) are handled by the MPC
-// threshold layer and don't appear in the wagmi connector.
+// (mainnet, lux, arbitrum, base, polygon, optimism, bsc for mainnet; sepolia,
+// luxTestnet, arbitrumSepolia, baseSepolia, optimismSepolia, polygonAmoy,
+// holesky, bscTestnet for testnet) is intentionally narrowed here so the
+// user wallet only sees chains the bridge backend actually settles to.
 //
-// Env-aware: BRIDGE_ENV=testnet → Sepolia / Base Sepolia / Holesky;
+// Lux mainnet (96369) and Lux Testnet (96368) ARE in the wagmi connector
+// because the user wallet signs the deposit leg when Lux is the SOURCE
+// chain (LUX → external). When Lux is the DESTINATION, the user never
+// signs on Lux — the bridge's MPC release wallet pays out. Non-EVM
+// chains (Solana, BTC, TON, XRP) are signed end-to-end by MPC for both
+// legs and don't appear in the wagmi connector.
+//
+// Env-aware: BRIDGE_ENV=testnet → Sepolia / Lux Testnet / Base Sepolia / Holesky;
 // BRIDGE_ENV=mainnet (default) → the production EVM allow-list.
 const envSlug = env('BRIDGE_ENV', 'mainnet') ?? 'mainnet'
 const isTestnetEnv = envSlug === 'testnet' || envSlug === 'devnet'
 const fallbackSupportedChainIds = isTestnetEnv
-  ? [11155111, 84532, 17000] // Sepolia, Base Sepolia, Holesky — the testnet pairs the bridge backend currently quotes.
-  : [1, 42161, 8453, 137, 10]
+  ? [
+      11155111, // Ethereum Sepolia
+      96368,    // Lux Testnet
+      84532,    // Base Sepolia
+      17000,    // Holesky
+      421614,   // Arbitrum Sepolia
+      11155420, // Optimism Sepolia
+      80002,    // Polygon Amoy
+      97,       // BSC Testnet
+      43113,    // Avalanche Fuji
+    ]
+  : [
+      1,     // Ethereum mainnet
+      96369, // Lux
+      42161, // Arbitrum
+      8453,  // Base
+      137,   // Polygon
+      10,    // Optimism
+      56,    // BSC
+      43114, // Avalanche
+    ]
 const fallbackDefaultChainId = isTestnetEnv ? 11155111 : 1
 
 /**
