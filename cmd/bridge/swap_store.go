@@ -212,7 +212,9 @@ type InMemoryStore struct {
 	// Release-pool persistence — lazily initialized on first
 	// LoadEntries/PutEntry call. Lives here (rather than as a
 	// separate type) so the in-memory test setup boots with a
-	// single NewInMemoryStore() call.
+	// single NewInMemoryStore() call. The inMemoryReleasePool is
+	// itself multi-family (entries keyed by (family, idx)), so this
+	// single slot handles every family the bridge supports.
 	poolOnce sync.Once
 	pool     *inMemoryReleasePool
 }
