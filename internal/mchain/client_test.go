@@ -183,6 +183,66 @@ func TestKeygen_SOL_PicksSOLAddress(t *testing.T) {
 	}
 }
 
+func TestKeygen_SOL_SendsEd25519Curve(t *testing.T) {
+	// Solana keygen MUST request the Ed25519 curve so the cluster
+	// routes to its FROST stack and returns an eddsa_pub_key /
+	// sol_address slot. Without this, the cluster defaults to
+	// secp256k1 and the resulting "SOL address" is just the ETH
+	// pubkey base58'd — broadcast-time signatures would not verify.
+	m := newMockCluster(t)
+	m.result = &keygenResult{SOLAddress: "SoLaNa", ResultType: "success"}
+	c := clientFor(m)
+	if _, err := c.KeygenForDeposit(context.Background(), "SOLANA_DEVNET"); err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(m.lastBody, &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["curve"] != "ed25519" {
+		t.Errorf("curve = %q, want \"ed25519\" for SOL keygen (body=%s)", body["curve"], m.lastBody)
+	}
+}
+
+func TestKeygen_ETH_SendsSecp256k1Curve(t *testing.T) {
+	// Regression: ETH keygen MUST stay on secp256k1 even after the
+	// Ed25519 hint plumbing. The cluster's default behaviour matches
+	// secp256k1; we still send the field explicitly to make the wire
+	// shape symmetric.
+	m := newMockCluster(t)
+	m.result = &keygenResult{ETHAddress: "0xfoo", ResultType: "success"}
+	c := clientFor(m)
+	if _, err := c.KeygenForDeposit(context.Background(), "ETHEREUM_SEPOLIA"); err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(m.lastBody, &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["curve"] != "secp256k1" {
+		t.Errorf("curve = %q, want \"secp256k1\" for ETH keygen (body=%s)", body["curve"], m.lastBody)
+	}
+}
+
+func TestCurveFor(t *testing.T) {
+	cases := []struct {
+		t    AddressType
+		want Curve
+	}{
+		{AddressTypeETH, CurveSecp256k1},
+		{AddressTypeBTC, CurveSecp256k1},
+		{AddressTypeXRP, CurveSecp256k1},
+		{AddressTypeSOL, CurveEd25519},
+		{AddressTypeTON, CurveEd25519},
+		{AddressTypeDOT, CurveEd25519},
+	}
+	for _, tc := range cases {
+		if got := CurveFor(tc.t); got != tc.want {
+			t.Errorf("CurveFor(%q) = %q, want %q", tc.t, got, tc.want)
+		}
+	}
+}
+
 func TestKeygen_TON_UsesSOLSlot(t *testing.T) {
 	// TON shares the SOL slot in the cluster's current keygen output —
 	// matches TS placeholder behaviour in mpc-wallet.ts. Test pins this
