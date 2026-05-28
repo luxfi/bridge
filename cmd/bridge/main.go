@@ -47,6 +47,7 @@ import (
 	"github.com/luxfi/bridge/internal/broadcast"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/luxfi/bridge/internal/substrate"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
@@ -133,6 +134,12 @@ func main() {
 		"network used for keygen of release-pool wallets. The MPC produces a deterministic eth_address that works across every EVM destination, so this only picks the address slot in the keygen response. Use LUX_MAINNET in prod.")
 	releaseBalanceThresholdWei := flag.String("release-balance-threshold-wei", envOr("BRIDGE_RELEASE_BALANCE_THRESHOLD_WEI", "100000000000000000"),
 		"native-token balance threshold below which the release pool logs a WARN at Acquire time. Default 0.1 native (1e17 wei). Set to 0 to disable the alerter; the gas pre-check in the signing driver still runs and short-circuits swaps that would actually fail.")
+	dotPoolSize := flag.Int("release-pool-dot-size", envOrInt("BRIDGE_RELEASE_POOL_DOT_SIZE", 3),
+		"size of the parallel DOT-family release-wallet pool. Substrate addresses are derived from the same secp256k1 pubkey as EVM, but pre-funding requirements (existential deposit etc.) differ enough that running a dedicated DOT pool keeps operator UX clean. Default 3. Set 0 to disable DOT swaps via the pool (deposit wallet falls back).")
+	dotPoolMintNetwork := flag.String("release-pool-dot-mint-network", envOr("BRIDGE_RELEASE_POOL_DOT_MINT_NETWORK", "POLKADOT_TESTNET"),
+		"network used for keygen of DOT-family release-pool wallets. Picks the SS58 prefix. Use POLKADOT_MAINNET in prod.")
+	dotPoolThresholdPlanck := flag.String("release-pool-dot-threshold-planck", envOr("BRIDGE_RELEASE_POOL_DOT_THRESHOLD_PLANCK", "100000000000"),
+		"planck balance threshold below which the DOT release pool logs a WARN. Default 10 DOT (1e11 planck on Polkadot mainnet) — well above the 1-DOT existential deposit to leave headroom for a few transfers.")
 	disableGasPrecheck := flag.Bool("disable-gas-precheck", false,
 		"disable the signing-driver gas pre-check (eth_getBalance against the release wallet before signing). When enabled, swaps that can't cover destination-chain gas + value short-circuit to failed_insufficient_release_gas BEFORE consuming the 75s MPC ceremony.")
 	btcReleasePoolSize := flag.Int("btc-release-pool-size", envOrInt("BRIDGE_BTC_RELEASE_POOL_SIZE", 0),
@@ -449,6 +456,46 @@ func main() {
 		"blockhash_url", solBhURL,
 	)
 
+	// DOT (substrate) assembler. Per-network params are operator-set
+	// hints; the signing driver refreshes spec_version + transaction_version
+	// + genesis_hash from the live chain at PreSign time, so a runtime
+	// upgrade only needs a YAML update for the CallIndex (which changes
+	// only on hard-fork pallet renumbering).
+	//
+	// CallIndex defaults are conservative:
+	//   - balances pallet section: ~5 on Polkadot v9430, ~4 on Westend.
+	//   - transfer_keep_alive method: ~3 historically.
+	// Operators should re-check on every runtime upgrade — querying
+	// /v1/state_getMetadata once and grepping for "transfer_keep_alive"
+	// is enough.
+	dotAsm := txassembler.NewDOTAssembler()
+	dotAsm.SetNetwork("POLKADOT_MAINNET", txassembler.PerDOTNetwork{
+		SS58Prefix:         substrate.SS58PolkadotMainnet,
+		Decimals:           10,                                         // 1 DOT = 1e10 planck on Polkadot mainnet
+		CallIndex:          substrate.CallIndex{Section: 5, Method: 3}, // balances.transfer_keep_alive at the v9430 era
+		ExistentialDeposit: big.NewInt(10_000_000_000),                 // 1 DOT — Polkadot mainnet ED
+		FeePlanck:          big.NewInt(150_000_000),                    // ~0.015 DOT — conservative ceiling
+	})
+	dotAsm.SetNetwork("POLKADOT_TESTNET", txassembler.PerDOTNetwork{
+		SS58Prefix:         substrate.SS58Generic,                      // Westend uses generic
+		Decimals:           12,                                         // Westend = 12 (test version of Polkadot)
+		CallIndex:          substrate.CallIndex{Section: 4, Method: 3}, // Westend balances pallet
+		ExistentialDeposit: big.NewInt(10_000_000_000),
+		FeePlanck:          big.NewInt(150_000_000),
+	})
+	dotAsm.SetNetwork("KUSAMA_MAINNET", txassembler.PerDOTNetwork{
+		SS58Prefix:         substrate.SS58Kusama,
+		Decimals:           12,
+		CallIndex:          substrate.CallIndex{Section: 4, Method: 3},
+		ExistentialDeposit: big.NewInt(333_333_333), // ~1/3000 KSM
+		FeePlanck:          big.NewInt(100_000_000),
+	})
+	dotChainCtx := NewLiveDOTChainContext(overrides, 8*time.Second)
+	logger.Info("dot assembler configured",
+		"networks", len(dotAsm.Networks),
+		"chain_context", "live",
+	)
+
 	// Balance probe: shared by the release-pool low-balance alerter
 	// and the signing-driver gas pre-check. One http.Client per
 	// process is plenty.
@@ -597,6 +644,41 @@ func main() {
 		)
 	}
 
+	// Parallel DOT-family pool. Keeps a fresh set of substrate-flavoured
+	// release wallets so an operator funds them once (existential deposit
+	// + headroom) and DOT swaps rotate through them. Mint network sets
+	// the SS58 prefix (mainnet=0, Westend=42, Kusama=2).
+	var dotReleasePool *ReleasePool
+	if poolStore, ok := swapStore.(ReleasePoolStore); ok && *dotPoolSize > 0 {
+		dotThreshold := new(big.Int)
+		if _, parseOK := dotThreshold.SetString(*dotPoolThresholdPlanck, 10); !parseOK {
+			logger.Error("invalid --release-pool-dot-threshold-planck",
+				"value", *dotPoolThresholdPlanck,
+			)
+			os.Exit(1)
+		}
+		dotReleasePool = NewReleasePoolForFamily(poolStore, FamilyDOT, *dotPoolMintNetwork, logger)
+		if dotThreshold.Sign() > 0 {
+			dotReleasePool.BalanceThresholdWei = dotThreshold // planck precision, same semantics
+			// No probe — DOT balance shape doesn't match eth_getBalance.
+			// The signing-driver's dotGasPrecheck handles the substrate
+			// balance check authoritatively.
+		}
+		bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		if err := dotReleasePool.Bootstrap(bootstrapCtx, mchainClient, *dotPoolSize); err != nil {
+			bootstrapCancel()
+			logger.Error("DOT release pool bootstrap failed", "err", err, "desired_size", *dotPoolSize)
+			os.Exit(1)
+		}
+		bootstrapCancel()
+		releasePoolSet.DOT = dotReleasePool
+		logger.Info("DOT release pool ready",
+			"size", dotReleasePool.Size(),
+			"mint_network", *dotPoolMintNetwork,
+			"balance_threshold_planck", dotThreshold.String(),
+		)
+	}
+
 	// Signing driver: background goroutine that drives swaps in
 	// bridge_transfer_pending through MPC threshold signing. Requires
 	// an mchain client; without one the driver has nothing to call.
@@ -606,6 +688,7 @@ func main() {
 		signer = NewSigningDriver(swapStore, mchainClient, *signingInterval, logger)
 		signer.SetAssembler(asm)       // produces wire-correct EVM txs
 		signer.SetSOLAssembler(solAsm) // produces wire-correct SOL txs
+		signer.SetDOTAssembler(dotAsm, dotChainCtx)
 		// PoolSet wins when present; the legacy single-pool stays as
 		// the fallback for callers that haven't migrated.
 		if releasePoolSet != nil && releasePoolSet.Size() > 0 {
@@ -613,6 +696,9 @@ func main() {
 		}
 		if releasePool != nil && releasePool.Size() > 0 {
 			signer.SetReleasePool(releasePool)
+		}
+		if dotReleasePool != nil && dotReleasePool.Size() > 0 {
+			signer.SetDOTReleasePool(dotReleasePool)
 		}
 		if !*disableGasPrecheck {
 			signer.SetGasProbe(balanceProbe)
@@ -631,7 +717,7 @@ func main() {
 		}()
 		logger.Info("signing driver started",
 			"interval", *signingInterval,
-			"assembler", "evm-eip155+sol-v0",
+			"assembler", "evm-eip155 + sol-v0 + btc-p2wpkh + substrate-ecdsa",
 			"release_pool", releasePool != nil && releasePool.Size() > 0,
 			"btc_release_pool", btcReleasePool != nil && btcReleasePool.Size() > 0,
 			"btc_assembler", btcAssembler != nil,
