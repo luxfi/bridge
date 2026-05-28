@@ -51,6 +51,17 @@ const (
 	SwapStatusRefunded SwapStatus = "refunded"
 	// Terminal failure (refund attempted but unrecoverable, etc.).
 	SwapStatusFailed SwapStatus = "failed"
+	// Terminal failure: gas pre-check in the signing driver determined
+	// the release wallet does not hold enough native token to cover
+	// (gasLimit * gasPrice + value) on the destination chain. The
+	// signing driver writes this state BEFORE spending the 75s
+	// signing-ceremony budget — operator must fund the wallet listed
+	// in Swap.ReleaseWalletID, then a follow-up manual nudge can
+	// resurrect the swap. Distinct from SwapStatusBroadcasting +
+	// "Insufficient funds" LastError (which can self-recover on
+	// next tick once funds arrive); this state is pre-sign and the
+	// swap deliberately does NOT retry until an operator intervenes.
+	SwapStatusFailedInsufficientReleaseGas SwapStatus = "failed_insufficient_release_gas"
 	// User-cancelled before deposit.
 	SwapStatusCancelled SwapStatus = "cancelled"
 )
@@ -119,6 +130,13 @@ type Swap struct {
 	// Signing — populated when the MPC ceremony emits a signature.
 	MPCSessionID string `json:"mpc_session_id,omitempty"`
 	Signature    string `json:"signature,omitempty"`
+
+	// ReleasePubKey is the hex-encoded 33-byte compressed secp256k1
+	// pubkey for the release wallet. Required by the DOT signing
+	// path so the assembler can derive the AccountId32 and pick the
+	// right ECDSA recovery byte. Empty for swaps that never use a
+	// substrate destination.
+	ReleasePubKey string `json:"release_pub_key,omitempty"`
 
 	// DestRawTx is the fully-assembled, signed destination-chain raw
 	// transaction (hex-encoded). The broadcast driver consumes this
@@ -209,6 +227,15 @@ type InMemoryStore struct {
 	swaps   map[string]*Swap
 	now     func() time.Time // overridable in tests
 	idMaker func() string    // overridable in tests
+
+	// Release-pool persistence — lazily initialized on first
+	// LoadEntries/PutEntry call. Lives here (rather than as a
+	// separate type) so the in-memory test setup boots with a
+	// single NewInMemoryStore() call. The inMemoryReleasePool is
+	// itself multi-family (entries keyed by (family, idx)), so this
+	// single slot handles every family the bridge supports.
+	poolOnce sync.Once
+	pool     *inMemoryReleasePool
 }
 
 // NewInMemoryStore returns an empty in-memory store.

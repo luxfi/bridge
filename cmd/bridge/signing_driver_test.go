@@ -13,6 +13,7 @@ import (
 
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/txassembler"
+	"github.com/luxfi/bridge/internal/xrpl"
 )
 
 // =============================================================================
@@ -22,12 +23,12 @@ import (
 // fakeSigner is a programmable MPCSigner for tests. Per walletID it
 // returns either a SignResult (success path) or an error.
 type fakeSigner struct {
-	mu        sync.Mutex
-	results   map[string]*mchain.SignResult
-	errors    map[string]error
-	calls     atomic.Int64
-	lastReq   []signCall
-	delay     time.Duration // optional artificial latency
+	mu      sync.Mutex
+	results map[string]*mchain.SignResult
+	errors  map[string]error
+	calls   atomic.Int64
+	lastReq []signCall
+	delay   time.Duration // optional artificial latency
 }
 
 type signCall struct {
@@ -686,4 +687,229 @@ func TestSigningDriverStats_StartsZero(t *testing.T) {
 	if s.Ticks != 0 || s.Attempts != 0 || s.Successes != 0 || s.Failures != 0 || s.ListErrors != 0 {
 		t.Errorf("expected zero stats, got %+v", s)
 	}
+}
+
+// =============================================================================
+// XRP dispatch
+// =============================================================================
+
+// fakeXRPProv is a minimal XRPProvider stand-in for the signing-driver
+// integration tests. Lives here (not in txassembler) because cmd/bridge
+// is where the XRP wiring is exercised.
+type fakeXRPProv struct {
+	seq          uint32
+	ledger       uint32
+	feeDrops     int64
+	balanceDrops int64
+	calls        atomic.Int64
+}
+
+func (f *fakeXRPProv) AccountInfo(_ context.Context, _, _ string) (uint32, uint32, error) {
+	f.calls.Add(1)
+	return f.seq, f.ledger, nil
+}
+func (f *fakeXRPProv) SuggestFeeDrops(_ context.Context, _ string) (int64, error) {
+	return f.feeDrops, nil
+}
+func (f *fakeXRPProv) AccountBalanceDrops(_ context.Context, _, _ string) (int64, error) {
+	return f.balanceDrops, nil
+}
+
+// xrpAssemblerFor wires an Assembler with the fake XRP provider so
+// the signing driver can exercise PreSignXRP / FinalizeXRP without a
+// live rippled.
+func xrpAssemblerFor(prov *fakeXRPProv) *txassembler.Assembler {
+	asm := txassembler.New(&txassembler.StaticProvider{
+		Nonces:   map[string]uint64{},
+		GasPrice: map[string]*big.Int{},
+	})
+	asm.XRP = prov
+	asm.SetXRPNetwork("XRP_TESTNET", txassembler.XRPNetwork{LastLedgerWindow: 20})
+	return asm
+}
+
+// xrpPoolEntryWithPubKey seeds the InMemoryStore + a ReleasePool with
+// one XRP-family wallet ready to release on XRP_TESTNET.
+func xrpPoolEntryWithPubKey(t *testing.T, store *InMemoryStore, walletID, addr, pubHex string) *ReleasePool {
+	t.Helper()
+	pool := NewReleasePoolForFamily(store, FamilyXRP, "XRP_TESTNET", nil)
+	if err := store.PutEntry(context.Background(), FamilyXRP, 0, ReleasePoolEntry{
+		Index:       0,
+		WalletID:    walletID,
+		Address:     addr,
+		Network:     "XRP_TESTNET",
+		Family:      FamilyXRP,
+		ECDSAPubKey: pubHex,
+		MintedAt:    time.Now().UTC(),
+	}); err != nil {
+		t.Fatalf("seed xrp pool: %v", err)
+	}
+	if err := pool.Bootstrap(context.Background(), nil, 0); err != nil {
+		t.Fatalf("bootstrap reload: %v", err)
+	}
+	return pool
+}
+
+// 130-hex-char (65-byte) MPC-style signature: 32B r + 32B s + 1B v.
+const testMPCSigHex = "1a2b3c4d5e6f708192a3b4c5d6e7f80910111213141516171819202122232425" +
+	"0b0c0d0e0f101112131415161718191a1b1c1d1e1f20212223242526272829ff" +
+	"00"
+
+const testXRPPubKeyHex = "0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020"
+
+func TestSigningDriver_XRP_HappyPath(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	prov := &fakeXRPProv{
+		seq:          42,
+		ledger:       100_000,
+		feeDrops:     12,
+		balanceDrops: 1_000_000_000, // 1000 XRP — plenty
+	}
+	asm := xrpAssemblerFor(prov)
+
+	walletID := "wallet-xrp-1"
+	// derive the canonical r-address from the test pubkey so it round-trips.
+	releaseAddr := mustXRPAddr(t, testXRPPubKeyHex)
+	pool := xrpPoolEntryWithPubKey(t, store, walletID, releaseAddr, testXRPPubKeyHex)
+
+	signer.ok(walletID, testMPCSigHex, "session-xrp-1")
+
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		Amount:             1.0, // 1 XRP
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+		DepositAddress:     "deposit-w###0xDepositAddr",
+		UseDepositAddress:  true,
+	}
+	if err := store.Create(context.Background(), sw); err != nil {
+		t.Fatalf("create swap: %v", err)
+	}
+
+	d := NewSigningDriver(store, signer, time.Second, nil)
+	d.SetAssembler(asm)
+	d.SetReleasePool(pool)
+	d.Tick(context.Background())
+
+	got, _ := store.Get(context.Background(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Errorf("Status = %q, want %q (LastError=%q)", got.Status, SwapStatusBroadcasting, got.LastError)
+	}
+	if got.DestRawTx == "" {
+		t.Error("DestRawTx must be populated by FinalizeXRP")
+	}
+	if got.ReleaseWalletID != walletID {
+		t.Errorf("ReleaseWalletID = %q, want %q", got.ReleaseWalletID, walletID)
+	}
+	if signer.calls.Load() != 1 {
+		t.Errorf("expected exactly 1 MPC sign call, got %d", signer.calls.Load())
+	}
+}
+
+func TestSigningDriver_XRP_InsufficientBalance_ShortCircuits(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	prov := &fakeXRPProv{
+		seq:          1,
+		ledger:       100,
+		feeDrops:     12,
+		balanceDrops: 100, // way below reserve+value
+	}
+	asm := xrpAssemblerFor(prov)
+
+	walletID := "wallet-xrp-broke"
+	releaseAddr := mustXRPAddr(t, testXRPPubKeyHex)
+	pool := xrpPoolEntryWithPubKey(t, store, walletID, releaseAddr, testXRPPubKeyHex)
+
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		Amount:             1.0,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+		DepositAddress:     "deposit-w###0xDepositAddr",
+		UseDepositAddress:  true,
+	}
+	if err := store.Create(context.Background(), sw); err != nil {
+		t.Fatal(err)
+	}
+
+	d := NewSigningDriver(store, signer, time.Second, nil)
+	d.SetAssembler(asm)
+	d.SetReleasePool(pool)
+	d.Tick(context.Background())
+
+	got, _ := store.Get(context.Background(), sw.ID)
+	if got.Status != SwapStatusFailedInsufficientReleaseGas {
+		t.Errorf("Status = %q, want failed_insufficient_release_gas (LastError=%q)", got.Status, got.LastError)
+	}
+	if signer.calls.Load() != 0 {
+		t.Errorf("MPC must NOT be called on gas-precheck short-circuit; got %d calls", signer.calls.Load())
+	}
+}
+
+func TestSigningDriver_XRP_PoolEntryMissingPubKey_RollsBack(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	asm := xrpAssemblerFor(&fakeXRPProv{seq: 1, ledger: 1, feeDrops: 12, balanceDrops: 1_000_000_000})
+
+	// Seed a pool entry that lacks ECDSAPubKey (simulates a legacy
+	// pre-XRP-support pool re-used for an XRP destination).
+	pool := NewReleasePoolForFamily(store, FamilyXRP, "XRP_TESTNET", nil)
+	_ = store.PutEntry(context.Background(), FamilyXRP, 0, ReleasePoolEntry{
+		Index:    0,
+		WalletID: "legacy-w",
+		Address:  "rLegacyNoPubKey",
+		Family:   FamilyXRP,
+		// ECDSAPubKey deliberately empty.
+		Network:  "XRP_TESTNET",
+		MintedAt: time.Now().UTC(),
+	})
+	_ = pool.Bootstrap(context.Background(), nil, 0)
+
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		Amount:             0.1,
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+		DepositAddress:     "d###0x0",
+		UseDepositAddress:  true,
+	}
+	_ = store.Create(context.Background(), sw)
+
+	d := NewSigningDriver(store, signer, time.Second, nil)
+	d.SetAssembler(asm)
+	d.SetReleasePool(pool)
+	d.Tick(context.Background())
+
+	got, _ := store.Get(context.Background(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("Status = %q, want rollback to bridge_transfer_pending", got.Status)
+	}
+	if got.LastError == "" {
+		t.Error("LastError must explain the missing PubKeyHex")
+	}
+}
+
+// mustXRPAddr derives the r-address from a hex-encoded compressed
+// secp256k1 pubkey. Test helper — wraps internal/xrpl so tests don't
+// import that path twice.
+func mustXRPAddr(t *testing.T, pubHex string) string {
+	t.Helper()
+	pub, err := hex.DecodeString(pubHex)
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr, err := xrpl.AddressFromPubKey(pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return addr
 }
