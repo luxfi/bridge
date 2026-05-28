@@ -8,7 +8,9 @@
 //   - EVM (Ethereum / Sepolia / Lux / Base / Polygon / Arbitrum /
 //     Optimism / Avalanche / BSC / Holesky / Zora / Blast / Linea):
 //     implemented via JSON-RPC eth_sendRawTransaction.
-//   - Non-EVM (BTC / SOL / TON / XRP / DOT): returns
+//   - Polkadot / Substrate (POLKADOT_MAINNET / POLKADOT_TESTNET /
+//     KUSAMA_MAINNET): implemented via author_submitExtrinsic. See dot.go.
+//   - Non-EVM, non-DOT (BTC / SOL / TON / XRP): returns
 //     ErrFamilyNotImplemented. Adding any one is a straightforward
 //     follow-up — different REST/RPC contracts, same shape.
 //
@@ -83,8 +85,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, SOL, TON, XRP, DOT).
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (only EVM today)")
+// isn't implemented yet (BTC, SOL, TON, XRP). EVM + Polkadot are
+// implemented today.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -180,10 +183,12 @@ type BroadcastResult struct {
 //
 // Errors:
 //   - ErrUnsupportedNetwork           network not in the table / overrides.
-//   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP/DOT — TODO.
+//   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP — TODO.
 //   - ErrEmptyRawTx                   rawTxHex == "".
 //   - *RPCError                       upstream returned a JSON-RPC error
 //                                     or non-2xx HTTP.
+//   - *DOTBroadcastError              Polkadot author_submitExtrinsic rejected
+//                                     the extrinsic; check Retryable bit.
 //   - context.Canceled/DeadlineExceeded on caller or per-call timeout.
 func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*BroadcastResult, error) {
 	if rawTxHex == "" {
@@ -196,11 +201,12 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 
 	// Family dispatch. We use mchain.AddressTypeFor as the canonical
 	// network→family mapping (it's already the project's source of
-	// truth for which family a network belongs to). For broadcast,
-	// only AddressTypeETH is implemented today.
+	// truth for which family a network belongs to).
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
+	case mchain.AddressTypeDOT:
+		return c.broadcastDOT(ctx, url, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
