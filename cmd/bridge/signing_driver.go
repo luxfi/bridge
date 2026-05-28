@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -78,18 +80,40 @@ type SigningDriver struct {
 	// stored but no raw tx assembled — broadcaster will skip).
 	assembler *txassembler.Assembler
 
+	// pool, when set, rotates release wallets per-swap instead of
+	// reusing the deposit wallet. The deposit wallet has no
+	// guaranteed funding on the destination chain; the pool wallets
+	// are pre-funded by the operator. Optional — nil keeps the
+	// legacy deposit-as-release semantics for backward compat.
+	pool *ReleasePool
+
+	// gasProbe, when set, runs an eth_getBalance check against the
+	// release wallet's destination-chain balance before signing.
+	// Short-circuits the swap to SwapStatusFailedInsufficientReleaseGas
+	// if balance < (gasLimit * gasPrice + value). Optional — nil
+	// disables the gas pre-check entirely.
+	gasProbe BalanceProbe
+
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
 	// headroom — matches the mchain client's keygen timeout.
 	perSignTimeout time.Duration
 
+	// perBalanceTimeout caps the gas pre-check eth_getBalance call.
+	perBalanceTimeout time.Duration
+
 	running atomic.Bool
 
-	ticks       atomic.Uint64
-	attempts    atomic.Uint64
-	successes   atomic.Uint64
-	failures    atomic.Uint64
-	listErrors  atomic.Uint64
+	ticks      atomic.Uint64
+	attempts   atomic.Uint64
+	successes  atomic.Uint64
+	failures   atomic.Uint64
+	listErrors atomic.Uint64
+	// shortCircuited counts swaps that failed pre-sign on the gas
+	// check. Distinct from failures so operator dashboards can show
+	// "swap failed because operator hasn't funded a pool wallet"
+	// separately from "MPC ceremony / RPC flake".
+	shortCircuited atomic.Uint64
 
 	stopOnce      sync.Once
 	cancelRunning context.CancelFunc
@@ -101,6 +125,19 @@ type SigningDriver struct {
 // Optional — leaving it nil retains the v1 placeholder behavior.
 func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler = asm }
 
+// SetReleasePool wires the static release pool. With a pool attached,
+// signOne rotates wallets per-swap and persists ReleaseWalletID on
+// the Swap record so the broadcaster + refund driver know which
+// pool wallet holds the funds.
+func (d *SigningDriver) SetReleasePool(pool *ReleasePool) { d.pool = pool }
+
+// SetGasProbe attaches a destination-chain balance probe. With a
+// probe set, signOne queries the release wallet's balance BEFORE
+// calling the MPC sign and short-circuits to
+// SwapStatusFailedInsufficientReleaseGas when balance can't cover
+// (gasLimit * gasPrice + value).
+func (d *SigningDriver) SetGasProbe(p BalanceProbe) { d.gasProbe = p }
+
 // DefaultSigningInterval is the production-suitable tick cadence for
 // the signing driver. Faster than the deposit watcher because once a
 // swap reaches bridge_transfer_pending the user is actively waiting
@@ -110,17 +147,24 @@ const DefaultSigningInterval = 10 * time.Second
 // DefaultPerSignTimeout caps each SignForWallet call.
 const DefaultPerSignTimeout = 75 * time.Second
 
+// DefaultPerBalanceTimeout caps each gas-precheck eth_getBalance call.
+// Generous because destination RPCs (e.g. api.lux-test.network behind
+// krakend) occasionally hiccup on cold connections, but short enough
+// to fail the pre-check cleanly rather than blocking the signing tick.
+const DefaultPerBalanceTimeout = 8 * time.Second
+
 // NewSigningDriver builds a driver with sensible defaults.
 func NewSigningDriver(store SwapStore, signer MPCSigner, interval time.Duration, logger luxlog.Logger) *SigningDriver {
 	if interval <= 0 {
 		interval = DefaultSigningInterval
 	}
 	return &SigningDriver{
-		store:          store,
-		signer:         signer,
-		interval:       interval,
-		logger:         logger,
-		perSignTimeout: DefaultPerSignTimeout,
+		store:             store,
+		signer:            signer,
+		interval:          interval,
+		logger:            logger,
+		perSignTimeout:    DefaultPerSignTimeout,
+		perBalanceTimeout: DefaultPerBalanceTimeout,
 	}
 }
 
@@ -129,21 +173,23 @@ func (d *SigningDriver) Running() bool { return d.running.Load() }
 
 // SigningDriverStats is a point-in-time view of the driver's counters.
 type SigningDriverStats struct {
-	Ticks      uint64 `json:"ticks"`
-	Attempts   uint64 `json:"attempts"`
-	Successes  uint64 `json:"successes"`
-	Failures   uint64 `json:"failures"`
-	ListErrors uint64 `json:"list_errors"`
+	Ticks          uint64 `json:"ticks"`
+	Attempts       uint64 `json:"attempts"`
+	Successes      uint64 `json:"successes"`
+	Failures       uint64 `json:"failures"`
+	ListErrors     uint64 `json:"list_errors"`
+	ShortCircuited uint64 `json:"short_circuited"`
 }
 
 // Stats snapshots the counters. Safe for concurrent reads.
 func (d *SigningDriver) Stats() SigningDriverStats {
 	return SigningDriverStats{
-		Ticks:      d.ticks.Load(),
-		Attempts:   d.attempts.Load(),
-		Successes:  d.successes.Load(),
-		Failures:   d.failures.Load(),
-		ListErrors: d.listErrors.Load(),
+		Ticks:          d.ticks.Load(),
+		Attempts:       d.attempts.Load(),
+		Successes:      d.successes.Load(),
+		Failures:       d.failures.Load(),
+		ListErrors:     d.listErrors.Load(),
+		ShortCircuited: d.shortCircuited.Load(),
 	}
 }
 
@@ -223,8 +269,43 @@ func (d *SigningDriver) tick(ctx context.Context) {
 // signOne drives one swap through the ceremony. Marks it as
 // SwapStatusSigning before the request fires so a restart can detect
 // "in-flight" state separately from "ready to sign."
+//
+// Pool integration: when d.pool is set, the driver picks a release
+// wallet via Acquire() and uses it as the sender for both the
+// assembler's PreSign call and the MPC sign call. Without a pool,
+// it falls back to the legacy "deposit wallet doubles as release
+// wallet" semantics (extractWalletID(DepositAddress)).
+//
+// Gas pre-check: when d.gasProbe is set, the driver queries the
+// release wallet's destination-chain native balance after PreSign
+// (which gave us the exact GasPrice + GasLimit + Value). If the
+// balance can't cover (gasLimit * gasPrice + value), the swap is
+// short-circuited to SwapStatusFailedInsufficientReleaseGas and the
+// MPC ceremony is skipped entirely. Saves the 75s sign-then-fail
+// dance the broadcast driver previously had to absorb.
 func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
-	walletID := extractWalletID(sw.DepositAddress)
+	// Step 1 — pick a signing wallet. Pool path takes precedence
+	// when configured; otherwise fall back to the deposit-as-release
+	// path that handled v1 swaps.
+	var walletID, senderAddr string
+	usingPool := false
+	if d.pool != nil && d.pool.Size() > 0 {
+		entry, perr := d.pool.Acquire(ctx, sw.DestinationNetwork)
+		if perr == nil && entry != nil {
+			walletID = entry.WalletID
+			senderAddr = entry.Address
+			usingPool = true
+		} else if d.logger != nil && perr != nil && !errors.Is(perr, ErrEmptyPool) {
+			d.logger.Warn("release pool acquire failed; falling back to deposit wallet",
+				"swap_id", sw.ID,
+				"err", perr,
+			)
+		}
+	}
+	if walletID == "" {
+		walletID = extractWalletID(sw.DepositAddress)
+		senderAddr = extractDepositAddress(sw.DepositAddress)
+	}
 	if walletID == "" {
 		// Swap was created without a minted MPC wallet (likely
 		// use_deposit_address=false). The signing flow doesn't apply
@@ -235,34 +316,40 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 
 	d.attempts.Add(1)
 
-	// Claim the swap by transitioning to "signing in progress" before
-	// the (slow) ceremony call. A second driver instance polling at
-	// the same moment will not see this swap in bridge_transfer_pending
-	// anymore and will skip it.
+	// Step 2 — claim the swap by transitioning to "signing in progress"
+	// before the (slow) ceremony call. A second driver instance polling
+	// at the same moment will not see this swap in
+	// bridge_transfer_pending anymore and will skip it. We persist
+	// the chosen release-wallet metadata here so the broadcast +
+	// refund drivers can read it back later.
 	claimed, err := d.store.Patch(ctx, sw.ID, func(s *Swap) {
 		if s.Status != SwapStatusBridgeTransferPending {
 			return
 		}
 		s.Status = SwapStatusSigning
+		if usingPool {
+			s.ReleaseWalletID = walletID
+			s.ReleaseAddress = senderAddr
+		}
 	})
 	if err != nil || claimed == nil || claimed.Status != SwapStatusSigning {
 		// Race with another driver / state already advanced — let it go.
 		return
 	}
 
-	// Compute the signing message. With an assembler attached, this is
-	// the actual destination-chain tx sighash (a real EVM EIP-155
-	// digest the destination chain will validate). Without one, fall
-	// back to the placeholder synthetic digest — useful for early
-	// integration testing but the resulting signature can't be
-	// broadcast as a real tx.
+	// Step 3 — compute the signing message. With an assembler attached,
+	// this is the actual destination-chain tx sighash (a real EVM
+	// EIP-155 digest the destination chain will validate). Without
+	// one, fall back to the placeholder synthetic digest — useful
+	// for early integration testing but the resulting signature
+	// can't be broadcast as a real tx.
 	var msgHex string
 	var unsigned *txassembler.Unsigned
-	senderAddr := extractDepositAddress(sw.DepositAddress)
 	if d.assembler != nil && senderAddr != "" {
 		var aerr error
 		unsigned, aerr = d.assembler.PreSign(ctx, txassembler.SwapIntent{
 			DestinationNetwork: sw.DestinationNetwork,
+			DestinationAsset:   sw.DestinationAsset,
 			DestinationAddress: sw.DestinationAddress,
 			Amount:             sw.Amount,
 			SenderAddress:      senderAddr,
@@ -287,6 +374,34 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			return
 		}
 		msgHex = "0x" + hex.EncodeToString(unsigned.SigHash[:])
+
+		// Step 4 — gas pre-check. We have the exact gasPrice, gasLimit,
+		// and value from PreSign; query the release wallet balance and
+		// short-circuit the swap before burning the MPC ceremony if
+		// the wallet can't cover the destination cost. Skip when no
+		// probe is configured (legacy / test setups).
+		if d.gasProbe != nil {
+			if reason, ok := d.gasPrecheck(ctx, sw, unsigned, senderAddr); !ok {
+				d.shortCircuited.Add(1)
+				_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+					if s.Status == SwapStatusSigning {
+						s.Status = SwapStatusFailedInsufficientReleaseGas
+					}
+					s.LastError = reason
+					s.LastErrorAt = time.Now().UTC()
+				})
+				if d.logger != nil {
+					d.logger.Warn("gas pre-check failed — swap short-circuited",
+						"swap_id", sw.ID,
+						"release_wallet_id", walletID,
+						"release_address", senderAddr,
+						"network", sw.DestinationNetwork,
+						"reason", reason,
+					)
+				}
+				return
+			}
+		}
 	} else {
 		msgHex = buildSigningMessage(sw)
 	}
@@ -427,6 +542,50 @@ func buildSigningMessage(sw *Swap) string {
 	b = append(b, []byte(sw.DestinationAsset)...)
 	sum := sha256.Sum256(b)
 	return "0x" + hex.EncodeToString(sum[:])
+}
+
+// gasPrecheck verifies the release wallet's destination-chain balance
+// covers (gasLimit * gasPrice + value). Returns (humanReadableReason, false)
+// when insufficient; (empty, true) when balance is sufficient or the
+// probe failed (probe failures must NOT block the swap — the
+// existing broadcast-retry path still handles transient RPC issues).
+func (d *SigningDriver) gasPrecheck(ctx context.Context, sw *Swap, u *txassembler.Unsigned, releaseAddr string) (string, bool) {
+	probeCtx, cancel := context.WithTimeout(ctx, d.perBalanceTimeout)
+	defer cancel()
+	balance, err := d.gasProbe.BalanceAt(probeCtx, sw.DestinationNetwork, releaseAddr)
+	if err != nil {
+		// Best-effort: log and skip the pre-check. We'd rather let
+		// the broadcast leg retry than refuse to sign a swap we
+		// can't verify.
+		if d.logger != nil {
+			d.logger.Debug("gas pre-check: balance probe failed (non-fatal — pre-check skipped)",
+				"swap_id", sw.ID,
+				"address", releaseAddr,
+				"network", sw.DestinationNetwork,
+				"err", err,
+			)
+		}
+		return "", true
+	}
+	// Required cost = (gasLimit * gasPrice) + value. The assembler's
+	// Value is already in base units (wei); gasPrice is wei/gas;
+	// gasLimit is uint64. Use big.Int math to avoid overflow.
+	gasCost := new(big.Int).Mul(u.GasPrice, new(big.Int).SetUint64(u.GasLimit))
+	required := new(big.Int).Add(gasCost, u.Value)
+	if balance.Cmp(required) >= 0 {
+		return "", true
+	}
+	short := new(big.Int).Sub(required, balance)
+	return fmt.Sprintf(
+		"Release wallet %s has insufficient native balance on %s: balance=%s wei, required=%s wei (gasCost=%s + value=%s), short=%s wei. Fund the wallet and trigger a retry.",
+		releaseAddr,
+		sw.DestinationNetwork,
+		balance.String(),
+		required.String(),
+		gasCost.String(),
+		u.Value.String(),
+		short.String(),
+	), false
 }
 
 // Compile-time check: *mchain.Client satisfies MPCSigner.
