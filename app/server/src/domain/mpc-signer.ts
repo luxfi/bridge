@@ -1,28 +1,67 @@
-import { JsonRpcProvider, Transaction, parseUnits, Interface, keccak256, getBytes } from "ethers"
-import axios from "axios"
+// EVM signer wired through the canonical MPCClient.
+//
+// Replaces the legacy axios/polling-against-/api/v1/transactions code
+// path with a single MPCClient.sign() round-trip plus a getWallet()
+// for address lookup. All bridge → mpcd traffic now flows through the
+// same wire protocol as ~/work/lux/kms/pkg/mpc/client.go.
+//
+// Env (brand-neutral):
+//   BRIDGE_MPC_URL              required (mpcd base URL)
+//   BRIDGE_IAM_ISSUER           required (auth)
+//   BRIDGE_IAM_CLIENT_ID        required (auth)
+//   BRIDGE_IAM_CLIENT_SECRET    required (auth — from KMS in prod)
+//   BRIDGE_MPC_WALLET_ID        EVM signer wallet id (required to enable)
+//
+// Standalone-friendly: isMPCSigningEnabled() returns false when the env
+// block is incomplete; callers fall back to LUX_SIGNER (legacy private
+// key) as documented in domain/swaps.ts. No crashes at module load.
 
-const MPC_API_URL = process.env.MPC_API_URL || "https://mpc.lux.network"
-const MPC_API_TOKEN = process.env.MPC_API_TOKEN || ""
-const MPC_WALLET_ID = process.env.MPC_WALLET_ID || ""
+import {
+  JsonRpcProvider,
+  Transaction,
+  Interface,
+  getBytes,
+} from "ethers"
 
-interface MPCSignResult {
-  r: string
-  s: string
-  signature?: string
+import { IAMClient } from "@/clients/iam"
+import { MPCClient } from "@/clients/mpc"
+import logger from "@/logger"
+
+// Lazily-built singleton MPC client. Env is read on first call so test
+// fixtures can mutate process.env without import-order issues.
+let _mpcClient: MPCClient | undefined
+function getMpcClient(): MPCClient | undefined {
+  if (_mpcClient) return _mpcClient
+  const url = process.env.BRIDGE_MPC_URL
+  const issuer = process.env.BRIDGE_IAM_ISSUER
+  const clientId = process.env.BRIDGE_IAM_CLIENT_ID
+  const clientSecret = process.env.BRIDGE_IAM_CLIENT_SECRET
+  if (!url || !issuer || !clientId || !clientSecret) return undefined
+  const iam = new IAMClient({ issuer, clientId, clientSecret })
+  _mpcClient = new MPCClient({ url, iam })
+  return _mpcClient
 }
 
-const mpcHeaders = () => ({
-  Authorization: `Bearer ${MPC_API_TOKEN}`,
-  "Content-Type": "application/json",
-})
+/** Test hook — drop the cached client so a fresh env config rebuilds it. */
+export function _resetMpcClientForTests(): void {
+  _mpcClient = undefined
+}
 
 /**
- * Sign and broadcast an EVM contract call via MPC.
- * 1. Build unsigned tx (to, data, gas, nonce, chainId)
- * 2. Serialize the unsigned tx hash
- * 3. POST to MPC API /transactions with raw_tx = unsigned tx hash
- * 4. Get back r, s signature components
- * 5. Attach signature to tx and broadcast via provider
+ * Sign and broadcast an EVM contract call via the canonical MPCClient.
+ *
+ * Flow:
+ *   1. Resolve the bridge's settlement wallet (MPCClient.getWallet) to
+ *      get its ETH address.
+ *   2. Build an unsigned EIP-1559 transaction with the right nonce
+ *      against `provider`.
+ *   3. Compute the unsigned tx hash bytes.
+ *   4. Call MPCClient.sign — one HTTP round-trip; mpcd handles the
+ *      threshold round internally and returns r/s/v.
+ *   5. Attach the signature and broadcast.
+ *
+ * Compared to the previous /api/v1/transactions + polling implementation
+ * this is ~2× shorter and one network round-trip instead of N polls.
  */
 export async function mpcSignAndSend(
   provider: JsonRpcProvider,
@@ -30,22 +69,33 @@ export async function mpcSignAndSend(
   data: string,
   value: bigint = 0n,
 ): Promise<string> {
-  const feeData = await provider.getFeeData()
-  const network = await provider.getNetwork()
-
-  // Get nonce for the MPC wallet address
-  const walletInfo = await axios.get(
-    `${MPC_API_URL}/api/v1/wallets/${MPC_WALLET_ID}`,
-    { headers: mpcHeaders() }
-  )
-  const fromAddress = walletInfo.data.ethAddress || walletInfo.data.eth_address
-  if (!fromAddress) {
-    throw new Error(`MPC wallet ${MPC_WALLET_ID} has no ETH address`)
+  const client = getMpcClient()
+  if (!client) {
+    throw new Error(
+      "MPC signing unavailable: BRIDGE_MPC_URL / BRIDGE_IAM_* env block is incomplete",
+    )
+  }
+  const walletId = process.env.BRIDGE_MPC_WALLET_ID
+  if (!walletId) {
+    throw new Error(
+      "MPC signing unavailable: BRIDGE_MPC_WALLET_ID is not set",
+    )
   }
 
+  // 1. Wallet → ETH address.
+  const wallet = await client.getWallet(walletId)
+  const fromAddress = wallet.ethAddress
+  if (!fromAddress) {
+    throw new Error(
+      `MPC wallet ${walletId} has no eth_address (keygen incomplete?)`,
+    )
+  }
+
+  // 2. Unsigned tx.
+  const feeData = await provider.getFeeData()
+  const network = await provider.getNetwork()
   const nonce = await provider.getTransactionCount(fromAddress)
 
-  // Build unsigned transaction
   const tx = Transaction.from({
     type: 2, // EIP-1559
     to,
@@ -55,87 +105,72 @@ export async function mpcSignAndSend(
     chainId: network.chainId,
     maxFeePerGas: feeData.maxFeePerGas,
     maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-    gasLimit: 300000n,
+    gasLimit: 300_000n,
   })
 
-  // Get the unsigned tx hash to sign
-  const unsignedHash = tx.unsignedHash
-  const rawTxHex = Buffer.from(getBytes(unsignedHash)).toString("hex")
+  // 3. Hash to sign.
+  const unsignedHashBytes = getBytes(tx.unsignedHash)
 
-  // Submit to MPC API for signing
-  const signResp = await axios.post(
-    `${MPC_API_URL}/api/v1/transactions`,
-    {
-      wallet_id: MPC_WALLET_ID,
-      tx_type: "bridge_payout",
-      chain: `eip155:${network.chainId}`,
-      to_address: to,
-      raw_tx: rawTxHex,
-    },
-    { headers: mpcHeaders() }
-  )
+  // 4. Threshold sign — single round-trip.
+  const result = await client.sign({
+    walletId,
+    keyType: "secp256k1",
+    message: unsignedHashBytes,
+  })
 
-  const txRecord = signResp.data
-
-  // Poll for signature completion (MPC signing is async)
-  let signed = txRecord
-  for (let i = 0; i < 30; i++) {
-    if (signed.status === "signed" || signed.status === "confirmed") break
-    if (signed.status === "failed") throw new Error("MPC signing failed")
-    await new Promise((r) => setTimeout(r, 2000))
-    const poll = await axios.get(
-      `${MPC_API_URL}/api/v1/transactions/${signed.id}`,
-      { headers: mpcHeaders() }
-    )
-    signed = poll.data
+  // 5. Attach signature + broadcast.
+  let r = result.r
+  let s = result.s
+  let v = result.v
+  if (!r || !s) {
+    // Some mpcd response shapes return the compact 65-byte signature in
+    // result.signature (hex). Split it manually as a fallback.
+    const sigHex = result.signature.replace(/^0x/, "")
+    if (sigHex.length < 130) {
+      throw new Error(
+        `MPC sign returned signature too short to split (got ${sigHex.length} hex chars; expected ≥130 for r||s||v)`,
+      )
+    }
+    r = "0x" + sigHex.slice(0, 64)
+    s = "0x" + sigHex.slice(64, 128)
+    v = parseInt(sigHex.slice(128, 130), 16)
   }
+  // EIP-155: v should be 27 or 28 (or chainId*2 + 35/36, but tx.signature
+  // accepts the raw 27/28 form and ethers handles the rest at serialize).
+  if (typeof v !== "number") v = 27
+  if (v < 27) v += 27
 
-  if (signed.status !== "signed" && signed.status !== "confirmed") {
-    throw new Error(`MPC signing timed out (status: ${signed.status})`)
-  }
-
-  // Reconstruct signature
-  const rHex = signed.signatureR || signed.signature_r
-  const sHex = signed.signatureS || signed.signature_s
-  if (!rHex || !sHex) {
-    throw new Error("MPC response missing r/s signature components")
-  }
-
-  // Attach signature to tx
-  const rBuf = Buffer.from(rHex, "hex")
-  const sBuf = Buffer.from(sHex, "hex")
-  // Determine v (recovery id) — try both 0 and 1
   tx.signature = {
-    r: "0x" + rBuf.toString("hex"),
-    s: "0x" + sBuf.toString("hex"),
-    v: 0,
+    r: r.startsWith("0x") ? r : "0x" + r,
+    s: s.startsWith("0x") ? s : "0x" + s,
+    v,
   }
 
-  // Broadcast
-  const signedTxHex = tx.serialized
-  const broadcastResult = await provider.broadcastTransaction(signedTxHex)
-  await broadcastResult.wait()
-
-  return broadcastResult.hash
+  const broadcast = await provider.broadcastTransaction(tx.serialized)
+  await broadcast.wait()
+  logger.info(
+    `[mpc-signer] broadcast tx=${broadcast.hash} from=${fromAddress} via mpcd wallet=${walletId}`,
+  )
+  return broadcast.hash
 }
 
 /**
- * Sign and send a bridgeMint call via MPC.
+ * Sign and send a `bridgeMint(recipient, amount)` call via MPC.
  */
 export async function mpcBridgeMint(
   provider: JsonRpcProvider,
   tokenAddress: string,
   recipient: string,
   amount: bigint,
-  abi: any[],
+  abi: unknown[],
 ): Promise<string> {
-  const iface = new Interface(abi)
+  const iface = new Interface(abi as ConstructorParameters<typeof Interface>[0])
   const data = iface.encodeFunctionData("bridgeMint", [recipient, amount])
   return mpcSignAndSend(provider, tokenAddress, data)
 }
 
 /**
- * Send native token (LUX/ZOO) via MPC signer.
+ * Send native token via MPC signer.
  */
 export async function mpcSendNative(
   provider: JsonRpcProvider,
@@ -146,8 +181,16 @@ export async function mpcSendNative(
 }
 
 /**
- * Check if MPC signing is configured and available.
+ * MPC signing is enabled iff the full BRIDGE_MPC_* + BRIDGE_IAM_* env
+ * block + BRIDGE_MPC_WALLET_ID are all set. Callers branch on this to
+ * fall back to LUX_SIGNER (legacy private key) when running standalone.
  */
 export function isMPCSigningEnabled(): boolean {
-  return !!(MPC_API_URL && MPC_API_TOKEN && MPC_WALLET_ID)
+  return !!(
+    process.env.BRIDGE_MPC_URL &&
+    process.env.BRIDGE_IAM_ISSUER &&
+    process.env.BRIDGE_IAM_CLIENT_ID &&
+    process.env.BRIDGE_IAM_CLIENT_SECRET &&
+    process.env.BRIDGE_MPC_WALLET_ID
+  )
 }
