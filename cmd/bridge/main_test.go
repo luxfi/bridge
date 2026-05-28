@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luxfi/bridge/internal/tenant"
+	"github.com/luxfi/bridge/pkg/tenant"
 )
 
 // Coverage for the small helpers in main.go. The main() function itself
