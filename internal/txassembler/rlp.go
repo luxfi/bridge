@@ -155,6 +155,13 @@ func hexNibble(c byte) (byte, bool) {
 // Amount → wei conversion
 // =============================================================================
 
+// FloatToBaseUnits is the exported alias for floatToWei. Useful for
+// non-EVM assemblers (DOT planck etc.) that share the same
+// human-amount → integer scaling logic. Same precision caps + behaviour.
+func FloatToBaseUnits(amount float64, decimals int) (*big.Int, error) {
+	return floatToWei(amount, decimals)
+}
+
 // floatToWei converts a human-readable amount (e.g. 0.1) to a wei
 // big.Int using `decimals` (18 for ETH/LUX).
 //
