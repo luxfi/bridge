@@ -13,6 +13,10 @@ import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWOR
 import { isMPCSigningEnabled, mpcBridgeMint, mpcSendNative } from "./mpc-signer"
 
 import type { CosignerIntent } from "./cosigners"
+import {
+  dispatchCosignersForSwap,
+  persistCosignerIntents,
+} from "./cosigners"
 
 export interface SwapData {
   amount: number
@@ -133,6 +137,15 @@ export async function handleSwapCreation(data: SwapData) {
         quotes: {}
       }
     })
+
+    // Persist layered cosigner intents (issue #386). One CosignerStep row
+    // per intent at status="pending". The post-native-sign hook
+    // (handlerUpdateMpcSignAction) reads them back via
+    // dispatchCosignersForSwap and updates each row with its terminal
+    // status before allowing the swap to advance to broadcasting.
+    if (cosigners && cosigners.length > 0) {
+      await persistCosignerIntents(swap.id, cosigners)
+    }
 
     // native currency for fee pay
     const nativeCurrency = await prisma.currency.findFirst({
@@ -904,6 +917,45 @@ export async function handlerUpdateMpcSignAction(id: string, txHash: string, amo
         }
       }
     })
+
+    // Layered cosigner gate (issue #386). After native MPC has produced
+    // a signature, every configured external cosigner (Utila /
+    // Fireblocks) must also approve before we advance the swap. If any
+    // listed cosigner rejects or fails, the swap is marked Failed with
+    // a user-visible fail_reason and we return early — the user-payout
+    // step is NEVER reached without 2-of-2 (native + every listed
+    // cosigner). For native-only swaps (cosigner_steps row count = 0),
+    // dispatchCosignersForSwap returns "no_steps" instantly and the
+    // existing code path runs unchanged.
+    const cosignVerdict = await dispatchCosignersForSwap(id, /*nativeSignature*/ txHash, txHash)
+    if (cosignVerdict.aggregate === "any_rejected" || cosignVerdict.aggregate === "any_failed") {
+      const failReason = `Layered cosigner ${cosignVerdict.aggregate === "any_rejected" ? "rejection" : "failure"}: ${cosignVerdict.failingReasons.join(" | ")}`
+      logger.warn(`[swaps] swap=${id} ${failReason}`)
+      await prisma.swap.update({
+        where: { id },
+        data: {
+          status: SwapStatus.Failed,
+          fail_reason: failReason,
+          transactions: {
+            connect: { id: transaction.id },
+          },
+        },
+      })
+      return prisma.swap.findUnique({
+        where: { id },
+        include: {
+          source_network: true,
+          source_asset: true,
+          destination_network: true,
+          destination_asset: true,
+          deposit_actions: true,
+          quotes: true,
+          transactions: { include: { currency: true, network: true } },
+          cosigner_steps: true,
+        },
+      })
+    }
+
     await prisma.swap.update({
       where: { id },
       data: {
