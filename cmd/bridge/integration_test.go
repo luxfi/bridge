@@ -95,8 +95,10 @@ func newIntegrationRig(t *testing.T) *integrationRig {
 
 	cfg, _ := LoadConfig("")
 	store := NewInMemoryStore()
-	feed := NewStaticPriceFeed(defaultPrices())
-	engine := &QuoteEngine{Feed: feed}
+	// Integration tests use a canonical in-process B-Chain mock so the
+	// daemon registers /v1/bridge/swaps natively. The signing driver
+	// receives a real (mock-derived) quote snapshot at create time.
+	bclient := newMockBChain(t, defaultPrices())
 
 	mpcClient := &mchain.Client{
 		APIURL:  mpc.URL(),
@@ -113,7 +115,7 @@ func newIntegrationRig(t *testing.T) *integrationRig {
 		Tokens:          tokens.DefaultRegistry(),
 	}
 
-	api := NewAPI(cfg, "", nil, mpcClient, dcClient, store, engine)
+	api := NewAPI(cfg, "", bclient, mpcClient, dcClient, store)
 	app := zip.New(zip.Config{AppName: "lux-bridge-it", DisableStartupMessage: true})
 	app.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(app)

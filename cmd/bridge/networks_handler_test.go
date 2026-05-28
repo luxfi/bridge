@@ -102,8 +102,8 @@ func testConfigMixed() Config {
 func newRigForConfig(t *testing.T, cfg Config) *zip.App {
 	t.Helper()
 	store := NewInMemoryStore()
-	engine := &QuoteEngine{Feed: NewStaticPriceFeed(defaultPrices())}
-	api := NewAPI(cfg, "", nil, nil, nil, store, engine)
+	// Networks/tokens handlers don't depend on bchain — pass nil.
+	api := NewAPI(cfg, "", nil, nil, nil, store)
 	app := zip.New(zip.Config{AppName: "lux-bridge-net-test", DisableStartupMessage: true})
 	app.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(app)
