@@ -8,7 +8,9 @@
 //   - EVM (Ethereum / Sepolia / Lux / Base / Polygon / Arbitrum /
 //     Optimism / Avalanche / BSC / Holesky / Zora / Blast / Linea):
 //     implemented via JSON-RPC eth_sendRawTransaction.
-//   - Non-EVM (BTC / SOL / TON / XRP / DOT): returns
+//   - BTC (mainnet / testnet): implemented via mempool.space's REST
+//     POST /api/tx (or a Bitcoin Core override). See btc.go.
+//   - Non-EVM, non-BTC (SOL / TON / XRP / DOT): returns
 //     ErrFamilyNotImplemented. Adding any one is a straightforward
 //     follow-up — different REST/RPC contracts, same shape.
 //
@@ -64,11 +66,9 @@ var rpcURLs = map[string]string{
 	"ZORA_MAINNET":     "https://rpc.zora.energy",
 	"BLAST_MAINNET":    "https://rpc.blast.io",
 	"LINEA_MAINNET":    "https://rpc.linea.build",
-	// Non-EVM are intentionally absent — they need chain-specific
-	// broadcast handlers (Bitcoin REST API, Solana JSON-RPC with a
-	// different method name, TON Center push endpoint, etc.). Adding
-	// any one is a separate impl in this file plus a switch case in
-	// Broadcast.
+	// BTC is registered by an init() in btc.go (so the BTC defaults
+	// live alongside the BTC broadcaster). SOL / TON / XRP / DOT are
+	// still pending their own chain-specific broadcast handlers.
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -83,8 +83,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, SOL, TON, XRP, DOT).
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (only EVM today)")
+// isn't implemented yet (SOL, TON, XRP, DOT). EVM + BTC are wired in
+// this package today.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -183,7 +184,7 @@ type BroadcastResult struct {
 //   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP/DOT — TODO.
 //   - ErrEmptyRawTx                   rawTxHex == "".
 //   - *RPCError                       upstream returned a JSON-RPC error
-//                                     or non-2xx HTTP.
+//     or non-2xx HTTP.
 //   - context.Canceled/DeadlineExceeded on caller or per-call timeout.
 func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*BroadcastResult, error) {
 	if rawTxHex == "" {
@@ -196,11 +197,15 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 
 	// Family dispatch. We use mchain.AddressTypeFor as the canonical
 	// network→family mapping (it's already the project's source of
-	// truth for which family a network belongs to). For broadcast,
-	// only AddressTypeETH is implemented today.
+	// truth for which family a network belongs to). EVM uses
+	// eth_sendRawTransaction; BTC uses mempool.space POST /api/tx (or
+	// the operator's own Bitcoin Core via Client.RPCURLOverrides).
+	// Other non-EVM families still pending their own broadcasters.
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
+	case mchain.AddressTypeBTC:
+		return c.broadcastBTC(ctx, url, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
