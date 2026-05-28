@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -86,13 +87,29 @@ type ReleasePoolStore interface {
 // Empty Family in deserialized entries means "evm" — kept for
 // backward compat with stores written before multi-family support.
 type ReleasePoolEntry struct {
-	Index    int       `json:"index"`
-	Family   string    `json:"family,omitempty"`
-	WalletID string    `json:"wallet_id"`
-	Address  string    `json:"address"`
-	Network  string    `json:"network,omitempty"`
+	Index    int    `json:"index"`
+	Family   string `json:"family,omitempty"`
+	WalletID string `json:"wallet_id"`
+	Address  string `json:"address"`
+	Network  string `json:"network,omitempty"`
+	// Pubkey is the raw 33-byte compressed secp256k1 public key.
+	// Required by:
+	//   - BTC release: witness stack on Finalize includes it alongside
+	//     the DER signature for P2WPKH spends.
+	//   - XRP release: same ECDSA-derived family.
+	// Empty for EVM-only deployments (the EIP-155 finalize path derives
+	// the address from the signature recovery alone) and for Ed25519
+	// families (SOL, TON).
 	Pubkey   []byte    `json:"pubkey,omitempty"`
 	MintedAt time.Time `json:"minted_at"`
+	// ECDSAPubKey is the hex-encoded compressed-secp256k1 public key
+	// (33 bytes → 66 hex chars). Persisted by the DOT signing path so
+	// the substrate assembler can derive AccountId32 + pick the ECDSA
+	// recovery byte without re-keygen'ing. Distinct from Pubkey (raw
+	// bytes) because the DOT path threads it through txassembler and
+	// Swap.ReleasePubKey as a string. The two fields hold equivalent
+	// data; populate whichever your release path consumes.
+	ECDSAPubKey string `json:"ecdsa_pub_key,omitempty"`
 }
 
 // FamilyOrDefault returns Family or "evm" when the field is empty.
@@ -112,6 +129,7 @@ const (
 	FamilyEVM = "evm"
 	FamilyBTC = "btc"
 	FamilySOL = "sol"
+	FamilyDOT = "dot"
 )
 
 // =============================================================================
@@ -245,6 +263,20 @@ func (p *ReleasePool) Entries() []ReleasePoolEntry {
 	return out
 }
 
+// PubKeyHex returns the persisted compressed-secp256k1 pubkey hex for
+// the named wallet. Returns "" if the wallet isn't in the pool or
+// wasn't minted with a pubkey (legacy entries).
+func (p *ReleasePool) PubKeyHex(walletID string) string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	for _, e := range p.entries {
+		if e.WalletID == walletID {
+			return e.ECDSAPubKey
+		}
+	}
+	return ""
+}
+
 // Bootstrap loads existing entries from the store and, if needed,
 // mints fresh ones up to the desired pool size.
 //
@@ -297,13 +329,14 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 			return fmt.Errorf("release pool [%s]: keygen idx=%d: %w", p.family, idx, err)
 		}
 		entry := ReleasePoolEntry{
-			Index:    idx,
-			Family:   p.family,
-			WalletID: w.Name,
-			Address:  w.Address,
-			Network:  p.mintNetwork,
-			Pubkey:   append([]byte(nil), w.ECDSAPubKey...),
-			MintedAt: time.Now().UTC(),
+			Index:       idx,
+			Family:      p.family,
+			WalletID:    w.Name,
+			Address:     w.Address,
+			Network:     p.mintNetwork,
+			Pubkey:      append([]byte(nil), w.ECDSAPubKey...),
+			MintedAt:    time.Now().UTC(),
+			ECDSAPubKey: hex.EncodeToString(w.ECDSAPubKey),
 		}
 		if err := p.store.PutEntry(ctx, p.family, idx, entry); err != nil {
 			return fmt.Errorf("release pool [%s]: persist idx=%d: %w", p.family, idx, err)
@@ -395,8 +428,8 @@ func (p *ReleasePool) checkBalance(ctx context.Context, entry *ReleasePoolEntry,
 // inside *InMemoryStore so the SwapStore + ReleasePoolStore share
 // one process-local home.
 //
-// Multi-family: entries are keyed by (family, index) so EVM and BTC
-// pools share storage without cross-contaminating. The empty-family
+// Multi-family: entries are keyed by (family, index) so EVM, BTC, SOL,
+// DOT pools share storage without cross-contaminating. The empty-family
 // bucket holds legacy entries from before family-awareness landed.
 type inMemoryReleasePool struct {
 	mu      sync.Mutex
@@ -473,7 +506,6 @@ func (s *InMemoryStore) LoadEntries(_ context.Context, family string) ([]Release
 	return out, nil
 }
 
-// PutEntry implements ReleasePoolStore for the in-memory SwapStore.
 func (s *InMemoryStore) PutEntry(_ context.Context, family string, idx int, entry ReleasePoolEntry) error {
 	s.initPool()
 	family = normalizeFamily(family)
