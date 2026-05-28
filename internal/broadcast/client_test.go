@@ -115,15 +115,15 @@ func TestBroadcast_UnsupportedNetwork(t *testing.T) {
 }
 
 func TestBroadcast_FamilyNotImplemented(t *testing.T) {
-	// BITCOIN_MAINNET is in mchain's address-type registry as BTC,
-	// but broadcast/ doesn't implement BTC yet. Need to add the
+	// SOLANA_MAINNET is in mchain's address-type registry as SOL,
+	// and broadcast/ doesn't implement SOL yet. Need to add the
 	// network to the rpcURLs table so we get past the URL check and
-	// hit the family switch.
+	// hit the family switch. (BTC is now implemented — see btc_test.go.)
 	c := New(time.Second)
-	c.RPCURLOverrides = map[string]string{"BITCOIN_MAINNET": "http://unused"}
-	_, err := c.Broadcast(context.Background(), "BITCOIN_MAINNET", "0xabc")
+	c.RPCURLOverrides = map[string]string{"SOLANA_MAINNET": "http://unused"}
+	_, err := c.Broadcast(context.Background(), "SOLANA_MAINNET", "0xabc")
 	if !errors.Is(err, ErrFamilyNotImplemented) {
-		t.Errorf("expected ErrFamilyNotImplemented for BTC, got %v", err)
+		t.Errorf("expected ErrFamilyNotImplemented for SOL, got %v", err)
 	}
 }
 
@@ -229,8 +229,11 @@ func TestRPCURLFor(t *testing.T) {
 	if RPCURLFor("MARS_MAINNET") != "" {
 		t.Error("unknown network should return empty string")
 	}
-	if RPCURLFor("BITCOIN_MAINNET") != "" {
-		t.Error("BTC should NOT be in the broadcast table yet (family not implemented)")
+	if RPCURLFor("BITCOIN_MAINNET") == "" {
+		t.Error("BTC mainnet should now be in the broadcast table (registered by btc.go init)")
+	}
+	if RPCURLFor("BITCOIN_TESTNET") == "" {
+		t.Error("BTC testnet should now be in the broadcast table (registered by btc.go init)")
 	}
 }
 

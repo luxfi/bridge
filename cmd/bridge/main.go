@@ -135,6 +135,16 @@ func main() {
 		"native-token balance threshold below which the release pool logs a WARN at Acquire time. Default 0.1 native (1e17 wei). Set to 0 to disable the alerter; the gas pre-check in the signing driver still runs and short-circuits swaps that would actually fail.")
 	disableGasPrecheck := flag.Bool("disable-gas-precheck", false,
 		"disable the signing-driver gas pre-check (eth_getBalance against the release wallet before signing). When enabled, swaps that can't cover destination-chain gas + value short-circuit to failed_insufficient_release_gas BEFORE consuming the 75s MPC ceremony.")
+	btcReleasePoolSize := flag.Int("btc-release-pool-size", envOrInt("BRIDGE_BTC_RELEASE_POOL_SIZE", 0),
+		"size of the static MPC BTC release-wallet pool. The signing driver rotates these wallets per BTC swap. Default 0 (BTC release disabled). Set to 5+ in prod once BTC swaps are wanted.")
+	btcReleasePoolMintNetwork := flag.String("btc-release-pool-mint-network", envOr("BRIDGE_BTC_RELEASE_POOL_MINT_NETWORK", "BITCOIN_MAINNET"),
+		"network used for keygen of BTC release-pool wallets. Controls the bech32 hrp (mainnet=bc, testnet=tb) on the locally-derived P2WPKH address.")
+	btcReleaseBalanceThresholdSat := flag.Int64("btc-release-balance-threshold-sat", envOrInt64("BRIDGE_BTC_RELEASE_BALANCE_THRESHOLD_SAT", 100_000),
+		"BTC release wallet balance threshold below which the alerter logs a WARN at Acquire time (sat). Default 100_000 sat (0.001 BTC).")
+	btcMempoolMainnetURL := flag.String("btc-mempool-mainnet-url", envOr("BRIDGE_BTC_MEMPOOL_MAINNET_URL", ""),
+		"override the mempool.space mainnet base URL (e.g. an operator-hosted mempool.space mirror or btc.lux.network). Empty uses the public default.")
+	btcMempoolTestnetURL := flag.String("btc-mempool-testnet-url", envOr("BRIDGE_BTC_MEMPOOL_TESTNET_URL", ""),
+		"override the mempool.space testnet base URL. Empty uses the public default.")
 	mpcDashboardURL := flag.String("mpc-dashboard-url", envOr("BRIDGE_MPC_DASHBOARD_URL", ""),
 		"MPC dashboard API base URL (e.g. http://mpc-dashboard.lux-mpc.svc:8081). When set, SignForWallet routes through POST /v1/mpc/sign there. Required for live signing — the legacy ${MPC_URL}/sign path is NOT served by the live mpcd v2026-05 daemon.")
 	mpcDashboardToken := flag.String("mpc-dashboard-token", envOr("BRIDGE_MPC_DASHBOARD_TOKEN", ""),
@@ -448,6 +458,62 @@ func main() {
 		)
 	}
 
+	// BTC release pool. Same shape as the EVM pool but keyed on the
+	// BTC family — wallets here are P2WPKH bech32, derived locally
+	// from the keygen's ECDSAPubKey. Optional — set
+	// --btc-release-pool-size > 0 to enable.
+	var btcReleasePool *ReleasePool
+	var btcMempoolClient *txassembler.MempoolSpaceClient
+	if *btcReleasePoolSize > 0 {
+		btcMempoolClient = &txassembler.MempoolSpaceClient{
+			MainnetURL: *btcMempoolMainnetURL,
+			TestnetURL: *btcMempoolTestnetURL,
+			Timeout:    10 * time.Second,
+		}
+		if poolStore, ok := swapStore.(ReleasePoolStore); ok && mchainClient != nil {
+			btcReleasePool = NewReleasePoolForFamily(poolStore, FamilyBTC, *btcReleasePoolMintNetwork, logger)
+			if *btcReleaseBalanceThresholdSat > 0 {
+				btcReleasePool.BalanceThresholdWei = big.NewInt(*btcReleaseBalanceThresholdSat)
+				btcReleasePool.Probe = &BTCBalanceProbeFn{
+					Network: *btcReleasePoolMintNetwork,
+					Fn: func(ctx context.Context, addr string) (int64, error) {
+						return btcMempoolClient.BalanceSat(ctx,
+							btcNetworkFromInternalName(*btcReleasePoolMintNetwork), addr)
+					},
+				}
+			}
+			bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			if err := btcReleasePool.Bootstrap(bootstrapCtx, mchainClient, *btcReleasePoolSize); err != nil {
+				bootstrapCancel()
+				logger.Error("BTC release pool bootstrap failed", "err", err, "desired_size", *btcReleasePoolSize)
+				os.Exit(1)
+			}
+			bootstrapCancel()
+			logger.Info("BTC release pool ready",
+				"size", btcReleasePool.Size(),
+				"mint_network", *btcReleasePoolMintNetwork,
+				"balance_threshold_sat", *btcReleaseBalanceThresholdSat,
+			)
+		} else {
+			logger.Warn("BTC release pool requested but store/mchain unconfigured",
+				"size_requested", *btcReleasePoolSize,
+				"have_store", swapStore != nil,
+				"have_mchain", mchainClient != nil,
+			)
+		}
+	}
+
+	// BTC tx assembler — built unconditionally when BTC release pool
+	// is configured, since the signing driver dispatches by family.
+	var btcAssembler *txassembler.BTCAssembler
+	if btcReleasePool != nil && btcMempoolClient != nil {
+		btcAssembler = txassembler.NewBTCAssembler(
+			btcNetworkFromInternalName(*btcReleasePoolMintNetwork),
+			btcMempoolClient,
+			btcMempoolClient,
+		)
+	}
+
 	// Signing driver: background goroutine that drives swaps in
 	// bridge_transfer_pending through MPC threshold signing. Requires
 	// an mchain client; without one the driver has nothing to call.
@@ -462,6 +528,15 @@ func main() {
 		if !*disableGasPrecheck {
 			signer.SetGasProbe(balanceProbe)
 		}
+		if btcReleasePool != nil && btcReleasePool.Size() > 0 {
+			signer.SetBTCReleasePool(btcReleasePool)
+		}
+		if btcAssembler != nil {
+			signer.SetBTCAssembler(btcAssembler)
+		}
+		if btcMempoolClient != nil && !*disableGasPrecheck {
+			signer.SetBTCBalanceProbe(btcMempoolClient)
+		}
 		go func() {
 			_ = signer.Run(signerCtx)
 		}()
@@ -469,6 +544,8 @@ func main() {
 			"interval", *signingInterval,
 			"assembler", "evm-eip155",
 			"release_pool", releasePool != nil && releasePool.Size() > 0,
+			"btc_release_pool", btcReleasePool != nil && btcReleasePool.Size() > 0,
+			"btc_assembler", btcAssembler != nil,
 			"gas_precheck", !*disableGasPrecheck,
 		)
 	} else if *disableSigningDriver {
@@ -581,6 +658,14 @@ func main() {
 				"balance_threshold_wei": *releaseBalanceThresholdWei,
 			}
 		}
+		if btcReleasePool != nil {
+			body["btc_release_pool"] = map[string]any{
+				"size":                  btcReleasePool.Size(),
+				"mint_network":          *btcReleasePoolMintNetwork,
+				"balance_threshold_sat": *btcReleaseBalanceThresholdSat,
+				"assembler":             btcAssembler != nil,
+			}
+		}
 		return c.JSON(200, body)
 	})
 
@@ -643,6 +728,21 @@ func envOrInt(k string, fallback int) int {
 		return fallback
 	}
 	n, err := strconv.Atoi(v)
+	if err != nil {
+		return fallback
+	}
+	return n
+}
+
+// envOrInt64 is envOrInt for int64. Used for BTC sat values that
+// exceed the 32-bit range on common amounts (1 BTC = 1e8 sat fits,
+// but multi-BTC reserve thresholds need int64).
+func envOrInt64(k string, fallback int64) int64 {
+	v := os.Getenv(k)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return fallback
 	}

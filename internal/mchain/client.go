@@ -57,31 +57,31 @@ const (
 // Unknown networks default to AddressTypeETH (matches TS behavior).
 var networkAddressType = map[string]AddressType{
 	// EVM chains use eth address
-	"ETHEREUM_MAINNET":  AddressTypeETH,
-	"ETHEREUM_SEPOLIA":  AddressTypeETH,
-	"ETHEREUM_GOERLI":   AddressTypeETH,
-	"BASE_MAINNET":      AddressTypeETH,
-	"BASE_SEPOLIA":      AddressTypeETH,
-	"HOLESKY_TESTNET":   AddressTypeETH,
-	"LUX_MAINNET":       AddressTypeETH,
-	"LUX_TESTNET":       AddressTypeETH,
-	"LUX_DEVNET":        AddressTypeETH,
-	"ZOO_MAINNET":       AddressTypeETH,
-	"ZOO_TESTNET":       AddressTypeETH,
-	"ZOO_DEVNET":        AddressTypeETH,
-	"BSC_MAINNET":       AddressTypeETH,
-	"BSC_TESTNET":       AddressTypeETH,
-	"POLYGON_MAINNET":   AddressTypeETH,
-	"ARBITRUM_MAINNET":  AddressTypeETH,
-	"OPTIMISM_MAINNET":  AddressTypeETH,
-	"AVAX_MAINNET":      AddressTypeETH,
-	"FANTOM_MAINNET":    AddressTypeETH,
-	"CELO_MAINNET":      AddressTypeETH,
-	"GNOSIS_MAINNET":    AddressTypeETH,
-	"AURORA_MAINNET":    AddressTypeETH,
-	"ZORA_MAINNET":      AddressTypeETH,
-	"BLAST_MAINNET":     AddressTypeETH,
-	"LINEA_MAINNET":     AddressTypeETH,
+	"ETHEREUM_MAINNET": AddressTypeETH,
+	"ETHEREUM_SEPOLIA": AddressTypeETH,
+	"ETHEREUM_GOERLI":  AddressTypeETH,
+	"BASE_MAINNET":     AddressTypeETH,
+	"BASE_SEPOLIA":     AddressTypeETH,
+	"HOLESKY_TESTNET":  AddressTypeETH,
+	"LUX_MAINNET":      AddressTypeETH,
+	"LUX_TESTNET":      AddressTypeETH,
+	"LUX_DEVNET":       AddressTypeETH,
+	"ZOO_MAINNET":      AddressTypeETH,
+	"ZOO_TESTNET":      AddressTypeETH,
+	"ZOO_DEVNET":       AddressTypeETH,
+	"BSC_MAINNET":      AddressTypeETH,
+	"BSC_TESTNET":      AddressTypeETH,
+	"POLYGON_MAINNET":  AddressTypeETH,
+	"ARBITRUM_MAINNET": AddressTypeETH,
+	"OPTIMISM_MAINNET": AddressTypeETH,
+	"AVAX_MAINNET":     AddressTypeETH,
+	"FANTOM_MAINNET":   AddressTypeETH,
+	"CELO_MAINNET":     AddressTypeETH,
+	"GNOSIS_MAINNET":   AddressTypeETH,
+	"AURORA_MAINNET":   AddressTypeETH,
+	"ZORA_MAINNET":     AddressTypeETH,
+	"BLAST_MAINNET":    AddressTypeETH,
+	"LINEA_MAINNET":    AddressTypeETH,
 	// Bitcoin
 	"BITCOIN_MAINNET": AddressTypeBTC,
 	"BITCOIN_TESTNET": AddressTypeBTC,
@@ -119,15 +119,28 @@ func AddressTypeFor(networkInternalName string) AddressType {
 
 // keygenResult mirrors the MPCKeygenResult wire shape from
 // mpc-wallet.ts. Internal to the package; callers consume *Wallet.
+//
+// EVMAddress is the alternate name mpcd uses on the wire ("evm_address"
+// in /root/luxify/mpc/cmd/mpcd/main.go around line 665). We accept
+// either spelling so the bridge keeps working through the renaming
+// transition.
+//
+// BTCAddress is mpcd's legacy P2PKH "1..." address. For bridge-side
+// release flows we don't use it directly — we re-derive a P2WPKH
+// bech32 address from ECDSAPubKey via deriveBTCBech32Address. The
+// P2WPKH form is what btcsuite txscript/wire actually expects on the
+// release side; mpcd's legacy P2PKH is preserved on the wire only for
+// SDK back-compat.
 type keygenResult struct {
-	WalletID     string `json:"wallet_id"`
-	ECDSAPubKey  string `json:"ecdsa_pub_key"`
-	EDDSAPubKey  string `json:"eddsa_pub_key"`
-	ETHAddress   string `json:"eth_address"`
-	BTCAddress   string `json:"btc_address"`
-	SOLAddress   string `json:"sol_address"`
-	ResultType   string `json:"result_type"`
-	Error        string `json:"error"`
+	WalletID    string `json:"wallet_id"`
+	ECDSAPubKey string `json:"ecdsa_pub_key"`
+	EDDSAPubKey string `json:"eddsa_pub_key"`
+	ETHAddress  string `json:"eth_address"`
+	EVMAddress  string `json:"evm_address"`
+	BTCAddress  string `json:"btc_address"`
+	SOLAddress  string `json:"sol_address"`
+	ResultType  string `json:"result_type"`
+	Error       string `json:"error"`
 }
 
 // Wallet is the public result of a keygen for one bridge deposit.
@@ -138,11 +151,20 @@ type Wallet struct {
 	// Name is the MPC wallet identifier (e.g. "bridge-ethereum_sepolia-1718000000").
 	Name string
 	// Address is the source-chain receive address derived from the
-	// keygen output, picked according to AddressTypeFor(network).
+	// keygen output, picked according to AddressTypeFor(network). For
+	// BTC, this is the bech32 P2WPKH derived locally from ECDSAPubKey
+	// (mpcd's legacy P2PKH form is intentionally not used — P2WPKH is
+	// what the bridge release flow consumes).
 	Address string
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
 	AddressType AddressType
+	// ECDSAPubKey is the 33-byte compressed secp256k1 public key the
+	// MPC quorum produced. The BTC release flow needs it for the
+	// witness stack on Finalize (P2WPKH spends include the pubkey
+	// alongside the DER signature). Empty when the keygen result didn't
+	// carry an ECDSA pubkey (Ed25519-only paths).
+	ECDSAPubKey []byte
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
@@ -344,8 +366,9 @@ func (c *Client) buildWalletID(networkInternalName string) string {
 //
 // This is the Go port of `createMPCWalletForDeposit` in mpc-wallet.ts,
 // updated to match the live mpcd contract:
-//   POST `${APIURL}/keygen` with `{org_id, wallet_id}` body and
-//   `Authorization: Bearer <Token>` header.
+//
+//	POST `${APIURL}/keygen` with `{org_id, wallet_id}` body and
+//	`Authorization: Bearer <Token>` header.
 //
 // Errors:
 //   - *MPCError{Op:"keygen", Message:"OrgID not configured"} when Client.OrgID is empty.
@@ -444,7 +467,7 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		}
 	}
 
-	address, err := pickAddress(&result, addrType)
+	address, err := pickAddress(&result, addrType, networkInternalName)
 	if err != nil {
 		return nil, err
 	}
@@ -457,10 +480,21 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		name = walletID
 	}
 
+	// Decode the compressed ECDSA pubkey for downstream consumers (BTC
+	// release flow needs it for the witness stack). Best-effort: if
+	// the keygen didn't return one (ed25519-only path), leave nil.
+	var ecdsaPubKey []byte
+	if result.ECDSAPubKey != "" {
+		if decoded, derr := hex.DecodeString(strings.TrimPrefix(result.ECDSAPubKey, "0x")); derr == nil {
+			ecdsaPubKey = compressSecp256k1Pubkey(decoded)
+		}
+	}
+
 	return &Wallet{
 		Name:        name,
 		Address:     address,
 		AddressType: addrType,
+		ECDSAPubKey: ecdsaPubKey,
 	}, nil
 }
 
@@ -495,10 +529,11 @@ type signResultWire struct {
 // result_type failures. context errors on cancellation / timeout.
 //
 // Wire shape (mirrors /keygen):
-//   POST `${APIURL}/sign`
-//   Authorization: Bearer <Token>
-//   Content-Type: application/json
-//   {"org_id":"...","wallet_id":"...","message":"<hex>"}
+//
+//	POST `${APIURL}/sign`
+//	Authorization: Bearer <Token>
+//	Content-Type: application/json
+//	{"org_id":"...","wallet_id":"...","message":"<hex>"}
 //
 // Response on success: {wallet_id, signature, session_id, result_type:"success"}
 // Response on cluster-side failure: {wallet_id, error, error_code, result_type:"error"}
@@ -617,11 +652,28 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 
 // pickAddress mirrors the TS switch on AddressType. Returns an
 // *MPCError when the chosen slot is empty.
-func pickAddress(r *keygenResult, t AddressType) (string, error) {
+//
+// networkInternalName is required for BTC so the bech32 hrp matches the
+// destination (BITCOIN_MAINNET → "bc"; BITCOIN_TESTNET → "tb"). For
+// every other family it's currently ignored but threaded so the API
+// is uniform.
+//
+// BTC handling: mpcd's btc_address field is a legacy P2PKH "1..." Base58
+// address. The bridge release flow uses bech32 P2WPKH, derived locally
+// from the ECDSAPubKey returned alongside. If the keygen returns an
+// ECDSAPubKey we ALWAYS prefer the locally-derived P2WPKH; otherwise we
+// fall back to the legacy form so SDK callers that read the wire
+// `btc_address` slot still get something.
+func pickAddress(r *keygenResult, t AddressType, networkInternalName string) (string, error) {
 	var addr string
 	switch t {
 	case AddressTypeBTC:
-		addr = r.BTCAddress
+		// Prefer locally-derived bech32 P2WPKH from the ECDSAPubKey.
+		if derived, derr := deriveBTCBech32Address(r.ECDSAPubKey, networkInternalName); derr == nil && derived != "" {
+			addr = derived
+		} else {
+			addr = r.BTCAddress
+		}
 	case AddressTypeSOL, AddressTypeTON:
 		// TON shares the SOL keygen slot in the current cluster output.
 		// Long-term TON needs its own address derivation from the
@@ -631,12 +683,12 @@ func pickAddress(r *keygenResult, t AddressType) (string, error) {
 		// XRP uses secp256k1 but with rAddress derivation. Until that
 		// lands, use the ETH address as an identifier — matches the
 		// explicit placeholder in mpc-wallet.ts.
-		addr = r.ETHAddress
+		addr = preferEVMAddress(r)
 	case AddressTypeDOT:
 		// Should never be reached — caller guards via ErrSubstrateNotImplemented.
 		return "", ErrSubstrateNotImplemented
 	default: // AddressTypeETH or unknown → eth
-		addr = r.ETHAddress
+		addr = preferEVMAddress(r)
 	}
 	if addr == "" {
 		return "", &MPCError{
