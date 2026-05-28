@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -248,9 +249,11 @@ func TestReleasePool_EntriesCopyIsolated(t *testing.T) {
 func TestReleasePoolEntry_Roundtrip(t *testing.T) {
 	in := ReleasePoolEntry{
 		Index:    7,
+		Family:   FamilyBTC,
 		WalletID: "wid",
-		Address:  "0xabc",
-		Network:  "LUX_TESTNET",
+		Address:  "bc1qxxxx",
+		Network:  "BITCOIN_MAINNET",
+		Pubkey:   []byte{0x02, 0xab, 0xcd},
 	}
 	b, err := encodeEntry(in)
 	if err != nil {
@@ -260,9 +263,229 @@ func TestReleasePoolEntry_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if out != in {
-		// Comparing time.Time would require special handling; we don't
-		// set MintedAt above so the zero value should round-trip.
+	// Struct contains a []byte so direct == comparison won't compile —
+	// compare field-by-field. MintedAt is zero in both (we don't set
+	// it), so reflect.DeepEqual would also work here.
+	if out.Index != in.Index ||
+		out.Family != in.Family ||
+		out.WalletID != in.WalletID ||
+		out.Address != in.Address ||
+		out.Network != in.Network ||
+		!bytes.Equal(out.Pubkey, in.Pubkey) {
 		t.Errorf("roundtrip mismatch: in=%+v out=%+v", in, out)
+	}
+}
+
+// =============================================================================
+// Multi-family (ReleasePools) tests
+// =============================================================================
+
+// fakeBTCKeygener satisfies Keygener and returns deterministic
+// BTC-family wallets. It tracks calls so tests can assert that BTC
+// keygens hit the BTC pool only.
+type fakeBTCKeygener struct {
+	calls atomic.Int64
+}
+
+func (k *fakeBTCKeygener) KeygenForDeposit(_ context.Context, network string) (*mchain.Wallet, error) {
+	i := k.calls.Add(1)
+	return &mchain.Wallet{
+		Name:        fmt.Sprintf("btc-wallet-%d", i),
+		Address:     fmt.Sprintf("bc1qexample-%d", i),
+		AddressType: mchain.AddressTypeBTC,
+		ECDSAPubKey: []byte{0x02, byte(i)}, // truncated but unique per call
+	}, nil
+}
+
+func TestReleasePool_BTCFamily_BootstrapAndAcquire(t *testing.T) {
+	store := NewInMemoryStore()
+	pool := NewReleasePoolForFamily(store, FamilyBTC, "BITCOIN_TESTNET", nil)
+	kg := &fakeBTCKeygener{}
+	if err := pool.Bootstrap(context.Background(), kg, 3); err != nil {
+		t.Fatalf("Bootstrap: %v", err)
+	}
+	if pool.Size() != 3 {
+		t.Errorf("Size = %d, want 3", pool.Size())
+	}
+	got, err := pool.Acquire(context.Background(), "BITCOIN_TESTNET")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Family != FamilyBTC {
+		t.Errorf("Family = %q, want %q", got.Family, FamilyBTC)
+	}
+	if len(got.Pubkey) == 0 {
+		t.Error("BTC pool entry should carry a non-empty pubkey from keygen")
+	}
+}
+
+func TestReleasePools_NoCrossContamination(t *testing.T) {
+	// One zapdb-equivalent backing store, two pools, two families.
+	store := NewInMemoryStore()
+
+	evmPool := NewReleasePoolForFamily(store, FamilyEVM, "LUX_TESTNET", nil)
+	if err := evmPool.Bootstrap(context.Background(), &fakeKeygener{}, 4); err != nil {
+		t.Fatalf("evm Bootstrap: %v", err)
+	}
+	btcPool := NewReleasePoolForFamily(store, FamilyBTC, "BITCOIN_TESTNET", nil)
+	if err := btcPool.Bootstrap(context.Background(), &fakeBTCKeygener{}, 2); err != nil {
+		t.Fatalf("btc Bootstrap: %v", err)
+	}
+	if evmPool.Size() != 4 {
+		t.Errorf("EVM pool size = %d, want 4", evmPool.Size())
+	}
+	if btcPool.Size() != 2 {
+		t.Errorf("BTC pool size = %d, want 2", btcPool.Size())
+	}
+
+	// ReleasePools dispatcher hands out the right family.
+	pools := NewReleasePools(nil)
+	pools.AddPool(evmPool)
+	pools.AddPool(btcPool)
+
+	// Acquire from each family. EVM should never produce a BTC entry,
+	// and vice versa.
+	for i := 0; i < 10; i++ {
+		got, err := pools.Acquire(context.Background(), FamilyEVM, "LUX_TESTNET")
+		if err != nil {
+			t.Fatalf("acquire EVM #%d: %v", i, err)
+		}
+		if got.Family != FamilyEVM {
+			t.Errorf("EVM acquire returned family=%q", got.Family)
+		}
+	}
+	for i := 0; i < 10; i++ {
+		got, err := pools.Acquire(context.Background(), FamilyBTC, "BITCOIN_TESTNET")
+		if err != nil {
+			t.Fatalf("acquire BTC #%d: %v", i, err)
+		}
+		if got.Family != FamilyBTC {
+			t.Errorf("BTC acquire returned family=%q", got.Family)
+		}
+		if len(got.Pubkey) == 0 {
+			t.Errorf("BTC entry should carry a pubkey")
+		}
+	}
+}
+
+func TestReleasePools_UnknownFamily(t *testing.T) {
+	pools := NewReleasePools(nil)
+	_, err := pools.Acquire(context.Background(), "sol", "SOLANA_MAINNET")
+	if !errors.Is(err, ErrUnknownFamily) {
+		t.Errorf("expected ErrUnknownFamily, got %v", err)
+	}
+}
+
+func TestReleasePools_Snapshot(t *testing.T) {
+	store := NewInMemoryStore()
+
+	evmPool := NewReleasePoolForFamily(store, FamilyEVM, "LUX_TESTNET", nil)
+	_ = evmPool.Bootstrap(context.Background(), &fakeKeygener{}, 2)
+	btcPool := NewReleasePoolForFamily(store, FamilyBTC, "BITCOIN_TESTNET", nil)
+	_ = btcPool.Bootstrap(context.Background(), &fakeBTCKeygener{}, 1)
+
+	pools := NewReleasePools(nil)
+	pools.AddPool(evmPool)
+	pools.AddPool(btcPool)
+
+	snap := pools.Snapshot()
+	if got := snap[FamilyEVM]["size"]; got != 2 {
+		t.Errorf("snapshot evm.size = %v, want 2", got)
+	}
+	if got := snap[FamilyBTC]["size"]; got != 1 {
+		t.Errorf("snapshot btc.size = %v, want 1", got)
+	}
+	if got := snap[FamilyBTC]["mint_network"]; got != "BITCOIN_TESTNET" {
+		t.Errorf("snapshot btc.mint_network = %v, want BITCOIN_TESTNET", got)
+	}
+
+	if total := pools.TotalSize(); total != 3 {
+		t.Errorf("TotalSize = %d, want 3", total)
+	}
+
+	families := pools.Families()
+	if len(families) != 2 || families[0] != FamilyBTC || families[1] != FamilyEVM {
+		t.Errorf("Families = %v, want [btc evm]", families)
+	}
+}
+
+func TestReleasePools_Reload_RestoresEntries(t *testing.T) {
+	// Two pools backed by the same store; bootstrap once, then
+	// reconstruct fresh pool instances and confirm entries reload
+	// without re-keygenning.
+	store := NewInMemoryStore()
+
+	evm1 := NewReleasePoolForFamily(store, FamilyEVM, "LUX_TESTNET", nil)
+	if err := evm1.Bootstrap(context.Background(), &fakeKeygener{}, 2); err != nil {
+		t.Fatal(err)
+	}
+	btc1 := NewReleasePoolForFamily(store, FamilyBTC, "BITCOIN_MAINNET", nil)
+	if err := btc1.Bootstrap(context.Background(), &fakeBTCKeygener{}, 2); err != nil {
+		t.Fatal(err)
+	}
+
+	// Now reconstruct from the same backing store.
+	evm2 := NewReleasePoolForFamily(store, FamilyEVM, "LUX_TESTNET", nil)
+	kg2 := &fakeKeygener{} // should NOT be called on reload
+	if err := evm2.Bootstrap(context.Background(), kg2, 2); err != nil {
+		t.Fatal(err)
+	}
+	if evm2.Size() != 2 {
+		t.Errorf("EVM reload size = %d, want 2", evm2.Size())
+	}
+	if kg2.calls.Load() != 0 {
+		t.Errorf("expected zero EVM keygen on reload, got %d", kg2.calls.Load())
+	}
+
+	btc2 := NewReleasePoolForFamily(store, FamilyBTC, "BITCOIN_MAINNET", nil)
+	btcKg2 := &fakeBTCKeygener{}
+	if err := btc2.Bootstrap(context.Background(), btcKg2, 2); err != nil {
+		t.Fatal(err)
+	}
+	if btc2.Size() != 2 {
+		t.Errorf("BTC reload size = %d, want 2", btc2.Size())
+	}
+	if btcKg2.calls.Load() != 0 {
+		t.Errorf("expected zero BTC keygen on reload, got %d", btcKg2.calls.Load())
+	}
+}
+
+func TestReleasePools_LegacyEntriesMigrateToEVM(t *testing.T) {
+	// Simulate a pre-multi-family persisted state: entries with no
+	// Family field. They should surface under FamilyEVM on read.
+	store := NewInMemoryStore()
+	// Write under empty family — that's the legacy state.
+	if err := store.PutEntry(context.Background(), "", 0, ReleasePoolEntry{
+		Index:    0,
+		WalletID: "legacy-0",
+		Address:  "0xlegacy0",
+		Network:  "LUX_TESTNET",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.PutEntry(context.Background(), "", 1, ReleasePoolEntry{
+		Index:    1,
+		WalletID: "legacy-1",
+		Address:  "0xlegacy1",
+		Network:  "LUX_TESTNET",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	evmPool := NewReleasePoolForFamily(store, FamilyEVM, "LUX_TESTNET", nil)
+	if err := evmPool.Bootstrap(context.Background(), nil, 0); err != nil {
+		t.Fatalf("Bootstrap reload: %v", err)
+	}
+	if evmPool.Size() != 2 {
+		t.Errorf("legacy entries should reload under EVM, got Size=%d", evmPool.Size())
+	}
+
+	// Verify BTC pool does NOT see those legacy entries.
+	btcPool := NewReleasePoolForFamily(store, FamilyBTC, "BITCOIN_MAINNET", nil)
+	if err := btcPool.Bootstrap(context.Background(), nil, 0); err != nil {
+		t.Fatal(err)
+	}
+	if btcPool.Size() != 0 {
+		t.Errorf("BTC pool should not inherit legacy EVM entries; got Size=%d", btcPool.Size())
 	}
 }

@@ -50,17 +50,22 @@ import (
 // needs. Both InMemoryStore and ZapStore implement it.
 //
 // The contract:
-//   - LoadEntries returns every persisted release-pool entry, in
-//     index order (smallest-index-first). Empty slice on first boot.
-//   - PutEntry persists one entry by index, overwriting any prior
-//     entry at the same index. Used at pool-grow time.
+//   - LoadEntries returns every persisted release-pool entry for the
+//     given family, in index order (smallest-index-first). Empty
+//     slice on first boot.
+//   - PutEntry persists one entry by index for the given family,
+//     overwriting any prior entry at the same index. Used at pool-
+//     grow time.
+//   - Family "" means "evm" — backward compat for stores that
+//     persisted pre-family release-pool entries. New writes always
+//     use an explicit non-empty family string.
 //
 // We deliberately do NOT model deletion here — operators grow the
 // pool but never shrink mid-flight (a deleted wallet may still be
 // referenced by an in-flight swap).
 type ReleasePoolStore interface {
-	LoadEntries(ctx context.Context) ([]ReleasePoolEntry, error)
-	PutEntry(ctx context.Context, idx int, entry ReleasePoolEntry) error
+	LoadEntries(ctx context.Context, family string) ([]ReleasePoolEntry, error)
+	PutEntry(ctx context.Context, family string, idx int, entry ReleasePoolEntry) error
 }
 
 // ReleasePoolEntry is one wallet in the pool. JSON-serialized for
@@ -70,13 +75,43 @@ type ReleasePoolStore interface {
 // "primary" network (the bridge's main destination — LUX_TESTNET in
 // dev, LUX_MAINNET in prod) and the EVM address works across all
 // EVM chains because the MPC produces a deterministic eth_address.
+//
+// Family is the canonical chain family the entry belongs to ("evm",
+// "btc"). For BTC, Address is the bech32 P2WPKH and Pubkey carries
+// the compressed secp256k1 pubkey the witness stack will include at
+// Finalize time — without Pubkey, the BTC release flow can't sign.
+// EVM entries leave Pubkey empty (the recovery id reconstructs the
+// signer address from the signature).
+//
+// Empty Family in deserialized entries means "evm" — kept for
+// backward compat with stores written before multi-family support.
 type ReleasePoolEntry struct {
 	Index    int       `json:"index"`
+	Family   string    `json:"family,omitempty"`
 	WalletID string    `json:"wallet_id"`
 	Address  string    `json:"address"`
 	Network  string    `json:"network,omitempty"`
+	Pubkey   []byte    `json:"pubkey,omitempty"`
 	MintedAt time.Time `json:"minted_at"`
 }
+
+// FamilyOrDefault returns Family or "evm" when the field is empty.
+// Backward-compat helper for entries persisted before multi-family
+// support.
+func (e ReleasePoolEntry) FamilyOrDefault() string {
+	if e.Family == "" {
+		return FamilyEVM
+	}
+	return e.Family
+}
+
+// Canonical family names. Keep these as constants rather than enums
+// so the JSON values match the operator-facing config and zapdb
+// persistence keys cleanly.
+const (
+	FamilyEVM = "evm"
+	FamilyBTC = "btc"
+)
 
 // =============================================================================
 // Keygen surface
@@ -111,9 +146,19 @@ type BalanceProbe interface {
 // ReleasePool is a fixed-size pool of MPC release wallets. Safe for
 // concurrent use by the signing driver and the (single) pool-grow
 // path at startup.
+//
+// One pool per family — EVM-flavored wallets live in one pool, BTC-
+// flavored wallets in another. The family identifier is persisted on
+// every entry (via ReleasePoolEntry.Family) and threaded through the
+// store interface (LoadEntries / PutEntry take a family arg).
+//
+// Use ReleasePools (plural) when the bridge runs multiple families
+// side-by-side. That wrapper composes one *ReleasePool per family
+// behind a family-keyed Acquire/Bootstrap interface.
 type ReleasePool struct {
-	store ReleasePoolStore
-	mu    sync.RWMutex
+	store  ReleasePoolStore
+	family string
+	mu     sync.RWMutex
 	// entries is the cached in-memory copy of the persisted pool, in
 	// index order. Read access is mutex-protected; writes happen only
 	// at startup-grow time so reads are heavily favored.
@@ -126,12 +171,19 @@ type ReleasePool struct {
 	// a specific destination. KeygenForDeposit needs SOME network to
 	// pick an address type from; for EVM destinations the resulting
 	// eth_address works on every EVM chain, so picking "LUX_TESTNET"
-	// vs "LUX_MAINNET" doesn't affect downstream consumers.
+	// vs "LUX_MAINNET" doesn't affect downstream consumers. For BTC,
+	// the network name matters because it selects mainnet vs testnet
+	// bech32 hrp on the bridge-side address derivation.
 	mintNetwork string
 
 	// BalanceThresholdWei is the floor below which Acquire logs a
 	// WARN. The bridge does NOT auto-fund; this is purely a heads-up
 	// for the operator. Optional — zero ⇒ alerter disabled.
+	//
+	// For BTC pools, the "wei" naming is preserved for type-uniformity
+	// but the actual unit is satoshis. The probe (Probe) interprets
+	// the value in chain-native base units. Operators set BTC
+	// thresholds in sat via main.go.
 	BalanceThresholdWei *big.Int
 	// Probe is the balance query target. Optional — nil disables
 	// the balance-threshold alerter (Acquire still picks a wallet).
@@ -146,17 +198,33 @@ type ReleasePool struct {
 var ErrEmptyPool = errors.New("release pool: empty (no entries provisioned)")
 
 // NewReleasePool constructs a pool backed by store. Defers loading +
-// growing until the caller calls Bootstrap.
+// growing until the caller calls Bootstrap. Defaults to the EVM
+// family for backward compat with single-family callers.
 func NewReleasePool(store ReleasePoolStore, mintNetwork string, logger luxlog.Logger) *ReleasePool {
+	return NewReleasePoolForFamily(store, FamilyEVM, mintNetwork, logger)
+}
+
+// NewReleasePoolForFamily constructs a pool bound to a specific chain
+// family. family is one of FamilyEVM / FamilyBTC; the value is
+// persisted on every minted entry so reloads dispatch back to the
+// right pool.
+func NewReleasePoolForFamily(store ReleasePoolStore, family, mintNetwork string, logger luxlog.Logger) *ReleasePool {
+	if family == "" {
+		family = FamilyEVM
+	}
 	if mintNetwork == "" {
 		mintNetwork = "LUX_TESTNET"
 	}
 	return &ReleasePool{
 		store:       store,
+		family:      family,
 		mintNetwork: mintNetwork,
 		logger:      logger,
 	}
 }
+
+// Family returns the family identifier the pool is bound to.
+func (p *ReleasePool) Family() string { return p.family }
 
 // Size reports the current pool size.
 func (p *ReleasePool) Size() int {
@@ -189,15 +257,23 @@ func (p *ReleasePool) Entries() []ReleasePoolEntry {
 // pool — useful for the "operator pre-loaded the pool, bridge just
 // needs to discover" deployment shape.
 func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize int) error {
-	existing, err := p.store.LoadEntries(ctx)
+	existing, err := p.store.LoadEntries(ctx, p.family)
 	if err != nil {
-		return fmt.Errorf("release pool: load entries: %w", err)
+		return fmt.Errorf("release pool [%s]: load entries: %w", p.family, err)
+	}
+	// Backfill family on legacy entries (pre-multi-family stores)
+	// so downstream consumers see a non-empty Family on every entry.
+	for i := range existing {
+		if existing[i].Family == "" {
+			existing[i].Family = p.family
+		}
 	}
 	p.mu.Lock()
 	p.entries = existing
 	p.mu.Unlock()
 	if p.logger != nil {
 		p.logger.Info("release pool loaded",
+			"family", p.family,
 			"existing", len(existing),
 			"desired", desiredSize,
 		)
@@ -206,8 +282,8 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 		return nil
 	}
 	if kg == nil {
-		return fmt.Errorf("release pool: cannot grow %d→%d without Keygener (mpc client not configured)",
-			len(existing), desiredSize)
+		return fmt.Errorf("release pool [%s]: cannot grow %d→%d without Keygener (mpc client not configured)",
+			p.family, len(existing), desiredSize)
 	}
 	// Mint the remaining slots, indexed from the next free position.
 	startIdx := len(existing)
@@ -217,27 +293,31 @@ func (p *ReleasePool) Bootstrap(ctx context.Context, kg Keygener, desiredSize in
 		}
 		w, err := kg.KeygenForDeposit(ctx, p.mintNetwork)
 		if err != nil {
-			return fmt.Errorf("release pool: keygen idx=%d: %w", idx, err)
+			return fmt.Errorf("release pool [%s]: keygen idx=%d: %w", p.family, idx, err)
 		}
 		entry := ReleasePoolEntry{
 			Index:    idx,
+			Family:   p.family,
 			WalletID: w.Name,
 			Address:  w.Address,
 			Network:  p.mintNetwork,
+			Pubkey:   append([]byte(nil), w.ECDSAPubKey...),
 			MintedAt: time.Now().UTC(),
 		}
-		if err := p.store.PutEntry(ctx, idx, entry); err != nil {
-			return fmt.Errorf("release pool: persist idx=%d: %w", idx, err)
+		if err := p.store.PutEntry(ctx, p.family, idx, entry); err != nil {
+			return fmt.Errorf("release pool [%s]: persist idx=%d: %w", p.family, idx, err)
 		}
 		p.mu.Lock()
 		p.entries = append(p.entries, entry)
 		p.mu.Unlock()
 		if p.logger != nil {
 			p.logger.Info("release pool minted entry",
+				"family", p.family,
 				"idx", idx,
 				"wallet_id", w.Name,
 				"address", w.Address,
 				"network", p.mintNetwork,
+				"has_pubkey", len(w.ECDSAPubKey) > 0,
 			)
 		}
 	}
@@ -313,45 +393,99 @@ func (p *ReleasePool) checkBalance(ctx context.Context, entry *ReleasePoolEntry,
 // inMemoryReleasePool is the lossy-on-restart implementation. Lives
 // inside *InMemoryStore so the SwapStore + ReleasePoolStore share
 // one process-local home.
+//
+// Multi-family: entries are keyed by (family, index) so EVM and BTC
+// pools share storage without cross-contaminating. The empty-family
+// bucket holds legacy entries from before family-awareness landed.
 type inMemoryReleasePool struct {
 	mu      sync.Mutex
-	entries map[int]ReleasePoolEntry
+	entries map[string]map[int]ReleasePoolEntry // family → idx → entry
 }
 
-// LoadReleasePoolEntries implements ReleasePoolStore for the in-memory
-// SwapStore. Returns the entries in ascending index order.
-func (s *InMemoryStore) LoadEntries(_ context.Context) ([]ReleasePoolEntry, error) {
+func (s *InMemoryStore) initPool() {
 	s.poolOnce.Do(func() {
-		s.pool = &inMemoryReleasePool{entries: map[int]ReleasePoolEntry{}}
+		s.pool = &inMemoryReleasePool{
+			entries: map[string]map[int]ReleasePoolEntry{},
+		}
 	})
+}
+
+func normalizeFamily(f string) string {
+	if f == "" {
+		return FamilyEVM
+	}
+	return f
+}
+
+// LoadEntries implements ReleasePoolStore for the in-memory SwapStore.
+// Returns the entries for the family in ascending index order. Empty
+// family is treated as FamilyEVM for back-compat with single-pool
+// callers and pre-family persisted state.
+func (s *InMemoryStore) LoadEntries(_ context.Context, family string) ([]ReleasePoolEntry, error) {
+	s.initPool()
+	family = normalizeFamily(family)
 	s.pool.mu.Lock()
 	defer s.pool.mu.Unlock()
-	out := make([]ReleasePoolEntry, 0, len(s.pool.entries))
-	// Stable iteration: sort by index ascending so callers see a
-	// canonical order.
+	bucket := s.pool.entries[family]
+	out := make([]ReleasePoolEntry, 0, len(bucket))
 	maxIdx := -1
-	for k := range s.pool.entries {
+	for k := range bucket {
 		if k > maxIdx {
 			maxIdx = k
 		}
 	}
 	for i := 0; i <= maxIdx; i++ {
-		if e, ok := s.pool.entries[i]; ok {
+		if e, ok := bucket[i]; ok {
 			out = append(out, e)
+		}
+	}
+	// Also drain the empty-family bucket the first time FamilyEVM is
+	// requested — legacy entries persisted without a family attribute
+	// should appear in the EVM pool by default. Merge by index,
+	// preferring the family-tagged copy.
+	if family == FamilyEVM {
+		if legacy, ok := s.pool.entries[""]; ok && len(legacy) > 0 {
+			seen := make(map[int]struct{}, len(out))
+			for _, e := range out {
+				seen[e.Index] = struct{}{}
+			}
+			extras := make([]ReleasePoolEntry, 0, len(legacy))
+			for idx, e := range legacy {
+				if _, dup := seen[idx]; dup {
+					continue
+				}
+				if e.Family == "" {
+					e.Family = FamilyEVM
+				}
+				extras = append(extras, e)
+			}
+			// Maintain index-ascending order across the merge.
+			out = append(out, extras...)
+			// Stable insertion sort — fine for small N.
+			for i := 1; i < len(out); i++ {
+				for j := i; j > 0 && out[j-1].Index > out[j].Index; j-- {
+					out[j-1], out[j] = out[j], out[j-1]
+				}
+			}
 		}
 	}
 	return out, nil
 }
 
 // PutEntry implements ReleasePoolStore for the in-memory SwapStore.
-func (s *InMemoryStore) PutEntry(_ context.Context, idx int, entry ReleasePoolEntry) error {
-	s.poolOnce.Do(func() {
-		s.pool = &inMemoryReleasePool{entries: map[int]ReleasePoolEntry{}}
-	})
+func (s *InMemoryStore) PutEntry(_ context.Context, family string, idx int, entry ReleasePoolEntry) error {
+	s.initPool()
+	family = normalizeFamily(family)
 	s.pool.mu.Lock()
 	defer s.pool.mu.Unlock()
+	if s.pool.entries[family] == nil {
+		s.pool.entries[family] = map[int]ReleasePoolEntry{}
+	}
 	entry.Index = idx
-	s.pool.entries[idx] = entry
+	if entry.Family == "" {
+		entry.Family = family
+	}
+	s.pool.entries[family][idx] = entry
 	return nil
 }
 
