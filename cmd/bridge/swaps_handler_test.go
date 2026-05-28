@@ -10,7 +10,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -121,6 +123,37 @@ func mockBchain(t *testing.T, on map[string]any) *httptest.Server {
 	}))
 	t.Cleanup(srv.Close)
 	return srv
+}
+
+// stubReleaseStore is a deterministic in-memory ReleaseWalletStore for
+// tests. Lets us assert that the create handler stamps the
+// release-wallet fields onto the swap without spinning up a second
+// mpcMock for the release-side keygen.
+type stubReleaseStore struct {
+	wallets map[string]*mchain.Wallet
+	calls   map[string]int
+}
+
+func newStubReleaseStore() *stubReleaseStore {
+	return &stubReleaseStore{
+		wallets: map[string]*mchain.Wallet{},
+		calls:   map[string]int{},
+	}
+}
+
+// set programs the wallet returned for `network`.
+func (s *stubReleaseStore) set(network, name, address string) {
+	s.wallets[network] = &mchain.Wallet{Name: name, Address: address, AddressType: mchain.AddressTypeETH}
+}
+
+func (s *stubReleaseStore) GetOrCreate(_ context.Context, network string) (*mchain.Wallet, error) {
+	s.calls[network]++
+	w, ok := s.wallets[network]
+	if !ok {
+		return nil, errors.New("stubReleaseStore: no wallet programmed for " + network)
+	}
+	cp := *w
+	return &cp, nil
 }
 
 // mpcMock serves a fake MPC /keygen endpoint.
@@ -486,7 +519,9 @@ func TestSwapsCreate_UseDepositAddressTrue_NoMPC_Returns503(t *testing.T) {
 	reqBody, _ := json.Marshal(createSwapReq{
 		Amount:             0.1,
 		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
 		DestinationAddress: "0xabc",
 		UseDepositAddress:  true,
 	})
@@ -507,7 +542,9 @@ func TestSwapsCreate_DOTRequest_Returns501(t *testing.T) {
 	reqBody, _ := json.Marshal(createSwapReq{
 		Amount:             1,
 		SourceNetwork:      "POLKADOT_MAINNET",
+		SourceAsset:        "DAI", // price-feed-known; the request fails on the DOT keygen path, not pricing
 		DestinationNetwork: "LUX_MAINNET",
+		DestinationAsset:   "LUX",
 		DestinationAddress: "0xfeed",
 		UseDepositAddress:  true,
 	})
@@ -532,7 +569,9 @@ func TestSwapsCreate_MPCKeygenFailure_Returns5xx(t *testing.T) {
 	reqBody, _ := json.Marshal(createSwapReq{
 		Amount:             0.1,
 		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
 		DestinationAddress: "0xabc",
 		UseDepositAddress:  true,
 	})
@@ -727,5 +766,203 @@ func TestAPIAlias_SwapsGetReturnsPersistedSwap(t *testing.T) {
 	}
 	if resp.Data.ID != sw.ID {
 		t.Fatalf("/api/swaps/:id returned id=%q want %q", resp.Data.ID, sw.ID)
+	}
+}
+
+// =============================================================================
+// Release-wallet wiring (the per-destination payout-treasury split)
+// =============================================================================
+
+// TestSwapsCreate_PopulatesReleaseWallet verifies that when the API
+// has a release store wired, swap creation stamps the long-lived
+// destination-network release wallet onto the swap row AND surfaces
+// the address on the serverSwap envelope so the SDK/UI can display
+// "paid from" diagnostics.
+func TestSwapsCreate_PopulatesReleaseWallet(t *testing.T) {
+	mpc := mpcMock(t, "0xDEP0sit0000000000000000000000000000000001", "", "")
+	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mc, nil)
+
+	releases := newStubReleaseStore()
+	releases.set("LUX_TESTNET",
+		"bridge-release-lux_testnet-1",
+		"0xREL3ase0000000000000000000000000000000001",
+	)
+	rig.api.SetReleaseStore(releases)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.01,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status=%d body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Data.ReleaseAddress != "0xREL3ase0000000000000000000000000000000001" {
+		t.Errorf("serverSwap.ReleaseAddress=%q, want stub address", resp.Data.ReleaseAddress)
+	}
+	stored, _ := rig.store.Get(t.Context(), resp.Data.ID)
+	if stored.ReleaseWalletID != "bridge-release-lux_testnet-1" {
+		t.Errorf("stored ReleaseWalletID=%q, want stub name", stored.ReleaseWalletID)
+	}
+	if stored.ReleaseAddress != "0xREL3ase0000000000000000000000000000000001" {
+		t.Errorf("stored ReleaseAddress=%q, want stub address", stored.ReleaseAddress)
+	}
+	// Deposit and release are independent wallets — the deposit address
+	// shouldn't accidentally overwrite the release one (or vice versa).
+	if !strings.HasSuffix(stored.DepositAddress, "###0xDEP0sit0000000000000000000000000000000001") {
+		t.Errorf("DepositAddress=%q does not carry the mpcMock eth address", stored.DepositAddress)
+	}
+	if stored.DepositAddress == stored.ReleaseAddress {
+		t.Errorf("DepositAddress and ReleaseAddress collided — they MUST be distinct wallets")
+	}
+}
+
+// TestSwapsCreate_ReleaseWalletReused proves a second swap to the same
+// destination network reuses the same release wallet. This is the
+// whole point of the long-lived release store — a single funded
+// address pays out every swap to that chain.
+func TestSwapsCreate_ReleaseWalletReused(t *testing.T) {
+	mpc := mpcMock(t, "0xDEP0sit0000000000000000000000000000000001", "", "")
+	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mc, nil)
+
+	releases := newStubReleaseStore()
+	releases.set("LUX_TESTNET", "release-lux-1", "0xREL3ase0000000000000000000000000000000001")
+	rig.api.SetReleaseStore(releases)
+
+	body, _ := json.Marshal(createSwapReq{
+		Amount: 0.01, SourceNetwork: "ETHEREUM_SEPOLIA", SourceAsset: "ETH",
+		DestinationNetwork: "LUX_TESTNET", DestinationAsset: "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  true,
+	})
+	for i := 0; i < 3; i++ {
+		st, _ := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", body)
+		if st != http.StatusOK {
+			t.Fatalf("swap %d: status=%d", i, st)
+		}
+	}
+	if got := releases.calls["LUX_TESTNET"]; got != 3 {
+		t.Errorf("GetOrCreate called %d times, want 3 (once per swap)", got)
+	}
+}
+
+// TestSwapsCreate_SnapshotsReceiveAmount proves the quote engine fires
+// at create time and stamps the destination-asset receive amount onto
+// the swap row + serverSwap envelope. Without this snapshot the
+// signing driver would fall back to the raw input amount and the
+// destination chain would receive 0.01-of-native instead of the
+// quoted ~14 LUX.
+func TestSwapsCreate_SnapshotsReceiveAmount(t *testing.T) {
+	mpc := mpcMock(t, "0xDEP0sit0000000000000000000000000000000001", "", "")
+	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mc, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.01, // 0.01 ETH @ $3500 ÷ $2.50 LUX = 14 LUX (no Lux-exit fee on Sepolia→Lux)
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status=%d body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Data.ReceiveAmount != 14 {
+		t.Errorf("serverSwap.ReceiveAmount=%v, want 14 (0.01 ETH @ $3500 / $2.50 LUX)", resp.Data.ReceiveAmount)
+	}
+	stored, _ := rig.store.Get(t.Context(), resp.Data.ID)
+	if stored.ReceiveAmount != 14 {
+		t.Errorf("stored ReceiveAmount=%v, want 14", stored.ReceiveAmount)
+	}
+	if stored.MinReceiveAmount != 14*(1-DefaultSlippage) {
+		t.Errorf("stored MinReceiveAmount=%v, want %v", stored.MinReceiveAmount, 14*(1-DefaultSlippage))
+	}
+	// Sepolia→Lux has no exit-from-Lux fee (the source isn't Lux-family).
+	if stored.ServiceFee != 0 {
+		t.Errorf("stored ServiceFee=%v, want 0 for non-Lux-exit", stored.ServiceFee)
+	}
+}
+
+// TestSwapsCreate_PriceUnknown_Returns503 covers the failure path:
+// when the price feed can't quote (asset not in the feed), create
+// fails at 503 rather than silently storing a 0 ReceiveAmount that
+// would later get fed to the signing driver.
+func TestSwapsCreate_PriceUnknown_Returns503(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	rig.feed.Set("ETH", 0)
+	// Wipe a price by giving the feed a fresh map that omits ETH.
+	rig.api.quote = &QuoteEngine{Feed: NewStaticPriceFeed(map[string]float64{"LUX": 2.5})}
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.01,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH", // not in feed
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  false,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusServiceUnavailable {
+		t.Fatalf("status=%d, want 503. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "price_unknown") {
+		t.Errorf("expected price_unknown error, got %s", body)
+	}
+}
+
+// TestSwapsCreate_NoReleaseStore_LeavesFieldsBlank covers the legacy
+// path: bridges running without --release-wallets-file (or without
+// --mpc-url) shouldn't crash — the create handler just leaves the new
+// fields empty and the signing driver's resolveReleaseSigning() falls
+// back to the deposit-address envelope.
+func TestSwapsCreate_NoReleaseStore_LeavesFieldsBlank(t *testing.T) {
+	mpc := mpcMock(t, "0xDEP0sit0000000000000000000000000000000001", "", "")
+	mc := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
+	rig := newRig(t, nil, mc, nil) // no SetReleaseStore call
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount: 0.01, SourceNetwork: "ETHEREUM_SEPOLIA", SourceAsset: "ETH",
+		DestinationNetwork: "LUX_TESTNET", DestinationAsset: "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		UseDepositAddress:  true,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status=%d body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	_ = json.Unmarshal(body, &resp)
+	if resp.Data.ReleaseAddress != "" {
+		t.Errorf("ReleaseAddress=%q, want empty when no release store is wired", resp.Data.ReleaseAddress)
+	}
+	stored, _ := rig.store.Get(t.Context(), resp.Data.ID)
+	if stored.ReleaseWalletID != "" || stored.ReleaseAddress != "" {
+		t.Errorf("legacy create flow stamped release fields: id=%q addr=%q",
+			stored.ReleaseWalletID, stored.ReleaseAddress)
 	}
 }
