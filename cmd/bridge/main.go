@@ -30,16 +30,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/big"
 	"os"
 	"os/signal"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/hanzoai/zip"
 	"github.com/hanzoai/zip/middleware"
-	"math/big"
 
 	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/internal/bchain"
@@ -126,6 +127,20 @@ func main() {
 		"elapsed-since-last-error window before the refund driver auto-reverts a swap stuck at broadcasting with insufficient-funds errors. Default 90s — long enough for an operator to drip LUX to the release address via lux-faucet.sh.")
 	disableRefundDriver := flag.Bool("disable-refund-driver", false,
 		"disable the background refund driver entirely. Swaps stuck at broadcasting will then never auto-revert — useful when the source chain is unreachable or operators want manual control.")
+	releasePoolSize := flag.Int("release-pool-size", envOrInt("BRIDGE_RELEASE_POOL_SIZE", 10),
+		"size of the static MPC release-wallet pool. The signing driver rotates these wallets per swap so a single under-funded wallet doesn't block all subsequent swaps. Default 10. Set 0 to disable (deposit wallet doubles as release wallet — v1 semantics).")
+	releasePoolMintNetwork := flag.String("release-pool-mint-network", envOr("BRIDGE_RELEASE_POOL_MINT_NETWORK", "LUX_TESTNET"),
+		"network used for keygen of release-pool wallets. The MPC produces a deterministic eth_address that works across every EVM destination, so this only picks the address slot in the keygen response. Use LUX_MAINNET in prod.")
+	releaseBalanceThresholdWei := flag.String("release-balance-threshold-wei", envOr("BRIDGE_RELEASE_BALANCE_THRESHOLD_WEI", "100000000000000000"),
+		"native-token balance threshold below which the release pool logs a WARN at Acquire time. Default 0.1 native (1e17 wei). Set to 0 to disable the alerter; the gas pre-check in the signing driver still runs and short-circuits swaps that would actually fail.")
+	disableGasPrecheck := flag.Bool("disable-gas-precheck", false,
+		"disable the signing-driver gas pre-check (eth_getBalance against the release wallet before signing). When enabled, swaps that can't cover destination-chain gas + value short-circuit to failed_insufficient_release_gas BEFORE consuming the 75s MPC ceremony.")
+	mpcDashboardURL := flag.String("mpc-dashboard-url", envOr("BRIDGE_MPC_DASHBOARD_URL", ""),
+		"MPC dashboard API base URL (e.g. http://mpc-dashboard.lux-mpc.svc:8081). When set, SignForWallet routes through POST /v1/mpc/sign there. Required for live signing — the legacy ${MPC_URL}/sign path is NOT served by the live mpcd v2026-05 daemon.")
+	mpcDashboardToken := flag.String("mpc-dashboard-token", envOr("BRIDGE_MPC_DASHBOARD_TOKEN", ""),
+		"JWT for the MPC dashboard API. Mutually exclusive with --mpc-dashboard-api-key (Bearer wins).")
+	mpcDashboardAPIKey := flag.String("mpc-dashboard-api-key", envOr("BRIDGE_MPC_DASHBOARD_API_KEY", ""),
+		"X-API-Key value for the MPC dashboard API. Used when no JWT is available (operator pre-mints an API key with sign permission on the dashboard).")
 	staticDir := flag.String("static", envOr("BRIDGE_STATIC_DIR", ""), "override embedded SPA from disk")
 	dataDir := flag.String("data-dir", envOr("BRIDGE_DATA_DIR", ""),
 		"persistent data directory for the swap store (zapdb). When empty, swaps are stored in-process and lost on restart — only use the in-memory mode for tests + first deploys. In prod, mount a PersistentVolume and point this at it (e.g. /var/lib/lux-bridge).")
@@ -207,10 +222,22 @@ func main() {
 			)
 		}
 		mchainClient = mchain.NewAuthed(*mpcURL, token, *mpcOrgID, *mpcTimeout)
+		// Dashboard signing — populates the new fields independently
+		// of the internal keygen path. Both endpoints can be reached
+		// from the same Client; the production deployment will set
+		// both, dev-against-mock setups set only one.
+		mchainClient.DashboardURL = *mpcDashboardURL
+		mchainClient.DashboardToken = *mpcDashboardToken
+		mchainClient.DashboardAPIKey = *mpcDashboardAPIKey
 		logger.Info("mpc keygen enabled",
 			"api_url", mchainClient.APIURL,
 			"org_id", mchainClient.OrgID,
 			"auth", map[string]bool{"with_token": token != ""},
+			"dashboard_url", mchainClient.DashboardURL,
+			"dashboard_auth", map[string]bool{
+				"bearer":  mchainClient.DashboardToken != "",
+				"api_key": mchainClient.DashboardAPIKey != "",
+			},
 			"timeout", *mpcTimeout,
 		)
 	}
@@ -375,6 +402,52 @@ func main() {
 		"mode", "pure_transfer",
 	)
 
+	// Balance probe: shared by the release-pool low-balance alerter
+	// and the signing-driver gas pre-check. One http.Client per
+	// process is plenty.
+	balanceProbe := NewBalanceProbe(overrides, 8*time.Second)
+
+	// Release pool: static set of MPC release wallets the signing
+	// driver rotates through, so a single under-funded wallet can't
+	// block every subsequent swap. The pool persists across restarts
+	// via the SwapStore (zapdb in prod, in-memory in dev).
+	//
+	// Bootstrap is synchronous on startup — minting a fresh wallet
+	// is a ~10s MPC operation, so a pool of 10 takes ~100s at first
+	// boot. Subsequent restarts reuse the same wallets and Bootstrap
+	// returns immediately. Pool size 0 disables the pool entirely.
+	var releasePool *ReleasePool
+	if poolStore, ok := swapStore.(ReleasePoolStore); ok && *releasePoolSize > 0 {
+		thresholdWei := new(big.Int)
+		if _, parseOK := thresholdWei.SetString(*releaseBalanceThresholdWei, 10); !parseOK {
+			logger.Error("invalid --release-balance-threshold-wei",
+				"value", *releaseBalanceThresholdWei,
+			)
+			os.Exit(1)
+		}
+		releasePool = NewReleasePool(poolStore, *releasePoolMintNetwork, logger)
+		if thresholdWei.Sign() > 0 {
+			releasePool.BalanceThresholdWei = thresholdWei
+			releasePool.Probe = balanceProbe
+		}
+		bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		if err := releasePool.Bootstrap(bootstrapCtx, mchainClient, *releasePoolSize); err != nil {
+			bootstrapCancel()
+			logger.Error("release pool bootstrap failed", "err", err, "desired_size", *releasePoolSize)
+			os.Exit(1)
+		}
+		bootstrapCancel()
+		logger.Info("release pool ready",
+			"size", releasePool.Size(),
+			"mint_network", *releasePoolMintNetwork,
+			"balance_threshold_wei", thresholdWei.String(),
+		)
+	} else if *releasePoolSize > 0 {
+		logger.Warn("release pool requested but swap store does not implement ReleasePoolStore",
+			"size_requested", *releasePoolSize,
+		)
+	}
+
 	// Signing driver: background goroutine that drives swaps in
 	// bridge_transfer_pending through MPC threshold signing. Requires
 	// an mchain client; without one the driver has nothing to call.
@@ -383,12 +456,20 @@ func main() {
 	if !*disableSigningDriver && mchainClient != nil {
 		signer = NewSigningDriver(swapStore, mchainClient, *signingInterval, logger)
 		signer.SetAssembler(asm) // produces wire-correct EVM txs
+		if releasePool != nil && releasePool.Size() > 0 {
+			signer.SetReleasePool(releasePool)
+		}
+		if !*disableGasPrecheck {
+			signer.SetGasProbe(balanceProbe)
+		}
 		go func() {
 			_ = signer.Run(signerCtx)
 		}()
 		logger.Info("signing driver started",
 			"interval", *signingInterval,
 			"assembler", "evm-eip155",
+			"release_pool", releasePool != nil && releasePool.Size() > 0,
+			"gas_precheck", !*disableGasPrecheck,
 		)
 	} else if *disableSigningDriver {
 		logger.Info("signing driver disabled by --disable-signing-driver")
@@ -493,6 +574,13 @@ func main() {
 		if refundDriver != nil {
 			body["refund_stats"] = refundDriver.Stats()
 		}
+		if releasePool != nil {
+			body["release_pool"] = map[string]any{
+				"size":                  releasePool.Size(),
+				"mint_network":          *releasePoolMintNetwork,
+				"balance_threshold_wei": *releaseBalanceThresholdWei,
+			}
+		}
 		return c.JSON(200, body)
 	})
 
@@ -544,6 +632,21 @@ func envOr(k, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// envOrInt parses an int env var with a fallback. Useful for sizes
+// (e.g. --release-pool-size) where 0 is a meaningful value (disabled)
+// so we don't want to use envOr-with-strconv-Atoi inline.
+func envOrInt(k string, fallback int) int {
+	v := os.Getenv(k)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return fallback
+	}
+	return n
 }
 
 // selectProfile resolves the --profile flag value to a bridge profile
