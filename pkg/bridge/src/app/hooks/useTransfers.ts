@@ -624,7 +624,12 @@ async function tryAutoDeposit(args: {
     switchChainAsync, sendTransactionAsync, writeContractAsync,
   } = args
 
-  if (fromChain.family !== 'evm') return null
+  // Lux chains are EVM-compatible (Avalanche C-Chain fork) — the user wallet
+  // leg uses the same wagmi sendTransaction / writeContract path. Both
+  // families share the deposit-tx flow; only purely-non-EVM sources (svm,
+  // btc, ton, xrp) bail out to manual deposit since the user wallet can't
+  // sign those.
+  if (fromChain.family !== 'evm' && fromChain.family !== 'lux') return null
   if (!fromChain.evmChainId) return null
 
   const onchainAddr = extractDepositAddress(swap.deposit_address)

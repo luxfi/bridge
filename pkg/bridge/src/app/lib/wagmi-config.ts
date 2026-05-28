@@ -16,9 +16,12 @@
 // (`@luxfi/threshold`) — wagmi is plumbing for the *user* leg, MPC is
 // plumbing for the *bridge* leg.
 
+import { defineChain } from 'viem'
 import {
   arbitrum,
   arbitrumSepolia,
+  avalanche,
+  avalancheFuji,
   base,
   baseSepolia,
   bsc,
@@ -37,6 +40,31 @@ import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 
 import type { BridgeConfig } from '../../types'
 
+// Lux native chains are EVM-compatible (Avalanche C-Chain fork) so the user
+// wallet leg uses the same wagmi / viem stack as any other EVM chain. Defined
+// inline because viem/chains doesn't ship a Lux entry. RPCs match the Lux
+// public endpoints; tenants can override with their own httpTransport.
+export const luxMainnet = defineChain({
+  id: 96369,
+  name: 'Lux',
+  nativeCurrency: { decimals: 18, name: 'Lux', symbol: 'LUX' },
+  rpcUrls: { default: { http: ['https://api.lux.network/ext/bc/C/rpc'] } },
+  blockExplorers: {
+    default: { name: 'Lux Explorer', url: 'https://explore.lux.network' },
+  },
+})
+
+export const luxTestnet = defineChain({
+  id: 96368,
+  name: 'Lux Testnet',
+  nativeCurrency: { decimals: 18, name: 'Lux', symbol: 'LUX' },
+  rpcUrls: { default: { http: ['https://api.lux-test.network/ext/bc/C/rpc'] } },
+  blockExplorers: {
+    default: { name: 'Lux Testnet Explorer', url: 'https://explore.lux-test.network' },
+  },
+  testnet: true,
+})
+
 /**
  * EVM chains the bridge can talk to out of the box, partitioned by env.
  *
@@ -46,19 +74,32 @@ import type { BridgeConfig } from '../../types'
  * those chains or `switchChain(11155111)` rejects with "chain not configured."
  *
  * Tenants narrow either set via `BridgeConfig.wallet.supportedChainIds`;
- * chains outside the allow-list are dropped from the wagmi config. Non-EVM
- * chains (Lux native, Solana, Bitcoin) don't appear here — they're signed
- * via the MPC threshold layer, not the user wallet.
+ * chains outside the allow-list are dropped from the wagmi config. Lux
+ * mainnet + testnet are present here because the user wallet signs the
+ * deposit leg when Lux is the source chain (the destination leg uses MPC).
+ * Non-EVM chains (Solana, Bitcoin, TON, XRP) don't appear here — both
+ * legs of those route through the MPC threshold layer, not the user wallet.
  */
-const MAINNET_EVM_CHAINS: ViemChain[] = [mainnet, arbitrum, base, polygon, optimism, bsc]
+const MAINNET_EVM_CHAINS: ViemChain[] = [
+  mainnet,
+  luxMainnet,
+  arbitrum,
+  base,
+  polygon,
+  optimism,
+  bsc,
+  avalanche,
+]
 const TESTNET_EVM_CHAINS: ViemChain[] = [
   sepolia,
+  luxTestnet,
   arbitrumSepolia,
   baseSepolia,
   optimismSepolia,
   polygonAmoy,
   holesky,
   bscTestnet,
+  avalancheFuji,
 ]
 
 /**
@@ -169,12 +210,13 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
 
 /**
  * Map a bridge-internal chain ID (`evm:1`, `lux:96369`, `svm:101`) to the
- * numeric wagmi/viem chainId. Returns null for non-EVM chains — those are
- * not signed by the user wallet but by the MPC threshold layer.
+ * numeric wagmi/viem chainId. Both `evm:` and `lux:` are EVM-signed by the
+ * user wallet so both resolve to a wagmi chainId. Returns null for non-EVM
+ * families (svm, btc, ton, xrp, …) which route through MPC instead.
  */
 export function bridgeIdToWagmiChainId(bridgeId: string): number | null {
   const [family, idStr] = bridgeId.split(':')
-  if (family !== 'evm') return null
+  if (family !== 'evm' && family !== 'lux') return null
   const n = Number(idStr)
   return Number.isFinite(n) ? n : null
 }

@@ -427,6 +427,24 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		return nil, err
 	}
 
+	// Bitcoin testnet patch: mpcd returns mainnet-format P2PKH addresses
+	// for BTC keygens regardless of the requesting network's testnet flag
+	// (verified empirically against the live cluster on 2026-05-28).
+	// Re-encode locally so BITCOIN_TESTNET deposits actually land at a
+	// valid testnet address. The fix belongs in mpcd long-term; this is
+	// a stopgap so the bridge isn't blocked. Idempotent on input that's
+	// already testnet — once mpcd is fixed, this call becomes a no-op.
+	if addrType == AddressTypeBTC && isBTCTestnet(networkInternalName) {
+		converted, convErr := btcAddressForTestnet(address)
+		if convErr != nil {
+			return nil, &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("btc testnet address re-encode: %v", convErr),
+			}
+		}
+		address = converted
+	}
+
 	// The cluster echoes back its own wallet_id; if it's empty fall
 	// back to the one we sent so the SDK's `name###address` contract
 	// always has a non-empty name slot.
