@@ -32,7 +32,10 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/luxfi/bridge/internal/xrpl"
 )
 
 // =============================================================================
@@ -52,35 +55,68 @@ const (
 	AddressTypeDOT AddressType = "dot"
 )
 
+// Curve names the threshold-signature scheme the MPC cluster keygens /
+// signs under. The lux-mpc dashboard (mpcd v2026-05+) accepts a
+// per-request curve switch; default is ECDSA/secp256k1 for backwards
+// compatibility with the original ETH/BTC pipeline. Solana / Cardano
+// / Polkadot need Ed25519 (FROST). Each address type maps to exactly
+// one curve — CurveFor() is the source of truth.
+type Curve string
+
+const (
+	// CurveSecp256k1 = ECDSA on secp256k1. ETH + BTC.
+	CurveSecp256k1 Curve = "secp256k1"
+	// CurveEd25519 = EdDSA on Ed25519 via FROST. SOL + TON + DOT + Cardano.
+	CurveEd25519 Curve = "ed25519"
+)
+
+// CurveFor returns the canonical curve for a given address family.
+// Used to populate the `curve` field on the keygen + sign request
+// bodies — the dashboard hands back the curve-appropriate pubkey slot
+// (eddsa_pub_key for Ed25519, ecdsa_pub_key otherwise).
+//
+// XRP is secp256k1 with rAddress derivation; the bridge tracks it as
+// AddressTypeXRP but the underlying key is the same as ETH today, so
+// it lands on secp256k1. Cardano shares the SOL slot per the legacy
+// TS mapping — its underlying key is Ed25519.
+func CurveFor(t AddressType) Curve {
+	switch t {
+	case AddressTypeSOL, AddressTypeTON, AddressTypeDOT:
+		return CurveEd25519
+	default:
+		return CurveSecp256k1
+	}
+}
+
 // networkAddressType mirrors NETWORK_ADDRESS_TYPE in mpc-wallet.ts.
 // Unknown networks default to AddressTypeETH (matches TS behavior).
 var networkAddressType = map[string]AddressType{
 	// EVM chains use eth address
-	"ETHEREUM_MAINNET":  AddressTypeETH,
-	"ETHEREUM_SEPOLIA":  AddressTypeETH,
-	"ETHEREUM_GOERLI":   AddressTypeETH,
-	"BASE_MAINNET":      AddressTypeETH,
-	"BASE_SEPOLIA":      AddressTypeETH,
-	"HOLESKY_TESTNET":   AddressTypeETH,
-	"LUX_MAINNET":       AddressTypeETH,
-	"LUX_TESTNET":       AddressTypeETH,
-	"LUX_DEVNET":        AddressTypeETH,
-	"ZOO_MAINNET":       AddressTypeETH,
-	"ZOO_TESTNET":       AddressTypeETH,
-	"ZOO_DEVNET":        AddressTypeETH,
-	"BSC_MAINNET":       AddressTypeETH,
-	"BSC_TESTNET":       AddressTypeETH,
-	"POLYGON_MAINNET":   AddressTypeETH,
-	"ARBITRUM_MAINNET":  AddressTypeETH,
-	"OPTIMISM_MAINNET":  AddressTypeETH,
-	"AVAX_MAINNET":      AddressTypeETH,
-	"FANTOM_MAINNET":    AddressTypeETH,
-	"CELO_MAINNET":      AddressTypeETH,
-	"GNOSIS_MAINNET":    AddressTypeETH,
-	"AURORA_MAINNET":    AddressTypeETH,
-	"ZORA_MAINNET":      AddressTypeETH,
-	"BLAST_MAINNET":     AddressTypeETH,
-	"LINEA_MAINNET":     AddressTypeETH,
+	"ETHEREUM_MAINNET": AddressTypeETH,
+	"ETHEREUM_SEPOLIA": AddressTypeETH,
+	"ETHEREUM_GOERLI":  AddressTypeETH,
+	"BASE_MAINNET":     AddressTypeETH,
+	"BASE_SEPOLIA":     AddressTypeETH,
+	"HOLESKY_TESTNET":  AddressTypeETH,
+	"LUX_MAINNET":      AddressTypeETH,
+	"LUX_TESTNET":      AddressTypeETH,
+	"LUX_DEVNET":       AddressTypeETH,
+	"ZOO_MAINNET":      AddressTypeETH,
+	"ZOO_TESTNET":      AddressTypeETH,
+	"ZOO_DEVNET":       AddressTypeETH,
+	"BSC_MAINNET":      AddressTypeETH,
+	"BSC_TESTNET":      AddressTypeETH,
+	"POLYGON_MAINNET":  AddressTypeETH,
+	"ARBITRUM_MAINNET": AddressTypeETH,
+	"OPTIMISM_MAINNET": AddressTypeETH,
+	"AVAX_MAINNET":     AddressTypeETH,
+	"FANTOM_MAINNET":   AddressTypeETH,
+	"CELO_MAINNET":     AddressTypeETH,
+	"GNOSIS_MAINNET":   AddressTypeETH,
+	"AURORA_MAINNET":   AddressTypeETH,
+	"ZORA_MAINNET":     AddressTypeETH,
+	"BLAST_MAINNET":    AddressTypeETH,
+	"LINEA_MAINNET":    AddressTypeETH,
 	// Bitcoin
 	"BITCOIN_MAINNET": AddressTypeBTC,
 	"BITCOIN_TESTNET": AddressTypeBTC,
@@ -96,6 +132,8 @@ var networkAddressType = map[string]AddressType{
 	"XRP_TESTNET": AddressTypeXRP,
 	// Polkadot / Substrate
 	"POLKADOT_MAINNET": AddressTypeDOT,
+	"POLKADOT_TESTNET": AddressTypeDOT,
+	"KUSAMA_MAINNET":   AddressTypeDOT,
 	// Cardano — placeholder (Ed25519); use the sol address slot until a
 	// proper Cardano encoder lands. Matches TS mpc-wallet.ts behaviour.
 	"CARDANO_MAINNET": AddressTypeSOL,
@@ -118,15 +156,28 @@ func AddressTypeFor(networkInternalName string) AddressType {
 
 // keygenResult mirrors the MPCKeygenResult wire shape from
 // mpc-wallet.ts. Internal to the package; callers consume *Wallet.
+//
+// EVMAddress is the alternate name mpcd uses on the wire ("evm_address"
+// in /root/luxify/mpc/cmd/mpcd/main.go around line 665). We accept
+// either spelling so the bridge keeps working through the renaming
+// transition.
+//
+// BTCAddress is mpcd's legacy P2PKH "1..." address. For bridge-side
+// release flows we don't use it directly — we re-derive a P2WPKH
+// bech32 address from ECDSAPubKey via deriveBTCBech32Address. The
+// P2WPKH form is what btcsuite txscript/wire actually expects on the
+// release side; mpcd's legacy P2PKH is preserved on the wire only for
+// SDK back-compat.
 type keygenResult struct {
-	WalletID     string `json:"wallet_id"`
-	ECDSAPubKey  string `json:"ecdsa_pub_key"`
-	EDDSAPubKey  string `json:"eddsa_pub_key"`
-	ETHAddress   string `json:"eth_address"`
-	BTCAddress   string `json:"btc_address"`
-	SOLAddress   string `json:"sol_address"`
-	ResultType   string `json:"result_type"`
-	Error        string `json:"error"`
+	WalletID    string `json:"wallet_id"`
+	ECDSAPubKey string `json:"ecdsa_pub_key"`
+	EDDSAPubKey string `json:"eddsa_pub_key"`
+	ETHAddress  string `json:"eth_address"`
+	EVMAddress  string `json:"evm_address"`
+	BTCAddress  string `json:"btc_address"`
+	SOLAddress  string `json:"sol_address"`
+	ResultType  string `json:"result_type"`
+	Error       string `json:"error"`
 }
 
 // Wallet is the public result of a keygen for one bridge deposit OR for
@@ -139,12 +190,34 @@ type keygenResult struct {
 type Wallet struct {
 	// Name is the MPC wallet identifier (e.g. "bridge-ethereum_sepolia-1718000000").
 	Name string `json:"name"`
-	// Address is the chain-appropriate receive/payout address derived
-	// from the keygen output, picked according to AddressTypeFor(network).
+	// Address is the source-chain receive address derived from the
+	// keygen output, picked according to AddressTypeFor(network). For
+	// BTC, this is the bech32 P2WPKH derived locally from ECDSAPubKey
+	// (mpcd's legacy P2PKH form is intentionally not used — P2WPKH is
+	// what the bridge release flow consumes).
 	Address string `json:"address"`
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
 	AddressType AddressType `json:"address_type"`
+	// ECDSAPubKey is the 33-byte compressed secp256k1 public key the
+	// MPC quorum produced. Required by:
+	//   - BTC release: witness stack on Finalize (P2WPKH spends include
+	//     the pubkey alongside the DER signature).
+	//   - DOT release: assembler derives the AccountId32 + picks the
+	//     ECDSA recovery byte at Finalize time.
+	//   - XRP release: tx wire payload embeds the pubkey + verifiers
+	//     reconstruct the address from it.
+	// Empty when the keygen result didn't carry an ECDSA pubkey
+	// (Ed25519-only paths: SOL, TON).
+	ECDSAPubKey []byte `json:"ecdsa_pub_key,omitempty"`
+
+	// EDDSAPubKeyHex is the hex-encoded 32-byte Ed25519 public key.
+	// Used by TON (where the address is derived from the wallet
+	// contract's state_init cell, which embeds this pubkey). Empty
+	// for non-Ed25519 wallets. SOL also signs with Ed25519 but the
+	// address IS the pubkey base58-encoded, so SOL doesn't need this
+	// field — the address slot carries everything.
+	EDDSAPubKeyHex string `json:"eddsa_pub_key_hex,omitempty"`
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
@@ -173,13 +246,26 @@ func (e *MPCError) Error() string {
 	return fmt.Sprintf("mchain: %s: %s", e.Op, e.Message)
 }
 
-// ErrSubstrateNotImplemented is returned when a Polkadot/Substrate
-// keygen is requested. Substrate addresses require SS58 encoding from
-// the ed25519 public key; the Go bridge doesn't depend on an SS58
-// library yet. Surfaces as a clear error so callers know to wait or
-// route the swap through a different path.
+// ErrSubstrateNotImplemented historically signalled "DOT keygen
+// unsupported by the bridge". As of the DOT integration the bridge
+// derives the SS58 address client-side from the cluster's
+// ecdsa_pub_key, so this error is no longer returned by KeygenForDeposit.
+// Kept exported for callers that historically branched on errors.Is —
+// they'll never see it return now, but the symbol stays a stable
+// part of the API.
+//
+// Deprecated: as of bridge v2.x.x DOT is supported; do not branch on
+// errors.Is against this value any more.
 var ErrSubstrateNotImplemented = errors.New(
 	"mchain: substrate (dot) address derivation not implemented; needs SS58 encoder",
+)
+
+// ErrMissingPubKey is returned when a substrate (DOT) keygen succeeds
+// but the cluster didn't populate ecdsa_pub_key — substrate ECDSA
+// AccountId derivation needs the compressed pubkey. Surfaces clearly
+// so the operator knows the MPC cluster's response shape changed.
+var ErrMissingPubKey = errors.New(
+	"mchain: substrate keygen response missing ecdsa_pub_key — cluster cannot derive SS58 address",
 )
 
 // =============================================================================
@@ -226,6 +312,30 @@ type Client struct {
 	// Clock is the time source for wallet-id construction. Tests
 	// override; production leaves it nil.
 	Clock func() time.Time
+
+	// DashboardURL points at the lux-mpc dashboard listener (typically
+	// port 8081). When set, SignForWallet routes through
+	// POST /v1/mpc/sign there instead of the legacy ${APIURL}/sign
+	// path (which the live mpcd v2026-05 daemon does NOT expose on
+	// the internal port). EnsureDashboardSession lazily mints a
+	// signing session on first use per (wallet, org).
+	DashboardURL string
+
+	// DashboardToken is a JWT for the dashboard API. Bridge gets one
+	// via /v1/auth/login or /v1/auth/oidc and refreshes it itself;
+	// pass the most-recent value via this field. Mutually exclusive
+	// with DashboardAPIKey — Bearer wins if both are set.
+	DashboardToken string
+
+	// DashboardAPIKey is an X-API-Key for the dashboard API. Bridge
+	// callers without OIDC plumbing can mint an API key once on the
+	// MPC dashboard with permissions=["sign"] and pass it here.
+	DashboardAPIKey string
+
+	// sessions caches dashboard session IDs by (walletID, orgID).
+	// Lazily initialized — sessionsOnce guards the first access.
+	sessions     *sessionCache
+	sessionsOnce sync.Once
 }
 
 // New constructs a Client pointing at apiURL with no Bearer token and
@@ -322,8 +432,9 @@ func (c *Client) buildWalletID(networkInternalName string) string {
 //
 // This is the Go port of `createMPCWalletForDeposit` in mpc-wallet.ts,
 // updated to match the live mpcd contract:
-//   POST `${APIURL}/keygen` with `{org_id, wallet_id}` body and
-//   `Authorization: Bearer <Token>` header.
+//
+//	POST `${APIURL}/keygen` with `{org_id, wallet_id}` body and
+//	`Authorization: Bearer <Token>` header.
 //
 // Errors:
 //   - *MPCError{Op:"keygen", Message:"OrgID not configured"} when Client.OrgID is empty.
@@ -345,23 +456,25 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 	if c.APIURL == "" {
 		return nil, &MPCError{Op: "keygen", Message: "APIURL not configured"}
 	}
-
-	// DOT check fires BEFORE the org_id check: a DOT keygen can't
-	// succeed regardless of auth, so the more informative
-	// ErrSubstrateNotImplemented wins.
 	addrType := AddressTypeFor(networkInternalName)
-	if addrType == AddressTypeDOT {
-		return nil, ErrSubstrateNotImplemented
-	}
 	if orgID == "" {
 		return nil, &MPCError{Op: "keygen", Message: "org_id required (set Client.OrgID or pass per-call)"}
 	}
 
 	walletID := c.buildWalletID(networkInternalName)
+	curve := CurveFor(addrType)
 
 	body, err := json.Marshal(map[string]string{
 		"org_id":    orgID,
 		"wallet_id": walletID,
+		// curve switches the cluster between ECDSA/secp256k1 and
+		// Ed25519/FROST. The live mpcd daemon ignores unknown keys, so
+		// older deployments that don't yet honour curve will fall back
+		// to their compile-time default (secp256k1) — that produces an
+		// EVM-shaped keygen which the SOL address picker then rejects
+		// downstream with a clear error. New deployments honour the
+		// hint and return an eddsa_pub_key + sol_address slot.
+		"curve": string(curve),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("mchain: marshal keygen body: %w", err)
@@ -422,7 +535,7 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		}
 	}
 
-	address, err := pickAddress(&result, addrType)
+	address, err := pickAddress(&result, addrType, networkInternalName)
 	if err != nil {
 		return nil, err
 	}
@@ -435,10 +548,24 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		name = walletID
 	}
 
+	// Decode the compressed ECDSA pubkey for downstream consumers
+	// (BTC release flow needs it for the witness stack; XRP release
+	// flow embeds it in the Payment's SigningPubKey; DOT signing
+	// derives AccountId32). Best-effort: if the keygen didn't return
+	// one (ed25519-only path), leave nil.
+	var ecdsaPubKey []byte
+	if result.ECDSAPubKey != "" {
+		if decoded, derr := hex.DecodeString(strings.TrimPrefix(result.ECDSAPubKey, "0x")); derr == nil {
+			ecdsaPubKey = compressSecp256k1Pubkey(decoded)
+		}
+	}
+
 	return &Wallet{
-		Name:        name,
-		Address:     address,
-		AddressType: addrType,
+		Name:           name,
+		Address:        address,
+		AddressType:    addrType,
+		ECDSAPubKey:    ecdsaPubKey,
+		EDDSAPubKeyHex: result.EDDSAPubKey,
 	}, nil
 }
 
@@ -473,10 +600,11 @@ type signResultWire struct {
 // result_type failures. context errors on cancellation / timeout.
 //
 // Wire shape (mirrors /keygen):
-//   POST `${APIURL}/sign`
-//   Authorization: Bearer <Token>
-//   Content-Type: application/json
-//   {"org_id":"...","wallet_id":"...","message":"<hex>"}
+//
+//	POST `${APIURL}/sign`
+//	Authorization: Bearer <Token>
+//	Content-Type: application/json
+//	{"org_id":"...","wallet_id":"...","message":"<hex>"}
 //
 // Response on success: {wallet_id, signature, session_id, result_type:"success"}
 // Response on cluster-side failure: {wallet_id, error, error_code, result_type:"error"}
@@ -491,11 +619,30 @@ func (c *Client) SignForWallet(ctx context.Context, walletID, messageHex string)
 	return c.SignForWalletWithOrg(ctx, walletID, messageHex, c.OrgID)
 }
 
+// SignForWalletOnCurve is SignForWallet with an explicit curve hint. The
+// caller (signing driver) knows the destination address family and so
+// the curve. The hint is forwarded to the dashboard so it routes the
+// session to the matching threshold-signature stack: ECDSA/secp256k1
+// for ETH/BTC, EdDSA/Ed25519 (FROST) for SOL/TON/DOT/Cardano.
+//
+// On the wire: an extra "curve" field in the POST body. Older
+// dashboards ignore unknown fields, so the call degrades to whatever
+// the cluster's default curve is (secp256k1) — that returns a 65-byte
+// ECDSA signature which the SOL finalizer will reject with a clear
+// error.
+func (c *Client) SignForWalletOnCurve(ctx context.Context, walletID, messageHex string, curve Curve) (*SignResult, error) {
+	return c.SignForWalletOnCurveWithOrg(ctx, walletID, messageHex, c.OrgID, curve)
+}
+
 // SignForWalletWithOrg is SignForWallet with an explicit per-call orgID.
 func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex, orgID string) (*SignResult, error) {
-	if c.APIURL == "" {
-		return nil, &MPCError{Op: "sign", Message: "APIURL not configured"}
-	}
+	return c.SignForWalletOnCurveWithOrg(ctx, walletID, messageHex, orgID, CurveSecp256k1)
+}
+
+// SignForWalletOnCurveWithOrg is the canonical implementation. All
+// other variants funnel through here with curve defaulting to
+// CurveSecp256k1 for backward compat.
+func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, messageHex, orgID string, curve Curve) (*SignResult, error) {
 	if walletID == "" {
 		return nil, &MPCError{Op: "sign", Message: "wallet_id required"}
 	}
@@ -506,10 +653,29 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 		return nil, &MPCError{Op: "sign", Message: "org_id required (set Client.OrgID or pass per-call)"}
 	}
 
+	// Production path: dashboard API. The live mpcd v2026-05 daemon
+	// only serves /sign through the dashboard listener (port 8081),
+	// gated by JWT or X-API-Key. EnsureDashboardSession lazily mints
+	// a per-(wallet, org) signing grant that signViaDashboard reuses.
+	if c.DashboardSigning() {
+		return c.signViaDashboard(ctx, walletID, messageHex, orgID, curve)
+	}
+
+	// Legacy path: ${APIURL}/sign — kept for in-process mocks and any
+	// future internal-API rev that grows a /sign route. The live
+	// cluster does NOT serve this; configuring only APIURL is a
+	// misconfiguration we surface clearly.
+	if c.APIURL == "" {
+		return nil, &MPCError{Op: "sign", Message: "neither APIURL nor DashboardURL configured"}
+	}
+
 	body, err := json.Marshal(map[string]string{
 		"org_id":    orgID,
 		"wallet_id": walletID,
 		"message":   messageHex,
+		// curve is forwarded so legacy mocks can branch on it. Production
+		// runs through the dashboard path above.
+		"curve": string(curve),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("mchain: marshal sign body: %w", err)
@@ -582,26 +748,100 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 
 // pickAddress mirrors the TS switch on AddressType. Returns an
 // *MPCError when the chosen slot is empty.
-func pickAddress(r *keygenResult, t AddressType) (string, error) {
+//
+// networkInternalName is required for BTC so the bech32 hrp matches the
+// destination (BITCOIN_MAINNET → "bc"; BITCOIN_TESTNET → "tb") and for
+// substrate / DOT so the SS58 prefix matches the network. For every
+// other family it's currently ignored but threaded so the API is uniform.
+//
+// BTC handling: mpcd's btc_address field is a legacy P2PKH "1..." Base58
+// address. The bridge release flow uses bech32 P2WPKH, derived locally
+// from the ECDSAPubKey returned alongside. If the keygen returns an
+// ECDSAPubKey we ALWAYS prefer the locally-derived P2WPKH; otherwise we
+// fall back to the legacy form so SDK callers that read the wire
+// `btc_address` slot still get something.
+//
+// DOT handling: Substrate ECDSA AccountId = blake2_256(compressed_pubkey),
+// then SS58-encoded with the network-specific prefix (Polkadot mainnet
+// vs Kusama vs Westend/generic testnet).
+func pickAddress(r *keygenResult, t AddressType, networkInternalName string) (string, error) {
 	var addr string
 	switch t {
 	case AddressTypeBTC:
-		addr = r.BTCAddress
-	case AddressTypeSOL, AddressTypeTON:
-		// TON shares the SOL keygen slot in the current cluster output.
-		// Long-term TON needs its own address derivation from the
-		// ed25519 pubkey, but for now match TS placeholder behaviour.
+		// Prefer locally-derived bech32 P2WPKH from the ECDSAPubKey.
+		if derived, derr := deriveBTCBech32Address(r.ECDSAPubKey, networkInternalName); derr == nil && derived != "" {
+			addr = derived
+		} else {
+			addr = r.BTCAddress
+		}
+	case AddressTypeTON:
+		// TON v4r2 address = state_init_hash(workchain=0, subwallet, pubkey).
+		// Prefer the proper derivation when the cluster surfaced the
+		// Ed25519 pubkey; otherwise fall back to whatever the cluster
+		// put in the SOL slot (legacy mpcd that doesn't yet derive
+		// chain-specific addresses).
+		if r.EDDSAPubKey != "" {
+			derived, err := deriveTONAddressFromHex(r.EDDSAPubKey)
+			if err == nil {
+				return derived, nil
+			}
+			// On derivation failure, fall through to the legacy slot —
+			// don't refuse keygens just because the new path glitched.
+		}
+		addr = r.SOLAddress
+	case AddressTypeSOL:
 		addr = r.SOLAddress
 	case AddressTypeXRP:
-		// XRP uses secp256k1 but with rAddress derivation. Until that
-		// lands, use the ETH address as an identifier — matches the
-		// explicit placeholder in mpc-wallet.ts.
-		addr = r.ETHAddress
+		// XRP r-address derivation: take the compressed-secp256k1 ECDSA
+		// pubkey returned by the MPC cluster, RIPEMD160(SHA256(pub)) →
+		// AccountID, then base58check with the XRPL alphabet + 0x00
+		// version byte. The cluster doesn't surface an r-address slot
+		// directly (XRPL never had its own keygen response field) but
+		// the ECDSAPubKey IS the pubkey that controls the XRP account,
+		// so derivation here is canonical and reversible.
+		//
+		// When the cluster's ECDSA pubkey field is empty (legacy mocks /
+		// shape-only test fixtures), fall back to ETH address as a stable
+		// identifier so the cluster integration tests pass. Production
+		// keygen always populates ecdsa_pub_key.
+		if r.ECDSAPubKey != "" {
+			pubHex := strings.TrimPrefix(strings.TrimPrefix(r.ECDSAPubKey, "0x"), "0X")
+			pub, err := hex.DecodeString(pubHex)
+			if err != nil {
+				return "", &MPCError{
+					Op:      "keygen",
+					Message: fmt.Sprintf("decode ECDSAPubKey hex %q: %v", r.ECDSAPubKey, err),
+				}
+			}
+			rAddr, err := xrpl.AddressFromPubKey(pub)
+			if err != nil {
+				return "", &MPCError{
+					Op:      "keygen",
+					Message: fmt.Sprintf("derive XRP r-address: %v", err),
+				}
+			}
+			addr = rAddr
+		} else {
+			addr = r.ETHAddress
+		}
 	case AddressTypeDOT:
-		// Should never be reached — caller guards via ErrSubstrateNotImplemented.
-		return "", ErrSubstrateNotImplemented
+		// Substrate ECDSA AccountId = blake2_256(compressed_pubkey),
+		// then SS58-encoded with the network-specific prefix. Derive
+		// client-side from the ecdsa_pub_key the cluster returns —
+		// the mpcd daemon doesn't (yet) emit SS58 strings natively.
+		if r.ECDSAPubKey == "" {
+			return "", ErrMissingPubKey
+		}
+		ss58, err := deriveSubstrateSS58(r.ECDSAPubKey, networkInternalName)
+		if err != nil {
+			return "", &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("derive SS58 address: %v", err),
+			}
+		}
+		addr = ss58
 	default: // AddressTypeETH or unknown → eth
-		addr = r.ETHAddress
+		addr = preferEVMAddress(r)
 	}
 	if addr == "" {
 		return "", &MPCError{

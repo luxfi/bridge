@@ -74,10 +74,10 @@ type CoinGeckoFeed struct {
 	// DefaultCoinGeckoIDMap. Symbol matching is case-insensitive.
 	IDMap map[string]string
 
-	mu         sync.Mutex
-	cache      map[string]float64 // upper-case symbol → USD
-	cachedAt   time.Time
-	inFlight   chan struct{} // single-flight gate around HTTP fetch
+	mu       sync.Mutex
+	cache    map[string]float64 // upper-case symbol → USD
+	cachedAt time.Time
+	inFlight chan struct{} // single-flight gate around HTTP fetch
 }
 
 // NewCoinGeckoFeed builds a feed with sensible defaults. Pass nil for

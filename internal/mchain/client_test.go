@@ -6,6 +6,7 @@ package mchain
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -89,6 +90,8 @@ func TestAddressTypeFor_Coverage(t *testing.T) {
 		{"TON_MAINNET", AddressTypeTON},
 		{"XRP_TESTNET", AddressTypeXRP},
 		{"POLKADOT_MAINNET", AddressTypeDOT},
+		{"POLKADOT_TESTNET", AddressTypeDOT},
+		{"KUSAMA_MAINNET", AddressTypeDOT},
 		{"CARDANO_MAINNET", AddressTypeSOL}, // placeholder slot
 		{"UNKNOWN_NETWORK", AddressTypeETH}, // default fallback
 	}
@@ -183,6 +186,66 @@ func TestKeygen_SOL_PicksSOLAddress(t *testing.T) {
 	}
 }
 
+func TestKeygen_SOL_SendsEd25519Curve(t *testing.T) {
+	// Solana keygen MUST request the Ed25519 curve so the cluster
+	// routes to its FROST stack and returns an eddsa_pub_key /
+	// sol_address slot. Without this, the cluster defaults to
+	// secp256k1 and the resulting "SOL address" is just the ETH
+	// pubkey base58'd — broadcast-time signatures would not verify.
+	m := newMockCluster(t)
+	m.result = &keygenResult{SOLAddress: "SoLaNa", ResultType: "success"}
+	c := clientFor(m)
+	if _, err := c.KeygenForDeposit(context.Background(), "SOLANA_DEVNET"); err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(m.lastBody, &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["curve"] != "ed25519" {
+		t.Errorf("curve = %q, want \"ed25519\" for SOL keygen (body=%s)", body["curve"], m.lastBody)
+	}
+}
+
+func TestKeygen_ETH_SendsSecp256k1Curve(t *testing.T) {
+	// Regression: ETH keygen MUST stay on secp256k1 even after the
+	// Ed25519 hint plumbing. The cluster's default behaviour matches
+	// secp256k1; we still send the field explicitly to make the wire
+	// shape symmetric.
+	m := newMockCluster(t)
+	m.result = &keygenResult{ETHAddress: "0xfoo", ResultType: "success"}
+	c := clientFor(m)
+	if _, err := c.KeygenForDeposit(context.Background(), "ETHEREUM_SEPOLIA"); err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(m.lastBody, &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["curve"] != "secp256k1" {
+		t.Errorf("curve = %q, want \"secp256k1\" for ETH keygen (body=%s)", body["curve"], m.lastBody)
+	}
+}
+
+func TestCurveFor(t *testing.T) {
+	cases := []struct {
+		t    AddressType
+		want Curve
+	}{
+		{AddressTypeETH, CurveSecp256k1},
+		{AddressTypeBTC, CurveSecp256k1},
+		{AddressTypeXRP, CurveSecp256k1},
+		{AddressTypeSOL, CurveEd25519},
+		{AddressTypeTON, CurveEd25519},
+		{AddressTypeDOT, CurveEd25519},
+	}
+	for _, tc := range cases {
+		if got := CurveFor(tc.t); got != tc.want {
+			t.Errorf("CurveFor(%q) = %q, want %q", tc.t, got, tc.want)
+		}
+	}
+}
+
 func TestKeygen_TON_UsesSOLSlot(t *testing.T) {
 	// TON shares the SOL slot in the cluster's current keygen output —
 	// matches TS placeholder behaviour in mpc-wallet.ts. Test pins this
@@ -203,10 +266,11 @@ func TestKeygen_TON_UsesSOLSlot(t *testing.T) {
 	}
 }
 
-func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
-	// XRP placeholder: uses the ETH address until proper rAddress
-	// derivation lands. Match TS exactly so the proxy and legacy
-	// server return the same identifier today.
+func TestKeygen_XRP_FallsBackToETHSlotWhenPubKeyAbsent(t *testing.T) {
+	// Legacy mock cluster fixture without ECDSAPubKey populated → the
+	// XRP branch falls back to ETHAddress so existing shape-only tests
+	// keep working. Production keygen always sets ECDSAPubKey, exercised
+	// in TestKeygen_XRP_DerivesRAddressFromPubKey below.
 	m := newMockCluster(t)
 	m.result = &keygenResult{ETHAddress: "0xeth_for_xrp"}
 	c := clientFor(m)
@@ -223,18 +287,105 @@ func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
 	}
 }
 
-func TestKeygen_DOT_ReturnsErrSubstrateNotImplemented(t *testing.T) {
-	// Important: we should NOT hit the cluster — fail fast in the
-	// AddressTypeDOT branch.
+func TestKeygen_XRP_DerivesRAddressFromPubKey(t *testing.T) {
+	// Canonical test vector: pubkey 0330... → r-address via the
+	// RIPEMD160(SHA256(pubkey)) + base58check pipeline in internal/xrpl.
+	// The derived address must round-trip parseable.
 	m := newMockCluster(t)
+	m.result = &keygenResult{
+		ETHAddress:  "0xshouldnotbeused",
+		ECDSAPubKey: "0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020",
+	}
 	c := clientFor(m)
 
-	_, err := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
-	if !errors.Is(err, ErrSubstrateNotImplemented) {
-		t.Fatalf("expected ErrSubstrateNotImplemented, got %v", err)
+	w, err := c.KeygenForDeposit(context.Background(), "XRP_MAINNET")
+	if err != nil {
+		t.Fatalf("err: %v", err)
 	}
-	if len(m.lastBody) != 0 {
-		t.Errorf("cluster should not have been hit for DOT request, body=%s", m.lastBody)
+	if w.AddressType != AddressTypeXRP {
+		t.Errorf("AddressType = %q", w.AddressType)
+	}
+	if w.Address == "" || w.Address[0] != 'r' {
+		t.Errorf("Address should be an r-address; got %q", w.Address)
+	}
+	if w.Address == "0xshouldnotbeused" {
+		t.Error("XRP branch must derive from ECDSAPubKey, not fall back to ETH slot")
+	}
+}
+
+func TestKeygen_XRP_BadPubKeyHex_Errors(t *testing.T) {
+	m := newMockCluster(t)
+	m.result = &keygenResult{
+		ECDSAPubKey: "not-hex",
+	}
+	c := clientFor(m)
+	_, err := c.KeygenForDeposit(context.Background(), "XRP_MAINNET")
+	if err == nil {
+		t.Fatal("expected error for bad ECDSAPubKey hex")
+	}
+}
+
+func TestKeygen_DOT_DerivesSS58FromPubKey(t *testing.T) {
+	// The cluster returns a 33-byte compressed ECDSA pubkey; the bridge
+	// derives the SS58 address client-side.
+	//
+	// Pin a deterministic pubkey so the test asserts on a fixed SS58.
+	const pub = "02bf3e72a73be7a3a1b9b7872c7e3a7bf1c5e22f4e7f2a73be7a3a1b9b7872c7e3"
+	m := newMockCluster(t)
+	m.result = &keygenResult{
+		WalletID:    "bridge-polkadot_mainnet-1",
+		ECDSAPubKey: pub,
+		ResultType:  "success",
+	}
+	c := clientFor(m)
+	w, err := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
+	if err != nil {
+		t.Fatalf("KeygenForDeposit: %v", err)
+	}
+	if w.AddressType != AddressTypeDOT {
+		t.Errorf("AddressType = %v", w.AddressType)
+	}
+	if !strings.HasPrefix(w.Address, "1") {
+		t.Errorf("Polkadot SS58 should start with '1', got %q", w.Address)
+	}
+	if hex.EncodeToString(w.ECDSAPubKey) != pub {
+		t.Errorf("ECDSAPubKey = %x", w.ECDSAPubKey)
+	}
+	// Second call with the same pubkey is deterministic.
+	w2, _ := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
+	if w2.Address != w.Address {
+		t.Error("SS58 derivation should be deterministic")
+	}
+}
+
+func TestKeygen_DOT_MissingPubKeyErrors(t *testing.T) {
+	// If the cluster returns no ecdsa_pub_key, we can't derive an SS58
+	// and surface ErrMissingPubKey.
+	m := newMockCluster(t)
+	m.result = &keygenResult{
+		WalletID:   "bridge-dot-1",
+		ResultType: "success",
+		// no ECDSAPubKey
+	}
+	c := clientFor(m)
+	_, err := c.KeygenForDeposit(context.Background(), "POLKADOT_MAINNET")
+	if !errors.Is(err, ErrMissingPubKey) {
+		t.Errorf("expected ErrMissingPubKey, got %v", err)
+	}
+}
+
+func TestKeygen_DOT_TestnetPrefix(t *testing.T) {
+	const pub = "02bf3e72a73be7a3a1b9b7872c7e3a7bf1c5e22f4e7f2a73be7a3a1b9b7872c7e3"
+	m := newMockCluster(t)
+	m.result = &keygenResult{ECDSAPubKey: pub, ResultType: "success"}
+	c := clientFor(m)
+	w, err := c.KeygenForDeposit(context.Background(), "POLKADOT_TESTNET")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Westend (generic) addresses start with '5'.
+	if !strings.HasPrefix(w.Address, "5") {
+		t.Errorf("Westend SS58 should start with '5', got %q", w.Address)
 	}
 }
 
@@ -569,8 +720,8 @@ func TestNewAuthed_PopulatesFields(t *testing.T) {
 func TestDeriveInternalKey_MatchesUpstreamFormula(t *testing.T) {
 	// Hand-computed reference: ed25519 private key = 64 bytes; seed =
 	// first 32. SHA-256(seed || "mpc-internal-api"), hex.
-	seed := strings.Repeat("ab", 32)              // 32 bytes of 0xab
-	pub := strings.Repeat("cd", 32)               // arbitrary pub
+	seed := strings.Repeat("ab", 32) // 32 bytes of 0xab
+	pub := strings.Repeat("cd", 32)  // arbitrary pub
 	identityJSON := []byte(`{"private_key":"` + seed + pub + `"}`)
 
 	key, err := DeriveInternalKey(identityJSON)
