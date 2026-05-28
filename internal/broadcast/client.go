@@ -8,7 +8,9 @@
 //   - EVM (Ethereum / Sepolia / Lux / Base / Polygon / Arbitrum /
 //     Optimism / Avalanche / BSC / Holesky / Zora / Blast / Linea):
 //     implemented via JSON-RPC eth_sendRawTransaction.
-//   - Non-EVM (BTC / SOL / TON / XRP / DOT): returns
+//   - TON (mainnet / testnet): implemented via TON Center sendBoc.
+//     See ton.go.
+//   - Non-EVM, non-TON (BTC / SOL / XRP / DOT): returns
 //     ErrFamilyNotImplemented. Adding any one is a straightforward
 //     follow-up — different REST/RPC contracts, same shape.
 //
@@ -83,8 +85,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, SOL, TON, XRP, DOT).
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (only EVM today)")
+// isn't implemented yet (BTC, SOL, XRP, DOT). EVM and TON are
+// implemented in this package today.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -129,6 +132,13 @@ type Client struct {
 	// RPCURLOverrides shadows specific networks with custom URLs (e.g.
 	// an authenticated provider). Checked before the package table.
 	RPCURLOverrides map[string]string
+
+	// TONAPIKeys maps a TON network name (TON_MAINNET / TON_TESTNET) to
+	// the X-API-Key value used when calling TON Center. Required at
+	// production rates — TON Center throttles unauthenticated callers
+	// to ~1 req/s. Populated via SetTONAPIKey (see ton.go) or directly
+	// by main.go from networks.yaml.
+	TONAPIKeys map[string]string
 
 	// callSeq is a monotonic JSON-RPC `id` counter. Atomic — safe for
 	// concurrent use without external locking.
@@ -196,11 +206,12 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 
 	// Family dispatch. We use mchain.AddressTypeFor as the canonical
 	// network→family mapping (it's already the project's source of
-	// truth for which family a network belongs to). For broadcast,
-	// only AddressTypeETH is implemented today.
+	// truth for which family a network belongs to).
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
+	case mchain.AddressTypeTON:
+		return c.broadcastTON(ctx, url, network, rawTxHex)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
