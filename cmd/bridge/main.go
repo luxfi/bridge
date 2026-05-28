@@ -51,6 +51,7 @@ import (
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/substrate"
+	"github.com/luxfi/bridge/internal/tenant"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
@@ -88,6 +89,10 @@ func parseRPCOverrides(raw string) (map[string]string, error) {
 var version = "dev"
 
 func main() {
+	tenantPath := flag.String("tenant-config", envOr("BRIDGE_TENANT_CONFIG", ""),
+		"path to the tenant config (tenant.yaml). When set, brand/IAM/KMS/MPC/PQ/supportedChains "+
+			"come from this file instead of per-flag defaults. White-label shim repos pass this; "+
+			"the canonical luxfi/bridge deployment may omit it and fall back to flag-driven defaults.")
 	cfgPath := flag.String("config", envOr("BRIDGE_CONFIG", "/etc/bridge/networks.yaml"), "path to networks.yaml")
 	addr := flag.String("addr", envOr("BRIDGE_ADDR", ":8080"), "listen address")
 	backend := flag.String("backend", envOr("BRIDGE_BACKEND_URL", ""), "legacy Node backend URL for proxied routes (empty disables proxy)")
@@ -200,7 +205,42 @@ func main() {
 		return
 	}
 
-	logger := luxlog.New("service", "lux-bridge")
+	// Tenant config: when --tenant-config is set, brand + IAM + KMS +
+	// MPC + PQ + supportedChains come from the YAML. Otherwise the
+	// flag-driven defaults stay in effect (legacy canonical Lux
+	// deployment path).
+	var tcfg *tenant.Config
+	serviceTag := "lux-bridge"
+	appName := "lux-bridge"
+	if *tenantPath != "" {
+		t, err := tenant.Load(*tenantPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "tenant config: %v\n", err)
+			os.Exit(1)
+		}
+		tcfg = t
+		serviceTag = t.Brand.Slug
+		appName = t.Brand.Slug
+		// Apply tenant defaults to flags that the operator did not
+		// explicitly pass. The pattern is: flag wins (explicit operator
+		// intent), tenant fills missing defaults (declarative deploy).
+		applyTenantOverrides(t, cfgPath, addr, mpcURL, mpcOrgID, profileFlag, releasePoolMintNetwork, releasePoolSize)
+	}
+
+	logger := luxlog.New("service", serviceTag)
+	if tcfg != nil {
+		logger.Info("tenant config loaded",
+			"path", *tenantPath,
+			"brand", tcfg.Brand.Name,
+			"slug", tcfg.Brand.Slug,
+			"network_id", tcfg.Network.ID,
+			"iam_endpoint", tcfg.IAM.Endpoint,
+			"kms_endpoint", tcfg.KMS.Endpoint,
+			"pq_profile", tcfg.PQProfile,
+			"supported_chains", tcfg.SupportedChains,
+			"domain", tcfg.Domain,
+		)
+	}
 
 	// Resolve the bridge profile. Default is classical-compat (the
 	// user-facing UI talks to external L1s); operators pin
@@ -971,7 +1011,7 @@ func main() {
 	defer refundCancel()
 
 	app := zip.New(zip.Config{
-		AppName:               "lux-bridge",
+		AppName:               appName,
 		DisableStartupMessage: true,
 	})
 	app.Use(middleware.Recover(), middleware.RequestID())
