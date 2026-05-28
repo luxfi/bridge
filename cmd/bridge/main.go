@@ -133,6 +133,12 @@ func main() {
 		"network used for keygen of release-pool wallets. The MPC produces a deterministic eth_address that works across every EVM destination, so this only picks the address slot in the keygen response. Use LUX_MAINNET in prod.")
 	releaseBalanceThresholdWei := flag.String("release-balance-threshold-wei", envOr("BRIDGE_RELEASE_BALANCE_THRESHOLD_WEI", "100000000000000000"),
 		"native-token balance threshold below which the release pool logs a WARN at Acquire time. Default 0.1 native (1e17 wei). Set to 0 to disable the alerter; the gas pre-check in the signing driver still runs and short-circuits swaps that would actually fail.")
+	xrpReleasePoolSize := flag.Int("xrp-release-pool-size", envOrInt("BRIDGE_XRP_RELEASE_POOL_SIZE", 5),
+		"size of the XRP-flavored release-wallet pool. XRP wallets need a separate pool because their addresses (r-form) don't share an MPC keygen with EVM (eth_address). Pre-fund each wallet with ≥10 XRP (reserve) + per-payment fee. Default 5. Set 0 to disable.")
+	xrpReleasePoolMintNetwork := flag.String("xrp-release-pool-mint-network", envOr("BRIDGE_XRP_RELEASE_POOL_MINT_NETWORK", "XRP_TESTNET"),
+		"network used for keygen of XRP release-pool wallets. Uses the ECDSAPubKey to derive the r-address.")
+	xrpReleaseBalanceThresholdDrops := flag.Int64("xrp-release-balance-threshold-drops", envOrInt64("BRIDGE_XRP_RELEASE_BALANCE_THRESHOLD_DROPS", 10_000_000),
+		"XRP balance threshold (drops) below which the XRP release pool logs a WARN at Acquire time. Default 10 XRP (the AccountRoot reserve). Set 0 to disable the alerter; the XRP gas pre-check still runs.")
 	disableGasPrecheck := flag.Bool("disable-gas-precheck", false,
 		"disable the signing-driver gas pre-check (eth_getBalance against the release wallet before signing). When enabled, swaps that can't cover destination-chain gas + value short-circuit to failed_insufficient_release_gas BEFORE consuming the 75s MPC ceremony.")
 	mpcDashboardURL := flag.String("mpc-dashboard-url", envOr("BRIDGE_MPC_DASHBOARD_URL", ""),
@@ -396,8 +402,19 @@ func main() {
 	asm.SetNetwork("BSC_MAINNET", txassembler.PerNetwork{ChainID: big.NewInt(56), NativeDecimals: 18})
 	asm.SetNetwork("POLYGON_MAINNET", txassembler.PerNetwork{ChainID: big.NewInt(137), NativeDecimals: 18})
 	asm.SetNetwork("HOLESKY_TESTNET", txassembler.PerNetwork{ChainID: big.NewInt(17000), NativeDecimals: 18})
+
+	// XRP-side of the assembler. Without an XRPProvider the
+	// PreSignXRP path refuses to build — the signing driver short-
+	// circuits XRP swaps with a readable LastError. The provider
+	// itself is cheap to construct (one http.Client); we always
+	// attach it so XRP networks can be added at runtime.
+	xrpProv := NewXRPProvider(overrides, 8*time.Second)
+	asm.XRP = xrpProv
+	asm.SetXRPNetwork("XRP_MAINNET", txassembler.XRPNetwork{LastLedgerWindow: 20})
+	asm.SetXRPNetwork("XRP_TESTNET", txassembler.XRPNetwork{LastLedgerWindow: 30})
 	logger.Info("tx assembler configured",
 		"networks", len(asm.Networks),
+		"xrp_networks", len(asm.XRPNetworks),
 		"provider", "rpc",
 		"mode", "pure_transfer",
 	)
@@ -445,6 +462,54 @@ func main() {
 	} else if *releasePoolSize > 0 {
 		logger.Warn("release pool requested but swap store does not implement ReleasePoolStore",
 			"size_requested", *releasePoolSize,
+		)
+	}
+
+	// XRP-flavored release wallets: same pool object, different
+	// family. The mint network drives ECDSAPubKey-based r-address
+	// derivation in mchain.pickAddress. Pool entries get Family="xrp"
+	// + PubKeyHex populated so signOneXRP can build the Payment.
+	//
+	// XRP pool size defaults to 5 (smaller than EVM because XRP
+	// transactions consume one Sequence each + reserve maintenance
+	// is per-wallet). Operators pre-fund each wallet with ≥10 XRP
+	// (the AccountRoot reserve) — until then, those wallets fail
+	// the gas pre-check and short-circuit incoming swaps.
+	if releasePool != nil && *xrpReleasePoolSize > 0 && mchainClient != nil {
+		// Use a separate ReleasePool helper for the XRP cohort —
+		// growing the SAME pool above with an XRP mint network would
+		// re-index the existing EVM entries on restart (Bootstrap's
+		// "next free slot" logic). Instead, mint XRP wallets into the
+		// same store but start their indices ABOVE the EVM slots.
+		xrpStartIdx := releasePool.Size()
+		xrpDesiredTotal := xrpStartIdx + *xrpReleasePoolSize
+		xrpHelper := NewReleasePool(releasePool.store, *xrpReleasePoolMintNetwork, logger)
+		bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		if err := xrpHelper.Bootstrap(bootstrapCtx, mchainClient, xrpDesiredTotal); err != nil {
+			bootstrapCancel()
+			logger.Error("xrp release pool bootstrap failed",
+				"err", err,
+				"existing_size", xrpStartIdx,
+				"xrp_size_requested", *xrpReleasePoolSize,
+			)
+			os.Exit(1)
+		}
+		bootstrapCancel()
+		// Reload the main pool's view so AcquireForFamily sees the new
+		// XRP entries (Bootstrap on xrpHelper already persisted them).
+		if err := releasePool.Reload(context.Background()); err != nil {
+			logger.Error("reload release pool after xrp bootstrap", "err", err)
+			os.Exit(1)
+		}
+		logger.Info("xrp release pool ready",
+			"xrp_size", releasePool.SizeByFamily("xrp"),
+			"xrp_mint_network", *xrpReleasePoolMintNetwork,
+			"xrp_balance_threshold_drops", *xrpReleaseBalanceThresholdDrops,
+		)
+	} else if *xrpReleasePoolSize > 0 && (mchainClient == nil || releasePool == nil) {
+		logger.Warn("xrp release pool requested but prerequisites missing",
+			"have_mchain_client", mchainClient != nil,
+			"have_release_pool", releasePool != nil,
 		)
 	}
 
@@ -577,8 +642,12 @@ func main() {
 		if releasePool != nil {
 			body["release_pool"] = map[string]any{
 				"size":                  releasePool.Size(),
+				"size_xrp":              releasePool.SizeByFamily("xrp"),
+				"size_eth":              releasePool.SizeByFamily("eth"),
 				"mint_network":          *releasePoolMintNetwork,
+				"xrp_mint_network":      *xrpReleasePoolMintNetwork,
 				"balance_threshold_wei": *releaseBalanceThresholdWei,
+				"xrp_balance_threshold_drops": *xrpReleaseBalanceThresholdDrops,
 			}
 		}
 		return c.JSON(200, body)
@@ -643,6 +712,21 @@ func envOrInt(k string, fallback int) int {
 		return fallback
 	}
 	n, err := strconv.Atoi(v)
+	if err != nil {
+		return fallback
+	}
+	return n
+}
+
+// envOrInt64 parses an int64 env var with a fallback. Used for XRP
+// drops thresholds (10 XRP = 10_000_000 drops fits int but Sequence
+// fields are int64-shaped throughout).
+func envOrInt64(k string, fallback int64) int64 {
+	v := os.Getenv(k)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return fallback
 	}
