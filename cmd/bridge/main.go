@@ -28,8 +28,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -134,6 +136,16 @@ func main() {
 		"path to a JSON file that persists per-destination-network release wallets (the long-lived MPC addresses that pay out settlements). When set, the bridge mints a release wallet on first need and reuses it across restarts. When empty AND --data-dir is set, defaults to <data-dir>/release-wallets.json. When empty AND --data-dir is empty, runs in-memory — every restart re-mints and any liquidity at the old address is stranded. Required for prod.")
 	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
 		"bridge security profile: strict-pq | classical-compat")
+	coingeckoEnabled := flag.Bool("coingecko", envBool("BRIDGE_COINGECKO", false),
+		"enable CoinGecko HTTP price feed (wrapped over the static feed as a fallback for LUX/ZOO and outages). When disabled (default), the static feed is the sole source of prices.")
+	coingeckoURL := flag.String("coingecko-url", envOr("BRIDGE_COINGECKO_URL", DefaultCoinGeckoBaseURL),
+		"CoinGecko API base URL")
+	coingeckoAPIKey := flag.String("coingecko-api-key", envOr("BRIDGE_COINGECKO_API_KEY", ""),
+		"CoinGecko Pro API key (empty for the free tier)")
+	coingeckoTTL := flag.Duration("coingecko-cache-ttl", DefaultCoinGeckoCacheTTL,
+		"how long CoinGecko prices are cached before re-fetching. The fetch batches every configured symbol into one HTTP call.")
+	coingeckoTimeout := flag.Duration("coingecko-timeout", DefaultCoinGeckoTimeout,
+		"per-request HTTP timeout for CoinGecko calls")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -300,11 +312,12 @@ func main() {
 			}
 		}
 	}()
-	// Seed the static price feed with the values used in dev / first
-	// deploys. Real production wiring should swap in a CoinGecko / Pyth
-	// PriceFeed implementation. These match the order-of-magnitude
-	// prices the TS app/server queries via getTokenPrice.
-	priceFeed := NewStaticPriceFeed(map[string]float64{
+	// Static feed seeds the assets CoinGecko doesn't list (LUX, ZOO) and
+	// serves as the fallback when CoinGecko is unreachable. Order-of-
+	// magnitude values matching the TS app/server's getTokenPrice — the
+	// CG-backed entries are overridden at runtime, the rest are the
+	// permanent source for LUX/ZOO.
+	staticFeed := NewStaticPriceFeed(map[string]float64{
 		"ETH":  3500.00,
 		"LUX":  2.50,
 		"ZOO":  0.05,
@@ -316,11 +329,31 @@ func main() {
 		"DAI":  1.00,
 		"BNB":  600.00,
 	})
+
+	var priceFeed PriceFeed = staticFeed
+	feedLabel := "static"
+	if *coingeckoEnabled {
+		cg := NewCoinGeckoFeed(*coingeckoURL, *coingeckoAPIKey, nil)
+		cg.CacheTTL = *coingeckoTTL
+		cg.HTTPClient = &http.Client{Timeout: *coingeckoTimeout}
+		priceFeed = &FallbackFeed{
+			Primary:   cg,
+			Secondary: staticFeed,
+			OnFallback: func(asset string, err error) {
+				if errors.Is(err, ErrPriceUnknown) {
+					return // expected for LUX/ZOO — not worth a log line per quote
+				}
+				logger.Warn("coingecko price fallback", "asset", asset, "err", err)
+			},
+		}
+		feedLabel = "coingecko+static"
+	}
+
 	quoteEngine := &QuoteEngine{Feed: priceFeed}
 	logger.Info("native swap CRUD enabled",
 		"store", storeLabel,
 		"data_dir", *dataDir,
-		"feed", "static",
+		"feed", feedLabel,
 		"fee_rate", quoteEngine.FeeRate,
 	)
 
@@ -581,6 +614,20 @@ func main() {
 func envOr(k, fallback string) string {
 	if v := os.Getenv(k); v != "" {
 		return v
+	}
+	return fallback
+}
+
+func envBool(k string, fallback bool) bool {
+	v := os.Getenv(k)
+	if v == "" {
+		return fallback
+	}
+	switch strings.ToLower(v) {
+	case "1", "t", "true", "yes", "y", "on":
+		return true
+	case "0", "f", "false", "no", "n", "off":
+		return false
 	}
 	return fallback
 }
