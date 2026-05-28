@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "baseUrl": "./src", // Base directory for module resolution
     "paths": {
       "@/*": ["*"] // Map "@/..." to "./src/..." for cleaner imports
