@@ -50,15 +50,15 @@ const main: React.CSSProperties = {
   flex: 1,
   display: 'flex',
   justifyContent: 'center',
-  padding: '32px 16px',
+  padding: 'var(--bridge-page-padding-y) var(--bridge-page-padding-x)',
 }
 
 const stack: React.CSSProperties = {
   width: '100%',
-  maxWidth: 480,
+  maxWidth: 'var(--bridge-stack-max-width)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 16,
+  gap: 'var(--bridge-stack-gap)',
 }
 
 const footer: React.CSSProperties = {
