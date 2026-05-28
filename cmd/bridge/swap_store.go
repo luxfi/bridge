@@ -119,6 +119,13 @@ type Swap struct {
 	// refund drivers don't need to re-key the wallet later.
 	ReleaseAddress string `json:"release_address,omitempty"`
 
+	// ReleasePubKey is the hex-encoded 33-byte compressed secp256k1
+	// pubkey for the release wallet. Required by the DOT signing
+	// path so the assembler can derive the AccountId32 and pick the
+	// right ECDSA recovery byte. Empty for swaps that never use a
+	// substrate destination.
+	ReleasePubKey string `json:"release_pub_key,omitempty"`
+
 	// DestRawTx is the fully-assembled, signed destination-chain raw
 	// transaction (hex-encoded). The broadcast driver consumes this
 	// field to push the tx onto the destination chain. Populated by
