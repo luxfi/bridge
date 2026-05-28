@@ -2,23 +2,23 @@
   "name": "@luxfi/utila",
   "version": "3.0.0",
   "dependencies": {
-    "@bufbuild/buf": "1.46.0",
-    "@bufbuild/protobuf": "2.2.2",
-    "@connectrpc/connect": "2.0.0-beta.1",
-    "@connectrpc/connect-node": "2.0.0-beta.1",
-    "jsonwebtoken": "9.0.2",
-    "tslib": "2.3.0",
-    "viem": "2.16.0"
+    "@bufbuild/buf": "1.69.0",
+    "@bufbuild/protobuf": "2.12.0",
+    "@connectrpc/connect": "2.1.1",
+    "@connectrpc/connect-node": "2.1.1",
+    "jsonwebtoken": "9.0.3",
+    "tslib": "2.8.1",
+    "viem": "2.50.4"
   },
   "main": "./dist/index.cjs.js",
   "module": "./dist/index.esm.js",
   "typings": "./dist/index.cjs.d.ts",
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.1",
-    "@rollup/plugin-node-resolve": "^15.3.0",
-    "@rollup/plugin-typescript": "^12.1.1",
-    "@types/jsonwebtoken": "^9.0.7",
-    "rollup": "^4.27.3"
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "rollup": "^4.60.4"
   },
   "scripts": {
     "build": "rollup -c rollup.config.js",

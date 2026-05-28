@@ -10,7 +10,7 @@ router.get(
   "/from/:fromAsset/to/:toAsset", 
   async (req: Request, res: Response) => {
     try {
-      const { fromAsset, toAsset } = req.params
+      const { fromAsset, toAsset } = req.params as { fromAsset: string; toAsset: string }
       const version = req.query.version
 
       res.status(200).json({
