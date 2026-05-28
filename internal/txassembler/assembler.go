@@ -111,6 +111,15 @@ type Assembler struct {
 	// release calls — backward compat for callers that haven't
 	// adopted the registry yet.
 	Tokens *tokens.Registry
+
+	// XRP is the XRP Ledger-side surface for the PreSignXRP /
+	// FinalizeXRP path (see xrp.go). nil ⇒ XRP destinations are
+	// unsupported and the signing driver short-circuits.
+	XRP XRPProvider
+
+	// XRPNetworks is per-chain XRP config (last-ledger window, fee
+	// override). Optional — zero-value entries get sane defaults.
+	XRPNetworks map[string]XRPNetwork
 }
 
 // New builds an empty assembler. Populate Networks per-network.
