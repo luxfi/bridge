@@ -384,3 +384,186 @@ func paramsString(p depositcheck.CheckParams) string {
 }
 
 var _ = paramsString // referenced by future tests; kept to avoid an unused-fn warning
+
+// =============================================================================
+// Auto-expire (--deposit-expire-after) — the last hardening pass.
+// =============================================================================
+//
+// Pattern mirrors the orphan-recovery tests in refund_driver_test.go:
+// temporarily pin the store's now func so we can seed a swap with a
+// CreatedAt back-dated by an arbitrary amount, then restore.
+
+// seedAgedPendingSwap creates a SwapStatusUserDepositPending row whose
+// CreatedAt is exactly agedBy in the past. Restores the store's now
+// hook on test cleanup.
+func seedAgedPendingSwap(t *testing.T, store *InMemoryStore, agedBy time.Duration, mutate func(*Swap)) *Swap {
+	t.Helper()
+	realNow := store.now
+	pinned := realNow().Add(-agedBy)
+	store.now = func() time.Time { return pinned }
+	t.Cleanup(func() { store.now = realNow })
+
+	sw := &Swap{
+		Status:             SwapStatusUserDepositPending,
+		Amount:             0.5,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xdest",
+		DepositAddress:     "bridge-test-wallet###0xdeposit",
+		UseDepositAddress:  true,
+	}
+	if mutate != nil {
+		mutate(sw)
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatalf("seed aged pending swap: %v", err)
+	}
+	return sw
+}
+
+func TestWatcher_Expire_PastThresholdCancels(t *testing.T) {
+	store := NewInMemoryStore()
+	fc := newFakeChecker()
+	w := NewDepositWatcher(store, fc, time.Second, nil)
+	w.SetExpireAfter(1 * time.Hour)
+
+	sw := seedAgedPendingSwap(t, store, 2*time.Hour, nil)
+	w.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusCancelled {
+		t.Errorf("status = %q, want cancelled", got.Status)
+	}
+	if !strings.Contains(got.LastError, "Auto-cancelled") {
+		t.Errorf("LastError = %q, want substring 'Auto-cancelled'", got.LastError)
+	}
+	if w.Stats().Expired != 1 {
+		t.Errorf("Expired = %d, want 1", w.Stats().Expired)
+	}
+}
+
+func TestWatcher_Expire_BelowThresholdPreserved(t *testing.T) {
+	store := NewInMemoryStore()
+	w := NewDepositWatcher(store, newFakeChecker(), time.Second, nil)
+	w.SetExpireAfter(1 * time.Hour)
+
+	sw := seedAgedPendingSwap(t, store, 30*time.Minute, nil)
+	w.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusUserDepositPending {
+		t.Errorf("status = %q, want still user_deposit_pending", got.Status)
+	}
+	if w.Stats().Expired != 0 {
+		t.Errorf("Expired = %d, want 0", w.Stats().Expired)
+	}
+}
+
+func TestWatcher_Expire_ZeroDisables(t *testing.T) {
+	store := NewInMemoryStore()
+	w := NewDepositWatcher(store, newFakeChecker(), time.Second, nil)
+	w.SetExpireAfter(0) // disabled
+
+	sw := seedAgedPendingSwap(t, store, 100*time.Hour, nil)
+	w.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusUserDepositPending {
+		t.Errorf("status = %q, want preserved (expire disabled)", got.Status)
+	}
+	if w.Stats().Expired != 0 {
+		t.Errorf("Expired = %d, want 0 — expire was disabled", w.Stats().Expired)
+	}
+}
+
+// TestWatcher_Expire_DepositConfirmedWinsOverExpiry verifies the
+// invariant: a deposit that just confirmed advances the swap even
+// when it's already past the expiry threshold. checkOne runs before
+// maybeExpire and the maybeExpire status guard then no-ops.
+func TestWatcher_Expire_DepositConfirmedWinsOverExpiry(t *testing.T) {
+	store := NewInMemoryStore()
+	fc := newFakeChecker()
+	w := NewDepositWatcher(store, fc, time.Second, nil)
+	w.SetExpireAfter(1 * time.Hour)
+
+	sw := seedAgedPendingSwap(t, store, 2*time.Hour, nil)
+	// Same tick: the deposit lands.
+	fc.setVerdict("ETHEREUM_SEPOLIA", "0xdeposit", true)
+
+	w.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("status = %q, want bridge_transfer_pending — deposit confirmed should win over expiry", got.Status)
+	}
+	if w.Stats().Expired != 0 {
+		t.Errorf("Expired = %d, want 0 — swap advanced before expiry could fire", w.Stats().Expired)
+	}
+	if w.Stats().Advances != 1 {
+		t.Errorf("Advances = %d, want 1", w.Stats().Advances)
+	}
+}
+
+// TestWatcher_Expire_StatusGuardIdempotent verifies a second tick after
+// expiry doesn't double-count (the cancelled swap is no longer in the
+// list query, but verify by direct call to maybeExpire).
+func TestWatcher_Expire_StatusGuardIdempotent(t *testing.T) {
+	store := NewInMemoryStore()
+	w := NewDepositWatcher(store, newFakeChecker(), time.Second, nil)
+	w.SetExpireAfter(1 * time.Hour)
+
+	sw := seedAgedPendingSwap(t, store, 2*time.Hour, nil)
+	w.Tick(t.Context())
+	if w.Stats().Expired != 1 {
+		t.Fatalf("first tick: Expired = %d, want 1", w.Stats().Expired)
+	}
+	// Direct call again — status guard inside the Patch func should make
+	// this a no-op since the swap is now Cancelled.
+	got, _ := store.Get(t.Context(), sw.ID)
+	w.maybeExpire(t.Context(), got, time.Now().UTC())
+	if w.Stats().Expired != 1 {
+		t.Errorf("after direct call: Expired = %d, want still 1", w.Stats().Expired)
+	}
+}
+
+// TestWatcher_Expire_ZeroCreatedAtSkipped covers the defensive path —
+// a legacy persisted swap with CreatedAt unset shouldn't be expired
+// (we can't compute its age).
+func TestWatcher_Expire_ZeroCreatedAtSkipped(t *testing.T) {
+	store := NewInMemoryStore()
+	w := NewDepositWatcher(store, newFakeChecker(), time.Second, nil)
+	w.SetExpireAfter(1 * time.Hour)
+
+	sw := &Swap{
+		Status:             SwapStatusUserDepositPending,
+		Amount:             0.5,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xdest",
+		DepositAddress:     "bridge-test-wallet###0xdeposit",
+		UseDepositAddress:  true,
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	// Directly hand maybeExpire a synthetic swap with zero CreatedAt
+	// to assert the defensive guard.
+	syntheticAged := *sw
+	syntheticAged.CreatedAt = time.Time{}
+	w.maybeExpire(t.Context(), &syntheticAged, time.Now().UTC())
+	if w.Stats().Expired != 0 {
+		t.Errorf("Expired = %d, want 0 — zero CreatedAt should be skipped", w.Stats().Expired)
+	}
+}
+
+func TestWatcher_Expire_SetClampsNegative(t *testing.T) {
+	w := NewDepositWatcher(NewInMemoryStore(), newFakeChecker(), time.Second, nil)
+	w.SetExpireAfter(-5 * time.Minute)
+	if w.expireAfter != 0 {
+		t.Errorf("expireAfter = %v, want 0 (clamped from negative)", w.expireAfter)
+	}
+}
