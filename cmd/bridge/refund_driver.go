@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,6 +64,13 @@ type RefundDriver struct {
 	assembler *txassembler.Assembler
 	interval  time.Duration
 	logger    luxlog.Logger
+
+	// solanaProvider supplies the recent blockhash for Solana refund
+	// txs. nil ⇒ Solana refunds error and the swap rolls back via the
+	// standard ceiling. Wire with SetSolanaProvider when the deployment
+	// supports Sol-source swaps; leaving it unset is fine for EVM-only
+	// deployments and matches the signing driver's pattern.
+	solanaProvider txassembler.SolanaProvider
 
 	// rpcOverrides shadows depositcheck's RPC URL table when querying
 	// the source-chain balance of the MPC deposit address. Operators
@@ -211,6 +219,15 @@ func (d *RefundDriver) SetMaxRefundAttempts(n int) {
 		n = 0
 	}
 	d.maxRefundAttempts = n
+}
+
+// SetSolanaProvider attaches the recent-blockhash source the refund
+// driver uses when sweeping a Solana-source deposit back to its sender.
+// nil means Solana refunds error out (and the swap rolls back via the
+// standard MaxRefundAttempts ceiling). Pass the same *solanarpc.Client
+// the signing driver gets so a single deployment flag governs both.
+func (d *RefundDriver) SetSolanaProvider(p txassembler.SolanaProvider) {
+	d.solanaProvider = p
 }
 
 // SetOrphanRefundingAfter configures the orphan-recovery threshold.
@@ -660,10 +677,49 @@ func (d *RefundDriver) refundPending(ctx context.Context, sw *Swap) {
 	d.executeRefund(ctx, sw, walletID, depositAddr)
 }
 
-// executeRefund runs the post-claim refund pipeline: read source-chain
-// balance, build/sign/broadcast a sweep tx, mark the swap refunded.
+// executeRefund runs the post-claim refund pipeline. Dispatches on the
+// SOURCE chain family — the refund tx is built FROM the MPC deposit
+// wallet on whichever chain the user originally sent funds to, so the
+// signing scheme + tx format track the source, not the destination
+// (which is what signing_driver.go dispatches on for the release leg).
 // Caller must have already transitioned the swap to SwapStatusRefunding.
 func (d *RefundDriver) executeRefund(ctx context.Context, sw *Swap, walletID, depositAddr string) {
+	family := mchain.AddressTypeFor(sw.SourceNetwork)
+	switch family {
+	case mchain.AddressTypeETH:
+		d.executeRefundEVM(ctx, sw, walletID, depositAddr)
+	case mchain.AddressTypeSOL:
+		d.executeRefundSolana(ctx, sw, walletID, depositAddr)
+	default:
+		// BTC / TON / XRP / DOT — no refund path implemented. Leave the
+		// swap in SwapStatusRefunding with an operator-actionable
+		// LastError so it shows up in the stuck-swap surface instead of
+		// looping or silently rolling back. Operators recover manually.
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			s.LastError = fmt.Sprintf(
+				"Refund not implemented for source family %q (network %s) — manual recovery required",
+				family, sw.SourceNetwork,
+			)
+			s.LastErrorAt = time.Now().UTC()
+		})
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("refund family unsupported",
+				"swap_id", sw.ID,
+				"family", string(family),
+				"source_network", sw.SourceNetwork,
+			)
+		}
+	}
+}
+
+// executeRefundEVM is the original EVM refund pipeline: balance via
+// eth_getBalance, fee via eth_gasPrice * 21000, sweep via
+// PreSignNativeTransfer + ECDSA sign + Finalize, broadcast via the
+// EVM JSON-RPC handler. Behavior is unchanged from before the family
+// dispatch — extracted verbatim so the Solana path can sit beside it
+// without a giant switch in one function.
+func (d *RefundDriver) executeRefundEVM(ctx context.Context, sw *Swap, walletID, depositAddr string) {
 	// Step 1 — get source-chain balance at the deposit address.
 	balanceCtx, cancelBal := context.WithTimeout(ctx, d.perBalanceTimeout)
 	balance, err := d.fetchBalance(balanceCtx, sw.SourceNetwork, depositAddr)
@@ -760,6 +816,176 @@ func (d *RefundDriver) executeRefund(ctx context.Context, sw *Swap, walletID, de
 			"refund_value_wei", refundValue.String(),
 		)
 	}
+}
+
+// executeRefundSolana is the Solana-source analog of executeRefundEVM.
+//
+// Pipeline shape mirrors EVM but uses Solana primitives at each step:
+//
+//	1. Balance via the Solana RPC `getBalance` method (uint64 lamports).
+//	2. Fee is a fixed 5000 lamports/signature (legacy tx, 1 signer) —
+//	   no gas-price RPC equivalent, no per-block adjustment.
+//	3. Sweep via PreSignSolanaRefund (builds a SystemProgram.transfer
+//	   from deposit wallet → original sender).
+//	4. MPC signs the raw message bytes (hex-encoded) via ed25519.
+//	5. FinalizeSolana attaches the 64-byte signature and base58-encodes
+//	   the wire-ready tx.
+//	6. Broadcast via the same source-network dispatch — the broadcast
+//	   client already knows how to send a base58 Solana raw tx.
+//
+// Requires SetSolanaProvider to have been called; without it, returns
+// an immediate rollback so the ceiling catches it without burning an
+// MPC sign call.
+func (d *RefundDriver) executeRefundSolana(ctx context.Context, sw *Swap, walletID, depositAddr string) {
+	if d.solanaProvider == nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("solanaProvider not configured for refund of %s source", sw.SourceNetwork))
+		return
+	}
+
+	// Step 1 — balance.
+	balanceCtx, cancelBal := context.WithTimeout(ctx, d.perBalanceTimeout)
+	lamports, err := d.fetchSolanaBalance(balanceCtx, sw.SourceNetwork, depositAddr)
+	cancelBal()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("fetch Solana balance: %w", err))
+		return
+	}
+
+	// Step 2 — refund value = balance − signature fee. One signature
+	// (the deposit wallet itself), so subtract exactly one fee unit.
+	if lamports <= txassembler.SolanaSignatureFeeLamports {
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			s.LastError = fmt.Sprintf(
+				"Refund impossible: deposit balance %d lamports ≤ signature fee %d lamports",
+				lamports, txassembler.SolanaSignatureFeeLamports,
+			)
+		})
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("solana refund impossible: balance ≤ fee",
+				"swap_id", sw.ID,
+				"balance_lamports", lamports,
+				"fee_lamports", txassembler.SolanaSignatureFeeLamports,
+			)
+		}
+		return
+	}
+	refundLamports := lamports - txassembler.SolanaSignatureFeeLamports
+
+	// Step 3 — build the unsigned sweep.
+	unsigned, err := d.assembler.PreSignSolanaRefund(
+		ctx, sw.SourceNetwork, depositAddr, sw.Sender, refundLamports, d.solanaProvider,
+	)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("preSign Solana refund: %w", err))
+		return
+	}
+
+	// Step 4 — MPC signs the raw message bytes via ed25519. Hex-encoded
+	// per the cluster's /sign contract; NO 0x prefix per signing_driver.go's
+	// Solana convention.
+	msgHex := hex.EncodeToString(unsigned.Message)
+	sigCtx, cancelSig := context.WithTimeout(ctx, d.perSignTimeout)
+	res, err := d.signer.SignForWallet(sigCtx, walletID, msgHex)
+	cancelSig()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("MPC sign Solana refund: %w", err))
+		return
+	}
+
+	// Step 5 — finalize. The cluster returns hex (with or without 0x
+	// prefix); strip and decode to the 64-byte ed25519 signature.
+	sigHex := strings.TrimPrefix(strings.TrimPrefix(res.Signature, "0x"), "0X")
+	sigBytes, err := hex.DecodeString(sigHex)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("decode Solana refund signature hex: %w", err))
+		return
+	}
+	rawTx, err := d.assembler.FinalizeSolana(unsigned, sigBytes)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("finalize Solana refund: %w", err))
+		return
+	}
+
+	// Step 6 — broadcast on the source chain (Solana).
+	pushCtx, cancelPush := context.WithTimeout(ctx, d.perBroadcastTimeout)
+	bres, err := d.bcaster.Broadcast(pushCtx, sw.SourceNetwork, rawTx)
+	cancelPush()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("broadcast Solana refund: %w", err))
+		return
+	}
+
+	// Step 7 — mark refunded. Same terminal state as EVM; the SDK
+	// surfaces RefundTxHash uniformly across families (base58 for
+	// Solana, 0x-hex for EVM).
+	_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		s.Status = SwapStatusRefunded
+		s.RefundTxHash = bres.TxHash
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
+		s.RefundAttempts = 0
+	})
+	d.successes.Add(1)
+	if d.logger != nil {
+		d.logger.Info("Solana refund completed",
+			"swap_id", sw.ID,
+			"refund_tx_hash", bres.TxHash,
+			"refund_value_lamports", refundLamports,
+		)
+	}
+}
+
+// fetchSolanaBalance queries the Solana RPC `getBalance` method for
+// the lamports held at the given base58 address. Uses the same URL
+// resolution policy as fetchBalance (overrides shadow depositcheck's
+// public table).
+func (d *RefundDriver) fetchSolanaBalance(ctx context.Context, network, addr string) (uint64, error) {
+	url := d.rpcOverrides[network]
+	if url == "" {
+		url = depositcheck.RPCURLFor(network)
+	}
+	if url == "" {
+		return 0, fmt.Errorf("no RPC URL configured for network %s", network)
+	}
+
+	body, _ := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  "getBalance",
+		"params":  []any{addr},
+	})
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := d.httpClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return 0, fmt.Errorf("getBalance HTTP %d: %s", resp.StatusCode, truncRefund(respBody, 200))
+	}
+	var parsed struct {
+		Result struct {
+			Value uint64 `json:"value"`
+		} `json:"result"`
+		Error *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error,omitempty"`
+	}
+	if err := json.Unmarshal(respBody, &parsed); err != nil {
+		return 0, fmt.Errorf("decode getBalance: %w", err)
+	}
+	if parsed.Error != nil {
+		return 0, fmt.Errorf("getBalance rpc %d: %s", parsed.Error.Code, parsed.Error.Message)
+	}
+	return parsed.Result.Value, nil
 }
 
 // fetchBalance queries eth_getBalance on the source chain's JSON-RPC

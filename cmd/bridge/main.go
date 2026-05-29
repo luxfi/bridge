@@ -755,12 +755,12 @@ func main() {
 			solClient := solanarpc.New(*solanaRPCURL)
 			solClient.Timeout = *solanaRPCTimeout
 			signer.SetSolanaProvider(solClient)
-			logger.Info("solana provider attached",
+			logger.Info("solana provider attached to signer",
 				"url", *solanaRPCURL,
 				"timeout", *solanaRPCTimeout,
 			)
 		} else {
-			logger.Info("solana provider not configured — X→Sol releases will fail PreSign and refund")
+			logger.Info("solana provider not configured — X→Sol releases will fail PreSign and refund; Sol→X refunds will fail to sweep deposit back to sender")
 		}
 
 		// Layered-cosigner gate (Utila / Fireblocks). Defaults to ON so
@@ -860,6 +860,18 @@ func main() {
 		)
 		refundDriver.SetMaxRefundAttempts(*maxRefundAttempts)
 		refundDriver.SetOrphanRefundingAfter(*orphanRefundingAfter)
+		// Solana refund provider: same client the signer uses for
+		// X→Sol releases. Sol-source swaps that hit insufficient-funds
+		// on the EVM release leg need to sweep deposits back via
+		// SystemProgram.transfer, which uses the same getLatestBlockhash
+		// call as the release path. nil ⇒ Sol-source refunds error and
+		// the swap rolls back via the standard ceiling. One
+		// --solana-rpc-url flag governs both legs.
+		if *solanaRPCURL != "" {
+			solClient := solanarpc.New(*solanaRPCURL)
+			solClient.Timeout = *solanaRPCTimeout
+			refundDriver.SetSolanaProvider(solClient)
+		}
 		api.SetRefundDriver(refundDriver)
 		go func() {
 			_ = refundDriver.Run(refundCtx)

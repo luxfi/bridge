@@ -186,6 +186,83 @@ func (a *Assembler) PreSignSolana(
 	}, nil
 }
 
+// SolanaSignatureFeeLamports is the per-signature fee charged by the
+// Solana runtime for a transaction. Hardcoded at the network level
+// at 5000 lamports/sig as of cluster genesis; the refund driver
+// subtracts this off the swept balance to size the transfer
+// instruction. A legacy SystemProgram.transfer needs exactly one
+// signature ⇒ subtract one fee unit.
+const SolanaSignatureFeeLamports uint64 = 5000
+
+// PreSignSolanaRefund is the refund-leg analog of PreSignSolana.
+//
+// Differences from PreSignSolana:
+//
+//   - Takes lamports as uint64 directly. The refund driver already
+//     computes (balance − fee) in base units; routing through float64
+//     would lose precision near max-u64.
+//   - Account roles are stated bluntly: `fromBase58` is the deposit
+//     wallet that holds the stranded user funds; `toBase58` is the
+//     original sender we're returning them to. Both are base58
+//     Solana pubkeys.
+//   - No tokens registry lookup — the refund path always operates on
+//     native SOL. SPL refunds would need a separate hook with ATA
+//     derivation; the current pipeline only mints native deposit
+//     wallets, so SPL stranding can't happen yet.
+//
+// The Provider argument supplies the recent blockhash (same as
+// PreSignSolana). The returned SolanaUnsigned uses the SOURCE network
+// name in `Network` so logging on the refund leg matches the source
+// chain it actually targets.
+func (a *Assembler) PreSignSolanaRefund(
+	ctx context.Context,
+	sourceNetwork string,
+	fromBase58, toBase58 string,
+	lamports uint64,
+	provider SolanaProvider,
+) (*SolanaUnsigned, error) {
+	if provider == nil {
+		return nil, fmt.Errorf("txassembler: Solana provider required")
+	}
+	if lamports == 0 {
+		return nil, fmt.Errorf("txassembler: refund amount must be > 0")
+	}
+
+	from, err := decodePubkey(fromBase58)
+	if err != nil {
+		return nil, fmt.Errorf("from (deposit wallet): %w", err)
+	}
+	to, err := decodePubkey(toBase58)
+	if err != nil {
+		return nil, fmt.Errorf("to (sender): %w", err)
+	}
+
+	bh, err := provider.GetLatestBlockhash(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("GetLatestBlockhash: %w", err)
+	}
+	blockhashBytes, err := solanarpc.DecodeBase58(bh.Blockhash)
+	if err != nil {
+		return nil, fmt.Errorf("decode blockhash: %w", err)
+	}
+	if len(blockhashBytes) != 32 {
+		return nil, fmt.Errorf("blockhash must be 32 bytes, got %d", len(blockhashBytes))
+	}
+	var blockhash [32]byte
+	copy(blockhash[:], blockhashBytes)
+
+	msg := buildLegacyMessage(from, to, systemProgramID, blockhash, lamports)
+
+	return &SolanaUnsigned{
+		Network:    sourceNetwork,
+		Message:    msg,
+		FromPubkey: from,
+		Recipient:  to,
+		Lamports:   lamports,
+		Blockhash:  bh.Blockhash,
+	}, nil
+}
+
 // FinalizeSolana attaches the ed25519 signature to the previously-
 // built message and returns the base58-encoded raw tx ready for
 // `sendTransaction`. The signature MUST be 64 bytes (R || S, no
