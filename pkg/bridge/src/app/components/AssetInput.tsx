@@ -14,11 +14,10 @@
 
 import { useMemo, type CSSProperties, type FC } from 'react'
 import { Input } from '@hanzo/gui'
-import { useBalance } from 'wagmi'
 
-import { bridgeIdToWagmiChainId } from '../lib/wagmi-config'
 import type { Asset } from '../lib/assets'
 import { formatAmount, parseAmount } from '../lib/format'
+import { useWalletForBridgeId } from '../lib/wallet-adapters'
 import { Logo, Select, type SelectOption } from './Select'
 
 export interface AssetInputProps {
@@ -134,61 +133,46 @@ export const AssetInput: FC<AssetInputProps> = ({
   walletAddress,
   showMax = false,
 }) => {
-  // Wagmi balance — only fires for EVM chains where we have a numeric
-  // chainId mapping. For non-EVM (SOL, BTC, TON, XRP, …) the hook
-  // stays disabled because wagmi can't read those chains; the bridge's
-  // MPC layer handles both legs of non-EVM swaps (see
-  // architecture_mpc_vs_teleporter memory).
-  const wagmiChainId = bridgeIdToWagmiChainId(asset.chainId)
-  const isEVM = wagmiChainId !== null
-  const enabled = Boolean(walletAddress) && isEVM
-  const balanceQuery = useBalance({
-    address: (walletAddress ?? undefined) as `0x${string}` | undefined,
-    chainId: wagmiChainId ?? undefined,
-    ...(asset.contractAddress
-      ? { token: asset.contractAddress as `0x${string}` }
-      : {}),
-    query: { enabled, refetchInterval: 30_000 },
-  })
+  // Family-aware balance. useWalletForBridgeId dispatches to:
+  //   - wagmi useBalance (EVM/Lux) — native or ERC-20 per tokenAddress
+  //   - @solana/wallet-adapter-react (SVM)
+  //   - @tonconnect/ui-react + toncenter (TON)
+  //   - sats-connect + mempool.space (BTC)
+  //   - noop (XRP, Cardano, Substrate — adapter pending)
+  //
+  // The `walletAddress` prop is now advisory: the family wallet's own
+  // connected address takes precedence so the asset picker always
+  // shows the balance for the family that asset belongs to.
+  const wallet = useWalletForBridgeId(asset.chainId, asset.symbol, asset.contractAddress)
 
-  // Three states the label row can be in:
-  //   - 'loading'      → wagmi is fetching, show '…'
-  //   - 'error'        → wagmi resolved but no data (e.g. RPC unreachable)
-  //   - 'mpc-only'     → non-EVM chain (chain signs via MPC, not the user wallet)
-  //   - 'no-wallet'    → no wallet connected
-  //   - <amount>       → real balance
   type BalanceState =
     | { kind: 'amount'; text: string }
     | { kind: 'loading' }
-    | { kind: 'mpc-only' }
+    | { kind: 'no-adapter' }
     | { kind: 'no-wallet' }
-    | { kind: 'error' }
     | { kind: 'hidden' }
 
   const balanceState = useMemo<BalanceState>(() => {
-    if (!walletAddress) return { kind: 'no-wallet' }
-    if (!isEVM) return { kind: 'mpc-only' }
-    if (balanceQuery.isLoading) return { kind: 'loading' }
-    const d = balanceQuery.data
-    if (!d) {
-      // Wagmi finished but returned nothing — RPC unreachable or chain
-      // not in the wallet's network list. Show 'error' rather than
-      // silently hiding so the user knows something's off.
-      return balanceQuery.error ? { kind: 'error' } : { kind: 'hidden' }
+    if (!wallet.connected && !walletAddress) return { kind: 'no-wallet' }
+    if (wallet.balanceLoading) return { kind: 'loading' }
+    if (wallet.balance !== null) {
+      return { kind: 'amount', text: formatAmount(wallet.balance, 4) }
     }
-    const value = Number(d.value) / 10 ** d.decimals
-    return { kind: 'amount', text: formatAmount(value, 4) }
-  }, [walletAddress, isEVM, balanceQuery.isLoading, balanceQuery.data, balanceQuery.error])
+    // No balance yet + no adapter for this family ⇒ pending adapter
+    // (XRP, Cardano, Substrate). Show the explanatory message so the
+    // empty space doesn't read as a bug.
+    if (wallet.availableWallets.length === 0 && !wallet.connected) {
+      return { kind: 'no-adapter' }
+    }
+    return { kind: 'hidden' }
+  }, [wallet, walletAddress])
 
   const onMax = () => {
-    const d = balanceQuery.data
-    if (!d) return
-    const value = Number(d.value) / 10 ** d.decimals
-    if (value <= 0) return
+    if (wallet.balance === null || wallet.balance <= 0) return
     // Trim to a reasonable precision so the input shows a clean number rather
     // than a 18-digit wei dump. The server will quote the final amount; user
     // confirms before signing.
-    onAmountChange(value.toString())
+    onAmountChange(wallet.balance.toString())
   }
 
   const options = useMemo(() => assets.map(toAssetOption), [assets])
@@ -201,7 +185,7 @@ export const AssetInput: FC<AssetInputProps> = ({
         return (
           <span style={balanceLine}>
             <span>Balance: {balanceState.text} {asset.symbol}</span>
-            {showMax && balanceQuery.data ? (
+            {showMax ? (
               <button type="button" style={maxBtn} onClick={onMax}>
                 Max
               </button>
@@ -210,15 +194,11 @@ export const AssetInput: FC<AssetInputProps> = ({
         )
       case 'loading':
         return <span style={balanceLine}>Balance: … {asset.symbol}</span>
-      case 'mpc-only':
-        // Non-EVM (SOL, BTC, TON, …) — the user wallet doesn't sign
-        // this leg; the bridge's MPC quorum does. Showing a balance
-        // would be misleading (it'd be the MPC wallet's balance, not
-        // the user's). Surface this explicitly so the empty space
-        // doesn't look like a bug.
+      case 'no-adapter':
+        // No wallet adapter for this family yet (XRP, Cardano,
+        // Substrate). The bridge's MPC quorum handles signing for
+        // these chains.
         return <span style={balanceLine}>MPC-signed — no wallet balance</span>
-      case 'error':
-        return <span style={balanceLine}>Balance unavailable</span>
       case 'no-wallet':
       case 'hidden':
       default:

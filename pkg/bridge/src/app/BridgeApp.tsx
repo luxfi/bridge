@@ -27,6 +27,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useMemo, type FC } from 'react'
 import { WagmiProvider } from 'wagmi'
 
+import { NonEVMProviders } from './lib/wallet-adapters'
+
 import { getConfig } from '../config'
 import { Header } from './components/Header'
 import { SwapForm } from './components/SwapForm'
@@ -162,7 +164,9 @@ export const BridgeApp: FC = () => {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <BridgeAppInner />
+        <NonEVMProviders>
+          <BridgeAppInner />
+        </NonEVMProviders>
       </QueryClientProvider>
     </WagmiProvider>
   )
