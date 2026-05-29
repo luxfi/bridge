@@ -308,6 +308,8 @@ func main() {
 		"Solana RPC URL used by the signing driver to fetch a recent blockhash when assembling Lux→Sol (and any X→Sol) release txs. Default is publicnode (api.mainnet-beta.solana.com returns 403 to many origins). Override with a paid endpoint (Helius/QuickNode/Triton) for prod throughput. Empty disables Sol-family destination support — swaps to Solana fail PreSign and refund.")
 	solanaRPCTimeout := flag.Duration("solana-rpc-timeout", 15*time.Second,
 		"per-request timeout for Solana RPC calls (getLatestBlockhash + sendTransaction). 15s default mirrors the broadcast client; tune lower if your endpoint is fast and reliable.")
+	corsAllowOrigins := flag.String("cors-allow-origins", envOr("BRIDGE_CORS_ALLOW_ORIGINS", ""),
+		"Comma-separated allow-list of Origin values to advertise via Access-Control-Allow-Origin. Empty (default) leaves the bridge same-origin only — the production deployment serves the SPA from the same domain and doesn't need CORS. Use `*` for permissive cross-origin (smoke testing, dev tunnels) or a specific list (e.g. `https://app.example.com,https://staging.example.com`) for cross-origin SPA hosts. Toggling this on enables an OPTIONS preflight responder for every route.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
 		"MPC keygen service URL for the PUBLIC cluster (m-chain) — used for per-swap deposit-wallet keygen and refund signing. Required when SDK requests carry use_deposit_address=true; empty disables MPC keygen and those requests 503. Single-cluster deploys leave --mpc-private-url empty and this URL serves both roles (back-compat).")
 	mpcTimeout := flag.Duration("mpc-timeout", 120*time.Second, "per-request timeout for MPC keygen calls (matches mpc-wallet.ts)")
@@ -894,6 +896,22 @@ func main() {
 		DisableStartupMessage: true,
 	})
 	app.Use(middleware.Recover(), middleware.RequestID())
+
+	// Cross-origin allow-list. Off by default — the production deploy
+	// serves the SPA same-origin behind the same domain, so there's
+	// nothing to negotiate. Smoke-test rigs (SPA dev server on one
+	// host, bridge tunnel on another) flip it on with a wildcard or a
+	// specific origin list.
+	if origins := strings.TrimSpace(*corsAllowOrigins); origins != "" {
+		allowed := strings.Split(origins, ",")
+		for i := range allowed {
+			allowed[i] = strings.TrimSpace(allowed[i])
+		}
+		app.Use(middleware.CORS(middleware.CORSConfig{
+			AllowOrigins: allowed,
+		}))
+		logger.Info("CORS middleware enabled", "allow_origins", allowed)
+	}
 
 	// Health endpoint stays at the root (matches the legacy probe path).
 	app.Get("/health", func(c *zip.Ctx) error {

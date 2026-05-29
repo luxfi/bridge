@@ -53,7 +53,9 @@ export default defineConfig(({ mode }) => {
         '.ngrok-free.app',
         '.ngrok.io',
         '.ngrok.app',
-        '.loca.lt',           // localtunnel
+        '.loca.lt',
+        '.nip.io',            // wildcard DNS — any subdomain of nip.io resolves to the embedded IP. Used for permanent HTTPS via Caddy + Let's Encrypt without owning a domain.
+        '.sslip.io',          // same idea as nip.io, alternate provider — handy fallback.           // localtunnel
       ],
       // Dev-only proxy. Default target is bridge-api.lux.network (the
       // prod backend, which only allow-lists https://bridge.lux.network
@@ -85,6 +87,8 @@ export default defineConfig(({ mode }) => {
         '.ngrok.io',
         '.ngrok.app',
         '.loca.lt',
+        '.nip.io',            // wildcard DNS — any subdomain of nip.io resolves to the embedded IP. Used for permanent HTTPS via Caddy + Let's Encrypt without owning a domain.
+        '.sslip.io',          // same idea as nip.io, alternate provider — handy fallback.
       ],
     },
     build: { outDir: 'dist', sourcemap: true },
