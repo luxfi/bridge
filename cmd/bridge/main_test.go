@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/luxfi/bridge"
+	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/pkg/tenant"
 )
 
@@ -181,5 +183,82 @@ func TestTenantExampleYAMLLoads(t *testing.T) {
 	}
 	if tcfg.Network.ID == 0 {
 		t.Errorf("Network.ID zero")
+	}
+}
+
+// =============================================================================
+// Profile → ProtocolFor wiring (PR z/main-protocol-profile)
+// =============================================================================
+
+func TestProtocolForScheme_KnownPQ(t *testing.T) {
+	cases := []struct {
+		scheme string
+		want   mchain.Protocol
+	}{
+		{bridge.SchemePulsarM65, mchain.ProtocolPulsarM65},
+		{bridge.SchemePulsarM87, mchain.ProtocolPulsarM87},
+		{bridge.SchemeBLS12381, mchain.ProtocolDefault},
+		{bridge.SchemeMLDSA65, mchain.ProtocolDefault}, // ml-dsa is a signature, not a threshold-MPC protocol — daemon dispatch
+		{"unknown-scheme", mchain.ProtocolDefault},
+		{"", mchain.ProtocolDefault},
+	}
+	for _, tc := range cases {
+		if got := protocolForScheme(tc.scheme); got != tc.want {
+			t.Errorf("protocolForScheme(%q) = %q, want %q", tc.scheme, got, tc.want)
+		}
+	}
+}
+
+func TestProfileProtocolFor_StrictPQReturnsPulsar(t *testing.T) {
+	p := bridge.LuxStrictPQBridgeProfile
+	fn := profileProtocolFor(&p)
+	if fn == nil {
+		t.Fatal("strict-pq profile must produce a non-nil ProtocolFor")
+	}
+	if got := fn(mchain.CurveSecp256k1); got != mchain.ProtocolPulsarM65 {
+		t.Errorf("strict-pq + secp256k1: got %q, want pulsar-m-65", got)
+	}
+	// Curve hint MUST be ignored under strict-pq today — the profile
+	// pins one protocol for every curve. A future per-curve profile
+	// will revisit this; for now, all curves route to the same PQ slot.
+	if got := fn(mchain.CurveEd25519); got != mchain.ProtocolPulsarM65 {
+		t.Errorf("strict-pq + ed25519: got %q, want pulsar-m-65 (curve-agnostic under strict-pq)", got)
+	}
+}
+
+func TestProfileProtocolFor_ClassicalReturnsNil(t *testing.T) {
+	// ClassicalCompat's SourceFinalityScheme is bls12-381 — not a PQ
+	// threshold protocol. profileProtocolFor returns nil so the driver
+	// skips the upgrade path entirely and curve-dispatch wins.
+	p := bridge.BridgeClassicalCompat
+	if fn := profileProtocolFor(&p); fn != nil {
+		t.Errorf("classical-compat must produce nil ProtocolFor (got non-nil); upgrade path must stay off")
+	}
+}
+
+func TestProfileProtocolFor_NilProfile(t *testing.T) {
+	if fn := profileProtocolFor(nil); fn != nil {
+		t.Errorf("nil profile must produce nil ProtocolFor")
+	}
+}
+
+func TestProtocolForLabel(t *testing.T) {
+	strict := bridge.LuxStrictPQBridgeProfile
+	classical := bridge.BridgeClassicalCompat
+	cases := []struct {
+		name string
+		p    *bridge.BridgeProfile
+		want string
+	}{
+		{"strict-pq", &strict, "pulsar-m-65"},
+		{"classical-compat", &classical, "default"},
+		{"nil", nil, "default"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := protocolForLabel(tc.p); got != tc.want {
+				t.Errorf("protocolForLabel = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

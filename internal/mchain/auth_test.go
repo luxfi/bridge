@@ -42,6 +42,10 @@ type dashMock struct {
 	nextSessionStatus atomic.Int64
 	// Last-seen auth header on /v1/mpc/sign — for "did we authenticate" tests.
 	lastSignAuth atomic.Value // string
+
+	// Last-seen body on /v1/mpc/sign — for wire-shape regression tests
+	// (e.g. protocol opt-in, curve field presence).
+	lastSignBody atomic.Value // map[string]any
 }
 
 func newDashMock(t *testing.T) *dashMock {
@@ -84,6 +88,7 @@ func newDashMock(t *testing.T) *dashMock {
 			body, _ := io.ReadAll(r.Body)
 			var req map[string]any
 			_ = json.Unmarshal(body, &req)
+			m.lastSignBody.Store(req)
 			if req["sessionId"] == nil || req["walletId"] == nil || req["message"] == nil {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"missing fields"}`))
@@ -313,5 +318,94 @@ func TestSign_Dashboard_ComposesSignatureFromRS(t *testing.T) {
 	// Leading r component should be zero-padded.
 	if !strings.HasPrefix(res.Signature, "0x"+strings.Repeat("0", 60)+"abc1") {
 		t.Errorf("r component not zero-padded: %q", res.Signature[:70])
+	}
+}
+
+// =============================================================================
+// Protocol enum wire shape (PR#6)
+// =============================================================================
+
+// TestSign_Dashboard_OmitsProtocolByDefault asserts that callers using
+// the curve-only sign path (SignForWalletOnCurve / SignForWallet) do
+// NOT cause a "protocol" field to appear on the wire. This is the
+// backward-compat contract — every dashboard older than the Protocol
+// enum keeps receiving the exact body shape it was written against.
+func TestSign_Dashboard_OmitsProtocolByDefault(t *testing.T) {
+	m := newDashMock(t)
+	c := &Client{
+		DashboardURL:    m.server.URL,
+		DashboardAPIKey: "k",
+		OrgID:           "test-org",
+		Timeout:         time.Second,
+	}
+	if _, err := c.SignForWalletOnCurve(context.Background(), "w", "0xab", CurveSecp256k1); err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+	body, ok := m.lastSignBody.Load().(map[string]any)
+	if !ok {
+		t.Fatal("no body captured")
+	}
+	if _, present := body["protocol"]; present {
+		t.Errorf("protocol field must be omitted by default; got body[\"protocol\"] = %v", body["protocol"])
+	}
+	// Curve must still be present — pre-Protocol behavior preserved.
+	if body["curve"] != string(CurveSecp256k1) {
+		t.Errorf("curve field missing or wrong: %v", body["curve"])
+	}
+}
+
+// TestSign_Dashboard_PassesProtocolWhenSet asserts that opting in to
+// a non-default Protocol (e.g. PulsarM65) sends the literal protocol
+// string on the wire. mpcd dispatches on this field to route the
+// session to the matching threshold-protocol stack.
+func TestSign_Dashboard_PassesProtocolWhenSet(t *testing.T) {
+	cases := []struct {
+		name     string
+		protocol Protocol
+		want     string
+	}{
+		{"pulsar-m-65", ProtocolPulsarM65, "pulsar-m-65"},
+		{"pulsar-m-87", ProtocolPulsarM87, "pulsar-m-87"},
+		{"corona", ProtocolCorona, "corona"},
+		{"cggmp21 explicit", ProtocolCGGMP21, "cggmp21"},
+		{"frost explicit", ProtocolFROST, "frost"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := newDashMock(t)
+			c := &Client{
+				DashboardURL:    m.server.URL,
+				DashboardAPIKey: "k",
+				OrgID:           "test-org",
+				Timeout:         time.Second,
+			}
+			if _, err := c.SignForWalletOnProtocol(context.Background(), "w", "0xab", CurveSecp256k1, tc.protocol); err != nil {
+				t.Fatalf("sign: %v", err)
+			}
+			body, _ := m.lastSignBody.Load().(map[string]any)
+			if got := body["protocol"]; got != tc.want {
+				t.Errorf("body[\"protocol\"] = %v, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// TestSign_Dashboard_ProtocolDefaultOmits asserts that explicitly
+// passing ProtocolDefault (rather than relying on the curve-only path)
+// also omits the field. Locks the "" → omit contract from protocol.go.
+func TestSign_Dashboard_ProtocolDefaultOmits(t *testing.T) {
+	m := newDashMock(t)
+	c := &Client{
+		DashboardURL:    m.server.URL,
+		DashboardAPIKey: "k",
+		OrgID:           "test-org",
+		Timeout:         time.Second,
+	}
+	if _, err := c.SignForWalletOnProtocol(context.Background(), "w", "0xab", CurveSecp256k1, ProtocolDefault); err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+	body, _ := m.lastSignBody.Load().(map[string]any)
+	if _, present := body["protocol"]; present {
+		t.Errorf("ProtocolDefault must omit the field; got body[\"protocol\"] = %v", body["protocol"])
 	}
 }
