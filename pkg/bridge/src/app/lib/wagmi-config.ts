@@ -196,10 +196,26 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
       : []),
   ]
 
-  // Transports: default to viem's public HTTP for each chain. Tenants that
-  // need custom RPC endpoints will compose their own wagmi config and use
-  // the underlying hooks directly (this builder targets the common case).
-  const transports = Object.fromEntries(chains.map((c) => [c.id, http()])) as Record<number, ReturnType<typeof http>>
+  // Transports: most chains use viem's public HTTP. Lux chains route
+  // through the bridge backend's same-origin /api/rpc/lux-{mainnet,testnet}
+  // proxy because the upstream Lux gateway's CORS allow-list doesn't
+  // include bridge.* origins — the browser would block every response
+  // and useBalance() would stall on '…' forever. The proxy makes the
+  // call server-side (no CORS) and forwards the response unchanged.
+  // Tenants who'd rather hit the gateway directly (allow-list updated,
+  // running their own Lux node, etc.) override at the wagmi layer by
+  // composing their own Config.
+  const luxRPCURL = (chainId: number): string | null => {
+    if (chainId === luxMainnet.id) return '/api/rpc/lux-mainnet'
+    if (chainId === luxTestnet.id) return '/api/rpc/lux-testnet'
+    return null
+  }
+  const transports = Object.fromEntries(
+    chains.map((c) => {
+      const luxURL = luxRPCURL(c.id)
+      return [c.id, luxURL ? http(luxURL) : http()]
+    }),
+  ) as Record<number, ReturnType<typeof http>>
 
   return createConfig({
     chains: chains as [ViemChain, ...ViemChain[]],

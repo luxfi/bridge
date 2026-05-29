@@ -20,9 +20,13 @@ describe('bridgeIdToWagmiChainId', () => {
     expect(bridgeIdToWagmiChainId('evm:1')).toBe(1)
     expect(bridgeIdToWagmiChainId('evm:8453')).toBe(8453)
   })
+  it('parses lux: namespaced ids (Lux chains are EVM at the wallet leg)', () => {
+    expect(bridgeIdToWagmiChainId('lux:96369')).toBe(96369)
+    expect(bridgeIdToWagmiChainId('lux:96368')).toBe(96368)
+  })
   it('returns null for non-evm ids', () => {
-    expect(bridgeIdToWagmiChainId('lux:96369')).toBeNull()
     expect(bridgeIdToWagmiChainId('svm:101')).toBeNull()
+    expect(bridgeIdToWagmiChainId('btc:mainnet')).toBeNull()
     expect(bridgeIdToWagmiChainId('garbage')).toBeNull()
   })
 })

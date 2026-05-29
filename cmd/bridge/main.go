@@ -274,6 +274,19 @@ func main() {
 	bchainTimeout := flag.Duration("bchain-timeout", 10*time.Second, "per-request timeout for bchain RPC calls")
 	bchainPollInterval := flag.Duration("bchain-poll-interval", DefaultBChainPollInterval,
 		"how often the LP-333 background poller refreshes the b-chain signer-set + epoch snapshot for /metrics + /health. Zero uses the default (30s). The poller never blocks the scrape path — when b-chain hangs, the cache surfaces stale-but-believable values and bridge_bchain_reachable flips to 0.")
+	// Same-origin Lux RPC proxy. The public Lux gateway's CORS allow-
+	// list doesn't include bridge.lux.network, so the embedded SPA's
+	// wagmi useBalance() stalls forever for LUX (browser blocks the
+	// response). The bridge proxies POST /api/rpc/lux-{mainnet,testnet}
+	// → upstream, same-origin, no CORS needed. Empty disables that
+	// route; operators who fix the upstream allow-list can turn the
+	// proxy off and have the SPA hit the gateway directly.
+	luxRPCMainnetURL := flag.String("lux-rpc-mainnet-url", envOr("BRIDGE_LUX_RPC_MAINNET_URL", "https://api.lux.network/ext/bc/C/rpc"),
+		"Upstream URL for the /api/rpc/lux-mainnet same-origin proxy. Default is the public Lux mainnet gateway. Empty disables the route (SPA must hit the gateway directly — only works when the gateway allow-list includes the bridge origin).")
+	luxRPCTestnetURL := flag.String("lux-rpc-testnet-url", envOr("BRIDGE_LUX_RPC_TESTNET_URL", "https://api.lux-test.network/ext/bc/C/rpc"),
+		"Upstream URL for the /api/rpc/lux-testnet same-origin proxy. Default is the public Lux testnet gateway. Empty disables the route.")
+	luxRPCTimeout := flag.Duration("lux-rpc-timeout", DefaultRPCProxyTimeout,
+		"per-request upstream timeout for the LUX RPC proxy. Default 12s — slow enough for a degraded gateway, fast enough that a hung upstream doesn't pin the browser tab's wagmi loop.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
 		"MPC keygen service URL for the PUBLIC cluster (m-chain) — used for per-swap deposit-wallet keygen and refund signing. Required when SDK requests carry use_deposit_address=true; empty disables MPC keygen and those requests 503. Single-cluster deploys leave --mpc-private-url empty and this URL serves both roles (back-compat).")
 	mpcTimeout := flag.Duration("mpc-timeout", 120*time.Second, "per-request timeout for MPC keygen calls (matches mpc-wallet.ts)")
@@ -589,6 +602,18 @@ func main() {
 	// LP-333 b-chain snapshot observable from /metrics. nil when
 	// --bchain-url is unset — gauges then emit reachable=0 + zeros.
 	api.SetBChainPoller(bchainPoller)
+	// Lux RPC same-origin proxy URLs. The embedded SPA wagmi-config
+	// posts to /api/rpc/lux-{mainnet,testnet} to avoid the upstream
+	// gateway's CORS allow-list. Empty URL → the corresponding route
+	// isn't registered.
+	api.SetLuxRPCURLs(*luxRPCMainnetURL, *luxRPCTestnetURL, *luxRPCTimeout, logger)
+	if *luxRPCMainnetURL != "" || *luxRPCTestnetURL != "" {
+		logger.Info("lux rpc proxy enabled",
+			"mainnet_url", *luxRPCMainnetURL,
+			"testnet_url", *luxRPCTestnetURL,
+			"timeout", *luxRPCTimeout,
+		)
+	}
 
 	// Per-destination-network release wallets. One MPC wallet per
 	// destination chain, minted lazily on first need and reused across

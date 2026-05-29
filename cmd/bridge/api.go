@@ -8,8 +8,11 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hanzoai/zip"
+	luxlog "github.com/luxfi/log"
+
 	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
@@ -81,6 +84,17 @@ type API struct {
 	// BChainPoller background loop. nil → /metrics emits zeros for
 	// b-chain gauges + reachable=0. Set via SetBChainPoller.
 	bchainSnapshot func() BChainSnapshot
+
+	// luxRPCMainnetURL / luxRPCTestnetURL are the upstream Lux gateway
+	// URLs the embedded SPA proxies through to dodge the gateway's
+	// CORS allow-list (bridge.lux.network is not whitelisted upstream;
+	// the proxy makes the call same-origin so the browser doesn't
+	// require the CORS header). Empty disables the corresponding
+	// /api/rpc/lux-{mainnet,testnet} route. Set via SetLuxRPCURLs.
+	luxRPCMainnetURL string
+	luxRPCTestnetURL string
+	luxRPCTimeout    time.Duration
+	luxRPCLogger     luxlog.Logger
 }
 
 func NewAPI(
@@ -194,6 +208,18 @@ func (a *API) SetBChainPoller(p *BChainPoller) {
 	a.bchainSnapshot = p.Snapshot
 }
 
+// SetLuxRPCURLs configures the upstream Lux gateway URLs the embedded
+// SPA proxies through to dodge the gateway's CORS allow-list. Either
+// (or both) may be empty — the corresponding /api/rpc/lux-* route is
+// then skipped at Register time. Logger may be nil; when set, upstream
+// failures are logged at Warn.
+func (a *API) SetLuxRPCURLs(mainnetURL, testnetURL string, timeout time.Duration, logger luxlog.Logger) {
+	a.luxRPCMainnetURL = mainnetURL
+	a.luxRPCTestnetURL = testnetURL
+	a.luxRPCTimeout = timeout
+	a.luxRPCLogger = logger
+}
+
 // Register mounts handlers on the given zip.App. The /v1/bridge prefix
 // matches what the SPA fetches and what hanzo/ingress routes externally.
 func (a *API) Register(app *zip.App) {
@@ -274,6 +300,17 @@ func (a *API) Register(app *zip.App) {
 		// (b-chain unreachable) from "configured but not yet LP-333".
 		app.Get("/v1/bridge/signer-set", a.signerSetNative)
 		app.Get("/v1/bridge/epoch", a.epochNative)
+	}
+
+	// /api/rpc/lux-{mainnet,testnet} — same-origin JSON-RPC proxy for
+	// the Lux gateway. Sidesteps the gateway's CORS allow-list so the
+	// embedded SPA's wagmi useBalance() actually resolves for LUX. See
+	// rpc_proxy.go for the motivation + properties.
+	if h := rpcProxy(a.luxRPCMainnetURL, a.luxRPCTimeout, a.luxRPCLogger); h != nil {
+		app.Post("/api/rpc/lux-mainnet", h)
+	}
+	if h := rpcProxy(a.luxRPCTestnetURL, a.luxRPCTimeout, a.luxRPCLogger); h != nil {
+		app.Post("/api/rpc/lux-testnet", h)
 	}
 
 	// /v1/bridge/check-deposit is an ops-only diagnostic that polls
