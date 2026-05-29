@@ -560,6 +560,130 @@ func TestRPCRoundTrip_RequestShape(t *testing.T) {
 	}
 }
 
+// =============================================================================
+// LP-333: signer set + epoch coordination
+// =============================================================================
+
+func TestGetSignerSetInfo_HappyPath(t *testing.T) {
+	m := newMockNode(t)
+	m.onResult("bridge_getSignerSetInfo", SignerSetInfo{
+		Members: []SignerMember{
+			{NodeID: "node-0", PublicKey: "0x" + strings.Repeat("a", 64), Address: "0xAAAA"},
+			{NodeID: "node-1", PublicKey: "0x" + strings.Repeat("b", 64), Address: "0xBBBB"},
+			{NodeID: "node-2", PublicKey: "0x" + strings.Repeat("c", 64), Address: "0xCCCC"},
+		},
+		Threshold:      2,
+		Total:          3,
+		Epoch:          7,
+		SignerSetHash:  "0xdeadbeef",
+		LastRotationAt: 1730000000,
+	})
+	c := clientForMock(m)
+
+	got, err := c.GetSignerSetInfo(context.Background())
+	if err != nil {
+		t.Fatalf("GetSignerSetInfo err: %v", err)
+	}
+	if got.Threshold != 2 {
+		t.Errorf("Threshold = %d, want 2", got.Threshold)
+	}
+	if got.Total != 3 {
+		t.Errorf("Total = %d, want 3", got.Total)
+	}
+	if got.Epoch != 7 {
+		t.Errorf("Epoch = %d, want 7", got.Epoch)
+	}
+	if got.SignerSetHash != "0xdeadbeef" {
+		t.Errorf("SignerSetHash = %q, want 0xdeadbeef", got.SignerSetHash)
+	}
+	if len(got.Members) != 3 || got.Members[0].NodeID != "node-0" {
+		t.Errorf("Members roster wrong: %+v", got.Members)
+	}
+}
+
+// TestGetSignerSetInfo_DerivesTotalFromMembers covers the defensive
+// path: an upstream that returns the Members roster but doesn't fill
+// Total should get a client-side fill-in so consumers don't have to
+// recount.
+func TestGetSignerSetInfo_DerivesTotalFromMembers(t *testing.T) {
+	m := newMockNode(t)
+	m.onResult("bridge_getSignerSetInfo", SignerSetInfo{
+		Members: []SignerMember{
+			{NodeID: "node-0"}, {NodeID: "node-1"}, {NodeID: "node-2"}, {NodeID: "node-3"},
+		},
+		Threshold: 3,
+		// Total intentionally omitted.
+		Epoch: 12,
+	})
+	c := clientForMock(m)
+
+	got, err := c.GetSignerSetInfo(context.Background())
+	if err != nil {
+		t.Fatalf("GetSignerSetInfo err: %v", err)
+	}
+	if got.Total != 4 {
+		t.Errorf("Total = %d, want 4 (derived from len(Members))", got.Total)
+	}
+}
+
+// TestGetSignerSetInfo_MethodNotFound documents the back-compat
+// contract: an upstream BridgeVM without LP-333 returns -32601, which
+// the client surfaces as a typed RPCError. Callers fall back to
+// "assumed state" mode.
+func TestGetSignerSetInfo_MethodNotFound(t *testing.T) {
+	m := newMockNode(t)
+	m.onError("bridge_getSignerSetInfo", -32601, "method not found")
+	c := clientForMock(m)
+
+	_, err := c.GetSignerSetInfo(context.Background())
+	if err == nil {
+		t.Fatal("expected RPCError, got nil")
+	}
+	var rpcErr *RPCError
+	if !errors.As(err, &rpcErr) {
+		t.Fatalf("expected *RPCError, got %T", err)
+	}
+	if rpcErr.Code != -32601 {
+		t.Errorf("Code = %d, want -32601 (method not found)", rpcErr.Code)
+	}
+}
+
+func TestGetCurrentEpoch_HappyPath(t *testing.T) {
+	m := newMockNode(t)
+	m.onResult("bridge_getCurrentEpoch", CurrentEpoch{
+		Epoch:         9,
+		SignerSetHash: "0xfeedface",
+		StartedAt:     1730000000,
+	})
+	c := clientForMock(m)
+
+	got, err := c.GetCurrentEpoch(context.Background())
+	if err != nil {
+		t.Fatalf("GetCurrentEpoch err: %v", err)
+	}
+	if got.Epoch != 9 {
+		t.Errorf("Epoch = %d, want 9", got.Epoch)
+	}
+	if got.SignerSetHash != "0xfeedface" {
+		t.Errorf("SignerSetHash = %q, want 0xfeedface", got.SignerSetHash)
+	}
+	if got.StartedAt != 1730000000 {
+		t.Errorf("StartedAt = %d, want 1730000000", got.StartedAt)
+	}
+}
+
+func TestGetCurrentEpoch_MethodNotFound(t *testing.T) {
+	m := newMockNode(t)
+	m.onError("bridge_getCurrentEpoch", -32601, "method not found")
+	c := clientForMock(m)
+
+	_, err := c.GetCurrentEpoch(context.Background())
+	var rpcErr *RPCError
+	if !errors.As(err, &rpcErr) || rpcErr.Code != -32601 {
+		t.Errorf("expected -32601 RPCError, got %v", err)
+	}
+}
+
 func TestRPCError_String(t *testing.T) {
 	cases := []struct {
 		name string
