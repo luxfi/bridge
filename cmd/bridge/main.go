@@ -886,6 +886,17 @@ func main() {
 		if btcMempoolClient != nil && !*disableGasPrecheck {
 			signer.SetBTCBalanceProbe(btcMempoolClient)
 		}
+		// Wire profile → ProtocolFor. The driver consults this on every
+		// signOnCurve call; when it returns a non-default Protocol AND
+		// mchain.Client satisfies ProtocolSigner (it does, after
+		// z/mchain-protocol-wire), the SignForWalletOnProtocol path
+		// activates and the "protocol" hint flows to mpcd's POST body.
+		//
+		// Wire-level effect:
+		//   LuxStrictPQBridgeProfile  → driver sends protocol="pulsar-m-65"
+		//   BridgeClassicalCompat     → driver omits protocol field; mpcd
+		//                               picks by curve (cggmp21 / frost)
+		signer.ProtocolFor = profileProtocolFor(profile)
 		go func() {
 			_ = signer.Run(signerCtx)
 		}()
@@ -897,6 +908,7 @@ func main() {
 			"btc_assembler", btcAssembler != nil,
 			"release_pool_set_sizes", releasePoolSet.FamilySizes(),
 			"gas_precheck", !*disableGasPrecheck,
+			"protocol_for", protocolForLabel(profile),
 		)
 	} else if *disableSigningDriver {
 		logger.Info("signing driver disabled by --disable-signing-driver")
@@ -1160,4 +1172,65 @@ func selectProfile(name string) (*bridge.BridgeProfile, error) {
 	default:
 		return nil, fmt.Errorf("unknown bridge profile %q (valid: strict-pq, classical-compat)", name)
 	}
+}
+
+// profileProtocolFor maps the active bridge profile's finality scheme
+// to the mchain.Protocol the signing driver requests from mpcd.
+//
+// The mapping reads SourceFinalityScheme — the protocol that produces
+// the source-side attestation, which is also what the bridge daemon
+// requests when it asks the cluster to sign a release tx for the
+// destination. DestFinalityScheme is the same value for both built-in
+// profiles, so a single lookup is enough today; if a future profile
+// splits source vs dest the right move is to pass a per-call hint
+// (e.g. via a closure that captures the destination chain) rather than
+// fan out this function.
+//
+// Returns mchain.ProtocolDefault for any unknown scheme so the driver
+// degrades to mpcd's curve-default rather than failing loudly — an
+// unknown scheme on a custom profile is a config issue, not a
+// per-swap blocker.
+func profileProtocolFor(p *bridge.BridgeProfile) func(mchain.Curve) mchain.Protocol {
+	if p == nil {
+		return nil
+	}
+	proto := protocolForScheme(p.SourceFinalityScheme)
+	// nil signals the driver to skip the upgrade path entirely; when
+	// the profile pins a classical scheme (or an unknown one) there's
+	// no reason to override mpcd's curve-default behavior.
+	if proto == mchain.ProtocolDefault {
+		return nil
+	}
+	return func(_ mchain.Curve) mchain.Protocol {
+		return proto
+	}
+}
+
+// protocolForScheme is the canonical scheme-string → Protocol mapping.
+// Kept separate from profileProtocolFor so tests can pin the table
+// directly without constructing a full BridgeProfile.
+func protocolForScheme(scheme string) mchain.Protocol {
+	switch scheme {
+	case bridge.SchemePulsarM65:
+		return mchain.ProtocolPulsarM65
+	case bridge.SchemePulsarM87:
+		return mchain.ProtocolPulsarM87
+	default:
+		return mchain.ProtocolDefault
+	}
+}
+
+// protocolForLabel returns a structured-log-friendly identifier for
+// the wire-level protocol the signing driver will request under this
+// profile. "default" means "no protocol hint sent; mpcd picks by
+// curve" — distinct from a specific PQ protocol name.
+func protocolForLabel(p *bridge.BridgeProfile) string {
+	if p == nil {
+		return "default"
+	}
+	proto := protocolForScheme(p.SourceFinalityScheme)
+	if proto == mchain.ProtocolDefault {
+		return "default"
+	}
+	return string(proto)
 }
