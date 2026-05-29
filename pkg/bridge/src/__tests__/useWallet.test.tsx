@@ -196,7 +196,21 @@ describe('useWallet', () => {
 
   it('switchChain rejects non-EVM bridge ids', async () => {
     const { result } = renderHook(() => useWallet())
-    await expect(result.current.switchChain('lux:96369')).rejects.toThrow(/not an EVM chain/)
+    // svm/btc/ton are genuinely non-EVM. lux: IS EVM at the wallet
+    // leg (see architecture_lux_family_evm_dual memory) so it must
+    // NOT reject — that case is covered in the next test.
+    await expect(result.current.switchChain('svm:101')).rejects.toThrow(/not an EVM chain/)
+    await expect(result.current.switchChain('btc:mainnet')).rejects.toThrow(/not an EVM chain/)
+    await expect(result.current.switchChain('ton:mainnet')).rejects.toThrow(/not an EVM chain/)
+  })
+
+  it('switchChain accepts lux: bridge ids (Lux is EVM at the wallet leg)', async () => {
+    const { result } = renderHook(() => useWallet())
+    switchChainAsync.mockResolvedValueOnce(undefined)
+    await act(async () => {
+      await result.current.switchChain('lux:96369')
+    })
+    expect(switchChainAsync).toHaveBeenCalledWith({ chainId: 96369 })
   })
 
   it('switchChain delegates to wagmi switchChainAsync for EVM ids', async () => {
