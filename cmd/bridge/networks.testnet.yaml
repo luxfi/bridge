@@ -62,10 +62,102 @@ networks:
     txExplorerTpl: https://holesky.etherscan.io/tx/{tx}
     addrExplorerTpl: https://holesky.etherscan.io/address/{addr}
 
+  - internalName: ARBITRUM_SEPOLIA
+    displayName: Arbitrum Sepolia
+    nativeCurrency: ETH
+    chainId: "421614"
+    type: evm
+    isTestnet: true
+    avgCompletion: 2m
+    txExplorerTpl: https://sepolia.arbiscan.io/tx/{tx}
+    addrExplorerTpl: https://sepolia.arbiscan.io/address/{addr}
+
+  - internalName: OPTIMISM_SEPOLIA
+    displayName: Optimism Sepolia
+    nativeCurrency: ETH
+    chainId: "11155420"
+    type: evm
+    isTestnet: true
+    avgCompletion: 2m
+    txExplorerTpl: https://sepolia-optimism.etherscan.io/tx/{tx}
+    addrExplorerTpl: https://sepolia-optimism.etherscan.io/address/{addr}
+
+  - internalName: POLYGON_AMOY
+    displayName: Polygon Amoy
+    nativeCurrency: POL
+    chainId: "80002"
+    type: evm
+    isTestnet: true
+    avgCompletion: 2m
+    txExplorerTpl: https://amoy.polygonscan.com/tx/{tx}
+    addrExplorerTpl: https://amoy.polygonscan.com/address/{addr}
+
+  - internalName: BSC_TESTNET
+    displayName: BNB Smart Chain Testnet
+    nativeCurrency: BNB
+    chainId: "97"
+    type: evm
+    isTestnet: true
+    avgCompletion: 2m
+    txExplorerTpl: https://testnet.bscscan.com/tx/{tx}
+    addrExplorerTpl: https://testnet.bscscan.com/address/{addr}
+
+  - internalName: AVALANCHE_FUJI
+    displayName: Avalanche Fuji
+    nativeCurrency: AVAX
+    chainId: "43113"
+    type: evm
+    isTestnet: true
+    avgCompletion: 2m
+    txExplorerTpl: https://testnet.snowtrace.io/tx/{tx}
+    addrExplorerTpl: https://testnet.snowtrace.io/address/{addr}
+
+  # Non-EVM testnets — source-only. The bridge's internal/depositcheck
+  # client polls native APIs for these (Blockstream for BTC, getBalance
+  # for SOL, TON Center for TON). The destination side is not yet
+  # implemented in internal/broadcast (returns ErrFamilyNotImplemented
+  # per §13.7 G1) — until mpcd ships FROST Ed25519 (Solana) and
+  # Schnorr (Bitcoin) and the txassembler gains non-EVM tx builders,
+  # these chains can only be used as SOURCES of bridge swaps.
+  # `is_withdrawal_enabled: false` on the native asset disables them
+  # in the destination picker.
+  - internalName: BITCOIN_TESTNET
+    displayName: Bitcoin Testnet
+    nativeCurrency: BTC
+    type: bitcoin
+    isTestnet: true
+    avgCompletion: 30m
+    txExplorerTpl: https://blockstream.info/testnet/tx/{tx}
+    addrExplorerTpl: https://blockstream.info/testnet/address/{addr}
+
+  - internalName: SOLANA_DEVNET
+    displayName: Solana Devnet
+    nativeCurrency: SOL
+    type: solana
+    isTestnet: true
+    avgCompletion: 1m
+    txExplorerTpl: https://explorer.solana.com/tx/{tx}?cluster=devnet
+    addrExplorerTpl: https://explorer.solana.com/address/{addr}?cluster=devnet
+
+  - internalName: TON_TESTNET
+    displayName: TON Testnet
+    nativeCurrency: TON
+    type: ton
+    isTestnet: true
+    avgCompletion: 5m
+    txExplorerTpl: https://testnet.tonscan.org/tx/{tx}
+    addrExplorerTpl: https://testnet.tonscan.org/address/{addr}
+
 tokens:
   - asset: ETH
     name: Ether
     decimals: 18
+    network: ETHEREUM_SEPOLIA
+
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
     network: ETHEREUM_SEPOLIA
 
   - asset: LUX
@@ -78,10 +170,104 @@ tokens:
     decimals: 18
     network: BASE_SEPOLIA
 
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+    network: BASE_SEPOLIA
+
   - asset: ETH
     name: Ether
     decimals: 18
     network: HOLESKY_TESTNET
+
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: ARBITRUM_SEPOLIA
+
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"
+    network: ARBITRUM_SEPOLIA
+
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: OPTIMISM_SEPOLIA
+
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7"
+    network: OPTIMISM_SEPOLIA
+
+  - asset: POL
+    name: Polygon
+    decimals: 18
+    network: POLYGON_AMOY
+
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582"
+    network: POLYGON_AMOY
+
+  - asset: BNB
+    name: BNB
+    decimals: 18
+    network: BSC_TESTNET
+
+  - asset: AVAX
+    name: Avalanche
+    decimals: 18
+    network: AVALANCHE_FUJI
+
+  - asset: USDC
+    name: USD Coin
+    decimals: 6
+    contract: "0x5425890298aed601595a70AB815c96711a31Bc65"
+    network: AVALANCHE_FUJI
+
+  # Non-EVM tokens — registry-visible but deposit + withdrawal disabled
+  # until both sides of the gap close (verified 2026-05-28):
+  #   - BTC: mpcd returns an address but in mainnet P2PKH format (`1...`)
+  #     even for BITCOIN_TESTNET. A user depositing testnet BTC would not
+  #     be detected (wrong network) and one depositing mainnet BTC would
+  #     lose funds. Needs either a mpcd testnet flag or a bridge-side
+  #     re-encoder (hash160 → tb1...).
+  #   - SOL: mpcd returns "no sol address returned from MPC keygen" —
+  #     ed25519 / FROST keygen not yet wired in the cluster (§13.6 step 6).
+  #   - TON: same as SOL — `mchain/client.go:590-594` notes TON shares
+  #     the SOL keygen slot pending its own ed25519 derivation.
+  # Once each gap closes (mpcd FROST + BTC testnet encoding), flip
+  # isDepositEnabled back to true per token.
+  # BTC source-only: deposit re-enabled 2026-05-28 once the bridge-side
+  # mainnet→testnet address re-encoder landed (internal/mchain/btc_address.go).
+  # mpcd still returns mainnet-format P2PKH; the bridge converts locally.
+  # Withdrawal remains disabled — settlement on Bitcoin still requires
+  # Schnorr signing in mpcd + a btc tx assembler (§13.6 step 6 / §13.7 G1).
+  - asset: BTC
+    name: Bitcoin
+    decimals: 8
+    network: BITCOIN_TESTNET
+    isDepositEnabled: true
+    isWithdrawalEnabled: false
+
+  - asset: SOL
+    name: Solana
+    decimals: 9
+    network: SOLANA_DEVNET
+    isDepositEnabled: false
+    isWithdrawalEnabled: false
+
+  - asset: TON
+    name: Toncoin
+    decimals: 9
+    network: TON_TESTNET
+    isDepositEnabled: false
+    isWithdrawalEnabled: false
 
 limits:
   minUSD: 1
