@@ -3,6 +3,7 @@ package cosigners
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 )
@@ -416,6 +417,59 @@ func TestEnvSecretStore_Fireblocks(t *testing.T) {
 	}
 	if got != "fake-fb-pem" {
 		t.Errorf("got %q", got)
+	}
+}
+
+// TestEnvSecretStore_FireblocksFromFile proves the URI-scheme path:
+// the env var holds `file:/path` and the resolver loads the PEM from
+// disk. Mirrors the K8s secret-mount pattern operators actually deploy.
+func TestEnvSecretStore_FireblocksFromFile(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/fireblocks.pem"
+	if err := os.WriteFile(path, []byte("-----PEM-FROM-FILE-----\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("FIREBLOCKS_COSIGNER_PEM__FILE_BACKED_KEY", "file:"+path)
+	s := EnvSecretStore{}
+	got, err := s.FetchFireblocks(context.Background(), &FireblocksIntent{APIKey: "file-backed-key"})
+	if err != nil {
+		t.Fatalf("fetch: %v", err)
+	}
+	if got != "-----PEM-FROM-FILE-----" {
+		t.Errorf("got %q, want trimmed file contents", got)
+	}
+}
+
+// TestEnvSecretStore_FireblocksFileMissing covers the error path: env
+// var points at a file that doesn't exist. Operator sees an actionable
+// path-in-error rather than ErrSecretNotConfigured (which would
+// suggest the env var is unset).
+func TestEnvSecretStore_FireblocksFileMissing(t *testing.T) {
+	t.Setenv("FIREBLOCKS_COSIGNER_PEM__BROKEN_KEY", "file:/no/such/path/xyz")
+	s := EnvSecretStore{}
+	_, err := s.FetchFireblocks(context.Background(), &FireblocksIntent{APIKey: "broken-key"})
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+	if !strings.Contains(err.Error(), "/no/such/path/xyz") {
+		t.Errorf("error should name the missing path: %v", err)
+	}
+}
+
+// TestEnvSecretStore_UtilaFromEnvIndirection covers the `env:OTHER_VAR`
+// scheme — operator points the cosigner env var at a different env var
+// that holds the actual PEM. Useful when secret-management tools
+// populate a canonical env name and operators want to alias.
+func TestEnvSecretStore_UtilaFromEnvIndirection(t *testing.T) {
+	t.Setenv("SHARED_UTILA_PEM", "actual-pem-content")
+	t.Setenv("UTILA_COSIGNER_PEM__INDIRECT_ORG", "env:SHARED_UTILA_PEM")
+	s := EnvSecretStore{}
+	got, err := s.FetchUtila(context.Background(), &UtilaIntent{OrgID: "indirect-org"})
+	if err != nil {
+		t.Fatalf("fetch: %v", err)
+	}
+	if got != "actual-pem-content" {
+		t.Errorf("got %q, want indirected value", got)
 	}
 }
 
