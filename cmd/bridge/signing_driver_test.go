@@ -913,3 +913,101 @@ func mustXRPAddr(t *testing.T, pubHex string) string {
 	}
 	return addr
 }
+
+// =============================================================================
+// ProtocolFor dispatch (PR z/signing-driver-protocol)
+// =============================================================================
+
+// fakeProtocolSigner satisfies MPCSigner + CurveSigner + ProtocolSigner.
+// Records which method was used so tests can assert dispatch routing.
+type fakeProtocolSigner struct {
+	plain    atomic.Int64
+	curve    atomic.Int64
+	proto    atomic.Int64
+	lastP    atomic.Value // mchain.Protocol
+	lastCurv atomic.Value // mchain.Curve
+}
+
+func (f *fakeProtocolSigner) SignForWallet(ctx context.Context, walletID, msgHex string) (*mchain.SignResult, error) {
+	f.plain.Add(1)
+	return &mchain.SignResult{Signature: "0xplain", SessionID: "s"}, nil
+}
+
+func (f *fakeProtocolSigner) SignForWalletOnCurve(ctx context.Context, walletID, msgHex string, curve mchain.Curve) (*mchain.SignResult, error) {
+	f.curve.Add(1)
+	f.lastCurv.Store(curve)
+	return &mchain.SignResult{Signature: "0xcurve", SessionID: "s"}, nil
+}
+
+func (f *fakeProtocolSigner) SignForWalletOnProtocol(ctx context.Context, walletID, msgHex string, curve mchain.Curve, protocol mchain.Protocol) (*mchain.SignResult, error) {
+	f.proto.Add(1)
+	f.lastP.Store(protocol)
+	f.lastCurv.Store(curve)
+	return &mchain.SignResult{Signature: "0xproto", SessionID: "s"}, nil
+}
+
+// TestSigning_ProtocolFor_RoutesPQ asserts that when ProtocolFor returns
+// a non-default Protocol AND the signer implements ProtocolSigner, the
+// driver upgrades to SignForWalletOnProtocol on the wire.
+func TestSigning_ProtocolFor_RoutesPQ(t *testing.T) {
+	signer := &fakeProtocolSigner{}
+	d := &SigningDriver{
+		signer: signer,
+		ProtocolFor: func(c mchain.Curve) mchain.Protocol {
+			return mchain.ProtocolPulsarM65
+		},
+	}
+	_, err := d.signOnCurve(t.Context(), "w", "0xab", mchain.CurveSecp256k1)
+	if err != nil {
+		t.Fatalf("signOnCurve: %v", err)
+	}
+	if signer.proto.Load() != 1 {
+		t.Errorf("expected 1 SignForWalletOnProtocol call, got %d (curve=%d, plain=%d)",
+			signer.proto.Load(), signer.curve.Load(), signer.plain.Load())
+	}
+	if got := signer.lastP.Load().(mchain.Protocol); got != mchain.ProtocolPulsarM65 {
+		t.Errorf("expected ProtocolPulsarM65 on the wire, got %q", got)
+	}
+}
+
+// TestSigning_ProtocolFor_DefaultFallsBackToCurve asserts that when
+// ProtocolFor returns ProtocolDefault, the driver does NOT upgrade —
+// the existing CurveSigner path runs and no "protocol" hint flows to
+// the wire.
+func TestSigning_ProtocolFor_DefaultFallsBackToCurve(t *testing.T) {
+	signer := &fakeProtocolSigner{}
+	d := &SigningDriver{
+		signer: signer,
+		ProtocolFor: func(c mchain.Curve) mchain.Protocol {
+			return mchain.ProtocolDefault
+		},
+	}
+	_, err := d.signOnCurve(t.Context(), "w", "0xab", mchain.CurveSecp256k1)
+	if err != nil {
+		t.Fatalf("signOnCurve: %v", err)
+	}
+	if signer.proto.Load() != 0 {
+		t.Errorf("ProtocolDefault must NOT upgrade — got %d Protocol calls", signer.proto.Load())
+	}
+	if signer.curve.Load() != 1 {
+		t.Errorf("expected 1 curve-path call, got %d", signer.curve.Load())
+	}
+}
+
+// TestSigning_ProtocolFor_Nil_PreservesLegacyPath locks in that the
+// pre-PR behavior is unchanged when no ProtocolFor is configured.
+func TestSigning_ProtocolFor_Nil_PreservesLegacyPath(t *testing.T) {
+	signer := &fakeProtocolSigner{}
+	d := &SigningDriver{signer: signer}
+	_, err := d.signOnCurve(t.Context(), "w", "0xab", mchain.CurveEd25519)
+	if err != nil {
+		t.Fatalf("signOnCurve: %v", err)
+	}
+	if signer.proto.Load() != 0 {
+		t.Errorf("nil ProtocolFor must NOT call Protocol path; got %d", signer.proto.Load())
+	}
+	if signer.curve.Load() != 1 {
+		t.Errorf("expected curve-path fallback, got %d (plain=%d)",
+			signer.curve.Load(), signer.plain.Load())
+	}
+}

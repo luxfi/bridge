@@ -100,6 +100,18 @@ type CurveSigner interface {
 	SignForWalletOnCurve(ctx context.Context, walletID, messageHex string, curve mchain.Curve) (*mchain.SignResult, error)
 }
 
+// ProtocolSigner is the strict-PQ-capable interface — sign with an
+// explicit Protocol (pulsar-m-65, pulsar-m-87, corona, magnetar, …).
+// *mchain.Client satisfies it natively after PR z/mchain-protocol-wire.
+//
+// The driver consults ProtocolFor — when set, the returned Protocol
+// flows into SignForWalletOnProtocol. Profile-driven gating lives at
+// the daemon main.go layer; the driver itself is policy-free and only
+// asks ProtocolFor "what should this swap use?"
+type ProtocolSigner interface {
+	SignForWalletOnProtocol(ctx context.Context, walletID, messageHex string, curve mchain.Curve, protocol mchain.Protocol) (*mchain.SignResult, error)
+}
+
 // SigningDriver polls bridge_transfer_pending swaps and drives them
 // through the MPC signing ceremony. Concurrency-safe.
 type SigningDriver struct {
@@ -180,6 +192,21 @@ type SigningDriver struct {
 	// signOneBTC short-circuits swaps whose value+fee exceeds the
 	// release wallet's BTC balance.
 	btcBalanceProbe txassembler.BTCBalanceProbe
+
+	// ProtocolFor, when set, decides which threshold-signature protocol
+	// to request from mpcd for a given curve. The daemon's main.go
+	// wires this from the active bridge.BridgeProfile — LuxStrictPQ
+	// returns ProtocolPulsarM65, BridgeClassicalCompat returns
+	// ProtocolDefault (let mpcd pick by curve). Nil disables the
+	// override path entirely (every swap goes through the curve-driven
+	// classical defaults).
+	//
+	// When ProtocolFor returns a non-default value AND the underlying
+	// signer satisfies ProtocolSigner, signOnCurve routes through
+	// SignForWalletOnProtocol so the daemon receives the "protocol"
+	// hint on the wire. Falls through to the curve-only path when the
+	// signer is a curve-only mock.
+	ProtocolFor func(curve mchain.Curve) mchain.Protocol
 
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
@@ -1131,7 +1158,19 @@ func (d *SigningDriver) signOneSOL(ctx context.Context, sw *Swap, walletID, send
 // (secp256k1) for mocks that haven't grown the curve hint — the SOL
 // finalizer will then reject the result with a clear "signature must
 // be 64 bytes" error, so a deployment mismatch fails fast.
+//
+// When ProtocolFor is configured and returns a non-default Protocol,
+// the call upgrades to SignForWalletOnProtocol so the daemon routes
+// the session to the named PQ stack (pulsar-m-65, corona, …). This is
+// the seam between the bridge profile gate and the mpcd request body.
 func (d *SigningDriver) signOnCurve(ctx context.Context, walletID, messageHex string, curve mchain.Curve) (*mchain.SignResult, error) {
+	if d.ProtocolFor != nil {
+		if proto := d.ProtocolFor(curve); proto != mchain.ProtocolDefault {
+			if ps, ok := d.signer.(ProtocolSigner); ok {
+				return ps.SignForWalletOnProtocol(ctx, walletID, messageHex, curve, proto)
+			}
+		}
+	}
 	if cs, ok := d.signer.(CurveSigner); ok {
 		return cs.SignForWalletOnCurve(ctx, walletID, messageHex, curve)
 	}
