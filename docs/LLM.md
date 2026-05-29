@@ -182,14 +182,14 @@ the migration is UI-only.
                    ┌──────────────────────────────────┐
 Tenant app         │ @luxfi/bridge  (pkg/bridge/)     │
 (app/bridge/,      │ exports: Bridge, mountBridge,    │
- app/explorer/,    │   BridgeConfig, types            │
- zoo/bridge/, …)   │                                  │
-imports SDK +      │ Bridge UI is INLINED at          │
-brand:             │   pkg/bridge/src/app/            │
-  @luxfi/bridge ─▶ │ (no @luxbridge/app-v3, no        │
-  @luxfi/brand     │  workspace cycle, no lazy load)  │
-  (or @zooai/brand,│                                  │
-   @hanzoai/brand) │ Direct deps:                     │
+ app/explorer/)    │   BridgeConfig, types            │
+imports SDK +      │                                  │
+brand:             │ Bridge UI is INLINED at          │
+  @luxfi/bridge ─▶ │   pkg/bridge/src/app/            │
+  @luxfi/brand     │ (no @luxbridge/app-v3, no        │
+                   │  workspace cycle, no lazy load)  │
+                   │                                  │
+                   │ Direct deps:                     │
                    │   @hanzo/gui, @luxfi/threshold,  │
                    │   wagmi, viem, react-query       │
                    └─────────────┬────────────────────┘
@@ -292,16 +292,18 @@ Lux / Hanzo / Liquidity zero-copy app protocol.
 - Source of truth for the wire format: `~/work/zap/README.md` (Go) +
   `~/work/zap/zap-js/src/protocol.ts` (TS). Match either.
 
-### Hanzo-side bridge / teleport — does not exist
+### Foreign-brand bridge tenants — out of this repo
 
-There is no `~/work/hanzo/teleport` and no `~/work/hanzo/bridge`. The
-canonical Lux cross-chain bridge protocol lives at `~/work/lux/teleport`
+The canonical Lux cross-chain bridge protocol lives at `~/work/lux/teleport`
 (Warp 2.0 envelopes + m-chain custody, LP-021v2 / LP-7330). The
-user-facing UI + SDK is `~/work/lux/bridge` (this repo). If you ever
-need a Hanzo-flavored bridge surface for a Hanzo-branded tenant, the
-right play is to add a Hanzo tenant build under `app/` (mirror of
-`app/bridge/`) that consumes `@luxfi/bridge` + `@hanzoai/brand` — not a
-new repo. The SDK is the integration point; tenants are thin.
+user-facing UI + SDK is `~/work/lux/bridge` (this repo) and ships ONE
+Lux-branded tenant (`app/bridge/`). Foreign-brand bridge surfaces
+(Hanzo, Zoo, Pars, third-party) MUST live in their own repos and own
+their brand assets there — typically a thin shim repo (e.g.
+`zooai/bridge-shim`) that consumes `@luxfi/bridge` plus its own brand
+package. No foreign-brand tenant manifests, logos, or color tokens
+belong in `luxfi/bridge`. The SDK is the integration point; tenants
+are thin and live where their brand lives.
 
 ### Native Lux services — m-chain (MPC) + KMS + f-chain
 

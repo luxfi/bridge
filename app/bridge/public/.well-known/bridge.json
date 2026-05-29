@@ -1,0 +1,12 @@
+{
+  "brandId": "lux",
+  "appId": "bridge",
+  "title": "Lux Bridge",
+  "domain": "bridge.lux.network",
+  "url": "https://bridge.lux.network",
+  "github": "https://github.com/luxfi/bridge",
+  "supportedChains": [96369, 96368, 1, 42161, 8453, 137, 43114],
+  "peers": [],
+  "capabilities": ["bridge", "mpc"],
+  "apiVersion": "1"
+}
