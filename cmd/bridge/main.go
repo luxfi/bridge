@@ -272,6 +272,8 @@ func main() {
 	bchainURL := flag.String("bchain-url", envOr("BRIDGE_BCHAIN_URL", ""),
 		"BridgeVM (b-chain) JSON-RPC base URL, e.g. https://api.lux-test.network — empty disables native bchain handlers and falls back to the legacy backend proxy")
 	bchainTimeout := flag.Duration("bchain-timeout", 10*time.Second, "per-request timeout for bchain RPC calls")
+	bchainPollInterval := flag.Duration("bchain-poll-interval", DefaultBChainPollInterval,
+		"how often the LP-333 background poller refreshes the b-chain signer-set + epoch snapshot for /metrics + /health. Zero uses the default (30s). The poller never blocks the scrape path — when b-chain hangs, the cache surfaces stale-but-believable values and bridge_bchain_reachable flips to 0.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
 		"MPC keygen service URL for the PUBLIC cluster (m-chain) — used for per-swap deposit-wallet keygen and refund signing. Required when SDK requests carry use_deposit_address=true; empty disables MPC keygen and those requests 503. Single-cluster deploys leave --mpc-private-url empty and this URL serves both roles (back-compat).")
 	mpcTimeout := flag.Duration("mpc-timeout", 120*time.Second, "per-request timeout for MPC keygen calls (matches mpc-wallet.ts)")
@@ -392,6 +394,8 @@ func main() {
 	// the legacy reverse-proxy stays on the swap/quote routes; when set
 	// the native handlers in swaps_handler.go run instead.
 	var bchainClient *bchain.Client
+	var bchainPoller *BChainPoller
+	bchainPollerCtx, bchainPollerCancel := context.WithCancel(context.Background())
 	if *bchainURL != "" {
 		bchainClient = bchain.New(*bchainURL, *bchainTimeout)
 		logger.Info("bchain RPC enabled",
@@ -399,7 +403,19 @@ func main() {
 			"threshold_rpc", bchainClient.ThresholdRPCURL,
 			"timeout", *bchainTimeout,
 		)
+		// LP-333 background poller — refreshes the cached signer-set +
+		// epoch snapshot for /metrics + /health without blocking the
+		// scrape path on RPC. The cache surfaces stale-but-believable
+		// values when b-chain blips; bridge_bchain_reachable flips to 0.
+		bchainPoller = NewBChainPoller(bchainClient, *bchainPollInterval, logger)
+		go func() {
+			_ = bchainPoller.Run(bchainPollerCtx)
+		}()
+		logger.Info("bchain LP-333 poller started",
+			"interval", *bchainPollInterval,
+		)
 	}
+	defer bchainPollerCancel()
 
 	// Construct the optional MPC keygen client(s). Per REQUIREMENTS.md §6
 	// the bridge supports a two-cluster layered model:
@@ -568,6 +584,9 @@ func main() {
 	// MPC pool observable from /metrics so operators can confirm
 	// --mpc-private-url actually applied after a config push.
 	api.SetMPCPool(mchainPool)
+	// LP-333 b-chain snapshot observable from /metrics. nil when
+	// --bchain-url is unset — gauges then emit reachable=0 + zeros.
+	api.SetBChainPoller(bchainPoller)
 
 	// Per-destination-network release wallets. One MPC wallet per
 	// destination chain, minted lazily on first need and reused across

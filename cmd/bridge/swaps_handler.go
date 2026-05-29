@@ -626,12 +626,25 @@ func (a *API) swapsGetNative(c *zip.Ctx) error {
 // rpcErrToHTTP maps a bchain.RPCError to an HTTP status + JSON envelope
 // that matches what the legacy Express server emitted (preserves the
 // TS SDK's existing error-handling assumptions in BridgeApiError).
+//
+// JSON-RPC -32601 (method-not-found) maps to HTTP 501 Not Implemented
+// because the upstream BridgeVM literally lacks the method — this is
+// the back-compat path for clusters that haven't shipped LP-333 yet.
+// Operators distinguish "upstream rejected" (501) from "transport / RPC
+// error" (502) by HTTP code without parsing the body.
 func rpcErrToHTTP(c *zip.Ctx, err error, op string) error {
 	if rpcErr, ok := err.(*bchain.RPCError); ok {
 		status := rpcErr.HTTPStatus
-		if status == 0 {
-			// JSON-RPC error without HTTP context — surface as 502 so the
-			// SDK can distinguish from validation 4xx.
+		switch {
+		case status != 0:
+			// HTTP-layer error from the upstream — keep its status.
+		case rpcErr.Code == -32601:
+			// Method not found — upstream is reachable but doesn't
+			// implement the method. 501 is the right semantic.
+			status = http.StatusNotImplemented
+		default:
+			// Other JSON-RPC error — surface as 502 so the SDK can
+			// distinguish from validation 4xx.
 			status = http.StatusBadGateway
 		}
 		return c.JSON(status, map[string]any{

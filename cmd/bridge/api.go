@@ -76,6 +76,11 @@ type API struct {
 	refundRunning   func() bool
 	watcherStats    func() WatcherStats
 	watcherRunning  func() bool
+
+	// bchainSnapshot returns the cached LP-333 state from the
+	// BChainPoller background loop. nil → /metrics emits zeros for
+	// b-chain gauges + reachable=0. Set via SetBChainPoller.
+	bchainSnapshot func() BChainSnapshot
 }
 
 func NewAPI(
@@ -178,6 +183,17 @@ func (a *API) SetDepositWatcher(w *DepositWatcher) {
 	a.watcherRunning = w.Running
 }
 
+// SetBChainPoller wires the background b-chain LP-333 poller. The
+// /metrics handler reads cached snapshots from this poller without
+// blocking on RPC. nil clears any prior wiring (gauges emit zeros).
+func (a *API) SetBChainPoller(p *BChainPoller) {
+	if p == nil {
+		a.bchainSnapshot = nil
+		return
+	}
+	a.bchainSnapshot = p.Snapshot
+}
+
 // Register mounts handlers on the given zip.App. The /v1/bridge prefix
 // matches what the SPA fetches and what hanzo/ingress routes externally.
 func (a *API) Register(app *zip.App) {
@@ -248,11 +264,16 @@ func (a *API) Register(app *zip.App) {
 		app.All("/api/swaps/*", proxied)
 	}
 	if a.bchain != nil {
-		// /v1/bridge/info exposes signer-set info from BridgeVM (the
-		// LP-333 chain). Currently passes through the speculative
-		// bridge_getInfo method until we add the real
-		// bridge_getSignerSetInfo client method.
+		// /v1/bridge/info exposes bridge_getInfo (node-level summary).
 		app.Get("/v1/bridge/info", a.infoNative)
+		// LP-333 surfaces. Both are read-only — the bridge is a
+		// consumer of the b-chain signer-set + epoch state, not a
+		// participant in rotations. When the upstream BridgeVM doesn't
+		// implement LP-333 yet (-32601 method-not-found), the handlers
+		// return HTTP 501 so operators can distinguish "not configured"
+		// (b-chain unreachable) from "configured but not yet LP-333".
+		app.Get("/v1/bridge/signer-set", a.signerSetNative)
+		app.Get("/v1/bridge/epoch", a.epochNative)
 	}
 
 	// /v1/bridge/check-deposit is an ops-only diagnostic that polls
@@ -421,6 +442,29 @@ func (a *API) infoNative(c *zip.Ctx) error {
 	return c.JSON(http.StatusOK, envelope{Data: info})
 }
 
+// signerSetNative answers GET /v1/bridge/signer-set with the LP-333
+// signer-set snapshot from b-chain. Registered only when a *bchain.Client
+// is configured. Returns HTTP 501 (via rpcErrToHTTP) when the upstream
+// BridgeVM doesn't implement bridge_getSignerSetInfo yet.
+func (a *API) signerSetNative(c *zip.Ctx) error {
+	info, err := a.bchain.GetSignerSetInfo(c.Context())
+	if err != nil {
+		return rpcErrToHTTP(c, err, "getSignerSetInfo")
+	}
+	return c.JSON(http.StatusOK, envelope{Data: info})
+}
+
+// epochNative answers GET /v1/bridge/epoch with the LP-333 current
+// epoch + signer-set hash. Cheap endpoint — meant for high-frequency
+// polling without re-fetching the full signer-set roster.
+func (a *API) epochNative(c *zip.Ctx) error {
+	ep, err := a.bchain.GetCurrentEpoch(c.Context())
+	if err != nil {
+		return rpcErrToHTTP(c, err, "getCurrentEpoch")
+	}
+	return c.JSON(http.StatusOK, envelope{Data: ep})
+}
+
 // jsonrpcReq is the request shape for /v1/bridge/rpc. Minimal JSON-RPC
 // 2.0 — we only implement bridge_getProfile here; future bridge_*
 // methods land in this switch.
@@ -444,9 +488,15 @@ type jsonrpcError struct {
 	Message string `json:"message"`
 }
 
-// rpc dispatches /v1/bridge/rpc calls. Currently:
+// rpc dispatches /v1/bridge/rpc calls.
 //
-//	bridge_getProfile — returns the active BridgeProfile.Metadata
+//	bridge_getProfile         — returns the active BridgeProfile.Metadata
+//	bridge_getSignerSetInfo   — passthrough to b-chain (LP-333)
+//	bridge_getCurrentEpoch    — passthrough to b-chain (LP-333)
+//
+// LP-333 methods are routed to the configured *bchain.Client. When no
+// bchain client is wired (--bchain-url empty), they return -32601 just
+// like an unknown method — the SDK then knows to fall back.
 func (a *API) rpc(c *zip.Ctx) error {
 	var req jsonrpcReq
 	if err := c.Bind(&req); err != nil {
@@ -462,12 +512,60 @@ func (a *API) rpc(c *zip.Ctx) error {
 			ID:      req.ID,
 			Result:  a.profile.Metadata(),
 		})
+	case "bridge_getSignerSetInfo":
+		if a.bchain == nil {
+			return c.JSON(http.StatusOK, jsonrpcResp{
+				JSONRPC: "2.0",
+				ID:      req.ID,
+				Error:   &jsonrpcError{Code: -32601, Message: "method not found (b-chain not configured)"},
+			})
+		}
+		info, err := a.bchain.GetSignerSetInfo(c.Context())
+		if err != nil {
+			return c.JSON(http.StatusOK, rpcErrToJSONRPC(req.ID, err))
+		}
+		return c.JSON(http.StatusOK, jsonrpcResp{JSONRPC: "2.0", ID: req.ID, Result: info})
+	case "bridge_getCurrentEpoch":
+		if a.bchain == nil {
+			return c.JSON(http.StatusOK, jsonrpcResp{
+				JSONRPC: "2.0",
+				ID:      req.ID,
+				Error:   &jsonrpcError{Code: -32601, Message: "method not found (b-chain not configured)"},
+			})
+		}
+		ep, err := a.bchain.GetCurrentEpoch(c.Context())
+		if err != nil {
+			return c.JSON(http.StatusOK, rpcErrToJSONRPC(req.ID, err))
+		}
+		return c.JSON(http.StatusOK, jsonrpcResp{JSONRPC: "2.0", ID: req.ID, Result: ep})
 	default:
 		return c.JSON(http.StatusOK, jsonrpcResp{
 			JSONRPC: "2.0",
 			ID:      req.ID,
 			Error:   &jsonrpcError{Code: -32601, Message: "method not found"},
 		})
+	}
+}
+
+// rpcErrToJSONRPC maps a bchain RPC error to a JSON-RPC error envelope
+// preserving the upstream code where possible. Wire-level errors fall
+// back to -32603 (internal error).
+func rpcErrToJSONRPC(id json.RawMessage, err error) jsonrpcResp {
+	if rpcErr, ok := err.(*bchain.RPCError); ok {
+		code := rpcErr.Code
+		if code == 0 {
+			code = -32603
+		}
+		return jsonrpcResp{
+			JSONRPC: "2.0",
+			ID:      id,
+			Error:   &jsonrpcError{Code: code, Message: rpcErr.Message},
+		}
+	}
+	return jsonrpcResp{
+		JSONRPC: "2.0",
+		ID:      id,
+		Error:   &jsonrpcError{Code: -32603, Message: err.Error()},
 	}
 }
 
@@ -571,6 +669,24 @@ func (a *API) metrics(c *zip.Ctx) error {
 	}
 	writeGauge(&b, "bridge_mpc_keygen_enabled", "1 iff an MPC pool is configured (at least --mpc-url is set).", mpcEnabled)
 	writeGauge(&b, "bridge_mpc_pool_split", "1 iff the MPC pool has distinct public + private clusters (--mpc-private-url set).", mpcSplit)
+
+	// LP-333: b-chain signer-set + epoch coordination gauges. Reads
+	// from the cached BChainPoller snapshot — never blocks on RPC.
+	// Reachable=0 with the rest non-zero means the cluster snapshot
+	// is stale but believable; operators alert on `Reachable=0 for
+	// >5m` to catch real outages without firing on transient blips.
+	var snap BChainSnapshot
+	if a.bchainSnapshot != nil {
+		snap = a.bchainSnapshot()
+	}
+	bchainReachable := 0
+	if snap.Reachable {
+		bchainReachable = 1
+	}
+	writeGauge(&b, "bridge_bchain_reachable", "1 iff the most recent LP-333 poll of b-chain succeeded. 0 means stale (the other gauges still report the last good values).", bchainReachable)
+	writeGauge(&b, "bridge_bchain_current_epoch", "Current LP-333 epoch number from b-chain. Increments on every signer-set rotation; alert on unexpected change.", int(snap.Epoch))
+	writeGauge(&b, "bridge_bchain_signer_set_threshold", "Active signer-set threshold (t in t-of-n). Alert on unexpected change.", snap.Threshold)
+	writeGauge(&b, "bridge_bchain_signer_set_size", "Active signer-set cardinality (n in t-of-n). Alert on unexpected change.", snap.Total)
 
 	// Per-status swap-count gauge — surfaces queue depth at each
 	// pipeline stage. Spikes here are the earliest signal an upstream
