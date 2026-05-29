@@ -227,6 +227,61 @@ services:
     depends_on:
       - bridge-server
 
+  # Bridge unified Go binary (cmd/bridge). Local-dev / testnet equivalent
+  # of k8s/bridge-deployment.yaml — same image, same env contract.
+  #
+  # The image bundles the SPA via go:embed and serves both / and
+  # /v1/bridge/* natively. Runs alongside bridge-server + bridge-ui
+  # during the §13.6 cutover soak. After DNS cutover, those two
+  # services and the bridge UI/server images can be retired.
+  #
+  # Build locally before `docker compose up bridge-go`:
+  #   docker build -f cmd/bridge/Dockerfile -t ghcr.io/luxfi/bridge:dev .
+  # Then export BRIDGE_TAG=dev (or pin :latest from CI).
+  bridge-go:
+    image: ghcr.io/luxfi/bridge:${BRIDGE_TAG:-latest}
+    container_name: bridge-go
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - BRIDGE_ADDR=:8080
+      - BRIDGE_CONFIG=/etc/bridge/networks.yaml
+      - BRIDGE_DATA_DIR=/var/lib/lux-bridge
+      # Empty disables the legacy backend proxy — all /v1/bridge/*
+      # routes resolve through native handlers.
+      - BRIDGE_BACKEND_URL=
+      # BridgeVM (b-chain) JSON-RPC. Leave unset until BridgeVM is
+      # available; native handlers still serve quote + swap state.
+      - BRIDGE_BCHAIN_URL=
+      # MPC daemon. The lux-mpc image exposes its HTTP API on NODE_PORT
+      # (default 6000 per the in-compose mpc-node-* env). Adjust if a
+      # different mpcd build / port is in use.
+      - BRIDGE_MPC_URL=${BRIDGE_MPC_URL:-http://mpc-node-0:6000}
+      - BRIDGE_MPC_TOKEN=${BRIDGE_MPC_TOKEN:-}
+      - BRIDGE_MPC_ORG_ID=bridge
+      # Source-chain RPC overrides. Holesky's publicnode default is
+      # geo-blocked from many hosts; drpc is reliable. Override per
+      # chain if you hit rate limits.
+      - BRIDGE_SOURCE_RPC_OVERRIDES=ETHEREUM_SEPOLIA=https://ethereum-sepolia-rpc.publicnode.com,LUX_TESTNET=https://api.lux-test.network/ext/bc/C/rpc,BASE_SEPOLIA=https://sepolia.base.org,HOLESKY_TESTNET=https://holesky.drpc.org
+    volumes:
+      # YAML-driven SPA picker config (networks + tokens + limits).
+      # Mounted read-only — the k8s deployment uses a ConfigMap for
+      # the same purpose.
+      - ./cmd/bridge/networks.testnet.yaml:/etc/bridge/networks.yaml:ro
+      # zapdb-backed swap store + release-wallets.json. Persists
+      # across container restarts so in-flight swaps survive.
+      - bridge-go-data:/var/lib/lux-bridge
+    networks:
+      - bridge-network
+    depends_on:
+      mpc-node-0:
+        condition: service_healthy
+      mpc-node-1:
+        condition: service_healthy
+      mpc-node-2:
+        condition: service_healthy
+
   # Monitoring - Lighter weight for testnet
   prometheus:
     image: prom/prometheus:latest
@@ -286,6 +341,7 @@ volumes:
   postgres-data:
   prometheus-data:
   grafana-data:
+  bridge-go-data:
 
 networks:
   bridge-network:

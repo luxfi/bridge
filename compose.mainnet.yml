@@ -283,6 +283,78 @@ services:
           cpus: '1'
           memory: 1G
 
+  # Bridge unified Go binary (cmd/bridge). Mainnet equivalent of the
+  # bridge-go service in compose.testnet.yml and the Deployment in
+  # k8s/bridge-deployment.yaml — same image, same env contract, same
+  # mainnet chain set (networks.mainnet.yaml mirrors the k8s ConfigMap).
+  #
+  # Build locally before `docker compose up bridge-go`:
+  #   docker build -f cmd/bridge/Dockerfile -t ghcr.io/luxfi/bridge:dev .
+  # Then export BRIDGE_TAG=dev. For production, pin to a released tag
+  # (e.g. BRIDGE_TAG=v1.2.3) rather than :latest so a registry retag
+  # can't roll the running stack out from under you.
+  #
+  # Runs alongside bridge-server + bridge-ui during the §13.6 cutover
+  # soak. Once the Go binary handles real traffic without regressions,
+  # DNS at bridge.lux.network repoints to this service and the legacy
+  # bridge-server + bridge-ui can be retired.
+  bridge-go:
+    image: ghcr.io/luxfi/bridge:${BRIDGE_TAG:-latest}
+    container_name: bridge-go
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - BRIDGE_ADDR=:8080
+      - BRIDGE_CONFIG=/etc/bridge/networks.yaml
+      - BRIDGE_DATA_DIR=/var/lib/lux-bridge
+      # Empty disables the legacy backend proxy — all /v1/bridge/*
+      # routes resolve through native handlers.
+      - BRIDGE_BACKEND_URL=
+      # BridgeVM (b-chain) JSON-RPC. Leave unset until BridgeVM exposes
+      # its public API; native handlers serve quote + swap state in the
+      # meantime.
+      - BRIDGE_BCHAIN_URL=
+      # MPC daemon. The lux-mpc image exposes its HTTP API on NODE_PORT
+      # (default 6000 per the in-compose mpc-node-* env). Override
+      # BRIDGE_MPC_URL to point at an external mpcd cluster when not
+      # running the in-compose MPC services.
+      - BRIDGE_MPC_URL=${BRIDGE_MPC_URL:-http://mpc-node-0:6000}
+      - BRIDGE_MPC_TOKEN=${BRIDGE_MPC_TOKEN:-}
+      - BRIDGE_MPC_ORG_ID=bridge
+      # Mainnet source-chain RPC overrides. Public RPC endpoints are
+      # fine for low-volume soak; pin to a private provider (Alchemy /
+      # Infura / Quicknode) before high-volume cutover so rate limits
+      # don't drop deposit-watcher polls.
+      - BRIDGE_SOURCE_RPC_OVERRIDES=ETHEREUM_MAINNET=https://eth.llamarpc.com,LUX_MAINNET=https://api.lux.network/ext/bc/C/rpc,ARBITRUM_MAINNET=https://arb1.arbitrum.io/rpc,OPTIMISM_MAINNET=https://mainnet.optimism.io,BASE_MAINNET=https://mainnet.base.org,POLYGON_MAINNET=https://polygon-rpc.com,BSC_MAINNET=https://bsc-dataseed.binance.org,AVAX_MAINNET=https://api.avax.network/ext/bc/C/rpc
+    volumes:
+      # Networks + tokens config. Read-only mount so an accidental write
+      # inside the container can't corrupt the operator-checked source-
+      # of-truth file. Keep this in sync with the inline YAML in
+      # k8s/bridge-deployment.yaml's ConfigMap.
+      - ./cmd/bridge/networks.mainnet.yaml:/etc/bridge/networks.yaml:ro
+      # zapdb-backed swap store + release-wallets.json. Bind-mounted to
+      # a host SSD path so the data survives compose down/up and is
+      # visible to host-side backup tooling.
+      - bridge-go-data:/var/lib/lux-bridge
+    networks:
+      - bridge-network
+    depends_on:
+      mpc-node-0:
+        condition: service_healthy
+      mpc-node-1:
+        condition: service_healthy
+      mpc-node-2:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
   # Enhanced Monitoring
   prometheus:
     image: prom/prometheus:latest
@@ -381,6 +453,12 @@ volumes:
     driver: local
   grafana-data:
     driver: local
+  bridge-go-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/ssd/bridge/bridge-go
 
 networks:
   bridge-network:
