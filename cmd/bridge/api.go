@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -60,6 +61,21 @@ type API struct {
 	// legacy reverse-proxy.
 	store SwapStore
 	quote *QuoteEngine
+
+	// Observability sources — set via the corresponding Set* helpers
+	// after main.go finishes wiring the drivers. Each is nil-safe; the
+	// /metrics endpoint emits zeros for nil drivers so a partial
+	// configuration (e.g. --disable-refund-driver) doesn't break
+	// Prometheus scraping. Pool is similarly nil-safe.
+	mpcPool         *mchain.Pool
+	signingStats    func() SigningDriverStats
+	signingRunning  func() bool
+	broadcastStats  func() BroadcastDriverStats
+	broadcastRunning func() bool
+	refundStats     func() RefundDriverStats
+	refundRunning   func() bool
+	watcherStats    func() WatcherStats
+	watcherRunning  func() bool
 }
 
 func NewAPI(
@@ -113,6 +129,53 @@ func (a *API) SetProfile(p *bridge.BridgeProfile) {
 // when they don't exercise the release-wallet path.
 func (a *API) SetReleaseStore(rs mchain.ReleaseWalletStore) {
 	a.releaseStore = rs
+}
+
+// SetMPCPool wires the layered MPC pool for /metrics + /health
+// reporting. Optional — when nil, the gauges report 0.
+func (a *API) SetMPCPool(p *mchain.Pool) { a.mpcPool = p }
+
+// SetSigningDriver wires the signing driver for /metrics. Setter
+// (not constructor arg) so the 20+ existing NewAPI test callers
+// don't need to change signature. Nil-safe: the metrics handler
+// emits zeros when not set.
+func (a *API) SetSigningDriver(d *SigningDriver) {
+	if d == nil {
+		a.signingStats, a.signingRunning = nil, nil
+		return
+	}
+	a.signingStats = d.Stats
+	a.signingRunning = d.Running
+}
+
+// SetBroadcastDriver mirrors SetSigningDriver.
+func (a *API) SetBroadcastDriver(d *BroadcastDriver) {
+	if d == nil {
+		a.broadcastStats, a.broadcastRunning = nil, nil
+		return
+	}
+	a.broadcastStats = d.Stats
+	a.broadcastRunning = d.Running
+}
+
+// SetRefundDriver mirrors SetSigningDriver.
+func (a *API) SetRefundDriver(d *RefundDriver) {
+	if d == nil {
+		a.refundStats, a.refundRunning = nil, nil
+		return
+	}
+	a.refundStats = d.Stats
+	a.refundRunning = d.Running
+}
+
+// SetDepositWatcher mirrors SetSigningDriver.
+func (a *API) SetDepositWatcher(w *DepositWatcher) {
+	if w == nil {
+		a.watcherStats, a.watcherRunning = nil, nil
+		return
+	}
+	a.watcherStats = w.Stats
+	a.watcherRunning = w.Running
 }
 
 // Register mounts handlers on the given zip.App. The /v1/bridge prefix
@@ -408,11 +471,26 @@ func (a *API) rpc(c *zip.Ctx) error {
 	}
 }
 
-// metrics serves Prometheus text exposition format. The bridge module
-// surfaces bridge_classical_compat_total{primitive=...} so operators can
-// alert on a classical-compat traversal spike.
+// metrics serves Prometheus text exposition format. Surfaces:
+//
+//   - bridge_classical_compat_total{primitive} — PQ-posture alerting
+//   - bridge_profile_post_quantum_end_to_end{} — posture gauge
+//   - bridge_<driver>_<event>_total — per-driver counters (signing,
+//     broadcast, refund, deposit_watcher). These promote the hardening
+//     counters (signing_max_attempts ceilings, refund_max_attempts
+//     ceilings, orphan recoveries) to alertable signals — pre-this,
+//     they only lived inside /health JSON.
+//   - bridge_<driver>_running{} — driver-loop liveness gauges
+//   - bridge_mpc_pool_split{} / bridge_mpc_keygen_enabled{} — MPC
+//     pool state gauges
+//
+// Nil-safe: drivers that weren't started (e.g. --disable-refund-driver)
+// emit zeros, not panics. Operators get a stable scrape contract even
+// when components are disabled.
 func (a *API) metrics(c *zip.Ctx) error {
 	var b strings.Builder
+
+	// Existing: classical-compat traversal counter (per primitive).
 	totals := bridge.ClassicalCompatTotal()
 	b.WriteString("# HELP bridge_classical_compat_total Count of classical-compat gate traversals broken down by primitive.\n")
 	b.WriteString("# TYPE bridge_classical_compat_total counter\n")
@@ -420,8 +498,6 @@ func (a *API) metrics(c *zip.Ctx) error {
 		fmt.Fprintf(&b, "bridge_classical_compat_total{profile=%q,primitive=%q} %d\n",
 			a.profile.Name, prim, totals[prim])
 	}
-	// Profile posture is observable as a label-only gauge so dashboards
-	// can colour-code strict-PQ vs classical-compat.
 	pq := 0
 	if a.profile.IsPostQuantumEndToEnd() {
 		pq = 1
@@ -430,8 +506,145 @@ func (a *API) metrics(c *zip.Ctx) error {
 	b.WriteString("# TYPE bridge_profile_post_quantum_end_to_end gauge\n")
 	fmt.Fprintf(&b, "bridge_profile_post_quantum_end_to_end{profile=%q} %d\n", a.profile.Name, pq)
 
+	// Signing driver — counters + running gauge.
+	var sigStats SigningDriverStats
+	if a.signingStats != nil {
+		sigStats = a.signingStats()
+	}
+	writeCounter(&b, "bridge_signing_ticks_total", "Signing driver loop iterations.", sigStats.Ticks)
+	writeCounter(&b, "bridge_signing_attempts_total", "MPC sign attempts initiated.", sigStats.Attempts)
+	writeCounter(&b, "bridge_signing_successes_total", "MPC signs that produced a valid signature + tx.", sigStats.Successes)
+	writeCounter(&b, "bridge_signing_failures_total", "MPC signs that errored (rolled back via refund or ceiling).", sigStats.Failures)
+	writeCounter(&b, "bridge_signing_list_errors_total", "Errors listing pending swaps during the signing loop.", sigStats.ListErrors)
+	writeCounter(&b, "bridge_signing_stale_total", "Swaps moved to refund_pending because the create-time quote aged past --quote-max-age.", sigStats.Stale)
+	writeGauge(&b, "bridge_signing_running", "1 iff the signing driver loop is active.", boolToGauge(a.signingRunning))
+
+	// Broadcast driver.
+	var bcStats BroadcastDriverStats
+	if a.broadcastStats != nil {
+		bcStats = a.broadcastStats()
+	}
+	writeCounter(&b, "bridge_broadcast_ticks_total", "Broadcast driver loop iterations.", bcStats.Ticks)
+	writeCounter(&b, "bridge_broadcast_attempts_total", "Destination-chain raw-tx broadcasts attempted.", bcStats.Attempts)
+	writeCounter(&b, "bridge_broadcast_successes_total", "Broadcasts the destination chain accepted.", bcStats.Successes)
+	writeCounter(&b, "bridge_broadcast_failures_total", "Broadcasts the destination chain rejected (will retry / refund).", bcStats.Failures)
+	writeCounter(&b, "bridge_broadcast_skipped_no_raw_tx_total", "Swaps skipped because DestRawTx is empty (placeholder mode or signing not yet finalized).", bcStats.SkippedNoRawTx)
+	writeCounter(&b, "bridge_broadcast_list_errors_total", "Errors listing broadcasting swaps.", bcStats.ListErrors)
+	writeGauge(&b, "bridge_broadcast_running", "1 iff the broadcast driver loop is active.", boolToGauge(a.broadcastRunning))
+
+	// Refund driver — including the new hardening counters.
+	var rfStats RefundDriverStats
+	if a.refundStats != nil {
+		rfStats = a.refundStats()
+	}
+	writeCounter(&b, "bridge_refund_ticks_total", "Refund driver loop iterations.", rfStats.Ticks)
+	writeCounter(&b, "bridge_refund_candidates_total", "Swaps the refund driver considered for rollback this run.", rfStats.Candidates)
+	writeCounter(&b, "bridge_refund_successes_total", "Successful refund-leg broadcasts (deposit returned to user).", rfStats.Successes)
+	writeCounter(&b, "bridge_refund_failures_total", "Refund-leg errors (sub-ceiling — will retry).", rfStats.Failures)
+	writeCounter(&b, "bridge_refund_terminal_failures_total", "Swaps moved to terminal SwapStatusFailed because they were stuck broadcasting past the refund window AND were not auto-refundable (Sender / DepositAddress empty). Require operator intervention.", rfStats.TerminalFailures)
+	writeCounter(&b, "bridge_refund_orphans_recovered_total", "Swaps reclaimed from SwapStatusRefunding by orphan-recovery. Non-zero on a healthy bridge means it was killed mid-refund at some point; a sustained rate is a smell (mpcd availability, persistent sign 504s).", rfStats.OrphansRecovered)
+	writeCounter(&b, "bridge_refund_list_errors_total", "Errors listing refund candidates.", rfStats.ListErrors)
+	writeGauge(&b, "bridge_refund_running", "1 iff the refund driver loop is active.", boolToGauge(a.refundRunning))
+
+	// Deposit watcher.
+	var wsStats WatcherStats
+	if a.watcherStats != nil {
+		wsStats = a.watcherStats()
+	}
+	writeCounter(&b, "bridge_deposit_watcher_ticks_total", "Deposit watcher loop iterations.", wsStats.Ticks)
+	writeCounter(&b, "bridge_deposit_watcher_checks_total", "Source-chain balance checks performed.", wsStats.Checks)
+	writeCounter(&b, "bridge_deposit_watcher_advances_total", "Swaps advanced from user_deposit_pending to bridge_transfer_pending by a confirmed deposit.", wsStats.Advances)
+	writeCounter(&b, "bridge_deposit_watcher_check_errors_total", "Errors querying source-chain RPC for deposit balance.", wsStats.CheckErrors)
+	writeCounter(&b, "bridge_deposit_watcher_list_errors_total", "Errors listing pending-deposit swaps.", wsStats.ListErrors)
+	writeGauge(&b, "bridge_deposit_watcher_running", "1 iff the deposit watcher loop is active.", boolToGauge(a.watcherRunning))
+
+	// MPC pool — split / enabled gauges. Both are point-in-time so an
+	// operator can confirm --mpc-private-url actually took effect after
+	// a config push without exec'ing into the pod.
+	mpcEnabled := 0
+	mpcSplit := 0
+	if a.mpcPool != nil {
+		mpcEnabled = 1
+		if a.mpcPool.IsSplit() {
+			mpcSplit = 1
+		}
+	}
+	writeGauge(&b, "bridge_mpc_keygen_enabled", "1 iff an MPC pool is configured (at least --mpc-url is set).", mpcEnabled)
+	writeGauge(&b, "bridge_mpc_pool_split", "1 iff the MPC pool has distinct public + private clusters (--mpc-private-url set).", mpcSplit)
+
+	// Per-status swap-count gauge — surfaces queue depth at each
+	// pipeline stage. Spikes here are the earliest signal an upstream
+	// dependency (mpcd, RPC, destination chain) is degraded.
+	if a.store != nil {
+		writeSwapStatusGauges(&b, a.store)
+	}
+
 	c.SetHeader("Content-Type", "text/plain; version=0.0.4")
 	return c.String(http.StatusOK, b.String())
+}
+
+// writeCounter emits one Prometheus counter line + HELP/TYPE preamble.
+func writeCounter(b *strings.Builder, name, help string, value uint64) {
+	fmt.Fprintf(b, "# HELP %s %s\n", name, help)
+	fmt.Fprintf(b, "# TYPE %s counter\n", name)
+	fmt.Fprintf(b, "%s %d\n", name, value)
+}
+
+// writeGauge emits one Prometheus gauge line + HELP/TYPE preamble.
+func writeGauge(b *strings.Builder, name, help string, value int) {
+	fmt.Fprintf(b, "# HELP %s %s\n", name, help)
+	fmt.Fprintf(b, "# TYPE %s gauge\n", name)
+	fmt.Fprintf(b, "%s %d\n", name, value)
+}
+
+// boolToGauge dereferences a "is running" func into 0/1. Nil func →
+// 0 (driver was never set, e.g. --disable-* flag).
+func boolToGauge(fn func() bool) int {
+	if fn == nil || !fn() {
+		return 0
+	}
+	return 1
+}
+
+// allSwapStatuses is the fixed label set for the per-status gauge.
+// Listed explicitly (not derived from store enumeration) so the metric
+// surface stays stable even when no swaps are in a given state — a
+// missing label is harder to alert on than an explicit zero.
+var allSwapStatuses = []SwapStatus{
+	SwapStatusUserDepositPending,
+	SwapStatusBridgeTransferPending,
+	SwapStatusSigning,
+	SwapStatusBroadcasting,
+	SwapStatusRefundPending,
+	SwapStatusRefunding,
+	SwapStatusCompleted,
+	SwapStatusRefunded,
+	SwapStatusFailed,
+	SwapStatusCancelled,
+}
+
+// writeSwapStatusGauges emits bridge_swaps_by_status{status="..."} for
+// every status. Uses a single List(empty) + group-by rather than N
+// List(status=X) calls because the in-memory and zapdb stores both
+// load swaps in O(n) regardless. Errors are silenced — /metrics must
+// always return a body even when the store is degraded; an alert on
+// `up` (scrape liveness) catches that case.
+func writeSwapStatusGauges(b *strings.Builder, store SwapStore) {
+	counts := map[SwapStatus]uint64{}
+	for _, s := range allSwapStatuses {
+		counts[s] = 0
+	}
+	swaps, err := store.List(context.Background(), SwapFilter{})
+	if err == nil {
+		for _, sw := range swaps {
+			counts[sw.Status]++
+		}
+	}
+	b.WriteString("# HELP bridge_swaps_by_status Current count of swaps in each pipeline status. Spikes signal upstream degradation (mpcd, RPC, destination chain).\n")
+	b.WriteString("# TYPE bridge_swaps_by_status gauge\n")
+	for _, s := range allSwapStatuses {
+		fmt.Fprintf(b, "bridge_swaps_by_status{status=%q} %d\n", string(s), counts[s])
+	}
 }
 
 // proxied returns the zip handler for paths that reverse-proxy to the
