@@ -639,10 +639,32 @@ func (c *Client) SignForWalletWithOrg(ctx context.Context, walletID, messageHex,
 	return c.SignForWalletOnCurveWithOrg(ctx, walletID, messageHex, orgID, CurveSecp256k1)
 }
 
-// SignForWalletOnCurveWithOrg is the canonical implementation. All
-// other variants funnel through here with curve defaulting to
-// CurveSecp256k1 for backward compat.
+// SignForWalletOnProtocol is SignForWalletOnCurve with an explicit
+// Protocol hint (PQ-safe pulsar / corona, or a different classical
+// protocol than the daemon's curve-default). Use this when the bridge
+// profile pins a specific threshold-signature stack.
+//
+// On the wire: an extra "protocol" field is added to the POST body
+// only when Protocol != ProtocolDefault. Older dashboards ignore the
+// field and silently fall back to curve dispatch — the safe degradation
+// when the cluster is mid-rollout of a new PQ protocol.
+func (c *Client) SignForWalletOnProtocol(ctx context.Context, walletID, messageHex string, curve Curve, protocol Protocol) (*SignResult, error) {
+	return c.SignForWalletOnProtocolWithOrg(ctx, walletID, messageHex, c.OrgID, curve, protocol)
+}
+
+// SignForWalletOnCurveWithOrg is the curve-only variant — kept for
+// callers that don't know about Protocol. Equivalent to
+// SignForWalletOnProtocolWithOrg with ProtocolDefault.
 func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, messageHex, orgID string, curve Curve) (*SignResult, error) {
+	return c.SignForWalletOnProtocolWithOrg(ctx, walletID, messageHex, orgID, curve, ProtocolDefault)
+}
+
+// SignForWalletOnProtocolWithOrg is the canonical implementation. All
+// other Sign* variants funnel through here. Curve defaults to
+// CurveSecp256k1 for backward compat; Protocol defaults to
+// ProtocolDefault, which omits the field on the wire and lets the
+// daemon pick by curve (cggmp21 for secp256k1, frost for ed25519).
+func (c *Client) SignForWalletOnProtocolWithOrg(ctx context.Context, walletID, messageHex, orgID string, curve Curve, protocol Protocol) (*SignResult, error) {
 	if walletID == "" {
 		return nil, &MPCError{Op: "sign", Message: "wallet_id required"}
 	}
@@ -658,7 +680,7 @@ func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, mess
 	// gated by JWT or X-API-Key. EnsureDashboardSession lazily mints
 	// a per-(wallet, org) signing grant that signViaDashboard reuses.
 	if c.DashboardSigning() {
-		return c.signViaDashboard(ctx, walletID, messageHex, orgID, curve)
+		return c.signViaDashboard(ctx, walletID, messageHex, orgID, curve, protocol)
 	}
 
 	// Legacy path: ${APIURL}/sign — kept for in-process mocks and any
@@ -669,14 +691,21 @@ func (c *Client) SignForWalletOnCurveWithOrg(ctx context.Context, walletID, mess
 		return nil, &MPCError{Op: "sign", Message: "neither APIURL nor DashboardURL configured"}
 	}
 
-	body, err := json.Marshal(map[string]string{
+	legacyBody := map[string]string{
 		"org_id":    orgID,
 		"wallet_id": walletID,
 		"message":   messageHex,
 		// curve is forwarded so legacy mocks can branch on it. Production
 		// runs through the dashboard path above.
 		"curve": string(curve),
-	})
+	}
+	// Same opt-in semantic as the dashboard path: omit "protocol" when
+	// ProtocolDefault so legacy mocks that pre-date the enum keep
+	// receiving the exact body shape they were written against.
+	if protocol != ProtocolDefault {
+		legacyBody["protocol"] = string(protocol)
+	}
+	body, err := json.Marshal(legacyBody)
 	if err != nil {
 		return nil, fmt.Errorf("mchain: marshal sign body: %w", err)
 	}
