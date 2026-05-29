@@ -27,6 +27,7 @@ import {
 import { getConfig } from '../../config'
 import { type Asset } from '../lib/assets'
 import { type Chain, findChain } from '../lib/chains'
+import { useSolanaSend } from '../lib/wallet-adapters'
 import {
   BridgeApiError,
   createSwap,
@@ -177,6 +178,12 @@ export function useTransfers(): TransferState {
   const { sendTransactionAsync } = useSendTransaction()
   const { switchChainAsync } = useSwitchChain()
   const { writeContractAsync } = useWriteContract()
+  // Solana auto-deposit hook. When the source chain is family='svm' and
+  // the user has Phantom (or any Wallet Standard-compatible Solana
+  // wallet) connected, this builds + sends a SystemProgram.transfer to
+  // the MPC deposit address. Stays a no-op for non-svm sources — see
+  // tryAutoDeposit for the family branch.
+  const { sendSolAsync } = useSolanaSend()
   const { chains, assets } = useNetworks()
 
   const [transfers, setTransfers] = useState<Transfer[]>([])
@@ -495,6 +502,7 @@ export function useTransfers(): TransferState {
           switchChainAsync,
           sendTransactionAsync,
           writeContractAsync,
+          sendSolAsync,
         })
         if (dep && !dep.ok) {
           // Local 'failed' is the source of truth here — server-side
@@ -527,6 +535,7 @@ export function useTransfers(): TransferState {
       switchChainAsync,
       sendTransactionAsync,
       writeContractAsync,
+      sendSolAsync,
     ],
   )
 
@@ -583,22 +592,24 @@ type AutoDepositResult =
   | { ok: false; error: string }
 
 /**
- * EVM auto-deposit. Pops the user's wallet to either:
- *   - sendTransaction (native: ETH / LUX / BNB / etc.), or
- *   - writeContract (ERC-20: USDC / USDT / DAI / etc.)
+ * Auto-deposit dispatcher. Pops the user's wallet so the deposit
+ * confirms with one click instead of a copy-paste address.
  *
- * so the user can confirm the deposit with one click instead of
- * copy-pasting the address into a separate wallet.
+ * Family routing:
+ *   - 'evm' / 'lux' → wagmi sendTransaction (native) or writeContract
+ *     (ERC-20). Lux is wagmi-flavoured because the wallet leg is EVM
+ *     even though the chain family is tagged separately.
+ *   - 'svm' → @solana/wallet-adapter sendTransaction (Phantom + any
+ *     other Wallet Standard wallet). SPL tokens not yet wired —
+ *     fromAsset.contractAddress set on a SOL chain returns null.
+ *   - other (btc / ton / xrp / cardano) → null. Those families don't
+ *     have a wagmi-equivalent in this codebase yet, so the user
+ *     copy-pastes the deposit address into the wallet themselves.
  *
- * Routing:
- *   - fromAsset.contractAddress set & matches the native symbol mapping
- *     for the chain → native send (some registries label a chain's
- *     native asset with the wrapped contract; we treat that as native).
- *   - fromAsset.contractAddress set → ERC-20 transfer().
- *   - else → native send.
- *
- * Non-EVM sources (BTC / SOL / TON / XRP) return null — the manual
- * deposit-address path in TransferStatus handles those.
+ * Null is "didn't attempt" — the manual-deposit fallback in
+ * TransferStatus picks up. {ok:false} is "tried and the user
+ * rejected" — the caller marks the transfer 'failed' so the UI
+ * doesn't spin until the SPA-side timer fires.
  */
 async function tryAutoDeposit(args: {
   swap: ServerSwap
@@ -618,17 +629,40 @@ async function tryAutoDeposit(args: {
     args: readonly [`0x${string}`, bigint]
     chainId?: number
   }) => Promise<`0x${string}`>
+  sendSolAsync: (args: { to: string; sol: number }) => Promise<string>
 }): Promise<AutoDepositResult> {
   const {
     swap, fromChain, fromAsset, inAmount,
-    switchChainAsync, sendTransactionAsync, writeContractAsync,
+    switchChainAsync, sendTransactionAsync, writeContractAsync, sendSolAsync,
   } = args
 
-  // Lux chains are EVM-compatible (Avalanche C-Chain fork) — the user wallet
-  // leg uses the same wagmi sendTransaction / writeContract path. Both
-  // families share the deposit-tx flow; only purely-non-EVM sources (svm,
-  // btc, ton, xrp) bail out to manual deposit since the user wallet can't
-  // sign those.
+  // Solana branch — SOL-source swaps. Pop Phantom / any Wallet Standard
+  // wallet with SystemProgram.transfer to the base58 deposit address.
+  // SPL tokens are out of scope: the assembler / signing driver only
+  // handle native SOL today (see internal/txassembler/solana.go's
+  // explicit reject). If the asset has a contract, fall through to null
+  // so the user lands on manual deposit instead of getting a wrong-tx
+  // popup.
+  if (fromChain.family === 'svm') {
+    if (fromAsset.contractAddress) return null
+    const onchainAddr = extractDepositAddress(swap.deposit_address)
+    if (!onchainAddr) return null
+    // Reject Solana addresses that wouldn't parse as base58. Strict-er
+    // than necessary (PublicKey.fromBase58 does its own validation) but
+    // gives a clearer error than "Invalid public key input".
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(onchainAddr)) return null
+    try {
+      const sig = await sendSolAsync({ to: onchainAddr, sol: inAmount })
+      return { ok: true, hash: sig }
+    } catch (err) {
+      return { ok: false, error: humanizeWalletError(err, 'Wallet rejected') }
+    }
+  }
+
+  // EVM / Lux branch — Lux's wallet leg is EVM-compatible (Avalanche
+  // C-Chain fork), so the same wagmi sendTransaction / writeContract
+  // path works. Other non-EVM families (btc / ton / xrp / cardano) bail
+  // to manual deposit since the user wallet can't sign those here.
   if (fromChain.family !== 'evm' && fromChain.family !== 'lux') return null
   if (!fromChain.evmChainId) return null
 

@@ -25,6 +25,20 @@ vi.mock('wagmi', () => ({
   useWriteContract: () => ({ writeContractAsync: wagmiMocks.writeContractAsync }),
 }))
 
+// useSolanaSend reads from @solana/wallet-adapter-react's WalletContext,
+// which logs a noisy console.error on every render when no WalletProvider
+// is mounted. The hook itself never crashes (the default context returns
+// null), but the noise drowns out real test failures. Tests don't
+// exercise SOL-source auto-deposit; mirror the wagmi mock pattern and
+// hand back a noop sender. Real Sol→Lux flows are covered by the
+// integration story (NonEVMProviders mounts the real provider).
+vi.mock('../app/lib/wallet-adapters', () => ({
+  useSolanaSend: () => ({
+    sendSolAsync: () => Promise.reject(new Error('useSolanaSend mocked in test')),
+    ready: false,
+  }),
+}))
+
 // Stub useNetworks to return the bundled static defaults so the test's
 // fetch matcher only sees /api/swaps + /api/swaps/:id (not the
 // /api/networks call useNetworks would otherwise fire on mount).
