@@ -64,11 +64,16 @@ var rpcURLs = map[string]string{
 	"ZORA_MAINNET":     "https://rpc.zora.energy",
 	"BLAST_MAINNET":    "https://rpc.blast.io",
 	"LINEA_MAINNET":    "https://rpc.linea.build",
-	// Non-EVM are intentionally absent — they need chain-specific
-	// broadcast handlers (Bitcoin REST API, Solana JSON-RPC with a
-	// different method name, TON Center push endpoint, etc.). Adding
-	// any one is a separate impl in this file plus a switch case in
-	// Broadcast.
+	// Solana — published JSON-RPC endpoints. Devnet/testnet defaults
+	// land on the official faucet-funded clusters; mainnet defaults
+	// to publicnode (api.mainnet-beta.solana.com returns 403 to many
+	// origins). Operators override via RPCURLOverrides for higher
+	// rate limits (Helius, QuickNode, Triton).
+	"SOLANA_MAINNET": "https://solana-rpc.publicnode.com",
+	"SOLANA_DEVNET":  "https://api.devnet.solana.com",
+	"SOLANA_TESTNET": "https://api.testnet.solana.com",
+	// BTC / TON / XRP / DOT still TODO — each needs a chain-specific
+	// broadcast handler (Bitcoin REST API, TON Center push, etc.).
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -83,8 +88,8 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, SOL, TON, XRP, DOT).
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (only EVM today)")
+// isn't implemented yet (BTC, TON, XRP, DOT). Solana is implemented.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (EVM + Solana today)")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -175,18 +180,23 @@ type BroadcastResult struct {
 // Broadcast pushes a signed, raw destination-chain transaction to the
 // network's RPC and returns the transaction hash on success.
 //
-// For EVM, rawTxHex must be the 0x-prefixed RLP-encoded signed tx
-// (i.e. the value you'd pass to `eth_sendRawTransaction`).
+// Wire format of `rawTx` depends on the network family:
+//   - EVM: 0x-prefixed RLP-encoded signed tx (eth_sendRawTransaction).
+//   - Solana: base58-encoded signed legacy tx (sendTransaction).
+//
+// The caller doesn't need to special-case the prefix — the assembler
+// produces the right format for the destination family, and this
+// function dispatches accordingly.
 //
 // Errors:
 //   - ErrUnsupportedNetwork           network not in the table / overrides.
-//   - ErrFamilyNotImplemented         BTC/SOL/TON/XRP/DOT — TODO.
-//   - ErrEmptyRawTx                   rawTxHex == "".
+//   - ErrFamilyNotImplemented         BTC/TON/XRP/DOT — TODO.
+//   - ErrEmptyRawTx                   rawTx == "".
 //   - *RPCError                       upstream returned a JSON-RPC error
 //                                     or non-2xx HTTP.
 //   - context.Canceled/DeadlineExceeded on caller or per-call timeout.
-func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*BroadcastResult, error) {
-	if rawTxHex == "" {
+func (c *Client) Broadcast(ctx context.Context, network, rawTx string) (*BroadcastResult, error) {
+	if rawTx == "" {
 		return nil, ErrEmptyRawTx
 	}
 	url := c.rpcURL(network)
@@ -196,11 +206,12 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 
 	// Family dispatch. We use mchain.AddressTypeFor as the canonical
 	// network→family mapping (it's already the project's source of
-	// truth for which family a network belongs to). For broadcast,
-	// only AddressTypeETH is implemented today.
+	// truth for which family a network belongs to).
 	switch mchain.AddressTypeFor(network) {
 	case mchain.AddressTypeETH:
-		return c.broadcastEVM(ctx, url, rawTxHex)
+		return c.broadcastEVM(ctx, url, rawTx)
+	case mchain.AddressTypeSOL:
+		return c.broadcastSolana(ctx, url, rawTx)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
