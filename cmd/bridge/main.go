@@ -565,6 +565,9 @@ func main() {
 	}
 	api := NewAPI(cfg, *backend, bchainClient, depositKeygenClient, depCheckClient, swapStore, quoteEngine)
 	api.SetProfile(profile)
+	// MPC pool observable from /metrics so operators can confirm
+	// --mpc-private-url actually applied after a config push.
+	api.SetMPCPool(mchainPool)
 
 	// Per-destination-network release wallets. One MPC wallet per
 	// destination chain, minted lazily on first need and reused across
@@ -616,6 +619,7 @@ func main() {
 	watcherCtx, watcherCancel := context.WithCancel(context.Background())
 	if !*disableDepositWatcher && depCheckClient != nil {
 		watcher = NewDepositWatcher(swapStore, depCheckClient, *depositWatcherInterval, logger)
+		api.SetDepositWatcher(watcher)
 		go func() {
 			_ = watcher.Run(watcherCtx)
 		}()
@@ -697,6 +701,7 @@ func main() {
 		if cosignerDisp != nil {
 			signer.SetCosignerDispatcher(cosignerDisp)
 		}
+		api.SetSigningDriver(signer)
 
 		go func() {
 			_ = signer.Run(signerCtx)
@@ -731,6 +736,7 @@ func main() {
 	bcastCtx, bcastCancel := context.WithCancel(context.Background())
 	if !*disableBroadcastDriver {
 		bcastDriver = NewBroadcastDriver(swapStore, bcastClient, *broadcastInterval, logger)
+		api.SetBroadcastDriver(bcastDriver)
 		go func() {
 			_ = bcastDriver.Run(bcastCtx)
 		}()
@@ -769,6 +775,7 @@ func main() {
 		)
 		refundDriver.SetMaxRefundAttempts(*maxRefundAttempts)
 		refundDriver.SetOrphanRefundingAfter(*orphanRefundingAfter)
+		api.SetRefundDriver(refundDriver)
 		go func() {
 			_ = refundDriver.Run(refundCtx)
 		}()
