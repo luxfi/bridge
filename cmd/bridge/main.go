@@ -50,6 +50,7 @@ import (
 	"github.com/luxfi/bridge/internal/cosigners"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/luxfi/bridge/internal/secrets"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
@@ -164,9 +165,24 @@ func parseRPCOverrides(raw string) (map[string]string, error) {
 // token + empty identity file returns "" (works only against
 // unauthenticated dev clusters). Errors only on file-read failure or
 // malformed identity JSON.
+//
+// The token value passes through internal/secrets.Resolver so operators
+// can supply it via any registered scheme:
+//
+//	--mpc-token=literal:abc123              (back-compat for bare values)
+//	--mpc-token=env:BRIDGE_MPC_TOKEN_SECRET
+//	--mpc-token=file:/var/run/secrets/mpc-token
+//	--mpc-token=kms:aws:cipher:<base64>     (when AWS KMS provider registered)
+//
+// Unprefixed values are treated as literal so every existing deploy
+// keeps working unchanged.
 func resolveMPCToken(token, identityFile, label string, logger luxlog.Logger) (string, error) {
 	if token != "" {
-		return token, nil
+		resolved, err := secrets.Default().Resolve(context.Background(), token)
+		if err != nil {
+			return "", fmt.Errorf("resolve %s mpc token: %w", label, err)
+		}
+		return resolved, nil
 	}
 	if identityFile == "" {
 		return "", nil
