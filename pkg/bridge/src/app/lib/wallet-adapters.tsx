@@ -32,7 +32,13 @@ import {
 } from '@solana/wallet-adapter-react'
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
 import type { Adapter } from '@solana/wallet-adapter-base'
-import { PublicKey, type Connection } from '@solana/web3.js'
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  type Connection,
+} from '@solana/web3.js'
 import { getWallets as getStandardWallets } from '@wallet-standard/app'
 import type { Wallet as StandardWallet } from '@wallet-standard/base'
 import {
@@ -165,6 +171,15 @@ interface PhantomProvider {
   disconnect: () => Promise<void>
   on?: (event: string, cb: (...args: unknown[]) => void) => void
   off?: (event: string, cb: (...args: unknown[]) => void) => void
+  // signAndSendTransaction is Phantom's single-call sign+broadcast. We
+  // use it on the "phantom-global" connect path (window.phantom.solana)
+  // — the @solana/wallet-adapter-react SDK path uses wallet.sendTransaction
+  // instead. Returns either {signature: string} (modern Phantom) or a
+  // raw string signature (older builds); the caller normalises both.
+  signAndSendTransaction?: (
+    tx: Transaction,
+    opts?: unknown,
+  ) => Promise<{ signature: string } | string>
 }
 
 function getPhantom(): PhantomProvider | null {
@@ -579,6 +594,135 @@ function useWalletForSVM(): WalletForFamily {
 
 async function readSolanaBalance(connection: Connection, pubkey: PublicKey): Promise<number> {
   return connection.getBalance(pubkey)
+}
+
+// =============================================================================
+// useSolanaSend — auto-deposit helper for SOL-source swaps
+// =============================================================================
+//
+// Pops the user's connected Solana wallet to sign and send a
+// SystemProgram.transfer to the MPC deposit address. Mirrors the role
+// of wagmi's sendTransactionAsync in the EVM auto-deposit path.
+//
+// Routes through whichever connect path the user is on:
+//   - SDK adapter (path 3 in useWalletForSVM): wallet.sendTransaction
+//   - Phantom global (path 1): provider.signAndSendTransaction
+//
+// Path 2 (Wallet Standard direct) returns through the SDK adapter once
+// the user is connected, so the SDK branch covers it.
+//
+// Returns the base58 transaction signature (Solana's canonical tx id).
+// Throws when no wallet is connected, when the address is invalid, or
+// when the user rejects the popup.
+export function useSolanaSend(): {
+  sendSolAsync: (args: { to: string; sol: number }) => Promise<string>
+  ready: boolean
+} {
+  const conn = useConnection()
+  const sol = useSolanaWalletInternal()
+
+  // Snapshot at hook call so the returned function captures stable
+  // refs. React's reconciler re-runs the hook when sol.publicKey
+  // changes, so this stays current without explicit subscriptions.
+  //
+  // The @solana/wallet-adapter-react hook reads through getters that
+  // throw when no WalletProvider ancestor is mounted (the case for
+  // every test rig that doesn't include NonEVMProviders, plus any
+  // bridge embed that disables non-EVM families). We tolerate that
+  // by treating SDK state as absent — sendSolAsync will fall through
+  // to the phantom-global path or error out clearly when neither is
+  // available, instead of crashing the host component on mount.
+  let sdkPublicKey: PublicKey | null = null
+  let sdkSend: ReturnType<typeof useSolanaWalletInternal>['sendTransaction'] | undefined
+  let sdkConnected = false
+  try {
+    sdkPublicKey = sol.publicKey
+    sdkSend = sol.sendTransaction
+    sdkConnected = sol.connected
+  } catch {
+    // No WalletProvider in scope — leave SDK refs unset.
+  }
+
+  const sendSolAsync = useCallback(
+    async (args: { to: string; sol: number }): Promise<string> => {
+      if (!conn.connection) {
+        throw new Error('Solana RPC connection not ready')
+      }
+      if (!Number.isFinite(args.sol) || args.sol <= 0) {
+        throw new Error(`Invalid SOL amount: ${args.sol}`)
+      }
+
+      // Resolve the sender pubkey from whichever path is live.
+      const phantom = getPhantom()
+      const fromBase58 =
+        sdkPublicKey?.toBase58() ?? phantom?.publicKey?.toString() ?? null
+      if (!fromBase58) {
+        throw new Error('No Solana wallet connected')
+      }
+
+      let fromPubkey: PublicKey
+      let toPubkey: PublicKey
+      try {
+        fromPubkey = new PublicKey(fromBase58)
+        toPubkey = new PublicKey(args.to)
+      } catch (err) {
+        throw new Error(
+          `Invalid Solana address: ${err instanceof Error ? err.message : String(err)}`,
+        )
+      }
+
+      // Round to whole lamports — Solana doesn't support fractional
+      // lamports. parseFloat * 1e9 can yield non-integers from imprecise
+      // user input ("0.01" → 9999999.999... in some flows), so coerce
+      // explicitly. Math.round biases tie-break toward "send slightly
+      // more" rather than "deposit short" — strictly better for the
+      // bridge's deposit-confirm threshold.
+      const lamports = Math.round(args.sol * LAMPORTS_PER_SOL)
+      if (lamports <= 0) {
+        throw new Error(`SOL amount rounds to 0 lamports: ${args.sol}`)
+      }
+
+      const { blockhash, lastValidBlockHeight } =
+        await conn.connection.getLatestBlockhash()
+
+      const tx = new Transaction({
+        feePayer: fromPubkey,
+        blockhash,
+        lastValidBlockHeight,
+      })
+      tx.add(
+        SystemProgram.transfer({
+          fromPubkey,
+          toPubkey,
+          lamports,
+        }),
+      )
+
+      // Path A — SDK adapter is fully wired (path-3 connect): use its
+      // sendTransaction, which handles signing + broadcast against the
+      // SDK's Connection.
+      if (sdkConnected && sdkSend) {
+        return sdkSend(tx, conn.connection)
+      }
+
+      // Path B — phantom-global connect: call the provider directly.
+      if (phantom?.signAndSendTransaction) {
+        const result = await phantom.signAndSendTransaction(tx)
+        if (typeof result === 'string') return result
+        if (result && typeof result.signature === 'string') return result.signature
+        throw new Error('Phantom signAndSendTransaction returned no signature')
+      }
+
+      throw new Error(
+        'No Solana send path available — connect a wallet that supports sending transactions',
+      )
+    },
+    [conn.connection, sdkConnected, sdkPublicKey, sdkSend],
+  )
+
+  const ready = Boolean(sdkPublicKey || getPhantom()?.publicKey)
+
+  return { sendSolAsync, ready }
 }
 
 // =============================================================================

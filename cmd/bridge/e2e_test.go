@@ -17,6 +17,8 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -718,5 +720,284 @@ func TestE2E_LuxToSol_NoProvider_FallsBackToRefund(t *testing.T) {
 	}
 	if !strings.Contains(strings.ToLower(sw.LastError), "solana") {
 		t.Errorf("LastError = %q, expected mention of solana", sw.LastError)
+	}
+}
+
+// =============================================================================
+// Solana → Lux cross-family happy path
+// =============================================================================
+//
+// Sol→Lux is the mirror of Lux→Sol but exercises completely different
+// wires:
+//
+//   - The source deposit wallet is a base58 Solana ed25519 pubkey
+//     (mchain.KeygenForDeposit("SOLANA_DEVNET") → pickAddress reads
+//     sol_address). The keygen stub must populate that field — the
+//     existing newMchainKeygenStub only fills eth_address, so this
+//     family needs its own stub.
+//   - The source deposit watcher polls SOLANA_DEVNET (the fakeChecker
+//     dispatches on (network, address) string keys, so the family
+//     dispatch in *real* depositcheck.Client.Check is not exercised
+//     here — that path has its own unit tests).
+//   - The signing leg targets LUX_TESTNET, an EVM destination — so
+//     PreSignSolana is NOT touched; the existing EVM PreSign / Finalize
+//     path runs, producing a 0x-hex raw tx.
+//   - The destination broadcast is on LUX_TESTNET — same EVM
+//     eth_sendRawTransaction shape as the long-standing happy-path
+//     test.
+//
+// What this test proves vs. what other tests already prove:
+//   - existing TestE2E_HappyPath: ETH→LUX (EVM source, EVM dest)
+//   - existing TestE2E_HappyPath_LuxToSol: LUX→SOL (EVM source, SOL dest)
+//   - THIS test: SOL→LUX (SOL source, EVM dest) — closes the matrix.
+
+// newKeygenStubClientSol returns a *mchain.Client whose /keygen
+// endpoint serves a Solana-shaped response: sol_address is the base58
+// pubkey, eth_address is also populated so the same stub could be
+// reused by an ETH-side keygen (not exercised here, but harmless).
+// The /sign endpoint is unused for Sol→Lux's source side — the signing
+// leg signs FROM the release wallet, which lives on the LUX EVM side
+// and is satisfied by the fakeSigner in the rig.
+func newKeygenStubClientSol(t *testing.T, walletID, solAddr string) *mchain.Client {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/keygen") {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"wallet_id":   walletID,
+				"address":     solAddr,
+				"sol_address": solAddr,
+				"eth_address": "0xdeadbeef00000000000000000000000000000099",
+				"result_type": "success",
+			})
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(srv.Close)
+	return &mchain.Client{APIURL: srv.URL, OrgID: "e2e", Timeout: 2 * time.Second}
+}
+
+// newE2ERigSolToLux builds the e2e rig with source=SOLANA_DEVNET and
+// destination=LUX_TESTNET. Compared to newE2ERigLuxToSol, the families
+// are swapped:
+//
+//   - The deposit wallet is base58 (Solana ed25519 pubkey).
+//   - The release wallet is hex (Lux EVM).
+//   - No Solana provider is wired on the signing driver — the
+//     destination is EVM, so PreSignSolana is never called.
+//
+// The rest of the pipeline composition (drivers, store, API) is
+// identical to the other Solana-side rig, which is the point of the
+// test: adding a non-EVM source is a configuration change, not a
+// state-machine change.
+func newE2ERigSolToLux(t *testing.T) *e2eRig {
+	t.Helper()
+
+	cfg, _ := LoadConfig("")
+	store := NewInMemoryStore()
+	engine := &QuoteEngine{Feed: NewStaticPriceFeed(defaultPrices())}
+
+	depositWalletID := "deposit-wallet-sol-to-lux"
+	// Reuse the e2e Solana fixture pubkey — any valid base58 32-byte
+	// payload works. The watcher reads swap.DepositAddress directly,
+	// so the keygen stub MUST return this same string in sol_address.
+	depositAddr := e2eSolanaRecipientAddr
+	releaseWalletID := "release-wallet-LUX_TESTNET"
+	releaseAddr := "0xcafebabe00000000000000000000000000000002"
+
+	relStore := newStubReleaseStore()
+	relStore.set("LUX_TESTNET", releaseWalletID, releaseAddr)
+
+	mc := newKeygenStubClientSol(t, depositWalletID, depositAddr)
+
+	api := NewAPI(cfg, "", nil, mc, nil, store, engine)
+	api.SetReleaseStore(relStore)
+
+	app := zip.New(zip.Config{AppName: "bridge-e2e-sol-to-lux", DisableStartupMessage: true})
+	app.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(app)
+
+	checker := newFakeChecker()
+	mpcFake := newFakeSigner()
+	bcastFake := newFakeBroadcaster()
+	asmProv := &txassembler.StaticProvider{
+		Nonces:   map[string]uint64{},
+		GasPrice: map[string]*big.Int{},
+	}
+	asm := txassembler.New(asmProv)
+	asm.SetNetwork("LUX_TESTNET", txassembler.PerNetwork{
+		ChainID:            big.NewInt(96368),
+		NativeDecimals:     18,
+		DefaultGasPriceWei: big.NewInt(1_000_000_000),
+	})
+
+	watcher := NewDepositWatcher(store, checker, time.Hour, nil)
+	signer := NewSigningDriver(store, mpcFake, time.Hour, nil)
+	signer.SetAssembler(asm)
+	// No SetSolanaProvider — destination is EVM, signer dispatches to
+	// the EVM PreSign branch. If it accidentally tried Solana the
+	// driver would error on nil provider.
+	bcastDrv := NewBroadcastDriver(store, bcastFake, time.Hour, nil)
+	refundDr := NewRefundDriver(store, mpcFake, bcastFake, asm, time.Hour, time.Second, nil, nil)
+
+	api.SetDepositWatcher(watcher)
+	api.SetSigningDriver(signer)
+	api.SetBroadcastDriver(bcastDrv)
+	api.SetRefundDriver(refundDr)
+
+	return &e2eRig{
+		t: t, app: app, api: api, store: store,
+		watcher: watcher, signer: signer, bcastDrv: bcastDrv, refundDr: refundDr,
+		checker: checker, mpc: mpcFake, bcast: bcastFake, asmProv: asmProv, relStore: relStore,
+		depositWalletID: depositWalletID,
+		depositAddr:     depositAddr,
+		releaseWalletID: releaseWalletID,
+		releaseAddr:     releaseAddr,
+	}
+}
+
+// createSwapSolToLux fires a swap-create request with SOL source +
+// LUX destination on the rig's API. Returns the swap ID.
+//
+// `sender` is a base58 Solana address (the user's Phantom wallet);
+// `destination_address` is hex EVM (the user's MetaMask). The bridge
+// stores both verbatim — the SDK is responsible for client-side
+// address-format validation.
+func (r *e2eRig) createSwapSolToLux() string {
+	r.t.Helper()
+	body, _ := json.Marshal(map[string]any{
+		"source_network":      "SOLANA_DEVNET",
+		"source_asset":        "SOL",
+		"destination_network": "LUX_TESTNET",
+		"destination_asset":   "LUX",
+		"destination_address": "0x1111111111111111111111111111111111111111",
+		"sender":              e2eSolanaRecipientAddr,
+		"amount":              0.01, // 0.01 SOL → ~0.60 LUX at defaultPrices ($150 / $2.50)
+		"use_deposit_address": true,
+	})
+	status, respBody := fireRequest(r.t, r.app, "POST", "/v1/bridge/swaps", body)
+	if status != 200 {
+		r.t.Fatalf("create sol→lux swap: status=%d body=%s", status, respBody)
+	}
+	var resp struct {
+		Data struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(respBody, &resp); err != nil {
+		r.t.Fatalf("decode create sol→lux: %v body=%s", err, respBody)
+	}
+	if resp.Data.ID == "" {
+		r.t.Fatalf("create sol→lux response missing id: %s", respBody)
+	}
+	return resp.Data.ID
+}
+
+// TestE2E_HappyPath_SolToLux walks a SOL→LUX swap through the full
+// pipeline and locks in:
+//
+//   - Swap creation mints an MPC deposit wallet on SOLANA_DEVNET
+//     (base58 pubkey via sol_address) AND resolves the LUX_TESTNET
+//     release wallet (hex EVM).
+//   - The deposit watcher advances on Solana deposit detection
+//     (in production: depositcheck.checkSOL via getBalance; here:
+//     fakeChecker keyed by SOLANA_DEVNET + base58 address).
+//   - The signing driver dispatches on DESTINATION family — since
+//     LUX_TESTNET is EVM, the EVM PreSign / Finalize path runs even
+//     though the source is Solana. This is the central invariant:
+//     source family does NOT influence which signing branch runs.
+//   - DestRawTx is 0x-prefixed EVM hex (NOT base58) — regression guard
+//     against the driver accidentally routing a SOL-source swap into
+//     PreSignSolana because of misread fields.
+//   - DestTxHash is a 0x-prefixed EVM tx hash.
+func TestE2E_HappyPath_SolToLux(t *testing.T) {
+	rig := newE2ERigSolToLux(t)
+	swapID := rig.createSwapSolToLux()
+
+	// Initial state — deposit address must be the base58 Solana pubkey,
+	// release address must be the hex EVM address. Catches misrouting
+	// bugs where the rig accidentally swapped the two.
+	sw := rig.getSwap(swapID)
+	if sw.Status != SwapStatusUserDepositPending {
+		t.Fatalf("after create: status = %q, want user_deposit_pending", sw.Status)
+	}
+	if sw.ReleaseAddress != rig.releaseAddr {
+		t.Errorf("after create: ReleaseAddress = %q, want %q (hex EVM)",
+			sw.ReleaseAddress, rig.releaseAddr)
+	}
+	if sw.DepositAddress == "" {
+		t.Fatal("after create: DepositAddress empty — MPC keygen for SOLANA didn't fire")
+	}
+	// DepositAddress envelope is "wallet_name###base58_address" — peel
+	// it and verify it's NOT hex. Catches the bug where the keygen stub
+	// accidentally returns eth_address for a SOL keygen.
+	bareDeposit := extractDepositAddress(sw.DepositAddress)
+	if strings.HasPrefix(bareDeposit, "0x") {
+		t.Errorf("DepositAddress looks like EVM hex (got %q), expected base58", bareDeposit)
+	}
+	if bareDeposit != rig.depositAddr {
+		t.Errorf("DepositAddress = %q, want %q", bareDeposit, rig.depositAddr)
+	}
+
+	// Stage 1 — Solana deposit detected. The fakeChecker is keyed by
+	// (network, address) and ignores the asset; in production this
+	// would be depositcheck.checkSOL polling getBalance via Solana RPC.
+	rig.checker.setVerdict("SOLANA_DEVNET", rig.depositAddr, true)
+	rig.watcher.Tick(t.Context())
+	sw = rig.getSwap(swapID)
+	if sw.Status != SwapStatusBridgeTransferPending {
+		t.Fatalf("after watcher tick: status = %q, want bridge_transfer_pending", sw.Status)
+	}
+
+	// Stage 2 — signing driver dispatches on destination family.
+	// For LUX_TESTNET, signer calls PreSign (EVM) → returns ECDSA
+	// R+S+V hex sig. Use the canonical 65-byte concat that the
+	// happy-path test uses.
+	rig.mpc.ok(rig.releaseWalletID,
+		"0x"+strings.Repeat("01", 32)+strings.Repeat("02", 32)+"1b",
+		"sess-sol-to-lux-001")
+	rig.signer.Tick(t.Context())
+	sw = rig.getSwap(swapID)
+	if sw.Status != SwapStatusBroadcasting {
+		t.Fatalf("after signer tick: status = %q, want broadcasting (LastError=%q)",
+			sw.Status, sw.LastError)
+	}
+	if sw.DestRawTx == "" {
+		t.Fatal("after signer tick: DestRawTx empty — Finalize didn't run")
+	}
+	// DestRawTx for EVM destinations is 0x-prefixed hex. Regression
+	// guard: a misrouted Sol-source swap would have produced base58
+	// instead.
+	if !strings.HasPrefix(sw.DestRawTx, "0x") {
+		t.Errorf("DestRawTx = %q, expected 0x-prefixed EVM hex", sw.DestRawTx)
+	}
+
+	// Stage 3 — broadcast driver on LUX_TESTNET.
+	rig.bcast.okFor("LUX_TESTNET", sw.DestRawTx, "0xluxfinaltxhash")
+	rig.bcastDrv.Tick(t.Context())
+	sw = rig.getSwap(swapID)
+	if sw.Status != SwapStatusCompleted {
+		t.Fatalf("after broadcast tick: status = %q, want completed (LastError=%q)",
+			sw.Status, sw.LastError)
+	}
+	if sw.DestTxHash != "0xluxfinaltxhash" {
+		t.Errorf("DestTxHash = %q, want 0xluxfinaltxhash (EVM hash, not base58)",
+			sw.DestTxHash)
+	}
+
+	// Metrics — Sol→Lux increments the same counters as any other
+	// completed swap. The per-family branches are observably
+	// transparent to the metrics layer.
+	body := rig.scrape()
+	for _, want := range []string{
+		"bridge_deposit_watcher_advances_total 1",
+		"bridge_signing_successes_total 1",
+		"bridge_broadcast_successes_total 1",
+		`bridge_swaps_by_status{status="completed"} 1`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("metrics missing %q", want)
+		}
 	}
 }
