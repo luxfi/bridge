@@ -654,6 +654,7 @@ func (a *API) metrics(c *zip.Ctx) error {
 	writeCounter(&b, "bridge_deposit_watcher_advances_total", "Swaps advanced from user_deposit_pending to bridge_transfer_pending by a confirmed deposit.", wsStats.Advances)
 	writeCounter(&b, "bridge_deposit_watcher_check_errors_total", "Errors querying source-chain RPC for deposit balance.", wsStats.CheckErrors)
 	writeCounter(&b, "bridge_deposit_watcher_list_errors_total", "Errors listing pending-deposit swaps.", wsStats.ListErrors)
+	writeCounter(&b, "bridge_deposit_watcher_expired_total", "Swaps auto-cancelled from user_deposit_pending because the create-time deposit address was never funded within --deposit-expire-after. Closes the last hardening-matrix gap (every other pipeline stage already had a terminal escape). A sudden spike is a smell — UX regression on the deposit step or someone spamming /v1/bridge/swaps.", wsStats.Expired)
 	writeGauge(&b, "bridge_deposit_watcher_running", "1 iff the deposit watcher loop is active.", boolToGauge(a.watcherRunning))
 
 	// MPC pool — split / enabled gauges. Both are point-in-time so an

@@ -310,6 +310,8 @@ func main() {
 		"poll cadence for the deposit watcher (background loop that advances swaps from user_deposit_pending → bridge_transfer_pending). Set <= 0 to use the default 15s.")
 	disableDepositWatcher := flag.Bool("disable-deposit-watcher", false,
 		"disable the background deposit watcher entirely. Swaps will then never advance state automatically — useful for tests + manual operation.")
+	depositExpireAfter := flag.Duration("deposit-expire-after", DefaultDepositExpireAfter,
+		"max age of a user_deposit_pending swap before the deposit watcher auto-cancels it (the create-time deposit address was never funded). Default 24h. Zero disables — back-compat for legacy 'pending forever' behaviour. Closes the final hardening-matrix gap so the store can't fill up with abandoned swap intents.")
 	signingInterval := flag.Duration("signing-interval", DefaultSigningInterval,
 		"poll cadence for the MPC signing driver (background loop that drives swaps from bridge_transfer_pending through MPC signing → broadcasting).")
 	quoteMaxAge := flag.Duration("quote-max-age", 30*time.Minute,
@@ -638,12 +640,14 @@ func main() {
 	watcherCtx, watcherCancel := context.WithCancel(context.Background())
 	if !*disableDepositWatcher && depCheckClient != nil {
 		watcher = NewDepositWatcher(swapStore, depCheckClient, *depositWatcherInterval, logger)
+		watcher.SetExpireAfter(*depositExpireAfter)
 		api.SetDepositWatcher(watcher)
 		go func() {
 			_ = watcher.Run(watcherCtx)
 		}()
 		logger.Info("deposit watcher started",
 			"interval", *depositWatcherInterval,
+			"expire_after", *depositExpireAfter,
 		)
 	} else if *disableDepositWatcher {
 		logger.Info("deposit watcher disabled by --disable-deposit-watcher")
