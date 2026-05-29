@@ -166,6 +166,94 @@ type BridgeSignature struct {
 	SessionID string `json:"sessionId"`
 }
 
+// =============================================================================
+// LP-333: signer set + epoch coordination
+// =============================================================================
+//
+// LP-333 makes BridgeVM (b-chain) authoritative on which MPC nodes are in
+// the active signer set, the threshold, and epoch transitions. The
+// bridge (this binary) is a CONSUMER of this state — it does not vote
+// on rotations; it observes them and points new keygen/signing at the
+// current epoch's quorum. mpcd remains authoritative on key share
+// material itself; b-chain is the membership + epoch ledger.
+//
+// The methods land on the same JSON-RPC endpoint as bridge_getInfo (the
+// BridgeVM RPC at `${nodeUrl}/ext/bc/B/rpc`), not on ThresholdVM. They
+// are read-only — the bridge never proposes a rotation; node operators
+// do that out-of-band via BridgeVM governance.
+
+// SignerMember is one node in the active signer set.
+type SignerMember struct {
+	// NodeID is the BridgeVM node identifier (e.g. "node-0",
+	// "NodeID-7Xhw..."). Operators correlate this with their MPC
+	// cluster identity.
+	NodeID string `json:"nodeId"`
+
+	// PublicKey is the node's announced MPC verifying-key share
+	// (hex-encoded). The composition rule (Schnorr sum, BLS aggregate)
+	// is implied by the threshold protocol on the cluster — out of
+	// scope for the bridge.
+	PublicKey string `json:"publicKey"`
+
+	// Address is the chain-format address corresponding to the
+	// PublicKey on whichever family the operator cares to display.
+	// May be empty when the BridgeVM has not surfaced it.
+	Address string `json:"address,omitempty"`
+}
+
+// SignerSetInfo is the bridge_getSignerSetInfo result — a snapshot of
+// the active MPC signer set at the current epoch. Bridge consumers
+// scrape this to surface "is the quorum the one I expect?" on dashboards.
+type SignerSetInfo struct {
+	// Members is the active signer-set roster. Order is meaningful:
+	// it matches the MPC protocol's index assignment, so logs that
+	// reference "party 0", "party 1" etc. line up with this slice.
+	Members []SignerMember `json:"members"`
+
+	// Threshold is the minimum number of members that must cooperate
+	// to produce a valid signature (the "t" in t-of-n). At least 1,
+	// at most len(Members).
+	Threshold int `json:"threshold"`
+
+	// Total is the cardinality of the signer set (len(Members)).
+	// Reported separately so a caller can detect a partially-populated
+	// Members slice without recounting.
+	Total int `json:"total"`
+
+	// Epoch is the current LP-333 epoch number. Increments monotonically
+	// on every rotation. The bridge keys metrics + logs on this so an
+	// operator can correlate a sudden refund-rate spike with an epoch
+	// transition.
+	Epoch uint64 `json:"epoch"`
+
+	// SignerSetHash is a fingerprint of the (sorted) Members + Threshold,
+	// useful for fast diff-detection on the consumer side without
+	// re-comparing the full roster. Hex-encoded.
+	SignerSetHash string `json:"signerSetHash,omitempty"`
+
+	// LastRotationAt is the unix-seconds timestamp of the most recent
+	// epoch transition. Zero when never rotated (epoch 0 / genesis).
+	LastRotationAt int64 `json:"lastRotationAt,omitempty"`
+}
+
+// CurrentEpoch is the bridge_getCurrentEpoch result — the smaller
+// payload meant for high-frequency polling (think 5-second cadence).
+// SignerSetInfo is the snapshot for dashboards; CurrentEpoch is for
+// "did anything change?" checks.
+type CurrentEpoch struct {
+	// Epoch is the current epoch number; same value as
+	// SignerSetInfo.Epoch.
+	Epoch uint64 `json:"epoch"`
+
+	// SignerSetHash matches SignerSetInfo.SignerSetHash. Operators
+	// alert on this changing without an expected operator action.
+	SignerSetHash string `json:"signerSetHash,omitempty"`
+
+	// StartedAt is the unix-seconds timestamp at which the current
+	// epoch began (or 0 for genesis).
+	StartedAt int64 `json:"startedAt,omitempty"`
+}
+
 // CancelResult is the bridge_cancelRequest result.
 type CancelResult struct {
 	Success bool `json:"success"`
@@ -527,6 +615,45 @@ func (c *Client) GetMPCPublicKey(ctx context.Context) (*MPCPublicKey, error) {
 func (c *Client) GetBridgeSignature(ctx context.Context, requestID string) (*BridgeSignature, error) {
 	var out BridgeSignature
 	if err := c.bridgeCall(ctx, "bridge_getSignature", map[string]string{"requestId": requestID}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// =============================================================================
+// LP-333: signer set + epoch coordination
+// =============================================================================
+
+// GetSignerSetInfo reads the active LP-333 signer set: roster, threshold,
+// epoch, and a content hash for fast diff-detection. Operators use this
+// to confirm the bridge is pointed at the expected MPC cluster identity
+// after a rotation; on-call alerts on SignerSetHash drift between scrapes.
+//
+// Returns an *RPCError with Code -32601 when the upstream BridgeVM
+// doesn't implement LP-333 yet — callers should treat that as "b-chain
+// is not authoritative on signer set here; fall back to assumed state."
+func (c *Client) GetSignerSetInfo(ctx context.Context) (*SignerSetInfo, error) {
+	var out SignerSetInfo
+	if err := c.bridgeCall(ctx, "bridge_getSignerSetInfo", nil, &out); err != nil {
+		return nil, err
+	}
+	// Defensive: if the upstream returned Members without Total, populate
+	// it from len(Members) so consumers don't have to recount.
+	if out.Total == 0 && len(out.Members) > 0 {
+		out.Total = len(out.Members)
+	}
+	return &out, nil
+}
+
+// GetCurrentEpoch reads the current LP-333 epoch number + signer-set
+// hash. Cheap to poll — meant to drive a "did anything change?" gauge
+// without re-fetching the full roster.
+//
+// Returns an *RPCError with Code -32601 when the upstream BridgeVM
+// doesn't implement LP-333 yet. Same fallback contract as GetSignerSetInfo.
+func (c *Client) GetCurrentEpoch(ctx context.Context) (*CurrentEpoch, error) {
+	var out CurrentEpoch
+	if err := c.bridgeCall(ctx, "bridge_getCurrentEpoch", nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
