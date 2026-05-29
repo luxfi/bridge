@@ -283,7 +283,7 @@ func (c *Client) createDashboardSession(ctx context.Context, walletID, orgID str
 // compile-time default (secp256k1) — the SOL finalizer rejects the
 // resulting ECDSA-shaped signature with a clear error, so a deployment
 // mismatch surfaces immediately.
-func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, orgID string, curve Curve) (*SignResult, error) {
+func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, orgID string, curve Curve, protocol Protocol) (*SignResult, error) {
 	sessionID, err := c.EnsureDashboardSessionWithOrg(ctx, walletID, orgID)
 	if err != nil {
 		return nil, err
@@ -296,6 +296,15 @@ func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, org
 		"sessionId": sessionID,
 		"value":     "0",
 		"curve":     string(curve),
+	}
+	// Protocol hint is opt-in. Empty = the daemon picks based on curve
+	// (cggmp21 for secp256k1, frost for ed25519) — preserves backwards
+	// compatibility with every caller that pre-dates the Protocol enum.
+	// When set, the daemon routes to the named threshold-protocol stack:
+	// pulsar-m-65/87 for MLWE, corona for RLWE, etc. Older dashboards
+	// ignore the field and silently fall back to curve dispatch.
+	if protocol != ProtocolDefault {
+		body["protocol"] = string(protocol)
 	}
 	buf, _ := json.Marshal(body)
 
@@ -340,7 +349,7 @@ func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, org
 				Message:    fmt.Sprintf("HTTP 403 + session renew failed: %v", sErr),
 			}
 		}
-		return c.signViaDashboardWithSession(ctx, walletID, messageHex, newSession, curve)
+		return c.signViaDashboardWithSession(ctx, walletID, messageHex, newSession, curve, protocol)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
@@ -357,7 +366,7 @@ func (c *Client) signViaDashboard(ctx context.Context, walletID, messageHex, org
 // signViaDashboardWithSession is the inner sign call once a session ID
 // is known. Pulled out so the 403-retry path doesn't recurse through
 // EnsureDashboardSession's cache-fill side effect twice.
-func (c *Client) signViaDashboardWithSession(ctx context.Context, walletID, messageHex, sessionID string, curve Curve) (*SignResult, error) {
+func (c *Client) signViaDashboardWithSession(ctx context.Context, walletID, messageHex, sessionID string, curve Curve, protocol Protocol) (*SignResult, error) {
 	body := map[string]any{
 		"message":   strings.TrimPrefix(strings.TrimPrefix(messageHex, "0x"), "0X"),
 		"encoding":  "hex",
@@ -365,6 +374,9 @@ func (c *Client) signViaDashboardWithSession(ctx context.Context, walletID, mess
 		"sessionId": sessionID,
 		"value":     "0",
 		"curve":     string(curve),
+	}
+	if protocol != ProtocolDefault {
+		body["protocol"] = string(protocol)
 	}
 	buf, _ := json.Marshal(body)
 
