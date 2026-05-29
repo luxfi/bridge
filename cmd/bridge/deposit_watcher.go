@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -53,6 +54,14 @@ type DepositWatcher struct {
 	// slow upstream RPC can't stall the whole tick.
 	perCheckTimeout time.Duration
 
+	// expireAfter is the age (since CreatedAt) at which a
+	// user_deposit_pending swap is auto-cancelled because the user
+	// never sent the deposit. Closes the final hardening-matrix gap:
+	// every other pipeline stage has a terminal escape, but
+	// user_deposit_pending used to grow without bound. Zero ⇒ disabled
+	// (legacy "keep pending forever" behaviour, preserved for back-compat).
+	expireAfter time.Duration
+
 	// running flips to true on Run + back to false on context cancel.
 	// Exported via Running() so /health and tests can observe.
 	running atomic.Bool
@@ -63,6 +72,7 @@ type DepositWatcher struct {
 	advances      atomic.Uint64
 	checkErrors   atomic.Uint64
 	listErrors    atomic.Uint64
+	expired       atomic.Uint64
 	stopOnce      sync.Once
 	cancelRunning context.CancelFunc
 }
@@ -92,6 +102,25 @@ const DefaultWatcherInterval = 15 * time.Second
 // DefaultPerCheckTimeout caps each individual depositcheck.Check call.
 const DefaultPerCheckTimeout = 8 * time.Second
 
+// DefaultDepositExpireAfter is the cap on how long a swap can sit in
+// user_deposit_pending before the watcher auto-cancels it. 24h is
+// generous enough to never accidentally cancel a real user (even
+// slow-to-act humans send deposits in minutes-to-hours) while bounding
+// the store growth from abandoned swap intents.
+const DefaultDepositExpireAfter = 24 * time.Hour
+
+// SetExpireAfter configures the auto-cancel threshold for stale
+// user_deposit_pending swaps. After this age (since CreatedAt) a
+// swap is moved to SwapStatusCancelled with an operator-actionable
+// LastError. Zero disables (legacy: keep forever). Negative values
+// are clamped to zero.
+func (w *DepositWatcher) SetExpireAfter(d time.Duration) {
+	if d < 0 {
+		d = 0
+	}
+	w.expireAfter = d
+}
+
 // Running reports whether the watcher loop is active.
 func (w *DepositWatcher) Running() bool { return w.running.Load() }
 
@@ -104,6 +133,12 @@ type WatcherStats struct {
 	Advances    uint64 `json:"advances"`
 	CheckErrors uint64 `json:"check_errors"`
 	ListErrors  uint64 `json:"list_errors"`
+	// Expired counts user_deposit_pending swaps that were auto-
+	// cancelled because their age exceeded --deposit-expire-after.
+	// Non-zero on a healthy bridge means real users abandoned their
+	// quotes (or someone is spamming the create endpoint); a sudden
+	// spike is a smell (UX regression on the deposit step?).
+	Expired uint64 `json:"expired"`
 }
 
 // Stats snapshots the current counters. Safe for concurrent reads.
@@ -114,6 +149,7 @@ func (w *DepositWatcher) Stats() WatcherStats {
 		Advances:    w.advances.Load(),
 		CheckErrors: w.checkErrors.Load(),
 		ListErrors:  w.listErrors.Load(),
+		Expired:     w.expired.Load(),
 	}
 }
 
@@ -192,11 +228,78 @@ func (w *DepositWatcher) tick(ctx context.Context) {
 	if w.logger != nil {
 		w.logger.Debug("deposit watcher tick", "pending", len(swaps))
 	}
+	now := time.Now().UTC()
 	for _, sw := range swaps {
 		if ctx.Err() != nil {
 			return
 		}
+		// Deposit check first — a deposit that just landed should
+		// advance the swap even when it's right at the edge of
+		// expireAfter. checkOne is no-op-idempotent: if it advances,
+		// maybeExpire's status guard prevents the cancel.
 		w.checkOne(ctx, sw)
+		w.maybeExpire(ctx, sw, now)
+	}
+}
+
+// maybeExpire auto-cancels a stale user_deposit_pending swap whose
+// CreatedAt is older than expireAfter. The status-guard inside Patch
+// keeps this safe against the race where checkOne just advanced the
+// swap on the same tick — only swaps still in user_deposit_pending
+// after the guard get cancelled.
+//
+// Disabled when expireAfter == 0 (back-compat: legacy "pending forever").
+func (w *DepositWatcher) maybeExpire(ctx context.Context, sw *Swap, now time.Time) {
+	if w.expireAfter <= 0 {
+		return
+	}
+	if sw.Status != SwapStatusUserDepositPending {
+		// Already advanced (or cancelled by a prior tick) — nothing to do.
+		return
+	}
+	if sw.CreatedAt.IsZero() {
+		// Defensive: no birth timestamp ⇒ cannot compute age.
+		// Skip rather than auto-cancel something we can't reason about.
+		return
+	}
+	age := now.Sub(sw.CreatedAt)
+	if age < w.expireAfter {
+		return
+	}
+
+	patched, err := w.store.Patch(ctx, sw.ID, func(s *Swap) {
+		// Status guard inside the lock: don't expire a swap that
+		// another tick (or a concurrent admin reset) just advanced.
+		if s.Status != SwapStatusUserDepositPending {
+			return
+		}
+		s.Status = SwapStatusCancelled
+		s.LastError = fmt.Sprintf(
+			"Auto-cancelled after %s of no deposit (threshold: %s) — the create-time deposit address was never funded. Create a new quote to retry.",
+			age.Round(time.Second), w.expireAfter,
+		)
+		s.LastErrorAt = now
+	})
+	if err != nil {
+		// Store error during expiry — log but don't count it under
+		// expired/. The next tick will retry.
+		if w.logger != nil {
+			w.logger.Warn("expire swap",
+				"swap_id", sw.ID,
+				"err", err,
+			)
+		}
+		return
+	}
+	if patched != nil && patched.Status == SwapStatusCancelled {
+		w.expired.Add(1)
+		if w.logger != nil {
+			w.logger.Info("expired stale user_deposit_pending swap",
+				"swap_id", sw.ID,
+				"age", age.Round(time.Second),
+				"threshold", w.expireAfter,
+			)
+		}
 	}
 }
 
