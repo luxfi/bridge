@@ -73,11 +73,20 @@ type SigningDriver struct {
 	logger   luxlog.Logger
 
 	// Assembler, when set, replaces the placeholder buildSigningMessage
-	// with a real EVM EIP-155 tx digest and finalizes the signed raw
-	// tx into Swap.DestRawTx after the MPC produces a signature.
+	// with a real destination-chain tx digest (EVM EIP-155 sighash or
+	// Solana legacy-message bytes) and finalizes the signed raw tx
+	// into Swap.DestRawTx after the MPC produces a signature.
 	// When nil, the driver falls back to placeholder mode (signature
 	// stored but no raw tx assembled — broadcaster will skip).
 	assembler *txassembler.Assembler
+
+	// solanaProvider supplies the recent blockhash for Solana
+	// destination releases. Required when ANY swap targets a
+	// SOLANA_* network; ignored for pure EVM workloads. Implemented
+	// by *solanarpc.Client in production; tests inject a stub that
+	// returns a deterministic blockhash. Nil + Solana destination
+	// triggers a PreSign error that the rollback path catches.
+	solanaProvider txassembler.SolanaProvider
 
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
@@ -129,10 +138,18 @@ type SigningDriver struct {
 }
 
 // SetAssembler attaches a tx assembler to the driver. When set, the
-// signing driver will use real EVM EIP-155 sighashes (not placeholder
-// digests) and finalize a wire-ready raw tx into Swap.DestRawTx.
-// Optional — leaving it nil retains the v1 placeholder behavior.
+// signing driver will use real destination-chain sighashes (EVM
+// EIP-155 or Solana legacy-message bytes) and finalize a wire-ready
+// raw tx into Swap.DestRawTx. Optional — leaving it nil retains the
+// v1 placeholder behavior.
 func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler = asm }
+
+// SetSolanaProvider attaches the blockhash provider used when a swap
+// targets a SOLANA_* destination. Required for Lux→Sol (and any
+// other family→Sol) releases. EVM-only deployments can leave this
+// nil and the signing driver behaves identically to the pre-Solana
+// version.
+func (d *SigningDriver) SetSolanaProvider(p txassembler.SolanaProvider) { d.solanaProvider = p }
 
 // SetMaxQuoteAge configures the staleness guard. Swaps older than this
 // at signing time are kicked to SwapStatusRefundPending instead of
@@ -362,35 +379,93 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	}
 
 	// Compute the signing message. With an assembler attached, this is
-	// the actual destination-chain tx sighash (a real EVM EIP-155
-	// digest the destination chain will validate). Without one, fall
-	// back to the placeholder synthetic digest — useful for early
-	// integration testing but the resulting signature can't be
-	// broadcast as a real tx.
-	var msgHex string
-	var unsigned *txassembler.Unsigned
+	// the actual destination-chain tx digest:
+	//   - EVM destinations: EIP-155 sighash (32 bytes).
+	//   - Solana destinations: serialized legacy message bytes (the
+	//     full transaction message, NOT hashed — ed25519 hashes
+	//     internally as part of its signing algorithm).
+	// Without an assembler, fall back to the placeholder synthetic
+	// digest — useful for early integration testing but the resulting
+	// signature can't be broadcast as a real tx.
+	var (
+		msgHex      string
+		unsignedEVM *txassembler.Unsigned       // populated for EVM destinations
+		unsignedSol *txassembler.SolanaUnsigned // populated for Solana destinations
+	)
 	if d.assembler != nil && senderAddr != "" {
-		var aerr error
-		unsigned, aerr = d.assembler.PreSign(ctx, txassembler.SwapIntent{
-			DestinationNetwork: sw.DestinationNetwork,
-			DestinationAddress: sw.DestinationAddress,
-			Amount:             releaseAmount(sw),
-			SenderAddress:      senderAddr,
-		})
-		if aerr != nil {
+		family := mchain.AddressTypeFor(sw.DestinationNetwork)
+		switch family {
+		case mchain.AddressTypeETH:
+			u, aerr := d.assembler.PreSign(ctx, txassembler.SwapIntent{
+				DestinationNetwork: sw.DestinationNetwork,
+				DestinationAddress: sw.DestinationAddress,
+				Amount:             releaseAmount(sw),
+				SenderAddress:      senderAddr,
+			})
+			if aerr != nil {
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("tx assembler PreSign failed",
+						"swap_id", sw.ID,
+						"err", aerr,
+					)
+				}
+				d.rollbackOrFail(ctx, sw.ID, aerr,
+					"Destination RPC unreachable while building tx — retrying",
+					"PreSign")
+				return
+			}
+			unsignedEVM = u
+			msgHex = "0x" + hex.EncodeToString(u.SigHash[:])
+		case mchain.AddressTypeSOL:
+			if d.solanaProvider == nil {
+				err := fmt.Errorf("solanaProvider not configured for %s", sw.DestinationNetwork)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("Solana provider missing", "swap_id", sw.ID, "err", err)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"Solana provider not configured — retrying",
+					"PreSignSolana")
+				return
+			}
+			u, aerr := d.assembler.PreSignSolana(ctx, txassembler.SwapIntent{
+				DestinationNetwork: sw.DestinationNetwork,
+				DestinationAsset:   sw.DestinationAsset,
+				DestinationAddress: sw.DestinationAddress,
+				Amount:             releaseAmount(sw),
+				SenderAddress:      senderAddr,
+			}, d.solanaProvider)
+			if aerr != nil {
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("tx assembler PreSignSolana failed",
+						"swap_id", sw.ID,
+						"err", aerr,
+					)
+				}
+				d.rollbackOrFail(ctx, sw.ID, aerr,
+					"Solana RPC unreachable while building tx — retrying",
+					"PreSignSolana")
+				return
+			}
+			unsignedSol = u
+			// Pass the message bytes verbatim — no 0x prefix, no
+			// SHA-256 wrapper. The cluster's ed25519 signer must
+			// hash internally per the curve spec.
+			msgHex = hex.EncodeToString(u.Message)
+		default:
+			err := fmt.Errorf("tx assembly not implemented for %s family (network %s)",
+				family, sw.DestinationNetwork)
 			d.failures.Add(1)
 			if d.logger != nil {
-				d.logger.Warn("tx assembler PreSign failed",
-					"swap_id", sw.ID,
-					"err", aerr,
-				)
+				d.logger.Warn("destination family unsupported", "swap_id", sw.ID, "err", err)
 			}
-			d.rollbackOrFail(ctx, sw.ID, aerr,
-				"Destination RPC unreachable while building tx — retrying",
-				"PreSign")
+			d.rollbackOrFail(ctx, sw.ID, err,
+				"Destination chain family not implemented",
+				"family dispatch")
 			return
 		}
-		msgHex = "0x" + hex.EncodeToString(unsigned.SigHash[:])
 	} else {
 		msgHex = buildSigningMessage(sw)
 	}
@@ -415,9 +490,13 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	}
 
 	// When the assembler was used, finalize the signed raw tx so the
-	// broadcaster has something wire-ready to push.
+	// broadcaster has something wire-ready to push. Branch on whichever
+	// of the two unsigned* variables PreSign populated:
+	//   - unsignedEVM ⇒ ParseRSV the EVM r||s||v, run EVM Finalize.
+	//   - unsignedSol ⇒ hex-decode the 64-byte ed25519 sig, run FinalizeSolana.
 	var destRawTx string
-	if unsigned != nil {
+	switch {
+	case unsignedEVM != nil:
 		r, s, v, perr := txassembler.ParseRSV(res.Signature)
 		if perr != nil {
 			d.failures.Add(1)
@@ -434,11 +513,52 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			})
 			return
 		}
-		rawTx, ferr := d.assembler.Finalize(unsigned, r, s, v)
+		rawTx, ferr := d.assembler.Finalize(unsignedEVM, r, s, v)
 		if ferr != nil {
 			d.failures.Add(1)
 			if d.logger != nil {
 				d.logger.Warn("tx assembler Finalize failed",
+					"swap_id", sw.ID,
+					"err", ferr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		destRawTx = rawTx
+
+	case unsignedSol != nil:
+		// MPC cluster returns the ed25519 sig as hex (with or
+		// without "0x"). Strip the optional prefix and decode.
+		sigHex := res.Signature
+		if len(sigHex) >= 2 && (sigHex[:2] == "0x" || sigHex[:2] == "0X") {
+			sigHex = sigHex[2:]
+		}
+		sigBytes, derr := hex.DecodeString(sigHex)
+		if derr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("decode ed25519 signature failed",
+					"swap_id", sw.ID,
+					"err", derr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		rawTx, ferr := d.assembler.FinalizeSolana(unsignedSol, sigBytes)
+		if ferr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("tx assembler FinalizeSolana failed",
 					"swap_id", sw.ID,
 					"err", ferr,
 				)

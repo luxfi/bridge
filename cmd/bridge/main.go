@@ -51,6 +51,7 @@ import (
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/secrets"
+	"github.com/luxfi/bridge/internal/solanarpc"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
@@ -303,6 +304,10 @@ func main() {
 		"Upstream URL for the /api/rpc/lux-testnet same-origin proxy. Default is the public Lux testnet gateway. Empty disables the route.")
 	luxRPCTimeout := flag.Duration("lux-rpc-timeout", DefaultRPCProxyTimeout,
 		"per-request upstream timeout for the LUX RPC proxy. Default 12s — slow enough for a degraded gateway, fast enough that a hung upstream doesn't pin the browser tab's wagmi loop.")
+	solanaRPCURL := flag.String("solana-rpc-url", envOr("BRIDGE_SOLANA_RPC_URL", "https://solana-rpc.publicnode.com"),
+		"Solana RPC URL used by the signing driver to fetch a recent blockhash when assembling Lux→Sol (and any X→Sol) release txs. Default is publicnode (api.mainnet-beta.solana.com returns 403 to many origins). Override with a paid endpoint (Helius/QuickNode/Triton) for prod throughput. Empty disables Sol-family destination support — swaps to Solana fail PreSign and refund.")
+	solanaRPCTimeout := flag.Duration("solana-rpc-timeout", 15*time.Second,
+		"per-request timeout for Solana RPC calls (getLatestBlockhash + sendTransaction). 15s default mirrors the broadcast client; tune lower if your endpoint is fast and reliable.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
 		"MPC keygen service URL for the PUBLIC cluster (m-chain) — used for per-swap deposit-wallet keygen and refund signing. Required when SDK requests carry use_deposit_address=true; empty disables MPC keygen and those requests 503. Single-cluster deploys leave --mpc-private-url empty and this URL serves both roles (back-compat).")
 	mpcTimeout := flag.Duration("mpc-timeout", 120*time.Second, "per-request timeout for MPC keygen calls (matches mpc-wallet.ts)")
@@ -738,9 +743,25 @@ func main() {
 		// cluster. Single-cluster pool: Private == Public, no behaviour
 		// change for legacy deploys.
 		signer = NewSigningDriver(swapStore, mchainPool.Private, *signingInterval, logger)
-		signer.SetAssembler(asm) // produces wire-correct EVM txs
+		signer.SetAssembler(asm) // produces wire-correct EVM + Solana txs
 		signer.SetMaxQuoteAge(*quoteMaxAge)
 		signer.SetMaxSigningAttempts(*maxSigningAttempts)
+
+		// Solana provider: only attached when --solana-rpc-url is
+		// non-empty. Required for any X→Sol destination; absence
+		// causes PreSignSolana to fail and the swap to refund (the
+		// signing driver's family dispatch handles this gracefully).
+		if *solanaRPCURL != "" {
+			solClient := solanarpc.New(*solanaRPCURL)
+			solClient.Timeout = *solanaRPCTimeout
+			signer.SetSolanaProvider(solClient)
+			logger.Info("solana provider attached",
+				"url", *solanaRPCURL,
+				"timeout", *solanaRPCTimeout,
+			)
+		} else {
+			logger.Info("solana provider not configured — X→Sol releases will fail PreSign and refund")
+		}
 
 		// Layered-cosigner gate (Utila / Fireblocks). Defaults to ON so
 		// swaps declaring cosigners[] in their POST body trigger an
