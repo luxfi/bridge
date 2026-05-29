@@ -38,6 +38,23 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3001,
       host: true,
+      // Vite 5.x blocks unknown Host headers by default (DNS-rebinding
+      // mitigation). Wallet extensions like Phantom refuse to open
+      // popups on non-HTTPS, non-localhost origins, so devs commonly
+      // expose the dev server through an HTTPS tunnel (cloudflared,
+      // ngrok). Without these entries Vite serves a "Blocked request"
+      // page instead of the SPA when the tunnel forwards traffic.
+      // Leading-dot entries match the host AND any subdomain — exactly
+      // what we want for randomly-named tunnel subdomains.
+      allowedHosts: [
+        'localhost',
+        '127.0.0.1',
+        '.trycloudflare.com',
+        '.ngrok-free.app',
+        '.ngrok.io',
+        '.ngrok.app',
+        '.loca.lt',           // localtunnel
+      ],
       // Dev-only proxy. Default target is bridge-api.lux.network (the
       // prod backend, which only allow-lists https://bridge.lux.network
       // — we inject that Origin so its CORS gate passes). Override to a
@@ -57,7 +74,19 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    preview: { port: 3001, host: true },
+    preview: {
+      port: 3001,
+      host: true,
+      allowedHosts: [
+        'localhost',
+        '127.0.0.1',
+        '.trycloudflare.com',
+        '.ngrok-free.app',
+        '.ngrok.io',
+        '.ngrok.app',
+        '.loca.lt',
+      ],
+    },
     build: { outDir: 'dist', sourcemap: true },
   }
 })

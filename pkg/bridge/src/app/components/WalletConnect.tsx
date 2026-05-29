@@ -34,6 +34,10 @@ import {
 import { createPortal } from 'react-dom'
 import { Button } from '@hanzo/gui'
 import type { WalletState, WalletConnectorInfo } from '../hooks/useWallet'
+import { useWalletForFamily } from '../lib/wallet-adapters'
+import type { WalletForFamily } from '../lib/wallet-adapters'
+import { ASSET_LOGOS } from '../lib/logos'
+import type { ChainFamily } from '../lib/chains'
 import { shortAddress } from '../lib/format'
 
 export interface WalletConnectProps {
@@ -247,6 +251,20 @@ function humaniseConnectError(err: unknown): string {
   if (lower.includes('reject') || lower.includes('cancel') || lower.includes('denied')) {
     return 'Connection rejected'
   }
+  // Surface our connect-watchdog timeout verbatim — its full body is
+  // an actionable instruction ("Phantom may be locked. Open the
+  // Phantom extension and try again.") and truncating it loses the
+  // remediation. Match by the verbatim watchdog phrase.
+  if (lower.includes('did not respond within')) {
+    return msg
+  }
+  // Insecure-origin preflight error: surface verbatim. The body
+  // explains the actual problem (HTTP on a non-localhost origin
+  // can't open wallet popups) plus three concrete remediation
+  // paths. Truncating to 80 chars would strip all of them.
+  if (lower.includes('wallet popups are blocked on')) {
+    return msg
+  }
   if (lower.includes('not registered') || lower.includes('no wallet')) {
     return 'No wallet found. Install MetaMask or use WalletConnect.'
   }
@@ -287,6 +305,28 @@ export const WalletConnect: FC<WalletConnectProps> = ({
   const [error, setError] = useState<string | null>(null)
   const triggerWrapRef = useRef<HTMLDivElement | null>(null)
   const firstFocusableRef = useRef<HTMLButtonElement | null>(null)
+
+  // Non-EVM wallet state. Read at the top level so the address pill
+  // can reflect ANY connected family, not just EVM. Picking order
+  // (EVM → SVM → TON → BTC) prefers EVM when multiple are connected,
+  // matching the historical default; non-EVM users see their family's
+  // address instead of a stuck "Connect Wallet" button.
+  const svmWallet = useWalletForFamily('svm')
+  const tonWallet = useWalletForFamily('ton')
+  const btcWallet = useWalletForFamily('btc')
+
+  // The "primary" connected wallet for the pill. EVM wins if connected
+  // (preserves prior UX); otherwise first non-EVM with an address.
+  const primary: { address: string; symbol: string | null; disconnect: () => void | Promise<void> } | null =
+    wallet.address
+      ? { address: wallet.address, symbol: null, disconnect: wallet.disconnect }
+      : svmWallet.address
+        ? { address: svmWallet.address, symbol: 'SOL', disconnect: svmWallet.disconnect }
+        : tonWallet.address
+          ? { address: tonWallet.address, symbol: 'TON', disconnect: tonWallet.disconnect }
+          : btcWallet.address
+            ? { address: btcWallet.address, symbol: 'BTC', disconnect: btcWallet.disconnect }
+            : null
 
   // ESC dismiss + focus restore. Mirrors the close-on-Escape pattern of
   // every dialog primitive we use elsewhere (Radix etc.).
@@ -334,12 +374,17 @@ export const WalletConnect: FC<WalletConnectProps> = ({
   useEffect(() => {
     if (open) setError(null)
   }, [open])
+  // Close the picker whenever ANY family flips to connected — was
+  // previously gated on wallet.address (EVM only), which left the
+  // dialog open after a successful Solana / TON / BTC connect even
+  // though state had updated underneath.
+  const primaryAddress = primary?.address ?? null
   useEffect(() => {
-    if (wallet.address) {
+    if (primaryAddress) {
       setError(null)
       setOpen(false)
     }
-  }, [wallet.address])
+  }, [primaryAddress])
 
   const onPick = useCallback(
     async (c: WalletConnectorInfo): Promise<void> => {
@@ -368,13 +413,19 @@ export const WalletConnect: FC<WalletConnectProps> = ({
     return { installed: installedList, popular: popularList }
   }, [wallet.connectors])
 
-  // Connected — show the address pill (no picker).
-  if (wallet.address) {
+  // Connected — show the address pill (no picker). Renders for ANY
+  // family that is currently connected (EVM / SVM / TON / BTC).
+  // Clicking the pill disconnects whichever family owns the address;
+  // the family is then free for the user to reconnect to a different
+  // one from the picker again.
+  if (primary) {
     return (
       <Button
         style={pillBase}
-        onClick={wallet.disconnect}
-        aria-label={`Disconnect wallet ${wallet.address}`}
+        onClick={() => {
+          void primary.disconnect()
+        }}
+        aria-label={`Disconnect ${primary.symbol ?? 'EVM'} wallet ${primary.address}`}
       >
         <span
           style={{
@@ -386,7 +437,22 @@ export const WalletConnect: FC<WalletConnectProps> = ({
           }}
           aria-hidden
         />
-        {shortAddress(wallet.address)}
+        {shortAddress(primary.address)}
+        {primary.symbol ? (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '1px 6px',
+              borderRadius: 4,
+              background: 'var(--bridge-bg-elevated)',
+              color: 'var(--bridge-text-muted)',
+              marginLeft: 4,
+            }}
+          >
+            {primary.symbol}
+          </span>
+        ) : null}
       </Button>
     )
   }
@@ -489,6 +555,11 @@ export const WalletConnect: FC<WalletConnectProps> = ({
                         </div>
                       </div>
                     ) : null}
+
+                    <NonEVMConnectorRows
+                      onError={setError}
+                      onConnected={() => setOpen(false)}
+                    />
                   </>
                 )}
               </div>
@@ -558,3 +629,131 @@ const ConnectorButton = forwardRef<HTMLButtonElement, ConnectorButtonProps>(
   ),
 )
 ConnectorButton.displayName = 'ConnectorButton'
+
+// =============================================================================
+// Non-EVM family rows
+// =============================================================================
+
+/**
+ * Three family entries — Solana, TON, Bitcoin — that delegate to each
+ * family's own connect modal/flow:
+ *
+ *   • Solana   → @solana/wallet-adapter-react's wallet.connect() opens the
+ *                selected wallet (Phantom by default)
+ *   • TON      → @tonconnect/ui-react's openModal() shows the TonConnect picker
+ *   • Bitcoin  → sats-connect's getAccounts() prompts the Wallet-Standard wallet
+ *
+ * Each row sits below the EVM "Installed" + "Popular" groups under a
+ * "Other Chains" heading. Connect errors bubble up via onError to the
+ * existing dialog error box; successful connects close the modal via
+ * onConnected (mirrors the EVM onPick handler's behaviour).
+ *
+ * Errors that surface here include user-cancelled connect attempts —
+ * humaniseConnectError handles those identically to the EVM path so the
+ * messaging is consistent.
+ */
+interface NonEVMConnectorRowsProps {
+  onError: (msg: string | null) => void
+  onConnected: () => void
+}
+
+const NonEVMConnectorRows: FC<NonEVMConnectorRowsProps> = ({ onError, onConnected }) => {
+  const svm = useWalletForFamily('svm')
+  const ton = useWalletForFamily('ton')
+  const btc = useWalletForFamily('btc')
+  // Track which row is mid-connect so we can show "Connecting…" on the
+  // right family without blocking the others (a Phantom popup that
+  // hangs shouldn't gray out TON + BTC).
+  const [pendingFamily, setPendingFamily] = useState<ChainFamily | null>(null)
+
+  const rows: Array<{
+    family: ChainFamily
+    label: string
+    via: string
+    icon: string
+    wallet: WalletForFamily
+  }> = [
+    { family: 'svm', label: 'Solana', via: 'Phantom', icon: ASSET_LOGOS.SOL ?? '', wallet: svm },
+    { family: 'ton', label: 'TON', via: 'TonConnect', icon: ASSET_LOGOS.TON ?? '', wallet: ton },
+    { family: 'btc', label: 'Bitcoin', via: 'Xverse', icon: ASSET_LOGOS.BTC ?? '', wallet: btc },
+  ]
+
+  return (
+    <div>
+      <div style={groupHeadingMuted}>Other Chains</div>
+      <div style={groupList}>
+        {rows.map(({ family, label, via, icon, wallet }) => {
+          // Only treat the row as "pending" when the user actively
+          // clicked it — wallet.connecting is also true when the
+          // family's adapter is silently re-connecting in the
+          // background (e.g. @solana/wallet-adapter-react's autoConnect
+          // restoring a saved Phantom session). Surfacing that
+          // background pending state would show "Connecting…" on the
+          // row the moment the dialog opens, even though the user
+          // hasn't done anything yet — the bug a real user reported.
+          const isPending = pendingFamily === family
+          const meta = wallet.connected ? 'Connected' : isPending ? 'Connecting…' : via
+          return (
+            <NonEVMConnectorButton
+              key={family}
+              label={label}
+              meta={meta}
+              icon={icon}
+              disabled={isPending}
+              onClick={async () => {
+                onError(null)
+                setPendingFamily(family)
+                try {
+                  await wallet.connect()
+                  onConnected()
+                } catch (err) {
+                  onError(humaniseConnectError(err))
+                } finally {
+                  setPendingFamily(null)
+                }
+              }}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface NonEVMConnectorButtonProps {
+  label: string
+  meta: string
+  icon: string
+  disabled?: boolean
+  onClick: () => void
+}
+
+const NonEVMConnectorButton: FC<NonEVMConnectorButtonProps> = ({
+  label,
+  meta,
+  icon,
+  disabled = false,
+  onClick,
+}) => (
+  <button
+    type="button"
+    style={{
+      ...connectorRow,
+      opacity: disabled ? 0.6 : 1,
+      cursor: disabled ? 'wait' : 'pointer',
+    }}
+    disabled={disabled}
+    onMouseEnter={(e) => {
+      if (disabled) return
+      e.currentTarget.style.background = 'var(--bridge-bg-hover)'
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.background = 'transparent'
+    }}
+    onClick={onClick}
+  >
+    {icon ? <img src={icon} alt="" style={connectorIcon} /> : <span style={connectorIcon} />}
+    <span>{label}</span>
+    <span style={connectorMeta}>{meta}</span>
+  </button>
+)
