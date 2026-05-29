@@ -107,4 +107,12 @@ describe('buildWagmiConfig', () => {
     const ids = config.connectors.map((c) => c.id)
     expect(ids).toContain('walletConnect')
   })
+
+  // Holesky's viem default RPC returns HTTP 403; we override to drpc.org
+  // so useBalance() doesn't stall on `…` forever. Assert the override
+  // is wired (the config exposes Holesky as a chain).
+  it('includes Holesky in the testnet chain set', () => {
+    const config = buildWagmiConfig({ ...base, env: 'testnet' })
+    expect(config.chains.map((c) => c.id)).toContain(17000)
+  })
 })

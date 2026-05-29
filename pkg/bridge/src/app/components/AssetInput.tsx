@@ -135,10 +135,13 @@ export const AssetInput: FC<AssetInputProps> = ({
   showMax = false,
 }) => {
   // Wagmi balance — only fires for EVM chains where we have a numeric
-  // chainId mapping. For non-EVM the hook stays disabled (no spurious
-  // refetches, no zero values).
+  // chainId mapping. For non-EVM (SOL, BTC, TON, XRP, …) the hook
+  // stays disabled because wagmi can't read those chains; the bridge's
+  // MPC layer handles both legs of non-EVM swaps (see
+  // architecture_mpc_vs_teleporter memory).
   const wagmiChainId = bridgeIdToWagmiChainId(asset.chainId)
-  const enabled = Boolean(walletAddress) && wagmiChainId !== null
+  const isEVM = wagmiChainId !== null
+  const enabled = Boolean(walletAddress) && isEVM
   const balanceQuery = useBalance({
     address: (walletAddress ?? undefined) as `0x${string}` | undefined,
     chainId: wagmiChainId ?? undefined,
@@ -148,14 +151,34 @@ export const AssetInput: FC<AssetInputProps> = ({
     query: { enabled, refetchInterval: 30_000 },
   })
 
-  const balanceText = useMemo(() => {
-    if (!enabled) return null
-    if (balanceQuery.isLoading) return '…'
+  // Three states the label row can be in:
+  //   - 'loading'      → wagmi is fetching, show '…'
+  //   - 'error'        → wagmi resolved but no data (e.g. RPC unreachable)
+  //   - 'mpc-only'     → non-EVM chain (chain signs via MPC, not the user wallet)
+  //   - 'no-wallet'    → no wallet connected
+  //   - <amount>       → real balance
+  type BalanceState =
+    | { kind: 'amount'; text: string }
+    | { kind: 'loading' }
+    | { kind: 'mpc-only' }
+    | { kind: 'no-wallet' }
+    | { kind: 'error' }
+    | { kind: 'hidden' }
+
+  const balanceState = useMemo<BalanceState>(() => {
+    if (!walletAddress) return { kind: 'no-wallet' }
+    if (!isEVM) return { kind: 'mpc-only' }
+    if (balanceQuery.isLoading) return { kind: 'loading' }
     const d = balanceQuery.data
-    if (!d) return null
+    if (!d) {
+      // Wagmi finished but returned nothing — RPC unreachable or chain
+      // not in the wallet's network list. Show 'error' rather than
+      // silently hiding so the user knows something's off.
+      return balanceQuery.error ? { kind: 'error' } : { kind: 'hidden' }
+    }
     const value = Number(d.value) / 10 ** d.decimals
-    return formatAmount(value, 4)
-  }, [enabled, balanceQuery.isLoading, balanceQuery.data])
+    return { kind: 'amount', text: formatAmount(value, 4) }
+  }, [walletAddress, isEVM, balanceQuery.isLoading, balanceQuery.data, balanceQuery.error])
 
   const onMax = () => {
     const d = balanceQuery.data
@@ -171,22 +194,43 @@ export const AssetInput: FC<AssetInputProps> = ({
   const options = useMemo(() => assets.map(toAssetOption), [assets])
   const value = useMemo(() => toAssetOption(asset), [asset])
 
-  return (
-    <div style={wrap}>
-      <div style={labelRow}>
-        <span>{label}</span>
-        {readOnly ? (
-          <span>estimated</span>
-        ) : balanceText !== null ? (
+  const renderBalanceRight = () => {
+    if (readOnly) return <span>estimated</span>
+    switch (balanceState.kind) {
+      case 'amount':
+        return (
           <span style={balanceLine}>
-            <span>Balance: {balanceText} {asset.symbol}</span>
-            {showMax && balanceText !== '…' && balanceQuery.data ? (
+            <span>Balance: {balanceState.text} {asset.symbol}</span>
+            {showMax && balanceQuery.data ? (
               <button type="button" style={maxBtn} onClick={onMax}>
                 Max
               </button>
             ) : null}
           </span>
-        ) : null}
+        )
+      case 'loading':
+        return <span style={balanceLine}>Balance: … {asset.symbol}</span>
+      case 'mpc-only':
+        // Non-EVM (SOL, BTC, TON, …) — the user wallet doesn't sign
+        // this leg; the bridge's MPC quorum does. Showing a balance
+        // would be misleading (it'd be the MPC wallet's balance, not
+        // the user's). Surface this explicitly so the empty space
+        // doesn't look like a bug.
+        return <span style={balanceLine}>MPC-signed — no wallet balance</span>
+      case 'error':
+        return <span style={balanceLine}>Balance unavailable</span>
+      case 'no-wallet':
+      case 'hidden':
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div style={wrap}>
+      <div style={labelRow}>
+        <span>{label}</span>
+        {renderBalanceRight()}
       </div>
       <div style={row}>
         <Input

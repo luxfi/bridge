@@ -196,25 +196,31 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
       : []),
   ]
 
-  // Transports: most chains use viem's public HTTP. Lux chains route
-  // through the bridge backend's same-origin /api/rpc/lux-{mainnet,testnet}
-  // proxy because the upstream Lux gateway's CORS allow-list doesn't
-  // include bridge.* origins — the browser would block every response
-  // and useBalance() would stall on '…' forever. The proxy makes the
-  // call server-side (no CORS) and forwards the response unchanged.
-  // Tenants who'd rather hit the gateway directly (allow-list updated,
-  // running their own Lux node, etc.) override at the wagmi layer by
-  // composing their own Config.
-  const luxRPCURL = (chainId: number): string | null => {
-    if (chainId === luxMainnet.id) return '/api/rpc/lux-mainnet'
-    if (chainId === luxTestnet.id) return '/api/rpc/lux-testnet'
-    return null
+  // Transports: most chains use viem's public HTTP. Two overrides:
+  //
+  //  1. Lux chains route through the bridge backend's same-origin
+  //     /api/rpc/lux-{mainnet,testnet} proxy because the upstream Lux
+  //     gateway's CORS allow-list doesn't include bridge.* origins —
+  //     the browser would block every response and useBalance() would
+  //     stall on '…' forever. The proxy makes the call server-side
+  //     (no CORS) and forwards the response unchanged.
+  //
+  //  2. Holesky's viem default (ethereum-holesky-rpc.publicnode.com)
+  //     returns HTTP 403 — endpoint is rate-limited / blocking. We
+  //     override to holesky.drpc.org which returns 200 with
+  //     `Access-Control-Allow-Origin: *`. Without this override,
+  //     useBalance() stalls on `…` forever for any Holesky asset.
+  //
+  // Tenants with their own RPC endpoints (Alchemy / Infura / Tenderly
+  // keys) override at the wagmi layer by composing their own Config.
+  const transportFor = (chainId: number): ReturnType<typeof http> => {
+    if (chainId === luxMainnet.id) return http('/api/rpc/lux-mainnet')
+    if (chainId === luxTestnet.id) return http('/api/rpc/lux-testnet')
+    if (chainId === holesky.id) return http('https://holesky.drpc.org')
+    return http()
   }
   const transports = Object.fromEntries(
-    chains.map((c) => {
-      const luxURL = luxRPCURL(c.id)
-      return [c.id, luxURL ? http(luxURL) : http()]
-    }),
+    chains.map((c) => [c.id, transportFor(c.id)]),
   ) as Record<number, ReturnType<typeof http>>
 
   return createConfig({
