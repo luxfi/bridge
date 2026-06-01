@@ -1087,7 +1087,29 @@ func (d *RefundDriver) rollback(ctx context.Context, id string, cause error) {
 			maxedOut = true
 			return
 		}
-		s.Status = SwapStatusBroadcasting
+		// Pick the rollback status based on whether the broadcast
+		// driver can make forward progress next tick.
+		//
+		// DestRawTx != "" — there's an assembled tx the broadcast
+		// driver will try to send. On chain-side rejection it'll
+		// write "insufficient funds" to LastError, which is what
+		// shouldRefund() keys on to re-pick the swap for the next
+		// refund tick. This is the original broadcast↔refund cycle.
+		//
+		// DestRawTx == "" — assembler never produced a tx (e.g. MPC
+		// sign failure routed the swap to refund_pending directly).
+		// The broadcast driver will skip with "DestRawTx empty" on
+		// every tick and never refresh LastError. If we rolled back
+		// to broadcasting here, shouldRefund() would never match
+		// (LastError still says "Signing failed N times…") and the
+		// swap would strand below maxRefundAttempts. Go back to
+		// refund_pending so the explicit-status list query in
+		// refundPendingSwaps() picks it up on the next tick instead.
+		if s.DestRawTx != "" {
+			s.Status = SwapStatusBroadcasting
+		} else {
+			s.Status = SwapStatusRefundPending
+		}
 		// IMPORTANT: leave LastError + LastErrorAt alone below the
 		// ceiling. The broadcast driver overwrites LastError on its
 		// next attempt with the canonical insufficient-funds string,

@@ -341,6 +341,57 @@ func TestSwapsCreate_MissingDestAddress400(t *testing.T) {
 	}
 }
 
+// TestSwapsCreate_SolSource_EvmSenderRejected guards the refund leg:
+// for a cross-family swap (svm source, evm destination) the SPA MUST
+// supply a base58 sender (the user's Phantom wallet) — silently falling
+// back to the EVM destination_address would brick the refund driver
+// with "preSign Solana refund: invalid base58 character '0'". Regression
+// for the Sol→Lux smoke-test bug where missing solSenderAddress caused
+// every refund attempt to fail and deposits to need manual recovery.
+func TestSwapsCreate_SolSource_EvmSenderRejected(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "SOLANA_DEVNET",
+		SourceAsset:        "SOL",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		Sender:             "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473", // EVM hex on a Solana source
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("expected 400 for EVM sender on Solana source, got status=%d body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "sender_wrong_chain_family") {
+		t.Errorf("expected sender_wrong_chain_family error, got %s", body)
+	}
+}
+
+// TestSwapsCreate_SolSource_EmptySenderRejected complements the above:
+// when the SPA fails to populate sender for a cross-family swap, the
+// old behaviour silently fell back to req.DestinationAddress (which is
+// in the destination family — e.g. EVM for Sol→Lux). Refuse instead.
+func TestSwapsCreate_SolSource_EmptySenderRejected(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             0.1,
+		SourceNetwork:      "SOLANA_DEVNET",
+		SourceAsset:        "SOL",
+		DestinationNetwork: "LUX_TESTNET",
+		DestinationAsset:   "LUX",
+		DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+		// Sender omitted — used to fall back to destination_address.
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing sender on cross-family swap, got status=%d body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "missing_source_chain_sender") {
+		t.Errorf("expected missing_source_chain_sender error, got %s", body)
+	}
+}
+
 func TestSwapsCreate_NegativeAmount400(t *testing.T) {
 	rig := newRig(t, nil, nil, nil)
 	reqBody, _ := json.Marshal(createSwapReq{

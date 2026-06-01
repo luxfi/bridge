@@ -183,7 +183,7 @@ export function useTransfers(): TransferState {
   // wallet) connected, this builds + sends a SystemProgram.transfer to
   // the MPC deposit address. Stays a no-op for non-svm sources — see
   // tryAutoDeposit for the family branch.
-  const { sendSolAsync } = useSolanaSend()
+  const { sendSolAsync, senderAddress: solSenderAddress } = useSolanaSend()
   const { chains, assets } = useNetworks()
 
   const [transfers, setTransfers] = useState<Transfer[]>([])
@@ -456,6 +456,37 @@ export function useTransfers(): TransferState {
       // flow on EVM sources, but the SDK default is the MPC flow.
       const useDepositAddress = input.useDepositAddress ?? true
 
+      // Resolve the source-chain sender at the moment of createSwap.
+      //
+      // For svm sources we prefer the hook-tracked solSenderAddress
+      // (subscribed to Phantom's connect/disconnect events), but fall
+      // back to reading window.phantom.solana.publicKey inline. The
+      // inline read defends against two edge cases the hook can miss:
+      //   (a) the user is on cached React state — useSolanaSend hasn't
+      //       re-rendered with the latest phantom event yet;
+      //   (b) the user connected via Wallet Standard direct (path 2),
+      //       where window.phantom.solana exists but never emitted a
+      //       'connect' event on its own surface (the wallet-standard
+      //       feature fires its own callback instead).
+      // Either way the fresh window read at this exact instant is the
+      // ground truth, so use it as the final fallback.
+      let sourceSender: string | undefined
+      if (fromChain.family === 'svm') {
+        // Inline window read as a final fallback for late-binding or
+        // Wallet-Standard-direct connects that don't emit a 'connect'
+        // event on window.phantom.solana's own surface. The hook
+        // subscribes to those events but the inline read is always
+        // ground truth at this exact instant.
+        const phantomPk =
+          typeof window !== 'undefined'
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (window as any).phantom?.solana?.publicKey?.toString?.()
+            : undefined
+        sourceSender = solSenderAddress ?? phantomPk ?? undefined
+      } else {
+        sourceSender = account.address ?? undefined
+      }
+
       try {
         const swap = await createSwap(
           cfg.apiHost,
@@ -466,9 +497,14 @@ export function useTransfers(): TransferState {
             destinationNetwork,
             destinationAsset: toAsset.symbol,
             destinationAddress,
-            // Sender = connected wallet (self-bridge default). Used only by
-            // the RPC transport; REST derives sender from the deposit tx.
-            ...(account.address ? { sender: account.address } : {}),
+            // Sender = the connected wallet on the SOURCE chain. The
+            // backend's refund driver sends source funds back to this
+            // address when a swap fails, so it MUST be a same-family
+            // address: base58 for svm sources, 0x… for evm/lux sources.
+            // Falling back to account.address (always EVM via wagmi)
+            // for an svm source bricks refunds with
+            // "preSign Solana refund: invalid base58 character '0'".
+            ...(sourceSender ? { sender: sourceSender } : {}),
             refuel: input.refuel ?? false,
             useDepositAddress,
             // MPC pipeline handles cross-chain delivery end-to-end —
@@ -536,6 +572,7 @@ export function useTransfers(): TransferState {
       sendTransactionAsync,
       writeContractAsync,
       sendSolAsync,
+      solSenderAddress,
     ],
   )
 

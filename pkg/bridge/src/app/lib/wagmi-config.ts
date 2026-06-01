@@ -196,7 +196,7 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
       : []),
   ]
 
-  // Transports: most chains use viem's public HTTP. Two overrides:
+  // Transports: most chains use viem's public HTTP. Several overrides:
   //
   //  1. Lux chains route through the bridge backend's same-origin
   //     /api/rpc/lux-{mainnet,testnet} proxy because the upstream Lux
@@ -211,12 +211,23 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
   //     `Access-Control-Allow-Origin: *`. Without this override,
   //     useBalance() stalls on `…` forever for any Holesky asset.
   //
+  //  3. Ethereum mainnet's viem default (eth.merkle.io) responds with
+  //     no Access-Control-Allow-Origin header AND 429s aggressively
+  //     under any sustained load. publicnode is CORS-permissive and
+  //     has generous rate limits — same provider used by depositcheck
+  //     server-side.
+  //
+  //  4. Sepolia's viem default (rpc.sepolia.org) has the same CORS
+  //     problem. publicnode mirror works.
+  //
   // Tenants with their own RPC endpoints (Alchemy / Infura / Tenderly
   // keys) override at the wagmi layer by composing their own Config.
   const transportFor = (chainId: number): ReturnType<typeof http> => {
     if (chainId === luxMainnet.id) return http('/api/rpc/lux-mainnet')
     if (chainId === luxTestnet.id) return http('/api/rpc/lux-testnet')
     if (chainId === holesky.id) return http('https://holesky.drpc.org')
+    if (chainId === mainnet.id) return http('https://ethereum-rpc.publicnode.com')
+    if (chainId === sepolia.id) return http('https://ethereum-sepolia-rpc.publicnode.com')
     return http()
   }
   const transports = Object.fromEntries(

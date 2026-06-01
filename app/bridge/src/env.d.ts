@@ -17,6 +17,7 @@ interface ImportMetaEnv {
   readonly VITE_BRIDGE_MPC_PUBLIC_URL?: string
   readonly VITE_BRIDGE_MPC_PRIVATE_URL?: string
   readonly VITE_BRIDGE_MPC_PROTOCOL?: string
+  readonly VITE_BRIDGE_SOLANA_RPC_URL?: string
 }
 
 interface ImportMeta {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -338,9 +339,40 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	}
 
 	// Step 2 — persist the swap. ID is assigned by the store.
+	//
+	// Sender resolution:
+	//   - If the caller provided req.Sender, validate that it matches
+	//     the SOURCE chain's address family. The refund driver will
+	//     try to send source funds back to this address, so a wrong
+	//     family bricks refunds (e.g. "preSign Solana refund: invalid
+	//     base58 character '0'" when an EVM hex string accidentally
+	//     gets used as a Solana base58 sender).
+	//   - If req.Sender is empty, only fall back to DestinationAddress
+	//     when source and destination are the SAME family — that's
+	//     the self-bridge convention. For cross-family swaps the SPA
+	//     MUST supply the source-chain sender; refuse with a clear
+	//     error rather than silently substituting the wrong-family
+	//     destination address.
+	srcAddrType := mchain.AddressTypeFor(req.SourceNetwork)
+	dstAddrType := mchain.AddressTypeFor(req.DestinationNetwork)
 	sender := req.Sender
 	if sender == "" {
+		if srcAddrType != dstAddrType {
+			fmt.Printf("[swap-create-reject] missing_source_chain_sender source=%s dst=%s dst_addr=%s\n",
+				req.SourceNetwork, req.DestinationNetwork, req.DestinationAddress)
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error":  "missing_source_chain_sender",
+				"detail": "sender is required for cross-family swaps so the refund leg can return source funds — falling back to destination_address would mix chains",
+			})
+		}
 		sender = req.DestinationAddress
+	} else if !addressMatchesType(sender, srcAddrType) {
+		fmt.Printf("[swap-create-reject] sender_wrong_chain_family source=%s src_addr_type=%s sender=%s\n",
+			req.SourceNetwork, srcAddrType, sender)
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":  "sender_wrong_chain_family",
+			"detail": fmt.Sprintf("sender %q is not a valid %s address for source network %s", sender, srcAddrType, req.SourceNetwork),
+		})
 	}
 	swap := &Swap{
 		Status:             SwapStatusUserDepositPending,
@@ -658,3 +690,33 @@ func rpcErrToHTTP(c *zip.Ctx, err error, op string) error {
 		"detail": err.Error(),
 	})
 }
+
+// addressMatchesType reports whether addr has the textual shape of an
+// address in the given chain family. Heuristic, not strict validation —
+// catches the common cross-family error (sending an EVM hex where a
+// Solana base58 was expected) without trying to fully validate every
+// chain's address encoding. The refund driver still does protocol-
+// level parsing downstream; this is a fast gate at swap-create time.
+//
+// btc/ton/xrp/dot families are not yet wired through the cross-family
+// refund path so we conservatively accept any non-empty string for
+// those — refusing would block existing same-family flows that never
+// hit a refund-family-mismatch bug.
+func addressMatchesType(addr string, t mchain.AddressType) bool {
+	if addr == "" {
+		return false
+	}
+	switch t {
+	case mchain.AddressTypeETH:
+		return evmHexAddressRE.MatchString(addr)
+	case mchain.AddressTypeSOL:
+		return solBase58AddressRE.MatchString(addr)
+	default:
+		return true
+	}
+}
+
+var (
+	evmHexAddressRE   = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
+	solBase58AddressRE = regexp.MustCompile(`^[1-9A-HJ-NP-Za-km-z]{32,44}$`)
+)

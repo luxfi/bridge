@@ -193,6 +193,12 @@ export const bridgeConfig: BridgeConfig = {
   env: envSlug,
   clientId: env('BRIDGE_CLIENT_ID'),
   iamOrg: env('BRIDGE_IAM_ORG', 'lux'),
+  // Tenant-level Solana RPC override. Undefined ⇒ SDK falls back to
+  // its mainnet default in NonEVMProviders. For devnet smoke testing
+  // set VITE_BRIDGE_SOLANA_RPC_URL=https://api.devnet.solana.com so
+  // the SPA's Phantom balance reads match the cluster the user's
+  // wallet is on.
+  solanaRpcUrl: env('BRIDGE_SOLANA_RPC_URL'),
   brand: {
     name: `${shortName ?? 'Lux'} Bridge`,
     logoUrl: env('BRIDGE_LOGO_URL') || luxLogoDataUrl,

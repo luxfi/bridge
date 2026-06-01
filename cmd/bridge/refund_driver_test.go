@@ -339,6 +339,49 @@ func TestRefund_MaxAttempts_RollbackIncrementsCounter(t *testing.T) {
 	}
 }
 
+// TestRefund_Rollback_EmptyDestRawTx_GoesBackToRefundPending verifies
+// the rollback path for the no-broadcast-tx case. When a swap reaches
+// refund via the signing-maxout / stale-quote path (NOT the broadcast
+// insufficient-funds path), DestRawTx is empty. If rollback put the
+// swap into SwapStatusBroadcasting, the broadcast driver would skip
+// every tick with "DestRawTx empty" and never overwrite LastError with
+// the "insufficient funds" string that shouldRefund keys on — the
+// swap would strand below maxRefundAttempts and never finish refunding.
+//
+// Fix: when DestRawTx == "", roll back to SwapStatusRefundPending so
+// the explicit-status list path picks the swap up on the next tick.
+// Regression for the Sol→Lux smoke test where a sender-format bug made
+// every refund attempt fail with "invalid base58 character" — the
+// swap stayed in broadcasting forever instead of retrying.
+func TestRefund_Rollback_EmptyDestRawTx_GoesBackToRefundPending(t *testing.T) {
+	d, _, _ := newRefundRig(t, "0xDE0B6B3A7640000") // 1 ETH (balance check passes)
+	d.signer = &rdFakeSigner{err: errors.New("simulated mpc reject")}
+	d.maxRefundAttempts = 5
+
+	store := NewInMemoryStore()
+	d.store = store
+	balanceSrv := fakeBalanceRPC(t, "0xDE0B6B3A7640000")
+	d.rpcOverrides = map[string]string{"ETHEREUM_SEPOLIA": balanceSrv.URL}
+
+	// Seed a swap as the signing driver would after maxing out: status
+	// refund_pending, DestRawTx empty (no signed tx ever produced).
+	sw := seedBlockedSwap(t, store, 5*time.Minute, func(s *Swap) {
+		s.Status = SwapStatusRefundPending
+		s.DestRawTx = ""
+		s.LastError = "Signing failed 5 times at MPC sign (max=5) — moving to refund: simulated"
+	})
+
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Fatalf("rollback with empty DestRawTx must go back to refund_pending so the list-query re-picks it; got %q", got.Status)
+	}
+	if got.RefundAttempts != 1 {
+		t.Errorf("RefundAttempts should be 1 after 1 rollback, got %d", got.RefundAttempts)
+	}
+}
+
 // TestRefund_MaxAttempts_HitsCeilingTerminalFails verifies the
 // persistent-failure short-circuit: once RefundAttempts reaches
 // maxRefundAttempts, the swap moves to SwapStatusFailed with a clear
