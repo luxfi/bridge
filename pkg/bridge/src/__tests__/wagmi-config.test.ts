@@ -64,6 +64,34 @@ describe('buildWagmiConfig', () => {
     expect(ids).not.toContain(1)
   })
 
+  it('exposes only Lux Local + Zoo Local when env=local', () => {
+    // Local env is a sandbox against a local avalanchego node — public
+    // testnet chains would clutter the picker with networks the local
+    // bridge can't actually serve. Mainnet chains must not appear either.
+    const config = buildWagmiConfig({ ...base, env: 'local' })
+    const ids = config.chains.map((c) => c.id)
+    expect(ids).toEqual(expect.arrayContaining([31337, 200203]))
+    expect(ids).not.toContain(1)         // no mainnet
+    expect(ids).not.toContain(11155111)  // no Sepolia
+    expect(ids).not.toContain(96368)     // no Lux Testnet
+    // chains[0] is always the implicit default — for local, Lux Local
+    // (31337) is the lead chain so the wallet picks it first on connect.
+    expect(ids[0]).toBe(31337)
+  })
+
+  it('narrows to local chain ids when supportedChainIds explicitly allows them', () => {
+    // Tenants pinning a strict allow-list across env boundaries (a single
+    // build that can run against local, testnet, or mainnet at deploy
+    // time) need the local IDs to survive the filter — assert that.
+    const config = buildWagmiConfig({
+      ...base,
+      wallet: { supportedChainIds: [31337, 200203] },
+    })
+    const ids = config.chains.map((c) => c.id)
+    expect(ids).toEqual(expect.arrayContaining([31337, 200203]))
+    expect(ids).not.toContain(1)
+  })
+
   it('narrows chains to supportedChainIds when provided', () => {
     const config = buildWagmiConfig({
       ...base,

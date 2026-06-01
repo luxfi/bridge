@@ -415,11 +415,43 @@ export function useTransfers(): TransferState {
         return x
       }
 
-      // Default destination: the connected wallet address (self-send). Tenants
-      // that need a different destination pass it explicitly.
-      const destinationAddress = input.destinationAddress ?? account.address
+      // Default destination: the connected wallet on the SAME chain
+      // family as the destination network (self-send). Tenants that
+      // need a different destination pass it explicitly via input.
+      //
+      // CRITICAL: default by family, not by wagmi. Wagmi's account.address
+      // is always an EVM hex address; using it as the destination for an
+      // svm chain produces a base58-decode error in the signing driver
+      // AFTER the deposit has already landed. In the stub MPC setup
+      // (single ed25519 key, no EVM secp256k1) the source deposit is
+      // then unrefundable and the user's tokens are permanently locked.
+      // Branch on toChain.family so the default address always matches
+      // the destination's encoding.
+      let destinationAddress: string | undefined = input.destinationAddress
       if (!destinationAddress) {
-        patch(id, { phase: 'failed', error: 'No destination address (wallet not connected)' })
+        if (toChain.family === 'svm') {
+          // Read fresh from window — same defense-in-depth pattern as
+          // the sender lookup, since useSolanaSend's hook state can
+          // lag a late-binding Phantom connect.
+          const phantomPk =
+            typeof window !== 'undefined'
+              ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (window as any).phantom?.solana?.publicKey?.toString?.()
+              : undefined
+          destinationAddress = solSenderAddress ?? phantomPk ?? undefined
+        } else if (toChain.family === 'evm' || toChain.family === 'lux') {
+          destinationAddress = account.address
+        }
+        // btc / ton / xrp / cardano / substrate: no auto-default — the
+        // caller must pass input.destinationAddress for those families.
+      }
+      if (!destinationAddress) {
+        patch(id, {
+          phase: 'failed',
+          error:
+            `No destination address — ${toChain.family} wallet not connected. ` +
+            `Connect a ${toChain.family}-family wallet or pass destinationAddress explicitly.`,
+        })
         return x
       }
 

@@ -178,10 +178,18 @@ var defaultTokens = []Info{
 	// get added when the per-asset contract list firms up in pkg/settings.
 	{Network: "LUX_MAINNET", Asset: "LUX", Decimals: 18},
 	{Network: "LUX_TESTNET", Asset: "LUX", Decimals: 18},
+	// LUX_LOCAL is the local sandbox network for full-stack smoke testing
+	// without depending on the public Lux gateway. Avalanche-style primary
+	// network is chain id 1337; the C-Chain EVM (where bridge swaps happen)
+	// runs at chain id 31337 — only the EVM side appears in wagmi.
+	{Network: "LUX_LOCAL", Asset: "LUX", Decimals: 18},
 
 	// Zoo — native only
 	{Network: "ZOO_MAINNET", Asset: "ZOO", Decimals: 18},
 	{Network: "ZOO_TESTNET", Asset: "ZOO", Decimals: 18},
+	// ZOO_LOCAL mirrors LUX_LOCAL — local devnet sandbox at C-Chain EVM
+	// chain id 200203 for ZOO development against a local Lux node.
+	{Network: "ZOO_LOCAL", Asset: "ZOO", Decimals: 18},
 
 	// Base — Circle's canonical USDC addresses
 	{Network: "BASE_MAINNET", Asset: "ETH", Decimals: 18},

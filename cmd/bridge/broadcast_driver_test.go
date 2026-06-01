@@ -159,6 +159,102 @@ func TestBroadcast_LeavesAtBroadcastingOnFailure(t *testing.T) {
 	}
 }
 
+// TestBroadcast_StaleSolanaBlockhash_ResetsForResign verifies the
+// Lux→Sol smoke-test recovery: when the cluster rejects a signed
+// Solana tx with "Blockhash not found" (the baked-in recent_blockhash
+// has expired past ~150 slots), the broadcast driver resets the swap
+// to bridge_transfer_pending and clears DestRawTx + sign artifacts so
+// the signing driver rebuilds with a fresh blockhash on its next tick.
+// Without this, the same stale-blockhash tx loops forever and the user's
+// deposit gets stuck even though all parties are signing correctly.
+func TestBroadcast_StaleSolanaBlockhash_ResetsForResign(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "SOLANA_DEVNET", "base58rawtx")
+	// seedBroadcastingSwap already sets Signature + MPCSessionID; the
+	// assertion below confirms those get cleared along with DestRawTx.
+	bc.failFor("SOLANA_DEVNET", "base58rawtx",
+		errors.New("broadcast: solana sendTransaction: rpc -32002: Transaction simulation failed: Blockhash not found"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Fatalf("stale-blockhash should reset to bridge_transfer_pending for re-sign, got %q", got.Status)
+	}
+	if got.DestRawTx != "" || got.Signature != "" || got.MPCSessionID != "" {
+		t.Errorf("DestRawTx/Signature/MPCSessionID should be cleared; got DestRawTx=%q Signature=%q MPCSessionID=%q",
+			got.DestRawTx, got.Signature, got.MPCSessionID)
+	}
+	if got.BroadcastRebuilds != 1 {
+		t.Errorf("BroadcastRebuilds should be 1 after first rebuild, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "blockhash expired") {
+		t.Errorf("LastError should explain the cause; got %q", got.LastError)
+	}
+	if d.Stats().Rebuilds != 1 {
+		t.Errorf("Rebuilds stat should be 1, got %d", d.Stats().Rebuilds)
+	}
+}
+
+// TestBroadcast_StaleBlockhash_MaxRebuilds_RoutesToRefund pins the
+// safety ceiling: after maxRebuilds consecutive blockhash-expired
+// failures the swap moves to refund_pending so the deposit gets
+// returned, instead of spinning forever against a broken cluster.
+func TestBroadcast_StaleBlockhash_MaxRebuilds_RoutesToRefund(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "SOLANA_DEVNET", "base58rawtx")
+	// Pre-seed with rebuilds at the ceiling-1 so one more failure
+	// trips the cap. Keeps the test fast — no need to loop the driver
+	// maxRebuilds times.
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastRebuilds = DefaultBroadcastMaxRebuilds - 1
+	})
+	bc.failFor("SOLANA_DEVNET", "base58rawtx",
+		errors.New("broadcast: solana sendTransaction: rpc -32002: Blockhash not found"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Fatalf("hitting rebuild ceiling should move to refund_pending, got %q", got.Status)
+	}
+	if got.BroadcastRebuilds != DefaultBroadcastMaxRebuilds {
+		t.Errorf("BroadcastRebuilds should reach the ceiling exactly, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "stale blockhash") {
+		t.Errorf("LastError should explain the ceiling hit, got %q", got.LastError)
+	}
+}
+
+// TestBroadcast_SuccessClearsRebuildCounter pins the success path —
+// after a swap finally lands, BroadcastRebuilds must reset so a
+// future swap reusing this ID (or operator-driven recovery) starts
+// from a clean counter.
+func TestBroadcast_SuccessClearsRebuildCounter(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "SOLANA_DEVNET", "base58rawtx")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastRebuilds = 2 // simulate prior expiries
+	})
+	bc.okFor("SOLANA_DEVNET", "base58rawtx", "5xxSigBase58")
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusCompleted {
+		t.Fatalf("expected completed on success, got %q", got.Status)
+	}
+	if got.BroadcastRebuilds != 0 {
+		t.Errorf("BroadcastRebuilds should reset to 0 on success, got %d", got.BroadcastRebuilds)
+	}
+}
+
 // TestBroadcast_SurfacesLastErrorOnInsufficientFunds pins the UX
 // contract: when the destination chain rejects with "insufficient
 // funds for gas * price + value", the swap stays at broadcasting

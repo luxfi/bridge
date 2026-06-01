@@ -214,6 +214,19 @@ type Swap struct {
 	// returned.
 	SigningAttempts int `json:"signing_attempts,omitempty"`
 
+	// BroadcastRebuilds counts broadcast→rebuild→sign→broadcast cycles
+	// driven by transient destination-chain errors that require a fresh
+	// signed tx — currently just Solana blockhash expiry (recent_blockhash
+	// is baked into the signed tx and expires after ~150 slots ≈ 60–90s,
+	// so a tx that sits unbroadcast for too long gets dropped by the
+	// cluster with "Blockhash not found"). On each blockhash-expired
+	// broadcast failure the swap is reset back to bridge_transfer_pending
+	// so the signing driver rebuilds with a fresh blockhash. Capped at
+	// --broadcast-max-rebuilds (default 5) to prevent infinite loops
+	// when the destination cluster is genuinely broken — past the cap
+	// the swap moves to refund_pending.
+	BroadcastRebuilds int `json:"broadcast_rebuilds,omitempty"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

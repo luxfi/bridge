@@ -65,6 +65,31 @@ export const luxTestnet = defineChain({
   testnet: true,
 })
 
+// Lux Local — full-stack sandbox network for local development.
+// Avalanche-style primary network (P-Chain) is chain id 1337; the C-Chain
+// EVM is 31337. Bridge swaps only ever touch the C-Chain side, so the
+// wagmi config exposes 31337. RPC defaults to a vanilla local node
+// listening on the standard avalanchego port; operators with a non-
+// default port override via their own wagmi Config.
+export const luxLocal = defineChain({
+  id: 31337,
+  name: 'Lux Local',
+  nativeCurrency: { decimals: 18, name: 'Lux', symbol: 'LUX' },
+  rpcUrls: { default: { http: ['http://localhost:9650/ext/bc/C/rpc'] } },
+  testnet: true,
+})
+
+// Zoo Local — local devnet sandbox for ZOO development. Same pattern
+// as luxLocal but a distinct EVM chain id so a single local Lux node
+// can host both subnets without ambiguity.
+export const zooLocal = defineChain({
+  id: 200203,
+  name: 'Zoo Local',
+  nativeCurrency: { decimals: 18, name: 'Zoo', symbol: 'ZOO' },
+  rpcUrls: { default: { http: ['http://localhost:9650/ext/bc/C/rpc'] } },
+  testnet: true,
+})
+
 /**
  * EVM chains the bridge can talk to out of the box, partitioned by env.
  *
@@ -102,24 +127,43 @@ const TESTNET_EVM_CHAINS: ViemChain[] = [
   avalancheFuji,
 ]
 
+// Local-env chains for full-stack sandbox testing against a local Lux
+// node. Kept SEPARATE from TESTNET_EVM_CHAINS so a developer running
+// `BRIDGE_ENV=local` doesn't see the public testnet chains they can't
+// actually use, and so a tenant who locks supportedChainIds to local
+// IDs doesn't accidentally enable a stray testnet at the same time.
+const LOCAL_EVM_CHAINS: ViemChain[] = [
+  luxLocal,
+  zooLocal,
+]
+
 /**
- * EVM chains for a given env. `testnet` and `devnet` both use the testnet
- * set (devnet currently rides Sepolia / Holesky for EVM legs too).
+ * EVM chains for a given env.
+ *
+ *   - `testnet` / `devnet` → TESTNET set (Sepolia + Lux Testnet etc.)
+ *   - `local`              → LOCAL set (Lux Local 31337, Zoo Local 200203)
+ *   - anything else        → MAINNET set
+ *
+ * `local` is intentionally distinct from testnet/devnet because the
+ * local sandbox runs against a developer's own avalanchego instance
+ * on localhost — pulling in public testnet chains would confuse the
+ * picker with networks the local bridge can't actually serve.
  */
 function chainsForEnv(env: string): ViemChain[] {
-  return env === 'testnet' || env === 'devnet'
-    ? TESTNET_EVM_CHAINS
-    : MAINNET_EVM_CHAINS
+  if (env === 'local') return LOCAL_EVM_CHAINS
+  if (env === 'testnet' || env === 'devnet') return TESTNET_EVM_CHAINS
+  return MAINNET_EVM_CHAINS
 }
 
 /** Back-compat export — defaults to the mainnet set. */
 const ALL_EVM_CHAINS: ViemChain[] = MAINNET_EVM_CHAINS
 
-/** Lookup viem Chain by numeric chainId across both mainnet + testnet sets. */
+/** Lookup viem Chain by numeric chainId across mainnet + testnet + local sets. */
 export function viemChainById(chainId: number): ViemChain | undefined {
   return (
     MAINNET_EVM_CHAINS.find((c) => c.id === chainId) ??
-    TESTNET_EVM_CHAINS.find((c) => c.id === chainId)
+    TESTNET_EVM_CHAINS.find((c) => c.id === chainId) ??
+    LOCAL_EVM_CHAINS.find((c) => c.id === chainId)
   )
 }
 
@@ -146,7 +190,7 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
   // the same process (this hit the wagmi-config.test.ts suite when default-
   // chain hoisting reordered the shared array).
   const chains: ViemChain[] = supported && supported.length > 0
-    ? [...MAINNET_EVM_CHAINS, ...TESTNET_EVM_CHAINS].filter((c) =>
+    ? [...MAINNET_EVM_CHAINS, ...TESTNET_EVM_CHAINS, ...LOCAL_EVM_CHAINS].filter((c) =>
         supported.includes(c.id),
       )
     : [...envChains]
@@ -225,6 +269,8 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
   const transportFor = (chainId: number): ReturnType<typeof http> => {
     if (chainId === luxMainnet.id) return http('/api/rpc/lux-mainnet')
     if (chainId === luxTestnet.id) return http('/api/rpc/lux-testnet')
+    if (chainId === luxLocal.id) return http('http://localhost:9650/ext/bc/C/rpc')
+    if (chainId === zooLocal.id) return http('http://localhost:9650/ext/bc/C/rpc')
     if (chainId === holesky.id) return http('https://holesky.drpc.org')
     if (chainId === mainnet.id) return http('https://ethereum-rpc.publicnode.com')
     if (chainId === sepolia.id) return http('https://ethereum-sepolia-rpc.publicnode.com')
