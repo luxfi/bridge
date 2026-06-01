@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -63,6 +64,14 @@ type BroadcastDriver struct {
 	// further; 15 s leaves room without holding the loop hostage.
 	perBroadcastTimeout time.Duration
 
+	// maxRebuilds caps how many times a single swap can be reset
+	// back to bridge_transfer_pending due to transient destination-
+	// chain errors (Solana blockhash expiry, future stale-nonce cases
+	// for EVM). Past the cap the swap moves to refund_pending so the
+	// deposit gets returned rather than looping indefinitely. Zero
+	// disables the cap (legacy behaviour).
+	maxRebuilds int
+
 	running atomic.Bool
 
 	ticks          atomic.Uint64
@@ -70,6 +79,7 @@ type BroadcastDriver struct {
 	successes      atomic.Uint64
 	failures       atomic.Uint64
 	skippedNoRawTx atomic.Uint64
+	rebuilds       atomic.Uint64
 	listErrors     atomic.Uint64
 
 	stopOnce      sync.Once
@@ -84,6 +94,16 @@ const DefaultBroadcastInterval = 5 * time.Second
 // DefaultPerBroadcastTimeout caps each individual broadcast call.
 const DefaultPerBroadcastTimeout = 15 * time.Second
 
+// DefaultBroadcastMaxRebuilds caps reset cycles per swap.
+// Solana's recent_blockhash expires after ~150 slots (60–90s) and
+// is baked into the signed tx, so a tx that hits cluster congestion
+// or queues behind us for too long gets dropped and must be re-signed
+// with a fresh blockhash. 5 attempts × (signing interval 5s + broadcast
+// interval 5s) ≈ 50s of headroom — well within blockhash lifetime
+// under normal conditions, and a clear "destination cluster broken"
+// signal if we still can't land a tx after that.
+const DefaultBroadcastMaxRebuilds = 5
+
 // NewBroadcastDriver constructs a driver with sensible defaults.
 func NewBroadcastDriver(store SwapStore, bcaster Broadcaster, interval time.Duration, logger luxlog.Logger) *BroadcastDriver {
 	if interval <= 0 {
@@ -95,6 +115,7 @@ func NewBroadcastDriver(store SwapStore, bcaster Broadcaster, interval time.Dura
 		interval:            interval,
 		logger:              logger,
 		perBroadcastTimeout: DefaultPerBroadcastTimeout,
+		maxRebuilds:         DefaultBroadcastMaxRebuilds,
 	}
 }
 
@@ -108,6 +129,7 @@ type BroadcastDriverStats struct {
 	Successes      uint64 `json:"successes"`
 	Failures       uint64 `json:"failures"`
 	SkippedNoRawTx uint64 `json:"skipped_no_raw_tx"`
+	Rebuilds       uint64 `json:"rebuilds"`
 	ListErrors     uint64 `json:"list_errors"`
 }
 
@@ -119,6 +141,7 @@ func (d *BroadcastDriver) Stats() BroadcastDriverStats {
 		Successes:      d.successes.Load(),
 		Failures:       d.failures.Load(),
 		SkippedNoRawTx: d.skippedNoRawTx.Load(),
+		Rebuilds:       d.rebuilds.Load(),
 		ListErrors:     d.listErrors.Load(),
 	}
 }
@@ -225,6 +248,24 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 				"err", err,
 			)
 		}
+
+		// Solana blockhash expired — recent_blockhash is baked into the
+		// signed tx and lives only ~150 slots (60–90s). A tx that sits
+		// unbroadcast for too long (cluster congestion, queued retries,
+		// fee market spike pushing us below the priority threshold) gets
+		// dropped with "Blockhash not found". Retrying the SAME signed
+		// tx is pointless — the blockhash will never come back.
+		//
+		// Reset the swap to bridge_transfer_pending so the signing driver
+		// rebuilds with a fresh blockhash on its next tick. Cap with
+		// maxRebuilds so a destination cluster that's genuinely broken
+		// can't loop forever — past the cap, route to refund_pending so
+		// the deposit gets returned.
+		if isStaleSolanaBlockhash(err) {
+			d.handleStaleBlockhash(ctx, sw)
+			return
+		}
+
 		// Surface the error so the SDK/UI can show the user what's
 		// blocking (e.g. "insufficient funds for gas" — the release
 		// address needs LUX). The swap stays at SwapStatusBroadcasting
@@ -253,6 +294,7 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 		s.Status = SwapStatusCompleted
 		s.LastError = "" // clear: terminal success.
 		s.LastErrorAt = time.Time{}
+		s.BroadcastRebuilds = 0 // clear rebuild counter on success.
 	})
 	if err != nil {
 		d.failures.Add(1)
@@ -274,6 +316,76 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 	}
 }
 
+// isStaleSolanaBlockhash matches the cluster's rejection of a signed
+// tx whose recent_blockhash has expired. Solana's RPC returns code
+// -32002 with a message containing "Blockhash not found" when the
+// blockhash referenced by the tx is older than the cluster's
+// max_processing_age window (~150 slots, 60–90 s of wall-clock).
+//
+// We match on the substring rather than just the code because -32002
+// also covers preflight simulation failures for unrelated reasons
+// (e.g. "insufficient funds for instruction"). The substring is
+// chain-stable: Solana's validator source emits this exact phrasing
+// when a stale blockhash is the cause, regardless of cluster version.
+func isStaleSolanaBlockhash(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "blockhash not found")
+}
+
+// handleStaleBlockhash resets a swap so the signing driver rebuilds
+// the destination tx with a fresh blockhash. Caps consecutive rebuild
+// cycles to maxRebuilds — beyond that, the destination cluster is
+// likely genuinely broken (sustained congestion, fee-priority bug,
+// validator partition) and we'd rather refund than spin forever.
+func (d *BroadcastDriver) handleStaleBlockhash(ctx context.Context, sw *Swap) {
+	patched, _ := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusBroadcasting {
+			return
+		}
+		s.BroadcastRebuilds++
+		if d.maxRebuilds > 0 && s.BroadcastRebuilds >= d.maxRebuilds {
+			// Persistent destination-side failure — route to refund
+			// rather than retry forever. The refund driver picks up
+			// SwapStatusRefundPending on its next tick.
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf(
+				"Destination cluster rejected %d successive broadcasts with stale blockhash — routing to refund. Likely cluster congestion or RPC partition.",
+				s.BroadcastRebuilds,
+			)
+			s.LastErrorAt = time.Now().UTC()
+			return
+		}
+		// Clear the assembled tx + sign artifacts so the signing
+		// driver re-runs cleanly. Matches the /admin/swaps/:id/reset
+		// shape: those four fields constitute the "we have a built
+		// and signed tx" claim that the broadcast driver consumes.
+		s.Status = SwapStatusBridgeTransferPending
+		s.DestRawTx = ""
+		s.Signature = ""
+		s.MPCSessionID = ""
+		s.DestTxHash = ""
+		s.LastError = "Solana blockhash expired — rebuilding with fresh blockhash"
+		s.LastErrorAt = time.Now().UTC()
+	})
+	d.rebuilds.Add(1)
+	if d.logger != nil && patched != nil {
+		if patched.Status == SwapStatusRefundPending {
+			d.logger.Warn("broadcast rebuilds maxed out → refund_pending",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+				"max", d.maxRebuilds,
+			)
+		} else {
+			d.logger.Info("broadcast: stale blockhash → reset for re-sign",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+			)
+		}
+	}
+}
+
 // humanizeBroadcastErr normalizes the underlying broadcast error into
 // a one-line surface for the SDK + UI. Goals:
 //   - Common chain-side rejections get a short human label so the UI
@@ -291,7 +403,13 @@ func humanizeBroadcastErr(err error) string {
 	msg := err.Error()
 	low := strings.ToLower(msg)
 	switch {
-	case strings.Contains(low, "insufficient funds"):
+	case strings.Contains(low, "insufficient funds"),
+		// Solana's "Attempt to debit an account but found no record of a
+		// prior credit" is emitted when an account has 0 lamports AND
+		// either never existed on chain or has been GC'd post-drain.
+		// Equivalent semantics to EVM "insufficient funds" for our
+		// purposes — release wallet is unfunded.
+		strings.Contains(low, "no record of a prior credit"):
 		return "Insufficient funds in release address — fund the MPC address with destination-chain gas tokens"
 	case strings.Contains(low, "nonce too low"):
 		return "Nonce stale — release address already has a tx with this nonce; bridge will catch up"

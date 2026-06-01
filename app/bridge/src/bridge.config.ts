@@ -96,33 +96,46 @@ const fallbackMpcProtocol: NonNullable<BridgeMPCConfig['protocol']> = 'cggmp21'
 // chains (Solana, BTC, TON, XRP) are signed end-to-end by MPC for both
 // legs and don't appear in the wagmi connector.
 //
-// Env-aware: BRIDGE_ENV=testnet → Sepolia / Lux Testnet / Base Sepolia / Holesky;
-// BRIDGE_ENV=mainnet (default) → the production EVM allow-list.
+// Env-aware:
+//   BRIDGE_ENV=testnet → Sepolia / Lux Testnet / Base Sepolia / Holesky;
+//   BRIDGE_ENV=local   → Lux Local (31337) / Zoo Local (200203) — for
+//                         smoke testing against a local avalanchego node,
+//                         no public testnet chains shown so the picker
+//                         isn't cluttered with networks the local bridge
+//                         can't actually serve;
+//   BRIDGE_ENV=mainnet (default) → the production EVM allow-list.
 const envSlug = env('BRIDGE_ENV', 'mainnet') ?? 'mainnet'
 const isTestnetEnv = envSlug === 'testnet' || envSlug === 'devnet'
-const fallbackSupportedChainIds = isTestnetEnv
+const isLocalEnv = envSlug === 'local'
+const fallbackSupportedChainIds = isLocalEnv
   ? [
-      11155111, // Ethereum Sepolia
-      96368,    // Lux Testnet
-      84532,    // Base Sepolia
-      17000,    // Holesky
-      421614,   // Arbitrum Sepolia
-      11155420, // Optimism Sepolia
-      80002,    // Polygon Amoy
-      97,       // BSC Testnet
-      43113,    // Avalanche Fuji
+      31337,  // Lux Local (C-Chain EVM; P-Chain primary network is 1337
+              // but lives outside wagmi — see luxLocal in wagmi-config.ts)
+      200203, // Zoo Local (C-Chain EVM)
     ]
-  : [
-      1,     // Ethereum mainnet
-      96369, // Lux
-      42161, // Arbitrum
-      8453,  // Base
-      137,   // Polygon
-      10,    // Optimism
-      56,    // BSC
-      43114, // Avalanche
-    ]
-const fallbackDefaultChainId = isTestnetEnv ? 11155111 : 1
+  : isTestnetEnv
+    ? [
+        11155111, // Ethereum Sepolia
+        96368,    // Lux Testnet
+        84532,    // Base Sepolia
+        17000,    // Holesky
+        421614,   // Arbitrum Sepolia
+        11155420, // Optimism Sepolia
+        80002,    // Polygon Amoy
+        97,       // BSC Testnet
+        43113,    // Avalanche Fuji
+      ]
+    : [
+        1,     // Ethereum mainnet
+        96369, // Lux
+        42161, // Arbitrum
+        8453,  // Base
+        137,   // Polygon
+        10,    // Optimism
+        56,    // BSC
+        43114, // Avalanche
+      ]
+const fallbackDefaultChainId = isLocalEnv ? 31337 : isTestnetEnv ? 11155111 : 1
 
 /**
  * Parse a comma-separated list of numeric chain IDs from env, dropping

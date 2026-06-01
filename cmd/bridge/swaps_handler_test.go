@@ -398,7 +398,7 @@ func TestSwapsCreate_NegativeAmount400(t *testing.T) {
 		Amount:             -1,
 		SourceNetwork:      "ETHEREUM_SEPOLIA",
 		DestinationNetwork: "LUX_TESTNET",
-		DestinationAddress: "0xabc",
+		DestinationAddress: "0x0000000000000000000000000000000000000abc",
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
 	if status != http.StatusBadRequest {
@@ -456,7 +456,7 @@ func TestSwapsList_NewestFirst(t *testing.T) {
 		_ = rig.store.Create(t.Context(), &Swap{
 			SourceNetwork:      "ETHEREUM_SEPOLIA",
 			DestinationNetwork: "LUX_TESTNET",
-			DestinationAddress: "0xabc",
+			DestinationAddress: "0x0000000000000000000000000000000000000abc",
 			Amount:             float64(i + 1),
 		})
 		time.Sleep(2 * time.Millisecond) // ensure distinct CreatedAt
@@ -546,7 +546,7 @@ func TestSwapsCreate_UseDepositAddressFalse_SkipsMPC(t *testing.T) {
 		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
 		DestinationAsset:   "LUX",
-		DestinationAddress: "0xabc",
+		DestinationAddress: "0x0000000000000000000000000000000000000abc",
 		UseDepositAddress:  false,
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
@@ -573,7 +573,7 @@ func TestSwapsCreate_UseDepositAddressTrue_NoMPC_Returns503(t *testing.T) {
 		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
 		DestinationAsset:   "LUX",
-		DestinationAddress: "0xabc",
+		DestinationAddress: "0x0000000000000000000000000000000000000abc",
 		UseDepositAddress:  true,
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
@@ -623,7 +623,7 @@ func TestSwapsCreate_MPCKeygenFailure_Returns5xx(t *testing.T) {
 		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
 		DestinationAsset:   "LUX",
-		DestinationAddress: "0xabc",
+		DestinationAddress: "0x0000000000000000000000000000000000000abc",
 		UseDepositAddress:  true,
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
@@ -678,7 +678,7 @@ func TestCheckDeposit_Confirmed(t *testing.T) {
 
 	reqBody, _ := json.Marshal(checkDepositReq{
 		Network: "ETHEREUM_SEPOLIA",
-		Address: "0xabc",
+		Address: "0x0000000000000000000000000000000000000abc",
 		Asset:   "ETH",
 		Amount:  0.5,
 	})
@@ -725,7 +725,7 @@ func TestCheckDeposit_NotRegistered_WhenDisabled(t *testing.T) {
 	// depcheck nil → handler not registered → 404 on POST.
 	rig := newRig(t, nil, nil, nil)
 
-	reqBody, _ := json.Marshal(checkDepositReq{Network: "ETHEREUM_SEPOLIA", Address: "0xabc", Amount: 1})
+	reqBody, _ := json.Marshal(checkDepositReq{Network: "ETHEREUM_SEPOLIA", Address: "0x0000000000000000000000000000000000000abc", Amount: 1})
 	status, _ := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
 	if status != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404 (handler not registered when depcheck=nil)", status)
@@ -759,7 +759,7 @@ func TestAPIAlias_QuoteParityWithV1(t *testing.T) {
 }
 
 func TestAPIAlias_SwapsCreateGoesThroughNativeHandler(t *testing.T) {
-	mpc := mpcMock(t, "0xabc", "tb1q", "Sol1111")
+	mpc := mpcMock(t, "0x0000000000000000000000000000000000000abc", "tb1q", "Sol1111")
 	mclient := &mchain.Client{APIURL: mpc.URL, OrgID: "test-org", Timeout: 2 * time.Second}
 	rig := newRig(t, nil, mclient, nil)
 
@@ -769,7 +769,7 @@ func TestAPIAlias_SwapsCreateGoesThroughNativeHandler(t *testing.T) {
 		SourceAsset:        "ETH",
 		DestinationNetwork: "LUX_TESTNET",
 		DestinationAsset:   "LUX",
-		DestinationAddress: "0xdeadbeef",
+		DestinationAddress: "0x00000000000000000000000000000000deadbeef",
 		UseDepositAddress:  true,
 	})
 	status, body := fireRequest(t, rig.app, http.MethodPost, "/api/swaps", reqBody)

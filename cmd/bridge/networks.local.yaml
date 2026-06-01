@@ -1,0 +1,64 @@
+# Local-network config for cmd/bridge.
+#
+# Drop in: bridge --config cmd/bridge/networks.local.yaml
+#
+# Local-env sandbox for full-stack smoke testing against a local
+# avalanchego (Lux) node. Mirrors the testnet config shape but
+# strips it down to just LUX_LOCAL + ZOO_LOCAL — no public testnet
+# chains, no real-money mainnet chains. Used in conjunction with:
+#
+#   - VITE_BRIDGE_ENV=local on the SPA build (see bridge.config.ts)
+#   - A local avalanchego instance with C-Chain RPC on
+#     http://localhost:9650/ext/bc/C/rpc (the standard port)
+#   - --source-rpc-overrides LUX_LOCAL=http://localhost:9650/...
+#     so deposit watcher + signing assembler hit the local node
+#
+# Chain IDs:
+#   - 1337   Lux Local primary network (P-Chain / X-Chain)  — not in wagmi
+#   - 31337  Lux Local C-Chain EVM                          — wagmi target
+#   - 200203 Zoo Local C-Chain EVM                          — wagmi target
+#
+# Bridge swaps only touch the C-Chain side; the primary network 1337
+# is referenced for P-Chain operations (signer-set queries via b-chain)
+# but never surfaces in the swap UI.
+
+brand:
+  name: Lux Bridge (local)
+  title: Lux Bridge — Local
+  logoUrl: /logo.svg
+  iconUrl: /icon.svg
+  brandHost: localhost
+
+networks:
+  - internalName: LUX_LOCAL
+    displayName: Lux Local
+    nativeCurrency: LUX
+    chainId: "31337"
+    type: evm
+    isTestnet: true
+    isFeatured: true
+    avgCompletion: 10s
+    txExplorerTpl: http://localhost:4000/tx/{tx}
+    addrExplorerTpl: http://localhost:4000/address/{addr}
+
+  - internalName: ZOO_LOCAL
+    displayName: Zoo Local
+    nativeCurrency: ZOO
+    chainId: "200203"
+    type: evm
+    isTestnet: true
+    isFeatured: true
+    avgCompletion: 10s
+    txExplorerTpl: http://localhost:4000/tx/{tx}
+    addrExplorerTpl: http://localhost:4000/address/{addr}
+
+assets:
+  - asset: LUX
+    name: Lux
+    decimals: 18
+    network: LUX_LOCAL
+
+  - asset: ZOO
+    name: Zoo
+    decimals: 18
+    network: ZOO_LOCAL

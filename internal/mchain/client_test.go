@@ -83,6 +83,13 @@ func TestAddressTypeFor_Coverage(t *testing.T) {
 	}{
 		{"ETHEREUM_SEPOLIA", AddressTypeETH},
 		{"LUX_TESTNET", AddressTypeETH},
+		// LUX_LOCAL + ZOO_LOCAL guard the local-env sandbox path.
+		// Without these entries the swap-create family validator
+		// would reject any cross-family swap to/from a local chain
+		// because mchain.AddressTypeFor() would fall through to the
+		// default ETH, which only matches by accident for EVM chains.
+		{"LUX_LOCAL", AddressTypeETH},
+		{"ZOO_LOCAL", AddressTypeETH},
 		{"BSC_MAINNET", AddressTypeETH},
 		{"BITCOIN_TESTNET", AddressTypeBTC},
 		{"SOLANA_DEVNET", AddressTypeSOL},

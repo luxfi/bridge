@@ -355,6 +355,25 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	//     destination address.
 	srcAddrType := mchain.AddressTypeFor(req.SourceNetwork)
 	dstAddrType := mchain.AddressTypeFor(req.DestinationNetwork)
+	// Validate destination_address matches the destination chain family.
+	// The signing driver (signing_driver.go::PreSignSolana et al.) will
+	// pass DestinationAddress through chain-specific encoders that reject
+	// mismatched formats — e.g. an EVM hex string as the Solana recipient
+	// produces "DestinationAddress: solanarpc: invalid base58 character".
+	// At that point the deposit has already landed, and refund of a Lux
+	// source needs a key we don't have in the stub setup, so the deposit
+	// gets permanently stuck. Refuse upfront instead.
+	if !addressMatchesType(req.DestinationAddress, dstAddrType) {
+		fmt.Printf("[swap-create-reject] destination_wrong_chain_family destination=%s dst_addr_type=%s destination_address=%s\n",
+			req.DestinationNetwork, dstAddrType, req.DestinationAddress)
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "destination_wrong_chain_family",
+			"detail": fmt.Sprintf(
+				"destination_address %q is not a valid %s address for destination network %s — supply a %s-formatted address (base58 for svm, 0x… for evm/lux)",
+				req.DestinationAddress, dstAddrType, req.DestinationNetwork, dstAddrType,
+			),
+		})
+	}
 	sender := req.Sender
 	if sender == "" {
 		if srcAddrType != dstAddrType {

@@ -65,6 +65,8 @@ var networkAddressType = map[string]AddressType{
 	"LUX_MAINNET":       AddressTypeETH,
 	"LUX_TESTNET":       AddressTypeETH,
 	"LUX_DEVNET":        AddressTypeETH,
+	"LUX_LOCAL":         AddressTypeETH,
+	"ZOO_LOCAL":         AddressTypeETH,
 	"ZOO_MAINNET":       AddressTypeETH,
 	"ZOO_TESTNET":       AddressTypeETH,
 	"ZOO_DEVNET":        AddressTypeETH,
