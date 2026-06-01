@@ -161,10 +161,16 @@ export const BridgeApp: FC = () => {
     [],
   )
 
+  // BridgeConfig.solanaRpcUrl threads the tenant's Solana cluster choice
+  // into the SDK-internal Connection. Undefined ⇒ NonEVMProviders picks
+  // its mainnet default. Tenants on devnet smoke rigs set this to
+  // https://api.devnet.solana.com so wallet-balance reads (and the
+  // SVM auto-deposit path in tryAutoDeposit) hit the cluster the user's
+  // Phantom is actually on.
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <NonEVMProviders>
+        <NonEVMProviders solanaRpcUrl={cfg.solanaRpcUrl}>
           <BridgeAppInner />
         </NonEVMProviders>
       </QueryClientProvider>

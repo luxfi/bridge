@@ -617,6 +617,21 @@ async function readSolanaBalance(connection: Connection, pubkey: PublicKey): Pro
 export function useSolanaSend(): {
   sendSolAsync: (args: { to: string; sol: number }) => Promise<string>
   ready: boolean
+  // Base58 pubkey of the connected Solana wallet, resolved across
+  // both the SDK-adapter path and the phantom-global path. Null when
+  // no Solana wallet is connected. Used by useTransfers to populate
+  // `sender` on createSwap for SVM-source swaps — without this the
+  // bridge would fall back to the EVM `account.address` and the
+  // refund driver would later choke on a non-base58 sender.
+  //
+  // IMPORTANT: this hook subscribes to Phantom's connect/disconnect
+  // events so a late-binding wallet connection forces a re-render
+  // and bubbles the new pubkey up to useTransfers. Otherwise an
+  // initial render with no wallet captures `null` into useCallback
+  // closures and a later connect doesn't refresh them — the SPA
+  // would silently submit createSwap with no sender, and the bridge
+  // would reject with "missing_source_chain_sender".
+  senderAddress: string | null
 } {
   const conn = useConnection()
   const sol = useSolanaWalletInternal()
@@ -642,6 +657,44 @@ export function useSolanaSend(): {
   } catch {
     // No WalletProvider in scope — leave SDK refs unset.
   }
+
+  // Phantom-global subscription: when the user connects via the
+  // window.phantom.solana path (path 1) or Wallet Standard direct
+  // (path 2), sol.publicKey stays null because the SDK adapter
+  // never sees the connection. The provider DOES emit connect /
+  // disconnect events on its own surface though, so we mirror them
+  // into local state. Without this hook a late-binding connect
+  // never triggers a re-render of useTransfers, the useCallback
+  // closure keeps its initial null senderAddress, and createSwap
+  // submits with no sender field — bridge rejects 400 with
+  // "missing_source_chain_sender" even though the wallet is
+  // actually connected and ready to sign.
+  const [phantomGlobalAddress, setPhantomGlobalAddress] = useState<string | null>(
+    () => getPhantom()?.publicKey?.toString() ?? null,
+  )
+  useEffect(() => {
+    const phantom = getPhantom()
+    if (!phantom?.on || !phantom.off) return
+    // Initial sync — phantom may already be connected by the time
+    // this effect runs (returning user, page reload, etc.).
+    if (phantom.publicKey) {
+      setPhantomGlobalAddress(phantom.publicKey.toString())
+    }
+    const handleConnect = (...args: unknown[]) => {
+      const pk = args[0] as { toString(): string } | undefined
+      if (pk) setPhantomGlobalAddress(pk.toString())
+      else if (phantom.publicKey) setPhantomGlobalAddress(phantom.publicKey.toString())
+    }
+    const handleDisconnect = () => {
+      setPhantomGlobalAddress(null)
+    }
+    phantom.on('connect', handleConnect)
+    phantom.on('disconnect', handleDisconnect)
+    return () => {
+      phantom.off?.('connect', handleConnect)
+      phantom.off?.('disconnect', handleDisconnect)
+    }
+  }, [])
 
   const sendSolAsync = useCallback(
     async (args: { to: string; sol: number }): Promise<string> => {
@@ -720,9 +773,16 @@ export function useSolanaSend(): {
     [conn.connection, sdkConnected, sdkPublicKey, sdkSend],
   )
 
-  const ready = Boolean(sdkPublicKey || getPhantom()?.publicKey)
+  // Prefer the live state subscription (phantomGlobalAddress) over
+  // the raw getPhantom() lookup so a late-binding connect actually
+  // bubbles up; fall back to the raw lookup for SSR / no-provider
+  // contexts where the effect hasn't run yet.
+  const phantomAddr =
+    phantomGlobalAddress ?? getPhantom()?.publicKey?.toString() ?? null
+  const ready = Boolean(sdkPublicKey || phantomAddr)
+  const senderAddress = sdkPublicKey?.toBase58() ?? phantomAddr ?? null
 
-  return { sendSolAsync, ready }
+  return { sendSolAsync, ready, senderAddress }
 }
 
 // =============================================================================

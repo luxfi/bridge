@@ -242,6 +242,17 @@ export interface BridgeConfig {
    * @deprecated Use `auth.orgSlug` instead. Preserved for backwards compat.
    */
   iamOrg?: string
+  /**
+   * Optional Solana RPC endpoint for the user-leg wallet adapter
+   * (balance reads, optional auto-deposit send). Defaults to
+   * `https://solana-rpc.publicnode.com` (mainnet) inside NonEVMProviders.
+   * Override for devnet smoke tests (`https://api.devnet.solana.com`),
+   * staging clusters, or higher-rate-limit endpoints (Helius / QuickNode /
+   * Triton). The bridge BACKEND has its own --solana-rpc-url flag for the
+   * release leg; this field only affects what the SPA's Connection
+   * queries for balance / send.
+   */
+  solanaRpcUrl?: string
 }
 
 /**

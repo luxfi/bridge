@@ -298,6 +298,14 @@ async function createSwapViaRest(
       destination_network: params.destinationNetwork,
       destination_asset: params.destinationAsset,
       destination_address: params.destinationAddress,
+      // Sender = the connected wallet on the SOURCE chain. The bridge's
+      // refund driver sends source funds back to this address when a
+      // swap fails, so it MUST match the source family (base58 for svm
+      // sources, 0x… for evm/lux sources). For cross-family swaps the
+      // backend rejects empty/wrong-family senders at create time; for
+      // same-family swaps it falls back to destination_address as the
+      // self-bridge convention.
+      ...(params.sender ? { sender: params.sender } : {}),
       refuel: params.refuel ?? false,
       use_deposit_address: params.useDepositAddress,
       use_teleporter: params.useTeleporter,

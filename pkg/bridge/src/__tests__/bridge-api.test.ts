@@ -165,6 +165,56 @@ describe('createSwap', () => {
     })
   })
 
+  it('forwards sender on the JSON body when provided (cross-family refund prerequisite)', async () => {
+    // Regression for the Sol→Lux smoke-test bug: createSwapViaRest used
+    // to enumerate body keys explicitly and silently dropped params.sender,
+    // so even a correctly-resolved Solana base58 from the SPA never
+    // reached the backend. The backend then fell back to destination_address
+    // (EVM hex), which broke the refund leg with "invalid base58 character".
+    global.fetch = mockFetch({
+      body: { data: { id: 'swap_abc', status: 'pending' } },
+    })
+    await createSwap(API_HOST, {
+      amount: 0.1,
+      sourceNetwork: 'SOLANA_DEVNET',
+      sourceAsset: 'SOL',
+      destinationNetwork: 'LUX_TESTNET',
+      destinationAsset: 'LUX',
+      destinationAddress: '0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473',
+      sender: '86vHdqjGz2TRDFfufrYUAehCCeR5PF5g9Qw7Quyzis6F',
+      useDepositAddress: true,
+      useTeleporter: false,
+      appName: 'test',
+    })
+    const init = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as RequestInit
+    const body = JSON.parse(init.body as string)
+    expect(body.sender).toBe('86vHdqjGz2TRDFfufrYUAehCCeR5PF5g9Qw7Quyzis6F')
+  })
+
+  it('omits sender from the JSON body when not provided (no empty-string fallback)', async () => {
+    // Negative case: when params.sender is undefined the body must not
+    // include the key at all — the backend distinguishes "missing"
+    // (same-family fallback to destination_address) from "empty"
+    // (rejected as missing_source_chain_sender for cross-family).
+    global.fetch = mockFetch({
+      body: { data: { id: 'swap_xyz', status: 'pending' } },
+    })
+    await createSwap(API_HOST, {
+      amount: 1,
+      sourceNetwork: 'LUX_MAINNET',
+      sourceAsset: 'LUX',
+      destinationNetwork: 'ETHEREUM_MAINNET',
+      destinationAsset: 'USDC',
+      destinationAddress: '0xabc',
+      useDepositAddress: true,
+      useTeleporter: false,
+      appName: 'test',
+    })
+    const init = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as RequestInit
+    const body = JSON.parse(init.body as string)
+    expect(body).not.toHaveProperty('sender')
+  })
+
   it('throws when server returns no id', async () => {
     global.fetch = mockFetch({ body: { data: {} } })
     await expect(
