@@ -13,15 +13,16 @@ import (
 // buildLockEvent constructs a fake LockEvent borsh payload for testing parseLockEventFromLogs.
 //
 // Layout after 8-byte discriminator:
-//   source_chain: u64   (8)   offset 0
-//   dest_chain:   u64   (8)   offset 8
-//   nonce:        u64   (8)   offset 16
-//   token:        [32]u8      offset 24
-//   sender:       [32]u8      offset 56
-//   recipient:    [32]u8      offset 88  (EVM addr in last 20 bytes => offset 100..120)
-//   amount:       u64   (8)   offset 120
-//   fee:          u64   (8)   offset 128
-//   timestamp:    i64   (8)   offset 136
+//
+//	source_chain: u64   (8)   offset 0
+//	dest_chain:   u64   (8)   offset 8
+//	nonce:        u64   (8)   offset 16
+//	token:        [32]u8      offset 24
+//	sender:       [32]u8      offset 56
+//	recipient:    [32]u8      offset 88  (EVM addr in last 20 bytes => offset 100..120)
+//	amount:       u64   (8)   offset 120
+//	fee:          u64   (8)   offset 128
+//	timestamp:    i64   (8)   offset 136
 //
 // Total event body: 144 bytes.  With discriminator: 152 bytes.
 func buildLockEvent(srcChain, destChain, nonce, amount, fee uint64, timestamp int64, recipient [20]byte) []byte {
