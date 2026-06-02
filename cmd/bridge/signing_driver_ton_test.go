@@ -21,9 +21,9 @@ import (
 
 func TestTONAmountToNano(t *testing.T) {
 	cases := []struct {
-		name    string
-		amount  float64
-		want    string // string-formatted nanoton
+		name   string
+		amount float64
+		want   string // string-formatted nanoton
 	}{
 		{"zero", 0, "0"},
 		{"one_ton", 1.0, "1000000000"},
@@ -297,7 +297,7 @@ func TestGasPrecheckTON_JettonPathSkipsValueInCheck(t *testing.T) {
 	spec := txassembler.TONSpec{
 		Network:    "TON_TESTNET",
 		AmountNano: big.NewInt(1_000_000_000), // 1000 USDT (6 decimals, big number)
-		Asset:      "USDT",                     // jetton path
+		Asset:      "USDT",                    // jetton path
 	}
 	_, ok := d.gasPrecheckTON(context.Background(), sw, spec, "0:abc")
 	if !ok {

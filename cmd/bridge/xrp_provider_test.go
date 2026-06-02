@@ -16,9 +16,9 @@ import (
 // rippledStub serves canonical rippled-shape replies for the methods
 // the provider calls.
 type rippledStub struct {
-	server   *httptest.Server
-	handler  func(method string, params []map[string]interface{}) interface{}
-	calls    int
+	server  *httptest.Server
+	handler func(method string, params []map[string]interface{}) interface{}
+	calls   int
 }
 
 func newRippledStub(t *testing.T, handler func(method string, params []map[string]interface{}) interface{}) *rippledStub {

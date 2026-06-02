@@ -163,17 +163,19 @@ func (p *PolkadotPlugin) getBlockDeposits(ctx context.Context, blockHash string,
 // if it is a bridge.deposit call. Returns the deposit event if so.
 //
 // Substrate extrinsic format (hex-encoded):
-//   length_prefix + version_byte + [signature_block] + call_data
+//
+//	length_prefix + version_byte + [signature_block] + call_data
 //
 // The call_data starts with a pallet index and call index.
 // We look for the bridge pallet deposit call by its known call encoding.
 //
 // Bridge.deposit call_data layout:
-//   pallet_index:  1 byte  (configured per runtime, we match from bridgeAddr config)
-//   call_index:    1 byte  (0x00 for deposit)
-//   recipient:     32 bytes (EVM address zero-padded, last 20 bytes used)
-//   amount:        compact SCALE u128
-//   nonce:         8 bytes  (u64 little-endian)
+//
+//	pallet_index:  1 byte  (configured per runtime, we match from bridgeAddr config)
+//	call_index:    1 byte  (0x00 for deposit)
+//	recipient:     32 bytes (EVM address zero-padded, last 20 bytes used)
+//	amount:        compact SCALE u128
+//	nonce:         8 bytes  (u64 little-endian)
 func parseSubstrateDepositExtrinsic(extHex string, blockNum uint64) (DepositEvent, bool) {
 	data, err := hexToBytes(extHex)
 	if err != nil || len(data) < 3 {
