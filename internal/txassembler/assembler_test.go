@@ -223,11 +223,14 @@ func TestFloatToWei_RejectsNegative(t *testing.T) {
 // =============================================================================
 
 // Canonical EIP-155 example from EIP-155 itself:
-//   nonce=9, gasPrice=20gwei, gas=21000,
-//   to=0x3535353535353535353535353535353535353535, value=1ether,
-//   data=empty, chainID=1, r=0, s=0
+//
+//	nonce=9, gasPrice=20gwei, gas=21000,
+//	to=0x3535353535353535353535353535353535353535, value=1ether,
+//	data=empty, chainID=1, r=0, s=0
+//
 // signing hash should be:
-//   0xdaf5a779ae972f972197303d7b574746c7ef83eadac0f2791ad23db92e4c8e53
+//
+//	0xdaf5a779ae972f972197303d7b574746c7ef83eadac0f2791ad23db92e4c8e53
 //
 // The signed-tx hex (with the specific r,s,v from the EIP-155 example)
 // is also documented. We test PreSign against the sighash.

@@ -18,28 +18,28 @@ func TestDecodeVarUInteger16(t *testing.T) {
 	}{
 		{
 			name:       "1_byte_small",
-			data:       []byte{0x10, 0x01},        // high nibble = 1 -> 1 byte follows: 0x01
+			data:       []byte{0x10, 0x01}, // high nibble = 1 -> 1 byte follows: 0x01
 			offset:     0,
 			wantVal:    big.NewInt(1),
 			wantOffset: 2,
 		},
 		{
 			name:       "1_byte_max",
-			data:       []byte{0x10, 0xFF},         // 1 byte: 255
+			data:       []byte{0x10, 0xFF}, // 1 byte: 255
 			offset:     0,
 			wantVal:    big.NewInt(255),
 			wantOffset: 2,
 		},
 		{
 			name:       "2_bytes",
-			data:       []byte{0x20, 0x03, 0xE8},   // high nibble = 2 -> 2 bytes: 0x03E8 = 1000
+			data:       []byte{0x20, 0x03, 0xE8}, // high nibble = 2 -> 2 bytes: 0x03E8 = 1000
 			offset:     0,
 			wantVal:    big.NewInt(1000),
 			wantOffset: 3,
 		},
 		{
-			name: "4_bytes_medium",
-			data: []byte{0x40, 0x3B, 0x9A, 0xCA, 0x00}, // 4 bytes: 0x3B9ACA00 = 1e9 (1 TON)
+			name:       "4_bytes_medium",
+			data:       []byte{0x40, 0x3B, 0x9A, 0xCA, 0x00}, // 4 bytes: 0x3B9ACA00 = 1e9 (1 TON)
 			offset:     0,
 			wantVal:    big.NewInt(1_000_000_000),
 			wantOffset: 5,
