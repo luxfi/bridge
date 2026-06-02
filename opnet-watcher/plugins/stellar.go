@@ -121,10 +121,10 @@ type stellarBalance struct {
 }
 
 type stellarTransaction struct {
-	Hash        string `json:"hash"`
-	Ledger      uint64 `json:"ledger"`
-	Memo        string `json:"memo"`
-	MemoType    string `json:"memo_type"`
+	Hash     string `json:"hash"`
+	Ledger   uint64 `json:"ledger"`
+	Memo     string `json:"memo"`
+	MemoType string `json:"memo_type"`
 }
 
 func (s *StellarPlugin) getCurrentLedger(ctx context.Context) (uint64, error) {

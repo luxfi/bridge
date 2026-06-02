@@ -488,8 +488,8 @@ func main() {
 	signerCtx, signerCancel := context.WithCancel(context.Background())
 	if !*disableSigningDriver && mchainClient != nil {
 		signer = NewSigningDriver(swapStore, mchainClient, *signingInterval, logger)
-		signer.SetAssembler(asm)         // produces wire-correct EVM txs
-		signer.SetTONAssembler(tonAsm)   // produces TON v4r2 BOCs
+		signer.SetAssembler(asm)       // produces wire-correct EVM txs
+		signer.SetTONAssembler(tonAsm) // produces TON v4r2 BOCs
 		if releasePool != nil && releasePool.Size() > 0 {
 			signer.SetReleasePool(releasePool)
 		}
