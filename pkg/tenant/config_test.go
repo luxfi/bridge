@@ -84,8 +84,8 @@ func TestPQProfileRequired(t *testing.T) {
 
 func TestFeeReceiverAddrFormat(t *testing.T) {
 	cases := []struct {
-		name  string
-		addr  string
+		name   string
+		addr   string
 		wantOK bool
 	}{
 		{"valid 0x lower", "0x1234567890abcdef1234567890abcdef12345678", true},
