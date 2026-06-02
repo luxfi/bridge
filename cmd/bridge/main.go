@@ -686,9 +686,9 @@ func main() {
 		}
 		if releasePoolSet != nil && releasePoolSet.Size() > 0 {
 			body["release_pool_set"] = map[string]any{
-				"family_sizes":                    releasePoolSet.FamilySizes(),
-				"sol_mint_network":                *releasePoolMintNetworkSOL,
-				"sol_balance_threshold_lamports":  *releaseBalanceThresholdLamports,
+				"family_sizes":                   releasePoolSet.FamilySizes(),
+				"sol_mint_network":               *releasePoolMintNetworkSOL,
+				"sol_balance_threshold_lamports": *releaseBalanceThresholdLamports,
 			}
 		}
 		return c.JSON(200, body)

@@ -111,7 +111,7 @@ func TestDefaultRegistry_HasCommonAssets(t *testing.T) {
 		{"ETHEREUM_MAINNET", "ETH", "", 18},
 		{"ETHEREUM_SEPOLIA", "USDC", "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", 6},
 		{"LUX_TESTNET", "LUX", "", 18},
-		{"BSC_MAINNET", "USDC", "", 18},  // BSC USDC is 18 decimals — not 6!
+		{"BSC_MAINNET", "USDC", "", 18}, // BSC USDC is 18 decimals — not 6!
 		{"POLYGON_MAINNET", "USDC", "", 6},
 		{"BITCOIN_TESTNET", "BTC", "", 8},
 		{"SOLANA_DEVNET", "SOL", "", 9},
