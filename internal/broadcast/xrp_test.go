@@ -22,11 +22,11 @@ import (
 // rippledMock is a stub rippled server. It returns whatever envelope
 // the test pre-populates.
 type rippledMock struct {
-	server      *httptest.Server
-	calls       int
-	lastTxBlob  string
-	resBody     []byte
-	statusCode  int
+	server     *httptest.Server
+	calls      int
+	lastTxBlob string
+	resBody    []byte
+	statusCode int
 }
 
 func newRippledMock(t *testing.T) *rippledMock {

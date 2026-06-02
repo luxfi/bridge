@@ -97,10 +97,10 @@ type accountInfoResp struct {
 type feeResp struct {
 	Result struct {
 		Drops struct {
-			OpenLedgerFee   string `json:"open_ledger_fee"`
-			MedianFee       string `json:"median_fee"`
-			MinimumFee      string `json:"minimum_fee"`
-			BaseFee         string `json:"base_fee"`
+			OpenLedgerFee string `json:"open_ledger_fee"`
+			MedianFee     string `json:"median_fee"`
+			MinimumFee    string `json:"minimum_fee"`
+			BaseFee       string `json:"base_fee"`
 		} `json:"drops"`
 		Status       string `json:"status"`
 		Error        string `json:"error,omitempty"`

@@ -288,10 +288,10 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// when configured; otherwise fall back to the deposit-as-release
 	// path that handled v1 swaps.
 	var (
-		walletID    string
-		senderAddr  string
-		poolEntry   *ReleasePoolEntry
-		usingPool   bool
+		walletID   string
+		senderAddr string
+		poolEntry  *ReleasePoolEntry
+		usingPool  bool
 	)
 	if d.pool != nil && d.pool.Size() > 0 {
 		// Acquire a wallet whose family matches the destination network.

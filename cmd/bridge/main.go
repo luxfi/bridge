@@ -641,12 +641,12 @@ func main() {
 		}
 		if releasePool != nil {
 			body["release_pool"] = map[string]any{
-				"size":                  releasePool.Size(),
-				"size_xrp":              releasePool.SizeByFamily("xrp"),
-				"size_eth":              releasePool.SizeByFamily("eth"),
-				"mint_network":          *releasePoolMintNetwork,
-				"xrp_mint_network":      *xrpReleasePoolMintNetwork,
-				"balance_threshold_wei": *releaseBalanceThresholdWei,
+				"size":                        releasePool.Size(),
+				"size_xrp":                    releasePool.SizeByFamily("xrp"),
+				"size_eth":                    releasePool.SizeByFamily("eth"),
+				"mint_network":                *releasePoolMintNetwork,
+				"xrp_mint_network":            *xrpReleasePoolMintNetwork,
+				"balance_threshold_wei":       *releaseBalanceThresholdWei,
 				"xrp_balance_threshold_drops": *xrpReleaseBalanceThresholdDrops,
 			}
 		}

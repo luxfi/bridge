@@ -11,7 +11,7 @@ func TestChainIDConstants(t *testing.T) {
 		got  uint64
 		want uint64
 	}{
-		{"OPNETChainID", OPNETChainID, 4294967299},  // 0x100000003 -- NOT the old 1330663759
+		{"OPNETChainID", OPNETChainID, 4294967299},   // 0x100000003 -- NOT the old 1330663759
 		{"SolanaChainID", SolanaChainID, 1399811149}, // "SOLN"
 		{"TONChainID", TONChainID, 1414483791},       // "TONO"
 	}

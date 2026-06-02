@@ -190,7 +190,7 @@ type BroadcastResult struct {
 //   - ErrFamilyNotImplemented         BTC/SOL/TON/DOT — TODO.
 //   - ErrEmptyRawTx                   rawTxHex == "".
 //   - *RPCError                       upstream returned a JSON-RPC error
-//                                     or non-2xx HTTP.
+//     or non-2xx HTTP.
 //   - context.Canceled/DeadlineExceeded on caller or per-call timeout.
 func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*BroadcastResult, error) {
 	if rawTxHex == "" {
