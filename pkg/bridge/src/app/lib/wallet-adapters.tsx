@@ -22,7 +22,7 @@
 // the hook returns a noop shape with connect() rejecting — the UI then
 // keeps the existing "MPC-signed — no wallet balance" message.
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FC, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FC, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import {
   ConnectionProvider,
@@ -856,8 +856,18 @@ async function readTonBalance(address: string): Promise<number> {
 // =============================================================================
 // Bitcoin (sats-connect)
 // =============================================================================
+//
+// BTC connection state lives in BTCWalletContext, NOT in the hook's
+// local useState. Reason: the WalletConnect dialog and the AssetInput
+// row both call useWalletForFamily('btc'), and without a shared
+// provider each call gets its own useState — so a successful connect
+// in the dialog never propagates to the asset input's balance row.
+// (Solana / TON dodge this because their adapter libraries ship their
+// own React Context out of the box; sats-connect doesn't.)
 
-function useWalletForBTC(): WalletForFamily {
+const BTCWalletContext = createContext<WalletForFamily | null>(null)
+
+const BTCWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState<string | null>(null)
   const [connected, setConnected] = useState(false)
   const [connecting, setConnecting] = useState(false)
@@ -865,23 +875,34 @@ function useWalletForBTC(): WalletForFamily {
   const [balanceLoading, setBalanceLoading] = useState(false)
 
   const connect = useCallback(async () => {
+    console.log('[BTC] connect() start')
     setConnecting(true)
     try {
       const sats = await import('sats-connect')
-      // sats-connect v4: provider request API
+      console.log('[BTC] sats-connect loaded; calling getAccounts')
+      // sats-connect v4: provider request API. Cast to never sidesteps
+      // a long-standing v4 typing quirk where Params<'getAccounts'>
+      // doesn't narrow from the string literal cleanly.
       const resp = await sats.default.request('getAccounts', {
         purposes: ['payment'],
         message: 'Connect to the Lux Bridge',
       } as never)
+      console.log('[BTC] getAccounts resp =', resp)
       if (resp.status !== 'success') {
-        throw new Error(`sats-connect status=${resp.status}`)
+        const err = (resp as { error?: { message?: string; code?: number } }).error
+        throw new Error(`sats-connect status=${resp.status}${err?.message ? `: ${err.message}` : ''}`)
       }
-      // getAccounts returns { result: [{ address, addressType, publicKey, purpose }] }
+      // getAccounts returns result: [{ address, addressType, publicKey, purpose, walletType }]
       const accounts = (resp as { result: Array<{ address: string; purpose: string }> }).result
+      console.log('[BTC] accounts =', accounts)
       const paymentAcct = accounts.find((a) => a.purpose === 'payment') ?? accounts[0]
       if (!paymentAcct) throw new Error('sats-connect: no payment account returned')
+      console.log('[BTC] setting address =', paymentAcct.address)
       setAddress(paymentAcct.address)
       setConnected(true)
+    } catch (err) {
+      console.error('[BTC] connect failed:', err)
+      throw err
     } finally {
       setConnecting(false)
     }
@@ -898,6 +919,7 @@ function useWalletForBTC(): WalletForFamily {
   // Refresh BTC balance via mempool.space (public + open CORS) when
   // the address changes. Returns satoshis; we convert to BTC.
   useEffect(() => {
+    console.log('[BTC] balance effect fired, address =', address)
     if (!address) {
       setBalance(null)
       return
@@ -906,13 +928,94 @@ function useWalletForBTC(): WalletForFamily {
     setBalanceLoading(true)
     void readBtcBalance(address)
       .then((sats) => {
+        console.log('[BTC] balance fetch ok, sats =', sats)
         if (cancelled) return
         // 1 BTC = 1e8 satoshis.
         setBalance(sats / 100_000_000)
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[BTC] balance fetch failed:', err)
         if (cancelled) return
         setBalance(null)
+      })
+      .finally(() => {
+        if (!cancelled) setBalanceLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [address])
+
+  const value = useMemo<WalletForFamily>(
+    () => ({
+      family: 'btc',
+      address,
+      connected,
+      connecting,
+      connect,
+      disconnect,
+      balance,
+      balanceSymbol: 'BTC',
+      balanceLoading,
+      availableWallets: [],
+    }),
+    [address, connected, connecting, connect, disconnect, balance, balanceLoading],
+  )
+
+  return <BTCWalletContext.Provider value={value}>{children}</BTCWalletContext.Provider>
+}
+
+// Fallback used when no BTCWalletProvider is mounted upstream (legacy
+// host apps): every hook call still gets its own useState, so connect
+// in one component won't propagate to others — but the existing
+// behavior (single-component flows) keeps working.
+function useFallbackBTCWallet(): WalletForFamily {
+  const [address, setAddress] = useState<string | null>(null)
+  const [connected, setConnected] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const [balance, setBalance] = useState<number | null>(null)
+  const [balanceLoading, setBalanceLoading] = useState(false)
+
+  const connect = useCallback(async () => {
+    setConnecting(true)
+    try {
+      const sats = await import('sats-connect')
+      const resp = await sats.default.request('getAccounts', {
+        purposes: ['payment'],
+        message: 'Connect to the Lux Bridge',
+      } as never)
+      if (resp.status !== 'success') {
+        throw new Error(`sats-connect status=${resp.status}`)
+      }
+      const accounts = (resp as { result: Array<{ address: string; purpose: string }> }).result
+      const paymentAcct = accounts.find((a) => a.purpose === 'payment') ?? accounts[0]
+      if (!paymentAcct) throw new Error('sats-connect: no payment account returned')
+      setAddress(paymentAcct.address)
+      setConnected(true)
+    } finally {
+      setConnecting(false)
+    }
+  }, [])
+
+  const disconnect = useCallback(async () => {
+    setAddress(null)
+    setConnected(false)
+    setBalance(null)
+  }, [])
+
+  useEffect(() => {
+    if (!address) {
+      setBalance(null)
+      return
+    }
+    let cancelled = false
+    setBalanceLoading(true)
+    void readBtcBalance(address)
+      .then((sats) => {
+        if (!cancelled) setBalance(sats / 100_000_000)
+      })
+      .catch(() => {
+        if (!cancelled) setBalance(null)
       })
       .finally(() => {
         if (!cancelled) setBalanceLoading(false)
@@ -936,11 +1039,37 @@ function useWalletForBTC(): WalletForFamily {
   }
 }
 
+function useWalletForBTC(): WalletForFamily {
+  const ctx = useContext(BTCWalletContext)
+  // Hooks rule of order: both branches must call the same hooks. We
+  // call the fallback hook unconditionally; when the provider IS
+  // mounted (the common case) we just discard its state and return
+  // the shared context value instead.
+  const fallback = useFallbackBTCWallet()
+  const result = ctx ?? fallback
+  console.log('[BTC] useWalletForBTC: ctx=', ctx ? 'context' : 'fallback', 'connected=', result.connected, 'address=', result.address, 'balance=', result.balance, 'balanceLoading=', result.balanceLoading)
+  return result
+}
+
+// isTestnetBtcAddress detects testnet3 addresses by base58/bech32 prefix.
+// Mainnet P2PKH/P2SH/bech32 start with 1, 3, bc1. Testnet3 equivalents
+// start with m, n, 2, tb1. Address-driven so it works whether Xverse is
+// on testnet because the user switched it, or because the bridge is in
+// testnet env — the displayed balance always matches the actual address.
+function isTestnetBtcAddress(address: string): boolean {
+  if (address.toLowerCase().startsWith('tb1')) return true
+  const first = address.charAt(0)
+  return first === 'm' || first === 'n' || first === '2'
+}
+
 async function readBtcBalance(address: string): Promise<number> {
-  // mempool.space GET /api/address/<addr>
+  // mempool.space GET /api/address/<addr> on mainnet, /testnet/api/... on testnet3.
   // Returns { chain_stats: { funded_txo_sum, spent_txo_sum, ... }, ... }
   // Balance = funded - spent.
-  const url = `https://mempool.space/api/address/${encodeURIComponent(address)}`
+  const base = isTestnetBtcAddress(address)
+    ? 'https://mempool.space/testnet/api'
+    : 'https://mempool.space/api'
+  const url = `${base}/address/${encodeURIComponent(address)}`
   const r = await fetch(url, { headers: { Accept: 'application/json' } })
   if (!r.ok) throw new Error(`mempool.space HTTP ${r.status}`)
   const j = (await r.json()) as {
@@ -1076,15 +1205,17 @@ interface NonEVMProvidersProps {
 }
 
 /**
- * NonEVMProviders wraps its children with Solana + TonConnect
+ * NonEVMProviders wraps its children with Solana + TonConnect + BTC
  * providers. Mount it INSIDE the wagmi provider so the order is:
  *
  *   WagmiProvider
  *     NonEVMProviders
  *       <bridge UI>
  *
- * BTC has no provider — sats-connect is invoked imperatively per
- * connect() call.
+ * BTC needs an explicit provider (BTCWalletProvider) because
+ * sats-connect doesn't ship its own React Context — without it, the
+ * WalletConnect dialog and the AssetInput row would each get their
+ * own useState and the connect wouldn't propagate.
  */
 export const NonEVMProviders: FC<NonEVMProvidersProps> = ({
   solanaRpcUrl = 'https://solana-rpc.publicnode.com',
@@ -1107,7 +1238,7 @@ export const NonEVMProviders: FC<NonEVMProvidersProps> = ({
     <ConnectionProvider endpoint={solanaRpcUrl}>
       <WalletProvider wallets={solanaWalletAdapters} autoConnect={false}>
         <TonConnectUIProvider manifestUrl={tonManifestUrl}>
-          {children}
+          <BTCWalletProvider>{children}</BTCWalletProvider>
         </TonConnectUIProvider>
       </WalletProvider>
     </ConnectionProvider>

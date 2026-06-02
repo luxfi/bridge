@@ -70,6 +70,10 @@ export function deriveChainId(net: ApiNetwork): string {
     case 'solana':
       return net.is_testnet ? 'svm:devnet' : 'svm:101'
     case 'btc':
+    case 'bitcoin':
+      // Backend uses the full word "bitcoin"; legacy responses use the
+      // short "btc" — accept both so the asset.chainId is always the
+      // 'btc:…' form familyForBridgeId routes by.
       return net.is_testnet ? 'btc:testnet' : 'btc:mainnet'
     case 'ton':
       return net.is_testnet ? 'ton:testnet' : 'ton:mainnet'

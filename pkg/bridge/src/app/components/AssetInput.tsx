@@ -153,19 +153,20 @@ export const AssetInput: FC<AssetInputProps> = ({
     | { kind: 'hidden' }
 
   const balanceState = useMemo<BalanceState>(() => {
-    if (!wallet.connected && !walletAddress) return { kind: 'no-wallet' }
-    if (wallet.balanceLoading) return { kind: 'loading' }
-    if (wallet.balance !== null) {
-      return { kind: 'amount', text: formatAmount(wallet.balance, 4) }
-    }
-    // No balance yet + no adapter for this family ⇒ pending adapter
-    // (XRP, Cardano, Substrate). Show the explanatory message so the
-    // empty space doesn't read as a bug.
-    if (wallet.availableWallets.length === 0 && !wallet.connected) {
-      return { kind: 'no-adapter' }
-    }
-    return { kind: 'hidden' }
-  }, [wallet, walletAddress])
+    const state = (() => {
+      if (!wallet.connected && !walletAddress) return { kind: 'no-wallet' } as const
+      if (wallet.balanceLoading) return { kind: 'loading' } as const
+      if (wallet.balance !== null) {
+        return { kind: 'amount', text: formatAmount(wallet.balance, 4) } as const
+      }
+      if (wallet.availableWallets.length === 0 && !wallet.connected) {
+        return { kind: 'no-adapter' } as const
+      }
+      return { kind: 'hidden' } as const
+    })()
+    console.log('[AssetInput]', label, asset.symbol, 'balanceState=', state.kind, 'wallet=', { connected: wallet.connected, address: wallet.address, balance: wallet.balance, balanceLoading: wallet.balanceLoading, availableWallets: wallet.availableWallets.length }, 'walletAddress=', walletAddress, 'readOnly=', readOnly)
+    return state
+  }, [wallet, walletAddress, label, asset.symbol, readOnly])
 
   const onMax = () => {
     if (wallet.balance === null || wallet.balance <= 0) return
