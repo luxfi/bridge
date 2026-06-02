@@ -78,9 +78,9 @@ func (s *StarkNetPlugin) QueryBacking(ctx context.Context) (*big.Int, error) {
 	const getTotalLockedSelector = "0x004869cb76b122ee5ed0530c00e1e21bfaf18faa3ad5a83e4c81e28bd0e2cfef"
 
 	params := map[string]interface{}{
-		"contract_address": s.bridgeAddr,
+		"contract_address":     s.bridgeAddr,
 		"entry_point_selector": getTotalLockedSelector,
-		"calldata":         []string{},
+		"calldata":             []string{},
 	}
 	result, err := s.rpcCall(ctx, "starknet_call", []interface{}{params, "latest"})
 	if err != nil {

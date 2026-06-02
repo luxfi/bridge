@@ -608,8 +608,8 @@ func TestNewAuthed_PopulatesFields(t *testing.T) {
 func TestDeriveInternalKey_MatchesUpstreamFormula(t *testing.T) {
 	// Hand-computed reference: ed25519 private key = 64 bytes; seed =
 	// first 32. SHA-256(seed || "mpc-internal-api"), hex.
-	seed := strings.Repeat("ab", 32)              // 32 bytes of 0xab
-	pub := strings.Repeat("cd", 32)               // arbitrary pub
+	seed := strings.Repeat("ab", 32) // 32 bytes of 0xab
+	pub := strings.Repeat("cd", 32)  // arbitrary pub
 	identityJSON := []byte(`{"private_key":"` + seed + pub + `"}`)
 
 	key, err := DeriveInternalKey(identityJSON)
