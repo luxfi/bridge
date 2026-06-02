@@ -132,10 +132,10 @@ func (s *StacksPlugin) QueryBacking(ctx context.Context) (*big.Int, error) {
 // ────────────────────────────────────────────────────────────────────
 
 type stacksTx struct {
-	TxID        string `json:"tx_id"`
-	TxType      string `json:"tx_type"`
-	TxStatus    string `json:"tx_status"`
-	BlockHeight uint64 `json:"block_height"`
+	TxID         string `json:"tx_id"`
+	TxType       string `json:"tx_type"`
+	TxStatus     string `json:"tx_status"`
+	BlockHeight  uint64 `json:"block_height"`
 	ContractCall struct {
 		ContractID   string `json:"contract_id"`
 		FunctionName string `json:"function_name"`

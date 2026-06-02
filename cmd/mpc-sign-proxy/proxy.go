@@ -236,14 +236,14 @@ type Proxy struct {
 
 	// Counters — exposed via /metrics/stats. Atomic uint64 — safe
 	// for concurrent updates.
-	signRequests    atomic.Uint64
-	signSuccess     atomic.Uint64
-	signFailures    atomic.Uint64
-	sessionErrors   atomic.Uint64
-	keygenRequests  atomic.Uint64
-	keygenSuccess   atomic.Uint64
-	keygenFailures  atomic.Uint64
-	upstreamErrs    atomic.Uint64
+	signRequests   atomic.Uint64
+	signSuccess    atomic.Uint64
+	signFailures   atomic.Uint64
+	sessionErrors  atomic.Uint64
+	keygenRequests atomic.Uint64
+	keygenSuccess  atomic.Uint64
+	keygenFailures atomic.Uint64
+	upstreamErrs   atomic.Uint64
 }
 
 // signMode returns the effective sign mode, defaulting Translate.
@@ -328,7 +328,7 @@ func (p *Proxy) handleStats(w http.ResponseWriter, _ *http.Request) {
 // SignMode:
 //   - Translate (default): runs the two-step dashboard flow.
 //   - Passthrough:         forwards the original request body to
-//                          {UpstreamURL}/sign verbatim.
+//     {UpstreamURL}/sign verbatim.
 func (p *Proxy) handleSign(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		p.writeError(w, "", http.StatusMethodNotAllowed, "POST required")

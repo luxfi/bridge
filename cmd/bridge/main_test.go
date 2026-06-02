@@ -43,11 +43,11 @@ func TestParseRPCOverrides_Empty(t *testing.T) {
 
 func TestParseRPCOverrides_Malformed(t *testing.T) {
 	cases := []string{
-		"no_equals_here",          // no '='
-		"=missing_network",        // empty key
-		"NETWORK=",                // empty value
-		"=",                       // both empty
-		"OK=https://x, BAD",       // mix of good + bad
+		"no_equals_here",    // no '='
+		"=missing_network",  // empty key
+		"NETWORK=",          // empty value
+		"=",                 // both empty
+		"OK=https://x, BAD", // mix of good + bad
 	}
 	for _, c := range cases {
 		_, err := parseRPCOverrides(c)
