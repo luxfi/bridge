@@ -22,7 +22,9 @@ RUN pnpm -C app/bridge build && \
 # ── 2. Go build ───────────────────────────────────────────────────────────
 FROM golang:1.26.3-alpine AS go-build
 WORKDIR /src
-RUN apk add --no-cache git
+RUN apk add --no-cache git ca-certificates tzdata \
+    && echo 'nonroot:x:65532:65532:nonroot:/home/nonroot:/sbin/nologin' >> /etc/passwd \
+    && echo 'nonroot:x:65532:' >> /etc/group
 COPY go.mod go.sum* ./
 RUN go mod download
 # The binary spans cmd/bridge, the internal/ subpackages it imports, and
@@ -40,10 +42,14 @@ RUN CGO_ENABLED=0 go build -trimpath \
     -o /out/bridge ./cmd/bridge
 
 # ── 3. Runtime ────────────────────────────────────────────────────────────
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM scratch
+COPY --from=go-build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=go-build /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=go-build /etc/passwd /etc/passwd
+COPY --from=go-build /etc/group /etc/group
 COPY --from=go-build /out/bridge /usr/local/bin/bridge
 COPY cmd/bridge/networks.example.yaml /etc/bridge/networks.yaml
-USER nonroot:nonroot
+USER 65532:65532
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/bridge"]
 CMD ["--config=/etc/bridge/networks.yaml", "--addr=:8080"]
