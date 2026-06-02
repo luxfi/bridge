@@ -118,15 +118,15 @@ func (t *TezosPlugin) QueryBacking(ctx context.Context) (*big.Int, error) {
 // ────────────────────────────────────────────────────────────────────
 
 type tezosOperation struct {
-	Hash     string              `json:"hash"`
-	Contents []tezosOpContent    `json:"contents"`
+	Hash     string           `json:"hash"`
+	Contents []tezosOpContent `json:"contents"`
 }
 
 type tezosOpContent struct {
-	Kind        string                 `json:"kind"`
-	Destination string                 `json:"destination"`
-	Amount      string                 `json:"amount"`
-	Parameters  *tezosParameters       `json:"parameters,omitempty"`
+	Kind        string           `json:"kind"`
+	Destination string           `json:"destination"`
+	Amount      string           `json:"amount"`
+	Parameters  *tezosParameters `json:"parameters,omitempty"`
 }
 
 type tezosParameters struct {

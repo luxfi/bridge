@@ -57,31 +57,31 @@ const (
 // Unknown networks default to AddressTypeETH (matches TS behavior).
 var networkAddressType = map[string]AddressType{
 	// EVM chains use eth address
-	"ETHEREUM_MAINNET":  AddressTypeETH,
-	"ETHEREUM_SEPOLIA":  AddressTypeETH,
-	"ETHEREUM_GOERLI":   AddressTypeETH,
-	"BASE_MAINNET":      AddressTypeETH,
-	"BASE_SEPOLIA":      AddressTypeETH,
-	"HOLESKY_TESTNET":   AddressTypeETH,
-	"LUX_MAINNET":       AddressTypeETH,
-	"LUX_TESTNET":       AddressTypeETH,
-	"LUX_DEVNET":        AddressTypeETH,
-	"ZOO_MAINNET":       AddressTypeETH,
-	"ZOO_TESTNET":       AddressTypeETH,
-	"ZOO_DEVNET":        AddressTypeETH,
-	"BSC_MAINNET":       AddressTypeETH,
-	"BSC_TESTNET":       AddressTypeETH,
-	"POLYGON_MAINNET":   AddressTypeETH,
-	"ARBITRUM_MAINNET":  AddressTypeETH,
-	"OPTIMISM_MAINNET":  AddressTypeETH,
-	"AVAX_MAINNET":      AddressTypeETH,
-	"FANTOM_MAINNET":    AddressTypeETH,
-	"CELO_MAINNET":      AddressTypeETH,
-	"GNOSIS_MAINNET":    AddressTypeETH,
-	"AURORA_MAINNET":    AddressTypeETH,
-	"ZORA_MAINNET":      AddressTypeETH,
-	"BLAST_MAINNET":     AddressTypeETH,
-	"LINEA_MAINNET":     AddressTypeETH,
+	"ETHEREUM_MAINNET": AddressTypeETH,
+	"ETHEREUM_SEPOLIA": AddressTypeETH,
+	"ETHEREUM_GOERLI":  AddressTypeETH,
+	"BASE_MAINNET":     AddressTypeETH,
+	"BASE_SEPOLIA":     AddressTypeETH,
+	"HOLESKY_TESTNET":  AddressTypeETH,
+	"LUX_MAINNET":      AddressTypeETH,
+	"LUX_TESTNET":      AddressTypeETH,
+	"LUX_DEVNET":       AddressTypeETH,
+	"ZOO_MAINNET":      AddressTypeETH,
+	"ZOO_TESTNET":      AddressTypeETH,
+	"ZOO_DEVNET":       AddressTypeETH,
+	"BSC_MAINNET":      AddressTypeETH,
+	"BSC_TESTNET":      AddressTypeETH,
+	"POLYGON_MAINNET":  AddressTypeETH,
+	"ARBITRUM_MAINNET": AddressTypeETH,
+	"OPTIMISM_MAINNET": AddressTypeETH,
+	"AVAX_MAINNET":     AddressTypeETH,
+	"FANTOM_MAINNET":   AddressTypeETH,
+	"CELO_MAINNET":     AddressTypeETH,
+	"GNOSIS_MAINNET":   AddressTypeETH,
+	"AURORA_MAINNET":   AddressTypeETH,
+	"ZORA_MAINNET":     AddressTypeETH,
+	"BLAST_MAINNET":    AddressTypeETH,
+	"LINEA_MAINNET":    AddressTypeETH,
 	// Bitcoin
 	"BITCOIN_MAINNET": AddressTypeBTC,
 	"BITCOIN_TESTNET": AddressTypeBTC,
@@ -120,14 +120,14 @@ func AddressTypeFor(networkInternalName string) AddressType {
 // keygenResult mirrors the MPCKeygenResult wire shape from
 // mpc-wallet.ts. Internal to the package; callers consume *Wallet.
 type keygenResult struct {
-	WalletID     string `json:"wallet_id"`
-	ECDSAPubKey  string `json:"ecdsa_pub_key"`
-	EDDSAPubKey  string `json:"eddsa_pub_key"`
-	ETHAddress   string `json:"eth_address"`
-	BTCAddress   string `json:"btc_address"`
-	SOLAddress   string `json:"sol_address"`
-	ResultType   string `json:"result_type"`
-	Error        string `json:"error"`
+	WalletID    string `json:"wallet_id"`
+	ECDSAPubKey string `json:"ecdsa_pub_key"`
+	EDDSAPubKey string `json:"eddsa_pub_key"`
+	ETHAddress  string `json:"eth_address"`
+	BTCAddress  string `json:"btc_address"`
+	SOLAddress  string `json:"sol_address"`
+	ResultType  string `json:"result_type"`
+	Error       string `json:"error"`
 }
 
 // Wallet is the public result of a keygen for one bridge deposit.
@@ -355,8 +355,9 @@ func (c *Client) buildWalletID(networkInternalName string) string {
 //
 // This is the Go port of `createMPCWalletForDeposit` in mpc-wallet.ts,
 // updated to match the live mpcd contract:
-//   POST `${APIURL}/keygen` with `{org_id, wallet_id}` body and
-//   `Authorization: Bearer <Token>` header.
+//
+//	POST `${APIURL}/keygen` with `{org_id, wallet_id}` body and
+//	`Authorization: Bearer <Token>` header.
 //
 // Errors:
 //   - *MPCError{Op:"keygen", Message:"OrgID not configured"} when Client.OrgID is empty.
@@ -508,10 +509,11 @@ type signResultWire struct {
 // result_type failures. context errors on cancellation / timeout.
 //
 // Wire shape (mirrors /keygen):
-//   POST `${APIURL}/sign`
-//   Authorization: Bearer <Token>
-//   Content-Type: application/json
-//   {"org_id":"...","wallet_id":"...","message":"<hex>"}
+//
+//	POST `${APIURL}/sign`
+//	Authorization: Bearer <Token>
+//	Content-Type: application/json
+//	{"org_id":"...","wallet_id":"...","message":"<hex>"}
 //
 // Response on success: {wallet_id, signature, session_id, result_type:"success"}
 // Response on cluster-side failure: {wallet_id, error, error_code, result_type:"error"}

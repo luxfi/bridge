@@ -24,10 +24,10 @@ var staticFS embed.FS
 // brand assets (/icon.svg, /logo.svg). Brand assets read from disk on every
 // request so a deploy can swap them without rebuilding the binary.
 type Frontend struct {
-	cfg      Config
-	root     fs.FS
-	index    []byte
-	overlay  string // optional disk dir for SPA + brand override
+	cfg     Config
+	root    fs.FS
+	index   []byte
+	overlay string // optional disk dir for SPA + brand override
 }
 
 func NewFrontend(cfg Config, overlay string) (*Frontend, error) {
@@ -80,7 +80,7 @@ func (f *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (f *Frontend) serveEnvs(w http.ResponseWriter, r *http.Request) {
 	envs := map[string]any{
-		"brand": f.cfg.Brand,
+		"brand":   f.cfg.Brand,
 		"apiBase": "/v1/bridge",
 	}
 	body, _ := json.Marshal(envs)

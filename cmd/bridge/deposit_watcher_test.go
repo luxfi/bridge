@@ -20,8 +20,8 @@ import (
 // address) it returns a configurable verdict + optional error.
 type fakeChecker struct {
 	mu         sync.Mutex
-	verdicts   map[string]bool   // key = network|address — true ⇒ confirmed
-	errors     map[string]error  // override the bool with an error
+	verdicts   map[string]bool  // key = network|address — true ⇒ confirmed
+	errors     map[string]error // override the bool with an error
 	calls      atomic.Int64
 	lastParams []depositcheck.CheckParams
 }

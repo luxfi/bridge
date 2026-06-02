@@ -99,9 +99,9 @@ type Token struct {
 // Limits are per-token min/max swap caps. Real impl reads from KMS/admin,
 // but for the SPA's read paths a static config is fine.
 type Limits struct {
-	MinUSD float64            `yaml:"minUSD"`
-	MaxUSD float64            `yaml:"maxUSD"`
-	Per    map[string]Caps    `yaml:"per"`
+	MinUSD float64         `yaml:"minUSD"`
+	MaxUSD float64         `yaml:"maxUSD"`
+	Per    map[string]Caps `yaml:"per"`
 }
 
 type Caps struct {
