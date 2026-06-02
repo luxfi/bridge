@@ -33,8 +33,8 @@ type Watcher struct {
 
 // checkpoint is the on-disk format for watcher state persistence.
 type checkpoint struct {
-	LastPos uint64                       `json:"last_pos"`
-	Seen    map[uint64]map[uint64]bool   `json:"seen"`
+	LastPos uint64                     `json:"last_pos"`
+	Seen    map[uint64]map[uint64]bool `json:"seen"`
 }
 
 // NewWatcher assembles the full pipeline from config.

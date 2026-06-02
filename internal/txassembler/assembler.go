@@ -490,7 +490,8 @@ func keccak256(data []byte) [32]byte {
 }
 
 // buildABIWordCall encodes a function call as
-//   selector(4) || addressWord(32) || uintWord(32).
+//
+//	selector(4) || addressWord(32) || uintWord(32).
 //
 // Used by both ERC-20 transfer (selector=0xa9059cbb) and the bridge
 // release path (selector=cfg.ReleaseSelector). Both have the same

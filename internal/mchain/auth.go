@@ -246,7 +246,7 @@ func (c *Client) createDashboardSession(ctx context.Context, walletID, orgID str
 	// that as a clear error rather than silently failing the next sign.
 	if parsed.Status == "pending_approval" {
 		return "", time.Time{}, &MPCError{
-			Op: "session",
+			Op:      "session",
 			Message: "dashboard returned pending_approval session — operator must approve before bridge can sign",
 		}
 	}

@@ -1,9 +1,9 @@
 // Package tokens is the per-(network, asset) token registry.
 //
 // Bridges have to know two things about each asset on each chain:
-//   1. The on-chain contract address (or "" for native gas tokens).
-//   2. The decimal place — wei-scaling for native tokens (18 for EVM),
-//      base-unit scaling for ERC-20s (6 for USDC, 18 for DAI, etc.).
+//  1. The on-chain contract address (or "" for native gas tokens).
+//  2. The decimal place — wei-scaling for native tokens (18 for EVM),
+//     base-unit scaling for ERC-20s (6 for USDC, 18 for DAI, etc.).
 //
 // Both `internal/depositcheck` (to decide eth_getBalance vs eth_call
 // balanceOf) and `internal/txassembler` (to scale the human amount

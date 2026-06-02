@@ -22,12 +22,12 @@ import (
 // fakeSigner is a programmable MPCSigner for tests. Per walletID it
 // returns either a SignResult (success path) or an error.
 type fakeSigner struct {
-	mu        sync.Mutex
-	results   map[string]*mchain.SignResult
-	errors    map[string]error
-	calls     atomic.Int64
-	lastReq   []signCall
-	delay     time.Duration // optional artificial latency
+	mu      sync.Mutex
+	results map[string]*mchain.SignResult
+	errors  map[string]error
+	calls   atomic.Int64
+	lastReq []signCall
+	delay   time.Duration // optional artificial latency
 }
 
 type signCall struct {
