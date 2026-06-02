@@ -19,12 +19,12 @@ import (
 // =============================================================================
 
 type fakeBroadcaster struct {
-	mu       sync.Mutex
-	results  map[string]string // key = network|rawTx — value = txHash on success
-	errors   map[string]error
-	calls    atomic.Int64
-	lastNet  string
-	lastRaw  string
+	mu      sync.Mutex
+	results map[string]string // key = network|rawTx — value = txHash on success
+	errors  map[string]error
+	calls   atomic.Int64
+	lastNet string
+	lastRaw string
 }
 
 func newFakeBroadcaster() *fakeBroadcaster {

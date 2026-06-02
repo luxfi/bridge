@@ -53,10 +53,10 @@ type Broadcaster interface {
 // BroadcastDriver polls SwapStatusBroadcasting swaps and pushes them
 // to the destination chain. Concurrency-safe.
 type BroadcastDriver struct {
-	store     SwapStore
-	bcaster   Broadcaster
-	interval  time.Duration
-	logger    luxlog.Logger
+	store    SwapStore
+	bcaster  Broadcaster
+	interval time.Duration
+	logger   luxlog.Logger
 
 	// perBroadcastTimeout caps one push call. Destination chain RPCs
 	// are typically fast (<500 ms) but congested testnets stretch

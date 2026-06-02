@@ -55,13 +55,13 @@ func (r *Relay) SubmitDeposit(ctx context.Context, srcChainID, nonce uint64, rec
 
 	var calldata []byte
 	calldata = append(calldata, selector[:]...)
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)   // srcChainId
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(nonce))...)         // depositNonce
-	calldata = append(calldata, leftPad(recipient[:], 32)...)                           // recipient (address)
-	calldata = append(calldata, uint256Bytes(amount)...)                                // amount
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(160))...)           // offset to bytes (5 * 32)
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)       // srcChainId
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(nonce))...)            // depositNonce
+	calldata = append(calldata, leftPad(recipient[:], 32)...)                              // recipient (address)
+	calldata = append(calldata, uint256Bytes(amount)...)                                   // amount
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(160))...)              // offset to bytes (5 * 32)
 	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(uint64(len(sig))))...) // length of sig
-	calldata = append(calldata, rightPad(sig, 32)...)                                   // signature data
+	calldata = append(calldata, rightPad(sig, 32)...)                                      // signature data
 
 	return r.sendTx(ctx, calldata)
 }
@@ -75,12 +75,12 @@ func (r *Relay) SubmitBacking(ctx context.Context, srcChainID uint64, totalBacki
 
 	var calldata []byte
 	calldata = append(calldata, selector[:]...)
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)     // srcChainId
-	calldata = append(calldata, uint256Bytes(totalBacking)...)                           // totalBacking
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(timestamp))...)      // timestamp
-	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(128))...)            // offset to bytes (4 * 32)
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(srcChainID))...)       // srcChainId
+	calldata = append(calldata, uint256Bytes(totalBacking)...)                             // totalBacking
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(timestamp))...)        // timestamp
+	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(128))...)              // offset to bytes (4 * 32)
 	calldata = append(calldata, uint256Bytes(new(big.Int).SetUint64(uint64(len(sig))))...) // length of sig
-	calldata = append(calldata, rightPad(sig, 32)...)                                    // signature data
+	calldata = append(calldata, rightPad(sig, 32)...)                                      // signature data
 
 	return r.sendTx(ctx, calldata)
 }
