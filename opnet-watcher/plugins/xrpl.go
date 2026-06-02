@@ -112,8 +112,8 @@ type xrplTxEntry struct {
 	Meta struct {
 		TransactionResult string `json:"TransactionResult"`
 	} `json:"meta"`
-	Validated    bool   `json:"validated"`
-	LedgerIndex  uint64 `json:"ledger_index"`
+	Validated   bool   `json:"validated"`
+	LedgerIndex uint64 `json:"ledger_index"`
 }
 
 // xrplAmount handles both XRP (string of drops) and issued currency (object).

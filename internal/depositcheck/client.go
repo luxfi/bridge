@@ -57,21 +57,21 @@ import (
 // Check call.
 var rpcURLs = map[string]string{
 	// EVM
-	"ETHEREUM_MAINNET":  "https://eth.llamarpc.com",
-	"ETHEREUM_SEPOLIA":  "https://rpc.sepolia.org",
-	"BASE_MAINNET":      "https://mainnet.base.org",
-	"BASE_SEPOLIA":      "https://sepolia.base.org",
-	"LUX_MAINNET":       "https://api.lux.network/ext/bc/C/rpc",
-	"LUX_TESTNET":       "https://api.lux-test.network/ext/bc/C/rpc",
-	"ZOO_MAINNET":       "https://api.zoo.network/ext/bc/Z/rpc",
-	"ZOO_TESTNET":       "https://api.zoo-test.network/ext/bc/Z/rpc",
-	"BSC_MAINNET":       "https://bsc-dataseed.binance.org",
-	"BSC_TESTNET":       "https://data-seed-prebsc-1-s1.binance.org:8545",
-	"POLYGON_MAINNET":   "https://polygon-rpc.com",
-	"ARBITRUM_MAINNET":  "https://arb1.arbitrum.io/rpc",
-	"OPTIMISM_MAINNET":  "https://mainnet.optimism.io",
-	"AVAX_MAINNET":      "https://api.avax.network/ext/bc/C/rpc",
-	"HOLESKY_TESTNET":   "https://ethereum-holesky-rpc.publicnode.com",
+	"ETHEREUM_MAINNET": "https://eth.llamarpc.com",
+	"ETHEREUM_SEPOLIA": "https://rpc.sepolia.org",
+	"BASE_MAINNET":     "https://mainnet.base.org",
+	"BASE_SEPOLIA":     "https://sepolia.base.org",
+	"LUX_MAINNET":      "https://api.lux.network/ext/bc/C/rpc",
+	"LUX_TESTNET":      "https://api.lux-test.network/ext/bc/C/rpc",
+	"ZOO_MAINNET":      "https://api.zoo.network/ext/bc/Z/rpc",
+	"ZOO_TESTNET":      "https://api.zoo-test.network/ext/bc/Z/rpc",
+	"BSC_MAINNET":      "https://bsc-dataseed.binance.org",
+	"BSC_TESTNET":      "https://data-seed-prebsc-1-s1.binance.org:8545",
+	"POLYGON_MAINNET":  "https://polygon-rpc.com",
+	"ARBITRUM_MAINNET": "https://arb1.arbitrum.io/rpc",
+	"OPTIMISM_MAINNET": "https://mainnet.optimism.io",
+	"AVAX_MAINNET":     "https://api.avax.network/ext/bc/C/rpc",
+	"HOLESKY_TESTNET":  "https://ethereum-holesky-rpc.publicnode.com",
 	// Bitcoin (Blockstream REST API base — note: NOT JSON-RPC)
 	"BITCOIN_MAINNET": "https://blockstream.info/api",
 	"BITCOIN_TESTNET": "https://blockstream.info/testnet/api",
@@ -276,7 +276,9 @@ func (c *Client) checkEVMNative(ctx context.Context, rpcURL, address string, dec
 // via eth_call.
 //
 // Call shape:
-//   eth_call({ to: contract, data: 0x70a08231 || <addr_padded_32B> }, "latest")
+//
+//	eth_call({ to: contract, data: 0x70a08231 || <addr_padded_32B> }, "latest")
+//
 // Response: 0x-prefixed hex of the 32-byte balance word.
 func (c *Client) checkEVMERC20(ctx context.Context, rpcURL, contract, holder string, decimals int, requiredAmount float64) (bool, error) {
 	holderBytes, err := parseAddress20(holder)
