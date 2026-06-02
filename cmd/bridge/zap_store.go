@@ -201,57 +201,57 @@ func (s *ZapStore) Patch(ctx context.Context, id string, fn func(*Swap)) (*Swap,
 	var out Swap
 	err := s.withConflictRetry(ctx, func() error {
 		return s.db.Update(func(txn *zapdb.Txn) error {
-		key := swapKey(id)
-		item, err := txn.Get(key)
-		if err != nil {
-			if errors.Is(err, zapdb.ErrKeyNotFound) {
-				return ErrSwapNotFound
-			}
-			return err
-		}
-		var current Swap
-		if err := item.Value(func(val []byte) error {
-			return json.Unmarshal(val, &current)
-		}); err != nil {
-			return fmt.Errorf("zap_store: unmarshal current: %w", err)
-		}
-		oldStatus := current.Status
-		oldSrc := current.SourceNetwork
-
-		fn(&current)
-		current.UpdatedAt = s.nowSafe()
-
-		val, err := json.Marshal(&current)
-		if err != nil {
-			return fmt.Errorf("zap_store: marshal: %w", err)
-		}
-		if err := txn.Set(key, val); err != nil {
-			return err
-		}
-		// Refresh secondary indexes when keys change. Tombstone the
-		// old entry first, then write the new one.
-		if oldStatus != current.Status {
-			if err := txn.Delete(idxStatusKey(oldStatus, id)); err != nil {
+			key := swapKey(id)
+			item, err := txn.Get(key)
+			if err != nil {
+				if errors.Is(err, zapdb.ErrKeyNotFound) {
+					return ErrSwapNotFound
+				}
 				return err
 			}
-			if err := txn.Set(idxStatusKey(current.Status, id), nil); err != nil {
+			var current Swap
+			if err := item.Value(func(val []byte) error {
+				return json.Unmarshal(val, &current)
+			}); err != nil {
+				return fmt.Errorf("zap_store: unmarshal current: %w", err)
+			}
+			oldStatus := current.Status
+			oldSrc := current.SourceNetwork
+
+			fn(&current)
+			current.UpdatedAt = s.nowSafe()
+
+			val, err := json.Marshal(&current)
+			if err != nil {
+				return fmt.Errorf("zap_store: marshal: %w", err)
+			}
+			if err := txn.Set(key, val); err != nil {
 				return err
 			}
-		}
-		if oldSrc != current.SourceNetwork {
-			if oldSrc != "" {
-				if err := txn.Delete(idxSrcKey(oldSrc, id)); err != nil {
+			// Refresh secondary indexes when keys change. Tombstone the
+			// old entry first, then write the new one.
+			if oldStatus != current.Status {
+				if err := txn.Delete(idxStatusKey(oldStatus, id)); err != nil {
+					return err
+				}
+				if err := txn.Set(idxStatusKey(current.Status, id), nil); err != nil {
 					return err
 				}
 			}
-			if current.SourceNetwork != "" {
-				if err := txn.Set(idxSrcKey(current.SourceNetwork, id), nil); err != nil {
-					return err
+			if oldSrc != current.SourceNetwork {
+				if oldSrc != "" {
+					if err := txn.Delete(idxSrcKey(oldSrc, id)); err != nil {
+						return err
+					}
+				}
+				if current.SourceNetwork != "" {
+					if err := txn.Set(idxSrcKey(current.SourceNetwork, id), nil); err != nil {
+						return err
+					}
 				}
 			}
-		}
-		out = current
-		return nil
+			out = current
+			return nil
 		})
 	})
 	if err != nil {
