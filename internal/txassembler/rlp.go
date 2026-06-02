@@ -1,12 +1,12 @@
 // Package txassembler builds EIP-155 legacy EVM transactions for the
 // destination side of a bridge swap. The assembler produces:
 //
-//   1. PreSign(swap) → (sighash, *Unsigned)  — the keccak256 of the
-//      RLP-encoded `[nonce, gasPrice, gas, to, value, data, chainID, 0, 0]`,
-//      which is what the MPC threshold quorum signs.
-//   2. Finalize(unsigned, r, s, v) → rawTxHex — the RLP-encoded
-//      `[nonce, gasPrice, gas, to, value, data, v, r, s]` ready for
-//      eth_sendRawTransaction.
+//  1. PreSign(swap) → (sighash, *Unsigned)  — the keccak256 of the
+//     RLP-encoded `[nonce, gasPrice, gas, to, value, data, chainID, 0, 0]`,
+//     which is what the MPC threshold quorum signs.
+//  2. Finalize(unsigned, r, s, v) → rawTxHex — the RLP-encoded
+//     `[nonce, gasPrice, gas, to, value, data, v, r, s]` ready for
+//     eth_sendRawTransaction.
 //
 // Scope:
 //   - EIP-155 legacy transactions only. EIP-1559 (type=2) is a

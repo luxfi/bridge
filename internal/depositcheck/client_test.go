@@ -167,11 +167,11 @@ func TestCheck_EVM_LargeBalancePrecision(t *testing.T) {
 // eth_call. It records the call params so we can verify the data
 // payload was assembled correctly.
 type erc20BalanceServer struct {
-	server    *httptest.Server
-	balance   string // 0x-prefixed hex of the 32-byte balance
-	lastData  string
-	lastTo    string
-	calls     int
+	server   *httptest.Server
+	balance  string // 0x-prefixed hex of the 32-byte balance
+	lastData string
+	lastTo   string
+	calls    int
 }
 
 func newERC20BalanceServer(t *testing.T, balance string) *erc20BalanceServer {
@@ -333,7 +333,7 @@ func TestCheck_EVM_UnknownAsset_FallsBackToNative(t *testing.T) {
 	// Registry has no entry for "WEIRDO" → falls back to native path
 	// with 18 decimals (backward compat).
 	srv := ethBalanceServer(t, "0xDE0B6B3A7640000") // 1 ETH
-	reg := tokens.NewRegistry() // empty
+	reg := tokens.NewRegistry()                     // empty
 	c := &Client{
 		Timeout:         time.Second,
 		RPCURLOverrides: map[string]string{"ETHEREUM_SEPOLIA": srv.URL},

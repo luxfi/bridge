@@ -30,10 +30,10 @@ func TestPolkadotChainIDValue(t *testing.T) {
 
 func TestScaleCompactDecode(t *testing.T) {
 	tests := []struct {
-		name     string
-		data     []byte
-		wantVal  uint64
-		wantLen  int
+		name    string
+		data    []byte
+		wantVal uint64
+		wantLen int
 	}{
 		{"single_byte_0", []byte{0x00}, 0, 1},
 		{"single_byte_1", []byte{0x04}, 1, 1},
@@ -221,8 +221,8 @@ func TestParseSubstrateDepositExtrinsic_Unsigned(t *testing.T) {
 func TestParseSubstrateDepositExtrinsic_WrongCallIndex(t *testing.T) {
 	// Build an unsigned extrinsic with call_index=0x01 (not deposit).
 	callData := make([]byte, 2+32+4+8) // pallet + call + recip + amount + nonce
-	callData[0] = 0x05                  // pallet
-	callData[1] = 0x01                  // wrong call index
+	callData[0] = 0x05                 // pallet
+	callData[1] = 0x01                 // wrong call index
 
 	body := append([]byte{0x04}, callData...)
 	lengthPrefix := []byte{byte(len(body) << 2)}

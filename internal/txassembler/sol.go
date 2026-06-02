@@ -200,10 +200,10 @@ var ErrSOLNoNetworkConfig = errors.New("txassembler: no SOL network config for t
 //  3. Build instructions:
 //     - Native: [system.Transfer(payer, recipient, lamports)]
 //     - SPL with destination ATA present:
-//         [token.Transfer(srcATA, dstATA, payer, lamports)]
+//     [token.Transfer(srcATA, dstATA, payer, lamports)]
 //     - SPL with destination ATA absent:
-//         [ata.Create(payer, recipient, mint),
-//          token.Transfer(srcATA, dstATA, payer, lamports)]
+//     [ata.Create(payer, recipient, mint),
+//     token.Transfer(srcATA, dstATA, payer, lamports)]
 //  4. solana.NewTransaction(instructions, blockhash, WithPayer(payer))
 //  5. Marshal the message portion to bytes — that's what gets signed.
 //

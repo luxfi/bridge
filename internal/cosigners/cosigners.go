@@ -51,8 +51,8 @@ const (
 // terminology mirrors the TS module — what the swap creator INTENDS to
 // require, before any actual cosign dispatch.
 type Intent struct {
-	Kind       Kind             `json:"kind"`
-	Utila      *UtilaIntent     `json:"-"`
+	Kind       Kind              `json:"kind"`
+	Utila      *UtilaIntent      `json:"-"`
 	Fireblocks *FireblocksIntent `json:"-"`
 }
 
@@ -107,7 +107,7 @@ type Result struct {
 // ErrBadIntent is the validation error type. Includes the index of the
 // offending entry so the caller can surface a precise message.
 type ErrBadIntent struct {
-	Index   int    // 0-based; -1 means the top-level value wasn't an array
+	Index   int // 0-based; -1 means the top-level value wasn't an array
 	Message string
 }
 

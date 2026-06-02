@@ -475,14 +475,14 @@ func TestEnvSecretStore_UtilaFromEnvIndirection(t *testing.T) {
 
 func TestEnvSafe(t *testing.T) {
 	cases := map[string]string{
-		"":                  "",
-		"abc":               "ABC",
-		"abc-def":           "ABC_DEF",
-		"abc.def":           "ABC_DEF",
-		"abc def":           "ABC_DEF",
-		"tenant_42":         "TENANT_42",
-		"contains/slash":    "CONTAINS_SLASH",
-		"AlreadyUpper":      "ALREADYUPPER",
+		"":               "",
+		"abc":            "ABC",
+		"abc-def":        "ABC_DEF",
+		"abc.def":        "ABC_DEF",
+		"abc def":        "ABC_DEF",
+		"tenant_42":      "TENANT_42",
+		"contains/slash": "CONTAINS_SLASH",
+		"AlreadyUpper":   "ALREADYUPPER",
 	}
 	for in, want := range cases {
 		if got := envSafe(in); got != want {
