@@ -112,12 +112,12 @@ type QuoteEngine struct {
 // luxFamilyNetworks is the internal-name set that triggers the bridge
 // fee. Matches LUX_ZOO_NETWORKS in app/server/src/domain/quote.ts.
 var luxFamilyNetworks = map[string]bool{
-	"LUX_MAINNET":  true,
-	"LUX_TESTNET":  true,
-	"LUX_DEVNET":   true,
-	"ZOO_MAINNET":  true,
-	"ZOO_TESTNET":  true,
-	"ZOO_DEVNET":   true,
+	"LUX_MAINNET": true,
+	"LUX_TESTNET": true,
+	"LUX_DEVNET":  true,
+	"ZOO_MAINNET": true,
+	"ZOO_TESTNET": true,
+	"ZOO_DEVNET":  true,
 }
 
 func isExitFromLux(source, _ string) bool {
