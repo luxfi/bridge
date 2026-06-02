@@ -103,8 +103,8 @@ func (i *ICPPlugin) QueryBacking(ctx context.Context) (*big.Int, error) {
 
 type icpDeposit struct {
 	Nonce       uint64 `json:"nonce"`
-	Recipient   string `json:"recipient"`   // hex EVM address
-	Amount      string `json:"amount"`      // decimal string
+	Recipient   string `json:"recipient"` // hex EVM address
+	Amount      string `json:"amount"`    // decimal string
 	TxID        string `json:"tx_id"`
 	BlockHeight uint64 `json:"block_height"`
 }

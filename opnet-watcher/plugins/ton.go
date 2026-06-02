@@ -134,9 +134,9 @@ func (t *TONPlugin) getTransactions(ctx context.Context, afterLT uint64) ([]tonT
 	}
 
 	var apiResp struct {
-		OK     bool              `json:"ok"`
-		Result []tonTransaction  `json:"result"`
-		Error  string            `json:"error"`
+		OK     bool             `json:"ok"`
+		Result []tonTransaction `json:"result"`
+		Error  string           `json:"error"`
 	}
 	if err := json.Unmarshal(body, &apiResp); err != nil {
 		return nil, fmt.Errorf("parse response: %w", err)
@@ -168,9 +168,9 @@ func (t *TONPlugin) runGetMethod(ctx context.Context, method string) (*tonGetMet
 	}
 
 	var apiResp struct {
-		OK     bool                `json:"ok"`
-		Result tonGetMethodResult  `json:"result"`
-		Error  string              `json:"error"`
+		OK     bool               `json:"ok"`
+		Result tonGetMethodResult `json:"result"`
+		Error  string             `json:"error"`
 	}
 	if err := json.Unmarshal(body, &apiResp); err != nil {
 		return nil, fmt.Errorf("parse response: %w", err)

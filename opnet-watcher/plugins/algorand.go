@@ -117,23 +117,24 @@ type algoStateKV struct {
 }
 
 type algoTransaction struct {
-	ID              string        `json:"id"`
-	ConfirmedRound  uint64        `json:"confirmed-round"`
-	AppCall         *algoAppCall  `json:"application-transaction"`
+	ID             string       `json:"id"`
+	ConfirmedRound uint64       `json:"confirmed-round"`
+	AppCall        *algoAppCall `json:"application-transaction"`
 }
 
 type algoAppCall struct {
-	AppID           uint64   `json:"application-id"`
-	AppArgs         []string `json:"application-args"` // base64-encoded
-	OnCompletion    string   `json:"on-completion"`
+	AppID        uint64   `json:"application-id"`
+	AppArgs      []string `json:"application-args"` // base64-encoded
+	OnCompletion string   `json:"on-completion"`
 }
 
 // parseAlgorandDeposit extracts a DepositEvent from an Algorand application call transaction.
 // The bridge app expects application args:
-//   [0] method selector ("deposit")
-//   [1] nonce (8 bytes big-endian)
-//   [2] recipient (20 bytes EVM address)
-//   [3] amount (8 bytes big-endian)
+//
+//	[0] method selector ("deposit")
+//	[1] nonce (8 bytes big-endian)
+//	[2] recipient (20 bytes EVM address)
+//	[3] amount (8 bytes big-endian)
 func parseAlgorandDeposit(tx *algoTransaction) (DepositEvent, bool) {
 	if tx.AppCall == nil || len(tx.AppCall.AppArgs) < 4 {
 		return DepositEvent{}, false
