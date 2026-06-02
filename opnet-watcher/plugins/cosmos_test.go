@@ -30,10 +30,10 @@ func TestCosmosParseDepositFromTxResult(t *testing.T) {
 	p := NewCosmosPlugin("http://cosmos:26657", "cosmos1bridge...")
 
 	tests := []struct {
-		name     string
-		tx       cosmosTxResult
-		wantOK   bool
-		wantEvt  DepositEvent
+		name    string
+		tx      cosmosTxResult
+		wantOK  bool
+		wantEvt DepositEvent
 	}{
 		{
 			name: "valid_deposit",

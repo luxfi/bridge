@@ -84,14 +84,14 @@ type XRPNetwork struct {
 // signs; everything else is internal context FinalizeXRP needs to
 // emit the wire-format blob bit-identically.
 type XRPUnsigned struct {
-	Network        string
-	Account        string
-	Destination    string
-	AmountDrops    int64
-	FeeDrops       int64
-	Sequence       uint32
-	LastLedgerSeq  uint32
-	SigningPubKey  []byte
+	Network       string
+	Account       string
+	Destination   string
+	AmountDrops   int64
+	FeeDrops      int64
+	Sequence      uint32
+	LastLedgerSeq uint32
+	SigningPubKey []byte
 
 	// SigningPayload is the 32-byte digest the MPC must sign.
 	SigningPayload [32]byte

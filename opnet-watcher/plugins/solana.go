@@ -35,8 +35,8 @@ func NewSolanaPlugin(rpcURL, programID, vaultAddress string) *SolanaPlugin {
 	}
 }
 
-func (s *SolanaPlugin) Name() string        { return "solana" }
-func (s *SolanaPlugin) ChainID() uint64     { return SolanaChainID }
+func (s *SolanaPlugin) Name() string    { return "solana" }
+func (s *SolanaPlugin) ChainID() uint64 { return SolanaChainID }
 
 // PollDeposits fetches confirmed transaction signatures for the bridge program
 // starting from the given slot, then parses LockEvent data from each transaction's logs.
