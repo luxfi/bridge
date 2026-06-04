@@ -410,10 +410,12 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	}
 	if depositWallet != nil {
 		swap.DepositAddress = depositWallet.LegacyDepositString()
+		swap.DepositPubKey = depositWallet.PubKeyHex
 	}
 	if releaseWallet != nil {
 		swap.ReleaseWalletID = releaseWallet.Name
 		swap.ReleaseAddress = releaseWallet.Address
+		swap.ReleasePubKey = releaseWallet.PubKeyHex
 	}
 	if quoteRes != nil {
 		swap.ReceiveAmount = quoteRes.ReceiveAmount
@@ -730,12 +732,33 @@ func addressMatchesType(addr string, t mchain.AddressType) bool {
 		return evmHexAddressRE.MatchString(addr)
 	case mchain.AddressTypeSOL:
 		return solBase58AddressRE.MatchString(addr)
+	case mchain.AddressTypeTON:
+		// User-friendly TON addresses are 48-char base64url with a
+		// 2-char prefix encoding tag+workchain+network:
+		//   EQ / UQ → mainnet (bounceable / non-bounceable)
+		//   kQ / 0Q → testnet (bounceable / non-bounceable)
+		// Raw form (workchain:hex) is also valid but we don't accept
+		// it here — the SPA always submits user-friendly form.
+		return tonUserFriendlyAddressRE.MatchString(addr)
+	case mchain.AddressTypeBTC:
+		// Cover the four address families across mainnet + testnet:
+		//   1… / 3…              — mainnet P2PKH / P2SH (base58)
+		//   m… / n… / 2…         — testnet P2PKH / P2SH (base58)
+		//   bc1q… / bc1p…        — mainnet bech32 SegWit / Taproot
+		//   tb1q… / tb1p…        — testnet bech32 SegWit / Taproot
+		// Loose length bounds — bech32 max is 90 chars; base58 P2PKH
+		// is 25 bytes ≈ 34 chars.
+		return btcBech32AddressRE.MatchString(addr) ||
+			btcBase58AddressRE.MatchString(addr)
 	default:
 		return true
 	}
 }
 
 var (
-	evmHexAddressRE   = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
-	solBase58AddressRE = regexp.MustCompile(`^[1-9A-HJ-NP-Za-km-z]{32,44}$`)
+	evmHexAddressRE          = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
+	solBase58AddressRE       = regexp.MustCompile(`^[1-9A-HJ-NP-Za-km-z]{32,44}$`)
+	tonUserFriendlyAddressRE = regexp.MustCompile(`^(EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$`)
+	btcBech32AddressRE       = regexp.MustCompile(`^(bc1|tb1)[ac-hj-np-z02-9]{6,87}$`)
+	btcBase58AddressRE       = regexp.MustCompile(`^[123mn2][1-9A-HJ-NP-Za-km-z]{25,33}$`)
 )

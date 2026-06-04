@@ -790,9 +790,32 @@ export function useSolanaSend(): {
 // =============================================================================
 
 function useWalletForTON(): WalletForFamily {
-  const address = useTonAddress()
-  const wallet = useTonWallet()
-  const [tonConnectUI] = useTonConnectUI()
+  // Same tolerance pattern as useSolanaSend / useTonSend: the
+  // @tonconnect/ui-react hooks throw TonConnectProviderNotSetError
+  // when no TonConnectUIProvider is mounted, which breaks test
+  // rigs that don't include NonEVMProviders AND the
+  // useWalletForFamily('btc'/'svm'/'evm') dispatcher (which calls
+  // ALL family hooks unconditionally to satisfy rules-of-hooks).
+  // Degrading to "no address, no wallet" lets the dispatcher
+  // continue to its real branch without crashing the host.
+  let address = ''
+  let wallet: unknown = null
+  let tonConnectUI: ReturnType<typeof useTonConnectUI>[0] | undefined
+  try {
+    address = useTonAddress()
+  } catch {
+    address = ''
+  }
+  try {
+    wallet = useTonWallet()
+  } catch {
+    wallet = null
+  }
+  try {
+    ;[tonConnectUI] = useTonConnectUI()
+  } catch {
+    tonConnectUI = undefined
+  }
   const [balance, setBalance] = useState<number | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
 
@@ -830,9 +853,13 @@ function useWalletForTON(): WalletForFamily {
     connected: Boolean(wallet),
     connecting: false, // TonConnect doesn't surface a pending state
     connect: async () => {
+      if (!tonConnectUI) {
+        throw new Error('TonConnect provider not mounted — wrap with NonEVMProviders or pass a tonManifestUrl.')
+      }
       await tonConnectUI.openModal()
     },
     disconnect: async () => {
+      if (!tonConnectUI) return
       await tonConnectUI.disconnect()
     },
     balance,
@@ -845,12 +872,111 @@ function useWalletForTON(): WalletForFamily {
 async function readTonBalance(address: string): Promise<number> {
   // toncenter v2 GET /api/v2/getAddressBalance?address=<a>
   // Returns {"ok":true,"result":"123456789"} where result is nanoTON.
-  const url = `https://toncenter.com/api/v2/getAddressBalance?address=${encodeURIComponent(address)}`
+  //
+  // TON has separate mainnet + testnet toncenter hosts. The user-friendly
+  // address encodes which network it belongs to via the first two chars:
+  //   0Q / kQ → testnet (non-bounceable / bounceable)
+  //   UQ / EQ → mainnet (non-bounceable / bounceable)
+  // Querying mainnet toncenter for a testnet address returns balance 0,
+  // which is exactly the bug the UI surfaces when Tonkeeper is on testnet
+  // and the SPA pretends the address is mainnet.
+  const prefix = address.slice(0, 2)
+  const isTestnet = prefix === '0Q' || prefix === 'kQ'
+  const host = isTestnet ? 'testnet.toncenter.com' : 'toncenter.com'
+  const url = `https://${host}/api/v2/getAddressBalance?address=${encodeURIComponent(address)}`
   const r = await fetch(url, { headers: { Accept: 'application/json' } })
   if (!r.ok) throw new Error(`toncenter HTTP ${r.status}`)
   const j = (await r.json()) as { ok: boolean; result: string }
   if (!j.ok) throw new Error('toncenter: ok=false')
   return Number(j.result)
+}
+
+// =============================================================================
+// useTonSend — auto-deposit helper for TON-source swaps
+// =============================================================================
+//
+// Pops the user's connected TonConnect wallet (Tonkeeper, MyTonWallet,
+// OpenMask, etc.) to sign and send a native TON transfer to the MPC
+// deposit address. Mirrors the role of useSolanaSend for SVM and
+// wagmi's sendTransactionAsync for EVM.
+//
+// TonConnect's protocol is more uniform than Solana's three-path
+// connect mess — every wallet routes through tonConnectUI.sendTransaction
+// regardless of how the user connected. There's no path 1 / path 2 /
+// path 3 split, so the implementation is small.
+//
+// Returns the wallet's resolved address alongside the send function so
+// useTransfers can populate `sender` on createSwap for TON-source swaps
+// without a second hook lookup.
+//
+// The TonConnect spec encodes nanoTON as a decimal string, so the SPA
+// scales the human-readable TON amount with toNanoTon. We don't trust
+// blind multiplication by 1e9 because float math at 9 decimals drops
+// trailing nano (0.1 TON × 1e9 = 99_999_999.99999999 → 99999999 via
+// Math.floor). Math.round is the right rounding policy — matches the
+// floatToBaseUnits convention on the Go side (txassembler/ton.go).
+export function useTonSend(): {
+  sendTonAsync: (args: { to: string; ton: number }) => Promise<string>
+  ready: boolean
+  /** TonConnect-resolved address ('EQ.../UQ...' mainnet, 'kQ.../0Q...' testnet). Null when no TON wallet is connected. */
+  senderAddress: string | null
+} {
+  // Mirror useSolanaSend's tolerance: the @tonconnect/ui-react hooks
+  // throw with a clear "TonConnectProviderNotSetError" if no
+  // TonConnectUIProvider ancestor is mounted. That breaks every test
+  // rig that doesn't include NonEVMProviders. Catch and degrade to a
+  // no-op so the host component renders cleanly — sendTonAsync then
+  // throws at call time, which is exactly what we want for tests
+  // that never trigger the deposit path.
+  let address: string | null = null
+  let tonConnectUI: ReturnType<typeof useTonConnectUI>[0] | undefined
+  try {
+    address = useTonAddress() || null
+  } catch {
+    address = null
+  }
+  try {
+    ;[tonConnectUI] = useTonConnectUI()
+  } catch {
+    tonConnectUI = undefined
+  }
+
+  const sendTonAsync = useCallback(
+    async ({ to, ton }: { to: string; ton: number }): Promise<string> => {
+      if (!tonConnectUI) {
+        throw new Error('TonConnect provider not mounted — wrap the SDK with NonEVMProviders or pass a tonManifestUrl.')
+      }
+      if (!address) {
+        throw new Error('No TON wallet connected. Open the wallet selector and pick Tonkeeper / MyTonWallet first.')
+      }
+      if (!Number.isFinite(ton) || ton <= 0) {
+        throw new Error(`Invalid TON amount: ${ton}`)
+      }
+      const amountNano = String(Math.round(ton * 1_000_000_000))
+      // TonConnect validUntil is unix epoch seconds. 5 minutes is the
+      // standard upper bound for a user to confirm in the wallet UI;
+      // longer windows can be re-broadcast even after the SPA tab is
+      // closed which is bad UX for a bridge deposit.
+      const validUntil = Math.floor(Date.now() / 1000) + 300
+      const res = await tonConnectUI.sendTransaction({
+        validUntil,
+        messages: [{ address: to, amount: amountNano }],
+      })
+      // res.boc is the signed BoC base64 — TonConnect's canonical tx
+      // identifier. There's no separate "tx hash" returned; downstream
+      // code that wants an explorer link should derive sha256(BoC)
+      // from this on the server side, same convention the bridge's
+      // broadcastTON uses.
+      return res.boc
+    },
+    [address, tonConnectUI],
+  )
+
+  return {
+    sendTonAsync,
+    ready: Boolean(address),
+    senderAddress: address,
+  }
 }
 
 // =============================================================================
@@ -875,11 +1001,9 @@ const BTCWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [balanceLoading, setBalanceLoading] = useState(false)
 
   const connect = useCallback(async () => {
-    console.log('[BTC] connect() start')
     setConnecting(true)
     try {
       const sats = await import('sats-connect')
-      console.log('[BTC] sats-connect loaded; calling getAccounts')
       // sats-connect v4: provider request API. Cast to never sidesteps
       // a long-standing v4 typing quirk where Params<'getAccounts'>
       // doesn't narrow from the string literal cleanly.
@@ -887,22 +1011,16 @@ const BTCWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
         purposes: ['payment'],
         message: 'Connect to the Lux Bridge',
       } as never)
-      console.log('[BTC] getAccounts resp =', resp)
       if (resp.status !== 'success') {
         const err = (resp as { error?: { message?: string; code?: number } }).error
         throw new Error(`sats-connect status=${resp.status}${err?.message ? `: ${err.message}` : ''}`)
       }
       // getAccounts returns result: [{ address, addressType, publicKey, purpose, walletType }]
       const accounts = (resp as { result: Array<{ address: string; purpose: string }> }).result
-      console.log('[BTC] accounts =', accounts)
       const paymentAcct = accounts.find((a) => a.purpose === 'payment') ?? accounts[0]
       if (!paymentAcct) throw new Error('sats-connect: no payment account returned')
-      console.log('[BTC] setting address =', paymentAcct.address)
       setAddress(paymentAcct.address)
       setConnected(true)
-    } catch (err) {
-      console.error('[BTC] connect failed:', err)
-      throw err
     } finally {
       setConnecting(false)
     }
@@ -919,7 +1037,6 @@ const BTCWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Refresh BTC balance via mempool.space (public + open CORS) when
   // the address changes. Returns satoshis; we convert to BTC.
   useEffect(() => {
-    console.log('[BTC] balance effect fired, address =', address)
     if (!address) {
       setBalance(null)
       return
@@ -928,13 +1045,11 @@ const BTCWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setBalanceLoading(true)
     void readBtcBalance(address)
       .then((sats) => {
-        console.log('[BTC] balance fetch ok, sats =', sats)
         if (cancelled) return
         // 1 BTC = 1e8 satoshis.
         setBalance(sats / 100_000_000)
       })
-      .catch((err) => {
-        console.error('[BTC] balance fetch failed:', err)
+      .catch(() => {
         if (cancelled) return
         setBalance(null)
       })
@@ -1046,9 +1161,7 @@ function useWalletForBTC(): WalletForFamily {
   // mounted (the common case) we just discard its state and return
   // the shared context value instead.
   const fallback = useFallbackBTCWallet()
-  const result = ctx ?? fallback
-  console.log('[BTC] useWalletForBTC: ctx=', ctx ? 'context' : 'fallback', 'connected=', result.connected, 'address=', result.address, 'balance=', result.balance, 'balanceLoading=', result.balanceLoading)
-  return result
+  return ctx ?? fallback
 }
 
 // isTestnetBtcAddress detects testnet3 addresses by base58/bech32 prefix.
@@ -1196,9 +1309,14 @@ interface NonEVMProvidersProps {
   solanaRpcUrl?: string
   /**
    * Optional TonConnect manifest URL. TonConnect requires a JSON
-   * manifest at a public URL describing the app. When omitted, we
-   * point at the Lux Bridge canonical manifest; tenants should
-   * override with their own manifest URL for proper branding.
+   * manifest at a public URL describing the app — Tonkeeper (and
+   * every other TonConnect wallet) downloads it before issuing a
+   * signing prompt to verify the app's identity. When omitted, we
+   * default to `${origin}/tonconnect-manifest.json` so each
+   * deployment (localhost, tunnel, prod) serves its own manifest
+   * from its own origin — no hardcoded prod URL that 404s on dev.
+   * Tenants still override for custom branding or a CDN-hosted
+   * manifest.
    */
   tonManifestUrl?: string
   children: ReactNode
@@ -1219,9 +1337,19 @@ interface NonEVMProvidersProps {
  */
 export const NonEVMProviders: FC<NonEVMProvidersProps> = ({
   solanaRpcUrl = 'https://solana-rpc.publicnode.com',
-  tonManifestUrl = 'https://bridge.lux.network/tonconnect-manifest.json',
+  tonManifestUrl,
   children,
 }) => {
+  // Default to same-origin manifest so localhost, cloudflared/ngrok
+  // tunnels, and prod each serve their own /tonconnect-manifest.json
+  // without per-env config. SSR-safe: window is undefined → fall
+  // back to the production canonical URL so the JSX render doesn't
+  // throw before hydration.
+  const resolvedManifestUrl =
+    tonManifestUrl ??
+    (typeof window !== 'undefined'
+      ? `${window.location.origin}/tonconnect-manifest.json`
+      : 'https://bridge.lux.network/tonconnect-manifest.json')
   // autoConnect is intentionally OFF. With it on, returning users get
   // silently re-connected on page load — Phantom recognizes the site
   // as previously authorized and connects without a popup. The result:
@@ -1237,7 +1365,7 @@ export const NonEVMProviders: FC<NonEVMProvidersProps> = ({
   return (
     <ConnectionProvider endpoint={solanaRpcUrl}>
       <WalletProvider wallets={solanaWalletAdapters} autoConnect={false}>
-        <TonConnectUIProvider manifestUrl={tonManifestUrl}>
+        <TonConnectUIProvider manifestUrl={resolvedManifestUrl}>
           <BTCWalletProvider>{children}</BTCWalletProvider>
         </TonConnectUIProvider>
       </WalletProvider>

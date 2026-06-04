@@ -120,6 +120,20 @@ type Swap struct {
 	// operator-funded liquidity, not from the (always-empty) per-swap
 	// deposit wallet.
 	ReleaseAddress string `json:"release_address,omitempty"`
+	// ReleasePubKey is the raw ed25519 public key (hex-encoded) of the
+	// release wallet. Populated only when the destination chain's
+	// release tx construction needs the raw pubkey distinct from the
+	// receive Address — currently TON (whose address is hash(StateInit)
+	// derived from the pubkey, not the pubkey itself). Empty for ETH /
+	// SOL / BTC release wallets where Address alone suffices.
+	ReleasePubKey string `json:"release_pub_key,omitempty"`
+	// DepositPubKey is the raw ed25519 public key (hex-encoded) of the
+	// per-swap deposit wallet. Symmetric with ReleasePubKey: populated
+	// only when the SOURCE chain's refund-sweep tx needs the raw pubkey
+	// to rebuild the wallet contract (TON). The refund driver consumes
+	// it in executeRefundTON; empty for ETH / SOL / BTC sources where
+	// the deposit-wallet Address alone is enough to construct the sweep.
+	DepositPubKey string `json:"deposit_pub_key,omitempty"`
 
 	// Source-side observation: tx hash, confirmed amount.
 	SourceTxHash    string  `json:"source_tx_hash,omitempty"`

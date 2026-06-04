@@ -265,6 +265,16 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			d.handleStaleBlockhash(ctx, sw)
 			return
 		}
+		// TON equivalent: the wallet contract rejected the message with
+		// exit code 33 (seqno mismatch). Happens when the bridge built
+		// a message with a wrong seqno — typically because runGetMethod
+		// against an uninitialized contract returned a garbage stack
+		// instead of a clean zero. Reset for re-sign with the corrected
+		// provider logic on the next tick.
+		if isStaleTONSeqno(err) {
+			d.handleStaleTONSeqno(ctx, sw)
+			return
+		}
 
 		// Surface the error so the SDK/UI can show the user what's
 		// blocking (e.g. "insufficient funds for gas" — the release
@@ -313,6 +323,74 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			"network", sw.DestinationNetwork,
 			"tx_hash", res.TxHash,
 		)
+	}
+}
+
+// isStaleTONSeqno matches the toncenter rejection that surfaces when
+// the wallet contract refuses an external message. The two we care
+// about — exit 33 (msg_seqno != stored_seqno) and exit 36
+// (valid_until <= now()) — both arrive wrapped in this envelope:
+//
+//	"LITE_SERVER_UNKNOWN: cannot apply external message ... External
+//	 message was not accepted ... exitcode=33, steps=N, gas_used=N"
+//
+// In practice the broadcast.RPCError surface truncates the body
+// before "exitcode=" is reached. We therefore match on the chain-
+// stable prefix "external message was not accepted" — it's emitted
+// by the validator for ANY wallet-contract refusal (stale seqno,
+// expired valid_until, signature mismatch, init-data mismatch),
+// every one of which calls for a rebuild rather than a retry of the
+// same BoC. Broader than "exit 33 only", but the failure modes it
+// catches all share the same remediation: re-sign with a fresh
+// seqno + valid_until, retry.
+func isStaleTONSeqno(err error) bool {
+	if err == nil {
+		return false
+	}
+	low := strings.ToLower(err.Error())
+	return strings.Contains(low, "external message was not accepted")
+}
+
+// handleStaleTONSeqno mirrors handleStaleBlockhash for TON. Same
+// rebuild ceiling, same observability — refunds the deposit if the
+// destination keeps rejecting beyond maxRebuilds.
+func (d *BroadcastDriver) handleStaleTONSeqno(ctx context.Context, sw *Swap) {
+	patched, _ := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusBroadcasting {
+			return
+		}
+		s.BroadcastRebuilds++
+		if d.maxRebuilds > 0 && s.BroadcastRebuilds >= d.maxRebuilds {
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf(
+				"TON wallet contract rejected %d successive broadcasts (seqno mismatch / message expired) — routing to refund.",
+				s.BroadcastRebuilds,
+			)
+			s.LastErrorAt = time.Now().UTC()
+			return
+		}
+		s.Status = SwapStatusBridgeTransferPending
+		s.DestRawTx = ""
+		s.Signature = ""
+		s.MPCSessionID = ""
+		s.DestTxHash = ""
+		s.LastError = "TON message rejected (seqno / valid_until stale) — rebuilding"
+		s.LastErrorAt = time.Now().UTC()
+	})
+	d.rebuilds.Add(1)
+	if d.logger != nil && patched != nil {
+		if patched.Status == SwapStatusRefundPending {
+			d.logger.Warn("ton broadcast rebuilds maxed out → refund_pending",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+				"max", d.maxRebuilds,
+			)
+		} else {
+			d.logger.Info("broadcast: stale ton seqno → reset for re-sign",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+			)
+		}
 	}
 }
 

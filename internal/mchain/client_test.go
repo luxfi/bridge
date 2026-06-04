@@ -171,12 +171,16 @@ func TestKeygen_BTC_PicksBTCAddress(t *testing.T) {
 	}
 }
 
+// zeroPubKeyBase58 is the base58 encoding of 32 null bytes — a valid
+// ed25519 pubkey by length, used as deterministic test fixture data.
+const zeroPubKeyBase58 = "11111111111111111111111111111111"
+
 func TestKeygen_SOL_PicksSOLAddress(t *testing.T) {
 	m := newMockCluster(t)
 	m.result = &keygenResult{
 		WalletID:   "wid",
 		ETHAddress: "0xeth",
-		SOLAddress: "SoLaNaAdDrEsS",
+		SOLAddress: zeroPubKeyBase58,
 		ResultType: "success",
 	}
 	c := clientFor(m)
@@ -185,17 +189,30 @@ func TestKeygen_SOL_PicksSOLAddress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	if w.Address != "SoLaNaAdDrEsS" {
-		t.Errorf("Address = %q", w.Address)
+	// Solana's Wallet.Address is the raw pubkey base58 — unchanged
+	// by the keygen post-processing because SOL signers verify
+	// against the pubkey directly.
+	if w.Address != zeroPubKeyBase58 {
+		t.Errorf("Address = %q, want %q", w.Address, zeroPubKeyBase58)
+	}
+	// PubKeyHex captures the hex form for downstream callers that
+	// can't repeat the base58 decode. 32 zero bytes → 64 zero hex
+	// chars.
+	wantHex := "0000000000000000000000000000000000000000000000000000000000000000"
+	if w.PubKeyHex != wantHex {
+		t.Errorf("PubKeyHex = %q, want %q", w.PubKeyHex, wantHex)
 	}
 }
 
-func TestKeygen_TON_UsesSOLSlot(t *testing.T) {
-	// TON shares the SOL slot in the cluster's current keygen output —
-	// matches TS placeholder behaviour in mpc-wallet.ts. Test pins this
-	// so a refactor that breaks it is caught early.
+func TestKeygen_TON_DerivesContractAddress(t *testing.T) {
+	// The cluster returns the raw ed25519 pubkey in the sol_address slot
+	// (TON shares the SOL keygen slot — see pickAddress). KeygenForDeposit
+	// then derives the V4R2 wallet contract address from that pubkey;
+	// Wallet.Address is the user-facing contract string, NOT the raw
+	// pubkey. PubKeyHex carries the raw pubkey for the signing driver's
+	// FinalizeTON path.
 	m := newMockCluster(t)
-	m.result = &keygenResult{SOLAddress: "tonish_address"}
+	m.result = &keygenResult{SOLAddress: zeroPubKeyBase58}
 	c := clientFor(m)
 
 	w, err := c.KeygenForDeposit(context.Background(), "TON_TESTNET")
@@ -205,8 +222,15 @@ func TestKeygen_TON_UsesSOLSlot(t *testing.T) {
 	if w.AddressType != AddressTypeTON {
 		t.Errorf("AddressType = %q, want ton", w.AddressType)
 	}
-	if w.Address != "tonish_address" {
-		t.Errorf("Address = %q", w.Address)
+	// Address must look like a TON testnet user-friendly address:
+	// 48 chars, base64url, kQ.. / 0Q.. prefix (non-bounceable testnet).
+	if got := w.Address; len(got) != 48 || (!strings.HasPrefix(got, "kQ") && !strings.HasPrefix(got, "0Q")) {
+		t.Errorf("Address = %q, want 48-char kQ/0Q testnet address", got)
+	}
+	// The raw pubkey (32 zero bytes) hex.
+	wantHex := "0000000000000000000000000000000000000000000000000000000000000000"
+	if w.PubKeyHex != wantHex {
+		t.Errorf("PubKeyHex = %q, want %q", w.PubKeyHex, wantHex)
 	}
 }
 
