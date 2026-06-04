@@ -25,6 +25,15 @@ vi.mock('wagmi', () => ({
   useWriteContract: () => ({
     writeContractAsync: vi.fn(async () => '0xfeed' as `0x${string}`),
   }),
+  // useWalletForFamily('btc')/(any) calls useWalletForEVM internally,
+  // which touches the wagmi connect / disconnect / sign / balance hooks
+  // even though the BTC branch doesn't use their outputs. Provide
+  // no-op stubs so the wagmi mock surface is complete; missing one
+  // throws "No <name> export is defined on the wagmi mock" at render.
+  useConnect: () => ({ connectAsync: vi.fn(), connectors: [] as unknown[] }),
+  useDisconnect: () => ({ disconnectAsync: vi.fn() }),
+  useSignMessage: () => ({ signMessageAsync: vi.fn() }),
+  useBalance: () => ({ data: undefined, isLoading: false, refetch: vi.fn() }),
 }))
 
 // Stub useNetworks → DEFAULT_CHAINS / DEFAULT_ASSETS so the fetch matcher

@@ -29,13 +29,31 @@ vi.mock('wagmi', () => ({
 // which logs a noisy console.error on every render when no WalletProvider
 // is mounted. The hook itself never crashes (the default context returns
 // null), but the noise drowns out real test failures. Tests don't
-// exercise SOL-source auto-deposit; mirror the wagmi mock pattern and
-// hand back a noop sender. Real Sol→Lux flows are covered by the
-// integration story (NonEVMProviders mounts the real provider).
+// exercise non-EVM auto-deposit; mirror the wagmi mock pattern and
+// hand back noop senders. Real Sol→Lux / TON / BTC flows are covered
+// by the integration story (NonEVMProviders mounts the real provider).
 vi.mock('../app/lib/wallet-adapters', () => ({
   useSolanaSend: () => ({
     sendSolAsync: () => Promise.reject(new Error('useSolanaSend mocked in test')),
     ready: false,
+    senderAddress: null,
+  }),
+  useTonSend: () => ({
+    sendTonAsync: () => Promise.reject(new Error('useTonSend mocked in test')),
+    ready: false,
+    senderAddress: null,
+  }),
+  useWalletForFamily: () => ({
+    family: 'noop',
+    address: null,
+    connected: false,
+    connecting: false,
+    connect: async () => {},
+    disconnect: async () => {},
+    balance: null,
+    balanceSymbol: '',
+    balanceLoading: false,
+    availableWallets: [],
   }),
 }))
 

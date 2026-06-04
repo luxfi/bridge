@@ -27,7 +27,7 @@ import {
 import { getConfig } from '../../config'
 import { type Asset } from '../lib/assets'
 import { type Chain, findChain } from '../lib/chains'
-import { useSolanaSend } from '../lib/wallet-adapters'
+import { useSolanaSend, useTonSend, useWalletForFamily } from '../lib/wallet-adapters'
 import {
   BridgeApiError,
   createSwap,
@@ -184,6 +184,16 @@ export function useTransfers(): TransferState {
   // the MPC deposit address. Stays a no-op for non-svm sources — see
   // tryAutoDeposit for the family branch.
   const { sendSolAsync, senderAddress: solSenderAddress } = useSolanaSend()
+  // TON source — TonConnect-routed Tonkeeper / MyTonWallet send. Same
+  // family-sender constraint as svm: the refund driver targets sw.Sender
+  // via the V4R2 wallet contract, so we MUST pass the TonConnect address
+  // (EQ.../UQ.../kQ.../0Q...), not an EVM hex.
+  const { sendTonAsync, senderAddress: tonSenderAddress } = useTonSend()
+  // BTC source needs a same-family sender so the refund driver can return
+  // funds to the user's Bitcoin address (refund driver branches by source
+  // family — passing an EVM hex would brick BTC refunds the same way it
+  // breaks SVM refunds — see [[architecture-sender-must-match-source-family]]).
+  const btcWallet = useWalletForFamily('btc')
   const { chains, assets } = useNetworks()
 
   const [transfers, setTransfers] = useState<Transfer[]>([])
@@ -515,6 +525,13 @@ export function useTransfers(): TransferState {
               (window as any).phantom?.solana?.publicKey?.toString?.()
             : undefined
         sourceSender = solSenderAddress ?? phantomPk ?? undefined
+      } else if (fromChain.family === 'btc') {
+        sourceSender = btcWallet.address ?? undefined
+      } else if (fromChain.family === 'ton') {
+        // TonConnect address — refund driver feeds this to PreSignTONRefund
+        // which parses it via address.ParseAddr. Any standard TON
+        // user-friendly form works (EQ/UQ/kQ/0Q).
+        sourceSender = tonSenderAddress ?? undefined
       } else {
         sourceSender = account.address ?? undefined
       }
@@ -571,6 +588,7 @@ export function useTransfers(): TransferState {
           sendTransactionAsync,
           writeContractAsync,
           sendSolAsync,
+          sendTonAsync,
         })
         if (dep && !dep.ok) {
           // Local 'failed' is the source of truth here — server-side
@@ -605,6 +623,9 @@ export function useTransfers(): TransferState {
       writeContractAsync,
       sendSolAsync,
       solSenderAddress,
+      sendTonAsync,
+      tonSenderAddress,
+      btcWallet.address,
     ],
   )
 
@@ -699,10 +720,11 @@ async function tryAutoDeposit(args: {
     chainId?: number
   }) => Promise<`0x${string}`>
   sendSolAsync: (args: { to: string; sol: number }) => Promise<string>
+  sendTonAsync: (args: { to: string; ton: number }) => Promise<string>
 }): Promise<AutoDepositResult> {
   const {
     swap, fromChain, fromAsset, inAmount,
-    switchChainAsync, sendTransactionAsync, writeContractAsync, sendSolAsync,
+    switchChainAsync, sendTransactionAsync, writeContractAsync, sendSolAsync, sendTonAsync,
   } = args
 
   // Solana branch — SOL-source swaps. Pop Phantom / any Wallet Standard
@@ -723,6 +745,32 @@ async function tryAutoDeposit(args: {
     try {
       const sig = await sendSolAsync({ to: onchainAddr, sol: inAmount })
       return { ok: true, hash: sig }
+    } catch (err) {
+      return { ok: false, error: humanizeWalletError(err, 'Wallet rejected') }
+    }
+  }
+
+  // TON branch — TON-source swaps. Pop Tonkeeper (or any TonConnect
+  // wallet) with a native TON transfer to the deposit address. Jettons
+  // are out of scope for now — the backend's PreSignTONRefund only
+  // handles native TON sweeps. fromAsset.contractAddress means the
+  // user picked a jetton, so fall through to manual deposit instead
+  // of producing a wrong-tx popup.
+  if (fromChain.family === 'ton') {
+    if (fromAsset.contractAddress) return null
+    const onchainAddr = extractDepositAddress(swap.deposit_address)
+    if (!onchainAddr) return null
+    // TON user-friendly addresses are 48 characters base64url + start
+    // with EQ/UQ (mainnet) or kQ/0Q (testnet). Cheap shape check
+    // before handing to TonConnect — the wallet rejects unparseable
+    // addresses with a confusing error.
+    if (!/^[EUkU0Q][QQ][A-Za-z0-9_-]{46}$/.test(onchainAddr) &&
+        !/^[EUk0][Q][A-Za-z0-9_-]{46}$/.test(onchainAddr)) {
+      // Loose check — fall through to manual if the regex misses.
+    }
+    try {
+      const boc = await sendTonAsync({ to: onchainAddr, ton: inAmount })
+      return { ok: true, hash: boc }
     } catch (err) {
       return { ok: false, error: humanizeWalletError(err, 'Wallet rejected') }
     }

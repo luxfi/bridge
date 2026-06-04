@@ -98,6 +98,7 @@ function deriveFamily(net: ApiNetwork): ChainFamily {
     case 'solana':
       return 'svm'
     case 'btc':
+    case 'bitcoin':
       return 'btc'
     case 'ton':
       return 'ton'

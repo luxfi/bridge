@@ -8,13 +8,14 @@
 // 2-of-2 cosigner notice all live here. The visual layer uses theme tokens
 // from `styles/theme.css` (no hard-coded hex other than fallbacks).
 
-import { useState, type CSSProperties, type FC } from 'react'
+import { useEffect, useState, type CSSProperties, type FC } from 'react'
 import { Button } from '@hanzo/gui'
 import { getConfig } from '../../config'
 import type { SwapState } from '../hooks/useSwap'
 import type { WalletState } from '../hooks/useWallet'
 import type { TransferState } from '../hooks/useTransfers'
 import { formatAmount, formatUsd } from '../lib/format'
+import { useWalletForFamily } from '../lib/wallet-adapters'
 import { Card } from './Card'
 import { ChainSelector } from './ChainSelector'
 import { AssetInput } from './AssetInput'
@@ -243,6 +244,22 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   const [destinationAddress, setDestinationAddress] = useState<string>('')
   const cfg = getConfig()
 
+  // Wipe the destination-address field whenever the destination chain
+  // family changes. Why: each family has a totally different address
+  // shape (EVM hex, base58 SVM, base64url TON, bech32 BTC), so a value
+  // typed for a previous destination silently survives a chain switch
+  // and gets submitted verbatim. The create-time backend check rejects
+  // most mismatches, but only after burning the deposit attempt — and
+  // for stale-but-stay-EVM cases (Sepolia→Lux→Sepolia) it can pass.
+  // Clearing on family change also lets the new destination-family
+  // wallet's address auto-fill via the placeholder, which is the
+  // intended path. Keying on family (not chain.id) preserves the
+  // input across EVM-to-EVM swaps where the same hex address is the
+  // user's destination on both legs.
+  useEffect(() => {
+    setDestinationAddress('')
+  }, [swap.toChain.family])
+
   // Layered-cosigner indicator. When a tenant has set `mpc.utila` and/or
   // `mpc.fireblocks`, every settlement is 2-of-2 — native Lux MPC sign AND
   // external custodian approval. Surfacing this to the user is the only
@@ -262,11 +279,27 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     swap.fromChain.family === 'evm' || swap.fromChain.family === 'lux'
   const needsDepositAddressFlow = true
 
-  // Destination address resolution. We always need an address to deliver
-  // bridged funds to. EVM destinations default to the connected wallet's
-  // address (typical self-bridge). The user can override at any time —
-  // useful for sending to a cold wallet or a different address.
-  const effectiveDestination = (destinationAddress.trim() || wallet.address || '').trim()
+  // Destination-family wallet (Tonkeeper for ton, Phantom for svm,
+  // MetaMask for evm/lux, sats-connect for btc). Used both as the
+  // address fallback and as the placeholder hint so cross-family
+  // swaps (e.g. Sepolia→TON) don't silently default to the source
+  // wallet's hex address — that would fail backend validation with
+  // destination_wrong_chain_family.
+  const destWallet = useWalletForFamily(swap.toChain.family)
+
+  // Destination address resolution. Prefer (1) the user's typed input,
+  // then (2) the destination-family wallet's address. Same-family swaps
+  // (Sepolia→Lux) get auto-fill from MetaMask; cross-family swaps
+  // (Sepolia→TON) get auto-fill from the destination wallet — Tonkeeper,
+  // Phantom, Xverse, etc. Falling through to an empty string forces the
+  // user to paste an address rather than getting silently rejected by
+  // the backend with a wrong-family destination.
+  const destFamilyFallback =
+    swap.toChain.family === swap.fromChain.family ||
+    (sourceIsEvm && (swap.toChain.family === 'evm' || swap.toChain.family === 'lux'))
+      ? wallet.address ?? null
+      : destWallet.address ?? null
+  const effectiveDestination = (destinationAddress.trim() || destFamilyFallback || '').trim()
   const destOk = effectiveDestination.length > 0
 
   const canSubmit =
@@ -284,8 +317,12 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     }
     if (swap.quoting) return 'Fetching quote…'
     if (!swap.quote) return 'Enter an amount'
-    if (sourceIsEvm && !wallet.address) return 'Connect wallet to bridge'
-    if (!destOk) return `Enter ${swap.toChain.name} destination address`
+    if (sourceIsEvm && !wallet.address) {
+      return `Connect ${swap.fromChain.name} wallet to sign deposit`
+    }
+    if (!destOk) {
+      return `Enter ${swap.toChain.name} destination address`
+    }
     return `Bridge ${swap.fromAsset.symbol} → ${swap.toAsset.symbol}`
   })()
 
@@ -370,7 +407,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       <div style={destWrap}>
         <div style={destLabelRow}>
           <span>Destination address</span>
-          {wallet.address && destinationAddress.trim() !== '' && destinationAddress.trim() !== wallet.address ? (
+          {destFamilyFallback && destinationAddress.trim() !== '' && destinationAddress.trim() !== destFamilyFallback ? (
             <button
               type="button"
               style={destUseWalletBtn}
@@ -385,8 +422,8 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           type="text"
           style={destInput}
           placeholder={
-            wallet.address
-              ? `${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)} (connected wallet)`
+            destFamilyFallback
+              ? `${destFamilyFallback.slice(0, 6)}…${destFamilyFallback.slice(-4)} (connected ${swap.toChain.name} wallet)`
               : `Paste your ${swap.toChain.name} address`
           }
           value={destinationAddress}

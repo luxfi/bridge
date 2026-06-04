@@ -147,6 +147,14 @@ type Wallet struct {
 	// AddressType is the family of Address. Useful for downstream code
 	// that needs to render or validate the address.
 	AddressType AddressType `json:"address_type"`
+	// PubKeyHex is the raw ed25519 public key (32 bytes, hex-encoded)
+	// returned by the keygen. Populated only for AddressTypeSOL and
+	// AddressTypeTON — those are the only families that need the raw
+	// pubkey after Address has been derived. TON specifically needs it
+	// because the user-facing Address is a contract hash; building the
+	// release tx still requires the pubkey to construct the wallet
+	// contract's StateInit + state-bound signing message.
+	PubKeyHex string `json:"pub_key_hex,omitempty"`
 }
 
 // LegacyDepositString returns the "wallet_name###address" string the
@@ -447,6 +455,46 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		address = converted
 	}
 
+	// TON patch: the SOL slot carries the raw ed25519 pubkey, not a TON
+	// wallet contract address. Real TON wallets are smart contracts whose
+	// address = hash(StateInit). Derive the V4R2 contract address and
+	// format it with the right testnet/mainnet flag so the user sees a
+	// fundable kQ.../0Q.../EQ.../UQ... string instead of a Solana-format
+	// pubkey. PubKeyHex is captured separately so the signing driver can
+	// rebuild the wallet contract for message construction.
+	var pubKeyHex string
+	if addrType == AddressTypeTON {
+		converted, convErr := tonAddressFromEd25519PubKey(address, isTONTestnet(networkInternalName))
+		if convErr != nil {
+			return nil, &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("ton wallet address derive: %v", convErr),
+			}
+		}
+		hexKey, hexErr := hexEd25519FromBase58(address)
+		if hexErr != nil {
+			return nil, &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("ton pubkey hex encode: %v", hexErr),
+			}
+		}
+		address = converted
+		pubKeyHex = hexKey
+	} else if addrType == AddressTypeSOL {
+		// Symmetry with TON: same slot carries the same shape (raw
+		// ed25519 pubkey base58-encoded). Solana's signing path
+		// currently re-decodes from the address; capturing pubKeyHex
+		// here lets us migrate that path to the same convention.
+		hexKey, hexErr := hexEd25519FromBase58(address)
+		if hexErr != nil {
+			return nil, &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("sol pubkey hex encode: %v", hexErr),
+			}
+		}
+		pubKeyHex = hexKey
+	}
+
 	// The cluster echoes back its own wallet_id; if it's empty fall
 	// back to the one we sent so the SDK's `name###address` contract
 	// always has a non-empty name slot.
@@ -459,6 +507,7 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 		Name:        name,
 		Address:     address,
 		AddressType: addrType,
+		PubKeyHex:   pubKeyHex,
 	}, nil
 }
 

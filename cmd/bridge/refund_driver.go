@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -71,6 +72,14 @@ type RefundDriver struct {
 	// supports Sol-source swaps; leaving it unset is fine for EVM-only
 	// deployments and matches the signing driver's pattern.
 	solanaProvider txassembler.SolanaProvider
+
+	// tonProvider supplies the wallet-contract seqno + active state
+	// the refund driver needs to build a V4R2 sweep tx from a TON
+	// per-swap deposit wallet back to the user's Tonkeeper sender.
+	// nil ⇒ TON refunds error and the swap rolls back via the
+	// standard ceiling. Wire via SetTONProvider for TON-source
+	// deployments; mirrors the signing driver's pattern.
+	tonProvider txassembler.TONProvider
 
 	// rpcOverrides shadows depositcheck's RPC URL table when querying
 	// the source-chain balance of the MPC deposit address. Operators
@@ -228,6 +237,16 @@ func (d *RefundDriver) SetMaxRefundAttempts(n int) {
 // the signing driver gets so a single deployment flag governs both.
 func (d *RefundDriver) SetSolanaProvider(p txassembler.SolanaProvider) {
 	d.solanaProvider = p
+}
+
+// SetTONProvider attaches the toncenter provider the refund driver
+// uses to read the per-swap deposit wallet's seqno + active state
+// when sweeping a TON-source deposit back to its Tonkeeper sender.
+// nil means TON refunds error out via the standard ceiling. Pass the
+// same *ton.TonCenterProvider the signing driver gets so a single
+// deployment flag governs both.
+func (d *RefundDriver) SetTONProvider(p txassembler.TONProvider) {
+	d.tonProvider = p
 }
 
 // SetOrphanRefundingAfter configures the orphan-recovery threshold.
@@ -690,8 +709,10 @@ func (d *RefundDriver) executeRefund(ctx context.Context, sw *Swap, walletID, de
 		d.executeRefundEVM(ctx, sw, walletID, depositAddr)
 	case mchain.AddressTypeSOL:
 		d.executeRefundSolana(ctx, sw, walletID, depositAddr)
+	case mchain.AddressTypeTON:
+		d.executeRefundTON(ctx, sw, walletID, depositAddr)
 	default:
-		// BTC / TON / XRP / DOT — no refund path implemented. Leave the
+		// BTC / XRP / DOT — no refund path implemented. Leave the
 		// swap in SwapStatusRefunding with an operator-actionable
 		// LastError so it shows up in the stuck-swap surface instead of
 		// looping or silently rolling back. Operators recover manually.
@@ -932,6 +953,136 @@ func (d *RefundDriver) executeRefundSolana(ctx context.Context, sw *Swap, wallet
 			"swap_id", sw.ID,
 			"refund_tx_hash", bres.TxHash,
 			"refund_value_lamports", refundLamports,
+		)
+	}
+}
+
+// tonRefundFeeReserveNano is the buffer left in the per-swap deposit
+// wallet after a TON refund sweep. Covers (a) the wallet contract's
+// own gas to process its outbound message (~0.005 TON for a V4R2
+// transfer), (b) the validator's transaction fee, (c) some headroom
+// for testnet/mainnet fee-market drift. 0.05 TON is generous on
+// purpose — leaving a few cents stranded in a per-swap throwaway
+// wallet is cheaper than risking the refund fail-and-loop because
+// we underestimated by a few nano.
+const tonRefundFeeReserveNano uint64 = 50_000_000 // 0.05 TON
+
+// executeRefundTON is the TON-source analog of executeRefundSolana.
+// Sweeps the per-swap deposit wallet's balance (minus a fee reserve)
+// from the V4R2 contract back to the user's Tonkeeper sender via
+// MPC-signed external message + toncenter broadcast.
+//
+// Requires SetTONProvider to have been called; without it, returns
+// an error that the standard rollback path catches.
+func (d *RefundDriver) executeRefundTON(ctx context.Context, sw *Swap, walletID, depositAddr string) {
+	if d.tonProvider == nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("tonProvider not configured for refund of %s source", sw.SourceNetwork))
+		return
+	}
+	if sw.DepositPubKey == "" {
+		// Pre-DepositPubKey swaps can't refund cleanly — they predate
+		// the field. Surface a clear error so operators can recover
+		// manually rather than retry forever.
+		d.rollback(ctx, sw.ID, fmt.Errorf(
+			"swap %s lacks DepositPubKey (deposit wallet keygen predates TON refund support) — manual recovery required",
+			sw.ID,
+		))
+		return
+	}
+
+	// Step 1 — balance.
+	balanceCtx, cancelBal := context.WithTimeout(ctx, d.perBalanceTimeout)
+	balanceNano, err := d.tonProvider.GetBalanceNano(balanceCtx, depositAddr)
+	cancelBal()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("fetch TON balance: %w", err))
+		return
+	}
+
+	// Step 2 — refund value = balance − fee reserve. The wallet
+	// contract pays its own gas via mode 3 (PayGasSeparately) so
+	// the reserve has to stay in the wallet, not be added to the
+	// recipient amount.
+	if balanceNano <= tonRefundFeeReserveNano {
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			s.LastError = fmt.Sprintf(
+				"Refund impossible: deposit balance %d nanoTON ≤ fee reserve %d nanoTON",
+				balanceNano, tonRefundFeeReserveNano,
+			)
+		})
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("ton refund impossible: balance ≤ reserve",
+				"swap_id", sw.ID,
+				"balance_nano", balanceNano,
+				"reserve_nano", tonRefundFeeReserveNano,
+			)
+		}
+		return
+	}
+	refundNano := balanceNano - tonRefundFeeReserveNano
+
+	// Step 3 — build the unsigned V4R2 sweep.
+	unsigned, err := d.assembler.PreSignTONRefund(
+		ctx, sw.SourceNetwork, sw.DepositPubKey, depositAddr, sw.Sender, refundNano, d.tonProvider,
+	)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("preSign TON refund: %w", err))
+		return
+	}
+
+	// Step 4 — MPC signs the 32-byte cell hash via ed25519. Hex-
+	// encoded per the cluster's /sign contract; NO 0x prefix per the
+	// TON convention (matches Solana, the other ed25519 family).
+	msgHex := hex.EncodeToString(unsigned.SigningHash)
+	sigCtx, cancelSig := context.WithTimeout(ctx, d.perSignTimeout)
+	res, err := d.signer.SignForWallet(sigCtx, walletID, msgHex)
+	cancelSig()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("MPC sign TON refund: %w", err))
+		return
+	}
+
+	// Step 5 — finalize. Cluster returns hex (with or without 0x);
+	// strip and decode to the 64-byte ed25519 signature.
+	sigHex := strings.TrimPrefix(strings.TrimPrefix(res.Signature, "0x"), "0X")
+	sigBytes, err := hex.DecodeString(sigHex)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("decode TON refund signature hex: %w", err))
+		return
+	}
+	boc, err := d.assembler.FinalizeTON(unsigned, sigBytes)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("finalize TON refund: %w", err))
+		return
+	}
+
+	// Step 6 — broadcast on the source chain. The broadcast client
+	// dispatches by network's AddressTypeFor, routes TON to its
+	// broadcastTON handler, expects base64 BoC for the rawTx string.
+	rawTx := base64.StdEncoding.EncodeToString(boc)
+	pushCtx, cancelPush := context.WithTimeout(ctx, d.perBroadcastTimeout)
+	bres, err := d.bcaster.Broadcast(pushCtx, sw.SourceNetwork, rawTx)
+	cancelPush()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("broadcast TON refund: %w", err))
+		return
+	}
+
+	// Step 7 — mark refunded.
+	_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		s.Status = SwapStatusRefunded
+		s.RefundTxHash = bres.TxHash
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
+		s.RefundAttempts = 0
+	})
+	d.successes.Add(1)
+	if d.logger != nil {
+		d.logger.Info("TON refund completed",
+			"swap_id", sw.ID,
+			"refund_tx_hash", bres.TxHash,
+			"refund_value_nano", refundNano,
 		)
 	}
 }

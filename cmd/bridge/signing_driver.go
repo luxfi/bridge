@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -88,6 +89,13 @@ type SigningDriver struct {
 	// triggers a PreSign error that the rollback path catches.
 	solanaProvider txassembler.SolanaProvider
 
+	// tonProvider supplies the TON wallet contract state (seqno +
+	// active) and broadcasts the signed BoC. Required when ANY swap
+	// targets a TON_* network; ignored otherwise. Implemented by
+	// *ton.TonCenterProvider in production. Nil + TON destination
+	// triggers a PreSign error that the rollback path catches.
+	tonProvider txassembler.TONProvider
+
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
 	// headroom — matches the mchain client's keygen timeout.
@@ -150,6 +158,12 @@ func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler =
 // nil and the signing driver behaves identically to the pre-Solana
 // version.
 func (d *SigningDriver) SetSolanaProvider(p txassembler.SolanaProvider) { d.solanaProvider = p }
+
+// SetTONProvider attaches the toncenter provider used when a swap
+// targets a TON_* destination. Required for X→TON releases; ignored
+// otherwise. EVM-only / SOL-only deployments can leave this nil and
+// the signing driver behaves identically to the pre-TON version.
+func (d *SigningDriver) SetTONProvider(p txassembler.TONProvider) { d.tonProvider = p }
 
 // SetMaxQuoteAge configures the staleness guard. Swaps older than this
 // at signing time are kicked to SwapStatusRefundPending instead of
@@ -391,6 +405,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		msgHex      string
 		unsignedEVM *txassembler.Unsigned       // populated for EVM destinations
 		unsignedSol *txassembler.SolanaUnsigned // populated for Solana destinations
+		unsignedTON *txassembler.TONUnsigned    // populated for TON destinations
 	)
 	if d.assembler != nil && senderAddr != "" {
 		family := mchain.AddressTypeFor(sw.DestinationNetwork)
@@ -454,6 +469,52 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			// SHA-256 wrapper. The cluster's ed25519 signer must
 			// hash internally per the curve spec.
 			msgHex = hex.EncodeToString(u.Message)
+		case mchain.AddressTypeTON:
+			if d.tonProvider == nil {
+				err := fmt.Errorf("tonProvider not configured for %s", sw.DestinationNetwork)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("TON provider missing", "swap_id", sw.ID, "err", err)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"TON provider not configured — retrying",
+					"PreSignTON")
+				return
+			}
+			if sw.ReleasePubKey == "" {
+				err := fmt.Errorf("swap %s lacks ReleasePubKey (release wallet keygen predates TON support)", sw.ID)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("TON release pubkey missing — re-mint required",
+						"swap_id", sw.ID, "release_wallet_id", sw.ReleaseWalletID)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"TON release wallet predates pubkey capture — delete release-wallets.json TON entry to re-mint",
+					"PreSignTON")
+				return
+			}
+			u, aerr := d.assembler.PreSignTON(ctx, txassembler.SwapIntent{
+				DestinationNetwork: sw.DestinationNetwork,
+				DestinationAsset:   sw.DestinationAsset,
+				DestinationAddress: sw.DestinationAddress,
+				Amount:             releaseAmount(sw),
+				SenderAddress:      senderAddr,
+			}, d.tonProvider, sw.ReleasePubKey)
+			if aerr != nil {
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("tx assembler PreSignTON failed",
+						"swap_id", sw.ID,
+						"err", aerr,
+					)
+				}
+				d.rollbackOrFail(ctx, sw.ID, aerr,
+					"TON RPC unreachable while building tx — retrying",
+					"PreSignTON")
+				return
+			}
+			unsignedTON = u
+			msgHex = hex.EncodeToString(u.SigningHash)
 		default:
 			err := fmt.Errorf("tx assembly not implemented for %s family (network %s)",
 				family, sw.DestinationNetwork)
@@ -571,6 +632,52 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			return
 		}
 		destRawTx = rawTx
+
+	case unsignedTON != nil:
+		// MPC cluster returns the ed25519 sig as hex (with or
+		// without "0x"). Same convention as Solana — share the
+		// strip-and-decode logic.
+		sigHex := res.Signature
+		if len(sigHex) >= 2 && (sigHex[:2] == "0x" || sigHex[:2] == "0X") {
+			sigHex = sigHex[2:]
+		}
+		sigBytes, derr := hex.DecodeString(sigHex)
+		if derr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("decode ed25519 signature failed",
+					"swap_id", sw.ID,
+					"err", derr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		boc, ferr := d.assembler.FinalizeTON(unsignedTON, sigBytes)
+		if ferr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("tx assembler FinalizeTON failed",
+					"swap_id", sw.ID,
+					"err", ferr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		// Encode the BoC as base64 for the destRawTx string field.
+		// The broadcast client base64-decodes it back to bytes before
+		// POSTing to toncenter's sendBoc. Base64 is the natural wire
+		// format for TON (matches what tonkeeper / toncenter expect).
+		destRawTx = base64.StdEncoding.EncodeToString(boc)
 	}
 
 	// Layered-cosigner gate. If the SDK declared external cosigners

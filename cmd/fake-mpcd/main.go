@@ -135,12 +135,21 @@ func keygenHandler(solAddr, ethAddr, eddsaPubHex string) http.HandlerFunc {
 }
 
 // signHandler signs the supplied hex-encoded message with the stub's
-// ed25519 key. The bridge's Solana signing path posts the RAW message
-// bytes (legacy Solana message, ~150 B) hex-encoded with no 0x prefix.
-// EVM signing posts a 32-byte keccak sighash (64 hex chars); since
-// this stub has no ECDSA path, we reject those with a clear error so
-// operators know they need the real mpcd or a richer stub for the
-// Sol→Lux release leg.
+// ed25519 key. Path matrix by wallet_id family:
+//
+//   solana / sol_  → ed25519 over the raw message bytes (legacy Solana
+//                    message, ~150 B). Any length OK.
+//   ton_   / -ton- → ed25519 over the raw message bytes (V4R2 cell
+//                    hash, 32 B). The cell-hash being 32 B doesn't
+//                    mean it's an EVM sighash — TON's wallet contract
+//                    verifies ed25519 against the cell hash directly.
+//   anything else  → assumed EVM. We reject 32-B messages here with
+//                    a clear "use the real mpcd" error so EVM swaps
+//                    misrouted to this stub fail loudly instead of
+//                    producing an unverifiable ed25519 sig over a
+//                    keccak sighash.
+//
+// Pattern mirrors mpc-router.familyFor; keep both call sites in sync.
 func signHandler(priv ed25519.PrivateKey) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -157,10 +166,15 @@ func signHandler(priv ed25519.PrivateKey) http.HandlerFunc {
 			return
 		}
 		msgHex := strings.TrimPrefix(strings.TrimPrefix(req.Message, "0x"), "0X")
-		// Reject likely-EVM sighashes early so the failure mode is
-		// readable instead of "ed25519 sig over a 32-byte hash that
-		// nobody can verify on-chain."
-		if len(msgHex) == 64 {
+		// EVM rejection only fires when the wallet_id ISN'T an
+		// ed25519 family. TON cell hashes are also 32 B — they must
+		// pass through to ed25519.Sign below.
+		wid := strings.ToLower(req.WalletID)
+		isEd25519 := strings.Contains(wid, "solana") ||
+			strings.Contains(wid, "sol_") ||
+			strings.Contains(wid, "ton_") ||
+			strings.Contains(wid, "-ton-")
+		if !isEd25519 && len(msgHex) == 64 {
 			log.Printf("/sign REJECTED EVM-shaped sighash (32 B) wallet_id=%q", req.WalletID)
 			w.WriteHeader(http.StatusBadRequest)
 			_ = json.NewEncoder(w).Encode(map[string]any{

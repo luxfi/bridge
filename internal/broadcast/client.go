@@ -23,6 +23,9 @@ package broadcast
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -72,8 +75,14 @@ var rpcURLs = map[string]string{
 	"SOLANA_MAINNET": "https://solana-rpc.publicnode.com",
 	"SOLANA_DEVNET":  "https://api.devnet.solana.com",
 	"SOLANA_TESTNET": "https://api.testnet.solana.com",
-	// BTC / TON / XRP / DOT still TODO — each needs a chain-specific
-	// broadcast handler (Bitcoin REST API, TON Center push, etc.).
+	// TON — toncenter v2 endpoints. The free tier is rate-limited
+	// (1 req/s without an API key); operators override via
+	// RPCURLOverrides for higher throughput. Bridge bound to sub-1Hz
+	// broadcast cadence so the free tier is fine for first deploys.
+	"TON_MAINNET": "https://toncenter.com/api/v2",
+	"TON_TESTNET": "https://testnet.toncenter.com/api/v2",
+	// BTC / XRP / DOT still TODO — each needs a chain-specific
+	// broadcast handler (Bitcoin REST API, etc.).
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -88,8 +97,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, TON, XRP, DOT). Solana is implemented.
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (EVM + Solana today)")
+// isn't implemented yet (BTC, XRP, DOT). EVM, Solana, and TON are
+// implemented.
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (EVM, Solana, TON today)")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -212,9 +222,103 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTx string) (*Broadca
 		return c.broadcastEVM(ctx, url, rawTx)
 	case mchain.AddressTypeSOL:
 		return c.broadcastSolana(ctx, url, rawTx)
+	case mchain.AddressTypeTON:
+		return c.broadcastTON(ctx, url, rawTx)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}
+}
+
+// =============================================================================
+// TON — toncenter v2 sendBoc
+// =============================================================================
+
+// broadcastTON POSTs the signed BoC to toncenter's /sendBoc. The
+// rawTx string is the base64-encoded BoC the signing driver produced
+// after FinalizeTON. toncenter returns {"ok":true,"result":{"@type":"ok"}}
+// on accept; the message hash isn't echoed in the response, so we
+// surface a SHA-256-derived short id for the swap row to display.
+//
+// Rate limit: free tier is 1 req/s. Bridge broadcast cadence is well
+// below that, but operators with multiple concurrent TON destinations
+// should override RPCURLs with an authenticated toncenter URL or a
+// self-hosted ton-http-api.
+func (c *Client) broadcastTON(ctx context.Context, url, rawTx string) (*BroadcastResult, error) {
+	// Validate the base64 envelope up front so the toncenter error
+	// returned for invalid input doesn't get blamed on toncenter.
+	bocBytes, err := base64.StdEncoding.DecodeString(rawTx)
+	if err != nil {
+		// Be lenient: accept hex too (e.g. if a future caller chooses
+		// hex for consistency with EVM/SOL). The two encodings are
+		// disjoint at any non-trivial length, so this never collides.
+		if hexBytes, hexErr := hex.DecodeString(strings.TrimPrefix(rawTx, "0x")); hexErr == nil {
+			bocBytes = hexBytes
+		} else {
+			return nil, &RPCError{
+				Method:  "sendBoc",
+				Code:    -32602,
+				Message: fmt.Sprintf("rawTx not base64 or hex: %v", err),
+			}
+		}
+	}
+	if len(bocBytes) == 0 {
+		return nil, ErrEmptyRawTx
+	}
+
+	body, err := json.Marshal(map[string]any{
+		"boc": base64.StdEncoding.EncodeToString(bocBytes),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("broadcast: marshal sendBoc: %w", err)
+	}
+
+	callCtx, cancel := context.WithTimeout(ctx, c.timeout())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(callCtx, http.MethodPost,
+		strings.TrimRight(url, "/")+"/sendBoc",
+		bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return nil, err
+		}
+		return nil, &RPCError{Method: "sendBoc", Code: -32000, Message: err.Error()}
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, &RPCError{
+			Method:     "sendBoc",
+			HTTPStatus: resp.StatusCode,
+			Message:    truncate(respBody, 200),
+		}
+	}
+
+	var env struct {
+		Ok    bool   `json:"ok"`
+		Error string `json:"error,omitempty"`
+		Code  int    `json:"code,omitempty"`
+	}
+	if err := json.Unmarshal(respBody, &env); err != nil {
+		return nil, &RPCError{Method: "sendBoc", Code: -32700, Message: fmt.Sprintf("decode: %v", err)}
+	}
+	if !env.Ok {
+		return nil, &RPCError{Method: "sendBoc", Code: env.Code, Message: env.Error}
+	}
+	// Surface a tx identifier derived from the BoC so the swap row
+	// has something to display. SHA-256 of the BoC is a stable proxy
+	// for "this exact tx" — explorers won't link to it directly, but
+	// the swap's bridge id is the primary user-facing handle anyway.
+	digest := sha256.Sum256(bocBytes)
+	return &BroadcastResult{TxHash: hex.EncodeToString(digest[:])}, nil
 }
 
 // =============================================================================

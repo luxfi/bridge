@@ -53,6 +53,7 @@ import (
 	"github.com/luxfi/bridge/internal/secrets"
 	"github.com/luxfi/bridge/internal/solanarpc"
 	"github.com/luxfi/bridge/internal/tokens"
+	"github.com/luxfi/bridge/internal/ton"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
 )
@@ -308,6 +309,12 @@ func main() {
 		"Solana RPC URL used by the signing driver to fetch a recent blockhash when assembling Lux→Sol (and any X→Sol) release txs. Default is publicnode (api.mainnet-beta.solana.com returns 403 to many origins). Override with a paid endpoint (Helius/QuickNode/Triton) for prod throughput. Empty disables Sol-family destination support — swaps to Solana fail PreSign and refund.")
 	solanaRPCTimeout := flag.Duration("solana-rpc-timeout", 15*time.Second,
 		"per-request timeout for Solana RPC calls (getLatestBlockhash + sendTransaction). 15s default mirrors the broadcast client; tune lower if your endpoint is fast and reliable.")
+	tonRPCMainnetURL := flag.String("ton-rpc-mainnet-url", envOr("BRIDGE_TON_RPC_MAINNET_URL", "https://toncenter.com/api/v2"),
+		"toncenter v2 base URL used by the signing driver for TON_MAINNET releases (seqno reads + sendBoc). Free tier is rate-limited to 1 req/s; override with an authenticated toncenter URL or a self-hosted ton-http-api for throughput. Empty disables TON_MAINNET destinations.")
+	tonRPCTestnetURL := flag.String("ton-rpc-testnet-url", envOr("BRIDGE_TON_RPC_TESTNET_URL", "https://testnet.toncenter.com/api/v2"),
+		"toncenter v2 base URL used by the signing driver for TON_TESTNET releases. Defaults to the public testnet endpoint.")
+	tonRPCAPIKey := flag.String("ton-rpc-api-key", envOr("BRIDGE_TON_RPC_API_KEY", ""),
+		"X-API-Key header value for toncenter requests. Empty (default) uses the free tier (1 req/s). Required for higher rate limits.")
 	corsAllowOrigins := flag.String("cors-allow-origins", envOr("BRIDGE_CORS_ALLOW_ORIGINS", ""),
 		"Comma-separated allow-list of Origin values to advertise via Access-Control-Allow-Origin. Empty (default) leaves the bridge same-origin only — the production deployment serves the SPA from the same domain and doesn't need CORS. Use `*` for permissive cross-origin (smoke testing, dev tunnels) or a specific list (e.g. `https://app.example.com,https://staging.example.com`) for cross-origin SPA hosts. Toggling this on enables an OPTIONS preflight responder for every route.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
@@ -765,6 +772,30 @@ func main() {
 			logger.Info("solana provider not configured — X→Sol releases will fail PreSign and refund; Sol→X refunds will fail to sweep deposit back to sender")
 		}
 
+		// TON provider: attached when at least one TON RPC URL is set.
+		// Default URLs are the public toncenter endpoints, so this
+		// always fires on default config. The provider serves both
+		// TON_MAINNET and TON_TESTNET — toncenter routes by host.
+		// signing_driver.go's TON case fails fast when the provider
+		// is nil so a misconfigured deploy doesn't silently strand
+		// TON-destination swaps.
+		if *tonRPCMainnetURL != "" || *tonRPCTestnetURL != "" {
+			// Provider holds BOTH URLs and routes per call by parsing
+			// the address's testnet flag. A single bridge process
+			// serves TON_MAINNET + TON_TESTNET concurrently without
+			// per-network state. Empty URLs fall back to the canonical
+			// public toncenter endpoints inside the constructor.
+			tonClient := ton.NewTonCenterProvider(*tonRPCMainnetURL, *tonRPCTestnetURL, *tonRPCAPIKey)
+			signer.SetTONProvider(tonClient)
+			logger.Info("ton provider attached to signer",
+				"mainnet_url", tonClient.MainnetURL,
+				"testnet_url", tonClient.TestnetURL,
+				"has_api_key", *tonRPCAPIKey != "",
+			)
+		} else {
+			logger.Info("ton provider not configured — X→TON releases will fail PreSign and refund")
+		}
+
 		// Layered-cosigner gate (Utila / Fireblocks). Defaults to ON so
 		// swaps declaring cosigners[] in their POST body trigger an
 		// external-custodian approval flow after the native MPC sign.
@@ -873,6 +904,15 @@ func main() {
 			solClient := solanarpc.New(*solanaRPCURL)
 			solClient.Timeout = *solanaRPCTimeout
 			refundDriver.SetSolanaProvider(solClient)
+		}
+		// TON refund provider: parallel to Solana. Same TonCenterProvider
+		// the signing driver uses — single config governs both X→TON
+		// release sweep and TON→X refund sweep. nil here would make
+		// TON-source refunds error and roll back via the standard
+		// ceiling.
+		if *tonRPCMainnetURL != "" || *tonRPCTestnetURL != "" {
+			tonClient := ton.NewTonCenterProvider(*tonRPCMainnetURL, *tonRPCTestnetURL, *tonRPCAPIKey)
+			refundDriver.SetTONProvider(tonClient)
 		}
 		api.SetRefundDriver(refundDriver)
 		go func() {
