@@ -180,13 +180,14 @@ func (a *Assembler) PreSignXRP(
 	}
 
 	pay := &xrp.Payment{
-		Account:       in.SenderAddress,
-		Destination:   in.DestinationAddress,
-		AmountDrops:   amountDrops,
-		FeeDrops:      feeDrops,
-		Sequence:      info.AccountData.Sequence,
-		Flags:         0, // tfFullyCanonicalSig is secp256k1-only; ed25519 ignores
-		SigningPubKey: pubKey,
+		Account:        in.SenderAddress,
+		Destination:    in.DestinationAddress,
+		AmountDrops:    amountDrops,
+		FeeDrops:       feeDrops,
+		Sequence:       info.AccountData.Sequence,
+		Flags:          0, // tfFullyCanonicalSig is secp256k1-only; ed25519 ignores
+		SigningPubKey:  pubKey,
+		DestinationTag: in.DestinationTag,
 	}
 	signing, err := pay.SerializeForSigning()
 	if err != nil {

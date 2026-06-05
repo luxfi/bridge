@@ -86,6 +86,12 @@ type serverSwap struct {
 	// tell the user what's blocking — e.g. "insufficient funds for
 	// gas" before they sit through a 5-minute spinner.
 	LastError string `json:"last_error,omitempty"`
+	// DestinationTag is the XRPL DestinationTag (uint32) the bridge
+	// will include on the on-chain Payment, if set at swap-create.
+	// Echoed back on read so the SPA / SDK can render it for the user
+	// (memo line: "Exchange tag: 42") and verify the value the bridge
+	// will sign matches what they intended.
+	DestinationTag *uint32 `json:"destination_tag,omitempty"`
 	// RefundTxHash is the source-chain tx hash of the refund sweep
 	// once the refund driver lands it. Populated together with
 	// status=refunded.
@@ -115,6 +121,14 @@ type createSwapReq struct {
 	// advancing the swap to broadcasting. Empty / absent → no
 	// layered cosign; the native MPC quorum is the only signer.
 	Cosigners []any `json:"cosigners,omitempty"`
+	// DestinationTag is an optional XRPL DestinationTag (uint32) the
+	// release tx carries on its Payment. Exchanges (Binance, Bitstamp,
+	// etc.) require it to route deposits to a specific sub-account; if
+	// the SPA picker collected one, we propagate it to the assembler
+	// so the on-chain Payment includes it. Zero (or absent) ⇒ no tag
+	// field on the Payment — same as a regular wallet-to-wallet send.
+	// Ignored for non-XRP destinations.
+	DestinationTag *uint32 `json:"destination_tag,omitempty"`
 }
 
 // envelope is the canonical `{data: ...}` wrapper the legacy server
@@ -407,6 +421,7 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		UseTeleporter:      false, // teleporter dispatch is off the happy path per architecture_mpc_vs_teleporter
 		AppName:            req.AppName,
 		Cosigners:          cosignerIntents,
+		DestinationTag:     req.DestinationTag,
 	}
 	if depositWallet != nil {
 		swap.DepositAddress = depositWallet.LegacyDepositString()
@@ -474,6 +489,7 @@ func swapToServerShape(sw *Swap) serverSwap {
 		DestRawTx:          sw.DestRawTx,
 		LastError:          sw.LastError,
 		RefundTxHash:       sw.RefundTxHash,
+		DestinationTag:     sw.DestinationTag,
 	}
 }
 

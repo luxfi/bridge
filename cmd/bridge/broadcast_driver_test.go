@@ -255,6 +255,95 @@ func TestBroadcast_SuccessClearsRebuildCounter(t *testing.T) {
 	}
 }
 
+// TestBroadcast_StaleXRPSequence_ResetsForResign mirrors the Solana
+// blockhash / TON seqno recovery for XRP. When XRPL returns
+// terPRE_SEQ (current account sequence advanced past the tx's
+// sequence) or tefPAST_SEQ (sequence already used), the broadcast
+// driver clears DestRawTx + sign artifacts and routes back to
+// bridge_transfer_pending so the signing driver re-reads the account
+// sequence and re-signs.
+func TestBroadcast_StaleXRPSequence_ResetsForResign(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "XRP_TESTNET", "DEADBEEF")
+	bc.failFor("XRP_TESTNET", "DEADBEEF",
+		errors.New("broadcast: submit rpc -97: xrpl engine_result=terPRE_SEQ: Missing/inapplicable prior transaction"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Fatalf("stale-sequence should reset to bridge_transfer_pending for re-sign, got %q", got.Status)
+	}
+	if got.DestRawTx != "" || got.Signature != "" || got.MPCSessionID != "" {
+		t.Errorf("DestRawTx/Signature/MPCSessionID should be cleared; got DestRawTx=%q Signature=%q MPCSessionID=%q",
+			got.DestRawTx, got.Signature, got.MPCSessionID)
+	}
+	if got.BroadcastRebuilds != 1 {
+		t.Errorf("BroadcastRebuilds should be 1 after first rebuild, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "sequence stale") {
+		t.Errorf("LastError should explain the cause; got %q", got.LastError)
+	}
+	if d.Stats().Rebuilds != 1 {
+		t.Errorf("Rebuilds stat should be 1, got %d", d.Stats().Rebuilds)
+	}
+}
+
+// TestBroadcast_StaleXRPSequence_MaxRebuilds_RoutesToRefund pins the
+// ceiling: after maxRebuilds consecutive stale-sequence failures, the
+// swap moves to refund_pending so the deposit gets returned.
+func TestBroadcast_StaleXRPSequence_MaxRebuilds_RoutesToRefund(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "XRP_TESTNET", "DEADBEEF")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastRebuilds = DefaultBroadcastMaxRebuilds - 1
+	})
+	bc.failFor("XRP_TESTNET", "DEADBEEF",
+		errors.New("broadcast: submit rpc -99: xrpl engine_result=tefPAST_SEQ: This sequence number has already past"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Fatalf("hitting rebuild ceiling should move to refund_pending, got %q", got.Status)
+	}
+	if got.BroadcastRebuilds != DefaultBroadcastMaxRebuilds {
+		t.Errorf("BroadcastRebuilds should reach the ceiling, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "sequence stale") {
+		t.Errorf("LastError should explain the ceiling hit, got %q", got.LastError)
+	}
+}
+
+// TestIsStaleXRPSequence_Matchers verifies the matcher recognizes
+// each XRPL stale-sequence code without false positives.
+func TestIsStaleXRPSequence_Matchers(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		{"terPRE_SEQ", errors.New("engine_result=terPRE_SEQ: Missing/inapplicable prior transaction"), true},
+		{"terPRE_SEQ lowercase", errors.New("got terpre_seq from xrpl"), true},
+		{"tefPAST_SEQ", errors.New("engine_result=tefPAST_SEQ: This sequence number has already past"), true},
+		{"tefALREADY", errors.New("engine_result=tefALREADY: this transaction is already in the ledger"), true},
+		{"tecUNFUNDED unrelated", errors.New("engine_result=tecUNFUNDED_PAYMENT"), false},
+		{"random text", errors.New("connection refused"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isStaleXRPSequence(tc.err); got != tc.want {
+				t.Errorf("isStaleXRPSequence(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
 // TestBroadcast_SurfacesLastErrorOnInsufficientFunds pins the UX
 // contract: when the destination chain rejects with "insufficient
 // funds for gas * price + value", the swap stays at broadcasting

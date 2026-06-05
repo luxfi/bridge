@@ -125,6 +125,13 @@ export interface TransferState {
       appName?: string
       refuel?: boolean
       useDepositAddress?: boolean
+      /**
+       * Optional XRPL DestinationTag (uint32). Threaded onto the
+       * on-chain Payment when the destination is XRP. Exchanges like
+       * Binance / Bitstamp require this to route deposits to a specific
+       * sub-account.
+       */
+      destinationTag?: number
     },
   ) => Promise<Transfer>
   /**
@@ -571,6 +578,13 @@ export function useTransfers(): TransferState {
             useTeleporter: false,
             appName: input.appName ?? cfg.brand?.name ?? '@luxfi/bridge',
             ...(cosigners.length > 0 ? { cosigners } : {}),
+            // XRPL DestinationTag. Only XRP destinations use it; the
+            // backend ignores it elsewhere. Cheap to pass through
+            // unconditionally — bridge-api.ts spreads only when
+            // typeof === 'number'.
+            ...(typeof input.destinationTag === 'number'
+              ? { destinationTag: input.destinationTag }
+              : {}),
           },
           { idempotencyKey: id, signal: controller.signal },
         )

@@ -173,6 +173,10 @@ type SwapIntent struct {
 	// from the eth_address slot of the keygen response. Used to
 	// query nonce; also goes into the v calculation post-signing.
 	SenderAddress string
+	// DestinationTag is an optional XRPL DestinationTag (uint32).
+	// Threaded onto the on-chain Payment by PreSignXRP when present.
+	// Ignored for non-XRP destinations.
+	DestinationTag *uint32
 }
 
 // PreSign builds the unsigned transaction and returns the keccak256
