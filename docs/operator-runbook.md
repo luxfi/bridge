@@ -342,6 +342,62 @@ ship a new image — there is no runtime token-registration endpoint yet.
 only; they do **not** wire detection or calldata. Detection +
 calldata live in `internal/tokens`.
 
+### Cut over the ed25519 signer (fake-mpcd → mpcd-single)
+
+One-time procedure for deployments that still run the legacy `fake-mpcd`
+binary behind the `mpc-router` ed25519 route. The new `cmd/mpcd-single`
+binary speaks the identical HTTP wire (`/keygen`, `/sign`, port `:9900`)
+but derives **per-wallet ed25519 keys via HKDF-SHA-512** from a single
+master seed, instead of using one hardcoded key for every wallet.
+
+**Cutover bricks any in-flight ed25519-side swap** whose deposit address
+was minted by the old single-key fake-mpcd, because mpcd-single can't
+reproduce the old key for that wallet_id. Drain first.
+
+```bash
+# 1. Check for in-flight ed25519 swaps. From the bridge process:
+#    curl -s localhost:9810/swaps | jq '[.[] | select(
+#      .status == "bridge_transfer_pending" and
+#      (.destination_network | test("(?i)solana|sol_|ton_|xrp_")))]'
+#    Drain or accept loss before continuing.
+
+# 2. Build the new binary.
+go build -o /tmp/mpcd-single ./cmd/mpcd-single
+
+# 3. Provision a master seed.
+#    Dev / testnet: file: scheme with --auto-create-seed (default).
+#    Prod:          pre-create via `head -c 32 /dev/urandom | xxd -p -c 64 > /etc/mpcd-single/master.seed`
+#                   or use a kms: URI through the secrets Resolver.
+sudo mkdir -p /etc/mpcd-single && sudo chmod 700 /etc/mpcd-single
+# (skip the seed-file step if your URI is kms: or env:)
+
+# 4. Stop the legacy fake-mpcd, start mpcd-single on the same port.
+pkill -f /tmp/fake-mpcd
+nohup /tmp/mpcd-single \
+  --addr :9900 \
+  --master-seed file:/etc/mpcd-single/master.seed \
+  > /var/log/mpcd-single.log 2>&1 &
+
+# 5. Verify the wire is up.
+curl -s localhost:9900/healthz   # → "ok"
+curl -s -XPOST localhost:9900/keygen \
+  -H 'content-type: application/json' \
+  -d '{"org_id":"smoke","wallet_id":"bridge-xrp_testnet-smoke"}' | jq .
+
+# 6. Run an XRPL altnet round to confirm a tesSUCCESS:
+go run ./cmd/xrp-smoke --broadcast
+```
+
+The `mpc-router` and `cmd/bridge` processes do not need to be restarted
+— they talk to `:9900` over HTTP and don't care about the implementation
+behind it.
+
+Cluster-threshold ed25519 (real cluster-FROST mpcd) is the longer-term
+custody answer and is tracked as a separate epic; `mpcd-single` is the
+single-signer interim that addresses the actual security gap of the
+previous fake-mpcd (one key for every wallet) without waiting for the
+threshold protocol work.
+
 ---
 
 ## 8. Troubleshooting

@@ -3,7 +3,7 @@
 // Verifies the full happy path end-to-end:
 //   1. xrp.Provider reads sequence + open_ledger_fee from live altnet
 //   2. txassembler.PreSignXRP builds canonical Payment + signing bytes
-//   3. fake-mpcd /sign through the mpc-router returns a 64-byte ed25519 sig
+//   3. mpcd-single /sign through the mpc-router returns a 64-byte ed25519 sig
 //   4. txassembler.FinalizeXRP emits the uppercase-hex tx_blob
 //   5. xrp.Provider.SubmitBlob pushes to the altnet (only with --broadcast)
 //
@@ -107,8 +107,8 @@ func main() {
 }
 
 // signViaRouter POSTs to the mpc-router's /sign endpoint, which
-// dispatches XRP requests to fake-mpcd. Returns the ed25519 signature
-// hex.
+// dispatches XRP requests to the single-signer mpcd. Returns the
+// ed25519 signature hex.
 func signViaRouter(routerURL, walletID, msgHex string) (string, error) {
 	body, _ := json.Marshal(map[string]string{
 		"org_id":    "bridge",
