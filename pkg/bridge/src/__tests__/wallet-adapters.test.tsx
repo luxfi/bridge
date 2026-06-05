@@ -41,7 +41,12 @@ function makeWrapper(): FC<{ children: ReactNode }> {
 }
 
 describe('useWalletForFamily', () => {
-  it('returns a not-connected shape for xrp (no adapter yet)', () => {
+  it('returns a not-connected shape for xrp (Xaman provider mounted, no API key)', () => {
+    // The wrapper mounts NonEVMProviders without an xamanApiKey prop and
+    // tests run in jsdom with no window.__ENV — so the Xaman SDK is
+    // initialized with an empty key and the resulting state is "ready
+    // for connect attempt but will error out clearly". The hook still
+    // returns a fully-typed WalletForFamily shape with family='xrp'.
     const { result } = renderHook(() => useWalletForFamily('xrp'), {
       wrapper: makeWrapper(),
     })
@@ -59,11 +64,15 @@ describe('useWalletForFamily', () => {
     expect(result.current.connected).toBe(false)
   })
 
-  it('xrp adapter rejects connect() with a clear error', async () => {
+  it('xrp adapter rejects connect() with a clear error when no API key is configured', async () => {
+    // Without VITE_XAMAN_API_KEY the SDK never initializes — connect()
+    // surfaces a config-error message that points the developer at the
+    // env var to set, rather than a generic "no adapter" message that
+    // implies the family is unimplemented.
     const { result } = renderHook(() => useWalletForFamily('xrp'), {
       wrapper: makeWrapper(),
     })
-    await expect(result.current.connect()).rejects.toThrow(/No wallet adapter for xrp/)
+    await expect(result.current.connect()).rejects.toThrow(/Xaman SDK not initialized/)
   })
 
   it('routes svm to the Solana adapter (initial state)', () => {

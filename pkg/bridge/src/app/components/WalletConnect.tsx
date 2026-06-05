@@ -661,6 +661,7 @@ const NonEVMConnectorRows: FC<NonEVMConnectorRowsProps> = ({ onError, onConnecte
   const svm = useWalletForFamily('svm')
   const ton = useWalletForFamily('ton')
   const btc = useWalletForFamily('btc')
+  const xrp = useWalletForFamily('xrp')
   // Track which row is mid-connect so we can show "Connecting…" on the
   // right family without blocking the others (a Phantom popup that
   // hangs shouldn't gray out TON + BTC).
@@ -676,6 +677,7 @@ const NonEVMConnectorRows: FC<NonEVMConnectorRowsProps> = ({ onError, onConnecte
     { family: 'svm', label: 'Solana', via: 'Phantom', icon: ASSET_LOGOS.SOL ?? '', wallet: svm },
     { family: 'ton', label: 'TON', via: 'TonConnect', icon: ASSET_LOGOS.TON ?? '', wallet: ton },
     { family: 'btc', label: 'Bitcoin', via: 'Xverse', icon: ASSET_LOGOS.BTC ?? '', wallet: btc },
+    { family: 'xrp', label: 'XRP', via: 'Xaman', icon: ASSET_LOGOS.XRP ?? '', wallet: xrp },
   ]
 
   return (

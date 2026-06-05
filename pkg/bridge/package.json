@@ -99,7 +99,8 @@
     "@wallet-standard/base": "^1.1.0",
     "sats-connect": "^4.2.1",
     "viem": "2.30.5",
-    "wagmi": "2.15.5"
+    "wagmi": "2.15.5",
+    "xumm-oauth2-pkce": "^2.8.7"
   },
   "peerDependencies": {
     "@hanzogui/avatar": "^7.0.0",

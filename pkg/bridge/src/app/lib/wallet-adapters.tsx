@@ -48,6 +48,7 @@ import {
   useTonWallet,
 } from '@tonconnect/ui-react'
 import { useAccount, useBalance, useConnect, useDisconnect } from 'wagmi'
+import { XummPkce } from 'xumm-oauth2-pkce'
 
 import { bridgeIdToWagmiChainId } from './wagmi-config'
 import type { ChainFamily } from './chains'
@@ -1195,6 +1196,223 @@ async function readBtcBalance(address: string): Promise<number> {
 }
 
 // =============================================================================
+// XRP (Xaman / XUMM)
+// =============================================================================
+//
+// Xaman is a mobile-first non-custodial XRP wallet (formerly XUMM). The
+// browser SDK is xumm-oauth2-pkce: the app creates a PKCE authorize
+// request, the user scans a QR (or opens a deeplink on mobile), Xaman
+// returns a JWT + the user's r-address. We never see the private key.
+//
+// Why Context (not per-component hook) — same pattern as BTC: a single
+// XummPkce instance must drive every component that reads address /
+// balance / connect status. Mounting the SDK twice (e.g. once in the
+// connect dialog, once in the asset row) would create two separate
+// auth listeners that don't agree on state.
+//
+// SSR safe: the SDK touches window/localStorage at construction time,
+// so we lazy-init in a useEffect inside the provider — never at module
+// scope. Tests that don't mount NonEVMProviders fall through to the
+// noop wallet so they don't crash on import.
+//
+// The API key is a UUID issued by apps.xaman.dev. It's public-safe
+// (the SDK is designed for browser use); the matching API SECRET is
+// backend-only and stays out of the SPA bundle.
+
+const XRPWalletContext = createContext<WalletForFamily | null>(null)
+
+interface XRPWalletProviderProps {
+  /** Xaman API key (UUID from apps.xaman.dev). Public-safe. */
+  apiKey: string
+  children: ReactNode
+}
+
+const XRPWalletProvider: FC<XRPWalletProviderProps> = ({ apiKey, children }) => {
+  const [address, setAddress] = useState<string | null>(null)
+  const [connected, setConnected] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const [balance, setBalance] = useState<number | null>(null)
+  const [balanceLoading, setBalanceLoading] = useState(false)
+
+  const xummRef = useRef<XummPkce | null>(null)
+
+  // Lazy-init the SDK after mount so SSR doesn't try to touch window.
+  // The SDK persists tokens in localStorage; a returning user lands in
+  // the 'retrieved' handler with an active session and skips the QR.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !apiKey) return
+    try {
+      const sdk = new XummPkce(apiKey, { implicit: true })
+      xummRef.current = sdk
+      // 'retrieved' fires when an existing session is restored from
+      // localStorage on page reload. 'success' fires after a fresh
+      // authorize() completes. Both expose the same state shape.
+      const hydrate = async () => {
+        try {
+          const state = await sdk.state()
+          const acct = state?.me?.account
+          if (acct) {
+            setAddress(acct)
+            setConnected(true)
+          }
+        } catch {
+          // empty state is the expected "no session yet" path
+        }
+      }
+      sdk.on('retrieved', hydrate)
+      sdk.on('success', hydrate)
+      sdk.on('error', () => {
+        setConnecting(false)
+      })
+      void hydrate()
+    } catch (e) {
+      // Bad API key, network down, etc. — fall back to "no wallet" so
+      // the dispatcher still returns a callable shape; connect() will
+      // error with a clear message when the user actually clicks.
+      // eslint-disable-next-line no-console
+      console.warn('[xaman] SDK init failed:', e)
+    }
+  }, [apiKey])
+
+  const connect = useCallback(async () => {
+    if (!xummRef.current) {
+      throw new Error(
+        'Xaman SDK not initialized — set VITE_XAMAN_API_KEY (or pass xamanApiKey to NonEVMProviders).',
+      )
+    }
+    setConnecting(true)
+    try {
+      const state = await xummRef.current.authorize()
+      const acct = state?.me?.account
+      if (acct) {
+        setAddress(acct)
+        setConnected(true)
+      }
+    } finally {
+      setConnecting(false)
+    }
+  }, [])
+
+  const disconnect = useCallback(async () => {
+    try {
+      await xummRef.current?.logout()
+    } catch {
+      // SDK throws if there's no session; clearing local state is the
+      // outcome the caller wants regardless.
+    }
+    setAddress(null)
+    setConnected(false)
+    setBalance(null)
+  }, [])
+
+  // Balance refresh whenever the connected address changes. XRPL public
+  // cluster has permissive CORS so the browser call works directly.
+  useEffect(() => {
+    if (!address) {
+      setBalance(null)
+      return
+    }
+    let cancelled = false
+    setBalanceLoading(true)
+    void readXrpBalance(address)
+      .then((drops) => {
+        if (cancelled) return
+        // 1 XRP = 1e6 drops.
+        setBalance(drops / 1_000_000)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setBalance(null)
+      })
+      .finally(() => {
+        if (!cancelled) setBalanceLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [address])
+
+  const value = useMemo<WalletForFamily>(
+    () => ({
+      family: 'xrp',
+      address,
+      connected,
+      connecting,
+      connect,
+      disconnect,
+      balance,
+      balanceSymbol: 'XRP',
+      balanceLoading,
+      availableWallets: [],
+    }),
+    [address, connected, connecting, connect, disconnect, balance, balanceLoading],
+  )
+
+  return <XRPWalletContext.Provider value={value}>{children}</XRPWalletContext.Provider>
+}
+
+function useWalletForXRP(): WalletForFamily {
+  const ctx = useContext(XRPWalletContext)
+  // No provider mounted (test rig or tenant that didn't pass an API
+  // key) → return a noop. Connect rejects with a clear message rather
+  // than crashing the dispatcher.
+  return ctx ?? noopWallet('xrp', 'XRP')
+}
+
+// readXrpBalance queries the XRPL public cluster's JSON-RPC for the
+// XRP account balance, returning drops (1 XRP = 1e6 drops). Testnet
+// vs mainnet endpoint is chosen via VITE_BRIDGE_XRP_RPC_URL: empty/
+// unset routes to mainnet (xrplcluster.com), 'testnet' routes to the
+// altnet endpoint. Tenants can override with any JSON-RPC URL.
+//
+// Note: XRPL accounts unfunded below the 2 XRP reserve report as
+// 'actNotFound'; we return 0 instead of throwing so the UI renders
+// "0 XRP" instead of "error".
+async function readXrpBalance(address: string): Promise<number> {
+  const envUrl =
+    typeof window !== 'undefined' &&
+    (window as unknown as { __ENV?: Record<string, string> }).__ENV?.[
+      'VITE_BRIDGE_XRP_RPC_URL'
+    ]
+  // Vite-build-time fallback when window.__ENV isn't injected (local dev).
+  // The narrow VITE_BRIDGE_XRP_RPC_URL access avoids TS-on-import.meta noise.
+  const buildEnvUrl =
+    (typeof import.meta !== 'undefined' &&
+      ((import.meta as unknown as { env?: Record<string, string> }).env?.[
+        'VITE_BRIDGE_XRP_RPC_URL'
+      ] as string | undefined)) ||
+    undefined
+  const userUrl = (envUrl as string | undefined) ?? buildEnvUrl
+  // 'testnet' is a shorthand that resolves to the canonical altnet RPC.
+  const url =
+    userUrl === 'testnet'
+      ? 'https://s.altnet.rippletest.net:51234'
+      : userUrl || 'https://xrplcluster.com'
+
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'account_info',
+      params: [{ account: address, ledger_index: 'validated' }],
+    }),
+  })
+  if (!r.ok) throw new Error(`XRPL HTTP ${r.status}`)
+  const j = (await r.json()) as {
+    result?: {
+      status?: string
+      error?: string
+      account_data?: { Balance?: string }
+    }
+  }
+  if (j.result?.status === 'error') {
+    if (j.result.error === 'actNotFound') return 0
+    throw new Error(`XRPL: ${j.result.error}`)
+  }
+  return Number(j.result?.account_data?.Balance ?? 0)
+}
+
+// =============================================================================
 // Family dispatcher
 // =============================================================================
 
@@ -1219,6 +1437,7 @@ export function useWalletForFamily(
   const svm = useWalletForSVM()
   const ton = useWalletForTON()
   const btc = useWalletForBTC()
+  const xrp = useWalletForXRP()
 
   switch (family) {
     case 'evm':
@@ -1231,10 +1450,11 @@ export function useWalletForFamily(
     case 'btc':
       return btc
     case 'xrp':
+      return xrp
     case 'cardano':
     case 'substrate':
     default:
-      return noopWallet(family, family === 'xrp' ? 'XRP' : family === 'cardano' ? 'ADA' : 'DOT')
+      return noopWallet(family, family === 'cardano' ? 'ADA' : 'DOT')
   }
 }
 
@@ -1319,6 +1539,20 @@ interface NonEVMProvidersProps {
    * manifest.
    */
   tonManifestUrl?: string
+  /**
+   * Xaman (XRP) API key — UUID issued by apps.xaman.dev. Public-safe;
+   * the matching API SECRET stays backend-only.
+   *
+   * Resolution order at runtime:
+   *   1. explicit `xamanApiKey` prop here
+   *   2. window.__ENV.VITE_XAMAN_API_KEY (container-injected env)
+   *   3. import.meta.env.VITE_XAMAN_API_KEY (Vite build-time)
+   *
+   * When all three resolve to empty, useWalletForXRP falls back to a
+   * noop — the XRP picker still renders but connect() rejects with a
+   * clear message instead of crashing the SDK.
+   */
+  xamanApiKey?: string
   children: ReactNode
 }
 
@@ -1338,6 +1572,7 @@ interface NonEVMProvidersProps {
 export const NonEVMProviders: FC<NonEVMProvidersProps> = ({
   solanaRpcUrl = 'https://solana-rpc.publicnode.com',
   tonManifestUrl,
+  xamanApiKey,
   children,
 }) => {
   // Default to same-origin manifest so localhost, cloudflared/ngrok
@@ -1362,11 +1597,30 @@ export const NonEVMProviders: FC<NonEVMProvidersProps> = ({
   // selected wallet name still persists via localStorage so the SDK
   // remembers which adapter to use; only the silent re-connect is
   // suppressed.
+  // Resolve the Xaman API key with the documented precedence. When all
+  // three sources are empty, the XRP provider still mounts but its
+  // SDK init is a no-op; useWalletForXRP returns a Connect-rejects-
+  // with-clear-message shape so the rest of the UI keeps rendering.
+  const fromWindow =
+    typeof window !== 'undefined'
+      ? (window as unknown as { __ENV?: Record<string, string> }).__ENV?.[
+          'VITE_XAMAN_API_KEY'
+        ]
+      : undefined
+  const fromBuildEnv =
+    typeof import.meta !== 'undefined'
+      ? ((import.meta as unknown as { env?: Record<string, string> }).env?.[
+          'VITE_XAMAN_API_KEY'
+        ] as string | undefined)
+      : undefined
+  const resolvedXamanKey = xamanApiKey ?? fromWindow ?? fromBuildEnv ?? ''
   return (
     <ConnectionProvider endpoint={solanaRpcUrl}>
       <WalletProvider wallets={solanaWalletAdapters} autoConnect={false}>
         <TonConnectUIProvider manifestUrl={resolvedManifestUrl}>
-          <BTCWalletProvider>{children}</BTCWalletProvider>
+          <BTCWalletProvider>
+            <XRPWalletProvider apiKey={resolvedXamanKey}>{children}</XRPWalletProvider>
+          </BTCWalletProvider>
         </TonConnectUIProvider>
       </WalletProvider>
     </ConnectionProvider>
