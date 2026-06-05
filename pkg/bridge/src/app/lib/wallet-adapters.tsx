@@ -1221,6 +1221,22 @@ async function readBtcBalance(address: string): Promise<number> {
 
 const XRPWalletContext = createContext<WalletForFamily | null>(null)
 
+// XRPSendContext exposes a deposit-send method so useXrpSend can drive
+// Xaman payload signing without re-mounting the SDK. Kept separate
+// from XRPWalletContext so consumers that only need address / balance
+// don't have to read the SDK ref.
+//
+// The SDK call surface is intentionally narrow: only `sendXrpAsync`,
+// matching useTonSend / useSolanaSend's contract. Future XRPL ops
+// (refunds from a connected wallet, IOU transfers) would extend this
+// interface, not break it.
+interface XRPSendContextValue {
+  sendXrpAsync: (args: { to: string; xrp: number }) => Promise<string>
+  ready: boolean
+  senderAddress: string | null
+}
+const XRPSendContext = createContext<XRPSendContextValue | null>(null)
+
 interface XRPWalletProviderProps {
   /** Xaman API key (UUID from apps.xaman.dev). Public-safe. */
   apiKey: string
@@ -1348,7 +1364,96 @@ const XRPWalletProvider: FC<XRPWalletProviderProps> = ({ apiKey, children }) => 
     [address, connected, connecting, connect, disconnect, balance, balanceLoading],
   )
 
-  return <XRPWalletContext.Provider value={value}>{children}</XRPWalletContext.Provider>
+  // sendXrpAsync builds an XRPL Payment payload and routes it through
+  // Xaman for signing. The xumm-oauth2-pkce SDK exposes the full
+  // server-side Xumm SDK on `xummRef.current.state().sdk` once the
+  // user has authorized; `payload.createAndSubscribe` returns a
+  // resolved promise carrying the on-chain txid after the user signs
+  // in their phone app.
+  //
+  // We pass the amount as a decimal-drops string (XRPL canonical native
+  // amount form). Math.round mirrors the floatToBaseUnits convention on
+  // the Go side (txassembler/xrp.go) so 1.5 XRP unambiguously becomes
+  // 1_500_000 drops.
+  const sendXrpAsync = useCallback(
+    async ({ to, xrp }: { to: string; xrp: number }): Promise<string> => {
+      const sdkRef = xummRef.current
+      if (!sdkRef) {
+        throw new Error(
+          'Xaman SDK not initialized — set VITE_XAMAN_API_KEY (or pass xamanApiKey to NonEVMProviders).',
+        )
+      }
+      if (!address) {
+        throw new Error('No XRP wallet connected. Open the wallet selector and connect Xaman first.')
+      }
+      if (!Number.isFinite(xrp) || xrp <= 0) {
+        throw new Error(`Invalid XRP amount: ${xrp}`)
+      }
+      const drops = String(Math.round(xrp * 1_000_000))
+      // The xumm-oauth2-pkce SDK proxies to the Xumm SDK via state().sdk.
+      // Older SDK versions exposed it directly; both shapes are checked
+      // so an SDK bump doesn't silently break the deposit flow.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const state: any = await sdkRef.state()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const xummSdk = state?.sdk ?? (sdkRef as any).sdk
+      if (!xummSdk?.payload?.createAndSubscribe) {
+        throw new Error('Xaman SDK shape unexpected — payload.createAndSubscribe missing. Update xumm-oauth2-pkce.')
+      }
+      const subscription = await xummSdk.payload.createAndSubscribe(
+        {
+          txjson: {
+            TransactionType: 'Payment',
+            Account: address,
+            Destination: to,
+            Amount: drops,
+          },
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (event: any) => {
+          // Returning anything resolves the subscription. signed=false
+          // means the user rejected in Xaman; we throw so the auto-
+          // deposit branch surfaces a clean "wallet rejected" error.
+          if (event?.data?.signed === false) {
+            throw new Error('Xaman: user rejected payment')
+          }
+          if (event?.data?.signed === true) {
+            return event.data
+          }
+        },
+      )
+      const resolved = await subscription.resolved
+      // resolved.payload_uuidv4 is the Xaman handle; resolved.txid is
+      // the on-chain XRPL transaction hash. Prefer txid; some SDK
+      // versions only fill it after the next status poll, in which
+      // case we fetch the final payload state explicitly.
+      const txid: string | undefined =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (resolved as any)?.txid ?? (resolved as any)?.response?.txid
+      if (txid) return txid
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const uuid: string | undefined = (resolved as any)?.payload_uuidv4
+      if (uuid && xummSdk?.payload?.get) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const final: any = await xummSdk.payload.get(uuid)
+        const finalTxid: string | undefined = final?.response?.txid
+        if (finalTxid) return finalTxid
+      }
+      throw new Error('Xaman: signed but no txid returned')
+    },
+    [address],
+  )
+
+  const sendValue = useMemo<XRPSendContextValue>(
+    () => ({ sendXrpAsync, ready: Boolean(address), senderAddress: address }),
+    [sendXrpAsync, address],
+  )
+
+  return (
+    <XRPWalletContext.Provider value={value}>
+      <XRPSendContext.Provider value={sendValue}>{children}</XRPSendContext.Provider>
+    </XRPWalletContext.Provider>
+  )
 }
 
 function useWalletForXRP(): WalletForFamily {
@@ -1357,6 +1462,35 @@ function useWalletForXRP(): WalletForFamily {
   // key) → return a noop. Connect rejects with a clear message rather
   // than crashing the dispatcher.
   return ctx ?? noopWallet('xrp', 'XRP')
+}
+
+// useXrpSend — auto-deposit helper for XRP-source swaps. Mirrors
+// useTonSend / useSolanaSend's contract: returns { sendXrpAsync, ready,
+// senderAddress } so useTransfers can pop Xaman without re-mounting
+// the SDK.
+//
+// senderAddress is the r-address that signed the connect — the same
+// value useWalletForXRP returns. Populated onto createSwap.sender so
+// the refund driver can sweep funds back via PreSignXRPRefund when a
+// swap can't complete.
+export function useXrpSend(): {
+  sendXrpAsync: (args: { to: string; xrp: number }) => Promise<string>
+  ready: boolean
+  /** Xaman-resolved r-address. Null when no XRP wallet is connected. */
+  senderAddress: string | null
+} {
+  const ctx = useContext(XRPSendContext)
+  if (ctx) return ctx
+  // No provider mounted — return a stub whose sendXrpAsync throws.
+  // Matches useTonSend's tolerance for test rigs that don't include
+  // NonEVMProviders.
+  return {
+    sendXrpAsync: async () => {
+      throw new Error('XRP provider not mounted — wrap the SDK with NonEVMProviders or pass a xamanApiKey.')
+    },
+    ready: false,
+    senderAddress: null,
+  }
 }
 
 // readXrpBalance queries the XRPL public cluster's JSON-RPC for the

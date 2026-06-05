@@ -43,6 +43,11 @@ vi.mock('../app/lib/wallet-adapters', () => ({
     ready: false,
     senderAddress: null,
   }),
+  useXrpSend: () => ({
+    sendXrpAsync: () => Promise.reject(new Error('useXrpSend mocked in test')),
+    ready: false,
+    senderAddress: null,
+  }),
   useWalletForFamily: () => ({
     family: 'noop',
     address: null,

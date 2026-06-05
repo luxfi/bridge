@@ -81,6 +81,14 @@ type RefundDriver struct {
 	// deployments; mirrors the signing driver's pattern.
 	tonProvider txassembler.TONProvider
 
+	// xrpProvider supplies XRPL account state (sequence + balance +
+	// fee) the refund driver needs to sweep an XRP per-swap deposit
+	// wallet back to the user's source-chain r-address. nil ⇒ XRP
+	// refunds error and the swap rolls back via the standard ceiling.
+	// Wire via SetXRPProvider for XRP-source deployments; mirrors the
+	// signing driver's pattern.
+	xrpProvider txassembler.XRPProvider
+
 	// rpcOverrides shadows depositcheck's RPC URL table when querying
 	// the source-chain balance of the MPC deposit address. Operators
 	// set this via --source-rpc-overrides (same flag main.go reuses
@@ -247,6 +255,16 @@ func (d *RefundDriver) SetSolanaProvider(p txassembler.SolanaProvider) {
 // deployment flag governs both.
 func (d *RefundDriver) SetTONProvider(p txassembler.TONProvider) {
 	d.tonProvider = p
+}
+
+// SetXRPProvider attaches the XRPL JSON-RPC provider the refund driver
+// uses to read the per-swap deposit wallet's sequence + balance + fee
+// when sweeping an XRP-source deposit back to the user's r-address.
+// nil means XRP refunds error out via the standard ceiling. Pass the
+// same *xrp.Provider the signing driver gets so a single deployment
+// flag governs both.
+func (d *RefundDriver) SetXRPProvider(p txassembler.XRPProvider) {
+	d.xrpProvider = p
 }
 
 // SetOrphanRefundingAfter configures the orphan-recovery threshold.
@@ -711,8 +729,10 @@ func (d *RefundDriver) executeRefund(ctx context.Context, sw *Swap, walletID, de
 		d.executeRefundSolana(ctx, sw, walletID, depositAddr)
 	case mchain.AddressTypeTON:
 		d.executeRefundTON(ctx, sw, walletID, depositAddr)
+	case mchain.AddressTypeXRP:
+		d.executeRefundXRP(ctx, sw, walletID, depositAddr)
 	default:
-		// BTC / XRP / DOT — no refund path implemented. Leave the
+		// BTC / DOT — no refund path implemented. Leave the
 		// swap in SwapStatusRefunding with an operator-actionable
 		// LastError so it shows up in the stuck-swap surface instead of
 		// looping or silently rolling back. Operators recover manually.
@@ -1083,6 +1103,132 @@ func (d *RefundDriver) executeRefundTON(ctx context.Context, sw *Swap, walletID,
 			"swap_id", sw.ID,
 			"refund_tx_hash", bres.TxHash,
 			"refund_value_nano", refundNano,
+		)
+	}
+}
+
+// executeRefundXRP is the XRP-source analog of executeRefundTON.
+// Sweeps the per-swap deposit wallet's drops balance — minus the
+// 2 XRP base reserve and the open_ledger_fee — back to the user's
+// source-chain r-address via MPC-signed Payment + XRPL submit.
+//
+// Requires SetXRPProvider to have been called; without it, returns
+// an error that the standard rollback path catches.
+func (d *RefundDriver) executeRefundXRP(ctx context.Context, sw *Swap, walletID, depositAddr string) {
+	if d.xrpProvider == nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("xrpProvider not configured for refund of %s source", sw.SourceNetwork))
+		return
+	}
+	if sw.DepositPubKey == "" {
+		d.rollback(ctx, sw.ID, fmt.Errorf(
+			"swap %s lacks DepositPubKey (deposit wallet keygen predates XRP refund support) — manual recovery required",
+			sw.ID,
+		))
+		return
+	}
+
+	// Step 1 — balance + fee. The provider's BalanceDrops returns 0
+	// for actNotFound, but a never-funded account has no XRP to
+	// refund, so treat 0 as a no-op (operator-visible LastError).
+	balanceCtx, cancelBal := context.WithTimeout(ctx, d.perBalanceTimeout)
+	balanceDrops, err := d.xrpProvider.BalanceDrops(balanceCtx, sw.SourceNetwork, depositAddr)
+	cancelBal()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("fetch XRP balance: %w", err))
+		return
+	}
+	feeCtx, cancelFee := context.WithTimeout(ctx, d.perBalanceTimeout)
+	feeDrops, err := d.xrpProvider.ServerInfoFee(feeCtx, sw.SourceNetwork)
+	cancelFee()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("fetch XRP fee: %w", err))
+		return
+	}
+
+	// Step 2 — refund value = balance − reserve − fee. The 2 XRP
+	// reserve has to stay in the wallet, and the network fee is
+	// debited on top of the sweep amount.
+	const reserveDrops = txassembler.XRPReserveDrops
+	if balanceDrops <= reserveDrops+feeDrops {
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			s.LastError = fmt.Sprintf(
+				"Refund impossible: deposit balance %d drops ≤ reserve %d + fee %d",
+				balanceDrops, reserveDrops, feeDrops,
+			)
+		})
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("xrp refund impossible: balance ≤ reserve + fee",
+				"swap_id", sw.ID,
+				"balance_drops", balanceDrops,
+				"reserve_drops", reserveDrops,
+				"fee_drops", feeDrops,
+			)
+		}
+		return
+	}
+	sweepDrops := balanceDrops - reserveDrops - feeDrops
+
+	// Step 3 — build the unsigned XRPL Payment sweep.
+	unsigned, err := d.assembler.PreSignXRPRefund(
+		ctx, sw.SourceNetwork, sw.DepositPubKey, depositAddr, sw.Sender, sweepDrops, d.xrpProvider,
+	)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("preSign XRP refund: %w", err))
+		return
+	}
+
+	// Step 4 — MPC signs the STX\0-prefixed payload bytes via
+	// ed25519. Hex-encoded per the cluster's /sign contract; NO 0x
+	// prefix per the ed25519 family convention.
+	msgHex := hex.EncodeToString(unsigned.SigningBytes)
+	sigCtx, cancelSig := context.WithTimeout(ctx, d.perSignTimeout)
+	res, err := d.signer.SignForWallet(sigCtx, walletID, msgHex)
+	cancelSig()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("MPC sign XRP refund: %w", err))
+		return
+	}
+
+	// Step 5 — finalize. Cluster returns hex (with or without 0x);
+	// strip and decode to the 64-byte ed25519 signature.
+	sigHex := strings.TrimPrefix(strings.TrimPrefix(res.Signature, "0x"), "0X")
+	sigBytes, err := hex.DecodeString(sigHex)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("decode XRP refund signature hex: %w", err))
+		return
+	}
+	blob, err := d.assembler.FinalizeXRP(unsigned, sigBytes)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("finalize XRP refund: %w", err))
+		return
+	}
+
+	// Step 6 — broadcast on the source chain. The broadcast client
+	// dispatches by network's AddressTypeFor, routes XRP to its
+	// broadcastXRP handler, expects uppercase hex tx_blob.
+	pushCtx, cancelPush := context.WithTimeout(ctx, d.perBroadcastTimeout)
+	bres, err := d.bcaster.Broadcast(pushCtx, sw.SourceNetwork, blob)
+	cancelPush()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("broadcast XRP refund: %w", err))
+		return
+	}
+
+	// Step 7 — mark refunded.
+	_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		s.Status = SwapStatusRefunded
+		s.RefundTxHash = bres.TxHash
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
+		s.RefundAttempts = 0
+	})
+	d.successes.Add(1)
+	if d.logger != nil {
+		d.logger.Info("XRP refund completed",
+			"swap_id", sw.ID,
+			"refund_tx_hash", bres.TxHash,
+			"sweep_drops", sweepDrops,
 		)
 	}
 }

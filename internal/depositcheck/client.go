@@ -81,6 +81,9 @@ var rpcURLs = map[string]string{
 	// TON (TON Center REST API)
 	"TON_MAINNET": "https://toncenter.com/api/v2",
 	"TON_TESTNET": "https://testnet.toncenter.com/api/v2",
+	// XRP (XRPL JSON-RPC)
+	"XRP_MAINNET": "https://xrplcluster.com",
+	"XRP_TESTNET": "https://s.altnet.rippletest.net:51234",
 	// Polkadot
 	"POLKADOT_MAINNET": "https://rpc.polkadot.io",
 }
@@ -204,10 +207,7 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 	case mchain.AddressTypeTON:
 		return c.checkTON(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeXRP:
-		// XRP deposit detection not implemented in TS either (the
-		// mpc-wallet.ts default falls through to a warn-and-return-false).
-		// Mirror that behaviour with an explicit error.
-		return false, fmt.Errorf("%w: xrp deposit check not implemented", ErrUnsupportedNetwork)
+		return c.checkXRP(ctx, url, p.NetworkInternalName, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeDOT:
 		return false, ErrSubstrateNotImplemented
 	default:
