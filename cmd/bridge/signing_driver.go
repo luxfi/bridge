@@ -96,6 +96,13 @@ type SigningDriver struct {
 	// triggers a PreSign error that the rollback path catches.
 	tonProvider txassembler.TONProvider
 
+	// xrpProvider supplies XRPL account state (sequence + fee +
+	// balance) and posts the signed tx_blob via submit. Required when
+	// ANY swap targets an XRP_* network; ignored otherwise. Implemented
+	// by *xrp.Provider in production. Nil + XRP destination triggers a
+	// PreSign error that the rollback path catches.
+	xrpProvider txassembler.XRPProvider
+
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
 	// headroom — matches the mchain client's keygen timeout.
@@ -164,6 +171,12 @@ func (d *SigningDriver) SetSolanaProvider(p txassembler.SolanaProvider) { d.sola
 // otherwise. EVM-only / SOL-only deployments can leave this nil and
 // the signing driver behaves identically to the pre-TON version.
 func (d *SigningDriver) SetTONProvider(p txassembler.TONProvider) { d.tonProvider = p }
+
+// SetXRPProvider attaches the XRPL JSON-RPC provider used when a swap
+// targets an XRP_* destination. Required for X→XRP releases; ignored
+// otherwise. Deployments without an XRP corridor can leave this nil
+// and the signing driver behaves identically to the pre-XRP version.
+func (d *SigningDriver) SetXRPProvider(p txassembler.XRPProvider) { d.xrpProvider = p }
 
 // SetMaxQuoteAge configures the staleness guard. Swaps older than this
 // at signing time are kicked to SwapStatusRefundPending instead of
@@ -406,6 +419,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		unsignedEVM *txassembler.Unsigned       // populated for EVM destinations
 		unsignedSol *txassembler.SolanaUnsigned // populated for Solana destinations
 		unsignedTON *txassembler.TONUnsigned    // populated for TON destinations
+		unsignedXRP *txassembler.XRPUnsigned    // populated for XRP destinations
 	)
 	if d.assembler != nil && senderAddr != "" {
 		family := mchain.AddressTypeFor(sw.DestinationNetwork)
@@ -515,6 +529,52 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			}
 			unsignedTON = u
 			msgHex = hex.EncodeToString(u.SigningHash)
+		case mchain.AddressTypeXRP:
+			if d.xrpProvider == nil {
+				err := fmt.Errorf("xrpProvider not configured for %s", sw.DestinationNetwork)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("XRP provider missing", "swap_id", sw.ID, "err", err)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"XRP provider not configured — retrying",
+					"PreSignXRP")
+				return
+			}
+			if sw.ReleasePubKey == "" {
+				err := fmt.Errorf("swap %s lacks ReleasePubKey (release wallet keygen predates XRP support)", sw.ID)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("XRP release pubkey missing — re-mint required",
+						"swap_id", sw.ID, "release_wallet_id", sw.ReleaseWalletID)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"XRP release wallet predates pubkey capture — delete release-wallets.json XRP entry to re-mint",
+					"PreSignXRP")
+				return
+			}
+			u, aerr := d.assembler.PreSignXRP(ctx, txassembler.SwapIntent{
+				DestinationNetwork: sw.DestinationNetwork,
+				DestinationAsset:   sw.DestinationAsset,
+				DestinationAddress: sw.DestinationAddress,
+				Amount:             releaseAmount(sw),
+				SenderAddress:      senderAddr,
+			}, d.xrpProvider, sw.ReleasePubKey)
+			if aerr != nil {
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("tx assembler PreSignXRP failed",
+						"swap_id", sw.ID,
+						"err", aerr,
+					)
+				}
+				d.rollbackOrFail(ctx, sw.ID, aerr,
+					"XRP RPC unreachable while building tx — retrying",
+					"PreSignXRP")
+				return
+			}
+			unsignedXRP = u
+			msgHex = hex.EncodeToString(u.SigningBytes)
 		default:
 			err := fmt.Errorf("tx assembly not implemented for %s family (network %s)",
 				family, sw.DestinationNetwork)
@@ -678,6 +738,50 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		// POSTing to toncenter's sendBoc. Base64 is the natural wire
 		// format for TON (matches what tonkeeper / toncenter expect).
 		destRawTx = base64.StdEncoding.EncodeToString(boc)
+
+	case unsignedXRP != nil:
+		// MPC cluster returns the ed25519 sig as hex (with or
+		// without "0x"). Same convention as Solana / TON.
+		sigHex := res.Signature
+		if len(sigHex) >= 2 && (sigHex[:2] == "0x" || sigHex[:2] == "0X") {
+			sigHex = sigHex[2:]
+		}
+		sigBytes, derr := hex.DecodeString(sigHex)
+		if derr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("decode ed25519 signature failed",
+					"swap_id", sw.ID,
+					"err", derr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		blob, ferr := d.assembler.FinalizeXRP(unsignedXRP, sigBytes)
+		if ferr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("tx assembler FinalizeXRP failed",
+					"swap_id", sw.ID,
+					"err", ferr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		// FinalizeXRP returns the uppercase-hex tx_blob the XRPL
+		// submit RPC expects. The broadcast client passes it through
+		// to xrp.Provider.SubmitBlob verbatim.
+		destRawTx = blob
 	}
 
 	// Layered-cosigner gate. If the SDK declared external cosigners

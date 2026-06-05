@@ -6,6 +6,7 @@ package mchain
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/luxfi/bridge/internal/solanarpc"
 )
 
 // mockCluster mints a fake MPC cluster: returns the keygenResult
@@ -234,12 +237,27 @@ func TestKeygen_TON_DerivesContractAddress(t *testing.T) {
 	}
 }
 
-func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
-	// XRP placeholder: uses the ETH address until proper rAddress
-	// derivation lands. Match TS exactly so the proxy and legacy
-	// server return the same identifier today.
+func TestKeygen_XRP_DerivesRAddressFromSOLSlot(t *testing.T) {
+	// XRP now follows the same scheme as TON: the MPC cluster's
+	// sol_address slot carries a raw ed25519 pubkey base58-encoded.
+	// The post-pickAddress patch decodes it and derives the canonical
+	// XRP r-address (SHA-256 → RIPEMD-160 of 0xED-prefixed pubkey,
+	// base58 with Ripple alphabet).
+	//
+	// We feed a known-good base58-encoded 32-byte pubkey (the same
+	// fixture used in TestXRPAddressFromEd25519PubKey_KnownVectors)
+	// and assert both the derived r-address AND the captured pubkey
+	// hex propagate to the Wallet returned to the caller.
+	const pubKeyHex = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+	const wantAddr = "rDR3ovFUFWw8ojQaXBDBQCQS5eLrZxJuRX"
+	rawPubKey, err := hex.DecodeString(pubKeyHex)
+	if err != nil {
+		t.Fatalf("decode hex: %v", err)
+	}
+	pubKeyB58 := solanarpc.EncodeBase58(rawPubKey)
+
 	m := newMockCluster(t)
-	m.result = &keygenResult{ETHAddress: "0xeth_for_xrp"}
+	m.result = &keygenResult{SOLAddress: pubKeyB58}
 	c := clientFor(m)
 
 	w, err := c.KeygenForDeposit(context.Background(), "XRP_TESTNET")
@@ -247,10 +265,13 @@ func TestKeygen_XRP_UsesETHSlot(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 	if w.AddressType != AddressTypeXRP {
-		t.Errorf("AddressType = %q", w.AddressType)
+		t.Errorf("AddressType = %q, want %q", w.AddressType, AddressTypeXRP)
 	}
-	if w.Address != "0xeth_for_xrp" {
-		t.Errorf("Address = %q", w.Address)
+	if w.Address != wantAddr {
+		t.Errorf("Address = %q, want %q", w.Address, wantAddr)
+	}
+	if w.PubKeyHex != pubKeyHex {
+		t.Errorf("PubKeyHex = %q, want %q", w.PubKeyHex, pubKeyHex)
 	}
 }
 

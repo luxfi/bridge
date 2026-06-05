@@ -148,6 +148,15 @@ networks:
     txExplorerTpl: https://testnet.tonscan.org/tx/{tx}
     addrExplorerTpl: https://testnet.tonscan.org/address/{addr}
 
+  - internalName: XRP_TESTNET
+    displayName: XRP Testnet
+    nativeCurrency: XRP
+    type: xrp
+    isTestnet: true
+    avgCompletion: 30s
+    txExplorerTpl: https://testnet.xrpl.org/transactions/{tx}
+    addrExplorerTpl: https://testnet.xrpl.org/accounts/{addr}
+
 tokens:
   - asset: ETH
     name: Ether
@@ -268,6 +277,17 @@ tokens:
     network: TON_TESTNET
     isDepositEnabled: false
     isWithdrawalEnabled: false
+
+  # XRP Testnet — Phase 2 wires the destination-release path
+  # (txassembler PreSignXRP + FinalizeXRP + broadcast submit), so
+  # withdrawal is enabled. Deposit (Phase 3) still pending — needs
+  # depositcheck/xrp.go + PreSignXRPRefund + addressMatchesType.
+  - asset: XRP
+    name: XRP
+    decimals: 6
+    network: XRP_TESTNET
+    isDepositEnabled: false
+    isWithdrawalEnabled: true
 
 limits:
   minUSD: 1
