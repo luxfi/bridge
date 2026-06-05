@@ -680,6 +680,7 @@ func (a *API) metrics(c *zip.Ctx) error {
 	writeCounter(&b, "bridge_broadcast_successes_total", "Broadcasts the destination chain accepted.", bcStats.Successes)
 	writeCounter(&b, "bridge_broadcast_failures_total", "Broadcasts the destination chain rejected (will retry / refund).", bcStats.Failures)
 	writeCounter(&b, "bridge_broadcast_skipped_no_raw_tx_total", "Swaps skipped because DestRawTx is empty (placeholder mode or signing not yet finalized).", bcStats.SkippedNoRawTx)
+	writeCounter(&b, "bridge_broadcast_rebuilds_total", "Times BroadcastDriver reset a signed payload + MPC session and routed back to pending so the swap could re-sign under fresh blockhash / seqno / sequence. Spikes signal upstream RPC slowness or a chain producing sequence races (XRPL stale-seq, TON stale-seqno, Solana blockhash expiry). Sustained growth → check destination RPC health.", bcStats.Rebuilds)
 	writeCounter(&b, "bridge_broadcast_list_errors_total", "Errors listing broadcasting swaps.", bcStats.ListErrors)
 	writeGauge(&b, "bridge_broadcast_running", "1 iff the broadcast driver loop is active.", boolToGauge(a.broadcastRunning))
 

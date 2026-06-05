@@ -1,18 +1,33 @@
-// XRP destination-release smoke test against the live XRPL altnet.
+// XRP destination-release smoke test against the live XRPL network.
 //
-// Verifies the full happy path end-to-end:
-//   1. xrp.Provider reads sequence + open_ledger_fee from live altnet
+// Two modes:
+//
+//   testnet (default) — exercises the full happy path against
+//   altnet using the hardcoded release-wallet vitals captured from
+//   /tmp/bridge-data-testnet2/release-wallets.json. Single
+//   command: `go run ./cmd/xrp-smoke [--broadcast]`.
+//
+//   mainnet (--mainnet) — same code path against xrplcluster.com.
+//   Defaults are intentionally blank; operator MUST supply
+//   --release-address, --release-pubkey, --release-wallet-id, and
+//   --recipient. Without --broadcast the smoke stops at the signed
+//   tx_blob (no XRP moves). With --broadcast real XRP moves on
+//   mainnet — every flag is checked twice and the smoke prints the
+//   confirmation prompt operators need to read before pressing
+//   enter.
+//
+// Steps in both modes:
+//   1. xrp.Provider reads sequence + open_ledger_fee from live network
 //   2. txassembler.PreSignXRP builds canonical Payment + signing bytes
 //   3. mpcd-single /sign through the mpc-router returns a 64-byte ed25519 sig
 //   4. txassembler.FinalizeXRP emits the uppercase-hex tx_blob
-//   5. xrp.Provider.SubmitBlob pushes to the altnet (only with --broadcast)
-//
-// Run with: go run ./cmd/xrp-smoke [--broadcast]
+//   5. xrp.Provider.SubmitBlob pushes to the network (only with --broadcast)
 
 package main
 
 import (
 	"bytes"
+	"bufio"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -21,6 +36,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/luxfi/bridge/internal/txassembler"
@@ -28,23 +44,71 @@ import (
 )
 
 func main() {
-	broadcast := flag.Bool("broadcast", false, "actually submit the signed tx_blob to XRPL altnet")
+	broadcast := flag.Bool("broadcast", false, "actually submit the signed tx_blob to the chosen XRPL network. On mainnet this MOVES REAL XRP — the smoke prints an extra confirmation prompt before submitting.")
+	mainnet := flag.Bool("mainnet", false, "target XRPL mainnet (xrplcluster.com) instead of altnet testnet. Defaults below switch off; release-address / release-pubkey / release-wallet-id / recipient MUST be supplied.")
+	releaseAddrFlag := flag.String("release-address", "", "r-address of the release wallet to send from. Required when --mainnet.")
+	releasePubHexFlag := flag.String("release-pubkey", "", "hex-encoded ed25519 public key of the release wallet (32 B / 64 hex). Required when --mainnet.")
+	releaseWalletFlag := flag.String("release-wallet-id", "", "mpc wallet_id under which mpcd-single (or real mpcd) holds the release key. Required when --mainnet.")
+	recipientAddrFlag := flag.String("recipient", "", "r-address the smoke sends to. Required when --mainnet.")
+	amountXRP := flag.Float64("amount-xrp", 1.5, "amount in XRP to send.")
+	routerURLFlag := flag.String("router-url", "http://localhost:9700", "mpc-router URL for /sign dispatch.")
 	flag.Parse()
 
-	// Release-wallet vitals captured from
+	// Testnet defaults — vitals captured from
 	// /tmp/bridge-data-testnet2/release-wallets.json.
 	const (
-		releaseAddr   = "rfYTWP5kAW6EPgfYre4QpfCVNFEtsTjy38"
-		releasePubHex = "3136e6df793018909be3692b7e850db47f58677c2ea7f0e46c49704853f2997d"
-		releaseWallet = "bridge-xrp_testnet-1780651469792"
-		recipientAddr = "rDR3ovFUFWw8ojQaXBDBQCQS5eLrZxJuRX"
-		routerURL     = "http://localhost:9700"
+		testnetReleaseAddr   = "rfYTWP5kAW6EPgfYre4QpfCVNFEtsTjy38"
+		testnetReleasePubHex = "3136e6df793018909be3692b7e850db47f58677c2ea7f0e46c49704853f2997d"
+		testnetReleaseWallet = "bridge-xrp_testnet-1780651469792"
+		testnetRecipientAddr = "rDR3ovFUFWw8ojQaXBDBQCQS5eLrZxJuRX"
 	)
+
+	network := "XRP_TESTNET"
+	releaseAddr := testnetReleaseAddr
+	releasePubHex := testnetReleasePubHex
+	releaseWallet := testnetReleaseWallet
+	recipientAddr := testnetRecipientAddr
+	if *mainnet {
+		network = "XRP_MAINNET"
+		releaseAddr = *releaseAddrFlag
+		releasePubHex = *releasePubHexFlag
+		releaseWallet = *releaseWalletFlag
+		recipientAddr = *recipientAddrFlag
+		missing := []string{}
+		if releaseAddr == "" {
+			missing = append(missing, "--release-address")
+		}
+		if releasePubHex == "" {
+			missing = append(missing, "--release-pubkey")
+		}
+		if releaseWallet == "" {
+			missing = append(missing, "--release-wallet-id")
+		}
+		if recipientAddr == "" {
+			missing = append(missing, "--recipient")
+		}
+		if len(missing) > 0 {
+			log.Fatalf("--mainnet requires %v — none of these have testnet-style defaults, since signing for an unknown mainnet wallet would just leak signatures, and broadcasting to a random recipient would move real XRP", missing)
+		}
+		if *broadcast {
+			fmt.Printf("\n*** MAINNET BROADCAST CONFIRMATION ***\n")
+			fmt.Printf("    from:   %s\n", releaseAddr)
+			fmt.Printf("    to:     %s\n", recipientAddr)
+			fmt.Printf("    amount: %.6f XRP\n", *amountXRP)
+			fmt.Printf("    wallet_id: %s\n", releaseWallet)
+			fmt.Printf("This will move real XRP. Type 'YES' to continue: ")
+			scanner := bufio.NewScanner(os.Stdin)
+			if !scanner.Scan() || scanner.Text() != "YES" {
+				log.Fatalf("aborted (response %q != YES)", scanner.Text())
+			}
+		}
+	}
 
 	ctx := context.Background()
 	prov := xrp.NewProvider("https://xrplcluster.com", "https://s.altnet.rippletest.net:51234", 15*time.Second)
 
-	info, ok, err := prov.AccountInfo(ctx, "XRP_TESTNET", releaseAddr)
+	fmt.Printf("network: %s\n", network)
+	info, ok, err := prov.AccountInfo(ctx, network, releaseAddr)
 	if err != nil {
 		log.Fatalf("AccountInfo: %v", err)
 	}
@@ -54,7 +118,7 @@ func main() {
 	fmt.Printf("✅ provider.AccountInfo  balance=%s drops  sequence=%d\n",
 		info.AccountData.Balance, info.AccountData.Sequence)
 
-	fee, err := prov.ServerInfoFee(ctx, "XRP_TESTNET")
+	fee, err := prov.ServerInfoFee(ctx, network)
 	if err != nil {
 		log.Fatalf("ServerInfoFee: %v", err)
 	}
@@ -62,10 +126,10 @@ func main() {
 
 	asm := &txassembler.Assembler{}
 	unsigned, err := asm.PreSignXRP(ctx, txassembler.SwapIntent{
-		DestinationNetwork: "XRP_TESTNET",
+		DestinationNetwork: network,
 		DestinationAsset:   "XRP",
 		DestinationAddress: recipientAddr,
-		Amount:             1.5,
+		Amount:             *amountXRP,
 		SenderAddress:      releaseAddr,
 	}, prov, releasePubHex)
 	if err != nil {
@@ -74,7 +138,7 @@ func main() {
 	fmt.Printf("✅ PreSignXRP            amount=%d drops fee=%d seq=%d signingBytes=%d\n",
 		unsigned.AmountDrops, unsigned.FeeDrops, unsigned.Sequence, len(unsigned.SigningBytes))
 
-	sigHex, err := signViaRouter(routerURL, releaseWallet, hex.EncodeToString(unsigned.SigningBytes))
+	sigHex, err := signViaRouter(*routerURLFlag, releaseWallet, hex.EncodeToString(unsigned.SigningBytes))
 	if err != nil {
 		log.Fatalf("router sign: %v", err)
 	}
@@ -98,7 +162,7 @@ func main() {
 		return
 	}
 
-	res, err := prov.SubmitBlob(ctx, "XRP_TESTNET", blob)
+	res, err := prov.SubmitBlob(ctx, network, blob)
 	if err != nil {
 		log.Fatalf("SubmitBlob: %v", err)
 	}

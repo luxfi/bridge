@@ -130,6 +130,21 @@ networks:
     txExplorerTpl: https://tonscan.org/tx/{tx}
     addrExplorerTpl: https://tonscan.org/address/{addr}
 
+  # XRP mainnet — network registered; tokens deposit/withdrawal stay
+  # off until operator provisions a mainnet release wallet and decides
+  # on custody (mpcd-single single-signer vs cluster-FROST threshold,
+  # see architecture-mpc-eddsa-epic). Go layers (mchain.AddressType,
+  # broadcast.rpcURLs, xrp.Provider.urlFor, tokens registry) already
+  # handle XRP_MAINNET — flipping the token flags below is the
+  # operator-side trigger for go-live.
+  - internalName: XRP_MAINNET
+    displayName: XRP
+    nativeCurrency: XRP
+    type: xrp
+    avgCompletion: 30s
+    txExplorerTpl: https://livenet.xrpl.org/transactions/{tx}
+    addrExplorerTpl: https://livenet.xrpl.org/accounts/{addr}
+
 tokens:
   # LUX
   - asset: LUX
@@ -258,6 +273,15 @@ tokens:
     name: Toncoin
     decimals: 9
     network: TON_MAINNET
+    isDepositEnabled: false
+    isWithdrawalEnabled: false
+
+  # XRP — gated off until operator flips the flags (see network entry
+  # comment above and the runbook XRP mainnet rollout section).
+  - asset: XRP
+    name: XRP
+    decimals: 6
+    network: XRP_MAINNET
     isDepositEnabled: false
     isWithdrawalEnabled: false
 
