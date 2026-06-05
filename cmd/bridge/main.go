@@ -54,6 +54,7 @@ import (
 	"github.com/luxfi/bridge/internal/solanarpc"
 	"github.com/luxfi/bridge/internal/tokens"
 	"github.com/luxfi/bridge/internal/ton"
+	"github.com/luxfi/bridge/internal/xrp"
 	"github.com/luxfi/bridge/internal/txassembler"
 	luxlog "github.com/luxfi/log"
 )
@@ -315,6 +316,12 @@ func main() {
 		"toncenter v2 base URL used by the signing driver for TON_TESTNET releases. Defaults to the public testnet endpoint.")
 	tonRPCAPIKey := flag.String("ton-rpc-api-key", envOr("BRIDGE_TON_RPC_API_KEY", ""),
 		"X-API-Key header value for toncenter requests. Empty (default) uses the free tier (1 req/s). Required for higher rate limits.")
+	xrpRPCMainnetURL := flag.String("xrp-rpc-mainnet-url", envOr("BRIDGE_XRP_RPC_MAINNET_URL", "https://xrplcluster.com"),
+		"XRPL JSON-RPC base URL used by the signing driver for XRP_MAINNET releases (account_info + server_info + submit). Default is xrplcluster.com (community-run public cluster). Override with a paid endpoint for throughput. Empty disables XRP_MAINNET destinations.")
+	xrpRPCTestnetURL := flag.String("xrp-rpc-testnet-url", envOr("BRIDGE_XRP_RPC_TESTNET_URL", "https://s.altnet.rippletest.net:51234"),
+		"XRPL JSON-RPC base URL used by the signing driver for XRP_TESTNET releases. Defaults to the canonical faucet-funded altnet.")
+	xrpRPCTimeout := flag.Duration("xrp-rpc-timeout", 15*time.Second,
+		"per-request timeout for XRP RPC calls (account_info + submit). 15s default matches the broadcast client; tune lower if your endpoint is fast and reliable.")
 	corsAllowOrigins := flag.String("cors-allow-origins", envOr("BRIDGE_CORS_ALLOW_ORIGINS", ""),
 		"Comma-separated allow-list of Origin values to advertise via Access-Control-Allow-Origin. Empty (default) leaves the bridge same-origin only — the production deployment serves the SPA from the same domain and doesn't need CORS. Use `*` for permissive cross-origin (smoke testing, dev tunnels) or a specific list (e.g. `https://app.example.com,https://staging.example.com`) for cross-origin SPA hosts. Toggling this on enables an OPTIONS preflight responder for every route.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
@@ -794,6 +801,24 @@ func main() {
 			)
 		} else {
 			logger.Info("ton provider not configured — X→TON releases will fail PreSign and refund")
+		}
+
+		// XRP provider: parallel to TON. Default URLs are the public
+		// XRPL clusters (xrplcluster.com / s.altnet.rippletest.net),
+		// so this always fires on default config. signing_driver.go's
+		// XRP case fails fast when the provider is nil so a
+		// misconfigured deploy doesn't silently strand XRP-destination
+		// swaps.
+		if *xrpRPCMainnetURL != "" || *xrpRPCTestnetURL != "" {
+			xrpClient := xrp.NewProvider(*xrpRPCMainnetURL, *xrpRPCTestnetURL, *xrpRPCTimeout)
+			signer.SetXRPProvider(xrpClient)
+			logger.Info("xrp provider attached to signer",
+				"mainnet_url", xrpClient.MainnetURL,
+				"testnet_url", xrpClient.TestnetURL,
+				"timeout", *xrpRPCTimeout,
+			)
+		} else {
+			logger.Info("xrp provider not configured — X→XRP releases will fail PreSign and refund")
 		}
 
 		// Layered-cosigner gate (Utila / Fireblocks). Defaults to ON so

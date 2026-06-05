@@ -493,6 +493,28 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 			}
 		}
 		pubKeyHex = hexKey
+	} else if addrType == AddressTypeXRP {
+		// XRP r-address derivation: SHA-256 → RIPEMD-160 of (0xED ||
+		// pubkey), base58 with Ripple alphabet. r-addresses are
+		// network-agnostic (no testnet/mainnet prefix distinction);
+		// the bridge picks the XRPL RPC endpoint by network name at
+		// deposit-watch / broadcast time, not by address shape.
+		converted, convErr := xrpAddressFromEd25519PubKey(address)
+		if convErr != nil {
+			return nil, &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("xrp r-address derive: %v", convErr),
+			}
+		}
+		hexKey, hexErr := hexEd25519FromBase58(address)
+		if hexErr != nil {
+			return nil, &MPCError{
+				Op:      "keygen",
+				Message: fmt.Sprintf("xrp pubkey hex encode: %v", hexErr),
+			}
+		}
+		address = converted
+		pubKeyHex = hexKey
 	}
 
 	// The cluster echoes back its own wallet_id; if it's empty fall
@@ -656,16 +678,16 @@ func pickAddress(r *keygenResult, t AddressType) (string, error) {
 	switch t {
 	case AddressTypeBTC:
 		addr = r.BTCAddress
-	case AddressTypeSOL, AddressTypeTON:
-		// TON shares the SOL keygen slot in the current cluster output.
-		// Long-term TON needs its own address derivation from the
-		// ed25519 pubkey, but for now match TS placeholder behaviour.
+	case AddressTypeSOL, AddressTypeTON, AddressTypeXRP:
+		// TON + XRP share the SOL keygen slot in the current cluster
+		// output (raw ed25519 pubkey base58-encoded). The actual
+		// chain-specific address derivation runs in the
+		// post-pickAddress patch in KeygenForDeposit/KeygenForRelease
+		// — TON computes hash(StateInit), XRP computes the ed25519
+		// r-address. Surfacing the pubkey here lets the empty-slot
+		// guard fire on real cluster failures and not on legitimate
+		// ed25519 output.
 		addr = r.SOLAddress
-	case AddressTypeXRP:
-		// XRP uses secp256k1 but with rAddress derivation. Until that
-		// lands, use the ETH address as an identifier — matches the
-		// explicit placeholder in mpc-wallet.ts.
-		addr = r.ETHAddress
 	case AddressTypeDOT:
 		// Should never be reached — caller guards via ErrSubstrateNotImplemented.
 		return "", ErrSubstrateNotImplemented
