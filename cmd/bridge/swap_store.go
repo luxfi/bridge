@@ -85,6 +85,14 @@ type Swap struct {
 	UseTeleporter      bool       `json:"use_teleporter"`
 	AppName            string     `json:"app_name,omitempty"`
 
+	// DestinationTag is an optional XRPL DestinationTag (uint32).
+	// Populated for XRP destinations when the SDK / SPA collected one
+	// (exchanges like Binance / Bitstamp route deposits by this field).
+	// PreSignXRP threads it onto the on-chain Payment. Zero / nil ⇒
+	// no DestinationTag field on the Payment, same as a regular
+	// wallet-to-wallet send. Ignored for non-XRP destinations.
+	DestinationTag *uint32 `json:"destination_tag,omitempty"`
+
 	// Receive economics (snapshot at quote/create time).
 	ReceiveAmount    float64 `json:"receive_amount,omitempty"`
 	MinReceiveAmount float64 `json:"min_receive_amount,omitempty"`

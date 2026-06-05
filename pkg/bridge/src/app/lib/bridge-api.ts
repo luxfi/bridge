@@ -239,6 +239,15 @@ export interface CreateSwapParams {
    * before releasing settlement.
    */
   cosigners?: CosignerIntent[]
+  /**
+   * Optional XRPL DestinationTag (uint32). Exchanges like Binance,
+   * Bitstamp, etc. route deposits to a specific sub-account by this
+   * field; when set, the bridge's PreSignXRP threads it onto the
+   * on-chain Payment. Ignored for non-XRP destinations. Bridge API is
+   * key-enumerated so this must be added to the body literal in
+   * createSwapViaRest too — see [[architecture-bridge-api-rest-transport-enumerates-keys]].
+   */
+  destinationTag?: number
 }
 
 /** Server swap envelope (loose shape — wraps the underlying swap record). */
@@ -275,6 +284,13 @@ export interface ServerSwap {
    * with status === 'refunded'.
    */
   refund_tx_hash?: string
+  /**
+   * XRPL DestinationTag the bridge will include on the on-chain
+   * Payment. Echoed back so the UI can render "Tag: 42" alongside the
+   * destination address. Undefined for non-XRP destinations or when
+   * the SDK / SPA didn't supply one.
+   */
+  destination_tag?: number
   [k: string]: unknown
 }
 
@@ -312,6 +328,13 @@ async function createSwapViaRest(
       app_name: params.appName,
       ...(params.cosigners && params.cosigners.length > 0
         ? { cosigners: params.cosigners.map(serializeCosigner) }
+        : {}),
+      // XRPL DestinationTag. uint32 on the wire; the backend's
+      // PreSignXRP threads it onto the Payment. Only meaningful for
+      // XRP destinations but cheap to enumerate unconditionally —
+      // ignored elsewhere.
+      ...(typeof params.destinationTag === 'number'
+        ? { destination_tag: params.destinationTag }
         : {}),
     }),
     signal: opts.signal,

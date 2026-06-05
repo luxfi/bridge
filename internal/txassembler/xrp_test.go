@@ -175,6 +175,54 @@ func TestPreSignXRP_RejectsBadPubKey(t *testing.T) {
 	}
 }
 
+// DestinationTag must be threaded onto the on-chain Payment when set,
+// and omitted when nil. Verifies both directions so the field can't
+// silently get dropped on its way through the assembler.
+func TestPreSignXRP_DestinationTagThreadedThrough(t *testing.T) {
+	a := &Assembler{}
+	prov := &fakeXRPProvider{balanceDrops: 10_000_000, sequence: 1, feeDrops: 12}
+	tag := uint32(12345)
+
+	got, err := a.PreSignXRP(context.Background(), SwapIntent{
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAddress: xrpRecipientAddr,
+		Amount:             1.0,
+		SenderAddress:      xrpSenderAddr,
+		DestinationTag:     &tag,
+	}, prov, pubkeyHex32)
+	if err != nil {
+		t.Fatalf("PreSignXRP: %v", err)
+	}
+	if got.Inner.DestinationTag == nil {
+		t.Fatal("expected DestinationTag to be populated on Payment, got nil")
+	}
+	if *got.Inner.DestinationTag != 12345 {
+		t.Errorf("DestinationTag = %d, want 12345", *got.Inner.DestinationTag)
+	}
+
+	// And when not set, the Payment's tag must stay nil.
+	got2, err := a.PreSignXRP(context.Background(), SwapIntent{
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAddress: xrpRecipientAddr,
+		Amount:             1.0,
+		SenderAddress:      xrpSenderAddr,
+	}, prov, pubkeyHex32)
+	if err != nil {
+		t.Fatalf("PreSignXRP without tag: %v", err)
+	}
+	if got2.Inner.DestinationTag != nil {
+		t.Errorf("expected nil DestinationTag when SwapIntent omits it, got %v", *got2.Inner.DestinationTag)
+	}
+
+	// SigningBytes for the tagged tx must be longer (field id 0x2E +
+	// 4-byte u32 = 5 extra bytes minimum) than the untagged one. Same
+	// sequence so all other fields agree.
+	if len(got.SigningBytes) <= len(got2.SigningBytes) {
+		t.Errorf("tagged signing payload (%d) should be longer than untagged (%d)",
+			len(got.SigningBytes), len(got2.SigningBytes))
+	}
+}
+
 func TestPreSignXRP_AcceptsEDPrefixedPubKey(t *testing.T) {
 	a := &Assembler{}
 	prov := &fakeXRPProvider{balanceDrops: 10_000_000, sequence: 1, feeDrops: 12}

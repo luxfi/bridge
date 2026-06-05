@@ -275,6 +275,15 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			d.handleStaleTONSeqno(ctx, sw)
 			return
 		}
+		// XRP equivalent: the XRPL `submit` engine_result was
+		// terPRE_SEQ (sequence too low — current account seq > tx seq,
+		// retryable) or tefPAST_SEQ (sequence already used,
+		// claim-failure). Both call for a rebuild with fresh sequence;
+		// retrying the same blob is no-op or guaranteed reject.
+		if isStaleXRPSequence(err) {
+			d.handleStaleXRPSequence(ctx, sw)
+			return
+		}
 
 		// Surface the error so the SDK/UI can show the user what's
 		// blocking (e.g. "insufficient funds for gas" — the release
@@ -387,6 +396,75 @@ func (d *BroadcastDriver) handleStaleTONSeqno(ctx context.Context, sw *Swap) {
 			)
 		} else {
 			d.logger.Info("broadcast: stale ton seqno → reset for re-sign",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+			)
+		}
+	}
+}
+
+// isStaleXRPSequence matches the XRPL engine_result codes the bridge
+// gets when the signed Payment's Sequence field is no longer current:
+//
+//	terPRE_SEQ  — sequence > current account seq  (retryable; account
+//	              caught up since PreSign read it. Rebuild + retry will
+//	              succeed unless the account is stuck.)
+//	tefPAST_SEQ — sequence already used (the broadcast actually went
+//	              through earlier OR the sender used the seq from
+//	              another tx; either way, retrying THIS blob is no-op.)
+//	tefALREADY  — exact tx already in the ledger (retry no-op too).
+//
+// All three call for a clear-DestRawTx + re-sign with a fresh
+// sequence. The broadcast.RPCError surface carries the upstream
+// message (broadcast/xrp.go wraps engine_result + engine_result_message
+// into RPCError.Message), so substring match is enough.
+func isStaleXRPSequence(err error) bool {
+	if err == nil {
+		return false
+	}
+	low := strings.ToLower(err.Error())
+	return strings.Contains(low, "terpre_seq") ||
+		strings.Contains(low, "tefpast_seq") ||
+		strings.Contains(low, "tefalready")
+}
+
+// handleStaleXRPSequence mirrors handleStaleTONSeqno for XRP. Resets
+// DestRawTx and routes the swap back to bridge_transfer_pending so the
+// signing driver picks it up next tick with a fresh sequence pulled
+// from XRPL.AccountInfo.
+func (d *BroadcastDriver) handleStaleXRPSequence(ctx context.Context, sw *Swap) {
+	patched, _ := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusBroadcasting {
+			return
+		}
+		s.BroadcastRebuilds++
+		if d.maxRebuilds > 0 && s.BroadcastRebuilds >= d.maxRebuilds {
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf(
+				"XRPL rejected %d successive broadcasts (sequence stale) — routing to refund.",
+				s.BroadcastRebuilds,
+			)
+			s.LastErrorAt = time.Now().UTC()
+			return
+		}
+		s.Status = SwapStatusBridgeTransferPending
+		s.DestRawTx = ""
+		s.Signature = ""
+		s.MPCSessionID = ""
+		s.DestTxHash = ""
+		s.LastError = "XRPL submit rejected (sequence stale) — rebuilding"
+		s.LastErrorAt = time.Now().UTC()
+	})
+	d.rebuilds.Add(1)
+	if d.logger != nil && patched != nil {
+		if patched.Status == SwapStatusRefundPending {
+			d.logger.Warn("xrp broadcast rebuilds maxed out → refund_pending",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+				"max", d.maxRebuilds,
+			)
+		} else {
+			d.logger.Info("broadcast: stale xrp sequence → reset for re-sign",
 				"swap_id", sw.ID,
 				"rebuilds", patched.BroadcastRebuilds,
 			)

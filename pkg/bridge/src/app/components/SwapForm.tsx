@@ -242,6 +242,13 @@ const toggleKnob = (active: boolean): CSSProperties => ({
 export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   const [error, setError] = useState<string | null>(null)
   const [destinationAddress, setDestinationAddress] = useState<string>('')
+  // XRPL DestinationTag — uint32 the bridge will include on the
+  // on-chain Payment. Only shown for XRP destinations; exchanges
+  // (Binance, Bitstamp, etc.) require it to route deposits to a
+  // sub-account. Stored as a string so empty input means "no tag" —
+  // we parse to number at submit time. Wiped on family change like
+  // destinationAddress because tags are XRP-specific.
+  const [destinationTag, setDestinationTag] = useState<string>('')
   const cfg = getConfig()
 
   // Wipe the destination-address field whenever the destination chain
@@ -258,6 +265,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   // user's destination on both legs.
   useEffect(() => {
     setDestinationAddress('')
+    setDestinationTag('')
   }, [swap.toChain.family])
 
   // Layered-cosigner indicator. When a tenant has set `mpc.utila` and/or
@@ -326,6 +334,20 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     return `Bridge ${swap.fromAsset.symbol} → ${swap.toAsset.symbol}`
   })()
 
+  // DestinationTag parsing — only XRP destinations expose the input,
+  // but we still defensively reject malformed values when entered.
+  // XRPL DestinationTag is a uint32 (0 .. 2^32-1); strings that don't
+  // parse cleanly to an integer in that range get rejected at submit
+  // so the bridge backend's body parse can't fall back to "tag absent"
+  // silently (the user typed something — they expect a tag attached).
+  const isXrpDestination = swap.toChain.family === 'xrp'
+  const trimmedTag = destinationTag.trim()
+  const parsedTag = trimmedTag === ''
+    ? undefined
+    : /^\d+$/.test(trimmedTag) && Number(trimmedTag) <= 0xffffffff
+      ? Number(trimmedTag)
+      : null // null sentinel: typed but invalid
+
   const onSubmit = () => {
     setError(null)
     if (!swap.quote) {
@@ -340,6 +362,10 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       setError('Wallet must be connected for EVM source chains.')
       return
     }
+    if (isXrpDestination && parsedTag === null) {
+      setError('Destination tag must be a whole number between 0 and 4294967295.')
+      return
+    }
     transfers.submit({
       fromChainId: swap.fromChain.id,
       toChainId: swap.toChain.id,
@@ -350,6 +376,9 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       refuel: swap.refuel,
       destinationAddress: effectiveDestination,
       useDepositAddress: needsDepositAddressFlow,
+      ...(isXrpDestination && typeof parsedTag === 'number'
+        ? { destinationTag: parsedTag }
+        : {}),
     })
     // Clear input on successful submit so the next intent starts fresh.
     swap.setAmount('')
@@ -440,6 +469,31 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           destination after the threshold quorum signs.
         </span>
       </div>
+
+      {isXrpDestination ? (
+        <div style={destWrap}>
+          <div style={destLabelRow}>
+            <span>Destination tag (optional)</span>
+          </div>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="\d*"
+            style={destInput}
+            placeholder="Required by exchanges (Binance, Bitstamp…) to credit your account"
+            value={destinationTag}
+            onChange={(e) => setDestinationTag(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+            aria-label="XRPL destination tag"
+          />
+          <span style={destHint}>
+            Whole number, 0 to 4,294,967,295. Leave blank for personal
+            wallets. Exchanges almost always require this — if you skip it,
+            your XRP can be credited to the wrong account.
+          </span>
+        </div>
+      ) : null}
 
       <div style={refuelRow}>
         <div style={refuelLabel}>

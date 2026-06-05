@@ -559,6 +559,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 				DestinationAddress: sw.DestinationAddress,
 				Amount:             releaseAmount(sw),
 				SenderAddress:      senderAddr,
+				DestinationTag:     sw.DestinationTag,
 			}, d.xrpProvider, sw.ReleasePubKey)
 			if aerr != nil {
 				d.failures.Add(1)
