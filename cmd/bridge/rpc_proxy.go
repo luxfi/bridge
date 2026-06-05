@@ -96,6 +96,13 @@ func rpcProxy(upstreamURL string, timeout time.Duration, logger luxlog.Logger) z
 		// Always return JSON content-type — every upstream we care
 		// about (Lux gateway, Erigon, geth) sends JSON for JSON-RPC.
 		c.SetHeader("Content-Type", "application/json")
+		// CORS: permissive so wallet extensions (MetaMask) and any
+		// non-same-origin caller can hit the proxy directly. The
+		// upstream gateway's strict allow-list is the original
+		// problem — this proxy exists to dodge it; not echoing
+		// CORS here would just reintroduce the block one hop in.
+		c.SetHeader("Access-Control-Allow-Origin", "*")
+		c.SetHeader("Access-Control-Expose-Headers", "Content-Type")
 		return c.Bytes(resp.StatusCode, respBody)
 	}
 }

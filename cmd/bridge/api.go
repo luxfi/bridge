@@ -304,13 +304,29 @@ func (a *API) Register(app *zip.App) {
 
 	// /api/rpc/lux-{mainnet,testnet} — same-origin JSON-RPC proxy for
 	// the Lux gateway. Sidesteps the gateway's CORS allow-list so the
-	// embedded SPA's wagmi useBalance() actually resolves for LUX. See
-	// rpc_proxy.go for the motivation + properties.
+	// embedded SPA's wagmi useBalance() actually resolves for LUX, AND
+	// allows MetaMask/Rabby/etc. extensions (which run from
+	// chrome-extension:// origins) to point their custom-RPC URL at
+	// this proxy instead of the gateway. See rpc_proxy.go.
+	//
+	// Browsers send an OPTIONS preflight before the JSON-RPC POST
+	// (Content-Type: application/json is not a CORS-safe header). The
+	// preflight handler echoes the headers needed for the POST to
+	// proceed.
+	preflight := func(c *zip.Ctx) error {
+		c.SetHeader("Access-Control-Allow-Origin", "*")
+		c.SetHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
+		c.SetHeader("Access-Control-Allow-Headers", "Content-Type, Accept")
+		c.SetHeader("Access-Control-Max-Age", "86400")
+		return c.NoContent(http.StatusNoContent)
+	}
 	if h := rpcProxy(a.luxRPCMainnetURL, a.luxRPCTimeout, a.luxRPCLogger); h != nil {
 		app.Post("/api/rpc/lux-mainnet", h)
+		app.Options("/api/rpc/lux-mainnet", preflight)
 	}
 	if h := rpcProxy(a.luxRPCTestnetURL, a.luxRPCTimeout, a.luxRPCLogger); h != nil {
 		app.Post("/api/rpc/lux-testnet", h)
+		app.Options("/api/rpc/lux-testnet", preflight)
 	}
 
 	// /v1/bridge/check-deposit is an ops-only diagnostic that polls
