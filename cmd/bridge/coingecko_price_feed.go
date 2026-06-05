@@ -50,6 +50,7 @@ var DefaultCoinGeckoIDMap = map[string]string{
 	"BTC":  "bitcoin",
 	"SOL":  "solana",
 	"TON":  "the-open-network",
+	"XRP":  "ripple",
 	"USDC": "usd-coin",
 	"USDT": "tether",
 	"DAI":  "dai",
