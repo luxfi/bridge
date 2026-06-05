@@ -308,12 +308,13 @@ export const WalletConnect: FC<WalletConnectProps> = ({
 
   // Non-EVM wallet state. Read at the top level so the address pill
   // can reflect ANY connected family, not just EVM. Picking order
-  // (EVM → SVM → TON → BTC) prefers EVM when multiple are connected,
-  // matching the historical default; non-EVM users see their family's
-  // address instead of a stuck "Connect Wallet" button.
+  // (EVM → SVM → TON → BTC → XRP) prefers EVM when multiple are
+  // connected, matching the historical default; non-EVM users see
+  // their family's address instead of a stuck "Connect Wallet" button.
   const svmWallet = useWalletForFamily('svm')
   const tonWallet = useWalletForFamily('ton')
   const btcWallet = useWalletForFamily('btc')
+  const xrpWallet = useWalletForFamily('xrp')
 
   // The "primary" connected wallet for the pill. EVM wins if connected
   // (preserves prior UX); otherwise first non-EVM with an address.
@@ -326,7 +327,9 @@ export const WalletConnect: FC<WalletConnectProps> = ({
           ? { address: tonWallet.address, symbol: 'TON', disconnect: tonWallet.disconnect }
           : btcWallet.address
             ? { address: btcWallet.address, symbol: 'BTC', disconnect: btcWallet.disconnect }
-            : null
+            : xrpWallet.address
+              ? { address: xrpWallet.address, symbol: 'XRP', disconnect: xrpWallet.disconnect }
+              : null
 
   // ESC dismiss + focus restore. Mirrors the close-on-Escape pattern of
   // every dialog primitive we use elsewhere (Radix etc.).
