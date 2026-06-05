@@ -450,6 +450,85 @@ user_deposit_pending
    → completed                          (broadcast: pushed onchain)
 ```
 
+### XRP swap stuck or refund blocked
+
+XRPL has a few failure shapes that look like generic stuck-pending but
+need specific responses:
+
+**Stuck in `bridge_transfer_pending` with rebuild counter climbing.**
+Likely a stale sequence — the cluster signed a Payment, broadcast got
+`terPRE_SEQ` / `tefPAST_SEQ` / `tefALREADY` from XRPL, and the
+broadcast driver auto-cleared the signed payload to rebuild. Track
+`bridge_swaps_broadcast_rebuilds` per swap; if it climbs past the
+configured ceiling the swap routes to `refund_pending` instead of
+looping forever. Check the bridge logs for `handleStaleXRPSequence` —
+that's the rebuild path firing.
+
+**Refund blocked, swap state `refund_pending` indefinitely.** Almost
+always the 2 XRP reserve: a `PreSignXRPRefund` sweep computes
+`balance − reserve − fee` and refuses to sign if the balance can't
+cover the reserve. Either the deposit was below `2 XRP + fee`, or
+something already swept the wallet. Confirm via direct XRPL
+`account_info`:
+
+```bash
+curl -sS https://xrplcluster.com -d '{
+  "method":"account_info",
+  "params":[{"account":"<r-address>","ledger_index":"validated"}]
+}' | jq '.result.account_data.Balance'
+# Returns drops (1 XRP = 1_000_000 drops). Below 2_000_000 drops →
+# reserve-blocked. Below 0 → account doesn't exist (typo or wrong
+# network).
+```
+
+**Exchange recipient never credited.** If the destination is an
+exchange custody address (Binance, Bitstamp, Coinbase Custody, Kraken
+deposit, BitGo), they almost always require a `DestinationTag` to
+credit the sub-account. The SPA form prompts for it when destination
+family is `xrp`; if the user left it blank, the on-chain Payment ships
+without a tag and the exchange may hold or lose the funds. Check the
+swap row for `destination_tag` and the broadcast tx for field `2,14`
+(DestinationTag). Recovery is exchange-side — there's no on-chain fix.
+
+**Deposit address never received funds.** XRP accounts must be funded
+ABOVE the 2 XRP reserve to be activated. A deposit of exactly 2 XRP
+will technically create the account but leave it at zero usable
+balance and the bridge's `depositcheck.checkXRP` will see balance > 0
+yet the refund sweep will be reserve-blocked. Use a deposit minimum
+above `2 XRP + min_swap_amount`.
+
+**Confirming a tx landed.** The `txExplorerTpl` for `XRP_MAINNET`
+points at `livenet.xrpl.org`. Search by tx hash or the bridge's
+`broadcast_tx_hash` field; the engine_result must be exactly
+`tesSUCCESS` for the swap to advance to `completed`.
+
+### XRP mainnet rollout
+
+When you're ready to enable XRP mainnet swaps:
+
+1. **Cut over to mpcd-single** (see §7 "Cut over the ed25519 signer")
+   if you're still on the legacy `fake-mpcd`. mpcd-single's per-wallet
+   HKDF derivation is required for distinct deposit and release
+   addresses to exist; the old single-key fake-mpcd cannot serve
+   mainnet without colliding every wallet.
+2. **Provision the mainnet release wallet.** Call `/keygen` once with
+   `wallet_id=release-wallet-XRP_MAINNET` (use the org_id your bridge
+   is configured with) and record the returned `sol_address` — that's
+   the r-address. Fund it from your treasury above the 2 XRP reserve
+   plus expected daily release volume.
+3. **Decide on custody.** mpcd-single is single-signer custody (one
+   master seed compromises every derived wallet); the cluster-FROST
+   epic is the threshold answer. For modest mainnet liquidity, single-
+   signer with a KMS-rooted seed is the documented interim. For larger
+   liquidity, gate the YAML flip on cluster-FROST landing.
+4. **Flip the YAML.** In `networks.mainnet.yaml`, set both
+   `isDepositEnabled: true` and `isWithdrawalEnabled: true` on the
+   `XRP_MAINNET` token row. Restart pods (the binary reads the file
+   once at boot).
+5. **Confirm wiring at runtime.** Hit `/health`; the XRP_MAINNET row
+   should appear under reachable networks. Run a small (1 XRP) swap
+   round-trip and verify the on-chain tx lands `tesSUCCESS`.
+
 ---
 
 ## 9. Persistence + backups
