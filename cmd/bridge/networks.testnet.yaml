@@ -278,15 +278,15 @@ tokens:
     isDepositEnabled: false
     isWithdrawalEnabled: false
 
-  # XRP Testnet — Phase 2 wires the destination-release path
-  # (txassembler PreSignXRP + FinalizeXRP + broadcast submit), so
-  # withdrawal is enabled. Deposit (Phase 3) still pending — needs
-  # depositcheck/xrp.go + PreSignXRPRefund + addressMatchesType.
+  # XRP Testnet — full bidirectional support: Phase 2 (destination
+  # release via PreSignXRP + FinalizeXRP + broadcast submit) +
+  # Phase 3 (source path via depositcheck.checkXRP + executeRefundXRP
+  # + addressMatchesType + useXrpSend SPA auto-deposit).
   - asset: XRP
     name: XRP
     decimals: 6
     network: XRP_TESTNET
-    isDepositEnabled: false
+    isDepositEnabled: true
     isWithdrawalEnabled: true
 
 limits:

@@ -27,7 +27,7 @@ import {
 import { getConfig } from '../../config'
 import { type Asset } from '../lib/assets'
 import { type Chain, findChain } from '../lib/chains'
-import { useSolanaSend, useTonSend, useWalletForFamily } from '../lib/wallet-adapters'
+import { useSolanaSend, useTonSend, useWalletForFamily, useXrpSend } from '../lib/wallet-adapters'
 import {
   BridgeApiError,
   createSwap,
@@ -189,6 +189,10 @@ export function useTransfers(): TransferState {
   // via the V4R2 wallet contract, so we MUST pass the TonConnect address
   // (EQ.../UQ.../kQ.../0Q...), not an EVM hex.
   const { sendTonAsync, senderAddress: tonSenderAddress } = useTonSend()
+  // XRP source — Xaman-routed XRPL Payment send. Refund driver targets
+  // sw.Sender via PreSignXRPRefund, so we MUST pass the r-address, not
+  // an EVM hex. [[architecture-sender-must-match-source-family]]
+  const { sendXrpAsync, senderAddress: xrpSenderAddress } = useXrpSend()
   // BTC source needs a same-family sender so the refund driver can return
   // funds to the user's Bitcoin address (refund driver branches by source
   // family — passing an EVM hex would brick BTC refunds the same way it
@@ -532,6 +536,11 @@ export function useTransfers(): TransferState {
         // which parses it via address.ParseAddr. Any standard TON
         // user-friendly form works (EQ/UQ/kQ/0Q).
         sourceSender = tonSenderAddress ?? undefined
+      } else if (fromChain.family === 'xrp') {
+        // r-address — refund driver feeds this to PreSignXRPRefund
+        // which AccountIDFromRAddress-decodes it back to the 20-byte
+        // canonical AccountID for the XRPL Payment serializer.
+        sourceSender = xrpSenderAddress ?? undefined
       } else {
         sourceSender = account.address ?? undefined
       }
@@ -589,6 +598,7 @@ export function useTransfers(): TransferState {
           writeContractAsync,
           sendSolAsync,
           sendTonAsync,
+          sendXrpAsync,
         })
         if (dep && !dep.ok) {
           // Local 'failed' is the source of truth here — server-side
@@ -625,6 +635,8 @@ export function useTransfers(): TransferState {
       solSenderAddress,
       sendTonAsync,
       tonSenderAddress,
+      sendXrpAsync,
+      xrpSenderAddress,
       btcWallet.address,
     ],
   )
@@ -721,10 +733,11 @@ async function tryAutoDeposit(args: {
   }) => Promise<`0x${string}`>
   sendSolAsync: (args: { to: string; sol: number }) => Promise<string>
   sendTonAsync: (args: { to: string; ton: number }) => Promise<string>
+  sendXrpAsync: (args: { to: string; xrp: number }) => Promise<string>
 }): Promise<AutoDepositResult> {
   const {
     swap, fromChain, fromAsset, inAmount,
-    switchChainAsync, sendTransactionAsync, writeContractAsync, sendSolAsync, sendTonAsync,
+    switchChainAsync, sendTransactionAsync, writeContractAsync, sendSolAsync, sendTonAsync, sendXrpAsync,
   } = args
 
   // Solana branch — SOL-source swaps. Pop Phantom / any Wallet Standard
@@ -776,10 +789,32 @@ async function tryAutoDeposit(args: {
     }
   }
 
+  // XRP branch — XRP-source swaps. Pop Xaman with a native XRPL
+  // Payment to the deposit r-address. IOU (issued-currency) is out of
+  // scope — the backend's PreSignXRPRefund only sweeps native XRP.
+  // fromAsset.contractAddress means the user picked an IOU, so fall
+  // through to manual deposit instead of producing a wrong-tx popup.
+  if (fromChain.family === 'xrp') {
+    if (fromAsset.contractAddress) return null
+    const onchainAddr = extractDepositAddress(swap.deposit_address)
+    if (!onchainAddr) return null
+    // r-address shape — same regex as the Go-side addressMatchesType
+    // ([[architecture-sender-must-match-source-family]]). Cheap shape
+    // check before handing to Xaman; the wallet rejects unparseable
+    // r-addresses with a confusing error.
+    if (!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(onchainAddr)) return null
+    try {
+      const txid = await sendXrpAsync({ to: onchainAddr, xrp: inAmount })
+      return { ok: true, hash: txid }
+    } catch (err) {
+      return { ok: false, error: humanizeWalletError(err, 'Wallet rejected') }
+    }
+  }
+
   // EVM / Lux branch — Lux's wallet leg is EVM-compatible (Avalanche
   // C-Chain fork), so the same wagmi sendTransaction / writeContract
-  // path works. Other non-EVM families (btc / ton / xrp / cardano) bail
-  // to manual deposit since the user wallet can't sign those here.
+  // path works. Other non-EVM families (btc / cardano) bail to manual
+  // deposit since the user wallet can't sign those here.
   if (fromChain.family !== 'evm' && fromChain.family !== 'lux') return null
   if (!fromChain.evmChainId) return null
 

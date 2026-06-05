@@ -719,10 +719,10 @@ func rpcErrToHTTP(c *zip.Ctx, err error, op string) error {
 // chain's address encoding. The refund driver still does protocol-
 // level parsing downstream; this is a fast gate at swap-create time.
 //
-// btc/ton/xrp/dot families are not yet wired through the cross-family
-// refund path so we conservatively accept any non-empty string for
-// those — refusing would block existing same-family flows that never
-// hit a refund-family-mismatch bug.
+// btc/dot families are not yet wired through the cross-family refund
+// path so we conservatively accept any non-empty string for those —
+// refusing would block existing same-family flows that never hit a
+// refund-family-mismatch bug.
 func addressMatchesType(addr string, t mchain.AddressType) bool {
 	if addr == "" {
 		return false
@@ -740,6 +740,12 @@ func addressMatchesType(addr string, t mchain.AddressType) bool {
 		// Raw form (workchain:hex) is also valid but we don't accept
 		// it here — the SPA always submits user-friendly form.
 		return tonUserFriendlyAddressRE.MatchString(addr)
+	case mchain.AddressTypeXRP:
+		// XRPL r-addresses: leading 'r', then 24-34 Ripple-base58
+		// chars. Network-agnostic (same address valid on mainnet +
+		// testnet — XRPL has no per-network prefix split). Catches
+		// the common "user pasted EVM hex into XRP destination" bug.
+		return xrpAddressRE.MatchString(addr)
 	case mchain.AddressTypeBTC:
 		// Cover the four address families across mainnet + testnet:
 		//   1… / 3…              — mainnet P2PKH / P2SH (base58)
@@ -759,6 +765,7 @@ var (
 	evmHexAddressRE          = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
 	solBase58AddressRE       = regexp.MustCompile(`^[1-9A-HJ-NP-Za-km-z]{32,44}$`)
 	tonUserFriendlyAddressRE = regexp.MustCompile(`^(EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$`)
+	xrpAddressRE             = regexp.MustCompile(`^r[1-9A-HJ-NP-Za-km-z]{24,34}$`)
 	btcBech32AddressRE       = regexp.MustCompile(`^(bc1|tb1)[ac-hj-np-z02-9]{6,87}$`)
 	btcBase58AddressRE       = regexp.MustCompile(`^[123mn2][1-9A-HJ-NP-Za-km-z]{25,33}$`)
 )

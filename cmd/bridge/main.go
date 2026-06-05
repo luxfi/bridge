@@ -939,6 +939,13 @@ func main() {
 			tonClient := ton.NewTonCenterProvider(*tonRPCMainnetURL, *tonRPCTestnetURL, *tonRPCAPIKey)
 			refundDriver.SetTONProvider(tonClient)
 		}
+		// XRP refund provider: parallel to TON. Same xrp.Provider the
+		// signing driver uses — single config governs both X→XRP release
+		// sweep and XRP→X refund sweep.
+		if *xrpRPCMainnetURL != "" || *xrpRPCTestnetURL != "" {
+			xrpClient := xrp.NewProvider(*xrpRPCMainnetURL, *xrpRPCTestnetURL, *xrpRPCTimeout)
+			refundDriver.SetXRPProvider(xrpClient)
+		}
 		api.SetRefundDriver(refundDriver)
 		go func() {
 			_ = refundDriver.Run(refundCtx)

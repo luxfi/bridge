@@ -654,22 +654,6 @@ func TestCheck_Substrate_NotImplemented(t *testing.T) {
 	}
 }
 
-func TestCheck_XRP_NotImplemented(t *testing.T) {
-	// XRP routes through ErrUnsupportedNetwork rather than its own
-	// sentinel — matches the TS legacy "default: warn + return false"
-	// branch but with an explicit error type.
-	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
-		"XRP_TESTNET": "http://unused",
-	}}
-	_, err := c.Check(context.Background(), CheckParams{
-		NetworkInternalName: "XRP_TESTNET",
-		RequiredAmount:      1,
-	})
-	if !errors.Is(err, ErrUnsupportedNetwork) {
-		t.Fatalf("expected ErrUnsupportedNetwork for XRP, got %v", err)
-	}
-}
-
 // =============================================================================
 // Context + timeout
 // =============================================================================
