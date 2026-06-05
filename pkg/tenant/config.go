@@ -38,7 +38,7 @@ type Config struct {
 	// bridged collateral mints). Independent of NetworkID — the primary
 	// network ID is shared across all Lux-derived L1s (1=mainnet,
 	// 2=fuji, 3=local, 1337=development), while the EVM chain ID here
-	// is per-subnet, per-env (see CLAUDE.md "Network ID vs EVM Chain
+	// is per-chain, per-env (see CLAUDE.md "Network ID vs EVM Chain
 	// ID — NEVER CONFLATE").
 	Network NetworkConfig `yaml:"network"`
 
