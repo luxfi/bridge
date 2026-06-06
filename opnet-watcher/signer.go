@@ -32,7 +32,7 @@ import (
 //   - SchemeCMP (CGGMP21): threshold ECDSA on secp256k1 — for EVM chains
 //   - SchemeFROST: threshold Schnorr — for Bitcoin Taproot
 //   - SchemeBLS: BLS12-381 threshold — for Lux Warp internal
-//   - SchemeRingtail: lattice-based — post-quantum future
+//   - SchemeCorona: lattice-based — post-quantum future
 type Signer struct {
 	// Single-key mode (development/testing).
 	key *ecdsa.PrivateKey
