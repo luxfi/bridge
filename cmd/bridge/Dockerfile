@@ -20,7 +20,7 @@ RUN pnpm -C app/bridge build && \
     cp -r app/bridge/dist /ui-out
 
 # ── 2. Go build ───────────────────────────────────────────────────────────
-FROM golang:1.26.3-alpine AS go-build
+FROM golang:1.26.4-alpine AS go-build
 WORKDIR /src
 RUN apk add --no-cache git
 COPY go.mod go.sum* ./
