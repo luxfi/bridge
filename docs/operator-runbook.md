@@ -65,7 +65,7 @@ curl -sS localhost:8080/health | jq .
 The canonical Dockerfile is `cmd/bridge/Dockerfile`. Three stages:
 
 1. **ui-build** — `node:20-alpine`, `pnpm install` + `pnpm -C app/bridge build`
-2. **go-build** — `golang:1.26.3-alpine`, compiles `cmd/bridge` with embedded SPA
+2. **go-build** — `golang:1.26.4-alpine`, compiles `cmd/bridge` with embedded SPA
 3. **runtime** — `gcr.io/distroless/static-debian12:nonroot`, ~25 MB
 
 Build from the repo root (build context must include the pnpm workspace):
