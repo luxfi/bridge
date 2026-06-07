@@ -1,6 +1,6 @@
 module github.com/luxfi/bridge
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/gagliardetto/binary v0.8.0
