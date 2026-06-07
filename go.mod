@@ -1,6 +1,6 @@
 module github.com/luxfi/bridge
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/btcsuite/btcd v0.25.0
