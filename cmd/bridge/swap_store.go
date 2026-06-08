@@ -163,6 +163,20 @@ type Swap struct {
 	// Zero ⇒ legacy current ≥ required (preserves pre-baseline swaps).
 	TONSourceBaselineNanotons uint64 `json:"ton_source_baseline_nanotons,omitempty"`
 
+	// SOLSourceBaselineLamports mirrors XRPSourceBaselineDrops /
+	// TONSourceBaselineNanotons for SOL source swaps. mpcd-single's
+	// HKDF ed25519 keygen returns the SAME pubkey for both the per-swap
+	// SOL→X deposit wallet AND the long-lived X→SOL release wallet
+	// (same wallet pool, distinct wallet_ids both resolve to the
+	// release-wallet pubkey when the keygen is asked to mint for the
+	// same family). Without a baseline snapshot, depositcheck.checkSOL
+	// false-positives on the standing release-wallet liquidity → bridge
+	// pays out the destination side without any SOL actually arriving.
+	// Snapshotting lamports at create lets checkSOL gate on
+	// (current − baseline) ≥ required. Zero ⇒ legacy current ≥ required
+	// (preserves pre-baseline swaps).
+	SOLSourceBaselineLamports uint64 `json:"sol_source_baseline_lamports,omitempty"`
+
 	// Source-side observation: tx hash, confirmed amount.
 	SourceTxHash    string  `json:"source_tx_hash,omitempty"`
 	DepositedAmount float64 `json:"deposited_amount,omitempty"`

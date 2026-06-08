@@ -932,6 +932,40 @@ func (d *RefundDriver) executeRefundSolana(ctx context.Context, sw *Swap, wallet
 	}
 	refundLamports := lamports - txassembler.SolanaSignatureFeeLamports
 
+	// Baseline cap (added 2026-06-08, mirrors XRP/TON). mpcd-single's
+	// ed25519 keygen reuses the long-lived SOL release-wallet pubkey
+	// for per-swap deposit wallets. Without the cap, a failed SOL→X
+	// swap would sweep the operator's standing release-wallet liquidity
+	// to the user. Cap the refund at the per-swap delta. Zero baseline
+	// (pre-fix swap or non-shared-pool keygen) preserves the legacy
+	// "sweep everything minus fee" behaviour.
+	if sw.SOLSourceBaselineLamports > 0 {
+		var deltaLamports uint64
+		if lamports > sw.SOLSourceBaselineLamports {
+			deltaLamports = lamports - sw.SOLSourceBaselineLamports
+		}
+		if deltaLamports <= txassembler.SolanaSignatureFeeLamports {
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				s.LastError = fmt.Sprintf(
+					"Refund impossible: per-swap delta %d lamports ≤ signature fee %d lamports (baseline=%d, current=%d)",
+					deltaLamports, txassembler.SolanaSignatureFeeLamports, sw.SOLSourceBaselineLamports, lamports,
+				)
+			})
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("solana refund impossible: per-swap delta ≤ fee",
+					"swap_id", sw.ID,
+					"delta_lamports", deltaLamports,
+					"baseline_lamports", sw.SOLSourceBaselineLamports,
+					"current_lamports", lamports,
+					"fee_lamports", txassembler.SolanaSignatureFeeLamports,
+				)
+			}
+			return
+		}
+		refundLamports = deltaLamports - txassembler.SolanaSignatureFeeLamports
+	}
+
 	// Step 3 — build the unsigned sweep.
 	unsigned, err := d.assembler.PreSignSolanaRefund(
 		ctx, sw.SourceNetwork, depositAddr, sw.Sender, refundLamports, d.solanaProvider,
