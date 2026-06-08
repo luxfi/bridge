@@ -628,6 +628,102 @@ func TestCheck_TON_BadResultType(t *testing.T) {
 	}
 }
 
+// Baseline > 0 enforces a delta check for TON: wallet must have GAINED
+// at least the required amount since the snapshot. Fixes the
+// shared-wallet-pool false-positive when the deposit address already
+// holds release-wallet liquidity.
+func TestCheck_TON_BaselineRejectsPreExistingBalance(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 5 TON already in the wallet — would pass v1 check.
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "result": "5000000000"})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"TON_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "TON_TESTNET",
+		RequiredAmount:      1.0,
+		TONBaselineNanotons: 5_000_000_000, // baseline = current → delta is 0
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("baseline=current must reject — delta is 0, below required")
+	}
+}
+
+// Baseline + a new deposit accepts: delta meets required.
+func TestCheck_TON_BaselineAcceptsNewDeposit(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 5 + 0.3 TON after a deposit landed.
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "result": "5300000000"})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"TON_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "TON_TESTNET",
+		RequiredAmount:      0.3,
+		TONBaselineNanotons: 5_000_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatal("delta 0.3 TON should clear required")
+	}
+}
+
+// Underflow guard: baseline > current must not arithmetic-confirm.
+func TestCheck_TON_BaselineUnderflowReturnsZero(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "result": "1000000000"})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"TON_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "TON_TESTNET",
+		RequiredAmount:      1,
+		TONBaselineNanotons: 5_000_000_000, // baseline > current
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("baseline > current must not confirm; delta should clamp to 0")
+	}
+}
+
+// Regression guard: XRP fix must be unaffected by the TON additions
+// (zero TON baseline + non-zero XRP baseline still routes through the
+// XRP delta check, never accidentally triggers TON logic).
+func TestCheck_XRP_FixUnaffectedByTONBaselineField(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{
+				"account_data": map[string]any{"Balance": "100000000"},
+				"status":       "success",
+			},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"XRP_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "XRP_TESTNET",
+		RequiredAmount:      1.5,
+		XRPBaselineDrops:    100_000_000, // baseline = current → delta is 0
+		TONBaselineNanotons: 99_999,      // unrelated TON field — must be ignored
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("XRP delta check must still reject; TON field must not interfere")
+	}
+}
+
 // =============================================================================
 // Unsupported
 // =============================================================================

@@ -191,6 +191,15 @@ type CheckParams struct {
 	// wallet shares the address pool with a long-lived release
 	// wallet that already holds funds. Zero ⇒ legacy behaviour.
 	XRPBaselineDrops uint64
+
+	// TONBaselineNanotons mirrors XRPBaselineDrops for TON sources.
+	// mpcd's TON keygen has the same shared-address-pool quirk
+	// (deposit wallet == release wallet), and the V4R2 contract holds
+	// the bridge's standing liquidity. When > 0 and the deposit
+	// network is TON, checkTON compares (current − baseline) to the
+	// required amount instead of plain (current ≥ required). Zero ⇒
+	// legacy behaviour (preserves v1 for pre-baseline swaps).
+	TONBaselineNanotons uint64
 }
 
 // Check dispatches to the right per-chain probe and returns whether
@@ -214,7 +223,7 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 		// route by network → AddressType, not by SOL/TON family.
 		return c.checkSOL(ctx, url, p.Address, p.Asset, p.RequiredAmount)
 	case mchain.AddressTypeTON:
-		return c.checkTON(ctx, url, p.Address, p.RequiredAmount)
+		return c.checkTON(ctx, url, p.Address, p.RequiredAmount, p.TONBaselineNanotons)
 	case mchain.AddressTypeXRP:
 		return c.checkXRP(ctx, url, p.NetworkInternalName, p.Address, p.RequiredAmount, p.XRPBaselineDrops)
 	case mchain.AddressTypeDOT:
@@ -427,7 +436,16 @@ func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, r
 // TON — TON Center REST `/getAddressBalance`
 // =============================================================================
 
-func (c *Client) checkTON(ctx context.Context, apiBase, address string, requiredAmount float64) (bool, error) {
+// checkTON probes toncenter's /getAddressBalance for the deposit
+// wallet and compares the result to requiredAmount.
+//
+// baselineNanotons (added 2026-06-08, parallel to XRP) is the deposit
+// wallet's balance at swap-create time. When > 0 the check uses
+// (current − baseline) ≥ required so a shared-address-pool deposit
+// wallet doesn't false-positive on the pre-existing release-wallet
+// liquidity. Zero baseline → legacy current ≥ required for
+// back-compat with swaps minted before the snapshot was wired.
+func (c *Client) checkTON(ctx context.Context, apiBase, address string, requiredAmount float64, baselineNanotons uint64) (bool, error) {
 	url := strings.TrimRight(apiBase, "/") + "/getAddressBalance?address=" + address
 	// TON Center returns balances as a *string* (decimal), not a number;
 	// also returns an `ok: bool` envelope. We accept either flat or
@@ -455,8 +473,70 @@ func (c *Client) checkTON(ctx context.Context, apiBase, address string, required
 	default:
 		return false, fmt.Errorf("depositcheck: unexpected TON balance type %T", v)
 	}
+	// Baseline-aware delta when supplied. Underflow guard mirrors
+	// checkXRP: baseline > current (wallet debited since snapshot)
+	// clamps to zero so the caller never sees a spurious confirm
+	// from uint subtraction wrap-around.
+	if baselineNanotons > 0 {
+		balUnsigned := uint64(balNano)
+		if int64(balNano) < 0 {
+			balUnsigned = 0
+		}
+		var deltaNano uint64
+		if balUnsigned > baselineNanotons {
+			deltaNano = balUnsigned - baselineNanotons
+		}
+		deltaTon := float64(deltaNano) / 1e9
+		return deltaTon >= requiredAmount, nil
+	}
 	balTon := float64(balNano) / 1e9
 	return balTon >= requiredAmount, nil
+}
+
+// FetchTONNanotons returns the current nanoton balance for a TON
+// account. Used by the swap-create handler to snapshot the baseline.
+// actNotFound / never-funded accounts return 0 without error so a
+// fresh deposit wallet doesn't fail swap creation.
+func (c *Client) FetchTONNanotons(ctx context.Context, network, address string) (uint64, error) {
+	if mchain.AddressTypeFor(network) != mchain.AddressTypeTON {
+		return 0, fmt.Errorf("depositcheck: FetchTONNanotons called for non-TON network %s", network)
+	}
+	apiBase := c.rpcURL(network)
+	if apiBase == "" {
+		return 0, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, network)
+	}
+	url := strings.TrimRight(apiBase, "/") + "/getAddressBalance?address=" + address
+	var raw struct {
+		OK     bool        `json:"ok"`
+		Result interface{} `json:"result"`
+	}
+	if err := c.getJSON(ctx, url, &raw); err != nil {
+		return 0, fmt.Errorf("depositcheck: ton %s FetchTONNanotons: %w", network, err)
+	}
+	if raw.Result == nil {
+		return 0, nil
+	}
+	switch v := raw.Result.(type) {
+	case string:
+		if v == "" {
+			return 0, nil
+		}
+		big, ok := new(big.Int).SetString(v, 10)
+		if !ok {
+			return 0, fmt.Errorf("depositcheck: TON balance not a decimal string: %q", v)
+		}
+		if big.Sign() < 0 {
+			return 0, nil
+		}
+		return big.Uint64(), nil
+	case float64:
+		if v < 0 {
+			return 0, nil
+		}
+		return uint64(v), nil
+	default:
+		return 0, fmt.Errorf("depositcheck: unexpected TON balance type %T", v)
+	}
 }
 
 // =============================================================================

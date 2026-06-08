@@ -452,6 +452,19 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 				req.SourceNetwork, depositWallet.Address, err)
 		}
 	}
+	// Same snapshot for TON source swaps — mpcd's V4R2 keygen has the
+	// same shared-address-pool quirk as XRPL.
+	if srcAddrType == mchain.AddressTypeTON && a.depcheck != nil && depositWallet != nil {
+		baseCtx, cancelBase := context.WithTimeout(c.Context(), 8*time.Second)
+		nano, err := a.depcheck.FetchTONNanotons(baseCtx, req.SourceNetwork, depositWallet.Address)
+		cancelBase()
+		if err == nil {
+			swap.TONSourceBaselineNanotons = nano
+		} else {
+			fmt.Printf("[swap-create-warn] ton_baseline_fetch_failed swap_pre_id=%s addr=%s err=%v (falling back to legacy current≥required check)\n",
+				req.SourceNetwork, depositWallet.Address, err)
+		}
+	}
 	if quoteRes != nil {
 		swap.ReceiveAmount = quoteRes.ReceiveAmount
 		swap.MinReceiveAmount = quoteRes.MinReceiveAmount
