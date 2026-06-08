@@ -330,6 +330,7 @@ func (w *DepositWatcher) checkOne(ctx context.Context, sw *Swap) {
 		Asset:               sw.SourceAsset,
 		RequiredAmount:      sw.Amount,
 		XRPBaselineDrops:    sw.XRPSourceBaselineDrops,
+		TONBaselineNanotons: sw.TONSourceBaselineNanotons,
 	})
 	if err != nil {
 		w.checkErrors.Add(1)

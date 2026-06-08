@@ -154,6 +154,15 @@ type Swap struct {
 	// falls back to the v1 current ≥ required check).
 	XRPSourceBaselineDrops uint64 `json:"xrp_source_baseline_drops,omitempty"`
 
+	// TONSourceBaselineNanotons mirrors XRPSourceBaselineDrops for TON
+	// source swaps. Same shared-address-pool quirk in mpcd's TON
+	// keygen: the per-swap "deposit" wallet shares its V4R2 contract
+	// address with the long-lived release wallet that already holds
+	// liquidity. Snapshotting the nanoton balance at create lets
+	// depositcheck.checkTON gate on (current − baseline) ≥ required.
+	// Zero ⇒ legacy current ≥ required (preserves pre-baseline swaps).
+	TONSourceBaselineNanotons uint64 `json:"ton_source_baseline_nanotons,omitempty"`
+
 	// Source-side observation: tx hash, confirmed amount.
 	SourceTxHash    string  `json:"source_tx_hash,omitempty"`
 	DepositedAmount float64 `json:"deposited_amount,omitempty"`

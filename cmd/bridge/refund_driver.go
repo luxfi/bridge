@@ -1061,6 +1061,38 @@ func (d *RefundDriver) executeRefundTON(ctx context.Context, sw *Swap, walletID,
 	}
 	refundNano := balanceNano - tonRefundFeeReserveNano
 
+	// Baseline-aware cap. When swap-create snapshotted the deposit
+	// wallet's pre-existing nanoton balance, refund only the per-swap
+	// delta (balance − baseline) minus the fee reserve. Without this
+	// cap the sweep takes the operator's standing release-wallet
+	// liquidity (mpcd's TON keygen reuses the long-lived release
+	// wallet's V4R2 contract). Mirrors the XRP cap in executeRefundXRP.
+	if sw.TONSourceBaselineNanotons > 0 {
+		var deltaNano uint64
+		if balanceNano > sw.TONSourceBaselineNanotons {
+			deltaNano = balanceNano - sw.TONSourceBaselineNanotons
+		}
+		if deltaNano <= tonRefundFeeReserveNano {
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				s.LastError = fmt.Sprintf(
+					"Refund impossible: per-swap delta %d nanoTON ≤ fee reserve %d (baseline %d, current %d)",
+					deltaNano, tonRefundFeeReserveNano, sw.TONSourceBaselineNanotons, balanceNano,
+				)
+			})
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("ton refund impossible: delta ≤ reserve",
+					"swap_id", sw.ID,
+					"baseline_nano", sw.TONSourceBaselineNanotons,
+					"current_nano", balanceNano,
+					"reserve_nano", tonRefundFeeReserveNano,
+				)
+			}
+			return
+		}
+		refundNano = deltaNano - tonRefundFeeReserveNano
+	}
+
 	// Step 3 — build the unsigned V4R2 sweep.
 	unsigned, err := d.assembler.PreSignTONRefund(
 		ctx, sw.SourceNetwork, sw.DepositPubKey, depositAddr, sw.Sender, refundNano, d.tonProvider,
