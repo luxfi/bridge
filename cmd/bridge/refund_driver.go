@@ -89,6 +89,13 @@ type RefundDriver struct {
 	// signing driver's pattern.
 	xrpProvider txassembler.XRPProvider
 
+	// btcProvider supplies BTC UTXOs + recommended fees for sweeping a
+	// per-swap deposit wallet's confirmed UTXOs back to the user's
+	// source-chain BTC address. nil ⇒ BTC refunds error and the swap
+	// rolls back via the standard ceiling. Wire via SetBTCProvider for
+	// BTC-source deployments; mirrors the signing driver's pattern.
+	btcProvider txassembler.BTCProvider
+
 	// rpcOverrides shadows depositcheck's RPC URL table when querying
 	// the source-chain balance of the MPC deposit address. Operators
 	// set this via --source-rpc-overrides (same flag main.go reuses
@@ -265,6 +272,16 @@ func (d *RefundDriver) SetTONProvider(p txassembler.TONProvider) {
 // flag governs both.
 func (d *RefundDriver) SetXRPProvider(p txassembler.XRPProvider) {
 	d.xrpProvider = p
+}
+
+// SetBTCProvider attaches the BTC provider the refund driver uses to
+// list the per-swap deposit wallet's UTXOs + read the recommended fee
+// when sweeping a BTC-source deposit back to the user's BTC address.
+// nil means BTC refunds error out via the standard ceiling. Pass the
+// same *btc.Provider the signing driver gets so a single deployment
+// flag governs both.
+func (d *RefundDriver) SetBTCProvider(p txassembler.BTCProvider) {
+	d.btcProvider = p
 }
 
 // SetOrphanRefundingAfter configures the orphan-recovery threshold.
@@ -731,6 +748,8 @@ func (d *RefundDriver) executeRefund(ctx context.Context, sw *Swap, walletID, de
 		d.executeRefundTON(ctx, sw, walletID, depositAddr)
 	case mchain.AddressTypeXRP:
 		d.executeRefundXRP(ctx, sw, walletID, depositAddr)
+	case mchain.AddressTypeBTC:
+		d.executeRefundBTC(ctx, sw, walletID, depositAddr)
 	default:
 		// BTC / DOT — no refund path implemented. Leave the
 		// swap in SwapStatusRefunding with an operator-actionable
@@ -1229,6 +1248,103 @@ func (d *RefundDriver) executeRefundXRP(ctx context.Context, sw *Swap, walletID,
 			"swap_id", sw.ID,
 			"refund_tx_hash", bres.TxHash,
 			"sweep_drops", sweepDrops,
+		)
+	}
+}
+
+// executeRefundBTC is the BTC-source analog of executeRefundXRP.
+// Sweeps the per-swap deposit wallet's largest confirmed UTXO back
+// to the user's source-chain BTC address via MPC-ECDSA-signed legacy
+// P2PKH tx + mempool.space broadcast.
+//
+// Requires SetBTCProvider to have been called; without it, returns
+// an error that the standard rollback path catches. Single-input
+// sweep matches the destination release shape — multi-input UTXO
+// consolidation is a future extension.
+func (d *RefundDriver) executeRefundBTC(ctx context.Context, sw *Swap, walletID, depositAddr string) {
+	if d.btcProvider == nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("btcProvider not configured for refund of %s source", sw.SourceNetwork))
+		return
+	}
+	if sw.DepositPubKey == "" {
+		d.rollback(ctx, sw.ID, fmt.Errorf(
+			"swap %s lacks DepositPubKey (deposit wallet keygen predates BTC refund support) — manual recovery required",
+			sw.ID,
+		))
+		return
+	}
+
+	// Step 1 — build the unsigned sweep tx. PreSignBTCRefund handles
+	// UTXO selection + fee calc + sighash internally; surface its
+	// errors verbatim so "no UTXOs" / "balance ≤ fee + dust" land in
+	// LastError unedited.
+	unsigned, err := d.assembler.PreSignBTCRefund(
+		ctx, sw.SourceNetwork, sw.DepositPubKey, depositAddr, sw.Sender, d.btcProvider,
+	)
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("preSign BTC refund: %w", err))
+		return
+	}
+
+	// Step 2 — MPC ECDSA-signs the 32-byte legacy sighash. Hex
+	// encoding with 0x prefix matches the EVM family convention; the
+	// cluster returns r||s||v which BTC FinalizeBTC discards v from.
+	msgHex := "0x" + hex.EncodeToString(unsigned.SigHash[:])
+	sigCtx, cancelSig := context.WithTimeout(ctx, d.perSignTimeout)
+	res, err := d.signer.SignForWallet(sigCtx, walletID, msgHex)
+	cancelSig()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("MPC sign BTC refund: %w", err))
+		return
+	}
+
+	// Step 3 — parse the signature, reuse ParseRSV's low-s
+	// canonicalization (Bitcoin's STANDARD policy rejects high-s),
+	// reassemble r||s for FinalizeBTC.
+	r, s, _, perr := txassembler.ParseRSV(res.Signature)
+	if perr != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("parse BTC refund signature: %w", perr))
+		return
+	}
+	sigBytes := make([]byte, 64)
+	rBytes := r.Bytes()
+	sBytes := s.Bytes()
+	copy(sigBytes[32-len(rBytes):32], rBytes)
+	copy(sigBytes[64-len(sBytes):64], sBytes)
+
+	// Step 4 — finalize the raw tx hex.
+	rawHex, _, ferr := d.assembler.FinalizeBTC(unsigned, sigBytes)
+	if ferr != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("finalize BTC refund: %w", ferr))
+		return
+	}
+
+	// Step 5 — broadcast on the source chain. The broadcast client
+	// dispatches by AddressTypeFor, routes BTC to broadcastBTC which
+	// POSTs the raw hex to mempool.space and echoes the txid.
+	pushCtx, cancelPush := context.WithTimeout(ctx, d.perBroadcastTimeout)
+	bres, err := d.bcaster.Broadcast(pushCtx, sw.SourceNetwork, rawHex)
+	cancelPush()
+	if err != nil {
+		d.rollback(ctx, sw.ID, fmt.Errorf("broadcast BTC refund: %w", err))
+		return
+	}
+
+	// Step 6 — mark refunded.
+	_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		s.Status = SwapStatusRefunded
+		s.RefundTxHash = bres.TxHash
+		s.LastError = ""
+		s.LastErrorAt = time.Time{}
+		s.RefundAttempts = 0
+	})
+	d.successes.Add(1)
+	if d.logger != nil {
+		d.logger.Info("BTC refund completed",
+			"swap_id", sw.ID,
+			"refund_tx_hash", bres.TxHash,
+			"sweep_sats", unsigned.RecipientSats,
+			"fee_sats", unsigned.FeeSats,
 		)
 	}
 }
