@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hanzoai/zip"
 	"github.com/luxfi/bridge/internal/bchain"
@@ -431,6 +433,24 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		swap.ReleaseWalletID = releaseWallet.Name
 		swap.ReleaseAddress = releaseWallet.Address
 		swap.ReleasePubKey = releaseWallet.PubKeyHex
+	}
+	// For XRP source swaps, snapshot the deposit wallet's current
+	// drops balance so depositcheck.Check can do a delta comparison.
+	// mpcd's XRPL keygen reuses the long-lived release wallet's
+	// r-address, so the deposit wallet usually has a non-zero starting
+	// balance that would otherwise look like a confirmed deposit on
+	// the first poll. Baseline failures degrade gracefully to the
+	// legacy `current ≥ required` check (zero baseline).
+	if srcAddrType == mchain.AddressTypeXRP && a.depcheck != nil && depositWallet != nil {
+		baseCtx, cancelBase := context.WithTimeout(c.Context(), 8*time.Second)
+		drops, err := a.depcheck.FetchXRPDrops(baseCtx, req.SourceNetwork, depositWallet.Address)
+		cancelBase()
+		if err == nil {
+			swap.XRPSourceBaselineDrops = drops
+		} else {
+			fmt.Printf("[swap-create-warn] xrp_baseline_fetch_failed swap_pre_id=%s addr=%s err=%v (falling back to legacy current≥required check)\n",
+				req.SourceNetwork, depositWallet.Address, err)
+		}
 	}
 	if quoteRes != nil {
 		swap.ReceiveAmount = quoteRes.ReceiveAmount

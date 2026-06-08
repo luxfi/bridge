@@ -143,6 +143,17 @@ type Swap struct {
 	// the deposit-wallet Address alone is enough to construct the sweep.
 	DepositPubKey string `json:"deposit_pub_key,omitempty"`
 
+	// XRPSourceBaselineDrops is the drops balance the XRP deposit
+	// wallet held at swap-create time. Populated only for XRP source
+	// swaps. depositcheck.Check uses it as the lower bound for the
+	// per-swap delta — works around mpcd's shared address pool for
+	// XRPL ed25519 (deposit wallet == release wallet, so the pre-
+	// existing balance would otherwise false-positive as a deposit).
+	// Zero ⇒ baseline not captured (legacy swaps, non-XRP sources, or
+	// XRP source where account_info failed at create — depositcheck
+	// falls back to the v1 current ≥ required check).
+	XRPSourceBaselineDrops uint64 `json:"xrp_source_baseline_drops,omitempty"`
+
 	// Source-side observation: tx hash, confirmed amount.
 	SourceTxHash    string  `json:"source_tx_hash,omitempty"`
 	DepositedAmount float64 `json:"deposited_amount,omitempty"`

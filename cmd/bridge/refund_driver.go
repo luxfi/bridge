@@ -1188,6 +1188,40 @@ func (d *RefundDriver) executeRefundXRP(ctx context.Context, sw *Swap, walletID,
 	}
 	sweepDrops := balanceDrops - reserveDrops - feeDrops
 
+	// Baseline-aware cap. When the swap was created with a snapshot of
+	// the deposit wallet's pre-existing balance, refund only the
+	// per-swap delta (balance − baseline) instead of the entire
+	// sweepable balance. mpcd's XRPL keygen reuses the long-lived
+	// release wallet's r-address, so without this cap the refund
+	// path sweeps the operator's standing liquidity to the user.
+	// Zero baseline ⇒ legacy "sweep everything" behaviour preserved
+	// for swaps minted before the snapshot was wired.
+	if sw.XRPSourceBaselineDrops > 0 {
+		var deltaDrops uint64
+		if balanceDrops > sw.XRPSourceBaselineDrops {
+			deltaDrops = balanceDrops - sw.XRPSourceBaselineDrops
+		}
+		if deltaDrops <= feeDrops {
+			_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+				s.LastError = fmt.Sprintf(
+					"Refund impossible: per-swap delta %d drops ≤ fee %d (baseline %d, current %d)",
+					deltaDrops, feeDrops, sw.XRPSourceBaselineDrops, balanceDrops,
+				)
+			})
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("xrp refund impossible: delta ≤ fee",
+					"swap_id", sw.ID,
+					"baseline_drops", sw.XRPSourceBaselineDrops,
+					"current_drops", balanceDrops,
+					"fee_drops", feeDrops,
+				)
+			}
+			return
+		}
+		sweepDrops = deltaDrops - feeDrops
+	}
+
 	// Step 3 — build the unsigned XRPL Payment sweep.
 	unsigned, err := d.assembler.PreSignXRPRefund(
 		ctx, sw.SourceNetwork, sw.DepositPubKey, depositAddr, sw.Sender, sweepDrops, d.xrpProvider,

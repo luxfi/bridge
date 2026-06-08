@@ -182,6 +182,15 @@ type CheckParams struct {
 	Address             string
 	Asset               string
 	RequiredAmount      float64
+
+	// XRPBaselineDrops is the drops balance the XRP source deposit
+	// wallet held at swap-create time. When > 0 and the deposit
+	// network is XRPL, checkXRP compares (current − baseline) to the
+	// required amount instead of plain (current ≥ required). Fixes
+	// false-positive "deposit confirmed" when mpcd's XRPL deposit
+	// wallet shares the address pool with a long-lived release
+	// wallet that already holds funds. Zero ⇒ legacy behaviour.
+	XRPBaselineDrops uint64
 }
 
 // Check dispatches to the right per-chain probe and returns whether
@@ -207,7 +216,7 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 	case mchain.AddressTypeTON:
 		return c.checkTON(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeXRP:
-		return c.checkXRP(ctx, url, p.NetworkInternalName, p.Address, p.RequiredAmount)
+		return c.checkXRP(ctx, url, p.NetworkInternalName, p.Address, p.RequiredAmount, p.XRPBaselineDrops)
 	case mchain.AddressTypeDOT:
 		return false, ErrSubstrateNotImplemented
 	default:
