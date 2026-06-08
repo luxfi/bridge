@@ -34,6 +34,11 @@ yarn-error.log*
 # Wallet env (BIP-39 seed phrases — NEVER commit)
 wallet.env
 wallet.*.env
+# Seed-phrase screenshots — NEVER commit (BIP-39 visible in image)
+**/*seed*.PNG
+**/*seed*.png
+**/*seed*.jpg
+**/*seed*.jpeg
 .nx
 pkg/utila/dist
 .rollup.cache/
