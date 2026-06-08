@@ -79,6 +79,12 @@ type BTCUnsigned struct {
 	PrevVout      uint32
 }
 
+// estimatedRefundVsize is the vsize for a one-input single-output
+// legacy P2PKH sweep tx (what the refund path produces). Tighter
+// than the destination's two-output estimate so the user gets back
+// more of their deposit.
+const estimatedRefundVsize uint64 = 200
+
 // estimatedVsize is a conservative virtual size for our one-input
 // (P2PKH legacy) + at-most-two-output tx shape. Legacy P2PKH
 // transactions don't get the witness discount, so vsize == size:
@@ -286,6 +292,126 @@ func (a *Assembler) FinalizeBTC(u *BTCUnsigned, signature []byte) (rawHex, txid 
 		return "", "", fmt.Errorf("txassembler: BTC signature must be >= 64 bytes (r||s), got %d", len(signature))
 	}
 	return u.Inner.Finalize(signature[:64])
+}
+
+// PreSignBTCRefund builds an unsigned BTC sweep transaction returning
+// the per-swap deposit wallet's largest confirmed UTXO back to the
+// user's source-chain address. Single-input, single-output, no
+// change. UTXO consolidation (multi-input) is a future extension —
+// the current shape covers the common case of one user deposit
+// landing as one UTXO at the deposit wallet.
+//
+// Arguments mirror PreSignXRPRefund:
+//   - sourceNetwork — BITCOIN_TESTNET / BITCOIN_MAINNET (for address
+//     parameter selection + provider routing).
+//   - depositPubKeyHex — 33-byte compressed secp256k1 pubkey of the
+//     deposit wallet (from Wallet.PubKeyHex / Swap.DepositPubKey).
+//   - depositAddress — the deposit wallet's P2PKH address.
+//   - recipientAddress — user's source-chain BTC address (Swap.Sender),
+//     accepts any of P2PKH / P2SH / P2WPKH / P2WSH.
+//   - provider — BTCProvider for UTXO + fee + broadcast.
+//
+// Errors loudly when the deposit balance won't cover fee + dust so
+// the refund driver can surface a clear "manual recovery required"
+// message instead of looping signing forever.
+func (a *Assembler) PreSignBTCRefund(
+	ctx context.Context,
+	sourceNetwork, depositPubKeyHex, depositAddress, recipientAddress string,
+	provider BTCProvider,
+) (*BTCUnsigned, error) {
+	if provider == nil {
+		return nil, fmt.Errorf("txassembler: BTC provider required for refund")
+	}
+	params, ok := btc.ParamsFor(sourceNetwork)
+	if !ok {
+		return nil, fmt.Errorf("txassembler: unknown BTC network %q", sourceNetwork)
+	}
+
+	depositDecoded, err := btc.DecodeAddress(depositAddress, params)
+	if err != nil {
+		return nil, fmt.Errorf("depositAddress: %w", err)
+	}
+	if depositDecoded.Kind != btc.ScriptP2PKH {
+		return nil, fmt.Errorf("txassembler: deposit wallet must be P2PKH, got %s (%s)",
+			depositDecoded.Kind, depositAddress)
+	}
+	recipientDecoded, err := btc.DecodeAddress(recipientAddress, params)
+	if err != nil {
+		return nil, fmt.Errorf("recipientAddress: %w", err)
+	}
+
+	pubKey, err := decodeCompressedSecp256k1(depositPubKeyHex)
+	if err != nil {
+		return nil, fmt.Errorf("txassembler: deposit pubkey: %w", err)
+	}
+	if !btcHash160Match(pubKey, depositDecoded.Hash) {
+		return nil, fmt.Errorf("txassembler: deposit pubkey hash160 does not match deposit address %s", depositAddress)
+	}
+
+	utxos, err := provider.ListUTXOs(ctx, sourceNetwork, depositAddress)
+	if err != nil {
+		return nil, fmt.Errorf("ListUTXOs(%s): %w", depositAddress, err)
+	}
+	if len(utxos) == 0 {
+		return nil, fmt.Errorf("txassembler: deposit wallet %s has no confirmed UTXOs to refund", depositAddress)
+	}
+
+	fees, err := provider.RecommendedFees(ctx, sourceNetwork)
+	if err != nil {
+		return nil, fmt.Errorf("RecommendedFees: %w", err)
+	}
+	feeRate := fees.HalfHour
+	if feeRate == 0 {
+		feeRate = 1
+	}
+	feeSats := feeRate * estimatedRefundVsize
+	if feeSats < 250 {
+		feeSats = 250 // upstream min relay
+	}
+
+	// Sweep the largest UTXO (ListUTXOs returns descending-by-value).
+	spend := utxos[0]
+	if spend.Value <= feeSats+minRecipientSats {
+		return nil, fmt.Errorf(
+			"txassembler: largest UTXO %d sats <= fee %d + dust %d — refund value would be dust",
+			spend.Value, feeSats, minRecipientSats,
+		)
+	}
+	sweepAmount := spend.Value - feeSats
+
+	prevTxIDBytes, err := hex.DecodeString(spend.TxID)
+	if err != nil || len(prevTxIDBytes) != 32 {
+		return nil, fmt.Errorf("txassembler: invalid UTXO txid %q", spend.TxID)
+	}
+	var prevTxID [32]byte
+	copy(prevTxID[:], prevTxIDBytes)
+
+	// No change output — refund sweeps everything to recipient.
+	pay := &btc.Payment{
+		PrevTxID:        prevTxID,
+		PrevVout:        spend.Vout,
+		PrevValue:       spend.Value,
+		PrevScript:      depositDecoded.ScriptPubKey,
+		PubKey:          pubKey,
+		RecipientScript: recipientDecoded.ScriptPubKey,
+		RecipientValue:  sweepAmount,
+	}
+	sigHash, err := pay.SigHash()
+	if err != nil {
+		return nil, fmt.Errorf("SigHash (refund): %w", err)
+	}
+
+	return &BTCUnsigned{
+		Network:       sourceNetwork,
+		Inner:         pay,
+		SigHash:       sigHash,
+		Recipient:     recipientAddress,
+		RecipientSats: sweepAmount,
+		ChangeSats:    0,
+		FeeSats:       feeSats,
+		PrevTxID:      spend.TxID,
+		PrevVout:      spend.Vout,
+	}, nil
 }
 
 // decodeCompressedSecp256k1 parses a hex-encoded 33-byte compressed

@@ -991,6 +991,15 @@ func main() {
 			xrpClient := xrp.NewProvider(*xrpRPCMainnetURL, *xrpRPCTestnetURL, *xrpRPCTimeout)
 			refundDriver.SetXRPProvider(xrpClient)
 		}
+		// BTC refund provider: parallel to XRP/TON. Same *btc.Provider
+		// the signing driver uses — single config governs both X→BTC
+		// release sweep and BTC→X refund sweep. nil here would make
+		// BTC-source refunds error and roll back via the standard
+		// ceiling.
+		if *btcRPCMainnetURL != "" || *btcRPCTestnetURL != "" {
+			btcClient := btcprov.NewProvider(*btcRPCMainnetURL, *btcRPCTestnetURL, *btcRPCTimeout)
+			refundDriver.SetBTCProvider(btcClient)
+		}
 		api.SetRefundDriver(refundDriver)
 		go func() {
 			_ = refundDriver.Run(refundCtx)
