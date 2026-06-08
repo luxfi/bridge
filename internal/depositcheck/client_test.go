@@ -725,6 +725,119 @@ func TestCheck_XRP_FixUnaffectedByTONBaselineField(t *testing.T) {
 }
 
 // =============================================================================
+// SOL baseline tests (mirror XRP/TON — surfaced live 2026-06-08 via a
+// deliberate no-deposit SOL→LUX swap that auto-completed and paid LUX
+// to the user without any SOL having been sent).
+// =============================================================================
+
+// Baseline = current SOL balance: the wallet-pool collision scenario
+// where the per-swap deposit wallet's pubkey equals the long-lived
+// release-wallet pubkey. Without the fix this auto-confirmed.
+func TestCheck_SOL_BaselineRejectsPreExistingBalance(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 5 SOL already in the wallet (5e9 lamports).
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0",
+			"id":      1,
+			"result":  map[string]any{"value": 5_000_000_000},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"SOLANA_DEVNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "SOLANA_DEVNET",
+		RequiredAmount:      0.01,
+		SOLBaselineLamports: 5_000_000_000, // baseline = current → delta is 0
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("baseline=current must reject — delta is 0, below required")
+	}
+}
+
+// Baseline + a new deposit accepts: delta meets required.
+func TestCheck_SOL_BaselineAcceptsNewDeposit(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 5 + 0.01 SOL after a deposit landed.
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0",
+			"id":      1,
+			"result":  map[string]any{"value": 5_010_000_000},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"SOLANA_DEVNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "SOLANA_DEVNET",
+		RequiredAmount:      0.01,
+		SOLBaselineLamports: 5_000_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatal("delta 0.01 SOL should clear required")
+	}
+}
+
+// Underflow guard: baseline > current must not arithmetic-confirm.
+func TestCheck_SOL_BaselineUnderflowReturnsZero(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0",
+			"id":      1,
+			"result":  map[string]any{"value": 1_000_000_000},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"SOLANA_DEVNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "SOLANA_DEVNET",
+		RequiredAmount:      0.5,
+		SOLBaselineLamports: 5_000_000_000, // baseline > current
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("baseline > current must not confirm; delta should clamp to 0")
+	}
+}
+
+// Regression guard: XRP/TON fixes must be unaffected by the SOL
+// additions. Zero SOL baseline + non-zero XRP baseline still routes
+// through the XRP delta check; the new SOL field must not interfere.
+func TestCheck_XRP_FixUnaffectedBySOLBaselineField(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{
+				"account_data": map[string]any{"Balance": "100000000"},
+				"status":       "success",
+			},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"XRP_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "XRP_TESTNET",
+		RequiredAmount:      1.5,
+		XRPBaselineDrops:    100_000_000, // baseline = current → delta is 0
+		SOLBaselineLamports: 999_999,     // unrelated SOL field — must be ignored
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("XRP delta check must still reject; SOL field must not interfere")
+	}
+}
+
+// =============================================================================
 // Unsupported
 // =============================================================================
 

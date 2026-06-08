@@ -200,6 +200,19 @@ type CheckParams struct {
 	// required amount instead of plain (current ≥ required). Zero ⇒
 	// legacy behaviour (preserves v1 for pre-baseline swaps).
 	TONBaselineNanotons uint64
+
+	// SOLBaselineLamports mirrors XRPBaselineDrops/TONBaselineNanotons
+	// for SOL sources. mpcd-single's HKDF-derived SOL keygen falls into
+	// the same shared-address-pool pattern: the per-swap "deposit"
+	// wallet returned for a SOL→X swap is the SAME public key as the
+	// long-lived X→SOL release wallet, so the standing release-wallet
+	// liquidity false-positives the deposit check. When > 0 and the
+	// source is SOL, checkSOL compares (current − baseline) to required
+	// instead of plain (current ≥ required). Zero ⇒ legacy behaviour.
+	// Surfaced live 2026-06-08 by a deliberate no-deposit SOL→LUX swap
+	// that auto-completed and paid 0.268 LUX to the user without any
+	// SOL having been sent — see project_lux_sol_solbaseline memory.
+	SOLBaselineLamports uint64
 }
 
 // Check dispatches to the right per-chain probe and returns whether
@@ -221,7 +234,7 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 		// TON shares the SOL slot in mchain — but the deposit-check
 		// protocols are completely different (RPC vs REST), so we
 		// route by network → AddressType, not by SOL/TON family.
-		return c.checkSOL(ctx, url, p.Address, p.Asset, p.RequiredAmount)
+		return c.checkSOL(ctx, url, p.Address, p.Asset, p.RequiredAmount, p.SOLBaselineLamports)
 	case mchain.AddressTypeTON:
 		return c.checkTON(ctx, url, p.Address, p.RequiredAmount, p.TONBaselineNanotons)
 	case mchain.AddressTypeXRP:
@@ -409,7 +422,16 @@ func (c *Client) checkBTC(ctx context.Context, apiBase, address string, required
 // Solana — JSON-RPC `getBalance`
 // =============================================================================
 
-func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, requiredAmount float64) (bool, error) {
+// checkSOL polls Solana's `getBalance` JSON-RPC for the deposit
+// wallet and compares the result to requiredAmount.
+//
+// baselineLamports (added 2026-06-08, parallel to XRP/TON) is the
+// deposit wallet's lamport balance at swap-create time. When > 0 the
+// check uses (current − baseline) ≥ required so a shared-address-pool
+// deposit wallet doesn't false-positive on the pre-existing
+// release-wallet liquidity. Zero baseline → legacy current ≥ required
+// for back-compat with swaps minted before the snapshot was wired.
+func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, requiredAmount float64, baselineLamports uint64) (bool, error) {
 	type solBalanceResp struct {
 		Result struct {
 			Value uint64 `json:"value"`
@@ -428,8 +450,51 @@ func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, r
 		return false, fmt.Errorf("depositcheck: solana getBalance rpc %d: %s",
 			resp.Error.Code, resp.Error.Message)
 	}
-	balSol := float64(resp.Result.Value) / 1e9
+	balLamports := resp.Result.Value
+	if baselineLamports > 0 {
+		var deltaLamports uint64
+		if balLamports > baselineLamports {
+			deltaLamports = balLamports - baselineLamports
+		}
+		deltaSol := float64(deltaLamports) / 1e9
+		return deltaSol >= requiredAmount, nil
+	}
+	balSol := float64(balLamports) / 1e9
 	return balSol >= requiredAmount, nil
+}
+
+// FetchSOLLamports returns the current lamport balance at a Solana
+// address. Used by the swap-create handler to snapshot the deposit
+// wallet's balance into Swap.SOLSourceBaselineLamports so that
+// subsequent depositcheck.checkSOL calls can apply a delta-based
+// confirmation (vs the legacy current ≥ required which false-positives
+// when mpcd's keygen returns the long-lived release-wallet address as
+// the per-swap deposit wallet). Returns 0 (not an error) when the
+// account hasn't been touched yet — same shape as the equivalent
+// XRP/TON helpers.
+func (c *Client) FetchSOLLamports(ctx context.Context, network, address string) (uint64, error) {
+	url := c.rpcURL(network)
+	if url == "" {
+		return 0, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, network)
+	}
+	type solBalanceResp struct {
+		Result struct {
+			Value uint64 `json:"value"`
+		} `json:"result"`
+		Error *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error,omitempty"`
+	}
+	var resp solBalanceResp
+	if err := c.jsonRPC(ctx, url, "getBalance", []any{address}, &resp); err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, fmt.Errorf("depositcheck: solana getBalance rpc %d: %s",
+			resp.Error.Code, resp.Error.Message)
+	}
+	return resp.Result.Value, nil
 }
 
 // =============================================================================

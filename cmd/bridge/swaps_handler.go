@@ -465,6 +465,20 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 				req.SourceNetwork, depositWallet.Address, err)
 		}
 	}
+	// Same snapshot for SOL source swaps — mpcd-single's ed25519
+	// keygen has the same shared-address-pool quirk (deposit wallet
+	// pubkey == long-lived SOL release wallet pubkey).
+	if srcAddrType == mchain.AddressTypeSOL && a.depcheck != nil && depositWallet != nil {
+		baseCtx, cancelBase := context.WithTimeout(c.Context(), 8*time.Second)
+		lamports, err := a.depcheck.FetchSOLLamports(baseCtx, req.SourceNetwork, depositWallet.Address)
+		cancelBase()
+		if err == nil {
+			swap.SOLSourceBaselineLamports = lamports
+		} else {
+			fmt.Printf("[swap-create-warn] sol_baseline_fetch_failed swap_pre_id=%s addr=%s err=%v (falling back to legacy current≥required check)\n",
+				req.SourceNetwork, depositWallet.Address, err)
+		}
+	}
 	if quoteRes != nil {
 		swap.ReceiveAmount = quoteRes.ReceiveAmount
 		swap.MinReceiveAmount = quoteRes.MinReceiveAmount
