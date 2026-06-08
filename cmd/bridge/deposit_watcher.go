@@ -329,6 +329,7 @@ func (w *DepositWatcher) checkOne(ctx context.Context, sw *Swap) {
 		Address:             addr,
 		Asset:               sw.SourceAsset,
 		RequiredAmount:      sw.Amount,
+		XRPBaselineDrops:    sw.XRPSourceBaselineDrops,
 	})
 	if err != nil {
 		w.checkErrors.Add(1)

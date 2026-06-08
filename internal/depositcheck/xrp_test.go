@@ -147,6 +147,86 @@ func TestCheck_XRP_OtherErrorSurfaces(t *testing.T) {
 	}
 }
 
+// Baseline > 0 enforces a delta check: wallet must have GAINED at
+// least requiredAmount drops since the snapshot, not just hold them.
+// Fixes the shared-wallet-pool false-positive where the deposit
+// address already holds release-wallet liquidity.
+func TestCheck_XRP_BaselineRejectsPreExistingBalance(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 100 XRP already in the wallet — would pass the v1 check.
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{
+				"account_data": map[string]any{"Balance": "100000000"},
+				"status":       "success",
+			},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"XRP_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "XRP_TESTNET",
+		RequiredAmount:      1.5,
+		XRPBaselineDrops:    100_000_000, // baseline = current → delta is 0
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("baseline=current must reject — delta is 0, well below the 1.5 XRP required")
+	}
+}
+
+// Baseline + an actual incoming deposit passes: delta meets required.
+func TestCheck_XRP_BaselineAcceptsNewDeposit(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 100 + 2 XRP after a deposit landed.
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{
+				"account_data": map[string]any{"Balance": "102000000"},
+				"status":       "success",
+			},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"XRP_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "XRP_TESTNET",
+		RequiredAmount:      1.5,
+		XRPBaselineDrops:    100_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatal("delta 2.0 XRP should clear the 1.5 XRP required")
+	}
+}
+
+// Underflow guard: baseline > current must not arithmetic-confirm.
+func TestCheck_XRP_BaselineUnderflowReturnsZero(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{
+				"account_data": map[string]any{"Balance": "50000000"},
+				"status":       "success",
+			},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"XRP_TESTNET": srv.URL}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "XRP_TESTNET",
+		RequiredAmount:      1.5,
+		XRPBaselineDrops:    100_000_000, // higher than current — wallet was DEBITED
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("baseline > current must not confirm; delta should clamp to 0")
+	}
+}
+
 // XRP URLs must be in the default rpcURLs table.
 func TestCheck_XRP_DefaultURLConfigured(t *testing.T) {
 	if RPCURLFor("XRP_MAINNET") == "" {

@@ -40,7 +40,13 @@ const xrpDropsPerXRP float64 = 1_000_000
 //     diagnostics in the surfaced error, not used to route.
 //   - address — the r-address to query.
 //   - requiredAmountXRP — the user's required deposit in human XRP.
-func (c *Client) checkXRP(ctx context.Context, rpcURL, network, address string, requiredAmountXRP float64) (bool, error) {
+//   - baselineDrops — drops balance at swap-create time. When > 0,
+//     the check uses (current − baseline) ≥ required so a deposit
+//     wallet that shares the address pool with a long-lived release
+//     wallet doesn't false-positive on the pre-existing balance.
+//     Zero ⇒ legacy (current ≥ required) — preserves behaviour for
+//     callers that haven't migrated to the snapshot.
+func (c *Client) checkXRP(ctx context.Context, rpcURL, network, address string, requiredAmountXRP float64, baselineDrops uint64) (bool, error) {
 	if mchain.AddressTypeFor(network) != mchain.AddressTypeXRP {
 		// Defensive: dispatcher should have routed correctly already.
 		return false, fmt.Errorf("depositcheck: checkXRP called for non-XRP network %s", network)
@@ -84,6 +90,71 @@ func (c *Client) checkXRP(ctx context.Context, rpcURL, network, address string, 
 		return false, fmt.Errorf("depositcheck: xrp %s parse balance %q: %w",
 			network, resp.Result.AccountData.Balance, err)
 	}
+	// Apply the per-swap baseline when supplied. A baseline > current
+	// balance means the wallet was DEBITED since the snapshot (refund,
+	// XRPL reserve adjustment, etc.) — treat that as zero so the
+	// caller never sees a spurious "confirmed" from arithmetic
+	// underflow. Plain current ≥ required preserved when no baseline
+	// is set, matching the v1 behaviour exactly.
+	if baselineDrops > 0 {
+		var deltaDrops uint64
+		if drops > baselineDrops {
+			deltaDrops = drops - baselineDrops
+		}
+		deltaXRP := float64(deltaDrops) / xrpDropsPerXRP
+		return deltaXRP >= requiredAmountXRP, nil
+	}
 	balanceXRP := float64(drops) / xrpDropsPerXRP
 	return balanceXRP >= requiredAmountXRP, nil
+}
+
+// FetchXRPDrops returns the current drops balance for an XRPL account.
+// Used by the swap-create handler to snapshot a per-swap baseline for
+// XRP source swaps (see CheckParams.XRPBaselineDrops). The RPC URL is
+// resolved via the same overrides → public-table fallback the rest of
+// the package uses.
+//
+// actNotFound (a never-funded account) returns 0 cleanly. Real upstream
+// failures return an error so the caller can fall back to a 0 baseline
+// (legacy behaviour) without silently corrupting the snapshot.
+func (c *Client) FetchXRPDrops(ctx context.Context, network, address string) (uint64, error) {
+	if mchain.AddressTypeFor(network) != mchain.AddressTypeXRP {
+		return 0, fmt.Errorf("depositcheck: FetchXRPDrops called for non-XRP network %s", network)
+	}
+	rpcURL := c.rpcURL(network)
+	if rpcURL == "" {
+		return 0, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, network)
+	}
+	type accountData struct {
+		Balance string `json:"Balance"`
+	}
+	type xrpResult struct {
+		AccountData accountData `json:"account_data"`
+		Status      string      `json:"status"`
+		Error       string      `json:"error"`
+	}
+	type envelope struct {
+		Result xrpResult `json:"result"`
+	}
+	var resp envelope
+	if err := c.jsonRPC(ctx, rpcURL, "account_info", []any{
+		map[string]any{
+			"account":      address,
+			"ledger_index": "validated",
+		},
+	}, &resp); err != nil {
+		return 0, fmt.Errorf("depositcheck: xrp %s FetchXRPDrops: %w", network, err)
+	}
+	if resp.Result.Error == "actNotFound" {
+		return 0, nil
+	}
+	if resp.Result.Status == "error" || resp.Result.Error != "" {
+		return 0, fmt.Errorf("depositcheck: xrp %s FetchXRPDrops: %s", network, resp.Result.Error)
+	}
+	drops, err := strconv.ParseUint(resp.Result.AccountData.Balance, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("depositcheck: xrp %s parse balance %q: %w",
+			network, resp.Result.AccountData.Balance, err)
+	}
+	return drops, nil
 }
