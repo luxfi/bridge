@@ -459,6 +459,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		case mchain.AddressTypeETH:
 			u, aerr := d.assembler.PreSign(ctx, txassembler.SwapIntent{
 				DestinationNetwork: sw.DestinationNetwork,
+				DestinationAsset:   sw.DestinationAsset,
 				DestinationAddress: sw.DestinationAddress,
 				Amount:             releaseAmount(sw),
 				SenderAddress:      senderAddr,
