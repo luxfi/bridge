@@ -31,6 +31,9 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+# Wallet env (BIP-39 seed phrases — NEVER commit)
+wallet.env
+wallet.*.env
 .nx
 pkg/utila/dist
 .rollup.cache/

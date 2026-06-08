@@ -493,6 +493,14 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 			}
 		}
 		pubKeyHex = hexKey
+	} else if addrType == AddressTypeBTC {
+		// Capture the compressed secp256k1 pubkey so the BTC
+		// destination-release path (internal/txassembler/btc.go) can
+		// build a legacy P2PKH scriptSig. The cluster always returns
+		// it on ECDSA keygens regardless of family. Without this the
+		// signing driver's BTC case errors out with
+		// "release wallet predates pubkey capture".
+		pubKeyHex = result.ECDSAPubKey
 	} else if addrType == AddressTypeXRP {
 		// XRP r-address derivation: SHA-256 → RIPEMD-160 of (0xED ||
 		// pubkey), base58 with Ripple alphabet. r-addresses are

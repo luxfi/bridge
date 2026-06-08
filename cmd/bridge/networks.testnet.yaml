@@ -252,17 +252,20 @@ tokens:
   #     the SOL keygen slot pending its own ed25519 derivation.
   # Once each gap closes (mpcd FROST + BTC testnet encoding), flip
   # isDepositEnabled back to true per token.
-  # BTC source-only: deposit re-enabled 2026-05-28 once the bridge-side
+  # BTC source: deposit re-enabled 2026-05-28 once the bridge-side
   # mainnet→testnet address re-encoder landed (internal/mchain/btc_address.go).
   # mpcd still returns mainnet-format P2PKH; the bridge converts locally.
-  # Withdrawal remains disabled — settlement on Bitcoin still requires
-  # Schnorr signing in mpcd + a btc tx assembler (§13.6 step 6 / §13.7 G1).
+  # BTC destination: withdrawal enabled 2026-06-08 — P2PKH-input legacy
+  # sighash + secp256k1 ECDSA (same primitive the EVM path uses, no new
+  # mpcd work needed). See internal/btc/ and internal/txassembler/btc.go.
+  # P2TR (Taproot) outputs / inputs still need Schnorr — deferred behind
+  # the cluster-FROST epic (#112).
   - asset: BTC
     name: Bitcoin
     decimals: 8
     network: BITCOIN_TESTNET
     isDepositEnabled: true
-    isWithdrawalEnabled: false
+    isWithdrawalEnabled: true
 
   - asset: SOL
     name: Solana

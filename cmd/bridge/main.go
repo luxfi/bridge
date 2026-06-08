@@ -53,6 +53,7 @@ import (
 	"github.com/luxfi/bridge/internal/secrets"
 	"github.com/luxfi/bridge/internal/solanarpc"
 	"github.com/luxfi/bridge/internal/tokens"
+	btcprov "github.com/luxfi/bridge/internal/btc"
 	"github.com/luxfi/bridge/internal/ton"
 	"github.com/luxfi/bridge/internal/xrp"
 	"github.com/luxfi/bridge/internal/txassembler"
@@ -322,6 +323,12 @@ func main() {
 		"XRPL JSON-RPC base URL used by the signing driver for XRP_TESTNET releases. Defaults to the canonical faucet-funded altnet.")
 	xrpRPCTimeout := flag.Duration("xrp-rpc-timeout", 15*time.Second,
 		"per-request timeout for XRP RPC calls (account_info + submit). 15s default matches the broadcast client; tune lower if your endpoint is fast and reliable.")
+	btcRPCMainnetURL := flag.String("btc-rpc-mainnet-url", envOr("BRIDGE_BTC_RPC_MAINNET_URL", "https://mempool.space/api"),
+		"mempool.space REST API base URL used by the signing driver for BITCOIN_MAINNET releases (ListUTXOs + RecommendedFees + Broadcast). Default is the public mempool.space endpoint. Override with a self-hosted mempool/Bitcoin Core REST proxy for throughput. Empty disables BITCOIN_MAINNET destinations.")
+	btcRPCTestnetURL := flag.String("btc-rpc-testnet-url", envOr("BRIDGE_BTC_RPC_TESTNET_URL", "https://mempool.space/testnet/api"),
+		"mempool.space REST API base URL used by the signing driver for BITCOIN_TESTNET releases. Defaults to the public testnet3 endpoint.")
+	btcRPCTimeout := flag.Duration("btc-rpc-timeout", 20*time.Second,
+		"per-request timeout for BTC RPC calls (UTXO list + fee read + broadcast). 20s default — mempool.space's testnet is occasionally slow.")
 	corsAllowOrigins := flag.String("cors-allow-origins", envOr("BRIDGE_CORS_ALLOW_ORIGINS", ""),
 		"Comma-separated allow-list of Origin values to advertise via Access-Control-Allow-Origin. Empty (default) leaves the bridge same-origin only — the production deployment serves the SPA from the same domain and doesn't need CORS. Use `*` for permissive cross-origin (smoke testing, dev tunnels) or a specific list (e.g. `https://app.example.com,https://staging.example.com`) for cross-origin SPA hosts. Toggling this on enables an OPTIONS preflight responder for every route.")
 	mpcURL := flag.String("mpc-url", envOr("BRIDGE_MPC_URL", ""),
@@ -666,6 +673,7 @@ func main() {
 	//   --release-wallets-file unset AND
 	//     --data-dir set                  → <data-dir>/release-wallets.json
 	//   both unset                        → in-memory (lossy on restart)
+	var releaseStoreForResolver *mchain.FileReleaseStore
 	if mchainPool != nil {
 		releasePath := *releaseFile
 		if releasePath == "" && *dataDir != "" {
@@ -690,6 +698,11 @@ func main() {
 				"path", releasePath,
 			)
 		}
+		// Keep a reference so the signing driver (constructed later)
+		// can resolve a release wallet's pubkey when sw.ReleasePubKey
+		// is empty — true for BTC swaps created before AddressTypeBTC
+		// keygens started populating PubKeyHex.
+		releaseStoreForResolver = releaseStore
 	} else {
 		logger.Info("release wallet store skipped — no --mpc-url configured")
 	}
@@ -819,6 +832,38 @@ func main() {
 			)
 		} else {
 			logger.Info("xrp provider not configured — X→XRP releases will fail PreSign and refund")
+		}
+
+		// BTC provider: parallel to XRP/TON. Default URLs are
+		// mempool.space mainnet + testnet REST APIs, so this always
+		// fires on default config. signing_driver.go's BTC case fails
+		// fast when the provider is nil so a misconfigured deploy
+		// doesn't silently strand BTC-destination swaps.
+		if *btcRPCMainnetURL != "" || *btcRPCTestnetURL != "" {
+			btcClient := btcprov.NewProvider(*btcRPCMainnetURL, *btcRPCTestnetURL, *btcRPCTimeout)
+			signer.SetBTCProvider(btcClient)
+			logger.Info("btc provider attached to signer",
+				"mainnet_url", btcClient.MainnetURL,
+				"testnet_url", btcClient.TestnetURL,
+				"timeout", *btcRPCTimeout,
+			)
+		} else {
+			logger.Info("btc provider not configured — X→BTC releases will fail PreSign and refund")
+		}
+
+		// Back-compat fallback: when sw.ReleasePubKey is empty (true
+		// for any BTC swap created before AddressTypeBTC keygens
+		// started populating PubKeyHex), the signing driver consults
+		// this resolver. New swaps remain unaffected — their pubkey
+		// is captured at create time and the resolver never fires.
+		if releaseStoreForResolver != nil {
+			signer.SetReleasePubKeyResolver(func(network string) (string, error) {
+				w, err := releaseStoreForResolver.GetOrCreate(context.Background(), network)
+				if err != nil {
+					return "", err
+				}
+				return w.PubKeyHex, nil
+			})
 		}
 
 		// Layered-cosigner gate (Utila / Fireblocks). Defaults to ON so

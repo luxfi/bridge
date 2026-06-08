@@ -87,8 +87,13 @@ var rpcURLs = map[string]string{
 	// for higher throughput or private nodes.
 	"XRP_MAINNET": "https://xrplcluster.com",
 	"XRP_TESTNET": "https://s.altnet.rippletest.net:51234",
-	// BTC / DOT still TODO — each needs a chain-specific broadcast
-	// handler (Bitcoin REST API, etc.).
+	// BTC — mempool.space REST API. `POST {base}/tx` accepts raw hex
+	// directly. Operators override via RPCURLOverrides for higher
+	// rate limits (mempool.space free tier is generous but capped).
+	"BITCOIN_MAINNET":  "https://mempool.space/api",
+	"BITCOIN_TESTNET":  "https://mempool.space/testnet/api",
+	"BITCOIN_TESTNET3": "https://mempool.space/testnet/api",
+	// DOT still TODO — needs a Substrate RPC adapter.
 }
 
 // RPCURLFor returns the configured upstream URL for a network. "" if
@@ -103,9 +108,9 @@ func RPCURLFor(network string) string { return rpcURLs[network] }
 var ErrUnsupportedNetwork = errors.New("broadcast: unsupported network")
 
 // ErrFamilyNotImplemented — the network's address-family broadcaster
-// isn't implemented yet (BTC, DOT). EVM, Solana, TON, and XRP are
+// isn't implemented yet (DOT). EVM, Solana, TON, XRP, and BTC are
 // implemented.
-var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (EVM, Solana, TON, XRP today)")
+var ErrFamilyNotImplemented = errors.New("broadcast: family not implemented (EVM, Solana, TON, XRP, BTC today)")
 
 // ErrEmptyRawTx — the caller passed an empty rawTxHex. Surfacing
 // this distinctly so the broadcast driver can tell "missing tx
@@ -232,6 +237,8 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTx string) (*Broadca
 		return c.broadcastTON(ctx, url, rawTx)
 	case mchain.AddressTypeXRP:
 		return c.broadcastXRP(ctx, network, url, rawTx)
+	case mchain.AddressTypeBTC:
+		return c.broadcastBTC(ctx, url, rawTx)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrFamilyNotImplemented, network)
 	}

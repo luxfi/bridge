@@ -103,6 +103,22 @@ type SigningDriver struct {
 	// PreSign error that the rollback path catches.
 	xrpProvider txassembler.XRPProvider
 
+	// btcProvider supplies BTC UTXOs + recommended fees and POSTs the
+	// signed raw hex tx to the upstream node (mempool.space). Required
+	// when ANY swap targets a BITCOIN_* network; ignored otherwise.
+	// Implemented by *btc.Provider in production. Nil + BTC destination
+	// triggers a PreSign error that the rollback path catches.
+	btcProvider txassembler.BTCProvider
+
+	// releasePubKeyResolver is the back-compat fallback used when a swap
+	// row's ReleasePubKey field is empty — true for any BTC swap created
+	// before AddressTypeBTC keygens started capturing the secp256k1
+	// pubkey. main.go wires it to releaseStore.Get; nil keeps the strict
+	// behaviour (swap fails fast on missing pubkey). Only the BTC case
+	// consults this today; other families have populated the pubkey
+	// since their respective destination work landed.
+	releasePubKeyResolver func(network string) (string, error)
+
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
 	// headroom — matches the mchain client's keygen timeout.
@@ -171,6 +187,21 @@ func (d *SigningDriver) SetSolanaProvider(p txassembler.SolanaProvider) { d.sola
 // otherwise. EVM-only / SOL-only deployments can leave this nil and
 // the signing driver behaves identically to the pre-TON version.
 func (d *SigningDriver) SetTONProvider(p txassembler.TONProvider) { d.tonProvider = p }
+
+// SetBTCProvider attaches the BTC provider used when a swap targets a
+// BITCOIN_* destination. Required for X→BTC releases; ignored
+// otherwise. EVM-only deployments can leave this nil and the signing
+// driver behaves identically to the pre-BTC version.
+func (d *SigningDriver) SetBTCProvider(p txassembler.BTCProvider) { d.btcProvider = p }
+
+// SetReleasePubKeyResolver attaches a fallback lookup the signing
+// driver uses when sw.ReleasePubKey is empty — true for BTC swaps
+// created before mchain learned to capture the secp256k1 pubkey
+// on AddressTypeBTC keygens. main.go wires this to
+// releaseStore.Get(network).PubKeyHex.
+func (d *SigningDriver) SetReleasePubKeyResolver(fn func(network string) (string, error)) {
+	d.releasePubKeyResolver = fn
+}
 
 // SetXRPProvider attaches the XRPL JSON-RPC provider used when a swap
 // targets an XRP_* destination. Required for X→XRP releases; ignored
@@ -420,6 +451,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		unsignedSol *txassembler.SolanaUnsigned // populated for Solana destinations
 		unsignedTON *txassembler.TONUnsigned    // populated for TON destinations
 		unsignedXRP *txassembler.XRPUnsigned    // populated for XRP destinations
+		unsignedBTC *txassembler.BTCUnsigned    // populated for BTC destinations
 	)
 	if d.assembler != nil && senderAddr != "" {
 		family := mchain.AddressTypeFor(sw.DestinationNetwork)
@@ -576,6 +608,68 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 			}
 			unsignedXRP = u
 			msgHex = hex.EncodeToString(u.SigningBytes)
+		case mchain.AddressTypeBTC:
+			if d.btcProvider == nil {
+				err := fmt.Errorf("btcProvider not configured for %s", sw.DestinationNetwork)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("BTC provider missing", "swap_id", sw.ID, "err", err)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"BTC provider not configured — retrying",
+					"PreSignBTC")
+				return
+			}
+			// Pull the release pubkey from the swap row, falling back
+			// to the release-wallet store for swaps created before
+			// AddressTypeBTC keygens started populating PubKeyHex.
+			releasePubKey := sw.ReleasePubKey
+			if releasePubKey == "" && d.releasePubKeyResolver != nil {
+				if k, rerr := d.releasePubKeyResolver(sw.DestinationNetwork); rerr == nil && k != "" {
+					releasePubKey = k
+					if d.logger != nil {
+						d.logger.Info("BTC release pubkey recovered from wallet store",
+							"swap_id", sw.ID, "network", sw.DestinationNetwork)
+					}
+				}
+			}
+			if releasePubKey == "" {
+				err := fmt.Errorf("swap %s lacks ReleasePubKey (release wallet keygen predates BTC support)", sw.ID)
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("BTC release pubkey missing — re-mint required",
+						"swap_id", sw.ID, "release_wallet_id", sw.ReleaseWalletID)
+				}
+				d.rollbackOrFail(ctx, sw.ID, err,
+					"BTC release wallet predates pubkey capture — delete release-wallets.json BTC entry to re-mint",
+					"PreSignBTC")
+				return
+			}
+			u, aerr := d.assembler.PreSignBTC(ctx, txassembler.SwapIntent{
+				DestinationNetwork: sw.DestinationNetwork,
+				DestinationAsset:   sw.DestinationAsset,
+				DestinationAddress: sw.DestinationAddress,
+				Amount:             releaseAmount(sw),
+				SenderAddress:      senderAddr,
+			}, d.btcProvider, releasePubKey)
+			if aerr != nil {
+				d.failures.Add(1)
+				if d.logger != nil {
+					d.logger.Warn("tx assembler PreSignBTC failed",
+						"swap_id", sw.ID,
+						"err", aerr,
+					)
+				}
+				d.rollbackOrFail(ctx, sw.ID, aerr,
+					"BTC RPC unreachable or release wallet unfunded — retrying",
+					"PreSignBTC")
+				return
+			}
+			unsignedBTC = u
+			// Pass the raw 32-byte legacy sighash. The MPC cluster's
+			// secp256k1 ECDSA signer hashes nothing extra — it signs the
+			// bytes verbatim, same as the EVM path.
+			msgHex = "0x" + hex.EncodeToString(u.SigHash[:])
 		default:
 			err := fmt.Errorf("tx assembly not implemented for %s family (network %s)",
 				family, sw.DestinationNetwork)
@@ -783,6 +877,56 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		// submit RPC expects. The broadcast client passes it through
 		// to xrp.Provider.SubmitBlob verbatim.
 		destRawTx = blob
+
+	case unsignedBTC != nil:
+		// MPC cluster returns the secp256k1 ECDSA sig as hex
+		// (r||s||v, same shape as the EVM path). We discard `v`
+		// because Bitcoin doesn't use recovery bytes — Finalize
+		// only needs r||s. ParseRSV happens to also low-s
+		// canonicalize, which Bitcoin's STANDARD policy requires,
+		// so reuse it instead of doing the math twice.
+		r, s, _, perr := txassembler.ParseRSV(res.Signature)
+		if perr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("parse MPC signature failed (BTC)",
+					"swap_id", sw.ID,
+					"err", perr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		// Recompose r||s as a 64-byte big-endian blob for FinalizeBTC.
+		sigBytes := make([]byte, 64)
+		rBytes := r.Bytes()
+		sBytes := s.Bytes()
+		copy(sigBytes[32-len(rBytes):32], rBytes)
+		copy(sigBytes[64-len(sBytes):64], sBytes)
+		rawHex, _, ferr := d.assembler.FinalizeBTC(unsignedBTC, sigBytes)
+		if ferr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("tx assembler FinalizeBTC failed",
+					"swap_id", sw.ID,
+					"err", ferr,
+				)
+			}
+			_, _ = d.store.Patch(ctx, sw.ID, func(swp *Swap) {
+				if swp.Status == SwapStatusSigning {
+					swp.Status = SwapStatusBridgeTransferPending
+				}
+			})
+			return
+		}
+		// FinalizeBTC returns wire-form hex (no 0x prefix). The BTC
+		// broadcast handler accepts either form — strips an optional
+		// 0x — so we pass it through unmodified.
+		destRawTx = rawHex
 	}
 
 	// Layered-cosigner gate. If the SDK declared external cosigners
