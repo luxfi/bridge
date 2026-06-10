@@ -90,7 +90,7 @@ export const zooMainnet = defineChain({
   id: 200200,
   name: 'Zoo',
   nativeCurrency: { decimals: 18, name: 'Zoo', symbol: 'ZOO' },
-  rpcUrls: { default: { http: ['https://api.zoo.network/ext/bc/Z/rpc'] } },
+  rpcUrls: { default: { http: ['https://api.zoo.network/ext/bc/zoo/rpc'] } },
   blockExplorers: {
     default: { name: 'Zoo Explorer', url: 'https://explore.zoo.network' },
   },
@@ -100,7 +100,7 @@ export const zooTestnet = defineChain({
   id: 200201,
   name: 'Zoo Testnet',
   nativeCurrency: { decimals: 18, name: 'Zoo', symbol: 'ZOO' },
-  rpcUrls: { default: { http: ['https://api.zoo-test.network/ext/bc/Z/rpc'] } },
+  rpcUrls: { default: { http: ['https://api.zoo-test.network/ext/bc/zoo/rpc'] } },
   blockExplorers: {
     default: { name: 'Zoo Testnet Explorer', url: 'https://explore.zoo-test.network' },
   },

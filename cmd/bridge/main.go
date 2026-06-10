@@ -307,9 +307,9 @@ func main() {
 		"Upstream URL for the /api/rpc/lux-testnet same-origin proxy. Default is the public Lux testnet gateway. Empty disables the route.")
 	luxRPCTimeout := flag.Duration("lux-rpc-timeout", DefaultRPCProxyTimeout,
 		"per-request upstream timeout for the LUX RPC proxy. Default 12s — slow enough for a degraded gateway, fast enough that a hung upstream doesn't pin the browser tab's wagmi loop.")
-	zooRPCMainnetURL := flag.String("zoo-rpc-mainnet-url", envOr("BRIDGE_ZOO_RPC_MAINNET_URL", "https://api.zoo.network/ext/bc/Z/rpc"),
+	zooRPCMainnetURL := flag.String("zoo-rpc-mainnet-url", envOr("BRIDGE_ZOO_RPC_MAINNET_URL", "https://api.zoo.network/ext/bc/zoo/rpc"),
 		"Upstream URL for the /api/rpc/zoo-mainnet same-origin proxy (Zoo Mainnet, chain id 200200). Same CORS rationale as the LUX proxy; shares --lux-rpc-timeout. Empty disables the route.")
-	zooRPCTestnetURL := flag.String("zoo-rpc-testnet-url", envOr("BRIDGE_ZOO_RPC_TESTNET_URL", "https://api.zoo-test.network/ext/bc/Z/rpc"),
+	zooRPCTestnetURL := flag.String("zoo-rpc-testnet-url", envOr("BRIDGE_ZOO_RPC_TESTNET_URL", "https://api.zoo-test.network/ext/bc/zoo/rpc"),
 		"Upstream URL for the /api/rpc/zoo-testnet same-origin proxy (Zoo Testnet, chain id 200201). Shares --lux-rpc-timeout. Empty disables the route.")
 	solanaRPCURL := flag.String("solana-rpc-url", envOr("BRIDGE_SOLANA_RPC_URL", "https://solana-rpc.publicnode.com"),
 		"Solana RPC URL used by the signing driver to fetch a recent blockhash when assembling Lux→Sol (and any X→Sol) release txs. Default is publicnode (api.mainnet-beta.solana.com returns 403 to many origins). Override with a paid endpoint (Helius/QuickNode/Triton) for prod throughput. Empty disables Sol-family destination support — swaps to Solana fail PreSign and refund.")
