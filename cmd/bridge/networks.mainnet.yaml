@@ -110,12 +110,11 @@ networks:
     txExplorerTpl: https://snowtrace.io/tx/{tx}
     addrExplorerTpl: https://snowtrace.io/address/{addr}
 
-  # Non-EVM mainnet — registry-visible with gating. BTC enabled
-  # source-only (mpcd's mainnet keygen produces correct addresses;
-  # the testnet re-encoder in internal/mchain/btc_address.go is
-  # a no-op on mainnet input). Settlement on Bitcoin still requires
-  # a BTC tx assembler + Schnorr signing in mpcd. SOL/TON both
-  # disabled pending mpcd FROST Ed25519 keygen (§13.6 step 6).
+  # Non-EVM mainnet — LUX go-live corridors. BTC bidirectional via the
+  # real ECDSA cluster (P2WPKH/P2PKH need no Schnorr; tx assembler +
+  # destination shipped). SOL/TON/XRP bidirectional via the ed25519 stack
+  # (mpcd-single behind mpc-router) — see the token-level PRECONDITION
+  # block below and docs/operator-deploy-ed25519.md.
   - internalName: BITCOIN_MAINNET
     displayName: Bitcoin
     nativeCurrency: BTC
@@ -140,13 +139,11 @@ networks:
     txExplorerTpl: https://tonscan.org/tx/{tx}
     addrExplorerTpl: https://tonscan.org/address/{addr}
 
-  # XRP mainnet — network registered; tokens deposit/withdrawal stay
-  # off until operator provisions a mainnet release wallet and decides
-  # on custody (mpcd-single single-signer vs cluster-FROST threshold,
-  # see architecture-mpc-eddsa-epic). Go layers (mchain.AddressType,
-  # broadcast.rpcURLs, xrp.Provider.urlFor, tokens registry) already
-  # handle XRP_MAINNET — flipping the token flags below is the
-  # operator-side trigger for go-live.
+  # XRP mainnet — go-live custody decided: mpcd-single (single-signer,
+  # capped release balance) behind mpc-router, with the threshold-FROST
+  # upgrade deferred to a later --eddsa-url flip. Token flags below are
+  # enabled; the operator-side trigger is provisioning + capping the XRP
+  # mainnet release wallet per docs/operator-deploy-ed25519.md.
   - internalName: XRP_MAINNET
     displayName: XRP
     nativeCurrency: XRP
@@ -269,36 +266,45 @@ tokens:
     contract: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"
     network: AVAX_MAINNET
 
-  # Non-EVM mainnet — BTC source-only. SOL/TON both gated.
+  # Non-EVM mainnet — LUX go-live corridors (deposit + withdrawal).
+  #
+  # ⚠️ PRECONDITION for SOL / TON / XRP: the ed25519 signing stack must be
+  # live before this config is served — mpcd-single + mpc-router deployed
+  # and the bridge's BRIDGE_MPC_URL pointed at the router — and each
+  # release wallet funded AND BALANCE-CAPPED (single-signer custody; see
+  # docs/operator-deploy-ed25519.md). Serving these enabled to a bridge
+  # that lacks the ed25519 stack makes swaps to those chains stall at
+  # signing with no signer. BTC uses the real ECDSA cluster (always
+  # present) so it has no such precondition. The G8 source baseline gate
+  # (in the de3a912a image) must be present for the SOL/TON/XRP deposit
+  # side to be safe.
   - asset: BTC
     name: Bitcoin
     decimals: 8
     network: BITCOIN_MAINNET
     isDepositEnabled: true
-    isWithdrawalEnabled: false
+    isWithdrawalEnabled: true
 
   - asset: SOL
     name: Solana
     decimals: 9
     network: SOLANA_MAINNET
-    isDepositEnabled: false
-    isWithdrawalEnabled: false
+    isDepositEnabled: true
+    isWithdrawalEnabled: true
 
   - asset: TON
     name: Toncoin
     decimals: 9
     network: TON_MAINNET
-    isDepositEnabled: false
-    isWithdrawalEnabled: false
+    isDepositEnabled: true
+    isWithdrawalEnabled: true
 
-  # XRP — gated off until operator flips the flags (see network entry
-  # comment above and the runbook XRP mainnet rollout section).
   - asset: XRP
     name: XRP
     decimals: 6
     network: XRP_MAINNET
-    isDepositEnabled: false
-    isWithdrawalEnabled: false
+    isDepositEnabled: true
+    isWithdrawalEnabled: true
 
 limits:
   minUSD: 10
