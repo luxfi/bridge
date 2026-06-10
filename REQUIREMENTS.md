@@ -453,14 +453,15 @@ This section documents the Go binary as a parallel track. Phases 1–3 above con
 | `--quote-max-age` | Max age (default 30 m) of a create-time quote before the signing driver refuses to sign and hands off to the refund driver. Zero disables — only safe for stablecoin-only deployments. |
 | `--disable-deposit-watcher` / `--disable-signing-driver` | Disable background loops (testing / manual operation). |
 
-### 13.5 Current testnet scope (updated 2026-06-04)
+### 13.5 Current testnet scope (updated 2026-06-10)
 
-`cmd/bridge/networks.testnet.yaml` ships **12 networks** — 9 EVM + 3 non-EVM (BTC source-only, SOL + TON now fully enabled):
+`cmd/bridge/networks.testnet.yaml` ships **13 networks** — 10 EVM + 3 non-EVM (BTC source-only, SOL + TON now fully enabled):
 
 | Network | Type | Native | ERC-20s | Status |
 |---|---|---|---|---|
 | `ETHEREUM_SEPOLIA` | evm | ETH | USDC | ✅ full |
 | `LUX_TESTNET` | evm | LUX | — | ✅ full |
+| `ZOO_TESTNET` | evm | ZOO | — | 🟡 wired 2026-06-10 (YAML + wagmi `zooTestnet` 200201 + `/api/rpc/zoo-testnet` proxy + tenant allow-list; Go internals were pre-wired). **Blocked on chain liveness** — `api.zoo-test.network` returns Cloudflare 1033 (origin down), no live RPC found at any probed URL, so no end-to-end swap yet. Override endpoint via `--zoo-rpc-testnet-url` + `--source-rpc-overrides ZOO_TESTNET=<url>` once the chain is up. `ZOO_MAINNET` (200200) wired identically in `networks.mainnet.yaml`. |
 | `BASE_SEPOLIA` | evm | ETH | USDC | ✅ full |
 | `HOLESKY_TESTNET` | evm | ETH | — | ✅ full |
 | `ARBITRUM_SEPOLIA` | evm | ETH | USDC | ✅ full (added 2026-05-28) |
