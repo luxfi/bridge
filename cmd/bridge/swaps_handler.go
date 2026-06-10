@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hanzoai/zip"
 	"github.com/luxfi/bridge/internal/bchain"
@@ -332,6 +334,42 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	if releaseWallet != nil {
 		swap.ReleaseWalletID = releaseWallet.Name
 		swap.ReleaseAddress = releaseWallet.Address
+	}
+	// For SOL/TON source swaps, snapshot the deposit wallet's current
+	// native balance so the deposit watcher confirms on the delta
+	// (current − baseline) instead of the absolute balance. Under
+	// mpcd-single the per-swap deposit wallet shares an address with the
+	// long-lived release wallet, so without this snapshot the standing
+	// release liquidity false-positives the very first poll and the
+	// bridge pays out a swap the user never funded (G8, REQUIREMENTS
+	// §13.7). A fetch failure degrades to a zero baseline (legacy
+	// current ≥ required) — a transient RPC hiccup must not fail swap
+	// creation. Only SOL + TON snapshot: XRP source deposit-check is
+	// unimplemented (errors out), EVM deposit wallets are fresh per-swap
+	// keygens with no collision.
+	if depositWallet != nil && a.depcheck != nil {
+		switch mchain.AddressTypeFor(req.SourceNetwork) {
+		case mchain.AddressTypeSOL:
+			baseCtx, cancelBase := context.WithTimeout(c.Context(), 8*time.Second)
+			lamports, err := a.depcheck.FetchSOLLamports(baseCtx, req.SourceNetwork, depositWallet.Address)
+			cancelBase()
+			if err == nil {
+				swap.SOLSourceBaselineLamports = lamports
+			} else {
+				fmt.Printf("[swap-create-warn] sol_baseline_fetch_failed source_network=%s addr=%s err=%v (falling back to legacy current≥required check)\n",
+					req.SourceNetwork, depositWallet.Address, err)
+			}
+		case mchain.AddressTypeTON:
+			baseCtx, cancelBase := context.WithTimeout(c.Context(), 8*time.Second)
+			nano, err := a.depcheck.FetchTONNanotons(baseCtx, req.SourceNetwork, depositWallet.Address)
+			cancelBase()
+			if err == nil {
+				swap.TONSourceBaselineNanotons = nano
+			} else {
+				fmt.Printf("[swap-create-warn] ton_baseline_fetch_failed source_network=%s addr=%s err=%v (falling back to legacy current≥required check)\n",
+					req.SourceNetwork, depositWallet.Address, err)
+			}
+		}
 	}
 	if quoteRes != nil {
 		swap.ReceiveAmount = quoteRes.ReceiveAmount

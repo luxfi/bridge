@@ -179,6 +179,29 @@ type CheckParams struct {
 	Address             string
 	Asset               string
 	RequiredAmount      float64
+
+	// SOLBaselineLamports is the lamport balance the SOL source deposit
+	// wallet held at swap-create time. When > 0 and the source is SOL,
+	// checkSOL compares (current − baseline) to the required amount
+	// instead of plain (current ≥ required). Fixes a false-positive
+	// "deposit confirmed" when mpcd-single's HKDF ed25519 keygen returns
+	// the SAME pubkey for the per-swap deposit wallet and the long-lived
+	// release wallet (deposit==release under single-signer custody), so
+	// the standing release-wallet liquidity would otherwise look like a
+	// funded deposit on the first poll. Zero ⇒ legacy behaviour
+	// (preserves the pre-baseline check for swaps minted without a
+	// snapshot, and for real threshold custody where the collision
+	// doesn't occur). See G8 in REQUIREMENTS §13.7.
+	SOLBaselineLamports uint64
+
+	// TONBaselineNanotons mirrors SOLBaselineLamports for TON sources.
+	// mpcd-single's TON keygen has the same shared-address-pool quirk
+	// (the per-swap deposit wallet is the same V4R2 contract address as
+	// the long-lived release wallet, which holds standing liquidity).
+	// When > 0 and the source is TON, checkTON compares (current −
+	// baseline) to required instead of plain (current ≥ required).
+	// Zero ⇒ legacy behaviour.
+	TONBaselineNanotons uint64
 }
 
 // Check dispatches to the right per-chain probe and returns whether
@@ -200,9 +223,9 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 		// TON shares the SOL slot in mchain — but the deposit-check
 		// protocols are completely different (RPC vs REST), so we
 		// route by network → AddressType, not by SOL/TON family.
-		return c.checkSOL(ctx, url, p.Address, p.Asset, p.RequiredAmount)
+		return c.checkSOL(ctx, url, p.Address, p.Asset, p.RequiredAmount, p.SOLBaselineLamports)
 	case mchain.AddressTypeTON:
-		return c.checkTON(ctx, url, p.Address, p.RequiredAmount)
+		return c.checkTON(ctx, url, p.Address, p.RequiredAmount, p.TONBaselineNanotons)
 	case mchain.AddressTypeXRP:
 		// XRP deposit detection not implemented in TS either (the
 		// mpc-wallet.ts default falls through to a warn-and-return-false).
@@ -391,7 +414,7 @@ func (c *Client) checkBTC(ctx context.Context, apiBase, address string, required
 // Solana — JSON-RPC `getBalance`
 // =============================================================================
 
-func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, requiredAmount float64) (bool, error) {
+func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, requiredAmount float64, baselineLamports uint64) (bool, error) {
 	type solBalanceResp struct {
 		Result struct {
 			Value uint64 `json:"value"`
@@ -410,15 +433,61 @@ func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, r
 		return false, fmt.Errorf("depositcheck: solana getBalance rpc %d: %s",
 			resp.Error.Code, resp.Error.Message)
 	}
-	balSol := float64(resp.Result.Value) / 1e9
+	balLamports := resp.Result.Value
+	// Baseline-aware delta when supplied. Underflow guard: a baseline
+	// above the current balance (wallet debited since snapshot) clamps
+	// the delta to zero so uint subtraction never wraps into a spurious
+	// confirm. Zero baseline ⇒ legacy current ≥ required.
+	if baselineLamports > 0 {
+		var deltaLamports uint64
+		if balLamports > baselineLamports {
+			deltaLamports = balLamports - baselineLamports
+		}
+		deltaSol := float64(deltaLamports) / 1e9
+		return deltaSol >= requiredAmount, nil
+	}
+	balSol := float64(balLamports) / 1e9
 	return balSol >= requiredAmount, nil
+}
+
+// FetchSOLLamports returns the current lamport balance at a Solana
+// address. Used by the swap-create handler to snapshot the deposit
+// wallet's balance into Swap.SOLSourceBaselineLamports so subsequent
+// checkSOL calls can apply the delta-based confirmation above (vs the
+// legacy current ≥ required which false-positives when mpcd-single's
+// keygen returns the long-lived release-wallet address as the per-swap
+// deposit wallet). Returns 0 (not an error) when the account hasn't
+// been touched yet — a fresh deposit wallet must not fail swap creation.
+func (c *Client) FetchSOLLamports(ctx context.Context, network, address string) (uint64, error) {
+	url := c.rpcURL(network)
+	if url == "" {
+		return 0, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, network)
+	}
+	type solBalanceResp struct {
+		Result struct {
+			Value uint64 `json:"value"`
+		} `json:"result"`
+		Error *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error,omitempty"`
+	}
+	var resp solBalanceResp
+	if err := c.jsonRPC(ctx, url, "getBalance", []any{address}, &resp); err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, fmt.Errorf("depositcheck: solana getBalance rpc %d: %s",
+			resp.Error.Code, resp.Error.Message)
+	}
+	return resp.Result.Value, nil
 }
 
 // =============================================================================
 // TON — TON Center REST `/getAddressBalance`
 // =============================================================================
 
-func (c *Client) checkTON(ctx context.Context, apiBase, address string, requiredAmount float64) (bool, error) {
+func (c *Client) checkTON(ctx context.Context, apiBase, address string, requiredAmount float64, baselineNanotons uint64) (bool, error) {
 	url := strings.TrimRight(apiBase, "/") + "/getAddressBalance?address=" + address
 	// TON Center returns balances as a *string* (decimal), not a number;
 	// also returns an `ok: bool` envelope. We accept either flat or
@@ -446,8 +515,70 @@ func (c *Client) checkTON(ctx context.Context, apiBase, address string, required
 	default:
 		return false, fmt.Errorf("depositcheck: unexpected TON balance type %T", v)
 	}
+	// Baseline-aware delta when supplied. Underflow guard mirrors
+	// checkSOL: a baseline above the current balance clamps to zero so
+	// uint subtraction never wraps into a spurious confirm. Zero
+	// baseline ⇒ legacy current ≥ required.
+	if baselineNanotons > 0 {
+		var balUnsigned uint64
+		if balNano > 0 {
+			balUnsigned = uint64(balNano)
+		}
+		var deltaNano uint64
+		if balUnsigned > baselineNanotons {
+			deltaNano = balUnsigned - baselineNanotons
+		}
+		deltaTon := float64(deltaNano) / 1e9
+		return deltaTon >= requiredAmount, nil
+	}
 	balTon := float64(balNano) / 1e9
 	return balTon >= requiredAmount, nil
+}
+
+// FetchTONNanotons returns the current nanoton balance for a TON
+// account. Used by the swap-create handler to snapshot the baseline.
+// actNotFound / never-funded accounts return 0 without error so a
+// fresh deposit wallet doesn't fail swap creation.
+func (c *Client) FetchTONNanotons(ctx context.Context, network, address string) (uint64, error) {
+	if mchain.AddressTypeFor(network) != mchain.AddressTypeTON {
+		return 0, fmt.Errorf("depositcheck: FetchTONNanotons called for non-TON network %s", network)
+	}
+	apiBase := c.rpcURL(network)
+	if apiBase == "" {
+		return 0, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, network)
+	}
+	url := strings.TrimRight(apiBase, "/") + "/getAddressBalance?address=" + address
+	var raw struct {
+		OK     bool        `json:"ok"`
+		Result interface{} `json:"result"`
+	}
+	if err := c.getJSON(ctx, url, &raw); err != nil {
+		return 0, fmt.Errorf("depositcheck: ton %s FetchTONNanotons: %w", network, err)
+	}
+	if raw.Result == nil {
+		return 0, nil
+	}
+	switch v := raw.Result.(type) {
+	case string:
+		if v == "" {
+			return 0, nil
+		}
+		balBig, ok := new(big.Int).SetString(v, 10)
+		if !ok {
+			return 0, fmt.Errorf("depositcheck: TON balance not a decimal string: %q", v)
+		}
+		if balBig.Sign() < 0 {
+			return 0, nil
+		}
+		return balBig.Uint64(), nil
+	case float64:
+		if v < 0 {
+			return 0, nil
+		}
+		return uint64(v), nil
+	default:
+		return 0, fmt.Errorf("depositcheck: unexpected TON balance type %T", v)
+	}
 }
 
 // =============================================================================
