@@ -117,6 +117,7 @@ const fallbackSupportedChainIds = isLocalEnv
     ? [
         11155111, // Ethereum Sepolia
         96368,    // Lux Testnet
+        200201,   // Zoo Testnet
         84532,    // Base Sepolia
         17000,    // Holesky
         421614,   // Arbitrum Sepolia
@@ -126,14 +127,15 @@ const fallbackSupportedChainIds = isLocalEnv
         43113,    // Avalanche Fuji
       ]
     : [
-        1,     // Ethereum mainnet
-        96369, // Lux
-        42161, // Arbitrum
-        8453,  // Base
-        137,   // Polygon
-        10,    // Optimism
-        56,    // BSC
-        43114, // Avalanche
+        1,      // Ethereum mainnet
+        96369,  // Lux
+        200200, // Zoo
+        42161,  // Arbitrum
+        8453,   // Base
+        137,    // Polygon
+        10,     // Optimism
+        56,     // BSC
+        43114,  // Avalanche
       ]
 const fallbackDefaultChainId = isLocalEnv ? 31337 : isTestnetEnv ? 11155111 : 1
 

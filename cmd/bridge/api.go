@@ -95,6 +95,14 @@ type API struct {
 	luxRPCTestnetURL string
 	luxRPCTimeout    time.Duration
 	luxRPCLogger     luxlog.Logger
+
+	// zooRPCMainnetURL / zooRPCTestnetURL mirror the Lux pair for the
+	// Zoo gateway — same CORS rationale, served at
+	// /api/rpc/zoo-{mainnet,testnet}. Set via SetZooRPCURLs.
+	zooRPCMainnetURL string
+	zooRPCTestnetURL string
+	zooRPCTimeout    time.Duration
+	zooRPCLogger     luxlog.Logger
 }
 
 func NewAPI(
@@ -220,6 +228,19 @@ func (a *API) SetLuxRPCURLs(mainnetURL, testnetURL string, timeout time.Duration
 	a.luxRPCLogger = logger
 }
 
+// SetZooRPCURLs configures the upstream Zoo gateway URLs for the
+// /api/rpc/zoo-{mainnet,testnet} same-origin proxy — the Zoo gateway
+// shares the Lux gateway's CORS posture, so the embedded SPA's wagmi
+// transport for Zoo chains (200200/200201) routes through here. Either
+// (or both) may be empty — the corresponding route is then skipped at
+// Register time.
+func (a *API) SetZooRPCURLs(mainnetURL, testnetURL string, timeout time.Duration, logger luxlog.Logger) {
+	a.zooRPCMainnetURL = mainnetURL
+	a.zooRPCTestnetURL = testnetURL
+	a.zooRPCTimeout = timeout
+	a.zooRPCLogger = logger
+}
+
 // Register mounts handlers on the given zip.App. The /v1/bridge prefix
 // matches what the SPA fetches and what hanzo/ingress routes externally.
 func (a *API) Register(app *zip.App) {
@@ -327,6 +348,18 @@ func (a *API) Register(app *zip.App) {
 	if h := rpcProxy(a.luxRPCTestnetURL, a.luxRPCTimeout, a.luxRPCLogger); h != nil {
 		app.Post("/api/rpc/lux-testnet", h)
 		app.Options("/api/rpc/lux-testnet", preflight)
+	}
+
+	// /api/rpc/zoo-{mainnet,testnet} — same proxy pattern for the Zoo
+	// gateway (Zoo Mainnet 200200 / Zoo Testnet 200201). The SPA's
+	// wagmi transport for Zoo chains posts here.
+	if h := rpcProxy(a.zooRPCMainnetURL, a.zooRPCTimeout, a.zooRPCLogger); h != nil {
+		app.Post("/api/rpc/zoo-mainnet", h)
+		app.Options("/api/rpc/zoo-mainnet", preflight)
+	}
+	if h := rpcProxy(a.zooRPCTestnetURL, a.zooRPCTimeout, a.zooRPCLogger); h != nil {
+		app.Post("/api/rpc/zoo-testnet", h)
+		app.Options("/api/rpc/zoo-testnet", preflight)
 	}
 
 	// /v1/bridge/check-deposit is an ops-only diagnostic that polls
