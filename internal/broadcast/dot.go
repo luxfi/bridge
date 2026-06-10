@@ -27,7 +27,7 @@
 // extrinsic into its mempool" — NOT "finalized". The destination
 // confirmation loop (a separate concern) polls block inclusion.
 //
-// Brand: Lux Network surface — no Liquidity /  references.
+// Brand: Lux Network surface only.
 
 package broadcast
 

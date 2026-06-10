@@ -25,7 +25,7 @@
 // Trust model: this is leaf code with no network IO. Tested against
 // known-good vectors from the Polkadot JS SDK + substrate runtime.
 //
-// Brand: Lux Network surface — no Liquidity /  references.
+// Brand: Lux Network surface only.
 //
 // References:
 //   - SCALE spec: https://docs.substrate.io/reference/scale-codec/

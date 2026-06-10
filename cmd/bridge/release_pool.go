@@ -41,7 +41,7 @@ import (
 // so unit tests don't need a disk store.
 //
 // Brand: the pool is a Lux-network surface (the bridge itself ships
-// in ~/work/lux/bridge). No mention of  / .
+// in ~/work/lux/bridge).
 
 // =============================================================================
 // Persistence interface

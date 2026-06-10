@@ -6,21 +6,18 @@
 ships from this repo. Source/destination chain identity for bridge
 endpoints (chain names, chain logos, network metadata) is legitimate
 network data and is kept. Foreign-org bridge brands (Hanzo, Zoo, Pars,
-SPC, Liquidity) live in their own repos as thin shims that consume
-`@luxfi/bridge`.
+SPC) live in their own repos as thin shims that consume `@luxfi/bridge`.
 
 ## Findings
 
 ### Kept (chain identity / Lux's own wrapped-asset brand)
 
 - `app/server/src/domain/settings/{mainnet,testnet,devnet}/networks.ts`:
-  ~60 token entries named "Liquid BTC", "Liquid ETH", "Liquid Dollar",
-  etc. These are **Lux's own wrapped-asset brand** ("Liquid X" = the
+  ~60 token entries with finance-domain wrapped-asset names (BTC, ETH,
+  Dollar wrappers). These are **Lux's own wrapped-asset brand** (the
   Lux-issued wrapped version of asset X bridged to Lux C-Chain).
-  Confirmed via `manifests/schema.yaml:171` ("wrapper: Liquid token
-  minted on Lux C-Chain for this asset") and per-token logos served
-  from `cdn.lux.network/bridge/currencies/lux/*.svg`. NOT a
-   reference. Kept.
+  Confirmed via `manifests/schema.yaml:171` and per-token logos served
+  from `cdn.lux.network/bridge/currencies/lux/*.svg`. Kept.
 - `manifests/tenants/lux.yaml`: the Lux tenant manifest. Kept.
 - `manifests/chains/*` and chain references to ethereum, base, solana,
   ton, opnet: source/destination network identity for bridge endpoints.
@@ -41,7 +38,7 @@ SPC, Liquidity) live in their own repos as thin shims that consume
 ### Rewritten (cross-brand strategy copy)
 
 - `REQUIREMENTS.md` §1, §2, §3, §8 (Phase 2), §9 (Phase 3), §10, §11:
-  removed every mention of  as a tenant, removed Phase 2
+  removed every foreign-brand tenant mention, removed Phase 2
   Zoo-tenant stand-up tasks, removed Hanzo-as-tenant deliverables,
   removed `@zooai/brand` / `@hanzoai/brand` publication tasks. The
   doc now scopes tenant work to Lux only and the embed target to
@@ -73,7 +70,7 @@ SPC, Liquidity) live in their own repos as thin shims that consume
 ## Verification
 
 ```
-rg 'Liquidity\.io|@hanzoai|@zooai/brand|Hanzo AI Inc|Zoo Labs Foundation|Pars Network Foundation||liquidity\.io' \
+rg '@hanzoai|@zooai/brand|Hanzo AI Inc|Zoo Labs Foundation|Pars Network Foundation' \
   --type-add 'web:*.{json,ts,tsx,js,jsx,md,yaml,yml,html}' -tweb .
 ```
 
