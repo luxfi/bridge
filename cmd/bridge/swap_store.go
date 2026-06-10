@@ -127,6 +127,22 @@ type Swap struct {
 	SourceTxHash    string  `json:"source_tx_hash,omitempty"`
 	DepositedAmount float64 `json:"deposited_amount,omitempty"`
 
+	// SOLSourceBaselineLamports / TONSourceBaselineNanotons capture the
+	// deposit wallet's native balance at swap-create time for SOL/TON
+	// source swaps. The deposit watcher passes them into
+	// depositcheck.CheckParams so the confirm test compares
+	// (current − baseline) ≥ required instead of plain current ≥
+	// required. This closes the shared-address-pool false-positive under
+	// mpcd-single single-signer custody, where the per-swap deposit
+	// wallet shares an address with the long-lived release wallet and
+	// would otherwise look pre-funded on the first poll (G8,
+	// REQUIREMENTS §13.7). Zero ⇒ legacy check (swaps minted before the
+	// snapshot, or non-SOL/TON sources). Only SOL + TON carry a baseline:
+	// XRP source deposit-check is unimplemented here (errors out) and EVM
+	// deposit wallets are per-swap fresh keygens with no collision.
+	SOLSourceBaselineLamports uint64 `json:"sol_source_baseline_lamports,omitempty"`
+	TONSourceBaselineNanotons uint64 `json:"ton_source_baseline_nanotons,omitempty"`
+
 	// Signing — populated when the MPC ceremony emits a signature.
 	MPCSessionID string `json:"mpc_session_id,omitempty"`
 	Signature    string `json:"signature,omitempty"`

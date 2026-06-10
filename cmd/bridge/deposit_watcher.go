@@ -226,6 +226,13 @@ func (w *DepositWatcher) checkOne(ctx context.Context, sw *Swap) {
 		Address:             addr,
 		Asset:               sw.SourceAsset,
 		RequiredAmount:      sw.Amount,
+		// Delta-gate the confirm on the per-swap baseline for SOL/TON
+		// sources so a shared-pool deposit wallet (deposit==release under
+		// mpcd-single) doesn't false-positive on standing release
+		// liquidity. Zero for every other source / pre-baseline swap ⇒
+		// legacy current ≥ required (G8, REQUIREMENTS §13.7).
+		SOLBaselineLamports: sw.SOLSourceBaselineLamports,
+		TONBaselineNanotons: sw.TONSourceBaselineNanotons,
 	})
 	if err != nil {
 		w.checkErrors.Add(1)

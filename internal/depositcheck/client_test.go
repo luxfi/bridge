@@ -629,6 +629,196 @@ func TestCheck_TON_BadResultType(t *testing.T) {
 }
 
 // =============================================================================
+// G8 — SOL/TON source baseline gate (shared-address-pool false-positive)
+// =============================================================================
+//
+// Under mpcd-single, the per-swap SOL/TON deposit wallet shares an address
+// with the long-lived release wallet, so the deposit address starts with the
+// operator's standing release liquidity already in it. Without a baseline the
+// very first poll reads balance ≥ required and the bridge confirms a deposit
+// the user never made (then pays out the destination leg). These tests pin the
+// fix: a non-zero baseline makes the check gate on (current − baseline), and a
+// zero baseline preserves the legacy current ≥ required path (covered by the
+// TestCheck_SOL_*/TestCheck_TON_* cases above).
+
+func solBalanceServer(t *testing.T, lamports uint64) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": 1,
+			"result": map[string]any{"value": lamports},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL
+}
+
+func tonBalanceServer(t *testing.T, nanotons string) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/getAddressBalance") {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "result": nanotons})
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL
+}
+
+// THE exploit guard: deposit address holds exactly the standing release
+// liquidity (balance == baseline), user sent nothing → delta 0 → not confirmed.
+func TestCheck_SOL_Baseline_BlocksUnfundedSharedPool(t *testing.T) {
+	const standing = 2_000_000_000 // 2 SOL of release liquidity sitting in the shared wallet
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"SOLANA_DEVNET": solBalanceServer(t, standing),
+	}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "SOLANA_DEVNET",
+		Address:             "SoLaNa",
+		Asset:               "SOL",
+		RequiredAmount:      1.0,
+		SOLBaselineLamports: standing,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("SECURITY: unfunded shared-pool SOL deposit confirmed — baseline gate failed")
+	}
+}
+
+// User actually deposited: balance = baseline + 1.5 SOL → delta 1.5 ≥ 1.0.
+func TestCheck_SOL_Baseline_ConfirmsOnDelta(t *testing.T) {
+	const standing = 2_000_000_000
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"SOLANA_DEVNET": solBalanceServer(t, standing+1_500_000_000),
+	}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "SOLANA_DEVNET",
+		RequiredAmount:      1.0,
+		SOLBaselineLamports: standing,
+	})
+	if err != nil || !ok {
+		t.Fatalf("expected confirmed on 1.5 SOL delta, got (%v, %v)", ok, err)
+	}
+}
+
+// Wallet debited below baseline since snapshot → uint delta clamps to 0, never
+// wraps into a spurious confirm.
+func TestCheck_SOL_Baseline_UnderflowGuard(t *testing.T) {
+	const standing = 2_000_000_000
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"SOLANA_DEVNET": solBalanceServer(t, 1_000_000_000), // below baseline
+	}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "SOLANA_DEVNET",
+		RequiredAmount:      1.0,
+		SOLBaselineLamports: standing,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("underflow guard failed: debited-below-baseline SOL wallet confirmed")
+	}
+}
+
+func TestCheck_TON_Baseline_BlocksUnfundedSharedPool(t *testing.T) {
+	const standing = "5000000000" // 5 TON of release liquidity in the shared V4R2 wallet
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"TON_TESTNET": tonBalanceServer(t, standing),
+	}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "TON_TESTNET",
+		Address:             "tonAddr",
+		Asset:               "TON",
+		RequiredAmount:      1.0,
+		TONBaselineNanotons: 5_000_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("SECURITY: unfunded shared-pool TON deposit confirmed — baseline gate failed")
+	}
+}
+
+func TestCheck_TON_Baseline_ConfirmsOnDelta(t *testing.T) {
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"TON_TESTNET": tonBalanceServer(t, "8000000000"), // 5 TON baseline + 3 TON deposit
+	}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "TON_TESTNET",
+		RequiredAmount:      2.5,
+		TONBaselineNanotons: 5_000_000_000,
+	})
+	if err != nil || !ok {
+		t.Fatalf("expected confirmed on 3 TON delta, got (%v, %v)", ok, err)
+	}
+}
+
+func TestCheck_TON_Baseline_UnderflowGuard(t *testing.T) {
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"TON_TESTNET": tonBalanceServer(t, "3000000000"), // below 5 TON baseline
+	}}
+	ok, err := c.Check(context.Background(), CheckParams{
+		NetworkInternalName: "TON_TESTNET",
+		RequiredAmount:      1.0,
+		TONBaselineNanotons: 5_000_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("underflow guard failed: debited-below-baseline TON wallet confirmed")
+	}
+}
+
+// FetchSOLLamports / FetchTONNanotons feed the create-time snapshot. They must
+// return the raw balance, and never-funded accounts must return 0 (not an
+// error) so a fresh deposit wallet doesn't fail swap creation.
+func TestFetchSOLLamports(t *testing.T) {
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"SOLANA_DEVNET": solBalanceServer(t, 1_234_567_890),
+	}}
+	got, err := c.FetchSOLLamports(context.Background(), "SOLANA_DEVNET", "SoLaNa")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 1_234_567_890 {
+		t.Fatalf("FetchSOLLamports = %d, want 1234567890", got)
+	}
+}
+
+func TestFetchTONNanotons_StringAndNeverFunded(t *testing.T) {
+	c := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{
+		"TON_TESTNET": tonBalanceServer(t, "7000000000"),
+	}}
+	got, err := c.FetchTONNanotons(context.Background(), "TON_TESTNET", "tonAddr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 7_000_000_000 {
+		t.Fatalf("FetchTONNanotons = %d, want 7000000000", got)
+	}
+
+	// Never-funded account: TON Center returns result: null → 0, no error.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "result": nil})
+	}))
+	t.Cleanup(srv.Close)
+	c2 := &Client{Timeout: time.Second, RPCURLOverrides: map[string]string{"TON_TESTNET": srv.URL}}
+	got, err = c2.FetchTONNanotons(context.Background(), "TON_TESTNET", "freshAddr")
+	if err != nil || got != 0 {
+		t.Fatalf("never-funded FetchTONNanotons = (%d, %v), want (0, nil)", got, err)
+	}
+}
+
+// =============================================================================
 // Unsupported
 // =============================================================================
 
