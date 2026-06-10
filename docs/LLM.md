@@ -10,7 +10,7 @@ The Lux Bridge is a decentralized cross-chain bridge infrastructure that enables
 ## Package layout — public vs internal
 
 Two scopes, one canonical SDK entrypoint. Downstream consumers (Lux, Hanzo,
-Zoo, Liquidity, any white-label) import `@luxfi/bridge` and nothing else.
+Zoo, any white-label) import `@luxfi/bridge` and nothing else.
 
 | Path | npm name | Scope | Published |
 |---|---|---|---|
@@ -59,7 +59,7 @@ mountBridge({
 })
 ```
 
-Mirrors `mountExchange` from `@/exchange`. One declarative entry,
+Mirrors `mountExchange` from `@luxfi/exchange`. One declarative entry,
 build-time brand config, no hostname detection inside the SDK.
 
 ## Publishing
@@ -104,9 +104,6 @@ Routes (served from one binary, port-flexible):
 Migration plan: deploy `luxfi/explorer` alongside `app/explorer/`,
 hostname-cutover (`bridge-explorer.lux.network`) on K8s, delete the
 Next.js app after one-week soak. Same pattern as the
-`graphprotocol/graph-node` → `LiquidGraph` cutover in
-`liquidity/universe` (in-flight 2026-04-22; see
-`~/work/liquidity/universe/CLAUDE.md` § Explorer / indexer).
 
 The bridge backend (`app/server/`) does not depend on `app/explorer/`;
 the migration is UI-only.
