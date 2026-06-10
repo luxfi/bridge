@@ -299,7 +299,9 @@ services:
   # DNS at bridge.lux.network repoints to this service and the legacy
   # bridge-server + bridge-ui can be retired.
   bridge-go:
-    image: ghcr.io/luxfi/bridge:${BRIDGE_TAG:-latest}
+    # Default pinned to the verified G8 go-live image; override with BRIDGE_TAG.
+    # Never falls back to :latest, which may resolve to a G8-less build.
+    image: ghcr.io/luxfi/bridge:${BRIDGE_TAG:-de3a912a}
     container_name: bridge-go
     restart: always
     ports:
