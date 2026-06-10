@@ -7,8 +7,10 @@ gates. Read it top to bottom before touching the cluster.
 ## Scope & decisions (locked)
 
 - **Corridors:** LUX ↔ {ETH + EVM majors, BTC, Solana, TON, XRP}. All validated
-  on-chain. **Zoo is parked** — no Zoo chain exists yet; it's an additive
-  follow-up, not a blocker (bridge side already wired).
+  on-chain. **Zoo is a post-launch follow-up** — the chain IS live (200200/200201)
+  and the bridge RPC-path bug is fixed in code, but the `de3a912a` launch image
+  predates that fix, so Zoo is deliberately NOT part of this cutover (the k8s
+  ConfigMap omits it). See the post-launch item below.
 - **Image:** deploy **`ghcr.io/luxfi/{bridge,mpc-router,mpcd-single}:de3a912a`**
   (built + pushed). The bridge image carries the **G8 source baseline gate** and
   the SOL/TON/XRP refund caps — verified. Built from local `whispers/bridgev2`;
@@ -75,9 +77,12 @@ for Sol/TON/XRP and `family=ecdsa → mpc-api-svc` for EVM/BTC).
   (e.g. volume threshold) → FROST or Fireblocks via `--eddsa-url`.
 - **Monitoring:** alert on ed25519 release-wallet balances (drain + over-cap) and
   on `/metrics` (`bridge_bchain_reachable`, swap-stall counts).
-- **Zoo:** enable when the Zoo chain is actually deployed — confirm real chain
-  IDs (bridge assumes 200200/200201; zoo-k8s only has `beluga` 420420), flip
-  `ZOO_*` on, point `--zoo-rpc-*-url` at the live endpoint. No bridge code change.
+- **Zoo (follow-up):** chain is live (mainnet 200200 / testnet 200201, matching
+  the wiring) and the RPC-path fix is committed (`37e58814`), but the `de3a912a`
+  image has the old path. To ship Zoo: (1) build a new image past `37e58814`,
+  (2) add ZOO_MAINNET network + ZOO token to the k8s ConfigMap (mirror
+  `networks.mainnet.yaml`), (3) smoke ZOO_TESTNET↔LUX_TESTNET first. Mainnet Zoo
+  is brand-new (~799 blocks) — owner sign-off before routing real value.
 
 ## References
 `operator-deploy-phase-1-4.md` · `operator-deploy-ed25519.md` ·
