@@ -356,7 +356,11 @@ spec:
           type: RuntimeDefault
       containers:
         - name: bridge
-          image: ghcr.io/luxfi/bridge:latest
+          # Pinned to the verified go-live image (built from the local G8
+          # branch, carries the source baseline gate). Do NOT deploy :latest
+          # for go-live — it may resolve to a G8-less build. Bump this tag
+          # for each release.
+          image: ghcr.io/luxfi/bridge:de3a912a
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
