@@ -126,7 +126,7 @@ func TestSupportedChainsSubset(t *testing.T) {
 
 func TestSupportedChainsAllowedSet(t *testing.T) {
 	// Every value in the spec'd allowed set must validate.
-	for _, chain := range []string{"eth", "btc", "sol", "ton", "xrp", "dot", "liquid", "hanzo", "zoo", "pars", "spc", "lux"} {
+	for _, chain := range []string{"eth", "btc", "sol", "ton", "xrp", "dot", "hanzo", "zoo", "pars", "spc", "lux"} {
 		t.Run(chain, func(t *testing.T) {
 			c := validMinimal()
 			c.SupportedChains = []string{chain}
@@ -254,7 +254,7 @@ func TestSlugFormat(t *testing.T) {
 			}
 		})
 	}
-	good := []string{"a", "ab", "lux-bridge", "hanzo-bridge", "liquid-bridge", "tenant1"}
+	good := []string{"a", "ab", "lux-bridge", "hanzo-bridge", "zoo-bridge", "tenant1"}
 	for _, s := range good {
 		t.Run("ok-"+s, func(t *testing.T) {
 			c := validMinimal()

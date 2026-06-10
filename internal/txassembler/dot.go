@@ -37,7 +37,7 @@
 //     indices are pinned per-network in PerDOTNetwork — operator
 //     updates them if a runtime upgrade renumbers the pallet.
 //
-// Brand: Lux Network surface — no Liquidity /  references.
+// Brand: Lux Network surface only.
 
 package txassembler
 
