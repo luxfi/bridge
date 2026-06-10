@@ -62,10 +62,15 @@ the `bridge-secrets` Secret and `mpc-api-svc` exist), and you can push images to
 
 ## Step 1 — Build & push the images
 
-```bash
-export TAG=$(git rev-parse --short HEAD)
+**Already done for this release** — all three are built from the local G8
+branch and pushed to `ghcr.io/luxfi` at tag **`de3a912a`** (bridge ships the
+G8 baseline gate; verified). The manifests below pin that tag, so you can skip
+straight to Step 2. Re-run the block only to cut a new build.
 
-# Bridge — MUST be built from a branch that includes the G8 gate (826fdcaf).
+```bash
+export TAG=de3a912a   # the pushed release; the manifests below pin this
+
+# Bridge — MUST be built from a branch that includes the G8 gate (whispers/bridgev2).
 docker build -f cmd/bridge/Dockerfile      -t ghcr.io/luxfi/bridge:$TAG .
 # ed25519 backend + router (REQUIREMENTS §13.7 G7).
 docker build -f cmd/mpcd-single/Dockerfile -t ghcr.io/luxfi/mpcd-single:$TAG .
@@ -124,7 +129,7 @@ spec:
     spec:
       containers:
         - name: mpcd-single
-          image: ghcr.io/luxfi/mpcd-single:REPLACE_TAG
+          image: ghcr.io/luxfi/mpcd-single:de3a912a
           args:
             - --addr=:9900
             - --master-seed=file:/var/lib/mpcd-single/master.seed
@@ -157,7 +162,7 @@ spec:
 ```
 
 ```bash
-sed "s/REPLACE_TAG/$TAG/" k8s/mpcd-single-deployment.yaml | kubectl apply -f -
+kubectl apply -f k8s/mpcd-single-deployment.yaml
 kubectl -n lux-bridge rollout status deploy/mpcd-single
 ```
 
@@ -187,7 +192,7 @@ spec:
     spec:
       containers:
         - name: mpc-router
-          image: ghcr.io/luxfi/mpc-router:REPLACE_TAG
+          image: ghcr.io/luxfi/mpc-router:de3a912a
           args:
             - --addr=:9700
             - --eddsa-url=http://mpcd-single.lux-bridge.svc:9900
@@ -218,7 +223,7 @@ spec:
 ```
 
 ```bash
-sed "s/REPLACE_TAG/$TAG/" k8s/mpc-router-deployment.yaml | kubectl apply -f -
+kubectl apply -f k8s/mpc-router-deployment.yaml
 kubectl -n lux-bridge rollout status deploy/mpc-router
 ```
 
