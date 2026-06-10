@@ -79,6 +79,34 @@ export const luxLocal = defineChain({
   testnet: true,
 })
 
+// Zoo chains — EVM subnets in the Lux network family (no viem/chains
+// entry, same as Lux). Unlike Lux they carry plain family='evm' in the
+// chain registry, so no teleporter special-casing — wagmi treats them
+// like any other EVM chain. RPCs match the public Zoo gateways; the
+// transport override below routes browsers through the bridge's
+// same-origin /api/rpc/zoo-* proxy (same CORS posture as the Lux
+// gateway).
+export const zooMainnet = defineChain({
+  id: 200200,
+  name: 'Zoo',
+  nativeCurrency: { decimals: 18, name: 'Zoo', symbol: 'ZOO' },
+  rpcUrls: { default: { http: ['https://api.zoo.network/ext/bc/Z/rpc'] } },
+  blockExplorers: {
+    default: { name: 'Zoo Explorer', url: 'https://explore.zoo.network' },
+  },
+})
+
+export const zooTestnet = defineChain({
+  id: 200201,
+  name: 'Zoo Testnet',
+  nativeCurrency: { decimals: 18, name: 'Zoo', symbol: 'ZOO' },
+  rpcUrls: { default: { http: ['https://api.zoo-test.network/ext/bc/Z/rpc'] } },
+  blockExplorers: {
+    default: { name: 'Zoo Testnet Explorer', url: 'https://explore.zoo-test.network' },
+  },
+  testnet: true,
+})
+
 // Zoo Local — local devnet sandbox for ZOO development. Same pattern
 // as luxLocal but a distinct EVM chain id so a single local Lux node
 // can host both subnets without ambiguity.
@@ -108,6 +136,7 @@ export const zooLocal = defineChain({
 const MAINNET_EVM_CHAINS: ViemChain[] = [
   mainnet,
   luxMainnet,
+  zooMainnet,
   arbitrum,
   base,
   polygon,
@@ -118,6 +147,7 @@ const MAINNET_EVM_CHAINS: ViemChain[] = [
 const TESTNET_EVM_CHAINS: ViemChain[] = [
   sepolia,
   luxTestnet,
+  zooTestnet,
   arbitrumSepolia,
   baseSepolia,
   optimismSepolia,
@@ -242,12 +272,12 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
 
   // Transports: most chains use viem's public HTTP. Several overrides:
   //
-  //  1. Lux chains route through the bridge backend's same-origin
-  //     /api/rpc/lux-{mainnet,testnet} proxy because the upstream Lux
-  //     gateway's CORS allow-list doesn't include bridge.* origins —
-  //     the browser would block every response and useBalance() would
-  //     stall on '…' forever. The proxy makes the call server-side
-  //     (no CORS) and forwards the response unchanged.
+  //  1. Lux + Zoo chains route through the bridge backend's same-origin
+  //     /api/rpc/{lux,zoo}-{mainnet,testnet} proxies because the
+  //     upstream gateways' CORS allow-lists don't include bridge.*
+  //     origins — the browser would block every response and
+  //     useBalance() would stall on '…' forever. The proxy makes the
+  //     call server-side (no CORS) and forwards the response unchanged.
   //
   //  2. Holesky's viem default (ethereum-holesky-rpc.publicnode.com)
   //     returns HTTP 403 — endpoint is rate-limited / blocking. We
@@ -269,6 +299,8 @@ export function buildWagmiConfig(cfg: BridgeConfig): Config {
   const transportFor = (chainId: number): ReturnType<typeof http> => {
     if (chainId === luxMainnet.id) return http('/api/rpc/lux-mainnet')
     if (chainId === luxTestnet.id) return http('/api/rpc/lux-testnet')
+    if (chainId === zooMainnet.id) return http('/api/rpc/zoo-mainnet')
+    if (chainId === zooTestnet.id) return http('/api/rpc/zoo-testnet')
     if (chainId === luxLocal.id) return http('http://localhost:9650/ext/bc/C/rpc')
     if (chainId === zooLocal.id) return http('http://localhost:9650/ext/bc/C/rpc')
     if (chainId === holesky.id) return http('https://holesky.drpc.org')

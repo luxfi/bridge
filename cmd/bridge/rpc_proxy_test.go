@@ -181,3 +181,45 @@ func TestRPCProxy_BothNetworksConcurrentlyMounted(t *testing.T) {
 		t.Errorf("testnet hits = %d, want 1", testHits.Load())
 	}
 }
+
+// TestRPCProxy_ZooRoutesMountedIndependently covers the Zoo proxy pair:
+// /api/rpc/zoo-{mainnet,testnet} mount via SetZooRPCURLs, target their
+// own upstreams, and don't require the LUX proxy to be configured.
+func TestRPCProxy_ZooRoutesMountedIndependently(t *testing.T) {
+	var mainHits, testHits atomic.Int64
+	main := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		mainHits.Add(1)
+		_, _ = w.Write([]byte(`{"result":"zoo-mainnet"}`))
+	}))
+	t.Cleanup(main.Close)
+	test := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		testHits.Add(1)
+		_, _ = w.Write([]byte(`{"result":"zoo-testnet"}`))
+	}))
+	t.Cleanup(test.Close)
+
+	cfg, _ := LoadConfig("")
+	store := NewInMemoryStore()
+	engine := &QuoteEngine{Feed: NewStaticPriceFeed(defaultPrices())}
+	api := NewAPI(cfg, "", nil, nil, nil, store, engine)
+	// LUX proxy deliberately unset — zoo routes must mount on their own.
+	api.SetZooRPCURLs(main.URL, test.URL, time.Second, nil)
+	app := zip.New(zip.Config{AppName: "lux-bridge-test-rpc-proxy-zoo", DisableStartupMessage: true})
+	app.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(app)
+
+	status, body := fireRequest(t, app, "POST", "/api/rpc/zoo-mainnet", []byte(`{}`))
+	if status != http.StatusOK || !strings.Contains(string(body), "zoo-mainnet") {
+		t.Errorf("zoo-mainnet: status=%d body=%s, want 200 + zoo-mainnet result", status, body)
+	}
+	if _, _ = fireRequest(t, app, "POST", "/api/rpc/zoo-testnet", []byte(`{}`)); testHits.Load() != 1 {
+		t.Errorf("zoo testnet hits = %d, want 1", testHits.Load())
+	}
+	if mainHits.Load() != 1 {
+		t.Errorf("zoo mainnet hits = %d, want 1", mainHits.Load())
+	}
+	// LUX routes stay unregistered when only the Zoo proxy is configured.
+	if status, _ := fireRequest(t, app, "POST", "/api/rpc/lux-mainnet", []byte(`{}`)); status != http.StatusNotFound {
+		t.Errorf("lux-mainnet status = %d, want 404 (not configured)", status)
+	}
+}

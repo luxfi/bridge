@@ -35,6 +35,16 @@ networks:
     txExplorerTpl: https://explore.lux.network/tx/{tx}
     addrExplorerTpl: https://explore.lux.network/address/{addr}
 
+  - internalName: ZOO_MAINNET
+    displayName: Zoo
+    nativeCurrency: ZOO
+    chainId: "200200"
+    type: evm
+    isFeatured: true
+    avgCompletion: 1m
+    txExplorerTpl: https://explore.zoo.network/tx/{tx}
+    addrExplorerTpl: https://explore.zoo.network/address/{addr}
+
   - internalName: ETHEREUM_MAINNET
     displayName: Ethereum
     nativeCurrency: ETH
@@ -151,6 +161,11 @@ tokens:
     name: Lux
     decimals: 18
     network: LUX_MAINNET
+
+  - asset: ZOO
+    name: Zoo
+    decimals: 18
+    network: ZOO_MAINNET
 
   # Ethereum mainnet — ETH + 3 major stablecoins
   - asset: ETH

@@ -46,15 +46,21 @@ describe('buildWagmiConfig', () => {
     const ids = config.chains.map((c) => c.id)
     expect(ids).toContain(1)
     expect(ids).toContain(8453)
+    // Lux-family subnets ship in the mainnet set: Lux (96369) + Zoo (200200).
+    expect(ids).toContain(96369)
+    expect(ids).toContain(200200)
+    expect(ids).not.toContain(200201) // Zoo Testnet stays out of mainnet env
   })
 
   it('exposes the testnet EVM set when env=testnet', () => {
     const config = buildWagmiConfig({ ...base, env: 'testnet' })
     const ids = config.chains.map((c) => c.id)
-    // Sepolia, Base Sepolia, Holesky must all be present; mainnet chains must not.
-    expect(ids).toEqual(expect.arrayContaining([11155111, 84532, 17000]))
+    // Sepolia, Base Sepolia, Holesky, Lux Testnet, Zoo Testnet must all be
+    // present; mainnet chains must not.
+    expect(ids).toEqual(expect.arrayContaining([11155111, 84532, 17000, 96368, 200201]))
     expect(ids).not.toContain(1)
     expect(ids).not.toContain(8453)
+    expect(ids).not.toContain(200200) // Zoo Mainnet stays out of testnet env
   })
 
   it('treats env=devnet the same as env=testnet for chain set selection', () => {

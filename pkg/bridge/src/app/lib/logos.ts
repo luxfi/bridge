@@ -140,6 +140,8 @@ export const CHAIN_LOGOS: Record<string, string> = {
   'evm:56': BNB_SVG,            // Binance Smart Chain
   'evm:43114': AVAX_SVG,        // Avalanche C-Chain
   'evm:200200': ZOO_SVG,        // Zoo
+  'evm:200201': ZOO_SVG,        // Zoo Testnet
+  'evm:200203': ZOO_SVG,        // Zoo Local
   'evm:42220': CELO_SVG,        // Celo
   'evm:100': GNO_SVG,           // Gnosis Chain
   'evm:250': FTM_SVG,           // Fantom Opera
