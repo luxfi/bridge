@@ -1,0 +1,53 @@
+# mpc-router — family-aware MPC routing proxy (REQUIREMENTS §13.7 G7).
+#
+# Dispatches keygen/sign by wallet_id family: Solana/TON/XRP -> mpcd-single
+# (ed25519, no auth), EVM/BTC -> the real lux-mpc cluster (ECDSA, authed with
+# the existing mpc-api-token). The router injects each backend's token itself —
+# the bridge's inbound token is ignored. Apply when enabling the ed25519
+# corridors — docs/operator-deploy-ed25519.md (Step 4). After this is up,
+# repoint the bridge's BRIDGE_MPC_URL at http://mpc-router.lux-bridge.svc:9700.
+#
+# Stateless proxy; replicas: 2 for HA.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpc-router
+  namespace: lux-bridge
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: mpc-router }
+  template:
+    metadata:
+      labels: { app: mpc-router }
+    spec:
+      containers:
+        - name: mpc-router
+          image: ghcr.io/luxfi/mpc-router:de3a912a
+          args:
+            - --addr=:9700
+            - --eddsa-url=http://mpcd-single.lux-bridge.svc:9900
+            - --ecdsa-url=http://mpc-api-svc.lux-bridge.svc:8081
+            - --ecdsa-token=env:ECDSA_TOKEN     # secrets resolver reads $ECDSA_TOKEN
+          env:
+            - name: ECDSA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bridge-secrets
+                  key: mpc-api-token
+          ports:
+            - { containerPort: 9700, name: http }
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpc-router
+  namespace: lux-bridge
+spec:
+  selector: { app: mpc-router }
+  ports:
+    - { port: 9700, targetPort: 9700, name: http }

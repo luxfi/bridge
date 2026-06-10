@@ -1,0 +1,59 @@
+# mpcd-single — single-signer HKDF-per-wallet ed25519 backend (REQUIREMENTS §13.7 G7).
+#
+# The ed25519 leg of the LUX go-live (Solana / TON / XRP), sitting behind
+# mpc-router. Apply ONLY when enabling the ed25519 corridors — full runbook in
+# docs/operator-deploy-ed25519.md (Step 3).
+#
+# PRECONDITIONS:
+#   - Secret mpcd-single-secret exists with key master.seed (32-byte hex). BACK
+#     IT UP — losing it strands every derived deposit/release address.
+#   - Single-signer custody: cap the ed25519 release-wallet balances to an
+#     acceptable loss (this is not threshold custody).
+#
+# Stateless given the seed (derivation is deterministic) → no PVC; replicas can
+# scale for HA since every replica with the same seed derives the same keys.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpcd-single
+  namespace: lux-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mpcd-single }
+  template:
+    metadata:
+      labels: { app: mpcd-single }
+    spec:
+      containers:
+        - name: mpcd-single
+          image: ghcr.io/luxfi/mpcd-single:de3a912a
+          args:
+            - --addr=:9900
+            - --master-seed=file:/var/lib/mpcd-single/master.seed
+            - --auto-create-seed=false   # prod: fail loudly if the seed is missing
+          ports:
+            - { containerPort: 9900, name: http }
+          volumeMounts:
+            - { name: seed, mountPath: /var/lib/mpcd-single, readOnly: true }
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 3
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+      volumes:
+        - name: seed
+          secret:
+            secretName: mpcd-single-secret
+            items:
+              - { key: master.seed, path: master.seed }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpcd-single
+  namespace: lux-bridge
+spec:
+  selector: { app: mpcd-single }
+  ports:
+    - { port: 9900, targetPort: 9900, name: http }

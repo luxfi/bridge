@@ -33,9 +33,13 @@ These are not optional. Skipping either ships a live-exploitable bridge.
    release wallet to the **same** ed25519 address per family. Without the G8
    gate, `depositcheck` confirms SOL/TON swaps the user never funded and the
    bridge pays out the destination leg from standing release liquidity
-   (observed live: 96 XRP over-refund, 0.268 LUX free-mint). The fix is on
-   branch `whispers/g8-baseline-port` (commit `826fdcaf`); it must be merged
-   into the image you deploy. **Verify before enabling any network below:**
+   (observed live: 96 XRP over-refund, 0.268 LUX free-mint). The pushed
+   go-live image `ghcr.io/luxfi/bridge:de3a912a` was built from local
+   `whispers/bridgev2`, which **already contains the gate** (verified). Any
+   rebuild MUST come from that branch — NOT from `origin/whispers/bridgev2`
+   (#393), which was force-pushed to a G8-less baseline; the
+   `whispers/g8-baseline-port` branch (`826fdcaf`) is the separate port that
+   adds the gate onto the #393 shapes. **Verify before enabling any network:**
 
    ```bash
    # In the running bridge image, the Swap struct must carry the baseline fields.
@@ -113,7 +117,7 @@ is fine; it can scale for HA since every replica with the same seed derives the
 same keys.
 
 ```yaml
-# k8s/mpcd-single-deployment.yaml  (apply when enabling ed25519)
+# Committed at k8s/mpcd-single-deployment.yaml — apply it directly (below). Shown for reference:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -176,7 +180,7 @@ no auth) and to the existing `mpc-api-svc` (ECDSA, authed with the same
 itself — the bridge's inbound token is ignored.
 
 ```yaml
-# k8s/mpc-router-deployment.yaml  (apply when enabling ed25519)
+# Committed at k8s/mpc-router-deployment.yaml — apply it directly (below). Shown for reference:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
