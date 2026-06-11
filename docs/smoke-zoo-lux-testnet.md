@@ -43,6 +43,20 @@ then released LUX.
 | Dest chainId | `96368` (LUX_TESTNET) |
 | Release wallet | `0x887b9496f1854d93003a4d36cadb405651f48033` |
 
+## UI recording — `app/server/result-img/lux-zoo-test.gif`
+
+A screen recording of the **actual bridge SPA** driving a third LUX→ZOO swap end
+to end (connect → pick Lux Testnet → Zoo Testnet → 1 LUX → 49.5 ZOO → "Bridge
+LUX → ZOO" → ● Completed), against the same live Zoo-fixed bridge + threshold
+cluster. Same corridor, same RPC-path fix, shown through the real UI:
+
+| Field | Value |
+|---|---|
+| Swap ID | `swap_684f3b0d4681e520` |
+| Delivered | **49.5 ZOO** |
+| Deposit tx (LUX) | `0xbeac9607017b7d65d5a196392f3966a5fdac5690cbceb5f189d9c911392dca2e` |
+| Dest tx (ZOO) | `0x9aca578ee3e314c57782f834489e8223dae05d28e2fd5eef9b39d1ed8cb9c152` |
+
 ## What this proves / does not prove
 
 - **Proves:** both halves of the Zoo corridor work against the live chains via the
