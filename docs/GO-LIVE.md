@@ -33,12 +33,22 @@ gates. Read it top to bottom before touching the cluster.
 
 ## Sequence
 
-### Phase 0 — Rehearse on testnet (strongly recommended)
+### Phase 0 — Rehearse on testnet (DONE 2026-06-11 — `docs/rehearsal-phase0-findings.md`)
 The corridors are validated, but the **productionized deploy stack** (k8s
 manifests + staged ConfigMap + the `de3a912a` image + mpcd-single/mpc-router
-wiring) has never run as a unit. Deploy it to testnet first (same manifests,
-`networks.testnet.yaml`, a throwaway master seed), run the Phase 2 verification
-gate + one swap each direction, then tear down. Cheap insurance.
+wiring) had never run as a unit. It was rehearsed in an isolated
+`lux-bridge-rehearsal` namespace (testnet config, throwaway seed, in-namespace
+single-node ECDSA mpcd; live `lux-bridge` untouched) and **torn down**.
+**Result:** the stack runs end-to-end — G8 image gate, ECDSA + ed25519 keygen
+and sign through the router (`family=eddsa → mpcd-single`, `family=ecdsa →
+mpc-api-svc`), the **G8 no-deposit gate held** (unfunded XRP→LUX stayed
+`user_deposit_pending`), and swap state + key shares survived pod restarts.
+**One go-live blocker found + fixed:** the k8s manifest ran the static price
+feed only and it lacked XRP/AVAX/MATIC, so those corridors failed quote with
+`price_unknown` — now `BRIDGE_COINGECKO=true` is set in the deployment and the
+missing symbols were added to the static fallback. Two operator notes (mpcd
+`MPC_PASSWORD` env; ConfigMap/Ingress are ns-/host-bound for a testnet rehearsal)
+are in the findings doc. If you re-run before cutover, repeat the Phase 2 gate.
 
 ### Phase 1 — EVM + BTC live → `docs/operator-deploy-phase-1-4.md`
 Populate `bridge-secrets` → `kubectl apply -f k8s/bridge-deployment.yaml`

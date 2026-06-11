@@ -1,0 +1,35 @@
+### rehearsal resource inventory (Thu Jun 11 16:07:18 UTC 2026)
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/lux-bridge    1/1     1            1           16m
+deployment.apps/mpc-router    2/2     2            2           14m
+deployment.apps/mpcd-single   1/1     1            1           14m
+
+NAME                             READY   AGE
+statefulset.apps/mpc-rehearsal   1/1     21m
+
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/lux-bridge      ClusterIP   10.124.66.4     <none>        80/TCP     16m
+service/mpc-api-svc     ClusterIP   10.124.75.27    <none>        8081/TCP   21m
+service/mpc-rehearsal   ClusterIP   None            <none>        9651/TCP   21m
+service/mpc-router      ClusterIP   10.124.86.194   <none>        9700/TCP   14m
+service/mpcd-single     ClusterIP   10.124.88.84    <none>        9900/TCP   14m
+
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/lux-bridge-5ccd8dfcb6-7jxml   1/1     Running   0          8m49s
+pod/mpc-rehearsal-0               1/1     Running   0          92s
+pod/mpc-router-796d858645-5dt9n   1/1     Running   0          14m
+pod/mpc-router-796d858645-fkmz5   1/1     Running   0          14m
+pod/mpcd-single-d89779664-bhmzf   1/1     Running   0          42s
+
+NAME                                             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/lux-bridge-data            Bound    pvc-48199a84-8b01-4658-99fa-cdb9167d854f   20Gi       RWO            do-block-storage   <unset>                 16m
+persistentvolumeclaim/mpc-data-mpc-rehearsal-0   Bound    pvc-0b087475-4fed-419c-8d47-b23b490fe32f   2Gi        RWO            do-block-storage   <unset>                 21m
+
+NAME                          DATA   AGE
+configmap/kube-root-ca.crt    1      52m
+configmap/lux-bridge-config   1      21m
+
+NAME                        TYPE                             DATA   AGE
+secret/bridge-secrets       Opaque                           6      52m
+secret/ghcr-pull            kubernetes.io/dockerconfigjson   1      17m
+secret/mpcd-single-secret   Opaque                           1      52m

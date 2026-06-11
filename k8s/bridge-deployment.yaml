@@ -405,6 +405,16 @@ spec:
             # external L1s. Pin strict-pq for internal Lux↔Lux only.
             - name: BRIDGE_PROFILE
               value: classical-compat
+            # Live price feed (CoinGecko) wrapped over the static fallback.
+            # REQUIRED for go-live: the static feed alone has no price for
+            # XRP/AVAX/MATIC, so without this, XRP/AVAX/Polygon-native swaps
+            # fail quote with "price_unknown" (caught in the Phase 0 testnet
+            # rehearsal). The static feed still backstops CoinGecko outages
+            # (it now carries those symbols too). For production request
+            # volume set BRIDGE_COINGECKO_API_KEY (free tier is rate-limited)
+            # — wire it through bridge-secrets like mpc-api-token.
+            - name: BRIDGE_COINGECKO
+              value: "true"
           volumeMounts:
             - name: config
               mountPath: /etc/bridge
