@@ -34,8 +34,9 @@ These are not optional. Skipping either ships a live-exploitable bridge.
    gate, `depositcheck` confirms SOL/TON swaps the user never funded and the
    bridge pays out the destination leg from standing release liquidity
    (observed live: 96 XRP over-refund, 0.268 LUX free-mint). The pushed
-   go-live image `ghcr.io/luxfi/bridge:de3a912a` was built from local
-   `whispers/bridgev2`, which **already contains the gate** (verified). Any
+   go-live image `ghcr.io/luxfi/bridge:a335a9f6` was built from local
+   `whispers/bridgev2-golive`, which **already contains the gate** (re-verified
+   by `strings`; supersedes `de3a912a`). Any
    rebuild MUST come from that branch — NOT from `origin/whispers/bridgev2`
    (#393), which was force-pushed to a G8-less baseline; the
    `whispers/g8-baseline-port` branch (`826fdcaf`) is the separate port that
@@ -66,23 +67,28 @@ the `bridge-secrets` Secret and `mpc-api-svc` exist), and you can push images to
 
 ## Step 1 — Build & push the images
 
-**Already done for this release** — all three are built from the local G8
-branch and pushed to `ghcr.io/luxfi` at tag **`de3a912a`** (bridge ships the
-G8 baseline gate; verified). The manifests below pin that tag, so you can skip
-straight to Step 2. Re-run the block only to cut a new build.
+**Already done for this release** — all built from the local G8 branch and
+pushed to `ghcr.io/luxfi`. **The bridge is `a335a9f6`** (G8 gate + the
+XRP/AVAX/MATIC price fix + Zoo path; verified by `strings`); **mpcd-single and
+mpc-router stay `de3a912a`** (unchanged since that build). The manifests pin
+those tags, so you can skip straight to Step 2. Re-run the block only to cut a
+new build.
 
 ```bash
-export TAG=de3a912a   # the pushed release; the manifests below pin this
+# Bridge — MUST be built from a branch that includes the G8 gate
+# (whispers/bridgev2-golive). Tag = the code commit SHA.
+export BRIDGE_TAG=a335a9f6
+docker build -f cmd/bridge/Dockerfile --build-arg VERSION=$BRIDGE_TAG \
+  -t ghcr.io/luxfi/bridge:$BRIDGE_TAG .
+docker push ghcr.io/luxfi/bridge:$BRIDGE_TAG
 
-# Bridge — MUST be built from a branch that includes the G8 gate (whispers/bridgev2).
-docker build -f cmd/bridge/Dockerfile      -t ghcr.io/luxfi/bridge:$TAG .
-# ed25519 backend + router (REQUIREMENTS §13.7 G7).
-docker build -f cmd/mpcd-single/Dockerfile -t ghcr.io/luxfi/mpcd-single:$TAG .
-docker build -f cmd/mpc-router/Dockerfile  -t ghcr.io/luxfi/mpc-router:$TAG .
-
-docker push ghcr.io/luxfi/bridge:$TAG
-docker push ghcr.io/luxfi/mpcd-single:$TAG
-docker push ghcr.io/luxfi/mpc-router:$TAG
+# ed25519 backend + router (REQUIREMENTS §13.7 G7) — unchanged since de3a912a.
+# Only rebuild + bump these if cmd/mpcd-single or cmd/mpc-router changes.
+export MPC_TAG=de3a912a
+docker build -f cmd/mpcd-single/Dockerfile -t ghcr.io/luxfi/mpcd-single:$MPC_TAG .
+docker build -f cmd/mpc-router/Dockerfile  -t ghcr.io/luxfi/mpc-router:$MPC_TAG .
+docker push ghcr.io/luxfi/mpcd-single:$MPC_TAG
+docker push ghcr.io/luxfi/mpc-router:$MPC_TAG
 ```
 
 ---

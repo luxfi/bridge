@@ -359,8 +359,11 @@ spec:
           # Pinned to the verified go-live image (built from the local G8
           # branch, carries the source baseline gate). Do NOT deploy :latest
           # for go-live — it may resolve to a G8-less build. Bump this tag
-          # for each release.
-          image: ghcr.io/luxfi/bridge:de3a912a
+          # for each release. a335a9f6 adds the static-price fix (XRP/AVAX/
+          # MATIC) + the Zoo /ext/bc/zoo/rpc path over de3a912a; G8 gate
+          # re-verified by `strings`. mpc-router/mpcd-single stay de3a912a
+          # (unchanged in a335a9f6).
+          image: ghcr.io/luxfi/bridge:a335a9f6
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
