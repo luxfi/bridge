@@ -135,7 +135,7 @@ Notable removals from prior drafts:
 | Server-side cosigner glue | **Merged** — `app/server/src/domain/cosigners.ts` + Fireblocks/native tests. End-to-end soak against a real Utila/Fireblocks tenant still pending. | `app/server/` |
 | Lux tenant app (`app/bridge/`) | `@luxbridge/lux-tenant` v1.0.0 — thin shell | This repo |
 | Zoo tenant app | Pending — needs new tenant repo (see §10) | TBD |
-| Liquidity backend wire-up | Later | After Lux/Zoo tenants ship |
+| White-label tenant backend wire-up | Later | After Lux/Zoo tenants ship |
 
 ### 5.3 SDK public API surface (verified against `pkg/bridge/src/index.ts`)
 
