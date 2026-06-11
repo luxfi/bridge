@@ -7,14 +7,17 @@ gates. Read it top to bottom before touching the cluster.
 ## Scope & decisions (locked)
 
 - **Corridors:** LUX ↔ {ETH + EVM majors, BTC, Solana, TON, XRP}. All validated
-  on-chain. **Zoo is a post-launch follow-up** — the chain IS live (200200/200201)
-  and the bridge RPC-path bug is fixed in code, but the `de3a912a` launch image
-  predates that fix, so Zoo is deliberately NOT part of this cutover (the k8s
-  ConfigMap omits it). See the post-launch item below.
-- **Image:** deploy **`ghcr.io/luxfi/{bridge,mpc-router,mpcd-single}:de3a912a`**
-  (built + pushed). The bridge image carries the **G8 source baseline gate** and
-  the SOL/TON/XRP refund caps — verified. Built from local `whispers/bridgev2`;
-  any rebuild MUST come from that branch, **never `origin/#393`** (G8-less).
+  on-chain. **Zoo is a post-launch follow-up** — the chain IS live (200200/200201).
+  The bridge image now carries the RPC-path fix (the `a335a9f6` bridge image
+  includes `37e58814`), so the *image* no longer blocks Zoo; it stays out of this
+  cutover only because the k8s ConfigMap omits ZOO_MAINNET and mainnet Zoo needs
+  owner sign-off (young chain). See the post-launch item below.
+- **Image:** deploy **bridge `ghcr.io/luxfi/bridge:a335a9f6`** + **`ghcr.io/luxfi/{mpc-router,mpcd-single}:de3a912a`**.
+  The bridge image carries the **G8 source baseline gate** + SOL/TON/XRP refund
+  caps (re-verified by `strings`), plus the static-price fix (XRP/AVAX/MATIC) and
+  the Zoo path over `de3a912a`. mpc-router/mpcd-single are unchanged since
+  `de3a912a` (no rebuild). Built from local `whispers/bridgev2-golive`; any
+  rebuild MUST come from that branch, **never `origin/#393`** (G8-less).
 - **Custody:** ed25519 (SOL/TON/XRP) runs on **mpcd-single — single-signer,
   capped release balances** (fast path). EVM/BTC use the real threshold cluster.
   Upgrade to FROST/Fireblocks later is a `--eddsa-url` flag-flip (no redeploy).
@@ -70,7 +73,7 @@ enabled in the staged ConfigMap → **run the G8 no-deposit test before funding*
 3. **Master seed generated, backed up, and provided via Secret/KMS** (not auto-created).
 4. **G8 no-deposit test passes** — create a SOL swap, don't fund it, confirm it
    stays `user_deposit_pending` (never auto-confirms). Do this BEFORE real funds.
-5. **Route `bridge.lux.network` to the unified Go bridge (`bridge-go`/`de3a912a`)** —
+5. **Route `bridge.lux.network` to the unified Go bridge (`bridge-go`/`a335a9f6`)** —
    NOT the legacy `bridge-server`/`bridge-ui` Express stack (retire those post-soak).
 
 ## Verify (post-deploy)
@@ -80,19 +83,19 @@ for Sol/TON/XRP and `family=ecdsa → mpc-api-svc` for EVM/BTC).
 
 ## Open items (post-launch, not blockers)
 
-- **Branch reconciliation:** all go-live work is local on `whispers/bridgev2`;
-  only the images are pushed. Decide how the git work reaches the team (push
-  local→origin over #393, or keep deploying images out-of-band).
+- **Branch reconciliation:** go-live work is on `whispers/bridgev2-golive`
+  (pushed to origin; PR pending). Decide how it merges to `main` (it's orthogonal
+  to launch — deploys run from the pushed images, not the branch).
 - **Custody upgrade trigger:** decide when ed25519 moves off single-signer
   (e.g. volume threshold) → FROST or Fireblocks via `--eddsa-url`.
 - **Monitoring:** alert on ed25519 release-wallet balances (drain + over-cap) and
   on `/metrics` (`bridge_bchain_reachable`, swap-stall counts).
 - **Zoo (follow-up):** chain is live (mainnet 200200 / testnet 200201, matching
-  the wiring) and the RPC-path fix is committed (`37e58814`), but the `de3a912a`
-  image has the old path. To ship Zoo: (1) build a new image past `37e58814`,
-  (2) add ZOO_MAINNET network + ZOO token to the k8s ConfigMap (mirror
-  `networks.mainnet.yaml`), (3) smoke ZOO_TESTNET↔LUX_TESTNET first. Mainnet Zoo
-  is brand-new (~799 blocks) — owner sign-off before routing real value.
+  the wiring) and the RPC-path fix (`37e58814`) **is now in the `a335a9f6` bridge
+  image** — the image no longer blocks Zoo. To ship Zoo: (1) add ZOO_MAINNET
+  network + ZOO token to the k8s ConfigMap (mirror `networks.mainnet.yaml`),
+  (2) smoke ZOO_TESTNET↔LUX_TESTNET first. Mainnet Zoo is brand-new (~799 blocks)
+  — owner sign-off before routing real value.
 
 ## References
 `operator-deploy-phase-1-4.md` · `operator-deploy-ed25519.md` ·

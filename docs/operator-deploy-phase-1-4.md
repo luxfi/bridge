@@ -20,7 +20,7 @@ K8s artifact: `k8s/bridge-deployment.yaml` (already in this repo).
 | Namespace `lux-bridge` exists | `kubectl get ns lux-bridge` (create with `kubectl apply -f k8s/mpc-deployment.yaml` first — it creates the namespace + the StatefulSet the bridge talks to) |
 | `cert-manager` installed with `letsencrypt-prod` ClusterIssuer | `kubectl get clusterissuer letsencrypt-prod` |
 | Ingress controller with `ingressClassName: ingress` | `kubectl get ingressclass ingress` |
-| Go-live image `ghcr.io/luxfi/bridge:de3a912a` exists | `docker manifest inspect ghcr.io/luxfi/bridge:de3a912a` (the G8-gated build pinned in `k8s/bridge-deployment.yaml`; do NOT deploy `:latest` — it may resolve to a G8-less build) |
+| Go-live image `ghcr.io/luxfi/bridge:a335a9f6` exists | `docker manifest inspect ghcr.io/luxfi/bridge:a335a9f6` (the G8-gated build pinned in `k8s/bridge-deployment.yaml`; supersedes `de3a912a` — adds the XRP/AVAX/MATIC price fix + Zoo path; do NOT deploy `:latest` — it may resolve to a G8-less build) |
 | DNS control for `bridge.lux.network` + `bridge-api.lux.network` | Confirm with the team that owns the Lux zone |
 
 ## Step 1 — Populate `bridge-secrets`
@@ -91,7 +91,7 @@ Expected log lines on a healthy startup:
 Failure modes:
 - `mpc keygen unreachable` → `bridge-secrets.mpc-api-token` wrong, or the `mpc-api-svc.lux-bridge.svc:8081` service isn't routable from the bridge pod. Check `kubectl -n lux-bridge get svc mpc-api-svc`.
 - `swap store open: zapdb: cannot lock` → PVC stuck on an old pod's lock. `kubectl -n lux-bridge delete pod -l app=lux-bridge` and let `Recreate` strategy spin a fresh pod once the PV releases.
-- Image pull error → the `de3a912a` tag isn't pushed, or the cluster's `ghcr.io` pull secret is missing. Confirm with `docker manifest inspect ghcr.io/luxfi/bridge:de3a912a`; override the tag if needed with `kubectl -n lux-bridge set image deployment/lux-bridge bridge=ghcr.io/luxfi/bridge:<tag>` (use a G8-gated tag, never `:latest`).
+- Image pull error → the `a335a9f6` tag isn't pushed, or the cluster's `ghcr.io` pull secret is missing. Confirm with `docker manifest inspect ghcr.io/luxfi/bridge:a335a9f6`; override the tag if needed with `kubectl -n lux-bridge set image deployment/lux-bridge bridge=ghcr.io/luxfi/bridge:<tag>` (use a G8-gated tag, never `:latest`).
 
 ## Step 3 — Verify ingress + TLS
 
