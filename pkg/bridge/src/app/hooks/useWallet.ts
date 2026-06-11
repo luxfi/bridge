@@ -13,7 +13,7 @@
 //     `@luxfi/threshold` SDK — separate trust domain, separate signer.
 //   - PQ-safe at the bridge boundary: even if the user's wallet uses
 //     classical secp256k1, the bridge-side signature can be post-quantum
-//     (Corona / Pulsar / Corona) because the two legs are independent.
+//     (Pulsar / Corona) because the two legs are independent.
 //
 // DEV mode:
 //   When `import.meta.env.DEV` is true AND no wagmi connector is available
