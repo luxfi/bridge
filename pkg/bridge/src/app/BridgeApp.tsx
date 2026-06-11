@@ -15,7 +15,7 @@
 //   - No central authority. Chain + asset lists are static client-side data
 //     today; in production the bridge backend serves them, but the trust
 //     model is the same — the user signs every transfer via threshold MPC.
-//   - PQ-safe. The signing layer uses Ringtail-lattice + ECDSA-CMP hybrid;
+//   - PQ-safe. The signing layer uses Corona-lattice + ECDSA-CMP hybrid;
 //     nothing in this file makes a classical-only assumption. Wagmi handles
 //     the user leg (classical secp256k1); MPC handles the bridge leg (any
 //     protocol cfg.mpc.protocol specifies).
