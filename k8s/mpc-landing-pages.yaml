@@ -133,8 +133,8 @@ data:
         <div class="protocol"><h3>FROST</h3><div class="proto-type">Threshold Schnorr / EdDSA</div><p>2-round signing with hedged deterministic nonces. Ed25519 for Solana and TON. BIP-340 Taproot for Bitcoin.</p></div>
         <div class="protocol"><h3>LSSS</h3><div class="proto-type">Linear Secret Sharing</div><p>Dynamic resharing without key reconstruction. Transition t-of-n configurations with zero downtime and generation rollback.</p></div>
         <div class="protocol"><h3>TFHE</h3><div class="proto-type">Threshold Homomorphic Encryption</div><p>Multi-party threshold decryption with homomorphic operations. Confidential compute on encrypted data.</p></div>
-        <div class="protocol"><h3>Ringtail</h3><div class="proto-type">Post-Quantum Lattice</div><p>Module-LWE threshold signatures at 128/192/256-bit security levels. Protection against quantum adversaries.</p></div>
-        <div class="protocol"><h3>Quasar</h3><div class="proto-type">Hybrid BLS + Post-Quantum</div><p>Combines BLS12-381 pairing-based signatures with Ringtail lattice for immediate and future-proof security.</p></div>
+        <div class="protocol"><h3>Corona</h3><div class="proto-type">Post-Quantum Lattice</div><p>Module-LWE threshold signatures at 128/192/256-bit security levels. Protection against quantum adversaries.</p></div>
+        <div class="protocol"><h3>Quasar</h3><div class="proto-type">Hybrid BLS + Post-Quantum</div><p>Combines BLS12-381 pairing-based signatures with Corona lattice for immediate and future-proof security.</p></div>
         <div class="protocol"><h3>BLS</h3><div class="proto-type">Aggregate Signatures</div><p>BLS12-381 pairing-based threshold signatures with efficient aggregation. Compatible with consensus systems.</p></div>
         <div class="protocol"><h3>Doerner</h3><div class="proto-type">Optimized 2-of-2 ECDSA</div><p>Constant-time 2-party ECDSA at ~5ms signing. Specialized for peer-to-peer custody workflows.</p></div>
       </div>
@@ -148,7 +148,7 @@ data:
       <div class="features">
         <div class="feature"><h3>Configurable Threshold</h3><p>Any t-of-n scheme: 3-of-5, 3-of-5, 5-of-9, or any custom configuration. Byzantine-resilient majority.</p></div>
         <div class="feature"><h3>Dynamic Resharing</h3><p>Add or remove signing parties without changing public keys or addresses. Zero-downtime key rotation.</p></div>
-        <div class="feature"><h3>Post-Quantum Security</h3><p>Ringtail lattice-based and Quasar hybrid schemes provide protection against future quantum computer attacks.</p></div>
+        <div class="feature"><h3>Post-Quantum Security</h3><p>Corona lattice-based and Quasar hybrid schemes provide protection against future quantum computer attacks.</p></div>
         <div class="feature"><h3>Confidential Compute</h3><p>TFHE threshold homomorphic encryption enables computation on encrypted data. Private policy evaluation.</p></div>
         <div class="feature"><h3>Zero-Knowledge Proofs</h3><p>17 ZK proof systems including Paillier multiplication, Pedersen-Rabin, Schnorr proofs, and range proofs.</p></div>
         <div class="feature"><h3>Multi-Chain Bridge</h3><p>Secures the Lux Bridge across 15+ blockchain networks. Threshold-signed cross-chain transactions.</p></div>
@@ -202,7 +202,7 @@ data:
       <div class="features">
         <div class="feature"><h3>No Single Point of Failure</h3><p>Private keys are never reconstructed. Threshold parties hold shares that are individually useless.</p></div>
         <div class="feature"><h3>Identifiable Aborts</h3><p>CGGMP21 identifies the exact cheating party in a failed signing session. Automated fault recovery.</p></div>
-        <div class="feature"><h3>Proactive Security</h3><p>LSSS share refresh and Ringtail proactive rotation ensure long-term security. Generation-based key lifecycle.</p></div>
+        <div class="feature"><h3>Proactive Security</h3><p>LSSS share refresh and Corona proactive rotation ensure long-term security. Generation-based key lifecycle.</p></div>
         <div class="feature"><h3>Encrypted Storage</h3><p>All key shares encrypted at rest with AES-256. Optional KMS integration for hardware-backed encryption.</p></div>
       </div>
     </div>
@@ -367,8 +367,8 @@ data:
         <div class="protocol"><h3>FROST</h3><div class="proto-type">Threshold Schnorr / EdDSA</div><p>2-round signing with hedged deterministic nonces. Ed25519 for Solana and TON. BIP-340 Taproot for Bitcoin.</p></div>
         <div class="protocol"><h3>LSSS</h3><div class="proto-type">Linear Secret Sharing</div><p>Dynamic resharing without key reconstruction. Transition t-of-n configurations with zero downtime.</p></div>
         <div class="protocol"><h3>TFHE</h3><div class="proto-type">Threshold Homomorphic Encryption</div><p>Multi-party threshold decryption with homomorphic operations. Confidential compute on encrypted data.</p></div>
-        <div class="protocol"><h3>Ringtail</h3><div class="proto-type">Post-Quantum Lattice</div><p>Module-LWE threshold signatures at 128/192/256-bit security levels. Protection against quantum adversaries.</p></div>
-        <div class="protocol"><h3>Quasar</h3><div class="proto-type">Hybrid BLS + Post-Quantum</div><p>Combines BLS12-381 pairing-based signatures with Ringtail lattice for immediate and future-proof security.</p></div>
+        <div class="protocol"><h3>Corona</h3><div class="proto-type">Post-Quantum Lattice</div><p>Module-LWE threshold signatures at 128/192/256-bit security levels. Protection against quantum adversaries.</p></div>
+        <div class="protocol"><h3>Quasar</h3><div class="proto-type">Hybrid BLS + Post-Quantum</div><p>Combines BLS12-381 pairing-based signatures with Corona lattice for immediate and future-proof security.</p></div>
         <div class="protocol"><h3>BLS</h3><div class="proto-type">Aggregate Signatures</div><p>BLS12-381 pairing-based threshold signatures with efficient aggregation. Compatible with consensus systems.</p></div>
         <div class="protocol"><h3>Doerner</h3><div class="proto-type">Optimized 2-of-2 ECDSA</div><p>Constant-time 2-party ECDSA at ~5ms signing. Specialized for peer-to-peer custody workflows.</p></div>
       </div>
@@ -382,7 +382,7 @@ data:
       <div class="features">
         <div class="feature"><h3>Configurable Threshold</h3><p>Any t-of-n scheme: 3-of-5, 3-of-5, 5-of-9, or any custom configuration. Byzantine-resilient majority.</p></div>
         <div class="feature"><h3>Dynamic Resharing</h3><p>Add or remove signing parties without changing public keys or addresses. Zero-downtime key rotation.</p></div>
-        <div class="feature"><h3>Post-Quantum Security</h3><p>Ringtail lattice-based and Quasar hybrid schemes provide protection against future quantum computer attacks.</p></div>
+        <div class="feature"><h3>Post-Quantum Security</h3><p>Corona lattice-based and Quasar hybrid schemes provide protection against future quantum computer attacks.</p></div>
         <div class="feature"><h3>Confidential Compute</h3><p>TFHE threshold homomorphic encryption enables computation on encrypted data. Private policy evaluation.</p></div>
         <div class="feature"><h3>Zero-Knowledge Proofs</h3><p>17 ZK proof systems including Paillier multiplication, Pedersen-Rabin, Schnorr proofs, and range proofs.</p></div>
         <div class="feature"><h3>Multi-Chain Bridge</h3><p>Secures the Pars Bridge across 15+ blockchain networks. Threshold-signed cross-chain transactions.</p></div>
@@ -436,7 +436,7 @@ data:
       <div class="features">
         <div class="feature"><h3>No Single Point of Failure</h3><p>Private keys are never reconstructed. Threshold parties hold shares that are individually useless.</p></div>
         <div class="feature"><h3>Identifiable Aborts</h3><p>CGGMP21 identifies the exact cheating party in a failed signing session. Automated fault recovery.</p></div>
-        <div class="feature"><h3>Proactive Security</h3><p>LSSS share refresh and Ringtail proactive rotation ensure long-term security. Generation-based key lifecycle.</p></div>
+        <div class="feature"><h3>Proactive Security</h3><p>LSSS share refresh and Corona proactive rotation ensure long-term security. Generation-based key lifecycle.</p></div>
         <div class="feature"><h3>Encrypted Storage</h3><p>All key shares encrypted at rest with AES-256. Optional KMS integration for hardware-backed encryption.</p></div>
       </div>
     </div>
