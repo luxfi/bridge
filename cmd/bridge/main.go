@@ -595,16 +595,27 @@ func main() {
 	// CG-backed entries are overridden at runtime, the rest are the
 	// permanent source for LUX/ZOO.
 	staticFeed := NewStaticPriceFeed(map[string]float64{
-		"ETH":  3500.00,
-		"LUX":  2.50,
-		"ZOO":  0.05,
-		"BTC":  65000.00,
-		"SOL":  150.00,
-		"TON":  6.00,
-		"USDC": 1.00,
-		"USDT": 1.00,
-		"DAI":  1.00,
-		"BNB":  600.00,
+		"ETH":   3500.00,
+		"LUX":   2.50,
+		"ZOO":   0.05,
+		"BTC":   65000.00,
+		"SOL":   150.00,
+		"TON":   6.00,
+		"USDC":  1.00,
+		"USDT":  1.00,
+		"DAI":   1.00,
+		"BNB":   600.00,
+		// Native assets of the remaining go-live corridors. Without these
+		// the static feed (the sole source when --coingecko is off, and the
+		// fallback when CoinGecko is unreachable) has no price for them, so
+		// quote + swap-create fail with "price_unknown" — caught in the
+		// Phase 0 testnet rehearsal, where an XRP swap couldn't be priced.
+		// MATIC + POL both present: Polygon mainnet still tickers MATIC,
+		// Amoy testnet uses POL.
+		"XRP":   2.25,
+		"AVAX":  35.00,
+		"MATIC": 0.55,
+		"POL":   0.55,
 	})
 
 	var priceFeed PriceFeed = staticFeed
