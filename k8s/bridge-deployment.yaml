@@ -264,13 +264,16 @@ data:
         contract: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"
         network: AVAX_MAINNET
 
-      # Non-EVM mainnet — LUX go-live corridors (deposit + withdrawal).
-      # ⚠️ PRECONDITION for SOL/TON/XRP: the ed25519 stack (mpcd-single +
-      # mpc-router) must be live and release wallets funded + BALANCE-CAPPED
-      # before serving this (single-signer custody; docs/operator-deploy-
-      # ed25519.md). The bridge image must carry the G8 baseline gate
-      # (de3a912a). BTC uses the always-present ECDSA cluster — no
-      # precondition. Keep in sync with cmd/bridge/networks.mainnet.yaml.
+      # Non-EVM mainnet — LUX go-live corridors.
+      # ⚠️ SOL/TON/XRP SHIP DISABLED here on purpose: a Phase-1 (EVM+BTC)
+      # deploy must NOT advertise corridors it cannot sign yet. Phase 2 flips
+      # their isDepositEnabled/isWithdrawalEnabled → true (docs/operator-
+      # deploy-ed25519.md Step 6) ONLY AFTER the ed25519 stack (mpcd-single +
+      # mpc-router) is live and release wallets are funded + BALANCE-CAPPED
+      # (single-signer custody; docs/custody-signoff-ed25519.md). The bridge
+      # image must carry the G8 baseline gate (a335a9f6+). BTC stays enabled —
+      # it uses the always-present ECDSA cluster, no precondition. Keep in sync
+      # with cmd/bridge/networks.mainnet.yaml.
       - asset: BTC
         name: Bitcoin
         decimals: 8
@@ -282,22 +285,22 @@ data:
         name: Solana
         decimals: 9
         network: SOLANA_MAINNET
-        isDepositEnabled: true
-        isWithdrawalEnabled: true
+        isDepositEnabled: false   # Phase 2 → true (operator-deploy-ed25519.md Step 6)
+        isWithdrawalEnabled: false
 
       - asset: TON
         name: Toncoin
         decimals: 9
         network: TON_MAINNET
-        isDepositEnabled: true
-        isWithdrawalEnabled: true
+        isDepositEnabled: false   # Phase 2 → true (operator-deploy-ed25519.md Step 6)
+        isWithdrawalEnabled: false
 
       - asset: XRP
         name: XRP
         decimals: 6
         network: XRP_MAINNET
-        isDepositEnabled: true
-        isWithdrawalEnabled: true
+        isDepositEnabled: false   # Phase 2 → true (operator-deploy-ed25519.md Step 6)
+        isWithdrawalEnabled: false
 
     limits:
       minUSD: 10
