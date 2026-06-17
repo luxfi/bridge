@@ -37,30 +37,45 @@ master seed is compromised, an attacker can drain **up to the full balance held
 in those three release wallets**. The seed itself, if lost, makes every
 SOL/TON/XRP wallet **permanently unrecoverable**.
 
-## 4. The mitigation — a hard cap (you set this)
+## 4. The mitigation — a capped hot wallet + treasury reserve (you set the cap)
 
-Release-wallet balances on these chains are **hard-capped** so the maximum loss
-is bounded to a hot-wallet float. The operator funds from treasury only up to the
-cap and never tops a wallet above it.
+The goal is high liquidity (swaps never stall) **without** parking a large
+at-risk balance on the single-signer key. We get both with the standard
+hot/warm split:
 
-> **Per-wallet cap (USD-equivalent), SOL / TON / XRP:**
+- **Hot release wallet (on the single-signer key): capped LOW.** This is the
+  only balance an attacker could drain, so it *is* the worst-case loss. Cap it
+  to a hot-wallet float you'd accept losing.
+- **Treasury reserve (off the signer): holds the bulk.** Not reachable by the
+  ed25519 key — so it doesn't count toward the loss ceiling.
+- **Top-up:** the operator refills the hot wallet from treasury as it drains
+  (alert at a low-water mark) and **never tops above the cap.** Swaps don't
+  stall (treasury keeps refilling) and the at-risk amount stays bounded.
+
+> **Hot release-wallet cap (USD-equivalent) — the worst-case loss per chain:**
 >
-> - SOL release wallet:  **$ __________**
-> - TON release wallet:  **$ __________**
-> - XRP release wallet:  **$ __________**
+> - SOL hot wallet:  **$ __________**
+> - TON hot wallet:  **$ __________**
+> - XRP hot wallet:  **$ __________**
 >
-> _(Or a single uniform cap across all three: **$ __________**.)_
+> _(Or one uniform hot cap across all three: **$ __________**.)_
 >
-> **Aggregate ceiling across all three (optional):** **$ __________**
+> **Low-water alert / top-up threshold:** **$ __________**
+> **Treasury reserve earmarked for ed25519 top-ups (off the signer):** **$ __________**
 
-**Reconcile with the per-swap limit.** The bridge currently allows up to
-**$100,000 per single swap** (`limits.maxUSD` in the deploy ConfigMap), with no
-per-asset override for SOL/TON/XRP. A release wallet capped *below* the largest
-single swap it must pay will stall that swap ("insufficient funds in release
-address"). So either set each cap **≥ the largest single SOL/TON/XRP swap you
-want to allow**, or lower the per-asset max to match the cap:
+**Reconcile with the per-swap limit.** The bridge allows up to **$100,000 per
+single swap** (`limits.maxUSD`), with no per-asset override for SOL/TON/XRP. A
+single swap larger than the *current* hot balance stalls until the next top-up,
+so set the hot cap **≥ the largest single swap you want to clear without a manual
+refill**, or lower the per-asset max:
 
-> **Max single swap for SOL/TON/XRP (USD):** **$ __________**  _(must be ≤ the cap above; default today is $100,000)_
+> **Max single swap for SOL/TON/XRP (USD):** **$ __________**  _(≤ the hot cap; default today is $100,000)_
+
+> **Today's limitation:** the bridge does not auto-refill or auto-sweep yet —
+> top-ups are manual against a balance alert. So pick a hot cap comfortably above
+> normal per-swap size (to keep refills infrequent) but low enough that the
+> worst-case loss is acceptable. Auto-sweep is the path to a permanently-tiny hot
+> balance at any throughput; it's deferred post-launch.
 
 ## 5. This is reversible
 
@@ -74,9 +89,9 @@ or balance exceeds **$ __________**, or by **__________ (date)**.
 ## Sign-off
 
 > I accept the single-signer ed25519 custody risk for the Solana, TON, and XRP
-> release wallets, bounded by the per-wallet caps in §4 above. I authorize launch
-> under this model and acknowledge the master-seed-loss and key-compromise risks
-> in §3.
+> release wallets, bounded by the **hot-wallet caps in §4** (hot/warm split — the
+> bulk of liquidity stays in treasury, off the signer). I authorize launch under
+> this model and acknowledge the master-seed-loss and key-compromise risks in §3.
 
 - **Name / role:** ______________________________
 - **Signature:** ______________________________
