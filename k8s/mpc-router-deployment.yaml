@@ -33,8 +33,12 @@ spec:
             - name: ECDSA_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: bridge-secrets
-                  key: mpc-api-token
+                  # Live cluster: the MPC API token lives in Secret
+                  # `bridge-mpc-token` (key MPC_API_TOKEN), shared with the
+                  # bridge + legacy server. (Not bridge-secrets/mpc-api-token,
+                  # which doesn't exist here.)
+                  name: bridge-mpc-token
+                  key: MPC_API_TOKEN
           ports:
             - { containerPort: 9700, name: http }
           livenessProbe:

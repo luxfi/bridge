@@ -22,6 +22,17 @@ signer:
 is the single-signer ed25519 backend. Both were productionized under
 REQUIREMENTS §13.7 G7 (`cmd/mpc-router`, `cmd/mpcd-single`).
 
+> **Automated path:** `scripts/deploy-phase2.sh` runs Steps 3–7 (deploy
+> mpcd-single + mpc-router → health → repoint the bridge → enable the corridors →
+> **G8 no-deposit gate**) and aborts before funding if the gate fails. The manual
+> steps below mirror it. The custody cap to enforce at funding lives in
+> `docs/custody-signoff-ed25519.md`.
+>
+> **All three images are distroless** (`gcr.io/distroless/static-debian12`) — no
+> shell, `wget`, `strings`, or `cat` inside the pods. Every check below uses
+> `kubectl port-forward` + `curl` from the operator box, and verifies G8 by image
+> tag rather than `strings`-in-pod.
+
 ---
 
 ## ⚠️ Two hard gates before you start
@@ -43,10 +54,16 @@ These are not optional. Skipping either ships a live-exploitable bridge.
    adds the gate onto the #393 shapes. **Verify before enabling any network:**
 
    ```bash
-   # In the running bridge image, the Swap struct must carry the baseline fields.
-   kubectl -n lux-bridge exec deploy/lux-bridge -- \
-     sh -c 'strings /usr/local/bin/bridge | grep -c sol_source_baseline_lamports'
-   # Expect: >= 1.  If 0, the image predates G8 — DO NOT enable ed25519.
+   # Pods are distroless (no shell/strings inside). Verify the RUNNING image is a
+   # known-G8 tag — a335a9f6 was strings-verified to contain the gate at build:
+   kubectl -n lux-bridge get deploy/lux-bridge \
+     -o jsonpath='{.spec.template.spec.containers[?(@.name=="bridge")].image}'
+   # Expect: ghcr.io/luxfi/bridge:a335a9f6  (verified-G8 build). NEVER :latest.
+   #
+   # For byte-level proof, strings the binary on your box (not in the pod):
+   #   docker create --name g8 ghcr.io/luxfi/bridge:a335a9f6
+   #   docker cp g8:/usr/local/bin/bridge /tmp/bridge && docker rm g8
+   #   strings /tmp/bridge | grep -c sol_source_baseline_lamports   # >= 1
    ```
 
 2. **Custody is single-signer — accept it explicitly or stop.**
@@ -59,8 +76,8 @@ These are not optional. Skipping either ships a live-exploitable bridge.
    threshold mpcd and retire `mpcd-single` — no bridge change). Do not enable
    high-value ed25519 corridors on single-signer custody by default.
 
-**Also assumed:** Phase 1.4 is done (the EVM+BTC bridge is live in `lux-bridge`,
-the `bridge-secrets` Secret and `mpc-api-svc` exist), and you can push images to
+**Also assumed:** Phase 1 is done (the EVM+BTC bridge is live in `lux-bridge`,
+the `bridge-mpc-token` Secret and `mpc-api-svc` exist), and you can push images to
 `ghcr.io/luxfi`.
 
 ---
@@ -212,8 +229,8 @@ spec:
             - name: ECDSA_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: bridge-secrets
-                  key: mpc-api-token
+                  name: bridge-mpc-token   # live cluster: token lives here (key MPC_API_TOKEN)
+                  key: MPC_API_TOKEN
           ports:
             - { containerPort: 9700, name: http }
           livenessProbe:
@@ -265,18 +282,31 @@ kubectl -n lux-bridge rollout status deploy/lux-bridge
 
 ## Step 6 — Enable the networks in the ConfigMap
 
-`SOLANA_MAINNET`, `TON_MAINNET`, and `XRP_MAINNET` are already present in
-`lux-bridge-config` but were gated off (see the "disabled pending mpcd FROST"
-comment). With the signer now able to produce ed25519 signatures, make sure
-each network you intend to enable is present with its native asset, then roll:
+`SOLANA_MAINNET`, `TON_MAINNET`, and `XRP_MAINNET` are present in
+`lux-bridge-config` but **ship disabled** (`isDepositEnabled` /
+`isWithdrawalEnabled: false`) so a Phase-1/EVM-only deploy can't advertise
+corridors it can't sign. With the ed25519 signer up, flip them on and roll.
+
+Scripted (deterministic — re-applies the ConfigMap with the three assets enabled):
 
 ```bash
-kubectl -n lux-bridge edit configmap lux-bridge-config   # confirm SOL/TON/XRP networks + tokens
-kubectl -n lux-bridge rollout restart deploy/lux-bridge  # the binary reads the file once at boot
+python3 - <<'PY' | kubectl apply -f -
+import yaml, sys
+docs = list(yaml.safe_load_all(open("k8s/bridge-deployment.yaml")))
+cm = next(d for d in docs if d and d.get("kind") == "ConfigMap")
+net = yaml.safe_load(cm["data"]["networks.yaml"])
+for t in net.get("tokens", []):
+    if t.get("asset") in ("SOL", "TON", "XRP"):
+        t["isDepositEnabled"] = True; t["isWithdrawalEnabled"] = True
+cm["data"]["networks.yaml"] = yaml.safe_dump(net, sort_keys=False)
+yaml.safe_dump(cm, sys.stdout, sort_keys=False)
+PY
+kubectl -n lux-bridge rollout restart deploy/lux-bridge   # the binary reads the file at boot
 ```
 
-Add only the corridors you are funding and watching. Each enabled network is a
-new release wallet you are on the hook to keep funded (Step 8).
+Or `kubectl -n lux-bridge edit configmap lux-bridge-config` and set the three
+`false` pairs to `true` by hand. Enable only the corridors you are funding and
+watching — each is a release wallet you must keep funded + capped (Step 8).
 
 ---
 
@@ -285,8 +315,10 @@ new release wallet you are on the hook to keep funded (Step 8).
 **7a. Plumbing is up.**
 
 ```bash
-kubectl -n lux-bridge exec deploy/mpc-router -- wget -qO- http://localhost:9700/healthz
-# {"status":"ok","service":"mpc-router"}
+# distroless pods (no wget inside) → port-forward + curl from your box:
+kubectl -n lux-bridge port-forward svc/mpc-router 19700:9700 & PF=$!; sleep 3
+curl -fsS http://127.0.0.1:19700/healthz; echo      # {"status":"ok","service":"mpc-router"}
+kill $PF
 kubectl -n lux-bridge logs deploy/mpc-router | grep -E 'eddsa|ecdsa'   # routing banner
 ```
 
@@ -296,10 +328,18 @@ SOL-source swap and DO NOT fund it. A correct deployment leaves it in
 auto-confirms and pays out.
 
 ```bash
-# Create a SOL→LUX swap via the API, note its id, wait ~2 min, then:
-kubectl -n lux-bridge exec deploy/lux-bridge -- \
-  wget -qO- http://localhost:8080/v1/bridge/swaps/<id> | jq .status
-# Expect: "user_deposit_pending"  (NOT "bridge_transfer_pending" / completed)
+# Automated as Step 5 of scripts/deploy-phase2.sh. Manual (distroless → port-forward + curl):
+kubectl -n lux-bridge port-forward svc/lux-bridge 18080:80 & PF=$!; sleep 4
+ID=$(curl -fsS -X POST -H 'Content-Type: application/json' -d '{
+  "amount":1,"source_network":"SOLANA_MAINNET","source_asset":"SOL",
+  "destination_network":"LUX_MAINNET","destination_asset":"LUX",
+  "destination_address":"0x000000000000000000000000000000000000dEaD",
+  "sender":"So11111111111111111111111111111111111111112","refuel":false}' \
+  http://127.0.0.1:18080/v1/bridge/swaps | jq -r '.data.id')
+sleep 120
+curl -fsS "http://127.0.0.1:18080/v1/bridge/swaps/$ID" | jq -r '.data.status'
+kill $PF
+# Expect: user_deposit_pending  (NOT bridge_transfer_pending / completed)
 ```
 
 If that swap ever advances without a deposit, **disable the network
@@ -323,11 +363,13 @@ native gas + liquidity, swaps to that destination stall in
 release address"`.
 
 ```bash
-# Find the release address per network from the persisted file:
-kubectl -n lux-bridge exec deploy/lux-bridge -- \
-  sh -c 'cat $BRIDGE_DATA_DIR/release-wallets.json' | jq .
-# Fund each (SOL / TON / XRP) from the operator treasury. Keep balances capped
-# to the loss you accepted in Gate 2.
+# Distroless → no cat in the pod. The release address is on the swap row; read it
+# from any swap whose DESTINATION is that network (port-forward + curl):
+kubectl -n lux-bridge port-forward svc/lux-bridge 18080:80 & PF=$!; sleep 4
+curl -fsS "http://127.0.0.1:18080/v1/bridge/swaps/<id>" | jq -r '.data.release_address'
+kill $PF
+# Fund each (SOL / TON / XRP) from the operator treasury, CAPPED to the ceiling in
+# docs/custody-signoff-ed25519.md (Gate 2). Never top above the cap.
 ```
 
 ---
