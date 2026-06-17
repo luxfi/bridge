@@ -62,8 +62,10 @@ custody, zero new custody risk).
 ### Phase 2 — Solana / TON / XRP live → `docs/operator-deploy-ed25519.md`
 Master-seed Secret → `kubectl apply -f k8s/mpcd-single-deployment.yaml` +
 `k8s/mpc-router-deployment.yaml` → repoint `BRIDGE_MPC_URL` at
-`http://mpc-router.lux-bridge.svc:9700` → the ed25519 corridors are already
-enabled in the staged ConfigMap → **run the G8 no-deposit test before funding**
+`http://mpc-router.lux-bridge.svc:9700` → **enable the ed25519 corridors in the
+ConfigMap** (they ship DISABLED so a Phase-1/EVM-only deploy can't advertise
+un-signable corridors; Step 6 flips SOL/TON/XRP `is{Deposit,Withdrawal}Enabled`
+→ true) → **run the G8 no-deposit test before funding**
 → fund + **cap** the SOL/TON/XRP release wallets.
 
 ## Hard gates — do not skip
