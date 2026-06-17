@@ -54,10 +54,12 @@ missing symbols were added to the static fallback. Two operator notes (mpcd
 are in the findings doc. If you re-run before cutover, repeat the Phase 2 gate.
 
 ### Phase 1 — EVM + BTC live → `docs/operator-deploy-phase-1-4.md`
-Populate `bridge-secrets` → `kubectl apply -f k8s/bridge-deployment.yaml`
-(pinned to `de3a912a`) → ingress/TLS → DNS cutover → fund the EVM/BTC release
-wallets. After this, **LUX ↔ EVM and LUX ↔ BTC are live** (real threshold
-custody, zero new custody risk).
+Push the `a335a9f6` image → `scripts/deploy-phase1.sh` (applies compute, skips
+the bundled Ingress, smoke-tests, then swaps the shared `bridge-ingress`
+backends to `lux-bridge` — **no new Secret, no DNS change**; the MPC token
+`bridge-mpc-token` + `bridge-lux-tls` already exist on-cluster) → fund the
+EVM/BTC release wallets. After this, **LUX ↔ EVM and LUX ↔ BTC are live** (real
+threshold custody, zero new custody risk).
 
 ### Phase 2 — Solana / TON / XRP live → `docs/operator-deploy-ed25519.md`
 Master-seed Secret → `kubectl apply -f k8s/mpcd-single-deployment.yaml` +
