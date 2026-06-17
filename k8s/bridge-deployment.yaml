@@ -403,8 +403,14 @@ spec:
             - name: BRIDGE_MPC_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: bridge-secrets
-                  key: mpc-api-token
+                  # On the live lux-bridge cluster the MPC API token lives in
+                  # its own Secret `bridge-mpc-token` (key MPC_API_TOKEN),
+                  # already present and shared with the legacy bridge-server.
+                  # Reuse it — Phase 1 needs NO new secret. (If you instead add
+                  # `mpc-api-token` to bridge-secrets per
+                  # operator-deploy-phase-1-4.md Step 1, repoint these two lines.)
+                  name: bridge-mpc-token
+                  key: MPC_API_TOKEN
             - name: BRIDGE_MPC_ORG_ID
               value: bridge
             # Bridge security profile. classical-compat = user-facing UI to
