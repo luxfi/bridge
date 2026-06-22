@@ -44,6 +44,9 @@ func NewFrontend(cfg Config, overlay string) (*Frontend, error) {
 
 func (f *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
+	case "/__ENV.js":
+		f.serveRuntimeENV(w, r)
+		return
 	case "/envs.js":
 		f.serveEnvs(w, r)
 		return
@@ -76,6 +79,43 @@ func (f *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// SPA fallback — let React Router handle the route.
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write(f.index)
+}
+
+// spaEnvKeys are the window.__ENV keys the embedded SPA's bridge.config.ts
+// reads at boot (mirrors app/bridge's static __ENV.js). serveRuntimeENV emits
+// them from container env so ONE image serves N tenants without a rebuild — the
+// static __ENV.js ships all-empty and the SPA falls back to hardcoded defaults
+// (e.g. apiHost -> bridge-api.lux.network). Setting BRIDGE_API_HOST here pins a
+// tenant's SPA to its own origin instead, which is how the LUX go-live isolates
+// itself from the shared bridge-api.lux.network without touching other brands.
+var spaEnvKeys = []string{
+	"BRIDGE_API_HOST",
+	"BRIDGE_ENV",
+	"BRIDGE_CLIENT_ID",
+	"BRIDGE_IAM_ORG",
+	"BRIDGE_LOGO_URL",
+	"WC_PROJECT_ID",
+	"BRIDGE_WALLET_DEFAULT_CHAIN",
+	"BRIDGE_WALLET_SUPPORTED_CHAINS",
+	"BRIDGE_MPC_PUBLIC_URL",
+	"BRIDGE_MPC_PRIVATE_URL",
+	"BRIDGE_MPC_PROTOCOL",
+}
+
+// serveRuntimeENV replaces the embedded static /__ENV.js. It emits only the
+// SPA's known runtime keys, each from its matching container env var. Unset
+// vars are emitted as "" — exactly what the static file does — so the SPA's
+// own fallbacks still apply; a non-empty value overrides them. Object.assign
+// preserves any window.__ENV an outer wrapper set first.
+func (f *Frontend) serveRuntimeENV(w http.ResponseWriter, r *http.Request) {
+	env := make(map[string]string, len(spaEnvKeys))
+	for _, k := range spaEnvKeys {
+		env[k] = os.Getenv(k)
+	}
+	body, _ := json.Marshal(env)
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Cache-Control", "no-store")
+	fmt.Fprintf(w, "window.__ENV = Object.assign(window.__ENV || {}, %s);", body)
 }
 
 func (f *Frontend) serveEnvs(w http.ResponseWriter, r *http.Request) {
