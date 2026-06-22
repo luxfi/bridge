@@ -366,7 +366,7 @@ spec:
           # MATIC) + the Zoo /ext/bc/zoo/rpc path over de3a912a; G8 gate
           # re-verified by `strings`. mpc-router/mpcd-single stay de3a912a
           # (unchanged in a335a9f6).
-          image: ghcr.io/luxfi/bridge:a335a9f6
+          image: ghcr.io/luxfi/bridge:42e7b198
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
@@ -387,6 +387,14 @@ spec:
             # restart loses state.
             - name: BRIDGE_DATA_DIR
               value: /var/lib/lux-bridge
+            # SPA runtime apiHost (served via /__ENV.js). Pin it to THIS host's
+            # own origin so the embedded SPA calls /api/* same-origin on
+            # bridge.lux.network instead of the hardcoded bridge-api.lux.network
+            # fallback. This is what lets the go-live flip ONLY bridge.lux.network
+            # and leave the SHARED bridge-api.lux.network (pars/hanzo/zoo) on the
+            # legacy stack. Unset => SPA falls back to bridge-api.lux.network.
+            - name: BRIDGE_API_HOST
+              value: https://bridge.lux.network
             # Empty disables the legacy Node backend reverse proxy. All
             # /v1/bridge/* routes resolve through native handlers.
             - name: BRIDGE_BACKEND_URL
