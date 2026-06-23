@@ -359,14 +359,15 @@ spec:
           type: RuntimeDefault
       containers:
         - name: bridge
-          # Pinned to the verified go-live image (built from the local G8
-          # branch, carries the source baseline gate). Do NOT deploy :latest
-          # for go-live — it may resolve to a G8-less build. Bump this tag
-          # for each release. a335a9f6 adds the static-price fix (XRP/AVAX/
-          # MATIC) + the Zoo /ext/bc/zoo/rpc path over de3a912a; G8 gate
-          # re-verified by `strings`. mpc-router/mpcd-single stay de3a912a
-          # (unchanged in a335a9f6).
-          image: ghcr.io/luxfi/bridge:42e7b198
+          # Pinned to the verified go-live image (built from whispers/bridgev2-
+          # golive, carries the G8 source baseline gate). Do NOT deploy :latest
+          # for go-live — it may resolve to a G8-less build. Bump this tag for
+          # each release. e377ac59 adds server-side enforcement of the corridor
+          # enable-flags (403 source_deposit_disabled/destination_withdrawal_
+          # disabled) + per-swap USD min/max (400 amount_below_min/above_max)
+          # over 42e7b198; gates verified in-container + live-smoked against
+          # bridge.lux.network. mpc-router/mpcd-single (Phase 2) stay de3a912a.
+          image: ghcr.io/luxfi/bridge:e377ac59
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
