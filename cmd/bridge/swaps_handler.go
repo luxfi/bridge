@@ -149,6 +149,84 @@ type envelope struct {
 //
 // Required query params: source_network, source_token,
 // destination_network, destination_token, amount. Optional: refuel.
+// assetLabel renders an asset symbol for an error detail, falling back to
+// a readable phrase when the caller omitted the token (native-asset swap).
+func assetLabel(asset string) string {
+	if asset == "" {
+		return "the native asset"
+	}
+	return asset
+}
+
+// corridorLeg resolves one leg of a swap — a (network, asset) pair —
+// against the YAML config (a.cfg), the SAME source the
+// /v1/bridge/networks picker is built from, and reports whether deposits
+// and withdrawals are enabled for that leg.
+//
+// Semantics mirror the picker exactly: a leg is enabled only when its
+// network is active, its currency is active, and the directional flag is
+// on. The default-on policy for the *bool flags matches normalizeCurrency
+// (a nil flag means enabled — YAML that omits the flag is enabled). An
+// empty asset resolves to the network's native currency so a native-asset
+// swap (token omitted) is gated as its native leg rather than slipping
+// through unmatched.
+//
+// found is false when the pair isn't enumerated in a.cfg at all. Callers
+// MUST NOT block a not-found leg: the YAML token list mirrors the SPA
+// picker, not the runtime token registry (internal/tokens.DefaultRegistry),
+// so a pair the YAML doesn't list may still be a legitimate runtime
+// corridor — and the downstream quote/keygen already reject genuinely
+// unknown ones. We gate only on a present-and-explicitly-disabled leg,
+// which is precisely how an operator turns a corridor off (e.g. SOL/TON/XRP
+// ship is{Deposit,Withdrawal}Enabled=false until the ed25519 signer is
+// deployed). See the architecture_enable_flags_spa_gate_only memory.
+func (a *API) corridorLeg(network, asset string) (deposit, withdrawal, found bool) {
+	netActive := false
+	for _, n := range a.cfg.Networks {
+		if n.InternalName != network {
+			continue
+		}
+		netActive = n.Status == "" || strings.EqualFold(n.Status, "active")
+		if asset == "" {
+			asset = n.NativeCurrency
+		}
+		break
+	}
+	if asset == "" {
+		return false, false, false
+	}
+	for _, t := range a.cfg.Tokens {
+		if t.Network != network || !strings.EqualFold(t.Asset, asset) {
+			continue
+		}
+		active := netActive && (t.Status == "" || strings.EqualFold(t.Status, "active"))
+		dep := active && (t.IsDepositEnabled == nil || *t.IsDepositEnabled)
+		wd := active && (t.IsWithdrawalEnabled == nil || *t.IsWithdrawalEnabled)
+		return dep, wd, true
+	}
+	return false, false, false
+}
+
+// corridorDisabled enforces the enable-flag gate for a swap: the source
+// leg is a deposit and the destination leg is a withdrawal, so the
+// corridor requires the source token's deposit flag AND the destination
+// token's withdrawal flag. It returns a non-empty (code, detail) when a
+// leg is present in config and explicitly disabled, and "","" when the
+// corridor is allowed (or unlisted — see corridorLeg). Enforced
+// server-side so a direct API caller can't bypass the SPA picker's
+// client-side filter.
+func (a *API) corridorDisabled(srcNet, srcAsset, dstNet, dstAsset string) (code, detail string) {
+	if dep, _, found := a.corridorLeg(srcNet, srcAsset); found && !dep {
+		return "source_deposit_disabled",
+			fmt.Sprintf("deposits are disabled for %s on %s", assetLabel(srcAsset), srcNet)
+	}
+	if _, wd, found := a.corridorLeg(dstNet, dstAsset); found && !wd {
+		return "destination_withdrawal_disabled",
+			fmt.Sprintf("withdrawals are disabled for %s on %s", assetLabel(dstAsset), dstNet)
+	}
+	return "", ""
+}
+
 func (a *API) quoteNative(c *zip.Ctx) error {
 	src := c.Query("source_network")
 	srcTok := c.Query("source_token")
@@ -169,6 +247,14 @@ func (a *API) quoteNative(c *zip.Ctx) error {
 			"error":  "bad_amount",
 			"detail": "amount must be a positive number",
 		})
+	}
+
+	// Enable-flag gate: refuse a quote for a corridor an operator has
+	// disabled (source deposits / destination withdrawals), so the API
+	// surface is consistent with swap-create and doesn't advertise prices
+	// for a corridor the bridge won't settle.
+	if code, detail := a.corridorDisabled(src, srcTok, dst, dstTok); code != "" {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": code, "detail": detail})
 	}
 
 	res, err := a.quote.Quote(c.Context(), QuoteInput{
@@ -253,6 +339,21 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 			"error":  "bad_amount",
 			"detail": "amount must be > 0",
 		})
+	}
+
+	// Enable-flag gate (server-side). The source leg is a deposit and the
+	// destination leg is a withdrawal, so a swap requires the source
+	// token's deposit flag AND the destination token's withdrawal flag.
+	// These flags live in a.cfg (the same source as /v1/bridge/networks)
+	// and are how an operator turns a corridor off — e.g. SOL/TON/XRP ship
+	// disabled until the ed25519 signer is deployed. Enforced here so a
+	// direct API caller can't bypass the SPA picker's client-side filter
+	// and mint a deposit address (or strand funds) on a corridor the
+	// bridge can't settle. See architecture_enable_flags_spa_gate_only.
+	if code, detail := a.corridorDisabled(req.SourceNetwork, req.SourceAsset, req.DestinationNetwork, req.DestinationAsset); code != "" {
+		fmt.Printf("[swap-create-reject] %s source=%s/%s dst=%s/%s\n",
+			code, req.SourceNetwork, req.SourceAsset, req.DestinationNetwork, req.DestinationAsset)
+		return c.JSON(http.StatusForbidden, map[string]string{"error": code, "detail": detail})
 	}
 
 	// Validate cosigner intents up-front. ValidateIntents enforces the
