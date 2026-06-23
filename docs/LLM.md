@@ -641,7 +641,12 @@ nats-top -s localhost:4223
 
 ### Key Documentation Files
 - `docs/LLM.md` — this file, canonical AI/onboarding doc (single source of truth)
-- `docs/LUX-ID-INTEGRATION.md` — Casdoor-based unified auth integration
+- `docs/content/docs/index.mdx` — Architecture page (deep-dive served at `/docs`)
+- `docs/content/docs/integrations.mdx` — Go-side operator integration guide
+- `docs/content/docs/lux-id-integration.mdx` — Casdoor-based unified auth integration
+- `docs/content/docs/operator-runbook.mdx` — `cmd/bridge` runtime operations
+- `docs/content/docs/operator-deploy.mdx` — production deploy to `bridge.lux.network`
+- `docs/pages/*.mdx` — thin Nextra page wrappers that surface the content above
 - `pkg/bridge/README.md` — consumer-facing SDK docs (`mountBridge`, `BridgeConfig`)
 - Top-level `README.md` — quick-start + architecture pointer (kept consistent with this file)
 
@@ -649,7 +654,10 @@ The legacy migration .md files (BRIDGE-STATUS, LOCAL-SETUP, the four MPC
 migration notes, DEPLOYMENT, CI-CD-DOCKER-IMAGES) were deleted in v1.1.12
 (commit `b04e805`, issue #391) — they described an architecture from
 before the SDK rationalization and confused new readers. Migration
-history lives in `git log` and the GH release notes.
+history lives in `git log` and the GH release notes. The remaining loose
+`.md` files at `docs/` root were folded into the Nextra `content/docs/`
+tree in v1.1.13 (issue #391 follow-up) — only `docs/LLM.md` remains
+loose because it's the symlink target for `AGENTS.md` / `CLAUDE.md`.
 
 ## Context for All AI Assistants
 
