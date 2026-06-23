@@ -227,6 +227,52 @@ func (a *API) corridorDisabled(srcNet, srcAsset, dstNet, dstAsset string) (code,
 	return "", ""
 }
 
+// limitViolation enforces the per-swap USD min/max from a.cfg.Limits. The
+// swap's notional is the SOURCE value (amount × source price) — which, net
+// of fee + slippage, also bounds the destination payout, so it caps how
+// much a single swap can draw from a release/hot wallet. This is the guard
+// the Phase 2 ed25519 custody cap assumes exists (docs/custody-signoff-
+// ed25519.md reconciles the hot-wallet cap against limits.maxUSD); without
+// it a single swap could exceed the cap and blow the single-signer loss
+// ceiling. A per-asset Limits.Per[sourceAsset] override takes precedence
+// over the global Min/MaxUSD; a zero bound means "unset" (not enforced).
+//
+// Fail-open on an unpriceable source asset: with no price we can't compute
+// a notional, but the swap can't settle without a price anyway (the quote
+// step rejects ErrPriceUnknown), so skipping the check here never widens
+// what actually moves. See architecture_limits_not_enforced_server_side.
+func (a *API) limitViolation(ctx context.Context, srcAsset string, amount float64) (code, detail string) {
+	if a.quote == nil || a.quote.Feed == nil {
+		return "", ""
+	}
+	price, err := a.quote.Feed.Price(ctx, srcAsset)
+	if err != nil || price <= 0 {
+		return "", ""
+	}
+	usd := amount * price
+	minUSD, maxUSD := a.cfg.Limits.MinUSD, a.cfg.Limits.MaxUSD
+	for asset, caps := range a.cfg.Limits.Per {
+		if !strings.EqualFold(asset, srcAsset) {
+			continue
+		}
+		// Only the bounds the operator actually set (non-zero) override.
+		if caps.MinUSD > 0 {
+			minUSD = caps.MinUSD
+		}
+		if caps.MaxUSD > 0 {
+			maxUSD = caps.MaxUSD
+		}
+		break
+	}
+	if minUSD > 0 && usd < minUSD {
+		return "amount_below_min", fmt.Sprintf("swap notional $%.2f is below the $%.2f minimum", usd, minUSD)
+	}
+	if maxUSD > 0 && usd > maxUSD {
+		return "amount_above_max", fmt.Sprintf("swap notional $%.2f exceeds the $%.2f per-swap maximum", usd, maxUSD)
+	}
+	return "", ""
+}
+
 func (a *API) quoteNative(c *zip.Ctx) error {
 	src := c.Query("source_network")
 	srcTok := c.Query("source_token")
@@ -255,6 +301,11 @@ func (a *API) quoteNative(c *zip.Ctx) error {
 	// for a corridor the bridge won't settle.
 	if code, detail := a.corridorDisabled(src, srcTok, dst, dstTok); code != "" {
 		return c.JSON(http.StatusForbidden, map[string]string{"error": code, "detail": detail})
+	}
+	// Per-swap min/max USD gate (display config is also enforced here, not
+	// just shown in /limits).
+	if code, detail := a.limitViolation(c.Context(), srcTok, amountF); code != "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": code, "detail": detail})
 	}
 
 	res, err := a.quote.Quote(c.Context(), QuoteInput{
@@ -354,6 +405,14 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		fmt.Printf("[swap-create-reject] %s source=%s/%s dst=%s/%s\n",
 			code, req.SourceNetwork, req.SourceAsset, req.DestinationNetwork, req.DestinationAsset)
 		return c.JSON(http.StatusForbidden, map[string]string{"error": code, "detail": detail})
+	}
+
+	// Per-swap min/max USD gate. Enforced before any keygen/persist so an
+	// over-cap swap can't mint a deposit address or draw a release wallet
+	// beyond the custody cap.
+	if code, detail := a.limitViolation(c.Context(), req.SourceAsset, req.Amount); code != "" {
+		fmt.Printf("[swap-create-reject] %s source=%s/%s amount=%v\n", code, req.SourceNetwork, req.SourceAsset, req.Amount)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": code, "detail": detail})
 	}
 
 	// Validate cosigner intents up-front. ValidateIntents enforces the
