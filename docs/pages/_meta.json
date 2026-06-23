@@ -4,31 +4,37 @@
     "type": "page"
   },
   "docs": {
-    "title": "Documentation",
+    "title": "Architecture",
     "type": "page"
   },
-  "-- API": {
+  "integrations": {
+    "title": "Integrations",
+    "type": "page"
+  },
+  "operator-runbook": {
+    "title": "Operator Runbook",
+    "type": "page"
+  },
+  "operator-deploy": {
+    "title": "Deploy Guide",
+    "type": "page"
+  },
+  "lux-id-integration": {
+    "title": "Lux ID",
+    "type": "page"
+  },
+  "-- External": {
     "type": "separator",
-    "title": "API"
+    "title": "External"
   },
-  "api": {
-    "title": "API Reference",
-    "href": "/docs#api-reference"
+  "llm": {
+    "title": "LLM Knowledge Base",
+    "href": "https://github.com/luxfi/bridge/blob/main/docs/LLM.md",
+    "newWindow": true
   },
-  "-- Guides": {
-    "type": "separator",
-    "title": "Guides"
-  },
-  "integration": {
-    "title": "Integration Guide",
-    "href": "/docs#integration-guide"
-  },
-  "deployment": {
-    "title": "Deployment Guide",
-    "href": "/docs#deployment-guide"
-  },
-  "security": {
-    "title": "Security",
-    "href": "/docs#security-best-practices"
+  "github": {
+    "title": "GitHub ↗",
+    "href": "https://github.com/luxfi/bridge",
+    "newWindow": true
   }
 }
