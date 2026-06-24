@@ -33,7 +33,7 @@ import { SwapForm } from './components/SwapForm'
 import { TransferStatus } from './components/TransferStatus'
 import { useSwap } from './hooks/useSwap'
 import { useTransfers } from './hooks/useTransfers'
-import { useWallet } from './hooks/useWallet'
+import { useBridgeWallet } from './hooks/useBridgeWallet'
 import { buildWagmiConfig } from './lib/wagmi-config'
 
 import './styles/theme.css'
@@ -76,7 +76,27 @@ const footer: React.CSSProperties = {
 const BridgeAppInner: FC = () => {
   const cfg = getConfig()
 
-  const wallet = useWallet()
+  // Unified wallet across all six ecosystems: wagmi for the EVM/Lux deposit
+  // leg, @luxwallet/connect for Solana / Bitcoin / TON / XRP / Polkadot.
+  // The TON connector needs a dApp manifest URL; serve it same-origin so the
+  // TON Connect identity card shows this tenant. Falls back to the connect
+  // SDK's default if the URL can't be built.
+  const tonManifestUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/tonconnect-manifest.json`
+    }
+    try {
+      return new URL('/tonconnect-manifest.json', cfg.apiHost).toString()
+    } catch {
+      return undefined
+    }
+  }, [cfg.apiHost])
+
+  const wallet = useBridgeWallet({
+    connectorOptions: tonManifestUrl
+      ? { ton: { manifestUrl: tonManifestUrl } }
+      : {},
+  })
   const swap = useSwap()
   const transfers = useTransfers()
 
@@ -96,7 +116,7 @@ const BridgeAppInner: FC = () => {
 
   return (
     <div className="bridge-root" style={shell}>
-      <Header wallet={wallet} defaultChainId={swap.fromChain.id} />
+      <Header wallet={wallet} fromChain={swap.fromChain} />
       <main style={main}>
         <div style={stack}>
           <SwapForm swap={swap} wallet={wallet} transfers={transfers} />
