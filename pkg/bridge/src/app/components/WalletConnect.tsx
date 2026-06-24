@@ -33,13 +33,30 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@hanzo/gui'
-import type { WalletState, WalletConnectorInfo } from '../hooks/useWallet'
+import type { WalletConnectorInfo } from '../hooks/useWallet'
+import type { BridgeWallet } from '../hooks/useBridgeWallet'
+import type { Chain } from '../lib/chains'
+import { isEvmFamily } from '../lib/wallet-family'
 import { shortAddress } from '../lib/format'
 
 export interface WalletConnectProps {
-  wallet: WalletState
-  /** Chain to connect against when the user clicks a connector. */
-  defaultChainId: string
+  /** Unified wallet surface — wagmi (EVM/Lux) + @luxwallet/connect (non-EVM). */
+  wallet: BridgeWallet
+  /**
+   * The selected source chain. Drives which wallet stack the connect button
+   * targets: EVM/Lux → wagmi picker; Solana/BTC/TON/XRP/Polkadot →
+   * @luxwallet/connect single-tap connect.
+   */
+  fromChain: Chain
+}
+
+/** Human label for the non-EVM connect button, per source family. */
+const NON_EVM_LABEL: Record<string, string> = {
+  svm: 'Solana',
+  btc: 'Bitcoin',
+  ton: 'TON',
+  xrp: 'XRP',
+  substrate: 'Polkadot',
 }
 
 const wrap: CSSProperties = {
@@ -281,8 +298,107 @@ function ensureKeyframes(): void {
 
 export const WalletConnect: FC<WalletConnectProps> = ({
   wallet,
+  fromChain,
+}) => {
+  const family = fromChain.family
+  const routeToEvm = isEvmFamily(family)
+
+  // Non-EVM source → @luxwallet/connect single-tap connect. The connect SDK's
+  // per-chain connector opens the injected wallet (Phantom for Solana, Xverse
+  // for Bitcoin, TON Connect for TON, Crossmark for XRP, polkadot.js for DOT)
+  // and returns the account — no wagmi, no WalletConnect, no projectId.
+  if (!routeToEvm) {
+    return (
+      <NonEvmConnect wallet={wallet} fromChain={fromChain} />
+    )
+  }
+
+  return <EvmConnect wallet={wallet} defaultChainId={fromChain.id} />
+}
+
+/**
+ * Non-EVM connect — one button per the selected source ecosystem. Connected
+ * state shows the address pill with a disconnect action, mirroring the EVM
+ * pill's affordances.
+ */
+const NonEvmConnect: FC<{ wallet: BridgeWallet; fromChain: Chain }> = ({
+  wallet,
+  fromChain,
+}) => {
+  const family = fromChain.family
+  const [error, setError] = useState<string | null>(null)
+  const address = wallet.addressFor(family)
+  const label = NON_EVM_LABEL[family] ?? fromChain.name
+
+  const onConnect = useCallback(async (): Promise<void> => {
+    setError(null)
+    try {
+      await wallet.connectNonEvm(family)
+    } catch (err) {
+      setError(humaniseConnectError(err))
+    }
+  }, [wallet, family])
+
+  if (address) {
+    return (
+      <Button
+        style={pillBase}
+        onClick={() => {
+          void wallet.disconnect(family)
+        }}
+        aria-label={`Disconnect ${label} wallet ${address}`}
+      >
+        <span
+          style={{
+            display: 'inline-block',
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: 'var(--bridge-success)',
+          }}
+          aria-hidden
+        />
+        {shortAddress(address)}
+      </Button>
+    )
+  }
+
+  return (
+    <div style={wrap}>
+      <Button
+        style={{
+          ...buttonBase,
+          opacity: wallet.connecting ? 0.7 : 1,
+        }}
+        disabled={wallet.connecting}
+        onClick={() => {
+          void onConnect()
+        }}
+      >
+        {wallet.connecting ? 'Connecting…' : `Connect ${label} Wallet`}
+      </Button>
+      {error ? (
+        <span
+          role="alert"
+          style={{ fontSize: 11, color: 'var(--bridge-danger)', maxWidth: 220 }}
+        >
+          {error}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * EVM connect — the original wagmi picker modal, now reading from the unified
+ * wallet's `.evm` slice. Behaviour is byte-for-byte the original; only the
+ * data source moved from `wallet` to `wallet.evm`.
+ */
+const EvmConnect: FC<{ wallet: BridgeWallet; defaultChainId: string }> = ({
+  wallet: bridgeWallet,
   defaultChainId,
 }) => {
+  const wallet = bridgeWallet.evm
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const triggerWrapRef = useRef<HTMLDivElement | null>(null)
