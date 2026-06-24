@@ -545,11 +545,11 @@ importers:
         specifier: workspace:*
         version: link:../threshold
       '@luxwallet/chains':
-        specifier: file:../../../../luxwallet/sdk/packages/chains
-        version: file:../../luxwallet/sdk/packages/chains
+        specifier: ^0.1.0
+        version: 0.1.0
       '@luxwallet/connect':
-        specifier: file:../../../wallet-connect
-        version: file:../wallet-connect(@crossmarkio/sdk@0.4.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(@polkadot/util-crypto@14.0.3(@polkadot/util@14.0.3))(@polkadot/util@14.0.3)(@tonconnect/sdk@4.0.0)(sats-connect@4.2.1(typescript@5.7.2))(viem@2.50.4(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))
+        specifier: ^0.1.0
+        version: 0.1.0(@crossmarkio/sdk@0.4.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(@polkadot/util-crypto@14.0.3(@polkadot/util@14.0.3))(@polkadot/util@14.0.3)(@tonconnect/sdk@4.0.0)(sats-connect@4.2.1(typescript@5.7.2))(viem@2.50.4(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))
       '@polkadot/util':
         specifier: ^14.0.3
         version: 14.0.3
@@ -3071,11 +3071,11 @@ packages:
       lucide-react: 'catalog:'
       react: 'catalog:'
 
-  '@luxwallet/chains@file:../../luxwallet/sdk/packages/chains':
-    resolution: {directory: ../../luxwallet/sdk/packages/chains, type: directory}
+  '@luxwallet/chains@0.1.0':
+    resolution: {integrity: sha512-DoWF6j7f+PuKfWPbHVsnUve8ZECoBNtzpDOLlYu1bVt7w3UA0KpgIJe2MbHJaopQ09H1v1Vu9g3vBJ9cC/UGFg==}
 
-  '@luxwallet/connect@file:../wallet-connect':
-    resolution: {directory: ../wallet-connect, type: directory}
+  '@luxwallet/connect@0.1.0':
+    resolution: {integrity: sha512-teLWEOqM7XIUeEo9NPmsPV/1wlzwBmRXT56W5SOxkWk1o+6UqiaTRJZFn5AKAXXEdRMkaGqzCuTNkVVAA997Bg==}
     peerDependencies:
       '@crossmarkio/sdk': ^0.4.0
       '@polkadot/util': ^14.0.0
@@ -16410,9 +16410,9 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@luxwallet/chains@file:../../luxwallet/sdk/packages/chains': {}
+  '@luxwallet/chains@0.1.0': {}
 
-  '@luxwallet/connect@file:../wallet-connect(@crossmarkio/sdk@0.4.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(@polkadot/util-crypto@14.0.3(@polkadot/util@14.0.3))(@polkadot/util@14.0.3)(@tonconnect/sdk@4.0.0)(sats-connect@4.2.1(typescript@5.7.2))(viem@2.50.4(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))':
+  '@luxwallet/connect@0.1.0(@crossmarkio/sdk@0.4.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(@polkadot/util-crypto@14.0.3(@polkadot/util@14.0.3))(@polkadot/util@14.0.3)(@tonconnect/sdk@4.0.0)(sats-connect@4.2.1(typescript@5.7.2))(viem@2.50.4(bufferutil@4.1.0)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.25.76))':
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
