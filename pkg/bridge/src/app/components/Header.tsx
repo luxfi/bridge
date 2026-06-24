@@ -7,12 +7,15 @@
 
 import type { CSSProperties, FC } from 'react'
 import { getConfig } from '../../config'
-import type { WalletState } from '../hooks/useWallet'
+import type { BridgeWallet } from '../hooks/useBridgeWallet'
+import type { Chain } from '../lib/chains'
 import { WalletConnect } from './WalletConnect'
 
 export interface HeaderProps {
-  wallet: WalletState
-  defaultChainId: string
+  /** Unified wallet (wagmi EVM + @luxwallet/connect non-EVM). */
+  wallet: BridgeWallet
+  /** Selected source chain — drives which wallet stack the connect targets. */
+  fromChain: Chain
 }
 
 const header: CSSProperties = {
@@ -109,7 +112,7 @@ const right: CSSProperties = {
   flex: '0 0 auto',
 }
 
-export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
+export const Header: FC<HeaderProps> = ({ wallet, fromChain }) => {
   // Safe read — getConfig() throws only if BridgeApp renders before setConfig;
   // the Bridge.tsx wrapper guarantees order, so we can read directly.
   const cfg = getConfig()
@@ -143,7 +146,7 @@ export const Header: FC<HeaderProps> = ({ wallet, defaultChainId }) => {
         </div>
       </div>
       <div style={right}>
-        <WalletConnect wallet={wallet} defaultChainId={defaultChainId} />
+        <WalletConnect wallet={wallet} fromChain={fromChain} />
       </div>
     </header>
   )
