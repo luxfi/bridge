@@ -12,7 +12,7 @@ import { useState, type CSSProperties, type FC } from 'react'
 import { Button } from '@hanzo/gui'
 import { getConfig } from '../../config'
 import type { SwapState } from '../hooks/useSwap'
-import type { WalletState } from '../hooks/useWallet'
+import type { BridgeWallet } from '../hooks/useBridgeWallet'
 import type { TransferState } from '../hooks/useTransfers'
 import { formatAmount, formatUsd } from '../lib/format'
 import { Card } from './Card'
@@ -21,7 +21,7 @@ import { AssetInput } from './AssetInput'
 
 export interface SwapFormProps {
   swap: SwapState
-  wallet: WalletState
+  wallet: BridgeWallet
   transfers: TransferState
 }
 
@@ -262,11 +262,23 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     swap.fromChain.family === 'evm' || swap.fromChain.family === 'lux'
   const needsDepositAddressFlow = true
 
+  // Source-chain wallet address, resolved across BOTH stacks: wagmi for
+  // EVM/Lux, @luxwallet/connect for Solana/Bitcoin/TON/XRP/Polkadot. A
+  // Solana wallet only satisfies a Solana source, etc. (see addressFor).
+  const sourceAddress = wallet.addressFor(swap.fromChain.family)
+  // Destination address for the "Use wallet" affordance — prefer the source
+  // wallet, but only when it could be a valid destination (i.e. same family
+  // self-bridge). For cross-family bridges the user pastes the destination.
+  const destWalletAddress = wallet.addressFor(swap.toChain.family)
+
   // Destination address resolution. We always need an address to deliver
-  // bridged funds to. EVM destinations default to the connected wallet's
-  // address (typical self-bridge). The user can override at any time —
-  // useful for sending to a cold wallet or a different address.
-  const effectiveDestination = (destinationAddress.trim() || wallet.address || '').trim()
+  // bridged funds to. When a wallet is connected for the destination chain
+  // we default to it (typical self-bridge); otherwise the user pastes one.
+  const effectiveDestination = (
+    destinationAddress.trim() ||
+    destWalletAddress ||
+    ''
+  ).trim()
   const destOk = effectiveDestination.length > 0
 
   const canSubmit =
@@ -274,9 +286,11 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     !swap.quoting &&
     swap.fromChain.id !== swap.toChain.id &&
     destOk &&
-    // EVM-source still requires a connected wallet (the user signs the
-    // deposit). Non-EVM source only needs the destination address.
-    (sourceIsEvm ? wallet.address !== null : true)
+    // A connected source wallet is required for EVM/Lux (the user signs the
+    // deposit). For non-EVM sources a connected wallet is now offered too
+    // (@luxwallet/connect), but connect is not mandatory — the user can still
+    // send to the MPC deposit address from any wallet they hold.
+    (sourceIsEvm ? sourceAddress !== null : true)
 
   const submitLabel = (() => {
     if (swap.fromChain.id === swap.toChain.id) {
@@ -284,7 +298,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
     }
     if (swap.quoting) return 'Fetching quote…'
     if (!swap.quote) return 'Enter an amount'
-    if (sourceIsEvm && !wallet.address) return 'Connect wallet to bridge'
+    if (sourceIsEvm && !sourceAddress) return 'Connect wallet to bridge'
     if (!destOk) return `Enter ${swap.toChain.name} destination address`
     return `Bridge ${swap.fromAsset.symbol} → ${swap.toAsset.symbol}`
   })()
@@ -299,7 +313,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       setError('Destination address required.')
       return
     }
-    if (sourceIsEvm && !wallet.address) {
+    if (sourceIsEvm && !sourceAddress) {
       setError('Wallet must be connected for EVM source chains.')
       return
     }
@@ -351,7 +365,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
         asset={swap.fromAsset}
         assets={swap.fromAssetOptions}
         onAssetChange={swap.setFromAsset}
-        walletAddress={wallet.address}
+        walletAddress={sourceAddress}
         showMax
       />
 
@@ -362,7 +376,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
         asset={swap.toAsset}
         assets={swap.toAssetOptions}
         onAssetChange={swap.setToAsset}
-        walletAddress={wallet.address}
+        walletAddress={destWalletAddress}
         readOnly
         placeholder="—"
       />
@@ -370,7 +384,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
       <div style={destWrap}>
         <div style={destLabelRow}>
           <span>Destination address</span>
-          {wallet.address && destinationAddress.trim() !== '' && destinationAddress.trim() !== wallet.address ? (
+          {destWalletAddress && destinationAddress.trim() !== '' && destinationAddress.trim() !== destWalletAddress ? (
             <button
               type="button"
               style={destUseWalletBtn}
@@ -385,8 +399,8 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           type="text"
           style={destInput}
           placeholder={
-            wallet.address
-              ? `${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)} (connected wallet)`
+            destWalletAddress
+              ? `${destWalletAddress.slice(0, 6)}…${destWalletAddress.slice(-4)} (connected wallet)`
               : `Paste your ${swap.toChain.name} address`
           }
           value={destinationAddress}

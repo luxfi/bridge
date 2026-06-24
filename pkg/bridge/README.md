@@ -195,6 +195,39 @@ and the component seams stay stable across that swap.
 
 One canonical SDK name. One mount function. One config shape.
 
+## Multi-chain wallet connect
+
+The bridge lists chains across six ecosystems; two wallet stacks back them,
+split by chain family (`src/app/lib/wallet-family.ts` is the only place that
+decides which stack owns a family):
+
+| Family | Stack | Connectors |
+|--------|-------|-----------|
+| `evm`, `lux` | **wagmi** | injected (MetaMask/Rabby…), Coinbase Wallet, optional WalletConnect. Signs the EVM deposit leg. |
+| `svm` | **@luxwallet/connect** | Phantom / Solflare / Backpack |
+| `btc` | **@luxwallet/connect** | Xverse / Leather / Unisat (sats-connect) |
+| `ton` | **@luxwallet/connect** | TON Connect |
+| `xrp` | **@luxwallet/connect** | Crossmark |
+| `substrate` | **@luxwallet/connect** | polkadot.js / Talisman / SubWallet |
+
+`useBridgeWallet` composes both (`src/app/hooks/`): `useWallet` (wagmi) for
+EVM/Lux and `useLuxWallet` (@luxwallet/connect) for the rest. The connect
+button (`WalletConnect.tsx`) routes by the selected source chain's family —
+EVM/Lux open the wagmi picker, non-EVM open the matching injected wallet via
+`getConnector(chain).connect()`. No WalletConnect projectId is required for
+the non-EVM path. `@luxwallet/connect` also exposes SIWx (CAIP-122) login via
+`useLuxWallet().login(family, challenge)` for hosts that want wallet identity.
+
+The chain selector is driven by **@luxwallet/chains** (the canonical registry,
+shared with native Kotlin/Swift via `chains.json`). `src/app/lib/registry.ts`
+projects that registry into the bridge's `Chain` shape, so the selector shows
+exactly the bridge-supported set with no second hardcoded list.
+
+> Both `@luxwallet/connect` and `@luxwallet/chains` are consumed via `file:`
+> deps today; switch to a pinned semver range once published to npm (the
+> import specifiers already use the published package names — see the
+> `TODO(deps)` in `wallet-family.ts`).
+
 ## Consuming this SDK from a Vite app
 
 `@hanzo/gui` is React-Native-first. Web consumers MUST alias
