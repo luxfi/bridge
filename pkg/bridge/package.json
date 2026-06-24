@@ -96,8 +96,8 @@
     "@polkadot/util-crypto": "^14.0.3",
     "@tonconnect/sdk": "^4.0.0",
     "sats-connect": "^4.2.1",
-    "@luxwallet/chains": "file:../../../../luxwallet/sdk/packages/chains",
-    "@luxwallet/connect": "file:../../../wallet-connect"
+    "@luxwallet/chains": "^0.1.0",
+    "@luxwallet/connect": "^0.1.0"
   },
   "peerDependencies": {
     "@hanzogui/avatar": "^7.0.0",
