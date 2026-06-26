@@ -7,12 +7,16 @@
 // and returns whether the balance at the address meets or exceeds the
 // required amount.
 //
-// Trust model: each upstream RPC / REST endpoint is treated as
-// best-effort transport. The authoritative "swap can advance to
-// signing" decision is made by b-chain (BridgeVM); this package is
-// only useful for ops diagnostics, latency monitoring, or as a
-// secondary verification layer. Production swap-state advancement
-// belongs to BridgeVM's own watcher, not to anything in here.
+// Trust model (IMPORTANT — load-bearing): the deposit watcher
+// (cmd/bridge/deposit_watcher.go) uses Check to advance a swap from
+// user_deposit_pending to bridge_transfer_pending, which drives a
+// release-pool payout. So the single upstream RPC per network IS
+// trusted at runtime — an RPC that lies about a balance triggers a
+// payout for a deposit that never landed. This is identical across
+// every chain family here (one hardcoded endpoint, no quorum, no
+// confirmation count). Hardening to a multi-RPC quorum / on-chain
+// proof is a platform-wide follow-up; until then, only point this at
+// trusted endpoints (RPCURLOverrides) in production.
 //
 // Returns from `Check`:
 //   - (true, nil)  — confirmed deposit
