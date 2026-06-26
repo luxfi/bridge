@@ -31,9 +31,15 @@ import (
 // The MPC ceremony driver (Phase 4.6) is what picks up
 // bridge_transfer_pending swaps from here.
 //
-// Trust model: depositcheck queries public source-chain RPCs. The
-// result is best-effort. BridgeVM's own auditor (when deployed) is
-// the authority for slashing; this layer is for UI / SDK polling.
+// Trust model (IMPORTANT — load-bearing): this watcher is the sole
+// automated forward producer of bridge_transfer_pending for deposit-address
+// swaps, and that state directly drives a release-pool payout. So the single
+// upstream RPC that depositcheck.Check consults IS trusted at runtime: an RPC
+// that lies about a balance triggers a payout for a deposit that never landed.
+// There is no runtime BridgeVM gate today (--resync-swaps is a one-shot boot
+// reconciliation). Hardening this to a multi-RPC quorum / on-chain proof is a
+// platform-wide follow-up; until then, operators MUST point depositcheck at
+// trusted endpoints only.
 
 // DepositChecker is the 1-method interface the watcher needs. Pulls
 // the dependency to an interface so tests can swap in a fake without
