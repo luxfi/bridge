@@ -897,6 +897,13 @@ func main() {
 		//   BridgeClassicalCompat     → driver omits protocol field; mpcd
 		//                               picks by curve (cggmp21 / frost)
 		signer.ProtocolFor = profileProtocolFor(profile)
+		// Runtime withdrawal kill-switch: re-check the per-token
+		// isWithdrawalEnabled gate at sign time against the same parsed
+		// Config the create handler + normalizeCurrency use. Flipping
+		// isWithdrawalEnabled:false in networks.{env}.yaml stops new
+		// signings even for already-created swaps (XRP/BTC/SOL/TON mainnet
+		// stay un-payable until an operator explicitly enables them).
+		signer.WithdrawalEnabled = cfg.WithdrawalEnabled
 		go func() {
 			_ = signer.Run(signerCtx)
 		}()
@@ -951,6 +958,9 @@ func main() {
 	bcastCtx, bcastCancel := context.WithCancel(context.Background())
 	if !*disableBroadcastDriver {
 		bcastDriver = NewBroadcastDriver(swapStore, bcastClient, *broadcastInterval, logger)
+		// In-flight half of the withdrawal kill-switch: hold (never push) an
+		// already-signed swap whose destination became withdrawal-disabled.
+		bcastDriver.WithdrawalEnabled = cfg.WithdrawalEnabled
 		go func() {
 			_ = bcastDriver.Run(bcastCtx)
 		}()

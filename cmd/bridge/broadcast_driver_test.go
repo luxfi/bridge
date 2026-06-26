@@ -90,6 +90,47 @@ func seedBroadcastingSwap(t *testing.T, store SwapStore, destNet, rawTx string) 
 // broadcastOne + state transitions
 // =============================================================================
 
+// TestBroadcast_KillSwitchHoldsDisabledDestination: the in-flight half of the
+// withdrawal kill-switch (red MEDIUM). An already-signed swap whose destination
+// became withdrawal-disabled is HELD — never pushed — and resumes when the flag
+// is flipped back. Without this, flipping isWithdrawalEnabled:false stopped new
+// signings but not swaps already at broadcasting.
+func TestBroadcast_KillSwitchHoldsDisabledDestination(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := &Swap{
+		Status:             SwapStatusBroadcasting,
+		DestinationNetwork: "XRP_MAINNET",
+		DestinationAsset:   "XRP",
+		DestRawTx:          "0xrawtx",
+		Signature:          "0xsig",
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	bc.okFor("XRP_MAINNET", "0xrawtx", "0xhash") // would succeed if it ran
+
+	no, yes := false, true
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+
+	// Disabled destination -> HELD, not broadcast, status unchanged.
+	d.WithdrawalEnabled = Config{Tokens: []Token{{Network: "XRP_MAINNET", Asset: "XRP", IsWithdrawalEnabled: &no}}}.WithdrawalEnabled
+	d.Tick(t.Context())
+	if bc.calls.Load() != 0 {
+		t.Fatalf("disabled-destination swap must NOT be broadcast; got %d calls", bc.calls.Load())
+	}
+	if got, _ := store.Get(t.Context(), sw.ID); got.Status != SwapStatusBroadcasting {
+		t.Fatalf("held swap must stay at broadcasting (resumable), got %q", got.Status)
+	}
+
+	// Re-enable -> resumes and pushes.
+	d.WithdrawalEnabled = Config{Tokens: []Token{{Network: "XRP_MAINNET", Asset: "XRP", IsWithdrawalEnabled: &yes}}}.WithdrawalEnabled
+	d.Tick(t.Context())
+	if bc.calls.Load() != 1 {
+		t.Fatalf("re-enabled destination must broadcast; got %d calls", bc.calls.Load())
+	}
+}
+
 func TestBroadcast_AdvancesOnSuccess(t *testing.T) {
 	store := NewInMemoryStore()
 	bc := newFakeBroadcaster()

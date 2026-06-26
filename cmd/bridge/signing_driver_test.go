@@ -26,6 +26,7 @@ type fakeSigner struct {
 	mu      sync.Mutex
 	results map[string]*mchain.SignResult
 	errors  map[string]error
+	panics  map[string]bool
 	calls   atomic.Int64
 	lastReq []signCall
 	delay   time.Duration // optional artificial latency
@@ -39,7 +40,17 @@ func newFakeSigner() *fakeSigner {
 	return &fakeSigner{
 		results: map[string]*mchain.SignResult{},
 		errors:  map[string]error{},
+		panics:  map[string]bool{},
 	}
+}
+
+// panicOn programs SignForWallet to panic for walletID — used to verify
+// signOne's recover backstop keeps the poll loop alive when one swap's
+// signing path blows up.
+func (f *fakeSigner) panicOn(walletID string) {
+	f.mu.Lock()
+	f.panics[walletID] = true
+	f.mu.Unlock()
 }
 
 func (f *fakeSigner) ok(walletID, sig, sess string) {
@@ -69,6 +80,9 @@ func (f *fakeSigner) SignForWallet(ctx context.Context, walletID, msgHex string)
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.panics[walletID] {
+		panic("fakeSigner: injected panic for " + walletID)
+	}
 	if err, ok := f.errors[walletID]; ok {
 		return nil, err
 	}
@@ -200,6 +214,83 @@ func TestSigning_SkipsSwapsWithoutWalletID(t *testing.T) {
 	got, _ := store.Get(t.Context(), sw.ID)
 	if got.Status != SwapStatusBridgeTransferPending {
 		t.Errorf("status should be unchanged, got %q", got.Status)
+	}
+}
+
+// TestSigning_SkipsWithdrawalDisabledDestination is the runtime
+// kill-switch: a swap whose destination token has isWithdrawalEnabled
+// flipped false is NEVER claimed/signed/broadcast — it stays pending so
+// re-enabling the flag resumes it. Uses the SAME Config.WithdrawalEnabled
+// accessor the create handler + normalizeCurrency use. The seed is the
+// EVM LUX shape that TestSigning_AdvancesOnSuccess proves WOULD sign, so
+// the gate is the only thing holding it.
+func TestSigning_SkipsWithdrawalDisabledDestination(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	sw := seedBridgeTransferPendingSwap(t, store, "bridge-wallet-gated", "ETHEREUM_SEPOLIA")
+	signer.ok("bridge-wallet-gated", "0xsig", "sess_gated")
+
+	no := false
+	cfg := Config{Tokens: []Token{{
+		Network: "LUX_TESTNET", Asset: "LUX", IsWithdrawalEnabled: &no,
+	}}}
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	d.WithdrawalEnabled = cfg.WithdrawalEnabled
+	d.Tick(t.Context())
+
+	if signer.calls.Load() != 0 {
+		t.Errorf("signer must NOT be called for a withdrawal-disabled destination; got %d", signer.calls.Load())
+	}
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("gated swap must stay pending (kill-switch), got %q", got.Status)
+	}
+	if got.Signature != "" || got.DestRawTx != "" {
+		t.Errorf("gated swap must not be signed/broadcast: sig=%q rawtx=%q", got.Signature, got.DestRawTx)
+	}
+
+	// Re-enable: the SAME swap now signs on the next tick, proving the
+	// gate (not some other precondition) was the sole blocker and that
+	// the kill-switch is reversible.
+	yes := true
+	cfg.Tokens[0].IsWithdrawalEnabled = &yes
+	d.WithdrawalEnabled = cfg.WithdrawalEnabled
+	d.Tick(t.Context())
+	got, _ = store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBroadcasting {
+		t.Errorf("re-enabled swap should advance to broadcasting, got %q", got.Status)
+	}
+}
+
+// TestSigning_SurvivesPanicInOneSwap proves the recover backstop at the
+// top of signOne stops a panic in ONE swap's signing path from taking
+// down the daemon's poll loop: a second, healthy swap still completes.
+func TestSigning_SurvivesPanicInOneSwap(t *testing.T) {
+	store := NewInMemoryStore()
+	signer := newFakeSigner()
+	swPanic := seedBridgeTransferPendingSwap(t, store, "wallet-panic", "ETHEREUM_SEPOLIA")
+	swOK := seedBridgeTransferPendingSwap(t, store, "wallet-ok", "ETHEREUM_SEPOLIA")
+	signer.panicOn("wallet-panic")
+	signer.ok("wallet-ok", "0xsig", "sess_ok")
+
+	d := NewSigningDriver(store, signer, time.Hour, nil)
+	// A leaked panic here would crash the test goroutine and fail the
+	// test — reaching the assertions proves signOne recovered.
+	d.Tick(t.Context())
+
+	gotOK, _ := store.Get(t.Context(), swOK.ID)
+	if gotOK.Status != SwapStatusBroadcasting {
+		t.Errorf("healthy swap should reach broadcasting despite a panic in another swap, got %q", gotOK.Status)
+	}
+	if d.Stats().Failures == 0 {
+		t.Errorf("a recovered panic should be counted as a failure")
+	}
+	// The panicking swap was claimed (→ signing) before the panic fired,
+	// so it is no longer pending and won't re-panic every tick; it just
+	// must not have advanced to broadcasting.
+	gotPanic, _ := store.Get(t.Context(), swPanic.ID)
+	if gotPanic.Status == SwapStatusBroadcasting {
+		t.Errorf("panicking swap must not have advanced to broadcasting, got %q", gotPanic.Status)
 	}
 }
 

@@ -64,6 +64,14 @@ type BroadcastDriver struct {
 	// further; 15 s leaves room without holding the loop hostage.
 	perBroadcastTimeout time.Duration
 
+	// WithdrawalEnabled, when set, is the in-flight half of the kill-switch:
+	// a swap whose destination (network, asset) became withdrawal-disabled
+	// AFTER it was signed is HELD here (never pushed), so flipping
+	// isWithdrawalEnabled:false stops already-signed swaps too, not just new
+	// signings. nil ⇒ no gate (tests / back-compat). Same Config source as the
+	// signing driver's gate — one authoritative control.
+	WithdrawalEnabled func(network, asset string) bool
+
 	running atomic.Bool
 
 	ticks          atomic.Uint64
@@ -207,6 +215,21 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			d.logger.Debug("broadcast driver: skipping — DestRawTx empty (tx assembler pending)",
 				"swap_id", sw.ID,
 				"network", sw.DestinationNetwork,
+			)
+		}
+		return
+	}
+
+	// Kill-switch (in-flight half): a destination that became withdrawal-disabled
+	// after this swap was signed is HELD — never broadcast. It stays in its
+	// current state and resumes if the flag is flipped back. Pairs with the
+	// signing driver's create/sign gate so the control covers the whole pipeline.
+	if d.WithdrawalEnabled != nil && !d.WithdrawalEnabled(sw.DestinationNetwork, sw.DestinationAsset) {
+		if d.logger != nil {
+			d.logger.Warn("broadcast driver: HELD — destination withdrawal disabled (kill-switch)",
+				"swap_id", sw.ID,
+				"network", sw.DestinationNetwork,
+				"asset", sw.DestinationAsset,
 			)
 		}
 		return
