@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -77,8 +78,35 @@ func newRig(t *testing.T, bclient *bchain.Client, mclient *mchain.Client, dc *de
 		bclient = newMockBChain(t, defaultPrices())
 	}
 	cfg, _ := LoadConfig("")
+	// Wired NON-EVM families are default-DENY (config.go gatedFamily) — they
+	// need an explicit enabled (network, asset) row, exactly as production does.
+	// Enable the non-EVM pairs the newRig-based tests exercise so they reach the
+	// downstream create logic (X-address/tag/r-address validation, SS58 keygen);
+	// EVM pairs stay default-on with no row. Gate-behavior tests use newRigCfg.
+	yes := true
+	cfg.Tokens = append(cfg.Tokens,
+		Token{Network: "XRP_TESTNET", Asset: "XRP", IsDepositEnabled: &yes, IsWithdrawalEnabled: &yes},
+		Token{Network: "POLKADOT_MAINNET", Asset: "DAI", IsDepositEnabled: &yes, IsWithdrawalEnabled: &yes},
+	)
 	store := NewInMemoryStore()
 	api := NewAPI(cfg, "", bclient, mclient, dc, store)
+	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
+	app.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(app)
+	return &testRig{app: app, store: store, api: api}
+}
+
+// newRigCfg is newRig with an explicit Config — for gate-behavior tests that
+// need explicit isDepositEnabled / isWithdrawalEnabled:false rows. (newRig
+// enables the non-EVM pairs its own tests use; non-EVM families are otherwise
+// default-DENY per config.go gatedFamily.)
+func newRigCfg(t *testing.T, cfg Config, bclient *bchain.Client) *testRig {
+	t.Helper()
+	if bclient == nil {
+		bclient = newMockBChain(t, defaultPrices())
+	}
+	store := NewInMemoryStore()
+	api := NewAPI(cfg, "", bclient, nil, nil, store)
 	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
 	app.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(app)
@@ -554,6 +582,196 @@ func TestSwapsList_FilterByStatus(t *testing.T) {
 	}
 	if len(resp.Data) != 2 {
 		t.Errorf("expected 2 completed swaps, got %d. body=%s", len(resp.Data), body)
+	}
+}
+
+// =============================================================================
+// XRP destination tag + X-address safety (swap-create boundary)
+// =============================================================================
+//
+// XRP withdrawals are irreversible: a tag-less payout to an exchange's
+// pooled deposit address is credited to nobody. These tests pin the
+// create-time guards — X-address rejection, r-address validation, and
+// destination_tag range validation — that make XRP withdrawal safe to
+// enable.
+
+// A canonical r-address used as a known-good XRP destination across the
+// XRP create tests.
+const testXRPClassicDest = "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
+
+func TestSwapsCreate_XRP_RejectsXAddress(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	// Canonical XLS-5 testnet X-address — embeds a destination tag the
+	// bridge can't honor through its separate DestinationTag field.
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: "TVE26TYGhfLC7tQDno7G8dGtxSkYQn49b3qD26PK7FcGSKE",
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_destination") {
+		t.Errorf("expected bad_destination, got %s", body)
+	}
+	if !strings.Contains(string(body), "X-address") {
+		t.Errorf("error should name the X-address problem, got %s", body)
+	}
+}
+
+func TestSwapsCreate_XRP_RejectsBadRAddress(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: "rNotAValidAddressXXXXXXXXXXXXXXXXXX",
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_destination") {
+		t.Errorf("expected bad_destination, got %s", body)
+	}
+}
+
+// "ppppp" panics rippledata.NewAccountFromAddress raw; the boundary must
+// turn that into a clean 400, never a panic/500.
+func TestSwapsCreate_XRP_DecoderPanicInput_CleanReject(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: "ppppp",
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400 (clean reject, not panic). body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_destination") {
+		t.Errorf("expected bad_destination, got %s", body)
+	}
+}
+
+func TestSwapsCreate_XRP_RejectsTagOverUint32(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	overMax := int64(math.MaxUint32) + 1
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: testXRPClassicDest,
+		DestinationTag:     &overMax,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_destination_tag") {
+		t.Errorf("expected bad_destination_tag, got %s", body)
+	}
+}
+
+func TestSwapsCreate_XRP_RejectsNegativeTag(t *testing.T) {
+	rig := newRig(t, nil, nil, nil)
+	neg := int64(-1)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: testXRPClassicDest,
+		DestinationTag:     &neg,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400. body=%s", status, body)
+	}
+	if !strings.Contains(string(body), "bad_destination_tag") {
+		t.Errorf("expected bad_destination_tag, got %s", body)
+	}
+}
+
+// Valid classic r-address + in-range tag → created, and the tag is
+// persisted on the swap (read back from the store) so the XRP signing
+// path can carry it onto the Payment.
+func TestSwapsCreate_XRP_ValidClassicWithTag_Stored(t *testing.T) {
+	bclient := newMockBChain(t, map[string]float64{"ETH": 3500, "XRP": 0.5})
+	rig := newRig(t, bclient, nil, nil)
+
+	tag := int64(1234567)
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: testXRPClassicDest,
+		DestinationTag:     &tag,
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	stored, err := rig.store.Get(t.Context(), resp.Data.ID)
+	if err != nil {
+		t.Fatalf("store.Get: %v", err)
+	}
+	if stored.DestinationTag == nil || *stored.DestinationTag != uint32(tag) {
+		t.Errorf("stored DestinationTag = %v, want %d", stored.DestinationTag, tag)
+	}
+	if stored.DestinationAddress != testXRPClassicDest {
+		t.Errorf("stored DestinationAddress = %q, want %q", stored.DestinationAddress, testXRPClassicDest)
+	}
+}
+
+// A classic r-address with NO tag is valid — personal wallets don't use
+// tags. The swap is created and the stored tag stays nil.
+func TestSwapsCreate_XRP_ValidClassicNoTag_StoredNil(t *testing.T) {
+	bclient := newMockBChain(t, map[string]float64{"ETH": 3500, "XRP": 0.5})
+	rig := newRig(t, bclient, nil, nil)
+
+	reqBody, _ := json.Marshal(createSwapReq{
+		Amount:             10,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: "XRP_TESTNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: testXRPClassicDest,
+		// no DestinationTag
+	})
+	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", reqBody)
+	if status != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", status, body)
+	}
+	var resp struct {
+		Data serverSwap `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatal(err)
+	}
+	stored, _ := rig.store.Get(t.Context(), resp.Data.ID)
+	if stored.DestinationTag != nil {
+		t.Errorf("stored DestinationTag = %d, want nil (no tag supplied)", *stored.DestinationTag)
 	}
 }
 
@@ -1085,5 +1303,128 @@ func TestSwapsCreate_NoReleaseStore_LeavesFieldsBlank(t *testing.T) {
 	if stored.ReleaseWalletID != "" || stored.ReleaseAddress != "" {
 		t.Errorf("legacy create flow stamped release fields: id=%q addr=%q",
 			stored.ReleaseWalletID, stored.ReleaseAddress)
+	}
+}
+
+// =============================================================================
+// Deposit / withdrawal gate (authoritative — the swap-create boundary)
+// =============================================================================
+//
+// isWithdrawalEnabled / isDepositEnabled in networks.{env}.yaml MUST gate
+// the actual swap pipeline, not merely shape the SPA's /currencies list.
+// TestSwapsInject_GatedByWithdrawal: the operator inject-raw-tx admin path
+// jumps straight to broadcasting, so it must ALSO honor the withdrawal gate —
+// otherwise it bypasses the kill-switch (red MEDIUM). A disabled destination
+// returns 403 and the swap is not advanced.
+func TestSwapsInject_GatedByWithdrawal(t *testing.T) {
+	no := false
+	cfg := Config{Tokens: []Token{{Network: "XRP_MAINNET", Asset: "XRP", IsWithdrawalEnabled: &no}}}
+	rig := newRigCfg(t, cfg, nil)
+	sw := &Swap{
+		Status:             SwapStatusBridgeTransferPending,
+		DestinationNetwork: "XRP_MAINNET",
+		DestinationAsset:   "XRP",
+		DestinationAddress: testXRPClassicDest,
+	}
+	if err := rig.store.Create(t.Context(), sw); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	body, _ := json.Marshal(adminInjectRawTxReq{DestRawTx: "DEADBEEF"})
+	status, respBody := fireRequest(t, rig.app, http.MethodPost, "/admin/swaps/"+sw.ID+"/inject-raw-tx", body)
+	if status != http.StatusForbidden {
+		t.Fatalf("inject to a withdrawal-disabled destination must be 403, got %d: %s", status, respBody)
+	}
+	if !strings.Contains(string(respBody), "withdrawal_disabled") {
+		t.Errorf("expected withdrawal_disabled, got %s", respBody)
+	}
+	if got, _ := rig.store.Get(t.Context(), sw.ID); got.Status != SwapStatusBridgeTransferPending {
+		t.Errorf("gated inject must not advance the swap, got %q", got.Status)
+	}
+}
+
+// A direct API caller (bypassing the SPA) must not be able to create a
+// payout on a withdrawal-gated destination (XRP/BTC/SOL/TON on mainnet)
+// or a deposit on a deposit-gated source. Rejection is BEFORE persist —
+// no swap row, no minted deposit address.
+func TestSwapsCreate_GatesDepositAndWithdrawal(t *testing.T) {
+	no, yes := false, true
+	cfg := Config{Tokens: []Token{
+		// XRP mainnet: deposit-only, withdrawal gated (mirrors networks.mainnet.yaml).
+		{Network: "XRP_MAINNET", Asset: "XRP", IsDepositEnabled: &yes, IsWithdrawalEnabled: &no},
+		// SOL mainnet: both legs gated.
+		{Network: "SOLANA_MAINNET", Asset: "SOL", IsDepositEnabled: &no, IsWithdrawalEnabled: &no},
+		// LUX testnet: explicitly enabled (the happy path).
+		{Network: "LUX_TESTNET", Asset: "LUX", IsDepositEnabled: &yes, IsWithdrawalEnabled: &yes},
+	}}
+	// Price ETH/LUX/XRP/SOL so the enabled row's quote snapshot succeeds.
+	bclient := newMockBChain(t, map[string]float64{"ETH": 3500, "LUX": 2.5, "XRP": 0.5, "SOL": 150})
+
+	cases := []struct {
+		name       string
+		req        createSwapReq
+		wantStatus int
+		wantErr    string // body substring on rejection; "" ⇒ expect a created swap
+	}{
+		{
+			name: "withdrawal_disabled_destination_rejected",
+			req: createSwapReq{
+				Amount: 10, SourceNetwork: "ETHEREUM_SEPOLIA", SourceAsset: "ETH",
+				DestinationNetwork: "XRP_MAINNET", DestinationAsset: "XRP",
+				DestinationAddress: testXRPClassicDest,
+			},
+			wantStatus: http.StatusForbidden,
+			wantErr:    "withdrawal_disabled",
+		},
+		{
+			name: "deposit_disabled_source_rejected",
+			req: createSwapReq{
+				Amount: 1, SourceNetwork: "SOLANA_MAINNET", SourceAsset: "SOL",
+				DestinationNetwork: "LUX_TESTNET", DestinationAsset: "LUX",
+				DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+			},
+			wantStatus: http.StatusForbidden,
+			wantErr:    "deposit_disabled",
+		},
+		{
+			name: "enabled_destination_accepted",
+			req: createSwapReq{
+				Amount: 0.1, SourceNetwork: "ETHEREUM_SEPOLIA", SourceAsset: "ETH",
+				DestinationNetwork: "LUX_TESTNET", DestinationAsset: "LUX",
+				DestinationAddress: "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473",
+			},
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rig := newRigCfg(t, cfg, bclient)
+			body, _ := json.Marshal(tc.req)
+			status, resp := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/swaps", body)
+			if status != tc.wantStatus {
+				t.Fatalf("status = %d, want %d. body=%s", status, tc.wantStatus, resp)
+			}
+			if tc.wantErr != "" {
+				if !strings.Contains(string(resp), tc.wantErr) {
+					t.Errorf("body should contain %q, got %s", tc.wantErr, resp)
+				}
+				// A rejected create must NOT have persisted a swap.
+				list, _ := rig.store.List(t.Context(), SwapFilter{})
+				if len(list) != 0 {
+					t.Errorf("rejected create must not persist a swap; store has %d", len(list))
+				}
+				return
+			}
+			// Accepted: a swap row exists with a real id.
+			var ok struct {
+				Data serverSwap `json:"data"`
+			}
+			if err := json.Unmarshal(resp, &ok); err != nil {
+				t.Fatalf("decode: %v body=%s", err, resp)
+			}
+			if !strings.HasPrefix(ok.Data.ID, "swap_") {
+				t.Errorf("expected a created swap id, got %q", ok.Data.ID)
+			}
+		})
 	}
 }

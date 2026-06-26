@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/luxfi/bridge/internal/xrpl"
 )
 
 // swaps_handler.go wires the native swap CRUD into cmd/bridge.
@@ -102,11 +104,16 @@ type createSwapReq struct {
 	DestinationNetwork string  `json:"destination_network"`
 	DestinationAsset   string  `json:"destination_asset"`
 	DestinationAddress string  `json:"destination_address"`
-	Sender             string  `json:"sender,omitempty"`
-	Refuel             bool    `json:"refuel"`
-	UseDepositAddress  bool    `json:"use_deposit_address"`
-	UseTeleporter      bool    `json:"use_teleporter"`
-	AppName            string  `json:"app_name"`
+	// DestinationTag is the optional XRP destination tag. Accepted as a
+	// wider int64 so a negative or out-of-uint32-range value is rejected
+	// at the boundary with a clear error rather than failing JSON
+	// unmarshal opaquely; narrowed to uint32 after validation.
+	DestinationTag    *int64 `json:"destination_tag,omitempty"`
+	Sender            string `json:"sender,omitempty"`
+	Refuel            bool   `json:"refuel"`
+	UseDepositAddress bool   `json:"use_deposit_address"`
+	UseTeleporter     bool   `json:"use_teleporter"`
+	AppName           string `json:"app_name"`
 }
 
 // envelope is the canonical `{data: ...}` wrapper the legacy server
@@ -157,6 +164,61 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 			"error":  "bad_amount",
 			"detail": "amount must be > 0",
 		})
+	}
+
+	// Authoritative deposit/withdrawal gate. The per-token
+	// isDepositEnabled / isWithdrawalEnabled flags in
+	// networks.{env}.yaml are otherwise only cosmetic — normalizeCurrency
+	// reads isWithdrawalEnabled to shape the SPA's /currencies list, but
+	// it gates NOTHING in the swap pipeline. Enforce both legs here so a
+	// direct API caller can't bypass the SPA to deposit on a gated source
+	// or get a payout on a gated destination (XRP/BTC/SOL/TON on mainnet).
+	// Reject BEFORE the quote snapshot / deposit-address keygen below. The
+	// signing driver re-checks withdrawal as a runtime kill-switch
+	// (signing_driver.go signOne). Same Config accessor + default-on
+	// policy normalizeCurrency uses — no second config source.
+	if !a.cfg.DepositEnabled(req.SourceNetwork, req.SourceAsset) {
+		return c.JSON(http.StatusForbidden, map[string]string{
+			"error":  "deposit_disabled",
+			"detail": fmt.Sprintf("deposit_disabled: %s on %s", req.SourceAsset, req.SourceNetwork),
+		})
+	}
+	if !a.cfg.WithdrawalEnabled(req.DestinationNetwork, req.DestinationAsset) {
+		return c.JSON(http.StatusForbidden, map[string]string{
+			"error":  "withdrawal_disabled",
+			"detail": fmt.Sprintf("withdrawal_disabled: %s on %s", req.DestinationAsset, req.DestinationNetwork),
+		})
+	}
+
+	// Destination safety for XRP — validate at the API boundary so a bad
+	// destination fails fast here instead of stalling the swap until its
+	// expiry. Gated to XRP-family destinations (other chains have their
+	// own address shapes). Rejects X-addresses (which embed a tag the
+	// bridge can't honor through its separate DestinationTag field) and
+	// validates the classic r-address. See xrpl.ValidateDestination.
+	if mchain.AddressTypeFor(req.DestinationNetwork) == mchain.AddressTypeXRP {
+		if err := xrpl.ValidateDestination(req.DestinationAddress); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error":  "bad_destination",
+				"detail": err.Error(),
+			})
+		}
+	}
+
+	// Destination tag (optional; XRP-only in practice). XRPL's
+	// DestinationTag is a uint32 — reject anything outside [0, 2^32-1]
+	// with a clear error and narrow to the domain type for storage.
+	var destTag *uint32
+	if req.DestinationTag != nil {
+		t := *req.DestinationTag
+		if t < 0 || t > math.MaxUint32 {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error":  "bad_destination_tag",
+				"detail": "destination_tag must be in [0, 4294967295]",
+			})
+		}
+		v := uint32(t)
+		destTag = &v
 	}
 
 	// Step 0 — snapshot the quote from the B-Chain.
@@ -251,6 +313,7 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		DestinationNetwork: req.DestinationNetwork,
 		DestinationAsset:   req.DestinationAsset,
 		DestinationAddress: req.DestinationAddress,
+		DestinationTag:     destTag,
 		Sender:             sender,
 		Refuel:             req.Refuel,
 		UseDepositAddress:  req.UseDepositAddress,
@@ -453,6 +516,22 @@ func (a *API) swapsInjectRawTxNative(c *zip.Ctx) error {
 	}
 	if req.DestRawTx == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "dest_raw_tx required"})
+	}
+	// The withdrawal gate applies to operator inject too: a disabled destination
+	// must not be force-broadcast past the kill-switch (red MEDIUM — inject
+	// jumps straight to broadcasting, otherwise bypassing the signing-driver gate).
+	cur, gerr := a.store.Get(c.Context(), id)
+	if gerr != nil {
+		if errors.Is(gerr, ErrSwapNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "not_found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": gerr.Error()})
+	}
+	if !a.cfg.WithdrawalEnabled(cur.DestinationNetwork, cur.DestinationAsset) {
+		return c.JSON(http.StatusForbidden, map[string]string{
+			"error":  "withdrawal_disabled",
+			"detail": "withdrawal_disabled: " + cur.DestinationAsset + " on " + cur.DestinationNetwork,
+		})
 	}
 	sw, err := a.store.Patch(c.Context(), id, func(s *Swap) {
 		s.DestRawTx = req.DestRawTx

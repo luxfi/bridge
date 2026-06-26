@@ -282,11 +282,13 @@ tokens:
   # it has no mpcd FROST/Ed25519 gap (unlike SOL/TON). Inbound detection
   # (rippled account_info, last validated ledger) is implemented in
   # internal/depositcheck; the r-address derives locally from the ecdsa_pub_key
-  # mpcd already returns. Deposit-only for now, matching the BTC precedent:
-  # WITHDRAWAL IS GATED until the destination tag is plumbed end-to-end
-  # (API -> Swap -> XRPSpec -> Payment) and X-addresses are rejected at create
-  # time — a tag-less payout to an exchange's pooled deposit address is
-  # credited to nobody and is irreversible (red finding, c603f579 review).
+  # mpcd already returns.
+  # WITHDRAWAL ENABLED ON TESTNET: the destination tag is now plumbed
+  # end-to-end (API destination_tag -> Swap.DestinationTag -> XRPSpec ->
+  # xrpl.PaymentUnsigned.DestinationTag, signed into the SHA-512Half digest)
+  # and X-addresses are rejected at swap-create time (xrpl.ValidateDestination),
+  # so a tag-carrying payout to an exchange's pooled deposit address credits the
+  # right sub-account instead of being lost (closes red finding c603f579/d26a0d0b).
   # A fresh per-swap deposit address must also hold the >= 10-XRP AccountRoot
   # base reserve, so the per-XRP minimum below stays above it.
   - asset: XRP
@@ -294,7 +296,7 @@ tokens:
     decimals: 6
     network: XRP_TESTNET
     isDepositEnabled: true
-    isWithdrawalEnabled: false
+    isWithdrawalEnabled: true
 
 limits:
   minUSD: 1

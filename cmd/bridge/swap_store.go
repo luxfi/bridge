@@ -89,7 +89,14 @@ type Swap struct {
 	DestinationNetwork string     `json:"destination_network"`
 	DestinationAsset   string     `json:"destination_asset"`
 	DestinationAddress string     `json:"destination_address"`
-	Sender             string     `json:"sender,omitempty"`
+	// DestinationTag is the optional XRP destination tag — a 32-bit memo
+	// XRP exchanges/custodians require to credit a pooled-deposit payout
+	// to the right sub-account. nil for destinations that don't use one
+	// (personal r-addresses, and every non-XRP chain). Validated to fit
+	// uint32 at the API boundary (swaps_handler.go) and read by the XRP
+	// signing path (signOneXRP) which carries it onto the Payment.
+	DestinationTag *uint32 `json:"destination_tag,omitempty"`
+	Sender         string  `json:"sender,omitempty"`
 	Refuel             bool       `json:"refuel"`
 	UseDepositAddress  bool       `json:"use_deposit_address"`
 	UseTeleporter      bool       `json:"use_teleporter"`

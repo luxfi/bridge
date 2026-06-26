@@ -110,6 +110,12 @@ type XRPSpec struct {
 	SenderPubKeyHex    string  // compressed-secp256k1 hex (33 bytes ⇒ 66 chars)
 	DestinationAddress string  // recipient r-address
 	AmountXRP          float64 // human-friendly (e.g. 1.0 = 1 XRP); converted to drops here
+
+	// DestinationTag is the optional 32-bit tag XRP exchanges + custodial
+	// services require to credit a pooled-deposit payout to the right
+	// sub-account. nil for personal r-address destinations that don't use
+	// one. Carried straight through to the Payment's DestinationTag field.
+	DestinationTag *uint32
 }
 
 // =============================================================================
@@ -208,6 +214,7 @@ func (a *Assembler) PreSignXRP(ctx context.Context, in XRPSpec) (*XRPUnsigned, e
 		LastLedgerSequence: lastLedgerSeq,
 		SigningPubKey:      pub,
 		Flags:              flags,
+		DestinationTag:     in.DestinationTag,
 	}
 	digest, signCtx, err := xrpl.PreSign(pu)
 	if err != nil {
