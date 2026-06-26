@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/txassembler"
+	"github.com/luxfi/bridge/internal/xrpl"
 )
 
 // signing_driver.go: OBSERVE + BROADCAST shim for the cmd/bridge daemon.
@@ -207,6 +209,18 @@ type SigningDriver struct {
 	// hint on the wire. Falls through to the curve-only path when the
 	// signer is a curve-only mock.
 	ProtocolFor func(curve mchain.Curve) mchain.Protocol
+
+	// WithdrawalEnabled, when set, is the authoritative runtime gate that
+	// mirrors the create-time check in swapsCreateNative. Before claiming
+	// and signing a swap, signOne asks "may we still pay out this
+	// destination token?" — an operator who flips isWithdrawalEnabled:false
+	// in networks.{env}.yaml halts NEW signings even for already-created
+	// swaps (a real kill-switch), and the gated swap is left pending so
+	// re-enabling the flag resumes it on a later tick. main.go wires this
+	// to Config.WithdrawalEnabled (same source as normalizeCurrency). Nil
+	// ⇒ no gate (every swap is signable), preserving the pre-gate behavior
+	// for test rigs and operators who haven't wired a config.
+	WithdrawalEnabled func(network, asset string) bool
 
 	// perSignTimeout caps each individual SignForWallet call.
 	// 75 s default covers the cluster-side 60 s ceremony timeout plus
@@ -447,6 +461,44 @@ func (d *SigningDriver) tick(ctx context.Context) {
 // MPC ceremony is skipped entirely. Saves the 75s sign-then-fail
 // dance the broadcast driver previously had to absorb.
 func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
+	// Backstop: a panic anywhere in one swap's signing path (e.g. a
+	// malformed legacy row that trips a decoder fault) must not take down
+	// the daemon's signing goroutine. Recover here so the poll loop in
+	// tick() continues to the next swap. parseAccount has its own inner
+	// recover, but this is the load-bearing guard for every other path.
+	defer func() {
+		if r := recover(); r != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Error("signing driver: recovered from panic in signOne",
+					"swap_id", sw.ID,
+					"network", sw.DestinationNetwork,
+					"asset", sw.DestinationAsset,
+					"panic", r,
+					"stack", string(debug.Stack()),
+				)
+			}
+		}
+	}()
+
+	// Runtime withdrawal kill-switch (defense-in-depth behind the
+	// create-time gate in swaps_handler.go). If the destination token's
+	// isWithdrawalEnabled has been flipped false, do NOT claim or sign —
+	// leave the swap pending so re-enabling the flag resumes it on a later
+	// tick. This halts payouts even for already-created swaps, which the
+	// cosmetic /currencies flag never could. Checked before the BTC
+	// dispatch so it covers every destination family.
+	if d.WithdrawalEnabled != nil && !d.WithdrawalEnabled(sw.DestinationNetwork, sw.DestinationAsset) {
+		if d.logger != nil {
+			d.logger.Warn("signing skipped — withdrawal disabled for destination token",
+				"swap_id", sw.ID,
+				"network", sw.DestinationNetwork,
+				"asset", sw.DestinationAsset,
+			)
+		}
+		return
+	}
+
 	// Dispatch by destination network's family. BTC swaps run a
 	// per-input loop that the EVM single-sighash flow doesn't need;
 	// keeping them in separate functions stops the EVM path from
@@ -1369,6 +1421,31 @@ var _ MPCSigner = (*mchain.Client)(nil)
 // to SwapStatusBridgeTransferPending so the next tick retries (same
 // recovery model as the EVM path).
 func (d *SigningDriver) signOneXRP(ctx context.Context, sw *Swap, walletID, senderAddr string, poolEntry *ReleasePoolEntry) {
+	// Explicit destination re-check (defense-in-depth for legacy rows).
+	// Create-time validation (swaps_handler.go) rejects X-addresses and
+	// malformed r-addresses, but a row persisted BEFORE that gate existed
+	// could still carry one. PreSignXRP's parseAccount would reject it
+	// implicitly; make it explicit + terminal here so a bad destination
+	// fails fast with a clear error instead of looping through the whole
+	// assemble→sign path every tick.
+	if err := xrpl.ValidateDestination(sw.DestinationAddress); err != nil {
+		d.failures.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("XRP signing rejected — invalid destination address",
+				"swap_id", sw.ID,
+				"destination", sw.DestinationAddress,
+				"err", err,
+			)
+		}
+		_, _ = d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status == SwapStatusSigning {
+				s.Status = SwapStatusFailed
+			}
+			s.LastError = "invalid XRP destination address: " + err.Error()
+		})
+		return
+	}
+
 	if d.assembler == nil || d.assembler.XRPProviderFor() == nil {
 		// Without the XRP provider plumbed, we can't safely build the
 		// Payment (no rippled-side Sequence / Fee). Roll back so the
@@ -1410,6 +1487,7 @@ func (d *SigningDriver) signOneXRP(ctx context.Context, sw *Swap, walletID, send
 		SenderPubKeyHex:    poolEntry.ECDSAPubKey,
 		DestinationAddress: sw.DestinationAddress,
 		AmountXRP:          sw.Amount,
+		DestinationTag:     sw.DestinationTag,
 	})
 	if aerr != nil {
 		d.failures.Add(1)
