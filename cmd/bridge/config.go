@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/luxfi/bridge/internal/mchain"
 	"gopkg.in/yaml.v3"
 )
 
@@ -94,6 +96,72 @@ type Token struct {
 	IsDepositEnabled    *bool `yaml:"isDepositEnabled"    json:"is_deposit_enabled,omitempty"`
 	IsWithdrawalEnabled *bool `yaml:"isWithdrawalEnabled" json:"is_withdrawal_enabled,omitempty"`
 	IsRefuelEnabled     *bool `yaml:"isRefuelEnabled"     json:"is_refuel_enabled,omitempty"`
+}
+
+// findToken resolves the configured Token for a (network, asset) pair
+// using the SAME join key the /networks handler + normalizeCurrency use
+// (Token.Network == network && Token.Asset == asset). The bool reports
+// whether a row exists, so callers can distinguish "configured" from
+// "absent".
+func (c Config) findToken(network, asset string) (Token, bool) {
+	// Case-INSENSITIVE match: the signer dispatch keys on the network alone and
+	// case-folds it (mchain.AddressTypeFor uppercases; isBTCNetwork ToUppers),
+	// so the gate MUST fold too — otherwise a variant like asset "xrp" or
+	// network "bitcoin_testnet" would miss the exact row and dodge the gate
+	// while routing still reaches the release pool.
+	for _, t := range c.Tokens {
+		if strings.EqualFold(t.Network, network) && strings.EqualFold(t.Asset, asset) {
+			return t, true
+		}
+	}
+	return Token{}, false
+}
+
+// gatedFamily reports whether a network routes to a wired NON-EVM family
+// (BTC/SOL/TON/XRP/DOT). Those families are default-DENY for the deposit /
+// withdrawal gate: a move REQUIRES an explicitly-enabled (network, asset) row.
+// Their signer dispatch keys on the network only, so a variant asset or absent
+// row must never fall through to "enabled" — that was the gate-bypass. EVM
+// stays default-ON (its many tokens carry no explicit flag). The network is
+// upper-cased to match mchain.AddressTypeFor's exact-uppercase routing table.
+func gatedFamily(network string) bool {
+	return mchain.AddressTypeFor(strings.ToUpper(network)) != mchain.AddressTypeETH
+}
+
+// WithdrawalEnabled is the authoritative server-side gate behind the
+// per-token isWithdrawalEnabled flag: it reports whether the bridge may
+// pay OUT (network, asset) on its destination chain. swapsCreateNative
+// rejects a create whose destination is disabled, and the signing driver
+// skips (never signs/broadcasts) any swap whose destination is disabled —
+// so flipping isWithdrawalEnabled:false in networks.{env}.yaml is a real
+// kill-switch, not just a /currencies UI hint.
+//
+// Policy is asymmetric by family (see gatedFamily): wired NON-EVM families
+// (BTC/SOL/TON/XRP/DOT) are default-DENY — a payout requires an explicit
+// isWithdrawalEnabled:true row, so a variant asset/network-case that misses the
+// row is refused rather than slipping through. EVM is default-ON (mirroring
+// normalizeCurrency: many EVM tokens carry no explicit flag; only an explicit
+// isWithdrawalEnabled:false suppresses one).
+func (c Config) WithdrawalEnabled(network, asset string) bool {
+	t, ok := c.findToken(network, asset)
+	if gatedFamily(network) {
+		return ok && t.IsWithdrawalEnabled != nil && *t.IsWithdrawalEnabled
+	}
+	return !ok || t.IsWithdrawalEnabled == nil || *t.IsWithdrawalEnabled
+}
+
+// DepositEnabled is the source-side counterpart of WithdrawalEnabled:
+// whether the bridge may accept a DEPOSIT of (network, asset) on its source
+// chain. Same single config source and same family-asymmetric policy
+// (gatedFamily): non-EVM default-DENY, EVM default-ON. swapsCreateNative
+// rejects a create whose source token is deposit-disabled (e.g. SOL/TON on
+// mainnet, gated on both legs).
+func (c Config) DepositEnabled(network, asset string) bool {
+	t, ok := c.findToken(network, asset)
+	if gatedFamily(network) {
+		return ok && t.IsDepositEnabled != nil && *t.IsDepositEnabled
+	}
+	return !ok || t.IsDepositEnabled == nil || *t.IsDepositEnabled
 }
 
 // Limits are per-token min/max swap caps. Real impl reads from KMS/admin,

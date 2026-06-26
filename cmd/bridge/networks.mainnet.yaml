@@ -271,11 +271,14 @@ tokens:
 
   # XRP settles on secp256k1 (same curve as the live ETH/BTC pipeline) — no
   # mpcd FROST/Ed25519 gap. Inbound detection via rippled account_info, last
-  # validated ledger (internal/depositcheck). Deposit-only for now, matching
-  # the BTC precedent: WITHDRAWAL IS GATED until the destination tag is plumbed
-  # end-to-end (API -> Swap -> XRPSpec -> Payment) and X-addresses are rejected
-  # at create time — a tag-less payout to an exchange's pooled deposit address
-  # is credited to nobody and is irreversible (red finding, c603f579 review).
+  # validated ledger (internal/depositcheck).
+  # The destination tag IS now plumbed end-to-end (API destination_tag ->
+  # Swap.DestinationTag -> XRPSpec -> xrpl.PaymentUnsigned.DestinationTag) and
+  # X-addresses are rejected at create time (xrpl.ValidateDestination) — same
+  # code path as testnet. WITHDRAWAL STAYS GATED ON MAINNET: enable only after
+  # a live testnet proof of the tag-carrying payout path (the code is safe but
+  # never live-proven on a real ledger). Honest staged rollout — flip to true
+  # once a testnet XRP withdrawal with a destination tag is confirmed on-chain.
   # A fresh per-swap deposit address must also hold the >= 10-XRP AccountRoot
   # base reserve, so the per-XRP minimum below stays above it.
   - asset: XRP

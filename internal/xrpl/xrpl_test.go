@@ -379,6 +379,170 @@ func TestFinalize_RejectsBadInputs(t *testing.T) {
 }
 
 // =============================================================================
+// DestinationTag — carried, committed into the digest, and on the wire
+// =============================================================================
+
+// A destination tag must (a) land on the Payment, and (b) change the
+// signing digest — if the digest were unchanged, the signature would
+// not commit to the tag, and an attacker (or a buggy serializer) could
+// strip it post-signing and the signature would still validate,
+// misrouting funds to an exchange's pooled deposit. So the digest MUST
+// differ between tag-present and tag-absent.
+func TestPreSign_DestinationTag_CarriedAndCommitted(t *testing.T) {
+	addr, err := AddressFromPubKey(testPubKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := PaymentUnsigned{
+		Account:            addr,
+		Destination:        "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+		AmountDrops:        1_000_000,
+		FeeDrops:           XRPLBaseFeeDrops,
+		Sequence:           42,
+		LastLedgerSequence: 9_999_999,
+		SigningPubKey:      testPubKey,
+		Flags:              CanonicalSigFlag,
+	}
+
+	// Tag absent → Payment carries no tag.
+	noTagDigest, noTagCtx, err := PreSign(base)
+	if err != nil {
+		t.Fatalf("PreSign(no tag): %v", err)
+	}
+	if noTagCtx.Payment.DestinationTag != nil {
+		t.Errorf("DestinationTag should be nil when unset, got %d", *noTagCtx.Payment.DestinationTag)
+	}
+
+	// Tag present → Payment carries it.
+	tag := uint32(1234567)
+	withTag := base
+	withTag.DestinationTag = &tag
+	tagDigest, tagCtx, err := PreSign(withTag)
+	if err != nil {
+		t.Fatalf("PreSign(tag): %v", err)
+	}
+	if tagCtx.Payment.DestinationTag == nil || *tagCtx.Payment.DestinationTag != tag {
+		t.Fatalf("DestinationTag not carried onto Payment; got %v", tagCtx.Payment.DestinationTag)
+	}
+
+	// The tag must be inside the signed preimage.
+	if bytes.Equal(noTagDigest, tagDigest) {
+		t.Error("signing digest unchanged by DestinationTag — tag is NOT committed into the signature (strippable)")
+	}
+}
+
+// Full round-trip: a tag set on PaymentUnsigned must survive
+// serialization and be readable back off the wire blob.
+func TestFinalize_DestinationTag_OnTheWire(t *testing.T) {
+	addr, _ := AddressFromPubKey(testPubKey)
+	tag := uint32(4294967295) // max uint32 — boundary value
+	u := PaymentUnsigned{
+		Account:            addr,
+		Destination:        "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+		AmountDrops:        1_000_000,
+		FeeDrops:           12,
+		Sequence:           7,
+		LastLedgerSequence: 1_234_567,
+		SigningPubKey:      testPubKey,
+		Flags:              CanonicalSigFlag,
+		DestinationTag:     &tag,
+	}
+	_, ctx, err := PreSign(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := mustHexInt("1A2B3C4D5E6F708192A3B4C5D6E7F80910111213141516171819202122232425")
+	s := mustHexInt("0B0C0D0E0F101112131415161718191A1B1C1D1E1F20212223242526272829FF")
+	der, err := EncodeDERSignature(r, s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	blob, _, err := Finalize(der, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := rippledata.ReadTransaction(bytes.NewReader(blob))
+	if err != nil {
+		t.Fatalf("re-parse blob: %v", err)
+	}
+	payment, ok := parsed.(*rippledata.Payment)
+	if !ok {
+		t.Fatalf("parsed wrong tx type: %T", parsed)
+	}
+	if payment.DestinationTag == nil || *payment.DestinationTag != tag {
+		t.Errorf("DestinationTag missing/mismatched on the wire; got %v want %d", payment.DestinationTag, tag)
+	}
+}
+
+// =============================================================================
+// ValidateDestination — X-address rejection + r-address validation
+// =============================================================================
+
+func TestValidateDestination(t *testing.T) {
+	cases := []struct {
+		name    string
+		addr    string
+		wantErr bool
+	}{
+		{"valid classic r-address", "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe", false},
+		{"another valid classic", "rGWrZyQqhTp9Xu7G5Pkayo7bXjH4k4QYpf", false},
+		{"empty", "", true},
+		// Canonical XLS-5 X-address test vectors (ripple-address-codec).
+		{"mainnet X-address", "XVLhHMPHU98es4dbozjVtdWzVrDjtV5fdx1mHp98tDMoQXb", true},
+		{"testnet X-address", "TVE26TYGhfLC7tQDno7G8dGtxSkYQn49b3qD26PK7FcGSKE", true},
+		{"garbage", "not-an-r-address", true},
+		{"too short", "r123", true},
+		{"evm address", "0xa28fAE14eB42e7A5C36Ad2D774a2b7Eb293c4473", true},
+		// Regression: this input PANICS rippledata.NewAccountFromAddress
+		// (slice bounds out of range). ValidateDestination must return a
+		// clean error, never panic.
+		{"decoder-panic input", "ppppp", true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := ValidateDestination(c.addr)
+			if c.wantErr && err == nil {
+				t.Errorf("ValidateDestination(%q) = nil, want error", c.addr)
+			}
+			if !c.wantErr && err != nil {
+				t.Errorf("ValidateDestination(%q) = %v, want nil", c.addr, err)
+			}
+		})
+	}
+}
+
+// The X-address rejection error must be actionable — it has to tell the
+// user to supply a classic r-address + explicit tag, not just bubble an
+// opaque "bad version" from the decoder.
+func TestValidateDestination_XAddressErrorIsActionable(t *testing.T) {
+	err := ValidateDestination("XVLhHMPHU98es4dbozjVtdWzVrDjtV5fdx1mHp98tDMoQXb")
+	if err == nil {
+		t.Fatal("expected error for X-address")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "X-address") || !strings.Contains(msg, "classic r-address") {
+		t.Errorf("X-address error not actionable: %q", msg)
+	}
+}
+
+// Defense in depth: PreSign itself must not panic on a decoder-fault
+// destination even though the API boundary already rejects it.
+func TestPreSign_DoesNotPanicOnDecoderFaultDestination(t *testing.T) {
+	addr, _ := AddressFromPubKey(testPubKey)
+	_, _, err := PreSign(PaymentUnsigned{
+		Account:       addr,
+		Destination:   "ppppp", // panics rippledata.NewAccountFromAddress raw
+		AmountDrops:   1_000_000,
+		FeeDrops:      10,
+		Sequence:      1,
+		SigningPubKey: testPubKey,
+	})
+	if err == nil {
+		t.Error("expected error for decoder-fault destination, got nil")
+	}
+}
+
+// =============================================================================
 // helpers
 // =============================================================================
 
