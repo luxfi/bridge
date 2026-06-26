@@ -130,6 +130,14 @@ networks:
     txExplorerTpl: https://tonscan.org/tx/{tx}
     addrExplorerTpl: https://tonscan.org/address/{addr}
 
+  - internalName: XRP_MAINNET
+    displayName: XRP Ledger
+    nativeCurrency: XRP
+    type: xrp
+    avgCompletion: 1m
+    txExplorerTpl: https://livenet.xrpl.org/transactions/{tx}
+    addrExplorerTpl: https://livenet.xrpl.org/accounts/{addr}
+
 tokens:
   # LUX
   - asset: LUX
@@ -260,6 +268,18 @@ tokens:
     network: TON_MAINNET
     isDepositEnabled: false
     isWithdrawalEnabled: false
+
+  # XRP settles on secp256k1 (same curve as the live ETH/BTC pipeline) — no
+  # mpcd FROST/Ed25519 gap. Inbound detection via rippled account_info
+  # (internal/depositcheck); outbound via the XRP release pool + assembler +
+  # rippled submit. Operator note: pre-fund each XRP release wallet with
+  # >= 10 XRP (AccountRoot base reserve) + per-payment fee before payouts.
+  - asset: XRP
+    name: XRP
+    decimals: 6
+    network: XRP_MAINNET
+    isDepositEnabled: true
+    isWithdrawalEnabled: true
 
 limits:
   minUSD: 10
