@@ -280,18 +280,28 @@ tokens:
 
   # XRP settles on secp256k1 — the SAME curve as the live ETH/BTC pipeline, so
   # it has no mpcd FROST/Ed25519 gap (unlike SOL/TON). Inbound detection
-  # (rippled account_info) is implemented in internal/depositcheck; the
-  # r-address is derived locally from the ecdsa_pub_key mpcd already returns.
-  # Outbound is wired (XRP release pool + assembler + rippled submit).
-  # Operator note: pre-fund each XRP release wallet with >= 10 XRP (the
-  # AccountRoot base reserve) + per-payment fee before enabling payouts.
+  # (rippled account_info, last validated ledger) is implemented in
+  # internal/depositcheck; the r-address derives locally from the ecdsa_pub_key
+  # mpcd already returns. Deposit-only for now, matching the BTC precedent:
+  # WITHDRAWAL IS GATED until the destination tag is plumbed end-to-end
+  # (API -> Swap -> XRPSpec -> Payment) and X-addresses are rejected at create
+  # time — a tag-less payout to an exchange's pooled deposit address is
+  # credited to nobody and is irreversible (red finding, c603f579 review).
+  # A fresh per-swap deposit address must also hold the >= 10-XRP AccountRoot
+  # base reserve, so the per-XRP minimum below stays above it.
   - asset: XRP
     name: XRP
     decimals: 6
     network: XRP_TESTNET
     isDepositEnabled: true
-    isWithdrawalEnabled: true
+    isWithdrawalEnabled: false
 
 limits:
   minUSD: 1
   maxUSD: 100000
+  per:
+    # XRP per-swap deposit addresses must hold the >= 10-XRP AccountRoot base
+    # reserve to exist on-ledger; a sub-reserve deposit is rejected network-side
+    # and never confirms. Keep the minimum above the reserve (a token-denominated
+    # minimum is the robust follow-up; this USD floor is the interim proxy).
+    XRP: {minUSD: 30, maxUSD: 100000}
