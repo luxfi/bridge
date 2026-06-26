@@ -423,10 +423,45 @@ on behalf of the tenant.
 
 ## Supported Networks & Assets
 
+### Chain support — ground truth (v1.1.41, 2026-06-26)
+
+The `cmd/bridge` MPC pipeline routes by address family (`internal/mchain` AddressType
+enum + switch dispatch — there is NO polymorphic Chain interface). Per-chain reality
+(stale "TODO"/"coming soon" comments elsewhere lag the code — this table is authoritative):
+
+| Family | Inbound (depositcheck) | Outbound (assemble+sign+broadcast) | Config | Status |
+|--------|------------------------|------------------------------------|--------|--------|
+| ETH/EVM | done (eth_getBalance / ERC-20) | done (hand-rolled RLP, no go-ethereum) | enabled | full, live |
+| BTC | done (Blockstream REST) | code-complete | deposit-only | withdrawal gated on mpcd Schnorr |
+| SOL | done (getBalance) | code-complete | disabled both | gated on mpcd Ed25519/FROST |
+| TON | done (TON Center) | code-complete | disabled both | gated on mpcd Ed25519 |
+| XRP | **done — rippled `account_info`, validated ledger, drops** (`internal/depositcheck`) | done — DestinationTag plumbed into the SHA-512Half signing digest; X-addr rejected | **testnet on; mainnet gated** | secp256k1 (same curve as ETH/BTC) → no mpcd gap |
+
+XRP is the only non-EVM family with no external mpcd blocker. XRP per-swap deposit
+addresses must hold the ≥10-XRP AccountRoot reserve (per-XRP minUSD floor set); the
+reserve is a known capital-leak follow-up (shared-deposit + dest-tag is the robust model).
+
+### Withdrawal/deposit gate — AUTHORITATIVE (v1.1.41)
+`Config.WithdrawalEnabled` / `DepositEnabled` (cmd/bridge/config.go) are enforced
+SERVER-SIDE at create (403), sign (skip = kill-switch), broadcast (hold in-flight),
+and operator inject (403) — not just the SPA `/currencies` list. Match is
+case-INSENSITIVE with default-DENY for wired non-EVM families (so an asset-case
+variant `xrp` or network-case `bitcoin_testnet` can't dodge a disabled row into a
+release pool — the gate key aligns with the network-only/case-folded signer routing).
+
+### Mainnet-readiness follow-ups (pre-existing, bridge-wide; tracked, NOT XRP-specific)
+- `/admin/swaps/:id/{reset,inject-raw-tx}` have no auth middleware (bounded by 64-bit
+  random swap IDs + the now-gated inject). Gate behind operator token / mTLS.
+- `GET /v1/bridge/swaps` has no tenant scoping (IDOR).
+- depositcheck is the SOLE runtime payout gate (single hardcoded RPC, no quorum) —
+  multi-RPC quorum / on-chain proof is the platform hardening. Point only at trusted RPCs.
+- mainnet XRP withdrawal stays `isWithdrawalEnabled:false` until the above + a live
+  testnet tag-carrying-payout proof.
+
 ### Blockchain Networks (15+)
 **Layer 1**: Lux, Ethereum, BSC, Polygon, Fantom
 **Layer 2**: Arbitrum, Optimism, zkSync Era, Polygon zkEVM, Base, Blast
-**Other**: TON, Solana (coming soon), Cosmos (via IBC)
+**Other**: TON, Solana (gated on mpcd Ed25519), XRP (testnet live), Cosmos (via IBC)
 
 ### Supported Assets
 **Stablecoins**: USDT, USDC, DAI, ZUSD
