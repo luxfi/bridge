@@ -161,6 +161,60 @@ func AccountIDFromPubKey(pubkey []byte) ([]byte, error) {
 	return sha256ThenRipemd160(pubkey), nil
 }
 
+// ValidateDestination checks that addr is a usable XRP Payment
+// destination — a well-formed classic r-address — and REJECTS XRPL
+// X-addresses.
+//
+// X-addresses (mainnet "X…", testnet/devnet "T…") pack a destination
+// tag + network flag INSIDE the address. The bridge carries the tag in
+// a separate Payment field (DestinationTag), so honoring an X-address
+// would mean splitting it apart — and a tag-less Payment to the
+// embedded AccountID would silently misroute funds at an exchange's
+// pooled deposit address (irreversible loss). Rather than ship an
+// X-address codec the signing path can't use, we reject at the API
+// boundary and tell the caller to supply a classic r-address plus an
+// explicit destination tag.
+//
+// Returns nil for a valid classic r-address; a descriptive error
+// otherwise. Call this at swap-create time so a bad destination fails
+// fast instead of stalling the swap until its expiry.
+func ValidateDestination(addr string) error {
+	if addr == "" {
+		return errors.New("xrpl: destination address required")
+	}
+	// Classic r-addresses always start with 'r' (AccountID version byte
+	// 0x00). X-addresses start with 'X' (mainnet) or 'T' (testnet/devnet);
+	// reject them explicitly with an actionable message. NewAccountFromAddress
+	// below would also fail on an X-address, but with an opaque
+	// "bad version" error that doesn't tell the user what to do.
+	if c := addr[0]; c == 'X' || c == 'T' {
+		return fmt.Errorf("xrpl: destination %q is an X-address (it embeds a destination tag + network); supply a classic r-address and an explicit destination tag instead", addr)
+	}
+	if _, err := parseAccount(addr); err != nil {
+		return fmt.Errorf("xrpl: invalid destination r-address %q: %w", addr, err)
+	}
+	return nil
+}
+
+// parseAccount safely parses an XRPL classic address into an Account.
+//
+// It wraps rippledata.NewAccountFromAddress, which can PANIC ("slice
+// bounds out of range [:-1]") on certain malformed inputs: its base58
+// decoder slices off a 4-byte checksum WITHOUT bounds-checking the
+// decoded length, so a 5+ char string that decodes to fewer than 4
+// bytes (e.g. "ppppp") trips a negative slice bound. We recover any
+// such panic into a clean error so no untrusted address can crash the
+// parse — fail-secure at and behind the API boundary.
+func parseAccount(addr string) (acct *rippledata.Account, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			acct = nil
+			err = fmt.Errorf("malformed address (decoder fault): %v", r)
+		}
+	}()
+	return rippledata.NewAccountFromAddress(addr)
+}
+
 // sha256ThenRipemd160 is the standard "double-hash" XRPL uses for
 // account IDs: SHA-256 first, then RIPEMD-160 over the SHA-256 digest.
 // Bitcoin uses the same hashing pipeline; the XRPL difference is the
@@ -277,11 +331,11 @@ func PreSign(u PaymentUnsigned) ([]byte, *SignCtx, error) {
 		return nil, nil, err
 	}
 
-	from, err := rippledata.NewAccountFromAddress(u.Account)
+	from, err := parseAccount(u.Account)
 	if err != nil {
 		return nil, nil, fmt.Errorf("xrpl: parse Account %q: %w", u.Account, err)
 	}
-	to, err := rippledata.NewAccountFromAddress(u.Destination)
+	to, err := parseAccount(u.Destination)
 	if err != nil {
 		return nil, nil, fmt.Errorf("xrpl: parse Destination %q: %w", u.Destination, err)
 	}

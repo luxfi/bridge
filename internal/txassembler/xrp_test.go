@@ -1,11 +1,14 @@
 package txassembler
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"strings"
 	"sync"
 	"testing"
+
+	rippledata "github.com/rubblelabs/ripple/data"
 
 	"github.com/luxfi/bridge/internal/xrpl"
 )
@@ -257,6 +260,93 @@ func TestFinalizeXRP_RejectsBadSignature(t *testing.T) {
 	}
 	if _, _, err := asm.FinalizeXRP(nil, "00"); err == nil {
 		t.Error("expected error for nil XRPUnsigned")
+	}
+}
+
+// =============================================================================
+// DestinationTag plumbing: XRPSpec.DestinationTag → Payment.DestinationTag
+// =============================================================================
+
+// Tag present → carried onto the Payment AND folded into the signing
+// payload; tag absent → no tag on the Payment. (Same package as the
+// assembler, so the test can inspect the unexported signCtx.)
+func TestPreSignXRP_DestinationTag(t *testing.T) {
+	prov := &fakeXRPProvider{seq: 1, validatedLedger: 1, feeDrops: 12}
+	asm := New(nil)
+	asm.XRP = prov
+
+	spec := XRPSpec{
+		Network:            "XRP_TESTNET",
+		SenderAddress:      testAccount(t),
+		SenderPubKeyHex:    testXRPPubHex,
+		DestinationAddress: testXRPDestAddr,
+		AmountXRP:          1.0,
+	}
+
+	noTag, err := asm.PreSignXRP(context.Background(), spec)
+	if err != nil {
+		t.Fatalf("PreSignXRP(no tag): %v", err)
+	}
+	if noTag.signCtx.Payment.DestinationTag != nil {
+		t.Errorf("DestinationTag should be nil when unset, got %d", *noTag.signCtx.Payment.DestinationTag)
+	}
+
+	tag := uint32(987654)
+	withSpec := spec
+	withSpec.DestinationTag = &tag
+	withTag, err := asm.PreSignXRP(context.Background(), withSpec)
+	if err != nil {
+		t.Fatalf("PreSignXRP(tag): %v", err)
+	}
+	if withTag.signCtx.Payment.DestinationTag == nil || *withTag.signCtx.Payment.DestinationTag != tag {
+		t.Fatalf("DestinationTag not plumbed onto Payment; got %v", withTag.signCtx.Payment.DestinationTag)
+	}
+	// The tag must change the signed digest — otherwise it isn't part of
+	// what the MPC signs and could be stripped post-signing.
+	if withTag.SigningPayload == noTag.SigningPayload {
+		t.Error("SigningPayload unchanged by DestinationTag — tag not committed into the signed digest")
+	}
+}
+
+// End-to-end through the assembler: a tag set on the XRPSpec must be
+// present on the finalized wire blob.
+func TestFinalizeXRP_DestinationTagOnTheWire(t *testing.T) {
+	prov := &fakeXRPProvider{seq: 5, validatedLedger: 9, feeDrops: 12}
+	asm := New(nil)
+	asm.XRP = prov
+
+	tag := uint32(4294967295) // boundary: max uint32
+	u, err := asm.PreSignXRP(context.Background(), XRPSpec{
+		Network:            "XRP_TESTNET",
+		SenderAddress:      testAccount(t),
+		SenderPubKeyHex:    testXRPPubHex,
+		DestinationAddress: testXRPDestAddr,
+		AmountXRP:          0.5,
+		DestinationTag:     &tag,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := strings.Repeat("12", 32)
+	s := strings.Repeat("34", 32)
+	rawHex, _, err := asm.FinalizeXRP(u, r+s+"00")
+	if err != nil {
+		t.Fatalf("FinalizeXRP: %v", err)
+	}
+	blob, err := hex.DecodeString(rawHex)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := rippledata.ReadTransaction(bytes.NewReader(blob))
+	if err != nil {
+		t.Fatalf("re-parse blob: %v", err)
+	}
+	payment, ok := parsed.(*rippledata.Payment)
+	if !ok {
+		t.Fatalf("parsed wrong tx type: %T", parsed)
+	}
+	if payment.DestinationTag == nil || *payment.DestinationTag != tag {
+		t.Errorf("DestinationTag not on the wire; got %v want %d", payment.DestinationTag, tag)
 	}
 }
 
