@@ -83,6 +83,12 @@ var rpcURLs = map[string]string{
 	"TON_TESTNET": "https://testnet.toncenter.com/api/v2",
 	// Polkadot
 	"POLKADOT_MAINNET": "https://rpc.polkadot.io",
+	// XRP Ledger (rippled JSON-RPC). Same public clusters as the outbound
+	// broadcaster (internal/broadcast/client.go) — s1.ripple.com is the
+	// load-balanced mainnet cluster, s.altnet the Ripple-hosted testnet;
+	// :51234 is rippled's JSON-RPC port. One canonical endpoint per env.
+	"XRP_MAINNET": "https://s1.ripple.com:51234/",
+	"XRP_TESTNET": "https://s.altnet.rippletest.net:51234/",
 }
 
 // RPCURLFor returns the configured upstream URL for a network. Unknown
@@ -204,10 +210,7 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 	case mchain.AddressTypeTON:
 		return c.checkTON(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeXRP:
-		// XRP deposit detection not implemented in TS either (the
-		// mpc-wallet.ts default falls through to a warn-and-return-false).
-		// Mirror that behaviour with an explicit error.
-		return false, fmt.Errorf("%w: xrp deposit check not implemented", ErrUnsupportedNetwork)
+		return c.checkXRP(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeDOT:
 		return false, ErrSubstrateNotImplemented
 	default:
@@ -450,6 +453,69 @@ func (c *Client) checkTON(ctx context.Context, apiBase, address string, required
 	}
 	balTon := float64(balNano) / 1e9
 	return balTon >= requiredAmount, nil
+}
+
+// =============================================================================
+// XRP — rippled JSON-RPC `account_info` (balance in drops)
+// =============================================================================
+
+// xrpDropsDecimals is the drops-per-XRP scale exponent: 1 XRP = 10^6 drops.
+// compareBalance(drops, xrpDropsDecimals, want) == (drops/1e6 >= want).
+const xrpDropsDecimals = 6
+
+// checkXRP reads the XRP balance of a deposit address from rippled's
+// `account_info` against the last *validated* ledger (final, never
+// in-flight). rippled returns the balance as a decimal *drops* string
+// under result.account_data.Balance.
+//
+// rippled is JSON-RPC-ish: it ignores the {jsonrpc,id} envelope on the
+// request and replies {result:{...}} with no envelope — so the shared
+// jsonRPC POST helper works, and we decode rippled's result shape here
+// (same division of labour the broadcaster uses for `submit`).
+//
+// An address that has never received the base reserve is not an account
+// yet: rippled replies error="actNotFound". That is "no deposit yet"
+// (a zero balance), NOT a failure — it maps to the (false, nil) "not
+// enough funds" contract, exactly like a funded-but-too-small balance.
+func (c *Client) checkXRP(ctx context.Context, rpcURL, address string, requiredAmount float64) (bool, error) {
+	type xrpAccountInfoResp struct {
+		Result struct {
+			AccountData struct {
+				Balance string `json:"Balance"`
+			} `json:"account_data"`
+			Status       string `json:"status"`
+			Error        string `json:"error"`
+			ErrorMessage string `json:"error_message"`
+		} `json:"result"`
+	}
+	// strict:true forces `account` to be read as an address (never a
+	// username); ledger_index:"validated" reads only finalized state.
+	params := []any{map[string]any{
+		"account":      address,
+		"ledger_index": "validated",
+		"strict":       true,
+	}}
+	var resp xrpAccountInfoResp
+	if err := c.jsonRPC(ctx, rpcURL, "account_info", params, &resp); err != nil {
+		return false, err
+	}
+	// Unfunded account ⇒ zero balance ⇒ "no deposit yet" (not an error).
+	if resp.Result.Error == "actNotFound" {
+		return compareBalance(new(big.Int), xrpDropsDecimals, requiredAmount), nil
+	}
+	if resp.Result.Error != "" {
+		return false, fmt.Errorf("depositcheck: xrp account_info: %s (%s)",
+			resp.Result.Error, resp.Result.ErrorMessage)
+	}
+	if resp.Result.AccountData.Balance == "" {
+		return false, fmt.Errorf("depositcheck: xrp account_info: empty balance")
+	}
+	drops, ok := new(big.Int).SetString(resp.Result.AccountData.Balance, 10)
+	if !ok {
+		return false, fmt.Errorf("depositcheck: xrp balance not a decimal string: %q",
+			resp.Result.AccountData.Balance)
+	}
+	return compareBalance(drops, xrpDropsDecimals, requiredAmount), nil
 }
 
 // =============================================================================
