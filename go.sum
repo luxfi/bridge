@@ -105,6 +105,8 @@ github.com/logrusorgru/aurora v2.0.3+incompatible h1:tOpm7WcpBTn4fjmVfgpQq0EfczG
 github.com/logrusorgru/aurora v2.0.3+incompatible/go.mod h1:7rIyQOR62GCctdiQpZ/zOJlFyk6y+94wXzv6RNZgaR4=
 github.com/luxfi/age v1.4.0 h1:T8OKO/r3xg9xiZx2I/NzzdITTs//1lOKgi7nPISyRio=
 github.com/luxfi/age v1.4.0/go.mod h1:iAYAxgvrXxcy746+Ovh/eWWDuF9teJLNcCSSOX9RYW0=
+github.com/luxfi/cosigner v0.1.0 h1:yi6wNCicenEmvg8QDCuAi1143p+DqH6IjmQowwnS1fM=
+github.com/luxfi/cosigner v0.1.0/go.mod h1:XyuxdCvpLZ6Y+8erWnjrvt0FoX9h871tHI3gdr7DzDY=
 github.com/luxfi/log v1.4.3 h1:xkUKRWvQ4ZwvlUC2e0/RTtHYZOYSMvSQ9W9lbjwBmiI=
 github.com/luxfi/log v1.4.3/go.mod h1:myIkufyiQomSQH34K981kbz6cG4WUoerRUh7F4XhlQI=
 github.com/luxfi/zapdb v1.8.0 h1:E9hXMW1MTuS6kmDVs07j62gIq5qI5gZOdyzVfiBc1wg=
