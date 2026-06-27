@@ -12,6 +12,7 @@ import (
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/xrpl"
+	"github.com/luxfi/cosigner"
 )
 
 // swaps_handler.go wires the native swap CRUD into cmd/bridge.
@@ -114,6 +115,11 @@ type createSwapReq struct {
 	UseDepositAddress bool   `json:"use_deposit_address"`
 	UseTeleporter     bool   `json:"use_teleporter"`
 	AppName           string `json:"app_name"`
+	// Cosigners is the optional external-custodian co-sign array — PUBLIC
+	// identifiers only (org_id, api_key, vault ids). Validated via
+	// github.com/luxfi/cosigner at create; absent/empty is the
+	// permissionless default (no cosigners, no gate).
+	Cosigners []any `json:"cosigners,omitempty"`
 }
 
 // envelope is the canonical `{data: ...}` wrapper the legacy server
@@ -163,6 +169,19 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error":  "bad_amount",
 			"detail": "amount must be > 0",
+		})
+	}
+
+	// Validate any external-custodian cosigner declarations at the boundary.
+	// github.com/luxfi/cosigner rejects malformed entries and any that carry
+	// a secret-like field — secret material must NEVER cross the wire; the
+	// backend reads the secret half from KMS, keyed by the public id. Empty
+	// or absent is the permissionless default: no cosigners, no gate.
+	cosignerIntents, err := cosigner.ValidateIntents(req.Cosigners)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":  "bad_cosigners",
+			"detail": err.Error(),
 		})
 	}
 
@@ -319,6 +338,7 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 		UseDepositAddress:  req.UseDepositAddress,
 		UseTeleporter:      false, // teleporter dispatch is off the happy path per architecture_mpc_vs_teleporter
 		AppName:            req.AppName,
+		Cosigners:          cosignerIntents,
 	}
 	if depositWallet != nil {
 		swap.DepositAddress = depositWallet.LegacyDepositString()

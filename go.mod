@@ -10,6 +10,7 @@ require (
 	github.com/gagliardetto/solana-go v1.20.0
 	github.com/gofiber/fiber/v3 v3.2.0
 	github.com/hanzoai/zip v0.2.0
+	github.com/luxfi/cosigner v0.1.0
 	github.com/luxfi/log v1.4.3
 	github.com/luxfi/zapdb v1.8.0
 	github.com/rubblelabs/ripple v0.0.0-20240324121851-6816ca31ba51
