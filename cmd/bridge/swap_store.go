@@ -7,6 +7,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/luxfi/cosigner"
 )
 
 // swap_store.go: denormalized UX cache for the cmd/bridge daemon.
@@ -101,6 +103,19 @@ type Swap struct {
 	UseDepositAddress  bool       `json:"use_deposit_address"`
 	UseTeleporter      bool       `json:"use_teleporter"`
 	AppName            string     `json:"app_name,omitempty"`
+
+	// Cosigners are the external-custodian co-sign declarations attached to
+	// this swap, validated at create time via github.com/luxfi/cosigner so
+	// no secret material rides in on the wire (public identifiers only). The
+	// permissionless default is empty — no cosigners, no gate. When present
+	// (institutional flows), the signing stage dispatches each via the
+	// cosigner module after the native MPC sign and gates the broadcast on
+	// cosigner.AllApproved.
+	//
+	// json:"-": a typed Intent marshals to its `kind` discriminator only, so
+	// JSON would silently drop the public identifiers; intents are carried
+	// in-process on the record, never serialized lossily.
+	Cosigners []cosigner.Intent `json:"-"`
 
 	// Receive economics (snapshot at quote/create time).
 	ReceiveAmount    float64 `json:"receive_amount,omitempty"`
