@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="bridge" width="880"></p>
+
 # Lux Bridge
 
 Bridge monorepo for Lux Network — a decentralized cross-chain bridge using
