@@ -16,7 +16,7 @@ import (
 // (built atop the validator quorum's consensus) is the source of truth
 // for pending / in-flight / completed bridge requests. This local
 // store is a cache so the daemon's HTTP API can answer reads quickly
-// without round-tripping to /ext/bc/B/rpc for every request.
+// without round-tripping to /v1/bc/B/rpc for every request.
 //
 // ON CONFLICT, B-CHAIN WINS. Run `bridge --resync-swaps` to rebuild
 // the local cache from authoritative chain state. The daemon refuses
