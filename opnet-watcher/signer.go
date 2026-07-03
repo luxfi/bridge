@@ -15,7 +15,7 @@ import (
 
 	// Register threshold schemes at init time.
 	_ "github.com/luxfi/crypto/cggmp21"
-	_ "github.com/luxfi/crypto/threshold/bls"
+	_ "github.com/luxfi/threshold/scheme/bls"
 )
 
 // Signer produces threshold ECDSA signatures over Teleporter-compatible proof hashes.
