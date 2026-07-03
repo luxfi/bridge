@@ -314,7 +314,7 @@ export interface BridgeFChainConfig {
 export interface BridgeRpcConfig {
   /**
    * B-Chain (BridgeVM) JSON-RPC URL, e.g.
-   * `https://node.lux.network/ext/bc/B/rpc`. When set, drives the primary
+   * `https://node.lux.network/v1/bc/B/rpc`. When set, drives the primary
    * data path (estimate fee / submit request / get status).
    */
   bchainUrl?: string
