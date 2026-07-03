@@ -49,6 +49,7 @@ require (
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/luxfi/age v1.4.0 // indirect
+	github.com/luxfi/threshold v1.12.1
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.21 // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
