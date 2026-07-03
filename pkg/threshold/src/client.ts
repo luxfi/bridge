@@ -30,7 +30,7 @@ import type {
  *
  * @example
  * ```ts
- * const client = new ThresholdClient({ endpoint: 'http://localhost:9650/ext/bc/T' })
+ * const client = new ThresholdClient({ endpoint: 'http://localhost:9650/v1/bc/T' })
  *
  * // Generate key by chain (auto-selects protocol)
  * const keygen = await client.keygen({ keyId: 'my-key', chain: 'ethereum' })
