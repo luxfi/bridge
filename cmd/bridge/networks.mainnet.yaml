@@ -35,6 +35,26 @@ networks:
     txExplorerTpl: https://explore.lux.network/tx/{tx}
     addrExplorerTpl: https://explore.lux.network/address/{addr}
 
+  # Zoo sovereign L1 — primary networkID == EVM chainID == 200200.
+  # EVM chain, so the MPC cluster derives its deposit/vault address with
+  # the always-present ECDSA/secp256k1 (AddressTypeETH) path — no new
+  # keygen curve required (internal/mchain networkAddressType defaults
+  # unknown EVM networks to eth). The RPC endpoint lives in the compiled
+  # broadcast+depositcheck rpcURLs tables; the ZOO_MAINNET entry there
+  # (api.zoo.network) must serve the live C-Chain path before deposits
+  # route — see docs and the /ext→/v1 route migration. LUX<->ZOO is a
+  # native two-way corridor (see tokens: LUX wrapped on Zoo, ZOO wrapped
+  # on Lux).
+  - internalName: ZOO_MAINNET
+    displayName: Zoo
+    nativeCurrency: ZOO
+    chainId: "200200"
+    type: evm
+    isFeatured: true
+    avgCompletion: 1m
+    txExplorerTpl: https://explore.zoo.network/tx/{tx}
+    addrExplorerTpl: https://explore.zoo.network/address/{addr}
+
   - internalName: ETHEREUM_MAINNET
     displayName: Ethereum
     nativeCurrency: ETH
@@ -144,6 +164,34 @@ tokens:
     name: Lux
     decimals: 18
     network: LUX_MAINNET
+
+  # ── LUX <-> ZOO native two-way corridor ────────────────────────────
+  # ZOO native on its home chain (no contract — the chain's gas token).
+  - asset: ZOO
+    name: Zoo
+    decimals: 18
+    network: ZOO_MAINNET
+
+  # The wrapped legs make the corridor two-way. They stay COMMENTED until
+  # the ERC20B wrapped tokens are deployed (contracts/scripts/deploy-zoo.ts)
+  # and the MPC vault holds MINTER/ORACLE on each Bridge — uncommenting
+  # with a zero/placeholder address would let the SPA advertise a mint
+  # target that does not exist. Fill the real deployed addresses, then
+  # uncomment (staged rollout; mirrors the SOL/TON isDepositEnabled gate).
+  #
+  # LUX wrapped on Zoo (wLUX, ERC20B) — lets a user bridge LUX -> Zoo:
+  # - asset: LUX
+  #   name: Lux
+  #   decimals: 18
+  #   contract: "0x<DEPLOY wLUX ERC20B on Zoo C-Chain 200200>"
+  #   network: ZOO_MAINNET
+  #
+  # ZOO wrapped on Lux (wZOO, ERC20B) — lets a user bridge ZOO -> Lux:
+  # - asset: ZOO
+  #   name: Zoo
+  #   decimals: 18
+  #   contract: "0x<DEPLOY wZOO ERC20B on Lux C-Chain 96369>"
+  #   network: LUX_MAINNET
 
   # Ethereum mainnet — ETH + 3 major stablecoins
   - asset: ETH
