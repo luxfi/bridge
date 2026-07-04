@@ -190,13 +190,14 @@ tokens:
     decimals: 18
     network: LUX_TESTNET
 
-  # ZOO native on Zoo testnet (chainId 200201). Wrapped legs (wLUX on
-  # Zoo, wZOO on Lux) land once the testnet ERC20B + Bridge + ZooVault
-  # are deployed — see contracts/scripts/deploy-zoo.ts and the go-plan.
-  - asset: ZOO
-    name: Zoo
-    decimals: 18
-    network: ZOO_TESTNET
+  # ZOO corridor tokens (native ZOO + wrapped wLUX/wZOO) stay COMMENTED
+  # until the testnet ERC20B + Bridge + Vault are deployed and enabled
+  # ATOMICALLY (RED M3) — see contracts/scripts/deploy-zoo.ts and the
+  # go-plan. Exposing native ZOO alone = a source with no destination.
+  # - asset: ZOO
+  #   name: Zoo
+  #   decimals: 18
+  #   network: ZOO_TESTNET
 
   - asset: ETH
     name: Ether
