@@ -42,6 +42,22 @@ networks:
     txExplorerTpl: https://explore.lux-test.network/tx/{tx}
     addrExplorerTpl: https://explore.lux-test.network/address/{addr}
 
+  # Zoo testnet sovereign L1 — primary networkID == EVM chainID == 200201.
+  # Live node: zood-testnet-0 (chainId 0x30e09) in the zoo-mainnet ns.
+  # EVM → ECDSA/secp256k1 MPC address (no new keygen). RPC in the
+  # compiled rpcURLs table (api.zoo-test.network) must serve the live
+  # C-Chain path before this routes — see the /ext→/v1 route migration.
+  - internalName: ZOO_TESTNET
+    displayName: Zoo Testnet
+    nativeCurrency: ZOO
+    chainId: "200201"
+    type: evm
+    isTestnet: true
+    isFeatured: true
+    avgCompletion: 1m
+    txExplorerTpl: https://explore.zoo-test.network/tx/{tx}
+    addrExplorerTpl: https://explore.zoo-test.network/address/{addr}
+
   - internalName: BASE_SEPOLIA
     displayName: Base Sepolia
     nativeCurrency: ETH
@@ -173,6 +189,14 @@ tokens:
     name: Lux
     decimals: 18
     network: LUX_TESTNET
+
+  # ZOO native on Zoo testnet (chainId 200201). Wrapped legs (wLUX on
+  # Zoo, wZOO on Lux) land once the testnet ERC20B + Bridge + ZooVault
+  # are deployed — see contracts/scripts/deploy-zoo.ts and the go-plan.
+  - asset: ZOO
+    name: Zoo
+    decimals: 18
+    network: ZOO_TESTNET
 
   - asset: ETH
     name: Ether
