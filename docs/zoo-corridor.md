@@ -38,26 +38,32 @@ watches deposits on each side and signs the EIP-712 `Claim` that
 
 The **chain is live** — in-cluster `zood-0:9630/v1/bc/C/rpc` returns
 `eth_chainId` = `0x30e08` (200200), and `zood-testnet-0` = `0x30e09` (200201).
-The break is the **public endpoint**: `https://api.zoo.network/*` returns bare
-`404` on **every** path tried (`/`, `/ext/info`, `/ext/bc/Z/rpc`,
-`/v1/bc/C/rpc`) — so this is NOT a simple path-rewrite (RED M1 corrected my
-first read). The IngressRoute `zoo-rpc` targets the right service
-(`zood-rpc:9630`, live endpoint `10.160.7.85:9630`), so the failure is
-between Traefik and the node's HTTP response: candidates are luxd
-`--http-allowed-hosts` (must include `api.zoo.network`; a host-mismatch can
-present as 404), a Traefik middleware, or the node genuinely not serving that
-path for a non-localhost Host. Compare the working Lux side:
-`https://api.lux.network/ext/bc/C/rpc` → 200 / `0x17871` (96369).
+The break is the **public route**, ROOT-CAUSED (2026-07-04): the node is fine
+— `zood-0:9630/v1/bc/C/rpc` returns 200 **even with `-H 'Host: api.zoo.network'`**
+(so it is NOT luxd `--http-allowed-hosts`), and it 404s `/ext/bc/C/rpc`
+(v1.34.x dropped `/ext`, serves `/v1`). But `https://api.zoo.network/*` 404s
+on **every** path. The `zoo-rpc` IngressRoute (`hanzo.ai/v1alpha1`, ns
+zoo-mainnet) correctly targets the live `zood-rpc:9630` but applies
+`middlewares: [zood-root-rewrite]` — a path rewrite that is either scoped to
+the wrong CRD group (the middleware resolves under `traefik.io`, not
+`hanzo.ai`) or rewrites the path away from `/v1/bc/C/rpc`. That middleware is
+what 404s the RPC (it also breaks the Zoo explorer, which points at
+`api.zoo.network`). Compare working Lux: `api.lux.network/ext/bc/C/rpc` → 200.
 
-Fix procedure (do NOT guess — reproduce, then fix):
-1. `kubectl -n zoo-mainnet exec zood-0 -c zood -- curl -s -m5 -H 'Host: api.zoo.network' -X POST -d '{"jsonrpc":"2.0","method":"eth_chainId","id":1}' localhost:9630/v1/bc/C/rpc` — does adding the public Host reproduce the 404 in-cluster? If yes → luxd host-allowlist. If no → Traefik/route.
-2. Set the exposed node's `--http-allowed-hosts` to include `api.zoo.network` (or mirror exactly what makes `api.lux.network` work), keep admin/debug/personal namespaces disabled (RED L1).
-3. Point the bridge's compiled `ZOO_*` `rpcURLs`
+Fix (a zoo-k8s Traefik change — coordinate with the Zoo-live workstream; NOT
+applied here, it is live zoo-mainnet infra):
+1. Fix or drop `zood-root-rewrite` on the `zoo-rpc` route so requests reach
+   `zood-rpc:9630` unrewritten (the node serves `/v1/bc/C/rpc` directly), OR
+   make the rewrite map the chosen public path → `/v1/bc/C/rpc`. Keep
+   admin/debug/personal namespaces off the exposed node (RED L1).
+2. Point the bridge's compiled `ZOO_*` `rpcURLs`
    (`internal/broadcast/client.go`, `internal/depositcheck/client.go`,
-   `internal/txassembler/rpc_provider.go`) at the **served** public path
-   (align with the in-flight `fix/ext-to-v1-routes` branch — `/ext/bc/Z/rpc`
-   vs `/v1/bc/C/rpc`), or override per-network via `BRIDGE_SOURCE_RPC_OVERRIDES`.
-4. **Gate:** `curl … https://api.zoo.network/<served-path>` → `0x30e08` before any oracle keygen or deploy. The deploy script (`deploy-zoo.ts`) hard-refuses if the live chainId ≠ 200200/200201.
+   `internal/txassembler/rpc_provider.go`) at whatever public path you settle
+   on (currently `/ext/bc/Z/rpc` — align with `fix/ext-to-v1-routes`), or
+   override per-network via `BRIDGE_SOURCE_RPC_OVERRIDES`.
+3. **Gate:** `curl … https://api.zoo.network/<served-path>` → `0x30e08` before
+   any oracle keygen or deploy. `deploy-zoo.ts` hard-refuses if the live
+   chainId ≠ 200200/200201, so a dead endpoint cannot be deployed against.
 
 ## Mainnet go-plan (GATED — owner go required at every ▶)
 
