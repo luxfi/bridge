@@ -36,33 +36,46 @@ watches deposits on each side and signs the EIP-712 `Claim` that
 
 ## L2 — Zoo RPC (must fix before any deposit routes)
 
-k8s routing is already correct: `api.zoo.network` → IngressRoute `zoo-rpc` →
-svc `zood-rpc:9630` → live endpoint (zood-0). The 404 is at the node HTTP
-layer: the bridge's compiled `rpcURLs` expect `/ext/bc/Z/rpc` but the
-v1.34.x node serves `/v1/bc/C/rpc` (alias `C`, `/v1` prefix). This repo is
-mid-migration on branch `fix/ext-to-v1-routes` — align there.
-Fix = one of: (a) Traefik path-rewrite `/ext/bc/Z/rpc → /v1/bc/C/rpc` on the
-`zoo-rpc` route, or (b) update the `ZOO_*` entries in
-`internal/broadcast/client.go` + `internal/depositcheck/client.go` to the
-served path AND confirm luxd `--http-allowed-hosts` includes `api.zoo.network`.
-Verify: `curl -s -m8 -X POST -d '{"jsonrpc":"2.0","method":"eth_chainId","id":1}' https://api.zoo.network/<served-path>` → `0x30e08`.
+The **chain is live** — in-cluster `zood-0:9630/v1/bc/C/rpc` returns
+`eth_chainId` = `0x30e08` (200200), and `zood-testnet-0` = `0x30e09` (200201).
+The break is the **public endpoint**: `https://api.zoo.network/*` returns bare
+`404` on **every** path tried (`/`, `/ext/info`, `/ext/bc/Z/rpc`,
+`/v1/bc/C/rpc`) — so this is NOT a simple path-rewrite (RED M1 corrected my
+first read). The IngressRoute `zoo-rpc` targets the right service
+(`zood-rpc:9630`, live endpoint `10.160.7.85:9630`), so the failure is
+between Traefik and the node's HTTP response: candidates are luxd
+`--http-allowed-hosts` (must include `api.zoo.network`; a host-mismatch can
+present as 404), a Traefik middleware, or the node genuinely not serving that
+path for a non-localhost Host. Compare the working Lux side:
+`https://api.lux.network/ext/bc/C/rpc` → 200 / `0x17871` (96369).
+
+Fix procedure (do NOT guess — reproduce, then fix):
+1. `kubectl -n zoo-mainnet exec zood-0 -c zood -- curl -s -m5 -H 'Host: api.zoo.network' -X POST -d '{"jsonrpc":"2.0","method":"eth_chainId","id":1}' localhost:9630/v1/bc/C/rpc` — does adding the public Host reproduce the 404 in-cluster? If yes → luxd host-allowlist. If no → Traefik/route.
+2. Set the exposed node's `--http-allowed-hosts` to include `api.zoo.network` (or mirror exactly what makes `api.lux.network` work), keep admin/debug/personal namespaces disabled (RED L1).
+3. Point the bridge's compiled `ZOO_*` `rpcURLs`
+   (`internal/broadcast/client.go`, `internal/depositcheck/client.go`,
+   `internal/txassembler/rpc_provider.go`) at the **served** public path
+   (align with the in-flight `fix/ext-to-v1-routes` branch — `/ext/bc/Z/rpc`
+   vs `/v1/bc/C/rpc`), or override per-network via `BRIDGE_SOURCE_RPC_OVERRIDES`.
+4. **Gate:** `curl … https://api.zoo.network/<served-path>` → `0x30e08` before any oracle keygen or deploy. The deploy script (`deploy-zoo.ts`) hard-refuses if the live chainId ≠ 200200/200201.
 
 ## Mainnet go-plan (GATED — owner go required at every ▶)
 
 Keys/addresses (all from KMS — never inline):
-- `DEPLOYER` — funded EOA on each chain (gas only). Prefer a fresh key; hand admin to the DAO Safe after.
+- `PRIVATE_KEY` — funded deployer EOA (gas only). The deploy script de-privileges it fully before it exits — it is admin of nothing at the end.
+- `ADMIN_SAFE` — the org DAO Safe. Final `DEFAULT_ADMIN/ADMIN/PAUSER` on both Bridges + wrapped tokens. **Required** — the script refuses a deployer-EOA admin (RED C1).
 - `MPC_ORACLE_ADDR` — the 3-of-5 cluster's ECDSA signing address (keygen below).
 - `FEE_RECIPIENT` — the DAO Safe (or the existing live collector `0xa5cd9b2b514c42a1e124d4087d1c654dad2052ad`).
-- `ADMIN` — the org DAO Safe (final admin of both Bridges/tokens/vaults).
 
-1. ▶ **Fix L2 Zoo RPC** (above). Blocks everything.
-2. ▶ **MPC keygen the Zoo vault** — `AddressTypeETH`/secp256k1 on the existing cluster (no new curve). Record `MPC_ORACLE_ADDR`; fund it with gas on 200200 and 96369.
+0. ▶ **Prove the invariants** — run `contracts/` tests (deposit→bridgeWithdraw round-trip proving vault ownership; cross-chain + claimId replay reverts; forged-signer revert; `WrongClaimKind` discriminants; deploy-handoff de-privilege). No mainnet deploy on unproven contracts (RED H2).
+1. ▶ **Fix L2 Zoo RPC** (above). Blocks everything; the deploy script hard-refuses a wrong/dead chainId.
+2. ▶ **MPC keygen the Zoo vault** — `AddressTypeETH`/secp256k1 on the existing cluster (no new curve). Record `MPC_ORACLE_ADDR`; fund it + the deployer with gas on 200200 and 96369.
 3. ▶ **Deploy Zoo side** (chain 200200):
-   `ZOO_MAINNET_RPC=<served> MPC_ORACLE_ADDR=… FEE_RECIPIENT=… ADMIN_ADDR=<DAO Safe> npx hardhat run scripts/deploy-zoo.ts --network zoo`
-   → records `Bridge_zoo`, `Vault_zoo`, `wLUX`.
-4. ▶ **Deploy Lux side** (chain 96369): same with `--network lux` → `Bridge_lux`, `Vault_lux`, `wZOO`. (If a Lux Bridge already exists, reuse it: only deploy `wZOO`, `grantBridge`, `setTokenAllowed`, `setOracle`.)
-5. ▶ **Confirm** the SAME `MPC_ORACLE_ADDR` holds `ORACLE_ROLE` on `Bridge_zoo` AND `Bridge_lux`; both unpaused; token whitelists set.
-6. ▶ **Fill wrapped legs** in `networks.mainnet.yaml` (uncomment wLUX/wZOO with real addresses), regenerate the CM, and roll:
+   `ZOO_MAINNET_RPC=<served> ADMIN_SAFE=<DAO Safe> MPC_ORACLE_ADDR=… FEE_RECIPIENT=… npx hardhat run scripts/deploy-zoo.ts --network zoo`
+   The script deploys `Bridge_zoo`+`Vault_zoo`+`wLUX`, wires them, `transferOwnership(vault→bridge)` (RED H1), hands admin to the Safe, renounces the deployer, and asserts the deployer holds zero roles before exiting. Record the printed addresses.
+4. ▶ **Deploy Lux side** (chain 96369): same with `--network lux` → `Bridge_lux`+`Vault_lux`+`wZOO`. (If a Lux Bridge already exists, reuse it: deploy only `wZOO`, then from the Safe `grantBridge`/`setTokenAllowed`/`setOracle`.)
+5. ▶ **Confirm** the SAME `MPC_ORACLE_ADDR` holds `ORACLE_ROLE` on `Bridge_zoo` AND `Bridge_lux`; both unpaused; whitelists set (wrapped + `address(0)` native). Recommended: route `emergencyWithdraw` + `setOracle` through a Safe timelock (RED C1 residual — admin is still trusted).
+6. ▶ **Fill wrapped legs** in `networks.mainnet.yaml` — uncomment ALL THREE corridor token legs together (native ZOO + wLUX + wZOO) with real addresses (RED M3), regenerate the CM, and roll:
    `kubectl -n lux-bridge create configmap lux-bridge-config --from-file=networks.yaml=cmd/bridge/networks.mainnet.yaml --dry-run=client -o yaml | kubectl apply -f -`
    then `kubectl -n lux-bridge rollout restart deploy/lux-bridge deploy/bridge-server`.
 7. ▶ **Smallest real e2e**: bridge a dust amount LUX→Zoo, capture the lock tx (Lux) + mint tx (Zoo); reverse for ZOO→Lux. Only then raise `limits`.

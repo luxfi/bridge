@@ -95,6 +95,8 @@ contract Bridge is AccessControl, Pausable, ReentrancyGuard, EIP712 {
     error ClaimExpired(uint256 deadline);
     error InvalidOracle(address signer);
     error InvalidSignature();
+    error ChainMismatch(uint256 got, uint256 want);
+    error WrongClaimKind(); // mint claim submitted to withdraw, or vice-versa
     error FeeRateTooHigh(uint256 rate);
     error WithdrawalDisabled();
     error InsufficientBalance(uint256 required, uint256 available);
@@ -240,11 +242,15 @@ contract Bridge is AccessControl, Pausable, ReentrancyGuard, EIP712 {
         ClaimData calldata claim,
         bytes calldata signature
     ) external whenNotPaused nonReentrant returns (bytes32 claimId) {
+        // A mint claim MUST NOT be a vault-unlock claim. Binds the oracle
+        // signature to THIS operation so one sig can't be replayed against
+        // bridgeWithdraw (RED M2).
+        if (claim.vault) revert WrongClaimKind();
         if (!allowedTokens[claim.token]) revert TokenNotAllowed(claim.token);
         if (claim.amount == 0) revert ZeroAmount();
         if (claim.recipient == address(0)) revert ZeroAddress();
         if (block.timestamp > claim.deadline) revert ClaimExpired(claim.deadline);
-        if (claim.toChainId != block.chainid) revert InvalidSignature();
+        if (claim.toChainId != block.chainid) revert ChainMismatch(claim.toChainId, block.chainid);
 
         // Compute claimId from all claim fields (immune to signature malleability)
         claimId = keccak256(abi.encode(
@@ -301,10 +307,15 @@ contract Bridge is AccessControl, Pausable, ReentrancyGuard, EIP712 {
         ClaimData calldata claim,
         bytes calldata signature
     ) external whenNotPaused nonReentrant returns (bytes32 claimId) {
+        // A withdraw claim MUST be a vault-unlock claim, and its asset must
+        // be whitelisted — mirrors bridgeMint and stops a mint sig being
+        // replayed here / an un-whitelisted asset draining the vault (RED M2).
+        if (!claim.vault) revert WrongClaimKind();
+        if (!allowedTokens[claim.token]) revert TokenNotAllowed(claim.token);
         if (claim.amount == 0) revert ZeroAmount();
         if (claim.recipient == address(0)) revert ZeroAddress();
         if (block.timestamp > claim.deadline) revert ClaimExpired(claim.deadline);
-        if (claim.toChainId != block.chainid) revert InvalidSignature();
+        if (claim.toChainId != block.chainid) revert ChainMismatch(claim.toChainId, block.chainid);
 
         // Compute claimId
         claimId = keccak256(abi.encode(

@@ -165,28 +165,28 @@ tokens:
     decimals: 18
     network: LUX_MAINNET
 
-  # ── LUX <-> ZOO native two-way corridor ────────────────────────────
-  # ZOO native on its home chain (no contract — the chain's gas token).
-  - asset: ZOO
-    name: Zoo
-    decimals: 18
-    network: ZOO_MAINNET
-
-  # The wrapped legs make the corridor two-way. They stay COMMENTED until
-  # the ERC20B wrapped tokens are deployed (contracts/scripts/deploy-zoo.ts)
-  # and the MPC vault holds MINTER/ORACLE on each Bridge — uncommenting
-  # with a zero/placeholder address would let the SPA advertise a mint
-  # target that does not exist. Fill the real deployed addresses, then
-  # uncomment (staged rollout; mirrors the SOL/TON isDepositEnabled gate).
+  # ── LUX <-> ZOO native two-way corridor (staged; ALL legs flip together) ──
+  # The three token legs below stay COMMENTED until the ERC20B wrapped
+  # tokens are deployed (contracts/scripts/deploy-zoo.ts) and the MPC vault
+  # holds ORACLE on each Bridge. Enable them ATOMICALLY — exposing native
+  # ZOO as a source while its wrapped destination is absent would let the
+  # SPA advertise a route with nowhere to deliver, stranding a deposit
+  # (RED M3). Fill the real deployed addresses, then uncomment all three.
   #
-  # LUX wrapped on Zoo (wLUX, ERC20B) — lets a user bridge LUX -> Zoo:
+  # ZOO native on its home chain (source of ZOO -> Lux; no contract):
+  # - asset: ZOO
+  #   name: Zoo
+  #   decimals: 18
+  #   network: ZOO_MAINNET
+  #
+  # LUX wrapped on Zoo (wLUX, ERC20B) — destination of LUX -> Zoo:
   # - asset: LUX
   #   name: Lux
   #   decimals: 18
   #   contract: "0x<DEPLOY wLUX ERC20B on Zoo C-Chain 200200>"
   #   network: ZOO_MAINNET
   #
-  # ZOO wrapped on Lux (wZOO, ERC20B) — lets a user bridge ZOO -> Lux:
+  # ZOO wrapped on Lux (wZOO, ERC20B) — destination of ZOO -> Lux:
   # - asset: ZOO
   #   name: Zoo
   #   decimals: 18
