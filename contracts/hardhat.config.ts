@@ -1,9 +1,27 @@
-import { HardhatUserConfig } from "hardhat/config";
+import { HardhatUserConfig, subtask } from "hardhat/config";
+import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Two pre-existing, unrelated compile breaks — neither touches the LUX<->ZOO
+// corridor (Bridge/LuxVault/ERC20B) this branch adds; both predate it and are
+// excluded here (files themselves untouched) so the rest of contracts/ builds:
+//  - contracts/XChainVault.sol imports ./interfaces/{IWarpMessenger,IBridge}.sol,
+//    which have never existed in this repo (`git log --all` finds no such
+//    path ever tracked). Added in fa9023d8 / last touched 0286a933. Never compiled.
+//  - contracts/lux/*.sol (25 of 29 files, e.g. LADA/LBONK/LZOO) call the OLD
+//    2-arg `ERC20B(_name, _symbol)` constructor; ERC20B.sol was hardened to a
+//    3-arg `(name, symbol, admin)` AccessControl constructor and these legacy
+//    per-asset token shims (dead code — nothing imports contracts/lux/*) were
+//    never updated to match. The contracts/zoo/* siblings already use the
+//    correct 3-arg form.
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
+  const paths: string[] = await runSuper();
+  return paths.filter((p) => !p.endsWith("XChainVault.sol") && !p.includes("/contracts/lux/"));
+});
 
 const PRIVATE_KEY: string = process.env.PRIVATE_KEY!;
 const SEPOLIA_RPC: string = process.env.SEPOLIA_RPC!;
