@@ -1,27 +1,23 @@
 # Lux Bridge Documentation
 
-Welcome to the documentation for the **Lux Bridge** — a decentralized cross-chain
-bridge using Multi-Party Computation (MPC) for secure, trustless asset transfers
-across 15+ blockchain networks.
+Welcome to the comprehensive documentation for the Lux Bridge - a decentralized cross-chain bridge infrastructure using Multi-Party Computation (MPC) for secure asset transfers.
 
 ## Quick Links
 
-- [Architecture](/docs) — System design, MPC model, packages, and components
-- [Integrations](/integrations) — Add a new source chain (Go-side plugin guide)
-- [Operator Runbook](/operator-runbook) — Run the unified `cmd/bridge` daemon
-- [Deploy Guide](/operator-deploy) — Production deploy to `bridge.lux.network`
-- [Lux ID](/lux-id-integration) — Casdoor-based unified auth
+- [Architecture & Design](/docs) - Learn about the bridge architecture
+- [API Reference](/docs#api-reference) - Integrate with the bridge
+- [Deployment Guide](/docs#deployment-guide) - Deploy your own instance
+- [Security Best Practices](/docs#security-best-practices) - Keep your bridge secure
 
 ## What is Lux Bridge?
 
-The Lux Bridge enables:
+The Lux Bridge is a decentralized cross-chain bridge that enables:
 
-- **Secure asset transfers** — move tokens between 15+ chains with 2-of-3 threshold signatures
-- **Multi-Party Computation** — distributed key generation, no single point of failure
-- **Post-quantum-safe option** — lattice-based MPC protocols (`pulsar`, `corona`, `magnetar`)
-- **Optional layered cosigners** — Utila or Fireblocks on top of native MPC
-- **Universal message passing** — arbitrary cross-chain messages, not just token transfers
-- **Low fees & fast finality** — competitive bridge fee with caps, minutes not hours
+- **Secure Asset Transfers** - Transfer tokens between 15+ blockchain networks
+- **Multi-Party Computation** - 2-of-3 threshold signatures for maximum security
+- **Universal Message Passing** - Send arbitrary messages across chains
+- **Low Fees** - Competitive 0.3% bridge fee with caps
+- **Fast Finality** - Transfers complete in minutes, not hours
 
 ## Supported Networks
 
@@ -43,32 +39,28 @@ The Lux Bridge enables:
 
 ## Getting Started
 
-The bridge ships as a single Go binary (`cmd/bridge`) that embeds the SPA and
-serves both the UI and the native `/v1/bridge/*` API on one port.
-
 ```bash
-# Pull and run the unified bridge image
-docker run --rm -p 8080:8080 \
-  -v $(pwd)/networks.yaml:/etc/bridge/networks.yaml \
-  ghcr.io/luxfi/bridge:latest
+# Clone the repository
+git clone https://github.com/luxfi/bridge
+cd bridge
+
+# Install dependencies
+pnpm install
+
+# Start local development
+make up
+make start-mpc-nodes
+cd app/bridge && pnpm dev
 ```
 
-Visit [http://localhost:8080](http://localhost:8080) for the bridge UI; the
-native API is at [http://localhost:8080/v1/bridge](http://localhost:8080/v1/bridge).
+Visit [http://localhost:3000](http://localhost:3000) to see the bridge UI.
 
-For SDK consumers (Lux, Hanzo, Zoo, white-label tenants), import the public
-`@luxfi/bridge` package and call `mountBridge(...)` — see the [`pkg/bridge`
-README](https://github.com/luxfi/bridge/tree/main/pkg/bridge) for tenant usage.
+## Documentation Structure
 
-For local dev (workspace install, watcher fleet, tenant SPAs), see the top-level
-[`README.md`](https://github.com/luxfi/bridge/blob/main/README.md).
-
-## Canonical AI / Onboarding Doc
-
-The single source of truth for the architecture and conventions of this repo
-is [`docs/LLM.md`](https://github.com/luxfi/bridge/blob/main/docs/LLM.md). It
-is consumed verbatim by AI assistants (via `AGENTS.md` symlink) and is the
-first thing a new contributor should read.
+- **[Complete Documentation](/docs)** - Full technical documentation
+- **[Integration Examples](/docs#integration-guide)** - Code examples and SDKs
+- **[API Reference](/docs#api-reference)** - REST and WebSocket APIs
+- **[Security](/docs#security-best-practices)** - Security guidelines
 
 ## Need Help?
 
@@ -78,4 +70,4 @@ first thing a new contributor should read.
 
 ---
 
-*Docs last refreshed in v1.1.12 — see issue #391.*
+*Version 1.0.0 - November 2024*

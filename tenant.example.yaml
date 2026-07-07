@@ -6,8 +6,8 @@
 # supportedChains + ingress + basket allowlist all come from this file
 # — flag-driven defaults stay available as overrides.
 #
-# White-label shim repos (liquidity/bridge, hanzo/bridge-shim,
-# zoo/bridge-shim, pars/bridge-shim) each ship their own tenant.yaml
+# White-label shim repos (hanzo/bridge-shim, zoo/bridge-shim,
+# pars/bridge-shim) each ship their own tenant.yaml
 # and import luxfi/bridge as the upstream OSS dep. See those shim
 # repos for production examples.
 
@@ -42,7 +42,7 @@ network:
 #
 # Federated identity binding. Required — the bridge MUST NOT ship local
 # auth. Every authenticated route resolves identity via the tenant's IAM
-# (hanzo.id, lux.id, zoo.id, pars.id, liquidity.id).
+# (hanzo.id, lux.id, zoo.id, pars.id).
 iam:
   endpoint:     "https://lux.id"
   clientID:     "lux-bridge"

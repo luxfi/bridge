@@ -1,7 +1,6 @@
 // Playwright config for the @luxfi/bridge tenant SPA.
 //
-// One config, four environments. Mirrors the pattern from the liquidity
-// universe e2e suite (E2E_ENV=dev|test|main, default `local`).
+// One config, four environments (E2E_ENV=dev|test|main, default `local`).
 //
 //   local: spins up `vite preview` on :3001 from app/bridge/dist
 //          (so `pnpm build` in app/bridge must have run first; the preview

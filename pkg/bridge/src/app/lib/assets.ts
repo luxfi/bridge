@@ -5,7 +5,7 @@
 // at runtime — Phase 3 R2 swaps this for `useAssets(chainId)`.
 //
 // PQ-safe note: asset symbols are surface-only labels. All signing is done
-// by the SDK's MPC layer (Corona + ECDSA hybrid) — not by anything in
+// by the SDK's MPC layer (Ringtail + ECDSA hybrid) — not by anything in
 // this file. The asset list is data, not trust.
 
 import { ASSET_LOGOS } from './logos'
