@@ -106,12 +106,8 @@ bridge/
 │                          package.json + content/docs/*.mdx). The legacy loose
 │                          top-level *.md set (BRIDGE-STATUS, LOCAL-SETUP,
 │                          DEPLOYMENT, CI-CD-DOCKER-IMAGES, the MPC-* set) was
-│                          deleted in the merge from main (R5). The remaining
-│                          loose docs (INTEGRATIONS, LUX-ID-INTEGRATION, the
-│                          operator-* set) were folded into content/docs/ in
-│                          v1.1.13 (issue #391 follow-up). Only LLM.md
-│                          remains at docs/ root because AGENTS.md / CLAUDE.md
-│                          symlink to it.
+│                          deleted in the merge from main (R5). Only LLM.md
+│                          and LUX-ID-INTEGRATION.md remain at docs/ root.
 ├── config/mpc/config.yaml     Private MPC cluster config.
 ├── k8s/mpc-deployment.yaml    Public MPC (m-chain) deployment manifests.
 └── REQUIREMENTS.md            This document.
@@ -139,7 +135,7 @@ Notable removals from prior drafts:
 | Server-side cosigner glue | **Merged** — `app/server/src/domain/cosigners.ts` + Fireblocks/native tests. End-to-end soak against a real Utila/Fireblocks tenant still pending. | `app/server/` |
 | Lux tenant app (`app/bridge/`) | `@luxbridge/lux-tenant` v1.0.0 — thin shell | This repo |
 | Zoo tenant app | Pending — needs new tenant repo (see §10) | TBD |
-| White-label tenant backend wire-up | Later | After Lux/Zoo tenants ship |
+| Additional white-label backend wire-up | Later | After Lux/Zoo tenants ship |
 
 ### 5.3 SDK public API surface (verified against `pkg/bridge/src/index.ts`)
 
@@ -286,7 +282,7 @@ Status of original Phase 1 line items:
 | 1.2 | Commit the in-flight SDK edits that resolved the `@luxbridge/app` workspace cycle. | ✅ — see Phase 1.5 history note in `pkg/bridge/src/Bridge.tsx`. |
 | 1.3 | Run the SDK end-to-end against Lux testnet. | 🟡 — verify on current branch before mainnet cutover. |
 | 1.4 | Deploy the Lux tenant app to `bridge.lux.network`. | 🟡 — `app/bridge/` shape is final (`Dockerfile`, `docker-entrypoint.sh`, `__ENV.js` template all merged); deploy pipeline TBC. |
-| 1.5 | Refresh / fold the legacy `docs/*.md` (`BRIDGE-STATUS`, `LOCAL-SETUP`, etc.). | ✅ — legacy migration set deleted in v1.1.12; remaining loose docs (`INTEGRATIONS`, `LUX-ID-INTEGRATION`, operator runbooks) folded into `docs/content/docs/*.mdx` and surfaced as Nextra pages in v1.1.13 (issue #391). Only `docs/LLM.md` remains at docs root as the symlink target for `AGENTS.md`. |
+| 1.5 | Refresh / fold the legacy `docs/*.md` (`BRIDGE-STATUS`, `LOCAL-SETUP`, etc.). | ✅ — the loose top-level set was deleted in the merge from main; only `docs/LLM.md` and `docs/LUX-ID-INTEGRATION.md` remain at docs root, and active docs now live under `docs/content/docs/`. |
 | 1.6 | Keep `pkg/bridge/README.md` accurate (it was updated through R2/R3). | ✅ — consumer-facing README documents `Bridge`, `mountBridge`, `applyBrandMetadata`, `getConfig`, `setConfig`. |
 
 **Acceptance criteria** (recheck before sign-off):
