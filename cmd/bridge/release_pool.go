@@ -40,8 +40,8 @@ import (
 // pool size. The InMemoryStore path keeps the same shape in a map
 // so unit tests don't need a disk store.
 //
-// Brand: the pool is a Lux-network surface (the bridge itself ships
-// in ~/work/lux/bridge).
+// Brand: the pool is a Lux-network surface. No white-label brand
+// references.
 
 // =============================================================================
 // Persistence interface
