@@ -1,4 +1,4 @@
-# Lux Bridge - AI Assistant Knowledge Base
+# Lux Bridge
 
 **Project**: Lux Bridge
 **Organization**: Lux Network
@@ -10,7 +10,7 @@ The Lux Bridge is a decentralized cross-chain bridge infrastructure that enables
 ## Package layout — public vs internal
 
 Two scopes, one canonical SDK entrypoint. Downstream consumers (Lux, Hanzo,
-Zoo, any white-label tenant) import `@luxfi/bridge` and nothing else.
+Zoo, any white-label) import `@luxfi/bridge` and nothing else.
 
 | Path | npm name | Scope | Published |
 |---|---|---|---|
@@ -149,9 +149,7 @@ Routes (served from one binary, port-flexible):
 
 Migration plan: deploy `luxfi/explorer` alongside `app/explorer/`,
 hostname-cutover (`bridge-explorer.lux.network`) on K8s, delete the
-Next.js app after one-week soak. Same pattern as a `graphprotocol/graph-node`
-→ embedded Go explorer cutover (replacing a Next.js indexer UI with the
-single-binary `luxfi/explorer` over `luxfi/indexer` + `luxfi/graph`).
+Next.js app after one-week soak.
 
 The bridge backend (`app/server/`) does not depend on `app/explorer/`;
 the migration is UI-only.
@@ -641,12 +639,7 @@ nats-top -s localhost:4223
 
 ### Key Documentation Files
 - `docs/LLM.md` — this file, canonical AI/onboarding doc (single source of truth)
-- `docs/content/docs/index.mdx` — Architecture page (deep-dive served at `/docs`)
-- `docs/content/docs/integrations.mdx` — Go-side operator integration guide
-- `docs/content/docs/lux-id-integration.mdx` — Casdoor-based unified auth integration
-- `docs/content/docs/operator-runbook.mdx` — `cmd/bridge` runtime operations
-- `docs/content/docs/operator-deploy.mdx` — production deploy to `bridge.lux.network`
-- `docs/pages/*.mdx` — thin Nextra page wrappers that surface the content above
+- `docs/LUX-ID-INTEGRATION.md` — Casdoor-based unified auth integration
 - `pkg/bridge/README.md` — consumer-facing SDK docs (`mountBridge`, `BridgeConfig`)
 - Top-level `README.md` — quick-start + architecture pointer (kept consistent with this file)
 
@@ -654,10 +647,7 @@ The legacy migration .md files (BRIDGE-STATUS, LOCAL-SETUP, the four MPC
 migration notes, DEPLOYMENT, CI-CD-DOCKER-IMAGES) were deleted in v1.1.12
 (commit `b04e805`, issue #391) — they described an architecture from
 before the SDK rationalization and confused new readers. Migration
-history lives in `git log` and the GH release notes. The remaining loose
-`.md` files at `docs/` root were folded into the Nextra `content/docs/`
-tree in v1.1.13 (issue #391 follow-up) — only `docs/LLM.md` remains
-loose because it's the symlink target for `AGENTS.md` / `CLAUDE.md`.
+history lives in `git log` and the GH release notes.
 
 ## Context for All AI Assistants
 

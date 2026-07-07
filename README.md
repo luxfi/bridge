@@ -168,10 +168,8 @@ make down           # Stop infrastructure
 - [`docs/LLM.md`](docs/LLM.md) — canonical AI/onboarding doc: architecture,
   package layout, MPC topology, runtime config, publishing status, layered
   cosigners, explorer migration plan
-- Nextra docs site under [`docs/`](docs/) — `pnpm --filter @luxfi/bridge-docs build`
-  builds the public site (Home / Architecture / Integrations / Operator Runbook /
-  Deploy Guide / Lux ID). Sources live at `docs/content/docs/*.mdx`, pages at
-  `docs/pages/*.mdx`.
+- [`docs/LUX-ID-INTEGRATION.md`](docs/LUX-ID-INTEGRATION.md) — Lux ID
+  (Casdoor) auth integration
 - [`pkg/bridge/README.md`](pkg/bridge/README.md) — consumer-facing SDK
   README (`mountBridge`, `BridgeConfig`, all config blocks)
 

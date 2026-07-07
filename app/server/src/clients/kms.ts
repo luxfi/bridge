@@ -13,7 +13,7 @@
 //   DELETE /v1/kms/orgs/{org}/secrets/{path...}          — delete a secret (admin)
 //
 // Auth: Bearer JWT with `aud` claim matching the bridge's tenant id
-// (e.g. `liquidity-bd`, `lux-bridge`). Token is minted by Lux IAM via
+// (e.g. `acme-bd`, `lux-bridge`). Token is minted by Lux IAM via
 // `IAMClient.mint('kms')` and cached for its TTL.
 //
 // All secrets returned are STRINGS (PEM, JSON, bytes — caller decides
