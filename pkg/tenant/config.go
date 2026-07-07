@@ -43,8 +43,8 @@ type Config struct {
 	Network NetworkConfig `yaml:"network"`
 
 	// IAM points the bridge at the tenant's IAM (hanzo.id, lux.id,
-	// zoo.id, pars.id, ...). Per the IAM SSO requirement the bridge
-	// MUST NOT ship local auth — it federates to IAM only.
+	// zoo.id, pars.id, ...). Per the IAM SSO requirement
+	// the bridge MUST NOT ship local auth — it federates to IAM only.
 	IAM IAMConfig `yaml:"iam"`
 
 	// KMS points the bridge at the tenant's KMS (kms.hanzo.ai,
@@ -72,7 +72,7 @@ type Config struct {
 	// SupportedChains is the allowlist of chain families the daemon
 	// will mount handlers for. Anything not in this list will not have
 	// a release-pool, will not appear in /v1/bridge/networks, and will
-	// refuse swap creates. Subset of {eth,btc,sol,ton,xrp,dot,
+	// refuse swap creates. Subset of {eth,btc,sol,ton,xrp,dot,liquid,
 	// hanzo,zoo,pars,spc,lux}.
 	SupportedChains []string `yaml:"supportedChains"`
 
@@ -92,7 +92,7 @@ type Config struct {
 	// Domain is the public DNS host the SPA + API serve on. The
 	// frontend uses this to compute absolute URLs in og:metadata; the
 	// k8s IngressRoute uses it as the Host() match. Example:
-	// "bridge.lux.network" / "bridge.hanzo.network".
+	// "bridge.zoo.network" / "bridge.hanzo.network".
 	Domain string `yaml:"domain"`
 
 	// ReleasePool is the per-family wallet-pool configuration (size +
@@ -114,11 +114,11 @@ type Config struct {
 // the daemon's log "service" tag.
 type BrandConfig struct {
 	// Name is the human-readable brand label shown in the SPA header.
-	// Example: "Lux Bridge", "Hanzo Bridge", "Zoo Bridge".
+	// Example: "Lux Bridge", "Liquid Bridge", "Hanzo Bridge".
 	Name string `yaml:"name"`
 	// Slug is the machine-readable form used as the daemon's log
 	// service tag and the embedded app's framework AppName. Lowercase
-	// hyphenated. Example: "lux-bridge", "hanzo-bridge".
+	// hyphenated. Example: "lux-bridge", "liquid-bridge", "hanzo-bridge".
 	Slug string `yaml:"slug"`
 	// PrimaryColor is the hex code (#rrggbb) the SPA themes off.
 	PrimaryColor string `yaml:"primaryColor"`
@@ -174,7 +174,7 @@ type MPCConfig struct {
 	// "http://mpc-node-0.mpc-node-headless.{tenant}-mpc.svc:9800".
 	URL string `yaml:"url"`
 	// OrgID is the tenant identifier the MPC daemon multiplexes
-	// keygen by. Example: "bridge", "hanzo-bridge".
+	// keygen by. Example: "bridge", "liquid-bridge".
 	OrgID string `yaml:"orgID"`
 	// DashboardURL is the MPC dashboard API base URL — the v2026-05
 	// daemon serves /v1/mpc/sign there.
@@ -220,7 +220,7 @@ type FamilyPoolConfig struct {
 // Known chain families. Anything in SupportedChains MUST be a member.
 var supportedChainSet = map[string]struct{}{
 	"eth": {}, "btc": {}, "sol": {}, "ton": {}, "xrp": {}, "dot": {},
-	"hanzo": {}, "zoo": {}, "pars": {}, "spc": {}, "lux": {},
+	"liquid": {}, "hanzo": {}, "zoo": {}, "pars": {}, "spc": {}, "lux": {},
 }
 
 // Known PQ profile values.
@@ -347,7 +347,7 @@ func (c *Config) Validate() error {
 
 	// SupportedChains: non-empty + every entry must be in the known set.
 	if len(c.SupportedChains) == 0 {
-		errs = append(errs, "supportedChains: required (at least one of eth,btc,sol,ton,xrp,dot,hanzo,zoo,pars,spc,lux)")
+		errs = append(errs, "supportedChains: required (at least one of eth,btc,sol,ton,xrp,dot,liquid,hanzo,zoo,pars,spc,lux)")
 	} else {
 		seen := map[string]struct{}{}
 		for _, ch := range c.SupportedChains {
