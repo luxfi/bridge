@@ -25,6 +25,14 @@ WORKDIR /src
 RUN apk add --no-cache git ca-certificates tzdata \
     && echo 'nonroot:x:65532:65532:nonroot:/home/nonroot:/sbin/nologin' >> /etc/passwd \
     && echo 'nonroot:x:65532:' >> /etc/group
+# Private-module auth for github.com/hanzoai/zip (the only non-public dep).
+# Build-time only: the final stage is FROM scratch and copies just the binary,
+# so GH_TOKEN never ships in the published image. In CI, pass from a KMS secret.
+ARG GH_TOKEN=""
+ENV GOPRIVATE=github.com/hanzoai
+RUN if [ -n "$GH_TOKEN" ]; then \
+      git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"; \
+    fi
 COPY go.mod go.sum* ./
 RUN go mod download
 # The binary spans cmd/bridge, the internal/ subpackages it imports, and
