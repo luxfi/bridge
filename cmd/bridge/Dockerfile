@@ -44,6 +44,7 @@ RUN go mod download
 # repo would bust the layer cache on every UI edit.
 COPY cmd/ cmd/
 COPY internal/ internal/
+COPY pkg/ pkg/
 COPY profile.go ./
 # Replace placeholder static/ with the real UI build.
 RUN rm -rf cmd/bridge/static && mkdir -p cmd/bridge/static
