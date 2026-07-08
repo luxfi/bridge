@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/luxfi/bridge/pkg/tenant"
 )
 
 // staticFS is the embedded SPA. The Dockerfile populates static/ from a
@@ -24,13 +26,14 @@ var staticFS embed.FS
 // brand assets (/icon.svg, /logo.svg). Brand assets read from disk on every
 // request so a deploy can swap them without rebuilding the binary.
 type Frontend struct {
-	cfg     Config
-	root    fs.FS
-	index   []byte
-	overlay string // optional disk dir for SPA + brand override
+	cfg        Config
+	root       fs.FS
+	index      []byte
+	overlay    string            // optional disk dir for SPA + brand override
+	runtimeEnv map[string]string // window.__ENV served at /__ENV.js (tenant brand)
 }
 
-func NewFrontend(cfg Config, overlay string) (*Frontend, error) {
+func NewFrontend(cfg Config, overlay string, tcfg *tenant.Config) (*Frontend, error) {
 	root, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		return nil, fmt.Errorf("sub-fs: %w", err)
@@ -39,11 +42,40 @@ func NewFrontend(cfg Config, overlay string) (*Frontend, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read index.html: %w", err)
 	}
-	return &Frontend{cfg: cfg, root: root, index: idx, overlay: overlay}, nil
+	return &Frontend{cfg: cfg, root: root, index: idx, overlay: overlay, runtimeEnv: buildRuntimeEnv(tcfg)}, nil
+}
+
+// buildRuntimeEnv projects the tenant brand + IAM config into the window.__ENV
+// keys the SPA's bridge.config.ts reads (BRIDGE_*). When there is no tenant
+// (the canonical Lux deployment), it returns an empty map so the SPA falls
+// back to its build-time @luxfi/brand defaults — Lux is unchanged. White-label
+// shims ship a tenant.yaml and get their brand applied at runtime, one image.
+func buildRuntimeEnv(tcfg *tenant.Config) map[string]string {
+	e := map[string]string{}
+	if tcfg == nil {
+		return e
+	}
+	set := func(k, v string) {
+		if v != "" {
+			e[k] = v
+		}
+	}
+	b := tcfg.Brand
+	set("BRIDGE_BRAND_NAME", b.Name)
+	set("BRIDGE_LOGO_URL", b.LogoURL)
+	set("BRIDGE_FAVICON_URL", b.FaviconURL)
+	set("BRIDGE_PRIMARY_COLOR", b.PrimaryColor)
+	set("BRIDGE_DOCS_URL", b.DocsURL)
+	set("BRIDGE_IAM_ORG", tcfg.IAM.Organization)
+	set("BRIDGE_CLIENT_ID", tcfg.IAM.ClientID)
+	return e
 }
 
 func (f *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
+	case "/__ENV.js":
+		f.serveRuntimeEnv(w, r)
+		return
 	case "/envs.js":
 		f.serveEnvs(w, r)
 		return
@@ -76,6 +108,17 @@ func (f *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// SPA fallback — let React Router handle the route.
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write(f.index)
+}
+
+// serveRuntimeEnv emits window.__ENV — the runtime brand/config the embedded
+// SPA loads via <script src="/__ENV.js"> before its main bundle. This is the
+// tenant→frontend brand bridge: bridge.config.ts reads these BRIDGE_* keys and
+// applyBrandMetadata() applies name/favicon/logo/color to the document.
+func (f *Frontend) serveRuntimeEnv(w http.ResponseWriter, r *http.Request) {
+	body, _ := json.Marshal(f.runtimeEnv)
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Cache-Control", "no-store")
+	fmt.Fprintf(w, "window.__ENV = %s;", body)
 }
 
 func (f *Frontend) serveEnvs(w http.ResponseWriter, r *http.Request) {

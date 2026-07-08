@@ -170,17 +170,22 @@ export const bridgeConfig: BridgeConfig = {
   clientId: env('BRIDGE_CLIENT_ID'),
   iamOrg: env('BRIDGE_IAM_ORG', 'lux'),
   brand: {
-    name: `${shortName ?? 'Lux'} Bridge`,
+    // Every brand field is runtime-overridable via window.__ENV so a single
+    // build serves any tenant (the serving container — or the Go single-binary
+    // image's /__ENV.js — templates these from its tenant config). @luxfi/brand
+    // stays the fallback, so the Lux tenant is unchanged when no override is set.
+    name: env('BRIDGE_BRAND_NAME') || `${shortName ?? 'Lux'} Bridge`,
     logoUrl: env('BRIDGE_LOGO_URL') || luxLogoDataUrl,
-    primaryColor: primaryColor ?? '#000000',
+    faviconUrl: env('BRIDGE_FAVICON_URL'),
+    primaryColor: env('BRIDGE_PRIMARY_COLOR') || primaryColor || '#000000',
     // secondaryColor intentionally omitted. brand.json's theme.{light,dark}.accent1
     // is a per-theme foreground (white on dark / black on light), NOT a brand
     // accent — wiring it to --brand-secondary breaks hover-color on the
     // opposite-theme surface. Fall back to the SDK's compiled default
     // (`var(--brand-secondary, #7a9ff5)` in pkg/bridge/src/app/styles/theme.css)
     // until @luxfi/brand exposes a real brand-accent field.
-    supportEmail: supportEmail ?? 'support@lux.network',
-    docsUrl: fallbackDocsUrl,
+    supportEmail: env('BRIDGE_SUPPORT_EMAIL') || supportEmail || 'support@lux.network',
+    docsUrl: env('BRIDGE_DOCS_URL') || fallbackDocsUrl,
   },
   wallet,
   mpc,

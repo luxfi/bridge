@@ -257,7 +257,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	frontend, err := NewFrontend(cfg, *staticDir)
+	frontend, err := NewFrontend(cfg, *staticDir, tcfg)
 	if err != nil {
 		logger.Error("frontend init", "err", err)
 		os.Exit(1)
