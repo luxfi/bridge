@@ -5,15 +5,50 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/luxfi/bridge/pkg/tenant"
 )
+
+// titleRe / descRe locate the SPA's build-time (Lux) <title> and meta
+// description so the server can rewrite them per-tenant. applyBrandMetadata()
+// already fixes these at runtime for browsers; rewriting the served HTML also
+// covers non-JS consumers (crawlers, social-card unfurlers) so a white-label
+// deployment never surfaces the upstream brand name in its page source.
+var (
+	titleRe   = regexp.MustCompile(`<title>[^<]*</title>`)
+	descRe    = regexp.MustCompile(`(<meta name="description" content=")[^"]*(")`)
+	faviconRe = regexp.MustCompile(`(<link rel="icon"[^>]*?href=")[^"]*(")`)
+)
+
+// brandIndex rewrites the embedded index.html's title + description from the
+// tenant brand. No tenant → returned unchanged (canonical Lux build).
+func brandIndex(idx []byte, tcfg *tenant.Config) []byte {
+	if tcfg == nil {
+		return idx
+	}
+	name := tcfg.Brand.Title
+	if name == "" {
+		name = tcfg.Brand.Name
+	}
+	if name == "" {
+		return idx
+	}
+	s := string(idx)
+	s = titleRe.ReplaceAllString(s, "<title>"+html.EscapeString(name)+"</title>")
+	s = descRe.ReplaceAllString(s, "${1}"+html.EscapeString(name)+"${2}")
+	if fav := tcfg.Brand.FaviconURL; fav != "" {
+		s = faviconRe.ReplaceAllString(s, "${1}"+strings.ReplaceAll(fav, "$", "$$")+"${2}")
+	}
+	return []byte(s)
+}
 
 // staticFS is the embedded SPA. The Dockerfile populates static/ from a
 // luxfi/bridge UI build before the Go build runs; for local dev a
@@ -42,7 +77,7 @@ func NewFrontend(cfg Config, overlay string, tcfg *tenant.Config) (*Frontend, er
 	if err != nil {
 		return nil, fmt.Errorf("read index.html: %w", err)
 	}
-	return &Frontend{cfg: cfg, root: root, index: idx, overlay: overlay, runtimeEnv: buildRuntimeEnv(tcfg)}, nil
+	return &Frontend{cfg: cfg, root: root, index: brandIndex(idx, tcfg), overlay: overlay, runtimeEnv: buildRuntimeEnv(tcfg)}, nil
 }
 
 // buildRuntimeEnv projects the tenant brand + IAM config into the window.__ENV
