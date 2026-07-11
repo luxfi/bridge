@@ -13,7 +13,7 @@ on:
 jobs:
   full-integration:
     name: Full System Integration Test
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     timeout-minutes: 30
     
     services:
@@ -476,7 +476,7 @@ jobs:
 
   performance-test:
     name: Performance and Load Testing
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     needs: full-integration
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     
@@ -492,7 +492,7 @@ jobs:
 
   security-audit:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     needs: full-integration
     
     steps:

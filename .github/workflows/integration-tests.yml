@@ -12,7 +12,7 @@ on:
 jobs:
   integration:
     name: E2E Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     
     services:
       postgres:
@@ -234,7 +234,7 @@ jobs:
 
   security-scan:
     name: Security Scanning
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     
     steps:
     - name: Checkout code
