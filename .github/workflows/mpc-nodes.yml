@@ -3,7 +3,7 @@ on:
   workflow_dispatch:  # Only manual trigger since mpc-nodes directory is removed
 jobs:
   deprecated_notice:
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     steps:
       - name: Deprecation Notice
         run: |

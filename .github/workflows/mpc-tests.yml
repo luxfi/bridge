@@ -6,7 +6,7 @@ on:
 jobs:
   deprecated_notice:
     name: Deprecation Notice
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     
     steps:
     - name: MPC Tests Deprecated

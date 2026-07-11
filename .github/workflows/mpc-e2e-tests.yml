@@ -15,7 +15,7 @@ on:
 jobs:
   mpc-e2e:
     name: MPC End-to-End Tests
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     
     services:
       nats:
@@ -183,7 +183,7 @@ jobs:
 
   mpc-integration:
     name: MPC Bridge Integration
-    runs-on: ubuntu-latest
+    runs-on: lux-build-amd64
     needs: mpc-e2e
     
     steps:
