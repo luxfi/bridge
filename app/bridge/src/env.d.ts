@@ -10,7 +10,12 @@ interface ImportMetaEnv {
   readonly VITE_BRIDGE_ENV?: string
   readonly VITE_BRIDGE_CLIENT_ID?: string
   readonly VITE_BRIDGE_IAM_ORG?: string
+  readonly VITE_BRIDGE_BRAND_NAME?: string
   readonly VITE_BRIDGE_LOGO_URL?: string
+  readonly VITE_BRIDGE_FAVICON_URL?: string
+  readonly VITE_BRIDGE_PRIMARY_COLOR?: string
+  readonly VITE_BRIDGE_SUPPORT_EMAIL?: string
+  readonly VITE_BRIDGE_DOCS_URL?: string
   readonly VITE_WC_PROJECT_ID?: string
   readonly VITE_BRIDGE_WALLET_DEFAULT_CHAIN?: string
   readonly VITE_BRIDGE_WALLET_SUPPORTED_CHAINS?: string
