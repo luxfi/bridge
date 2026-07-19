@@ -3,6 +3,7 @@
     "target": "ES2022", // Use modern JavaScript features
     "module": "ESNext", // Generate ES modules
     "moduleResolution": "Node", // Resolve Node.js modules
+    "ignoreDeprecations": "6.0", // Silence TS7 node10 moduleResolution deprecation (build parity)
     "strict": true, // Enable strict type-checking
     "esModuleInterop": true, // Interop for CommonJS modules
     "allowSyntheticDefaultImports": true, // Support default imports
