@@ -65,6 +65,17 @@ const env = (key: string, fallback?: string): string | undefined => {
 
 const luxLogoDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(getColorSVG())}`
 
+// Brand display name — tenant override (BRIDGE_BRAND_NAME) wins, else
+// "<shortName> Bridge" from @luxfi/brand.
+const brandName = env('BRIDGE_BRAND_NAME') || `${shortName ?? 'Lux'} Bridge`
+// Meta description — tenant override (BRIDGE_DESCRIPTION) wins, else derived
+// from the network name (brandName minus a trailing "Bridge"). Deriving from
+// the already-white-labeled brand name keeps ONE source of truth and
+// guarantees a non-Lux surface never leaks "Lux" in its <head>.
+const networkName = brandName.replace(/\s*bridge\s*$/i, '').trim() || (shortName ?? 'Lux')
+const brandDescription =
+  env('BRIDGE_DESCRIPTION') || `Cross-chain bridge for the ${networkName} Network.`
+
 // Live bridge REST endpoint. Note the hostname is `bridge-api.lux.network`
 // (hyphenated) — this is the same Express backend the production
 // bridge.lux.network frontend uses today. The previous `api.bridge.lux.network`
@@ -174,7 +185,8 @@ export const bridgeConfig: BridgeConfig = {
     // build serves any tenant (the serving container — or the Go single-binary
     // image's /__ENV.js — templates these from its tenant config). @luxfi/brand
     // stays the fallback, so the Lux tenant is unchanged when no override is set.
-    name: env('BRIDGE_BRAND_NAME') || `${shortName ?? 'Lux'} Bridge`,
+    name: brandName,
+    description: brandDescription,
     logoUrl: env('BRIDGE_LOGO_URL') || luxLogoDataUrl,
     faviconUrl: env('BRIDGE_FAVICON_URL'),
     primaryColor: env('BRIDGE_PRIMARY_COLOR') || primaryColor || '#000000',

@@ -7,6 +7,28 @@
  * vars on the host page; only `--bridge-*` are owned by the SDK.
  */
 
+/*
+ * Basel Grotesk — the canonical brand face (BRAND_TOKENS.font) shared by all
+ * four tenants (Lux/Zoo/Hanzo/Pars). Shipped as a bundled webfont so the body
+ * font is a real sans face, never a Times serif fallback. The woff2 files are
+ * served from the consuming app's public/fonts/ at the SPA root (bridge is a
+ * full-page app mounted at `/`), so the absolute `/fonts/*` src resolves.
+ */
+@font-face {
+  font-family: 'Basel Grotesk';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Basel-Grotesk-Book.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Basel Grotesk';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Basel-Grotesk-Medium.woff2') format('woff2');
+}
+
 :root {
   /* Surfaces — layered dark stack with subtle blue undertone for depth. */
   --bridge-bg: #07080b;
@@ -54,8 +76,8 @@
   --bridge-spacing-lg: 24px;
 
   /* Typography. */
-  --bridge-font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI',
-    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bridge-font: 'Basel Grotesk', -apple-system, BlinkMacSystemFont, 'Inter',
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --bridge-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
     monospace;
 
@@ -123,6 +145,16 @@
     --bridge-brand-name-size: 14px;
     --bridge-mpc-chip-display: none;
   }
+}
+
+/*
+ * The bridge is a full-page SPA, so the page owner (html/body) inherits the
+ * brand font. Without this, `getComputedStyle(document.body).fontFamily` is the
+ * UA default (Times serif) since `.bridge-root` only styles the mount subtree.
+ */
+html,
+body {
+  font-family: var(--bridge-font);
 }
 
 .bridge-root {

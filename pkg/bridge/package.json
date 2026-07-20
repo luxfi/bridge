@@ -1,6 +1,6 @@
 {
   "name": "@luxfi/bridge",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Lux Bridge SDK — embed bridge.lux.network into any host application",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

@@ -13,6 +13,13 @@
 export interface BrandConfig {
   /** Display name for the bridge instance (window title, header). */
   name: string
+  /**
+   * Meta description for the document `<head>` — written to
+   * `<meta name="description">` plus `og:description` / `twitter:description`
+   * by `applyBrandMetadata`. White-labels the head per tenant so a non-Lux
+   * surface never leaks "Lux" in its description (the white-label invariant).
+   */
+  description?: string
   /** URL to the brand logo (SVG preferred). */
   logoUrl?: string
   /** URL to the favicon. */
