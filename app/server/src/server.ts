@@ -47,8 +47,19 @@ try {
   })
 
   // Middleware
+  // Per-brand allow-list. Every white-labeled bridge tenant may call this
+  // backend cross-origin (tenant UIs also route /api same-origin via ingress,
+  // but swap POSTs carry an Origin header, so the tenant host must be allowed).
+  // The `*.lux.(network|exchange)` regex keeps every Lux subdomain (wallet, etc.).
   app.use(cors({
-    origin: ['https://bridge.lux.network', /\.lux\.(network|exchange)$/],
+    origin: [
+      'https://bridge.lux.network',
+      'https://bridge.zoo.network',
+      'https://bridge.zoo.ngo',
+      'https://bridge.pars.network',
+      'https://bridge.hanzo.ai',
+      /\.lux\.(network|exchange)$/,
+    ],
   }))
   app.use(rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
