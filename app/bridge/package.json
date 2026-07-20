@@ -1,6 +1,6 @@
 {
   "name": "@luxbridge/lux-tenant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "bridge.lux.network — Lux-branded tenant build consuming @luxfi/bridge + @luxfi/brand.",
   "license": "MIT",

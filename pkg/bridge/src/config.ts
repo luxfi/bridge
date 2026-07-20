@@ -39,7 +39,23 @@ export function getConfig(): BridgeConfig {
 }
 
 /**
- * Apply brand metadata to the host document (title, favicon, CSS variables).
+ * Upsert a `<meta>` tag's `content`, matched by an attribute selector, creating
+ * it in `<head>` if absent. `attr`/`val` identify the tag (`name="description"`
+ * or `property="og:description"`); `content` is the white-labeled text.
+ */
+function setMeta(attr: 'name' | 'property', val: string, content: string): void {
+  let el = document.head?.querySelector<HTMLMetaElement>(`meta[${attr}="${val}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute(attr, val)
+    document.head?.appendChild(el)
+  }
+  el.setAttribute('content', content)
+}
+
+/**
+ * Apply brand metadata to the host document (title, description, favicon, CSS
+ * variables).
  *
  * Pure side effect on `document`. Called once by `mountBridge`.
  */
@@ -48,6 +64,15 @@ export function applyBrandMetadata(brand: BrandConfig | undefined): void {
 
   if (brand.name) {
     document.title = brand.name
+  }
+
+  // White-label the description across the standard + social meta so no non-Lux
+  // surface leaks a foreign brand in its <head>. index.html ships the Lux
+  // default; this rewrites it per tenant at mount.
+  if (brand.description) {
+    setMeta('name', 'description', brand.description)
+    setMeta('property', 'og:description', brand.description)
+    setMeta('name', 'twitter:description', brand.description)
   }
 
   if (brand.faviconUrl) {
