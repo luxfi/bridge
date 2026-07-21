@@ -11,6 +11,7 @@ import (
 	luxlog "github.com/luxfi/log"
 
 	"github.com/luxfi/bridge/internal/broadcast"
+	"github.com/luxfi/bridge/internal/mchain"
 )
 
 // broadcast_driver.go: background goroutine that pushes signed swaps
@@ -51,6 +52,18 @@ type Broadcaster interface {
 	Broadcast(ctx context.Context, network, rawTxHex string) (*broadcast.BroadcastResult, error)
 }
 
+// ConfirmationChecker reports whether a destination tx has been mined.
+// Only the BTC release path uses it: Bitcoin's "broadcast accepted"
+// (mempool admission) is not final, so a BTC swap parks in
+// SwapStatusAwaitingConfirmation until this says confirmed (or the
+// rebuild timeout fires). *btc.Provider's GetTxStatus is adapted to
+// this in main.go. nil ⇒ the driver keeps the legacy behaviour of
+// marking every broadcast Completed immediately (no BTC confirmation
+// gate), so a deploy without a BTC confirmer never strands swaps.
+type ConfirmationChecker interface {
+	ConfirmationStatus(ctx context.Context, network, txid string) (confirmed bool, err error)
+}
+
 // BroadcastDriver polls SwapStatusBroadcasting swaps and pushes them
 // to the destination chain. Concurrency-safe.
 type BroadcastDriver struct {
@@ -72,15 +85,29 @@ type BroadcastDriver struct {
 	// disables the cap (legacy behaviour).
 	maxRebuilds int
 
+	// confirmer gates the BTC release path: a BTC tx parks in
+	// SwapStatusAwaitingConfirmation and is promoted to Completed only
+	// when this reports it mined. nil ⇒ legacy immediate-Completed for
+	// every family (no BTC confirmation gate). Wired in main.go from the
+	// BTC provider; left nil in non-BTC deploys and most unit tests.
+	confirmer ConfirmationChecker
+
+	// btcConfirmTimeout is how long a BTC release may sit unconfirmed in
+	// the mempool before the watcher rebuilds it with a higher (RBF)
+	// feerate. Measured from Swap.BroadcastAt and reset on each rebuild.
+	btcConfirmTimeout time.Duration
+
 	running atomic.Bool
 
-	ticks          atomic.Uint64
-	attempts       atomic.Uint64
-	successes      atomic.Uint64
-	failures       atomic.Uint64
-	skippedNoRawTx atomic.Uint64
-	rebuilds       atomic.Uint64
-	listErrors     atomic.Uint64
+	ticks           atomic.Uint64
+	attempts        atomic.Uint64
+	successes       atomic.Uint64
+	failures        atomic.Uint64
+	skippedNoRawTx  atomic.Uint64
+	rebuilds        atomic.Uint64
+	listErrors      atomic.Uint64
+	confirmChecks   atomic.Uint64
+	confirmTimeouts atomic.Uint64
 
 	stopOnce      sync.Once
 	cancelRunning context.CancelFunc
@@ -104,6 +131,15 @@ const DefaultPerBroadcastTimeout = 15 * time.Second
 // signal if we still can't land a tx after that.
 const DefaultBroadcastMaxRebuilds = 5
 
+// DefaultBTCConfirmationTimeout is how long a BTC release tx may sit
+// unconfirmed in the mempool before the watcher rebuilds it at a higher
+// (RBF) feerate. 30 min ≈ 3 expected blocks: long enough that a tx with
+// a sane fee confirms normally, short enough to react before a user
+// gives up. Each rebuild bumps the feerate and restarts this clock; the
+// shared maxRebuilds cap eventually routes a persistently stuck swap to
+// refund rather than spinning forever.
+const DefaultBTCConfirmationTimeout = 30 * time.Minute
+
 // NewBroadcastDriver constructs a driver with sensible defaults.
 func NewBroadcastDriver(store SwapStore, bcaster Broadcaster, interval time.Duration, logger luxlog.Logger) *BroadcastDriver {
 	if interval <= 0 {
@@ -116,6 +152,21 @@ func NewBroadcastDriver(store SwapStore, bcaster Broadcaster, interval time.Dura
 		logger:              logger,
 		perBroadcastTimeout: DefaultPerBroadcastTimeout,
 		maxRebuilds:         DefaultBroadcastMaxRebuilds,
+		btcConfirmTimeout:   DefaultBTCConfirmationTimeout,
+	}
+}
+
+// SetConfirmer attaches the BTC confirmation checker. When set, BTC
+// releases gate through SwapStatusAwaitingConfirmation instead of
+// completing the instant the mempool accepts them. No-op for other
+// families. Wired in main.go from the BTC provider.
+func (d *BroadcastDriver) SetConfirmer(c ConfirmationChecker) { d.confirmer = c }
+
+// SetBTCConfirmTimeout overrides the unconfirmed-mempool timeout before
+// an RBF rebuild. Primarily for tests; production uses the default.
+func (d *BroadcastDriver) SetBTCConfirmTimeout(t time.Duration) {
+	if t > 0 {
+		d.btcConfirmTimeout = t
 	}
 }
 
@@ -124,25 +175,29 @@ func (d *BroadcastDriver) Running() bool { return d.running.Load() }
 
 // BroadcastDriverStats is a point-in-time view of the driver's counters.
 type BroadcastDriverStats struct {
-	Ticks          uint64 `json:"ticks"`
-	Attempts       uint64 `json:"attempts"`
-	Successes      uint64 `json:"successes"`
-	Failures       uint64 `json:"failures"`
-	SkippedNoRawTx uint64 `json:"skipped_no_raw_tx"`
-	Rebuilds       uint64 `json:"rebuilds"`
-	ListErrors     uint64 `json:"list_errors"`
+	Ticks           uint64 `json:"ticks"`
+	Attempts        uint64 `json:"attempts"`
+	Successes       uint64 `json:"successes"`
+	Failures        uint64 `json:"failures"`
+	SkippedNoRawTx  uint64 `json:"skipped_no_raw_tx"`
+	Rebuilds        uint64 `json:"rebuilds"`
+	ListErrors      uint64 `json:"list_errors"`
+	ConfirmChecks   uint64 `json:"confirm_checks"`
+	ConfirmTimeouts uint64 `json:"confirm_timeouts"`
 }
 
 // Stats snapshots the counters. Safe for concurrent reads.
 func (d *BroadcastDriver) Stats() BroadcastDriverStats {
 	return BroadcastDriverStats{
-		Ticks:          d.ticks.Load(),
-		Attempts:       d.attempts.Load(),
-		Successes:      d.successes.Load(),
-		Failures:       d.failures.Load(),
-		SkippedNoRawTx: d.skippedNoRawTx.Load(),
-		Rebuilds:       d.rebuilds.Load(),
-		ListErrors:     d.listErrors.Load(),
+		Ticks:           d.ticks.Load(),
+		Attempts:        d.attempts.Load(),
+		Successes:       d.successes.Load(),
+		Failures:        d.failures.Load(),
+		SkippedNoRawTx:  d.skippedNoRawTx.Load(),
+		Rebuilds:        d.rebuilds.Load(),
+		ListErrors:      d.listErrors.Load(),
+		ConfirmChecks:   d.confirmChecks.Load(),
+		ConfirmTimeouts: d.confirmTimeouts.Load(),
 	}
 }
 
@@ -203,19 +258,39 @@ func (d *BroadcastDriver) tick(ctx context.Context) {
 		if d.logger != nil {
 			d.logger.Warn("broadcast driver: list broadcasting swaps", "err", err)
 		}
+		// Don't return — the broadcasting list failing shouldn't starve
+		// the confirmation pass below (independent state, independent RPC).
+	} else {
+		if len(swaps) > 0 && d.logger != nil {
+			d.logger.Debug("broadcast driver tick", "broadcasting", len(swaps))
+		}
+		for _, sw := range swaps {
+			if ctx.Err() != nil {
+				return
+			}
+			d.broadcastOne(ctx, sw)
+		}
+	}
+
+	// Second pass: BTC releases parked awaiting on-chain confirmation.
+	// Only the BTC path ever produces this state, and only when a
+	// confirmer is wired — skip the list query entirely otherwise.
+	if d.confirmer == nil {
 		return
 	}
-	if len(swaps) == 0 {
+	pending, err := d.store.List(ctx, SwapFilter{Status: SwapStatusAwaitingConfirmation})
+	if err != nil {
+		d.listErrors.Add(1)
+		if d.logger != nil {
+			d.logger.Warn("broadcast driver: list awaiting-confirmation swaps", "err", err)
+		}
 		return
 	}
-	if d.logger != nil {
-		d.logger.Debug("broadcast driver tick", "broadcasting", len(swaps))
-	}
-	for _, sw := range swaps {
+	for _, sw := range pending {
 		if ctx.Err() != nil {
 			return
 		}
-		d.broadcastOne(ctx, sw)
+		d.confirmOne(ctx, sw)
 	}
 }
 
@@ -284,6 +359,17 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			d.handleStaleXRPSequence(ctx, sw)
 			return
 		}
+		// BTC equivalent: bitcoind / mempool.space rejected the release tx
+		// because its feerate is below the relay or mempool floor (or an
+		// RBF bump didn't beat the tx it replaces). The fee is baked into
+		// the signed tx, so retrying the same blob is rejected identically
+		// forever — reset so PreSignBTC re-quotes a fresh, higher feerate
+		// and re-signs. RBF (nSequence=0xfffffffd, internal/btc/payment.go)
+		// makes the replacement a valid BIP-125 substitution.
+		if isStaleBTCFee(err) {
+			d.handleStaleBTCFee(ctx, sw)
+			return
+		}
 
 		// Surface the error so the SDK/UI can show the user what's
 		// blocking (e.g. "insufficient funds for gas" — the release
@@ -302,6 +388,41 @@ func (d *BroadcastDriver) broadcastOne(ctx context.Context, sw *Swap) {
 			}
 			s.LastError = humanized
 		})
+		return
+	}
+
+	// BTC is the one family where mempool admission is NOT final: a
+	// low-fee tx is accepted then may never confirm (fee market rises or
+	// the tx is evicted). Park it in awaiting_confirmation and let the
+	// watcher promote it to Completed once it's mined — but only when a
+	// confirmer is wired, otherwise fall through to immediate-Completed
+	// so the swap can't strand. Every other family completes on accept.
+	if d.confirmer != nil && destIsBTC(sw.DestinationNetwork) {
+		patched, perr := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status != SwapStatusBroadcasting {
+				return
+			}
+			s.DestTxHash = res.TxHash
+			s.Status = SwapStatusAwaitingConfirmation
+			s.BroadcastAt = time.Now().UTC()
+			s.LastError = "" // clear: tx accepted, now awaiting a block.
+			s.LastErrorAt = time.Time{}
+		})
+		if perr != nil {
+			d.failures.Add(1)
+			if d.logger != nil {
+				d.logger.Warn("persist DestTxHash (btc awaiting confirmation)",
+					"swap_id", sw.ID, "err", perr)
+			}
+			return
+		}
+		if d.logger != nil && patched != nil {
+			d.logger.Info("btc release accepted → awaiting confirmation",
+				"swap_id", sw.ID,
+				"network", sw.DestinationNetwork,
+				"tx_hash", res.TxHash,
+			)
+		}
 		return
 	}
 
@@ -470,6 +591,203 @@ func (d *BroadcastDriver) handleStaleXRPSequence(ctx context.Context, sw *Swap) 
 			)
 		}
 	}
+}
+
+// isStaleBTCFee matches the bitcoind / mempool.space rejections that mean
+// the release tx's fee is too low for the node to accept it right now:
+//
+//	"min relay fee not met, A < B"   — below the node's static minrelaytxfee
+//	"mempool min fee not met, A < B" — below the dynamic mempool floor (mempool full)
+//	"insufficient fee, rejecting replacement …" — an RBF fee-bump that didn't
+//	                                   beat the tx it replaces by enough (BIP-125)
+//
+// Unlike Solana / TON / XRP, a too-low BTC fee is usually ACCEPTED into the
+// mempool (no error — the tx just sits unconfirmed); these strings are the
+// subset of fee problems the node rejects at submit time. The feerate is baked
+// into the signed tx, so retrying the SAME DestRawTx is futile — it gets
+// rejected identically forever. Resetting for re-assembly fixes it: PreSignBTC
+// re-quotes mempool.space's current recommended feerate and re-selects the
+// still-unconfirmed UTXO, so the rebuilt tx carries a fresh, higher fee. RBF is
+// always signalled (nSequence = 0xfffffffd, internal/btc/payment.go) so the
+// replacement is a valid BIP-125 substitution of the prior attempt.
+//
+// "insufficient funds" (an unfunded release wallet) is deliberately NOT matched
+// here — humanizeBroadcastErr handles that, keeping the swap at broadcasting and
+// telling the operator to fund the address. Rebuilding can't help, and the geth
+// phrase "insufficient funds" never contains the substring "insufficient fee".
+func isStaleBTCFee(err error) bool {
+	if err == nil {
+		return false
+	}
+	low := strings.ToLower(err.Error())
+	return strings.Contains(low, "min relay fee not met") ||
+		strings.Contains(low, "mempool min fee not met") ||
+		strings.Contains(low, "insufficient fee")
+}
+
+// handleStaleBTCFee mirrors handleStaleXRPSequence for Bitcoin. Same rebuild
+// ceiling + refund fallback: if the node keeps rejecting our feerate past
+// maxRebuilds — a persistently overfull mempool, or a release wallet whose only
+// confirmed UTXO is too small to carry a relayable fee — route to refund rather
+// than spin forever. Otherwise reset to bridge_transfer_pending and clear the
+// assembled tx + sign artifacts so the signing driver re-quotes the fee and
+// re-signs on its next tick.
+func (d *BroadcastDriver) handleStaleBTCFee(ctx context.Context, sw *Swap) {
+	patched, _ := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusBroadcasting {
+			return
+		}
+		s.BroadcastRebuilds++
+		if d.maxRebuilds > 0 && s.BroadcastRebuilds >= d.maxRebuilds {
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf(
+				"Bitcoin node rejected %d successive broadcasts (fee below relay / mempool floor) — routing to refund.",
+				s.BroadcastRebuilds,
+			)
+			s.LastErrorAt = time.Now().UTC()
+			return
+		}
+		s.Status = SwapStatusBridgeTransferPending
+		s.DestRawTx = ""
+		s.Signature = ""
+		s.MPCSessionID = ""
+		s.DestTxHash = ""
+		s.LastError = "Bitcoin fee below relay floor — rebuilding with a fresh feerate"
+		s.LastErrorAt = time.Now().UTC()
+	})
+	d.rebuilds.Add(1)
+	if d.logger != nil && patched != nil {
+		if patched.Status == SwapStatusRefundPending {
+			d.logger.Warn("btc broadcast rebuilds maxed out → refund_pending",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+				"max", d.maxRebuilds,
+			)
+		} else {
+			d.logger.Info("broadcast: stale btc fee → reset for re-sign",
+				"swap_id", sw.ID,
+				"rebuilds", patched.BroadcastRebuilds,
+			)
+		}
+	}
+}
+
+// confirmOne polls the destination chain for a BTC release parked in
+// SwapStatusAwaitingConfirmation and either promotes it to Completed
+// (mined) or — once btcConfirmTimeout has elapsed since BroadcastAt —
+// rebuilds it at a higher RBF feerate. A confirmer RPC error is treated
+// as transient: log and leave the swap parked for the next tick.
+func (d *BroadcastDriver) confirmOne(ctx context.Context, sw *Swap) {
+	if sw.DestTxHash == "" {
+		// We only park swaps after recording the txid, so this is a
+		// can't-happen guard — nothing to poll, leave for operator triage.
+		return
+	}
+	d.confirmChecks.Add(1)
+	checkCtx, cancel := context.WithTimeout(ctx, d.perBroadcastTimeout)
+	defer cancel()
+
+	confirmed, err := d.confirmer.ConfirmationStatus(checkCtx, sw.DestinationNetwork, sw.DestTxHash)
+	if err != nil {
+		// Transient RPC error — don't disturb the swap, retry next tick.
+		if d.logger != nil {
+			d.logger.Debug("btc confirmation check failed (will retry)",
+				"swap_id", sw.ID, "tx_hash", sw.DestTxHash, "err", err)
+		}
+		return
+	}
+	if confirmed {
+		patched, _ := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+			if s.Status != SwapStatusAwaitingConfirmation {
+				return
+			}
+			s.Status = SwapStatusCompleted
+			s.LastError = ""
+			s.LastErrorAt = time.Time{}
+			s.BroadcastRebuilds = 0 // clear: terminal success.
+		})
+		if patched != nil && patched.Status == SwapStatusCompleted {
+			d.successes.Add(1)
+			if d.logger != nil {
+				d.logger.Info("btc release confirmed → swap completed",
+					"swap_id", sw.ID, "tx_hash", sw.DestTxHash)
+			}
+		}
+		return
+	}
+
+	// Not yet mined. If it's been parked past the timeout, the feerate
+	// is likely too low for current conditions (or the tx was evicted)
+	// — rebuild with a higher RBF fee. Otherwise give the block time.
+	if d.btcConfirmTimeout > 0 && !sw.BroadcastAt.IsZero() &&
+		time.Since(sw.BroadcastAt) >= d.btcConfirmTimeout {
+		d.handleBTCConfirmTimeout(ctx, sw)
+	}
+}
+
+// handleBTCConfirmTimeout rebuilds a BTC release that sat unconfirmed
+// past btcConfirmTimeout. Same rebuild ceiling as the submit-reject
+// path (handleStaleBTCFee): past maxRebuilds the swap routes to refund
+// rather than bumping the fee forever. The reset deliberately KEEPS
+// LastFeeRate so the signing driver's next PreSignBTC (via
+// bumpBTCFeeRate) bids strictly above the stuck tx — a valid BIP-125
+// replacement that RBF (nSequence=0xfffffffd) lets evict the original.
+func (d *BroadcastDriver) handleBTCConfirmTimeout(ctx context.Context, sw *Swap) {
+	patched, _ := d.store.Patch(ctx, sw.ID, func(s *Swap) {
+		if s.Status != SwapStatusAwaitingConfirmation {
+			return
+		}
+		s.BroadcastRebuilds++
+		if d.maxRebuilds > 0 && s.BroadcastRebuilds >= d.maxRebuilds {
+			s.Status = SwapStatusRefundPending
+			s.LastError = fmt.Sprintf(
+				"Bitcoin release tx unconfirmed after %d rebuild attempts (feerate too low for the current mempool) — routing to refund.",
+				s.BroadcastRebuilds,
+			)
+			s.LastErrorAt = time.Now().UTC()
+			return
+		}
+		s.Status = SwapStatusBridgeTransferPending
+		s.DestRawTx = ""
+		s.Signature = ""
+		s.MPCSessionID = ""
+		s.DestTxHash = ""
+		// KEEP LastFeeRate — the next PreSignBTC bumps strictly above it.
+		s.LastError = "Bitcoin release unconfirmed — rebuilding with a higher RBF feerate"
+		s.LastErrorAt = time.Now().UTC()
+	})
+	d.rebuilds.Add(1)
+	d.confirmTimeouts.Add(1)
+	if d.logger != nil && patched != nil {
+		if patched.Status == SwapStatusRefundPending {
+			d.logger.Warn("btc confirmation rebuilds maxed out → refund_pending",
+				"swap_id", sw.ID, "rebuilds", patched.BroadcastRebuilds, "max", d.maxRebuilds)
+		} else {
+			d.logger.Info("broadcast: btc unconfirmed → reset for higher-fee re-sign",
+				"swap_id", sw.ID, "rebuilds", patched.BroadcastRebuilds,
+				"prev_fee_rate", sw.LastFeeRate)
+		}
+	}
+}
+
+// bumpBTCFeeRate returns the sat/vB floor for an RBF replacement of a
+// tx that paid prev. Zero in ⇒ zero out (first attempt: no prior tx to
+// beat, so PreSignBTC just uses the live mempool estimate). Otherwise
+// +25% +1, so the replacement strictly out-bids the prior fee even for
+// tiny rates where integer truncation would otherwise tie — BIP-125
+// requires a higher absolute fee, not merely equal.
+func bumpBTCFeeRate(prev uint64) uint64 {
+	if prev == 0 {
+		return 0
+	}
+	return prev + prev/4 + 1
+}
+
+// destIsBTC reports whether the destination network releases over the
+// Bitcoin family (BITCOIN_MAINNET / BITCOIN_TESTNET), the one family
+// whose mempool admission isn't final and needs a confirmation gate.
+func destIsBTC(network string) bool {
+	return mchain.AddressTypeFor(network) == mchain.AddressTypeBTC
 }
 
 // isStaleSolanaBlockhash matches the cluster's rejection of a signed

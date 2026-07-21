@@ -177,6 +177,13 @@ type SwapIntent struct {
 	// Threaded onto the on-chain Payment by PreSignXRP when present.
 	// Ignored for non-XRP destinations.
 	DestinationTag *uint32
+	// MinFeeRate is an optional sat/vB floor for the BTC release tx.
+	// When >0, PreSignBTC uses max(live mempool estimate, MinFeeRate)
+	// instead of the bare estimate, so a rebuilt (RBF) tx out-bids the
+	// stuck attempt it replaces. Set by the signing driver from the
+	// swap's persisted LastFeeRate on a rebuild; zero on the first
+	// attempt. Ignored for non-BTC destinations.
+	MinFeeRate uint64
 }
 
 // PreSign builds the unsigned transaction and returns the keccak256

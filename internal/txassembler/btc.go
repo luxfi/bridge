@@ -75,8 +75,13 @@ type BTCUnsigned struct {
 	RecipientSats uint64
 	ChangeSats    uint64
 	FeeSats       uint64
-	PrevTxID      string
-	PrevVout      uint32
+	// FeeRate is the effective sat/vB this tx pays (FeeSats / vsize,
+	// rounded up, after the min-fee floor and any dust-swept change).
+	// The signing driver persists it on Swap.LastFeeRate so a later RBF
+	// rebuild can bump strictly above it. Zero on the refund path.
+	FeeRate  uint64
+	PrevTxID string
+	PrevVout uint32
 }
 
 // estimatedRefundVsize is the vsize for a one-input single-output
@@ -213,6 +218,15 @@ func (a *Assembler) PreSignBTC(
 	if feeRate == 0 {
 		feeRate = 1
 	}
+	// RBF replacement floor: on a rebuild the caller passes the prior
+	// attempt's (already-bumped) feerate as MinFeeRate. Honour it even
+	// when the live mempool estimate has since dropped, otherwise the
+	// replacement wouldn't out-bid the stuck tx and the node rejects it
+	// with "insufficient fee" (BIP-125). max() so a genuinely risen
+	// market still wins when it exceeds the floor.
+	if in.MinFeeRate > feeRate {
+		feeRate = in.MinFeeRate
+	}
 	feeSats := feeRate * estimatedVsize
 	if feeSats < 250 {
 		feeSats = 250 // upstream min relay fee threshold
@@ -263,6 +277,11 @@ func (a *Assembler) PreSignBTC(
 		return nil, fmt.Errorf("SigHash: %w", err)
 	}
 
+	// Effective feerate the tx actually pays (post dust-sweep + floor),
+	// rounded up so the persisted value never understates the on-chain
+	// fee — the next RBF bump must beat what this tx really paid.
+	effFeeRate := (feeSats + estimatedVsize - 1) / estimatedVsize
+
 	return &BTCUnsigned{
 		Network:       in.DestinationNetwork,
 		Inner:         pay,
@@ -271,6 +290,7 @@ func (a *Assembler) PreSignBTC(
 		RecipientSats: amountSats,
 		ChangeSats:    change,
 		FeeSats:       feeSats,
+		FeeRate:       effFeeRate,
 		PrevTxID:      spend.TxID,
 		PrevVout:      spend.Vout,
 	}, nil
