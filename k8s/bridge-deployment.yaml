@@ -362,12 +362,22 @@ spec:
           # Pinned to the verified go-live image (built from whispers/bridgev2-
           # golive, carries the G8 source baseline gate). Do NOT deploy :latest
           # for go-live — it may resolve to a G8-less build. Bump this tag for
-          # each release. e377ac59 adds server-side enforcement of the corridor
-          # enable-flags (403 source_deposit_disabled/destination_withdrawal_
-          # disabled) + per-swap USD min/max (400 amount_below_min/above_max)
-          # over 42e7b198; gates verified in-container + live-smoked against
-          # bridge.lux.network. mpc-router/mpcd-single (Phase 2) stay de3a912a.
-          image: ghcr.io/luxfi/bridge:e377ac59
+          # each release. 61d53055 adds the BTC release confirmation gate (a
+          # broadcast-accepted BTC tx now parks in awaiting_confirmation until
+          # mined instead of completing immediately) + RBF fee-bump rebuild on
+          # both a node fee-reject and a confirmation timeout, over e377ac59
+          # (corridor enable-flag gate + per-swap USD min/max, still in effect).
+          # mpc-router/mpcd-single (Phase 2) stay de3a912a.
+          #
+          # NOT YET DEPLOYED as of this commit: built + verified locally, but
+          # `docker push` to ghcr.io is blocked on an expired/invalid registry
+          # credential in the deploy environment. Live cluster is still running
+          # e377ac59. DO NOT `kubectl apply` this file until `docker manifest
+          # inspect ghcr.io/luxfi/bridge:61d53055` succeeds — applying sooner
+          # tears down the healthy e377ac59 pod (Recreate/RWO) and then fails
+          # to pull the new tag, taking bridge.lux.network down with no
+          # immediate way back up. Remove this note once pushed + rolled out.
+          image: ghcr.io/luxfi/bridge:61d53055
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
