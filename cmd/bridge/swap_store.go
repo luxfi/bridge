@@ -42,6 +42,17 @@ const (
 	SwapStatusSigning SwapStatus = "bridge_transfer_pending_signing"
 	// Signed payload broadcast on destination chain; waiting for inclusion.
 	SwapStatusBroadcasting SwapStatus = "bridge_transfer_pending_broadcasting"
+	// BTC-only intermediate state: the release tx was accepted into the
+	// mempool but isn't confirmed yet. For every other family "broadcast
+	// accepted" is effectively final, so they skip straight to Completed.
+	// Bitcoin can accept a low-fee tx into the mempool and then never
+	// mine it (fee market rises, or the tx is evicted), so a BTC release
+	// only reaches Completed once the confirmation watcher in the
+	// broadcast driver sees it in a block. While here, the watcher either
+	// promotes it to Completed or — after a timeout — rebuilds it with a
+	// higher (RBF) feerate. Non-terminal; the SDK/UI must render this as
+	// "in progress", NOT done.
+	SwapStatusAwaitingConfirmation SwapStatus = "bridge_transfer_pending_confirmation"
 	// Final settlement: funds arrived at destination address.
 	SwapStatusCompleted SwapStatus = "completed"
 	// Quote committed at create time has aged past the configured
@@ -282,6 +293,22 @@ type Swap struct {
 	// when the destination cluster is genuinely broken — past the cap
 	// the swap moves to refund_pending.
 	BroadcastRebuilds int `json:"broadcast_rebuilds,omitempty"`
+
+	// LastFeeRate is the sat/vB feerate of the most recent BTC release
+	// attempt, persisted by the signing driver when it finalizes a BTC
+	// tx. The confirmation watcher / submit-reject handler use it as the
+	// floor for the next rebuild so an RBF replacement strictly out-bids
+	// the tx it replaces (BIP-125 requires a higher absolute fee). Zero
+	// for non-BTC swaps and for the first BTC attempt (no prior fee to
+	// beat — PreSignBTC just uses the live mempool estimate). Survives a
+	// rebuild reset so the bump compounds across successive attempts.
+	LastFeeRate uint64 `json:"last_fee_rate,omitempty"`
+
+	// BroadcastAt stamps when the current destination tx was accepted
+	// into the mempool. The BTC confirmation watcher measures its
+	// rebuild timeout from here; refreshed on every (re)broadcast so the
+	// clock restarts for each replacement tx. Unused by non-BTC families.
+	BroadcastAt time.Time `json:"broadcast_at,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

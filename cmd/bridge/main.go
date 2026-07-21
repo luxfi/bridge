@@ -789,6 +789,11 @@ func main() {
 	// bridge_transfer_pending through MPC threshold signing. Requires
 	// an mchain client; without one the driver has nothing to call.
 	var signer *SigningDriver
+	// Captured from the signer's BTC provider so the broadcast driver
+	// can reuse it as the BTC confirmation checker (Part B: gate BTC
+	// releases through awaiting_confirmation until mined). Nil when no
+	// BTC provider is configured.
+	var btcConfirmProvider *btcprov.Provider
 	signerCtx, signerCancel := context.WithCancel(context.Background())
 	if !*disableSigningDriver && mchainPool != nil {
 		// Settlement leg signs FROM the release wallet (treasury) on the
@@ -866,6 +871,7 @@ func main() {
 		if *btcRPCMainnetURL != "" || *btcRPCTestnetURL != "" {
 			btcClient := btcprov.NewProvider(*btcRPCMainnetURL, *btcRPCTestnetURL, *btcRPCTimeout)
 			signer.SetBTCProvider(btcClient)
+			btcConfirmProvider = btcClient
 			logger.Info("btc provider attached to signer",
 				"mainnet_url", btcClient.MainnetURL,
 				"testnet_url", btcClient.TestnetURL,
@@ -948,6 +954,15 @@ func main() {
 	bcastCtx, bcastCancel := context.WithCancel(context.Background())
 	if !*disableBroadcastDriver {
 		bcastDriver = NewBroadcastDriver(swapStore, bcastClient, *broadcastInterval, logger)
+		// BTC confirmation gate (Part B): when a BTC provider is wired,
+		// BTC releases park in awaiting_confirmation until mined instead
+		// of completing on mempool admission. Without it, BTC behaves as
+		// before (immediate Completed) — no stranding.
+		if btcConfirmProvider != nil {
+			bcastDriver.SetConfirmer(btcConfirmAdapter{p: btcConfirmProvider})
+			logger.Info("btc confirmation watcher enabled",
+				"timeout", DefaultBTCConfirmationTimeout)
+		}
 		api.SetBroadcastDriver(bcastDriver)
 		go func() {
 			_ = bcastDriver.Run(bcastCtx)
@@ -1174,4 +1189,18 @@ func selectProfile(name string) (*bridge.BridgeProfile, error) {
 	default:
 		return nil, fmt.Errorf("unknown bridge profile %q (valid: strict-pq, classical-compat)", name)
 	}
+}
+
+// btcConfirmAdapter bridges *btc.Provider's GetTxStatus to the
+// broadcast driver's ConfirmationChecker interface (which deliberately
+// avoids importing internal/btc). Returns confirmed=false on any RPC
+// error so the driver treats it as "not yet" and retries next tick.
+type btcConfirmAdapter struct{ p *btcprov.Provider }
+
+func (a btcConfirmAdapter) ConfirmationStatus(ctx context.Context, network, txid string) (bool, error) {
+	st, err := a.p.GetTxStatus(ctx, network, txid)
+	if err != nil {
+		return false, err
+	}
+	return st.Confirmed, nil
 }

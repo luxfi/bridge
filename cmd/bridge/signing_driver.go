@@ -652,6 +652,11 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 				DestinationAddress: sw.DestinationAddress,
 				Amount:             releaseAmount(sw),
 				SenderAddress:      senderAddr,
+				// On a rebuild (BroadcastRebuilds>0 with a recorded
+				// LastFeeRate), force the new tx to out-bid the stuck
+				// attempt so it's a valid BIP-125 replacement. Zero on
+				// the first attempt → PreSignBTC uses the live estimate.
+				MinFeeRate: bumpBTCFeeRate(sw.LastFeeRate),
 			}, d.btcProvider, releasePubKey)
 			if aerr != nil {
 				d.failures.Add(1)
@@ -1001,6 +1006,12 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 		s.MPCSessionID = res.SessionID
 		if destRawTx != "" {
 			s.DestRawTx = destRawTx
+		}
+		// Persist the BTC feerate this attempt pays so the broadcast
+		// driver's confirmation watcher (and the submit-reject handler)
+		// can bump strictly above it on a later RBF rebuild.
+		if unsignedBTC != nil {
+			s.LastFeeRate = unsignedBTC.FeeRate
 		}
 		s.Status = SwapStatusBroadcasting
 		// Clear any prior transient error — we're past the signing

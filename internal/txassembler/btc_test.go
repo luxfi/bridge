@@ -195,3 +195,84 @@ func TestPreSignBTCRefund_UnknownNetwork(t *testing.T) {
 		t.Fatalf("expected unknown-network error, got %v", err)
 	}
 }
+
+// ───────────────────────────────────────────────────────────────────
+// PreSignBTC — release path: RBF MinFeeRate floor + FeeRate surfacing
+// ───────────────────────────────────────────────────────────────────
+
+// btcReleaseIntent is the release-direction SwapIntent for the matched
+// mqEJ…xr8 fixture wallet (sender == release wallet) paying testRecipient.
+func btcReleaseIntent(minFeeRate uint64) SwapIntent {
+	return SwapIntent{
+		DestinationNetwork: "BITCOIN_TESTNET",
+		DestinationAsset:   "BTC",
+		DestinationAddress: testRecipientAddr,
+		Amount:             0.001, // 100_000 sats
+		SenderAddress:      testDepositAddress,
+		MinFeeRate:         minFeeRate,
+	}
+}
+
+// releaseProvider funds the release wallet (sender) with one big UTXO so
+// change stays well above dust (no fee-sweep distortion of FeeRate).
+func releaseProvider(halfHour uint64) *fakeBTCProvider {
+	return &fakeBTCProvider{
+		utxos: map[string][]btc.UTXO{
+			testDepositAddress: {
+				confirmedUTXO("bbbb000000000000000000000000000000000000000000000000000000000001", 0, 1_000_000),
+			},
+		},
+		fees: &btc.FeeRates{HalfHour: halfHour},
+	}
+}
+
+// TestPreSignBTC_FeeRateSurfaced: with no floor, PreSignBTC uses the live
+// mempool estimate and reports the effective sat/vB on FeeRate so the
+// signing driver can persist it for a later RBF bump.
+func TestPreSignBTC_FeeRateSurfaced(t *testing.T) {
+	a := newTestAssembler()
+	u, err := a.PreSignBTC(context.Background(), btcReleaseIntent(0), releaseProvider(3), testDepositPubKeyHex)
+	if err != nil {
+		t.Fatalf("PreSignBTC: %v", err)
+	}
+	// 3 sat/vB × 250 vsize = 750 sat; effective rate = 750/250 = 3.
+	if u.FeeSats != 750 {
+		t.Errorf("FeeSats = %d, want 750", u.FeeSats)
+	}
+	if u.FeeRate != 3 {
+		t.Errorf("FeeRate = %d, want 3", u.FeeRate)
+	}
+}
+
+// TestPreSignBTC_MinFeeRateFloorApplied: a rebuild passes MinFeeRate above
+// the live estimate; PreSignBTC must honour the floor so the replacement
+// out-bids the stuck tx (BIP-125), even though the market estimate dropped.
+func TestPreSignBTC_MinFeeRateFloorApplied(t *testing.T) {
+	a := newTestAssembler()
+	// Live estimate 2 sat/vB, but the prior attempt's bumped floor is 10.
+	u, err := a.PreSignBTC(context.Background(), btcReleaseIntent(10), releaseProvider(2), testDepositPubKeyHex)
+	if err != nil {
+		t.Fatalf("PreSignBTC: %v", err)
+	}
+	if u.FeeRate != 10 {
+		t.Errorf("FeeRate = %d, want 10 (floor wins over estimate 2)", u.FeeRate)
+	}
+	if u.FeeSats != 2500 {
+		t.Errorf("FeeSats = %d, want 2500 (10 × 250)", u.FeeSats)
+	}
+}
+
+// TestPreSignBTC_MinFeeRateBelowEstimateIgnored: when the live estimate
+// already exceeds the floor (market rose on its own), the estimate wins —
+// max(), not blind override.
+func TestPreSignBTC_MinFeeRateBelowEstimateIgnored(t *testing.T) {
+	a := newTestAssembler()
+	// Floor 4, but the market estimate is 9 → tx should pay 9.
+	u, err := a.PreSignBTC(context.Background(), btcReleaseIntent(4), releaseProvider(9), testDepositPubKeyHex)
+	if err != nil {
+		t.Fatalf("PreSignBTC: %v", err)
+	}
+	if u.FeeRate != 9 {
+		t.Errorf("FeeRate = %d, want 9 (estimate exceeds floor)", u.FeeRate)
+	}
+}
