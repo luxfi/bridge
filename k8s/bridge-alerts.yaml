@@ -1,0 +1,113 @@
+---
+# Prometheus alerting rules for the release-wallet canary-sign health
+# poller (cmd/bridge/wallet_health_poller.go, commit f3457767). Without
+# this file, bridge_release_wallet_signable and friends (documented in
+# docs/operator-runbook.md §6 Metrics) are a gauge someone has to
+# remember to check — nothing pages on it. These rules are what makes
+# it an actual alert.
+#
+# Written as a Prometheus Operator PrometheusRule CRD, since that's how
+# most k8s clusters wire rules into Prometheus today. If this cluster
+# does NOT run kube-prometheus-stack / Prometheus Operator,
+# `kubectl apply -f k8s/bridge-alerts.yaml` will fail loudly with
+# "no matches for kind PrometheusRule" — in that case copy the
+# `spec.groups` block below into whatever rule_files entry your plain
+# Prometheus loads instead. The expr/for/labels/annotations content is
+# identical either way; only the wrapper differs.
+#
+# This file defines WHEN to alert. It does NOT define WHERE the alert
+# goes (Slack, PagerDuty, email, ...) — that's Alertmanager routing,
+# cluster-level config that lives outside this repo. Whatever route
+# already pages the team should pick these up automatically as long as
+# it isn't scoped to an explicit alertname allow-list; if it is, add
+# BridgeReleaseWalletUnsignable / BridgeReleaseWalletHealthCheckStale /
+# BridgeWalletHealthPollerDown to it.
+#
+# Apply:
+#   kubectl apply -f k8s/bridge-alerts.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lux-bridge-wallet-health
+  namespace: lux-bridge
+  labels:
+    app: lux-bridge
+    role: alerting
+spec:
+  groups:
+    - name: bridge-release-wallet-health
+      rules:
+        # The one that matters: a release wallet's canary sign has
+        # failed persistently. A real payout on this network would
+        # stall the exact same way — this is the incident the whole
+        # poller exists to catch (see the 2026-06-11 ZOO share-desync
+        # writeup in docs/operator-runbook.md §6).
+        #
+        # `for: 25m` against the default 10m poll interval requires the
+        # gauge to still read 0 across at least two consecutive canary
+        # checks before paging — enough to rule out a single transient
+        # blip without sitting on a real failure for long. If you ever
+        # change --wallet-health-poll-interval, scale this `for` to
+        # roughly 2.5x the new interval.
+        - alert: BridgeReleaseWalletUnsignable
+          expr: bridge_release_wallet_signable == 0
+          for: 25m
+          labels:
+            severity: critical
+            service: lux-bridge
+          annotations:
+            summary: "Release wallet {{ $labels.network }} ({{ $labels.wallet_id }}) failed its canary sign"
+            description: >-
+              bridge_release_wallet_signable{network="{{ $labels.network }}"}
+              has read 0 for 25m+ — at least two consecutive canary
+              signs have failed. A real payout on this network will
+              stall the same way. Do NOT retry in place: mpcd keygen is
+              not idempotent, so a desynced wallet can't be repaired,
+              only replaced. Re-mint the release wallet and re-fund it;
+              see docs/operator-runbook.md §6 (Metrics) and §7 (Cut
+              over the ed25519 signer) for the mechanics.
+            runbook: "docs/operator-runbook.md#metrics"
+
+        # Narrower signal: the poller loop itself is fine, but one
+        # network's checks have gone stale — most likely a single
+        # canary call wedged past its own timeout without the loop
+        # noticing. Separate from BridgeWalletHealthPollerDown below so
+        # an operator isn't left guessing whether it's "everything is
+        # down" or "one network is stuck."
+        - alert: BridgeReleaseWalletHealthCheckStale
+          expr: bridge_wallet_health_poller_running == 1 and bridge_release_wallet_last_check_age_seconds > 1800
+          for: 5m
+          labels:
+            severity: warning
+            service: lux-bridge
+          annotations:
+            summary: "Canary-sign check for {{ $labels.network }} hasn't completed in 30m+"
+            description: >-
+              bridge_release_wallet_last_check_age_seconds{network="{{ $labels.network }}"}
+              exceeds 1800s (3x the default 10m poll interval) while
+              bridge_wallet_health_poller_running=1. The loop is alive
+              but appears stuck checking this specific network.
+            runbook: "docs/operator-runbook.md#metrics"
+
+        # The poller loop is not running at all. NOTE: this reads 0 by
+        # design on any deploy without --mpc-url / a release store
+        # configured, or run with --disable-wallet-health-poller — if
+        # that's an intentional config for this namespace/environment,
+        # silence this alert here rather than deleting it, so it still
+        # fires if prod itself is ever launched that way by mistake.
+        - alert: BridgeWalletHealthPollerDown
+          expr: bridge_wallet_health_poller_running == 0
+          for: 10m
+          labels:
+            severity: warning
+            service: lux-bridge
+          annotations:
+            summary: "Release-wallet health poller is not running"
+            description: >-
+              bridge_wallet_health_poller_running is 0. If this
+              environment is expected to run it (prod, with --mpc-url
+              and a release-wallet store configured), check pod logs
+              for "release wallet health poller started" at boot — its
+              absence means either --disable-wallet-health-poller was
+              set or mchainPool/the release store failed to initialize.
+            runbook: "docs/operator-runbook.md#metrics"
