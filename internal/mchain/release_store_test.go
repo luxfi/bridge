@@ -85,6 +85,43 @@ func TestFileReleaseStore_GetOrCreate_IsIdempotent(t *testing.T) {
 	}
 }
 
+func TestFileReleaseStore_ListReleaseWallets(t *testing.T) {
+	srv, _ := keygenStub(t)
+	store, _ := NewFileReleaseStore(newClientForStub(srv), "")
+
+	if got := store.ListReleaseWallets(); len(got) != 0 {
+		t.Fatalf("expected empty list before any mint, got %+v", got)
+	}
+
+	ctx := context.Background()
+	lux, err := store.GetOrCreate(ctx, "LUX_TESTNET")
+	if err != nil {
+		t.Fatalf("GetOrCreate LUX_TESTNET: %v", err)
+	}
+	base, err := store.GetOrCreate(ctx, "BASE_SEPOLIA")
+	if err != nil {
+		t.Fatalf("GetOrCreate BASE_SEPOLIA: %v", err)
+	}
+
+	got := store.ListReleaseWallets()
+	if len(got) != 2 {
+		t.Fatalf("expected 2 wallets, got %d: %+v", len(got), got)
+	}
+	if got["LUX_TESTNET"].Name != lux.Name || got["BASE_SEPOLIA"].Name != base.Name {
+		t.Errorf("listed wallets don't match minted wallets: %+v", got)
+	}
+
+	// Mutating the returned map must not affect the store's cache —
+	// callers (e.g. a health poller on a timer) get a defensive copy.
+	entry := got["LUX_TESTNET"]
+	entry.Name = "tampered"
+	got["LUX_TESTNET"] = entry
+	fresh := store.ListReleaseWallets()
+	if fresh["LUX_TESTNET"].Name != lux.Name {
+		t.Errorf("mutating the returned map leaked into the store: got %+v", fresh["LUX_TESTNET"])
+	}
+}
+
 func TestFileReleaseStore_DistinctNetworks_DistinctWallets(t *testing.T) {
 	srv, _ := keygenStub(t)
 	store, _ := NewFileReleaseStore(newClientForStub(srv), "")
