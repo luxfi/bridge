@@ -290,8 +290,26 @@ Prometheus exposition at `/metrics`. Add to your scrape config:
       action: keep
 ```
 
-**Alert on `bridge_release_wallet_signable{network="..."} == 0`.** A
-background poller (`WalletHealthPoller`, `cmd/bridge/wallet_health_poller.go`)
+**Alert on `bridge_release_wallet_signable{network="..."} == 0`.**
+`k8s/bridge-alerts.yaml` ships this as a ready-to-apply
+`PrometheusRule` (`kubectl apply -f k8s/bridge-alerts.yaml`) covering
+three alerts: `BridgeReleaseWalletUnsignable` (the one that matters —
+paged critical), `BridgeReleaseWalletHealthCheckStale` (one network's
+checks are wedged while the poller loop itself is fine), and
+`BridgeWalletHealthPollerDown` (the loop isn't running at all — reads
+0 by design on any deploy without `--mpc-url`/a release store or with
+`--disable-wallet-health-poller`, so silence rather than delete it if
+that's intentional for a given environment). If this cluster doesn't
+run Prometheus Operator, `kubectl apply` fails loudly
+(`no matches for kind "PrometheusRule"`) — copy the file's
+`spec.groups` block into whatever rule file your Prometheus loads
+instead; the alert logic is identical either way. **The file defines
+WHEN to alert, not WHERE it goes** — Alertmanager routing (Slack /
+PagerDuty / email) is cluster-level config outside this repo; if your
+routing is scoped to an explicit alertname allow-list rather than
+catching everything, add these three names to it.
+
+A background poller (`WalletHealthPoller`, `cmd/bridge/wallet_health_poller.go`)
 runs a harmless canary sign (arbitrary throwaway digest, discarded —
 never a real tx) against every minted release wallet on a timer
 (`--wallet-health-poll-interval`, default 10m) and caches the result.
