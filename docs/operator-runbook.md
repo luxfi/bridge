@@ -290,6 +290,31 @@ Prometheus exposition at `/metrics`. Add to your scrape config:
       action: keep
 ```
 
+**Alert on `bridge_release_wallet_signable{network="..."} == 0`.** A
+background poller (`WalletHealthPoller`, `cmd/bridge/wallet_health_poller.go`)
+runs a harmless canary sign (arbitrary throwaway digest, discarded —
+never a real tx) against every minted release wallet on a timer
+(`--wallet-health-poll-interval`, default 10m) and caches the result.
+This exists because the real threshold-MPC cluster's key shares can
+silently desync on a long-lived wallet with **no node restart and no
+config change** — seen directly on 2026-06-11, when a ZOO release
+wallet went unsignable ~9h after keygen while a fresh wallet on the
+same cluster signed fine (`project_mpc_threshold_stale_shares`
+memory). A real payout would have stalled the exact same way; this
+poller catches it first. Companion series:
+`bridge_release_wallet_sign_latency_ms{network="..."}` (canary sign
+latency — a rising trend ahead of an outright failure is an early
+warning) and `bridge_release_wallet_last_check_age_seconds{network="..."}`
+(alert if this grows unbounded while `bridge_wallet_health_poller_running`
+is 1 — the loop is alive but stuck on a specific network). A network
+only appears once its release wallet has been minted and checked at
+least once — absence isn't a 0.
+
+If a wallet goes unsignable: don't retry in place. Re-mint the release
+wallet (mpcd keygen is not idempotent, so there's no "repair" path)
+and re-fund it — see [§7 Cut over the ed25519 signer](#cut-over-the-ed25519-signer-fake-mpcd--mpcd-single)
+for the general re-mint mechanics.
+
 ---
 
 ## 7. Common operations

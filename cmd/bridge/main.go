@@ -406,6 +406,10 @@ func main() {
 		"persistent data directory for the swap store (zapdb). When empty, swaps are stored in-process and lost on restart — only use the in-memory mode for tests + first deploys. In prod, mount a PersistentVolume and point this at it (e.g. /var/lib/lux-bridge).")
 	releaseFile := flag.String("release-wallets-file", envOr("BRIDGE_RELEASE_WALLETS_FILE", ""),
 		"path to a JSON file that persists per-destination-network release wallets (the long-lived MPC addresses that pay out settlements). When set, the bridge mints a release wallet on first need and reuses it across restarts. When empty AND --data-dir is set, defaults to <data-dir>/release-wallets.json. When empty AND --data-dir is empty, runs in-memory — every restart re-mints and any liquidity at the old address is stranded. Required for prod.")
+	walletHealthPollInterval := flag.Duration("wallet-health-poll-interval", DefaultWalletHealthPollInterval,
+		"how often the background poller exercises a throwaway canary sign against each minted release wallet, to catch a threshold-MPC key-share desync (see wallet_health_poller.go) before a real payout hits it. Zero uses the default (10m). Results surface as bridge_release_wallet_signable{network=...} on /metrics; the poller never blocks the scrape path or a real swap.")
+	disableWalletHealthPoller := flag.Bool("disable-wallet-health-poller", false,
+		"disable the release-wallet canary-sign health poller. The canary sign is a real (if harmless) call against the signing cluster on a timer; disable if that cluster's operator wants zero non-swap sign traffic, or during an incident where you don't want extra load on an already-struggling cluster.")
 	profileFlag := flag.String("profile", envOr("BRIDGE_PROFILE", "classical-compat"),
 		"bridge security profile: strict-pq | classical-compat")
 	coingeckoEnabled := flag.Bool("coingecko", envBool("BRIDGE_COINGECKO", false),
@@ -730,6 +734,27 @@ func main() {
 	} else {
 		logger.Info("release wallet store skipped — no --mpc-url configured")
 	}
+
+	// Release-wallet health poller: background goroutine that runs a
+	// harmless canary sign against every minted release wallet on a
+	// timer, so a threshold-MPC key-share desync (see
+	// wallet_health_poller.go) surfaces on /metrics before it stalls a
+	// real payout. Needs both a signer (mchainPool.Private — the same
+	// cluster that signs real release txs) and something to enumerate
+	// (releaseStoreForResolver implements ReleaseWalletLister).
+	var walletHealthPoller *WalletHealthPoller
+	walletHealthPollerCtx, walletHealthPollerCancel := context.WithCancel(context.Background())
+	if !*disableWalletHealthPoller && mchainPool != nil && releaseStoreForResolver != nil {
+		walletHealthPoller = NewWalletHealthPoller(mchainPool.Private, releaseStoreForResolver, *walletHealthPollInterval, logger)
+		go func() {
+			_ = walletHealthPoller.Run(walletHealthPollerCtx)
+		}()
+		api.SetWalletHealthPoller(walletHealthPoller)
+		logger.Info("release wallet health poller started",
+			"interval", *walletHealthPollInterval,
+		)
+	}
+	defer walletHealthPollerCancel()
 
 	// Deposit watcher: background goroutine that polls the source chains
 	// for confirmed deposits and advances pending swaps. Only meaningful
@@ -1092,6 +1117,7 @@ func main() {
 			"signing_driver":          signer != nil && signer.Running(),
 			"broadcast_driver":        bcastDriver != nil && bcastDriver.Running(),
 			"refund_driver":           refundDriver != nil && refundDriver.Running(),
+			"wallet_health_poller":    walletHealthPoller != nil && walletHealthPoller.Running(),
 			"profile":                 profile.Name,
 			"post_quantum_end_to_end": profile.IsPostQuantumEndToEnd(),
 		}
