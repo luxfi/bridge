@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hanzoai/zip"
+	"github.com/zap-proto/zip"
 	"github.com/luxfi/bridge/internal/bchain"
 )
 
