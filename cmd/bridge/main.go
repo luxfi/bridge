@@ -20,7 +20,7 @@
 //	/v1/bridge/swaps/*                      swap CRUD (proxied)
 //	/v1/bridge/explorer/*                   tx lookup (proxied)
 //
-// HTTP framework: github.com/hanzoai/zip (Sinatra-style on Fiber v3 /
+// HTTP framework: github.com/zap-proto/zip (Sinatra-style on Fiber v3 /
 // fasthttp). Logging: github.com/luxfi/log. This is the canonical Hanzo
 // Go stack; do NOT introduce stdlib net/http handlers, slog, or zap on
 // new paths — use zip.Ctx + luxlog throughout.
@@ -39,8 +39,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hanzoai/zip"
-	"github.com/hanzoai/zip/middleware"
+	"github.com/zap-proto/zip"
+	"github.com/zap-proto/zip/middleware"
 
 	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/internal/bchain"
