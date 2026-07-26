@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hanzoai/zip"
+	"github.com/zap-proto/zip"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
