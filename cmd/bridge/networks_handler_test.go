@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hanzoai/zip"
-	"github.com/hanzoai/zip/middleware"
+	"github.com/zap-proto/zip"
+	"github.com/zap-proto/zip/middleware"
 )
 
 // =============================================================================
