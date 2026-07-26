@@ -47,9 +47,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
-	"github.com/hanzoai/zip"
-	"github.com/hanzoai/zip/middleware"
+	"github.com/zap-proto/fiber/v3"
+	"github.com/zap-proto/zip"
+	"github.com/zap-proto/zip/middleware"
 	"github.com/luxfi/bridge/internal/broadcast"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
