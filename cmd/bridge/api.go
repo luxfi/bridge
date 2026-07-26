@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hanzoai/zip"
+	"github.com/zap-proto/zip"
 	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
