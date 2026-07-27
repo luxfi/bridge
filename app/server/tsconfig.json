@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src", // Base directory for module resolution
     "paths": {
-      "@/*": ["*"] // Map "@/..." to "./src/..." for cleaner imports
+      "@/*": [
+        "./src/*"
+      ] // Map "@/..." to "./src/..." for cleaner imports
     },
     "module": "NodeNext", // Ensures compatibility with moduleResolution: NodeNext
     "moduleResolution": "NodeNext", // Required for modern Node.js ESM/CommonJS resolution
