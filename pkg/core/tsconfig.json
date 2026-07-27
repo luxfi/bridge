@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022", // Use modern JavaScript features
     "module": "ESNext", // Generate ES modules
-    "moduleResolution": "Node", // Resolve Node.js modules
+    "moduleResolution": "bundler", // Resolve Node.js modules
     "strict": true, // Enable strict type-checking
     "esModuleInterop": true, // Interop for CommonJS modules
     "allowSyntheticDefaultImports": true, // Support default imports
