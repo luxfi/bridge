@@ -1,8 +1,10 @@
 // JSON-RPC client tests for the BridgeVM (b-chain) Go port.
 //
-// BridgeVM isn't deployed on the live Lux nodes yet (verified
-// 2026-05-25: 404 on api.lux.network/ext/bc/B/rpc and api.lux-test
-// equivalent), so these tests drive the client against httptest.Server
+// BridgeVM isn't deployed on the live Lux nodes yet (re-verified
+// 2026-07-27 on the canonical /v1 prefix: api.lux.network/v1/bc/B/rpc
+// and the api.lux-test equivalent both 404, while /v1/bc/C/rpc answers
+// 200 — so the 404 is "no such chain", not "no such prefix"), so these
+// tests drive the client against httptest.Server
 // mocks that return the canonical wire shapes documented in
 // pkg/bridge/src/app/lib/bridge-rpc.ts. When BridgeVM lands, a second
 // suite hitting the real wire can be added without changing client.go.
@@ -495,10 +497,10 @@ func TestThresholdCall_NotConfigured(t *testing.T) {
 
 func TestNew_DerivesURLs(t *testing.T) {
 	c := New("https://api.lux-test.network", 0)
-	if c.BridgeRPCURL != "https://api.lux-test.network/ext/bc/B/rpc" {
+	if c.BridgeRPCURL != "https://api.lux-test.network/v1/bc/B/rpc" {
 		t.Errorf("BridgeRPCURL: %q", c.BridgeRPCURL)
 	}
-	if c.ThresholdRPCURL != "https://api.lux-test.network/ext/bc/T/rpc" {
+	if c.ThresholdRPCURL != "https://api.lux-test.network/v1/bc/T/rpc" {
 		t.Errorf("ThresholdRPCURL: %q", c.ThresholdRPCURL)
 	}
 	if c.Timeout != 0 {
@@ -508,7 +510,7 @@ func TestNew_DerivesURLs(t *testing.T) {
 
 func TestNew_DefaultsToLocalhost(t *testing.T) {
 	c := New("", 5*time.Second)
-	if c.BridgeRPCURL != "http://127.0.0.1:9650/ext/bc/B/rpc" {
+	if c.BridgeRPCURL != "http://127.0.0.1:9650/v1/bc/B/rpc" {
 		t.Errorf("expected localhost default, got %q", c.BridgeRPCURL)
 	}
 	if c.Timeout != 5*time.Second {

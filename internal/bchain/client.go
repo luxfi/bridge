@@ -1,8 +1,8 @@
 // Package bchain is a JSON-RPC client for the Lux BridgeVM (b-chain).
 //
 // This is the Go port of `pkg/bridge/src/app/lib/bridge-rpc.ts`. Talks to
-// the BridgeVM JSON-RPC interface (`${nodeUrl}/ext/bc/B/rpc`) and, when
-// configured, the ThresholdVM interface (`${nodeUrl}/ext/bc/T/rpc`) for
+// the BridgeVM JSON-RPC interface (`${nodeUrl}/v1/bc/B/rpc`) and, when
+// configured, the ThresholdVM interface (`${nodeUrl}/v1/bc/T/rpc`) for
 // MPC signature retrieval.
 //
 // Trust model matches the TS client: the JSON-RPC node is untrusted
@@ -178,7 +178,7 @@ type BridgeSignature struct {
 // material itself; b-chain is the membership + epoch ledger.
 //
 // The methods land on the same JSON-RPC endpoint as bridge_getInfo (the
-// BridgeVM RPC at `${nodeUrl}/ext/bc/B/rpc`), not on ThresholdVM. They
+// BridgeVM RPC at `${nodeUrl}/v1/bc/B/rpc`), not on ThresholdVM. They
 // are read-only — the bridge never proposes a rotation; node operators
 // do that out-of-band via BridgeVM governance.
 
@@ -296,7 +296,7 @@ const DefaultTimeout = 10 * time.Second
 // the ThresholdVM (t-chain). Safe for concurrent use.
 type Client struct {
 	// BridgeRPCURL is the BridgeVM JSON-RPC endpoint
-	// (e.g. https://node.lux.network/ext/bc/B/rpc). Required.
+	// (e.g. https://node.lux.network/v1/bc/B/rpc). Required.
 	BridgeRPCURL string
 
 	// ThresholdRPCURL is the ThresholdVM JSON-RPC endpoint. Optional;
@@ -334,8 +334,8 @@ func New(nodeURL string, timeout time.Duration) *Client {
 		nodeURL = "http://127.0.0.1:9650"
 	}
 	return &Client{
-		BridgeRPCURL:    nodeURL + "/ext/bc/B/rpc",
-		ThresholdRPCURL: nodeURL + "/ext/bc/T/rpc",
+		BridgeRPCURL:    nodeURL + "/v1/bc/B/rpc",
+		ThresholdRPCURL: nodeURL + "/v1/bc/T/rpc",
 		Timeout:         timeout,
 	}
 }
