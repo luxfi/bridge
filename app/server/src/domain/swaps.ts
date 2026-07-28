@@ -696,12 +696,12 @@ export async function handlerUtilaPayoutAction(swapId: string) {
 
     // rpc urls — Zoo is an L2 subnet on Lux, NOT the Z-chain
     const rpcs: Record<string, string> = {
-      'LUX_MAINNET': 'https://api.lux.network/ext/bc/C/rpc',
-      'LUX_TESTNET': 'https://api.lux-test.network/ext/bc/C/rpc',
-      'LUX_DEVNET': 'https://api.lux-dev.network/ext/bc/C/rpc',
-      'ZOO_MAINNET': 'https://api.lux.network/ext/bc/zoo/rpc',
-      'ZOO_TESTNET': 'https://api.lux-test.network/ext/bc/zoo/rpc',
-      'ZOO_DEVNET': 'https://api.lux-dev.network/ext/bc/zoo/rpc'
+      'LUX_MAINNET': 'https://api.lux.network/v1/bc/C/rpc',
+      'LUX_TESTNET': 'https://api.lux-test.network/v1/bc/C/rpc',
+      'LUX_DEVNET': 'https://api.lux-dev.network/v1/bc/C/rpc',
+      'ZOO_MAINNET': 'https://api.zoo.network/v1/bc/C/rpc',
+      'ZOO_TESTNET': 'https://api.zoo-test.network/v1/bc/C/rpc',
+      'ZOO_DEVNET': 'https://api.zoo-dev.network/v1/bc/C/rpc'
     }
     const rpc = rpcs[swap?.destination_network?.internal_name as string]
     console.log(">> payout details", {
