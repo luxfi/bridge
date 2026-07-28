@@ -9,8 +9,17 @@
 #
 # Ports:
 #   9651 - ZAP p2p consensus (mpc-node ↔ mpc-node only)
-#   8080 - HTTP API        (bridge-server → mpc-node only)
-#   8081 - Dashboard API   (bridge-server → mpc-node only; also exposed via Ingress)
+#   9800 - mpcd HTTP API   (bridge callers → mpc-node). This is the ONLY API port
+#          mpcd actually opens: the StatefulSet launches `mpcd start --api :9800`.
+#          8080/8081 are kept only because mpc-api-svc still publishes 8081 as its
+#          service port; nothing has ever listened on 8080 inside the pod.
+#
+# Both bridge backends call keygen, so both must be admitted:
+#   app=bridge-server - the TypeScript server (bridge-api.lux.network)
+#   app=lux-bridge    - the Go server        (bridge.lux.network)
+# Omitting lux-bridge silently BLACKHOLED every keygen (packets dropped, not
+# rejected) so createSwap failed with `i/o timeout` and no deposit address could
+# ever be minted — the reason /health showed 229k broadcast ticks and 0 attempts.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -23,12 +32,17 @@ spec:
   policyTypes:
   - Ingress
   ingress:
-  # bridge-server → mpc-node: HTTP API and dashboard API
+  # bridge backends → mpc-node: mpcd HTTP API
   - from:
     - podSelector:
         matchLabels:
           app: bridge-server
+    - podSelector:
+        matchLabels:
+          app: lux-bridge
     ports:
+    - protocol: TCP
+      port: 9800
     - protocol: TCP
       port: 8080
     - protocol: TCP
