@@ -33,7 +33,7 @@ ARG GH_TOKEN=""
 # the public Go proxy: luxfi module tags are mutable internal releases and can
 # diverge from the immutable proxy/checksum-DB copy. GOPRIVATE keeps the build
 # and go.sum resolving them the same way (direct), avoiding proxy/direct skew.
-ENV GOPRIVATE=github.com/hanzoai,github.com/luxfi
+ENV GOPRIVATE=github.com/hanzoai,github.com/lux-private
 RUN if [ -n "$GH_TOKEN" ]; then \
       git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"; \
     fi
