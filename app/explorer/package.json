@@ -1,6 +1,6 @@
 {
   "name": "@luxbridge/explorer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",
-    "@heroicons/react": "^2.2.0",
     "@luxdefi/ui": "0.5.10",
     "@next/mdx": "16.2.6",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -25,8 +24,7 @@
     "clsx": "^2.1.1",
     "copy-to-clipboard": "^4.0.2",
     "framer-motion": "^12.40.0",
-    "heroicons": "^2.2.0",
-    "lucide-react": "^1.16.0",
+    "lucide-react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
