@@ -243,7 +243,13 @@ spec:
     name: api
 ---
 # MPC API service — bridge-server uses MPC_URL=http://mpc-api-svc.lux-bridge.svc:8081
-# mpcd listens on :8080 (--api flag); port 8081 is exposed for external callers
+#
+# targetPort MUST be 9800: mpcd's API listener is `mpcd start --api :9800`
+# (cmd/mpcd/main.go, --api-listen). Nothing has ever bound :8080 in the pod —
+# `netstat -ltn` inside mpc-node-0 shows 7301/9800/9653/9651 only. Because the
+# StatefulSet declares no readinessProbe, kube still published all 3 pods as
+# ready endpoints on the dead port, so the Service looked healthy while every
+# keygen dial hung until timeout.
 apiVersion: v1
 kind: Service
 metadata:
@@ -254,7 +260,7 @@ spec:
     app: mpc-node
   ports:
   - port: 8081
-    targetPort: 8080
+    targetPort: 9800
     name: api
 ---
 # Bridge Server Deployment
