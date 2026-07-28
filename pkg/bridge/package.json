@@ -1,7 +1,7 @@
 {
   "name": "@luxfi/bridge",
   "version": "1.0.7",
-  "description": "Lux Bridge SDK \u2014 embed bridge.lux.network into any host application",
+  "description": "Lux Bridge SDK — embed bridge.lux.network into any host application",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
@@ -73,7 +73,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lat": "npm show @luxfi/bridge version",
-    "prepublishOnly": "pnpm run build",
+    "prepublishOnly": "node ../../scripts/assert-pnpm-publish.mjs && pnpm run build",
     "pub": "npm publish"
   },
   "dependencies": {
