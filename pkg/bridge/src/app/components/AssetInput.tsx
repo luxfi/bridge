@@ -138,7 +138,10 @@ export const AssetInput: FC<AssetInputProps> = ({
   //   - @solana/wallet-adapter-react (SVM)
   //   - @tonconnect/ui-react + toncenter (TON)
   //   - sats-connect + mempool.space (BTC)
-  //   - noop (XRP, Cardano, Substrate — adapter pending)
+  //   - Xaman deep-link (XRP)
+  //   - noop (Cardano, Substrate/DOT — adapter pending; the MPC quorum
+  //     still handles signing for these, they just have no interactive
+  //     wallet to show a balance for)
   //
   // The `walletAddress` prop is now advisory: the family wallet's own
   // connected address takes precedence so the asset picker always
@@ -195,9 +198,9 @@ export const AssetInput: FC<AssetInputProps> = ({
       case 'loading':
         return <span style={balanceLine}>Balance: … {asset.symbol}</span>
       case 'no-adapter':
-        // No wallet adapter for this family yet (XRP, Cardano,
-        // Substrate). The bridge's MPC quorum handles signing for
-        // these chains.
+        // No wallet adapter for this family yet (Cardano, Substrate/
+        // DOT). The bridge's MPC quorum handles signing for these
+        // chains.
         return <span style={balanceLine}>MPC-signed — no wallet balance</span>
       case 'no-wallet':
       case 'hidden':
