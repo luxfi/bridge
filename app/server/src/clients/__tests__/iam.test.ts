@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { IAMTokenError, IAMClient } from "../iam"
 
 const ISSUER = "https://iam.lux.network"
-const TOKEN_URL = `${ISSUER}/oauth/token`
+const TOKEN_URL = `${ISSUER}/v1/iam/oauth/token`
 
 const cfg = {
   issuer: ISSUER,
@@ -29,7 +29,7 @@ function jsonResponse(body: object, status = 200): Response {
 }
 
 describe("IAMClient.mint", () => {
-  it("posts client_credentials form to /oauth/token and returns access_token", async () => {
+  it("posts client_credentials form to /v1/iam/oauth/token and returns access_token", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       jsonResponse({ access_token: "tok-1", expires_in: 3600 }),
     )
