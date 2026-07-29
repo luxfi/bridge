@@ -1,0 +1,87 @@
+---
+# The Prometheus instance itself — a Custom Resource that the
+# prometheus-operator controller reconciles into a StatefulSet. First
+# monitoring stack in this cluster (2026-07-23); previously nothing
+# scraped /metrics on any workload, including the bridge's own
+# hardening counters and the release-wallet signability gauges added
+# in commit f3457767.
+#
+# serviceMonitorSelector: {} / serviceMonitorNamespaceSelector: {} /
+# ruleSelector: {} / ruleNamespaceSelector: {} are all deliberately
+# wide open (empty selector = match everything) rather than scoped by
+# label. This is a shared cluster with 40+ namespaces — requiring every
+# future team to hand-label their ServiceMonitor/PrometheusRule to
+# match a specific release name (the usual kube-prometheus-stack
+# default) adds friction for zero benefit here, since there's no
+# competing Prometheus instance to disambiguate from. Revisit if a
+# second Prometheus is ever introduced.
+#
+# Storage: 20Gi on the cluster's default StorageClass
+# (do-block-storage), 15d retention. Sized for "one app's metrics plus
+# room to grow" — the bridge's /metrics surface today is a few hundred
+# series (per-driver counters, per-network gauges), nowhere near what
+# would pressure this. Revisit if/when more workloads get scraped.
+#
+# No Ingress: intentionally internal-only for now (ClusterIP Service
+# below). Reach it via `kubectl -n monitoring port-forward
+# svc/prometheus 9090:9090` until there's a real decision about
+# exposing it (auth model, who needs access) — see
+# docs/operator-runbook.md §6.1.
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: lux-monitoring
+spec:
+  replicas: 1
+  serviceAccountName: prometheus
+  retention: 15d
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: do-block-storage
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  podMonitorNamespaceSelector: {}
+  ruleSelector: {}
+  ruleNamespaceSelector: {}
+  alerting:
+    alertmanagers:
+      - namespace: monitoring
+        name: alertmanager-operated
+        port: web
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    fsGroup: 65534
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: prometheus
+    prometheus: prometheus
+  ports:
+    - name: web
+      port: 9090
+      targetPort: web

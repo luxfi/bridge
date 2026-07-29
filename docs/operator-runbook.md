@@ -309,6 +309,17 @@ PagerDuty / email) is cluster-level config outside this repo; if your
 routing is scoped to an explicit alertname allow-list rather than
 catching everything, add these three names to it.
 
+**`bridge_btc_confirm_checks_total` / `bridge_btc_confirm_timeouts_total`**
+track the `SwapStatusAwaitingConfirmation` gate (§6 above covers why
+BTC releases park there instead of completing on broadcast). Checks
+increments every poll of a parked release; timeouts increments each
+time one sits unconfirmed past the timeout and gets rebuilt at a
+bumped RBF feerate. A rising `_timeouts` rate against a flat
+`_checks` rate means BTC network fees are outpacing the bump, or one
+release wallet's tx is specifically stuck — cross-reference with
+`bridge_broadcast_rebuilds_total`, which both draw from the same
+`maxRebuilds` ceiling before a swap routes to `refund_pending`.
+
 A background poller (`WalletHealthPoller`, `cmd/bridge/wallet_health_poller.go`)
 runs a harmless canary sign (arbitrary throwaway digest, discarded —
 never a real tx) against every minted release wallet on a timer
@@ -332,6 +343,59 @@ If a wallet goes unsignable: don't retry in place. Re-mint the release
 wallet (mpcd keygen is not idempotent, so there's no "repair" path)
 and re-fund it — see [§7 Cut over the ed25519 signer](#cut-over-the-ed25519-signer-fake-mpcd--mpcd-single)
 for the general re-mint mechanics.
+
+### 6.1 Standing up the monitoring stack (first-time setup)
+
+As of 2026-07-23 this cluster runs **no Prometheus, Alertmanager, or
+Grafana anywhere** — confirmed by checking every namespace for a
+matching pod and finding none. `/metrics` has existed on the bridge
+for a while (see §6 above) but nothing was ever scraping it, so
+`k8s/bridge-alerts.yaml` had nowhere to evaluate. The manifests below
+are staged and ready but **not yet applied** — `kubectl apply` for
+this step needs either an operator running it directly or a Bash
+permission rule, since it grants new cluster-wide read RBAC (see the
+inline comments in `k8s/monitoring-rbac.yaml` for why that's
+necessary: Prometheus has to discover Services/Pods across every
+namespace to find scrape targets).
+
+Install order:
+
+1. **prometheus-operator CRDs + controller.** Not vendored into this
+   repo (it's a ~75k-line upstream bundle) — apply directly from the
+   pinned release:
+   ```bash
+   kubectl create namespace monitoring
+   kubectl apply --server-side -f https://github.com/prometheus-operator/prometheus-operator/releases/download/v0.92.1/bundle.yaml
+   ```
+   That bundle targets `namespace: default` for the operator's own
+   Deployment/ServiceAccount/Service by default — retarget those 4
+   occurrences to `monitoring` first (`sed -i 's/namespace: default/namespace: monitoring/'`)
+   if you want the operator itself living alongside everything else
+   rather than in `default`. Wait for it to come up:
+   `kubectl -n monitoring rollout status deployment/prometheus-operator`.
+2. **RBAC for the Prometheus instance itself** (separate from the
+   operator's own RBAC in step 1): `kubectl apply -f k8s/monitoring-rbac.yaml`.
+3. **Prometheus + Alertmanager instances:**
+   `kubectl apply -f k8s/monitoring-prometheus.yaml -f k8s/monitoring-alertmanager.yaml`.
+   Alertmanager's config ships with a `null` receiver as a deliberate
+   placeholder — nothing pages yet, see the comment header in
+   `k8s/monitoring-alertmanager.yaml` for how to wire a real Slack/
+   PagerDuty receiver once you have one.
+4. **Point Prometheus at the bridge + load the alert rules:**
+   `kubectl apply -f k8s/bridge-servicemonitor.yaml -f k8s/bridge-alerts.yaml`.
+5. **Verify:**
+   ```bash
+   kubectl -n monitoring get pods                       # prometheus-0, alertmanager-0 both Running
+   kubectl -n monitoring port-forward svc/prometheus 9090:9090
+   # http://localhost:9090/targets -> lux-bridge/lux-bridge target should be "up"
+   # http://localhost:9090/alerts  -> the three Bridge* alerts should be listed (inactive until something actually fires)
+   ```
+
+This is intentionally scoped to just what the bridge needs to alert on
+itself — no Grafana, no Ingress exposing any of this publicly, no
+dashboards. Both are natural next steps once someone decides on an
+auth model for exposing them and what else in this cluster should get
+scraped.
 
 ---
 

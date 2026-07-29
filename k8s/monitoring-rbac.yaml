@@ -1,0 +1,55 @@
+---
+# RBAC for the Prometheus *instance* itself (the Pod that scrapes
+# targets), not the prometheus-operator controller. The operator's own
+# RBAC ships in its upstream release bundle (see
+# docs/operator-runbook.md §6.1 for the pinned install command) — this
+# file is the second, separate RBAC grant every prometheus-operator
+# deploy needs: permission for the running Prometheus server to read
+# the Service/Endpoints/Pod objects it discovers targets from.
+#
+# Cluster-scoped by design (ClusterRole + ClusterRoleBinding, not
+# Role): the Prometheus CR (k8s/monitoring-prometheus.yaml) sets
+# serviceMonitorNamespaceSelector: {} so any namespace in this cluster
+# can add its own ServiceMonitor without a central RBAC change — that
+# only works if Prometheus itself can read across all namespaces.
+# Read-only; no write verbs anywhere in this file.
+#
+# Apply after the prometheus-operator CRDs are installed (order doesn't
+# actually matter between this file and monitoring-prometheus.yaml —
+# neither references the other directly, the Prometheus CR just names
+# this ServiceAccount).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/metrics", "services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: monitoring

@@ -1,0 +1,33 @@
+---
+# Tells Prometheus (k8s/monitoring-prometheus.yaml) to scrape the
+# bridge's /metrics endpoint. Without this, everything documented in
+# docs/operator-runbook.md §6 (Metrics) and the alert rules in
+# k8s/bridge-alerts.yaml have no data to evaluate against — Prometheus
+# only scrapes targets a ServiceMonitor (or PodMonitor) points it at.
+#
+# Targets the `lux-bridge` Service's "http" port (k8s/bridge-deployment.yaml)
+# — the same port that serves the SPA + API, since cmd/bridge is one
+# binary on one port. Lives in the lux-bridge namespace, not monitoring:
+# ServiceMonitors are picked up cluster-wide because
+# serviceMonitorNamespaceSelector: {} on the Prometheus CR matches every
+# namespace, so it can sit next to the thing it's monitoring.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: lux-bridge
+  namespace: lux-bridge
+  labels:
+    app: lux-bridge
+    app.kubernetes.io/part-of: lux-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: lux-bridge
+  namespaceSelector:
+    matchNames:
+      - lux-bridge
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

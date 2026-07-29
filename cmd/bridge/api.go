@@ -740,6 +740,18 @@ func (a *API) metrics(c *zip.Ctx) error {
 	writeCounter(&b, "bridge_broadcast_list_errors_total", "Errors listing broadcasting swaps.", bcStats.ListErrors)
 	writeGauge(&b, "bridge_broadcast_running", "1 iff the broadcast driver loop is active.", boolToGauge(a.broadcastRunning))
 
+	// BTC-specific: the confirmation-gate counters added alongside
+	// SwapStatusAwaitingConfirmation (commit 61d53055). Unlike every
+	// other destination family, BTC mempool acceptance isn't finality,
+	// so a release parks here and gets polled until mined or until it
+	// times out and rebuilds at a higher RBF feerate. These were
+	// tracked on BroadcastDriverStats from the start but never reached
+	// /metrics until now — closes that half of the "BTC operator
+	// runbook + bridge_btc_* Prometheus metrics" gap (REQUIREMENTS.md
+	// §13.7.1); mempool.space request latency is still open.
+	writeCounter(&b, "bridge_btc_confirm_checks_total", "Times the broadcast driver polled a parked BTC release for confirmation. Zero on a deploy with no BTC destinations or no confirmer wired (--btc-rpc-*-url unset) — not an error state.", bcStats.ConfirmChecks)
+	writeCounter(&b, "bridge_btc_confirm_timeouts_total", "Times a parked BTC release sat unconfirmed past the confirmation timeout and was rebuilt at a bumped RBF feerate. Sustained growth means BTC network fees are outpacing the bump rate, or a specific release wallet's tx is stuck (low-fee UTXO, mempool congestion) — check bridge_broadcast_rebuilds_total alongside this for the shared ceiling both draw from.", bcStats.ConfirmTimeouts)
+
 	// Refund driver — including the new hardening counters.
 	var rfStats RefundDriverStats
 	if a.refundStats != nil {

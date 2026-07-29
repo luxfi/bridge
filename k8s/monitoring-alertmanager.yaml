@@ -1,0 +1,90 @@
+---
+# Alertmanager instance + its config. Companion to
+# k8s/monitoring-prometheus.yaml — Prometheus evaluates the rules in
+# k8s/bridge-alerts.yaml and hands anything firing to this Alertmanager,
+# which decides where it goes.
+#
+# IMPORTANT — the receiver below is a deliberate placeholder. There is
+# no real notification channel wired in yet: no Slack webhook, no
+# PagerDuty key, nothing. Every alert routes to the `null` receiver,
+# which has no integrations — it doesn't error (empty receivers are
+# valid config), it just means a firing alert is visible in the
+# Alertmanager UI/API (`kubectl -n monitoring port-forward
+# svc/alertmanager 9093:9093`) but pages no one. This was a deliberate
+# choice over guessing at a webhook URL that doesn't exist, which would
+# either silently fail or (worse) look configured while doing nothing.
+#
+# To actually make BridgeReleaseWalletUnsignable etc. page someone:
+# add a real receiver (Slack: `slack_configs` + an incoming webhook
+# URL; PagerDuty: `pagerduty_configs` + an integration key) to the
+# `receivers` list below, point `route.receiver` (or a `route.routes[]`
+# child route matching `service: lux-bridge`) at it, and re-apply this
+# Secret. See docs/operator-runbook.md §6.1.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-alertmanager
+  namespace: monitoring
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: 'null'
+      group_by: ['alertname', 'severity', 'network']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+    receivers:
+      - name: 'null'
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/part-of: lux-monitoring
+spec:
+  replicas: 1
+  configSecret: alertmanager-alertmanager
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: do-block-storage
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    fsGroup: 65534
+---
+# Human-facing Service (kubectl port-forward). The operator separately
+# auto-creates a headless "alertmanager-operated" governing Service for
+# StatefulSet pod DNS / Prometheus's own alerting.alertmanagers target
+# (see monitoring-prometheus.yaml) — this one is just for people.
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alertmanager
+    alertmanager: alertmanager
+  ports:
+    - name: web
+      port: 9093
+      targetPort: web

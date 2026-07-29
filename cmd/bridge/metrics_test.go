@@ -61,6 +61,8 @@ func TestMetrics_NilDriversEmitZeros(t *testing.T) {
 		"bridge_broadcast_ticks_total 0",
 		"bridge_broadcast_skipped_no_raw_tx_total 0",
 		"bridge_broadcast_running 0",
+		"bridge_btc_confirm_checks_total 0",
+		"bridge_btc_confirm_timeouts_total 0",
 		// Refund driver — including the new hardening counters.
 		"bridge_refund_ticks_total 0",
 		"bridge_refund_terminal_failures_total 0",
@@ -111,6 +113,8 @@ func TestMetrics_DriverCountersPromote(t *testing.T) {
 	bd.failures.Store(2)
 	bd.skippedNoRawTx.Store(4)
 	bd.listErrors.Store(1)
+	bd.confirmChecks.Store(9)
+	bd.confirmTimeouts.Store(2)
 	rig.api.SetBroadcastDriver(bd)
 
 	// Refund driver — most important since we just shipped two
@@ -132,6 +136,8 @@ func TestMetrics_DriverCountersPromote(t *testing.T) {
 		"bridge_signing_stale_total":            "3",
 		"bridge_broadcast_ticks_total":          "13",
 		"bridge_broadcast_skipped_no_raw_tx_total": "4",
+		"bridge_btc_confirm_checks_total":       "9",
+		"bridge_btc_confirm_timeouts_total":     "2",
 		"bridge_refund_ticks_total":             "19",
 		"bridge_refund_terminal_failures_total": "2",
 		"bridge_refund_orphans_recovered_total": "1",
