@@ -23,7 +23,7 @@ export interface IAMConfig {
   clientId: string
   /** OAuth2 client_secret. Resolved at startup from KMS or env (NEVER hardcoded). */
   clientSecret: string
-  /** Override the default `/oauth/token` path. */
+  /** Override the default `/v1/iam/oauth/token` path. */
   tokenPath?: string
   /** Refresh this much before expiry (seconds). Default 60. */
   earlyRefreshSec?: number
@@ -55,7 +55,7 @@ export class IAMClient {
     if (!cfg.issuer) throw new Error("iam: issuer required")
     if (!cfg.clientId) throw new Error("iam: clientId required")
     if (!cfg.clientSecret) throw new Error("iam: clientSecret required")
-    const path = cfg.tokenPath ?? "/oauth/token"
+    const path = cfg.tokenPath ?? "/v1/iam/oauth/token"
     this.tokenUrl = cfg.issuer.replace(/\/$/, "") + path
     this.earlyRefreshMs = (cfg.earlyRefreshSec ?? 60) * 1000
   }
