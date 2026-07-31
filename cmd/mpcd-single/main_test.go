@@ -7,11 +7,13 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -226,5 +228,176 @@ func TestSignHandler_XrpFamilyAccepted(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		t.Fatalf("status %d, want 200 — XRP family must accept 32-byte messages", resp.StatusCode)
+	}
+}
+
+// =============================================================================
+// loadMasterSeed / pathDir / seedFingerprint
+// =============================================================================
+
+func TestPathDir(t *testing.T) {
+	cases := map[string]string{
+		"/etc/mpcd/seed":    "/etc/mpcd",
+		"/a/b/c":            "/a/b",
+		"seed":              "",
+		"":                  "",
+		"/seed":             "",
+		"/a/b/":             "/a/b",
+	}
+	for in, want := range cases {
+		if got := pathDir(in); got != want {
+			t.Errorf("pathDir(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestSeedFingerprint_DeterministicAndDistinct(t *testing.T) {
+	a := seedFingerprint(fixedSeed)
+	b := seedFingerprint(fixedSeed)
+	if a != b {
+		t.Errorf("fingerprint not deterministic: %q vs %q", a, b)
+	}
+	if len(a) != 16 {
+		t.Errorf("fingerprint length = %d, want 16 hex chars (8 bytes)", len(a))
+	}
+
+	other := mustHex("ffeeddccbbaa99887766554433221100" + "ffeeddccbbaa998877665544332211ff")
+	if got := seedFingerprint(other); got == a {
+		t.Error("different seeds produced the same fingerprint")
+	}
+
+	// Non-reversible in the weak "doesn't just echo the input" sense —
+	// the whole point is an operator can log this without leaking the
+	// seed. It must not literally be (a prefix of) the seed's own hex.
+	if strings.Contains(hex.EncodeToString(fixedSeed), a) || strings.Contains(a, hex.EncodeToString(fixedSeed)[:16]) {
+		t.Error("fingerprint appears to leak the raw seed hex")
+	}
+}
+
+func TestLoadMasterSeed_LiteralHappyPath(t *testing.T) {
+	uri := "literal:" + hex.EncodeToString(fixedSeed)
+	seed, generated, err := loadMasterSeed(context.Background(), uri, false)
+	if err != nil {
+		t.Fatalf("loadMasterSeed: %v", err)
+	}
+	if generated {
+		t.Error("literal: scheme should never report generated=true")
+	}
+	if !bytes.Equal(seed, fixedSeed) {
+		t.Error("decoded seed doesn't match input")
+	}
+}
+
+func TestLoadMasterSeed_RejectsWrongLength(t *testing.T) {
+	uri := "literal:" + hex.EncodeToString([]byte("too short"))
+	_, _, err := loadMasterSeed(context.Background(), uri, false)
+	if err == nil {
+		t.Fatal("expected an error for a short seed, got nil")
+	}
+}
+
+func TestLoadMasterSeed_RejectsBadHex(t *testing.T) {
+	_, _, err := loadMasterSeed(context.Background(), "literal:not-hex-at-all!!", false)
+	if err == nil {
+		t.Fatal("expected an error for non-hex input, got nil")
+	}
+}
+
+func TestLoadMasterSeed_FileMissingWithoutAutoCreateErrors(t *testing.T) {
+	dir := t.TempDir()
+	uri := "file:" + dir + "/seed.hex"
+	_, _, err := loadMasterSeed(context.Background(), uri, false)
+	if err == nil {
+		t.Fatal("expected an error for a missing file with autoCreate=false, got nil")
+	}
+}
+
+// TestLoadMasterSeed_FileMissingWithAutoCreateGeneratesAndPersists is the
+// important one for the custody story: a fresh deploy with no seed file
+// yet must generate exactly once, write it durably, and every subsequent
+// call (this process or a restart) must read back the SAME seed rather
+// than silently regenerating — regenerating would orphan every wallet
+// already derived from the old seed.
+func TestLoadMasterSeed_FileMissingWithAutoCreateGeneratesAndPersists(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/seed.hex"
+	uri := "file:" + path
+
+	first, generated, err := loadMasterSeed(context.Background(), uri, true)
+	if err != nil {
+		t.Fatalf("first load: %v", err)
+	}
+	if !generated {
+		t.Error("expected generated=true on first call against a missing file")
+	}
+	if len(first) != masterSeedLen {
+		t.Fatalf("generated seed length = %d, want %d", len(first), masterSeedLen)
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("seed file was not written: %v", err)
+	}
+	if perm := info.Mode().Perm(); perm != 0o600 {
+		t.Errorf("seed file perms = %o, want 0600", perm)
+	}
+
+	second, generated2, err := loadMasterSeed(context.Background(), uri, true)
+	if err != nil {
+		t.Fatalf("second load: %v", err)
+	}
+	if generated2 {
+		t.Error("second call against an existing file must NOT report generated=true")
+	}
+	if !bytes.Equal(first, second) {
+		t.Fatal("second load returned a DIFFERENT seed than the first — this would orphan every wallet derived so far")
+	}
+}
+
+func TestLoadMasterSeed_FileAutoCreateMakesParentDir(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/nested/does/not/exist/seed.hex"
+	uri := "file:" + path
+
+	_, generated, err := loadMasterSeed(context.Background(), uri, true)
+	if err != nil {
+		t.Fatalf("loadMasterSeed: %v", err)
+	}
+	if !generated {
+		t.Error("expected generated=true")
+	}
+	if _, statErr := os.Stat(path); statErr != nil {
+		t.Errorf("seed file not created under nested dir: %v", statErr)
+	}
+}
+
+func TestLoadMasterSeed_FileExistingValidSeedReadNotRegenerated(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/seed.hex"
+	if err := os.WriteFile(path, []byte(hex.EncodeToString(fixedSeed)), 0o600); err != nil {
+		t.Fatalf("seed the file: %v", err)
+	}
+	uri := "file:" + path
+
+	seed, generated, err := loadMasterSeed(context.Background(), uri, true)
+	if err != nil {
+		t.Fatalf("loadMasterSeed: %v", err)
+	}
+	if generated {
+		t.Error("an already-populated seed file must not report generated=true")
+	}
+	if !bytes.Equal(seed, fixedSeed) {
+		t.Error("loaded seed doesn't match the pre-existing file content")
+	}
+}
+
+// TestLoadMasterSeed_NonFileSchemeIgnoresAutoCreate confirms autoCreate
+// only ever kicks in for file: URIs — a typo'd or unset env/kms secret
+// must surface as a hard error, never silently fall through to
+// generating a throwaway seed.
+func TestLoadMasterSeed_NonFileSchemeIgnoresAutoCreate(t *testing.T) {
+	_, _, err := loadMasterSeed(context.Background(), "env:MPCD_SEED_DOES_NOT_EXIST_XYZ", true)
+	if err == nil {
+		t.Fatal("expected an error for an unset env var even with autoCreate=true, got nil")
 	}
 }
