@@ -20,7 +20,8 @@ RUN pnpm -C app/bridge build && \
     cp -r app/bridge/dist /ui-out
 
 # ── 2. Go build ───────────────────────────────────────────────────────────
-FROM golang:1.26.4-alpine AS go-build
+FROM golang:1.26.5-alpine AS go-build
+ENV GOTOOLCHAIN=auto
 WORKDIR /src
 RUN apk add --no-cache git ca-certificates tzdata \
     && echo 'nonroot:x:65532:65532:nonroot:/home/nonroot:/sbin/nologin' >> /etc/passwd \
