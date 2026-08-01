@@ -27,8 +27,16 @@ jobs:
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          # ghcr.io, from a self-hosted runner. `secrets.GITHUB_TOKEN` is minted by
+          # git.hanzo.ai and ghcr.io has never seen it, so the login answered
+          #   denied: denied
+          # and every job after it skipped. On GitHub that pair is correct and this
+          # file was written for GitHub; every job here runs on a lux self-hosted
+          # pool, so GitHub is not the executor and its token is not a credential.
+          # orgs/luxfi provisions exactly GHCR_USER + GHCR_TOKEN — no GH_PAT, and a
+          # missing org secret is "", so a `||` chain would hide which one was used.
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
       - name: Compute tags
         id: meta
         run: |
