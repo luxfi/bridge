@@ -173,7 +173,11 @@ jobs:
 
     - name: Upload logs
       if: always()
-      uses: actions/upload-artifact@v4
+      # v3, not v4+: this runs on git.hanzo.ai, which presents as GHES, and
+      # the v4 action refuses outright -- "@actions/artifact v2.0.0+ ... are not
+      # currently supported on GHES". The job does its work and then discards the
+      # artifact at the last step, so a successful run reads as a failed one.
+      uses: actions/upload-artifact@v3
       with:
         name: mpc-e2e-logs
         path: |
