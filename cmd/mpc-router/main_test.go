@@ -187,3 +187,77 @@ func TestResolveToken(t *testing.T) {
 		t.Fatalf("resolveToken(literal) = (%q, %v), want (bridge-testnet-key, nil)", got, err)
 	}
 }
+
+// TestTokenState pins the startup-banner contract: it must report
+// presence/absence only, never the token value itself.
+func TestTokenState(t *testing.T) {
+	if got := tokenState(""); got != "none" {
+		t.Errorf("tokenState(empty) = %q, want %q", got, "none")
+	}
+	if got := tokenState("super-secret-bearer-token"); got != "set" {
+		t.Errorf("tokenState(non-empty) = %q, want %q", got, "set")
+	}
+}
+
+// A non-POST request to /keygen or /sign must be rejected, not silently
+// forwarded — the backend contract (and every real caller) is POST-only.
+func TestRouter_RejectsNonPOST(t *testing.T) {
+	eddsa := newBackendRig(t, http.StatusOK, `{}`)
+	ecdsa := newBackendRig(t, http.StatusOK, `{}`)
+	front := httptest.NewServer(newTestRouter(t, eddsa, ecdsa, "", "").mux())
+	t.Cleanup(front.Close)
+
+	resp, err := http.Get(front.URL + "/sign")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("GET /sign status = %d, want 405", resp.StatusCode)
+	}
+	if eddsa.hits.Load() != 0 || ecdsa.hits.Load() != 0 {
+		t.Error("rejected request should never reach a backend")
+	}
+}
+
+// Malformed JSON must fail fast with 400, not forward garbage downstream
+// where a backend's own parser error would be harder to attribute.
+func TestRouter_RejectsMalformedJSON(t *testing.T) {
+	eddsa := newBackendRig(t, http.StatusOK, `{}`)
+	ecdsa := newBackendRig(t, http.StatusOK, `{}`)
+	front := httptest.NewServer(newTestRouter(t, eddsa, ecdsa, "", "").mux())
+	t.Cleanup(front.Close)
+
+	status, _ := post(t, front, "/sign", `{not valid json`)
+	if status != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", status)
+	}
+	if eddsa.hits.Load() != 0 || ecdsa.hits.Load() != 0 {
+		t.Error("malformed request should never reach a backend")
+	}
+}
+
+// TestRouter_BackendUnreachableReturns502 is the failure mode a bridge
+// operator actually hits when a backend cluster is down: forward()
+// must surface it as a clean 502, not hang or panic, so the bridge's
+// MPC client transitions out of "pending" instead of stalling forever.
+func TestRouter_BackendUnreachableReturns502(t *testing.T) {
+	ecdsa := newBackendRig(t, http.StatusOK, `{}`)
+	// A closed server: connections to this URL are refused.
+	dead := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	deadURL := dead.URL
+	dead.Close()
+
+	rt := &router{
+		eddsaURL: deadURL,
+		ecdsaURL: ecdsa.server.URL,
+		client:   &http.Client{Timeout: 2 * time.Second},
+	}
+	front := httptest.NewServer(rt.mux())
+	t.Cleanup(front.Close)
+
+	status, _ := post(t, front, "/sign", `{"wallet_id":"bridge-solana_devnet-1"}`)
+	if status != http.StatusBadGateway {
+		t.Errorf("status = %d, want 502 for an unreachable backend", status)
+	}
+}
