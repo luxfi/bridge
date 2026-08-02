@@ -1,6 +1,6 @@
 module github.com/luxfi/bridge
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/btcsuite/btcd v0.25.0
@@ -13,7 +13,7 @@ require (
 	github.com/rubblelabs/ripple v0.0.0-20240324121851-6816ca31ba51
 	github.com/xssnick/tonutils-go v1.17.2
 	github.com/zap-proto/fiber/v3 v3.2.1
-	github.com/zap-proto/zip v1.8.3
+	github.com/zap-proto/zip v1.18.22
 	golang.org/x/crypto v0.51.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -70,7 +70,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.70.0 // indirect
 	github.com/zap-proto/go v1.3.0 // indirect
-	github.com/zap-proto/http v0.2.0 // indirect
+	github.com/zap-proto/http v0.3.1 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.39.0 // indirect
