@@ -255,6 +255,95 @@ func TestBroadcast_SuccessClearsRebuildCounter(t *testing.T) {
 	}
 }
 
+// TestBroadcast_StaleTONSeqno_ResetsForResign mirrors the XRP-sequence
+// recovery for TON. When toncenter rejects an external message because
+// the wallet contract's seqno or valid_until is stale, the broadcast
+// driver clears DestRawTx + sign artifacts and routes back to
+// bridge_transfer_pending so the signing driver re-reads the current
+// seqno and re-signs with a fresh valid_until.
+func TestBroadcast_StaleTONSeqno_ResetsForResign(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "TON_TESTNET", "te6ccgEBAQ==")
+	bc.failFor("TON_TESTNET", "te6ccgEBAQ==",
+		errors.New("broadcast: sendBoc rpc -32000: LITE_SERVER_UNKNOWN: cannot apply external message to shard: External message was not accepted: exitcode=33, steps=1"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Fatalf("stale TON seqno should reset to bridge_transfer_pending for re-sign, got %q", got.Status)
+	}
+	if got.DestRawTx != "" || got.Signature != "" || got.MPCSessionID != "" {
+		t.Errorf("DestRawTx/Signature/MPCSessionID should be cleared; got DestRawTx=%q Signature=%q MPCSessionID=%q",
+			got.DestRawTx, got.Signature, got.MPCSessionID)
+	}
+	if got.BroadcastRebuilds != 1 {
+		t.Errorf("BroadcastRebuilds should be 1 after first rebuild, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "seqno / valid_until stale") {
+		t.Errorf("LastError should explain the cause; got %q", got.LastError)
+	}
+	if d.Stats().Rebuilds != 1 {
+		t.Errorf("Rebuilds stat should be 1, got %d", d.Stats().Rebuilds)
+	}
+}
+
+// TestBroadcast_StaleTONSeqno_MaxRebuilds_RoutesToRefund pins the
+// ceiling: after maxRebuilds consecutive stale-seqno failures, the
+// swap moves to refund_pending so the deposit gets returned instead of
+// retrying a wallet contract that keeps refusing the message.
+func TestBroadcast_StaleTONSeqno_MaxRebuilds_RoutesToRefund(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "TON_TESTNET", "te6ccgEBAQ==")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastRebuilds = DefaultBroadcastMaxRebuilds - 1
+	})
+	bc.failFor("TON_TESTNET", "te6ccgEBAQ==",
+		errors.New("broadcast: sendBoc rpc -32000: External message was not accepted: exitcode=36"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusRefundPending {
+		t.Fatalf("hitting rebuild ceiling should move to refund_pending, got %q", got.Status)
+	}
+	if got.BroadcastRebuilds != DefaultBroadcastMaxRebuilds {
+		t.Errorf("BroadcastRebuilds should reach the ceiling, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(got.LastError, "successive broadcasts") {
+		t.Errorf("LastError should explain the ceiling hit, got %q", got.LastError)
+	}
+}
+
+// TestIsStaleTONSeqno_Matchers verifies the matcher recognizes the
+// wallet-contract-refusal envelope without false positives on
+// unrelated toncenter errors.
+func TestIsStaleTONSeqno_Matchers(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		{"exit 33 stale seqno", errors.New("LITE_SERVER_UNKNOWN: External message was not accepted: exitcode=33"), true},
+		{"exit 36 expired valid_until", errors.New("cannot apply external message to shard: External message was not accepted: exitcode=36"), true},
+		{"case-insensitive", errors.New("external message WAS NOT accepted"), true},
+		{"unrelated rate limit", errors.New("toncenter error: rate limited, retry after 1s"), false},
+		{"random text", errors.New("connection refused"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isStaleTONSeqno(tc.err); got != tc.want {
+				t.Errorf("isStaleTONSeqno(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
 // TestBroadcast_StaleXRPSequence_ResetsForResign mirrors the Solana
 // blockhash / TON seqno recovery for XRP. When XRPL returns
 // terPRE_SEQ (current account sequence advanced past the tx's
