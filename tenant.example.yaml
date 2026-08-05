@@ -54,7 +54,7 @@ iam:
 # material) MUST come from KMS via Universal Auth. NEVER from env vars
 # in production.
 kms:
-  endpoint:    "https://kms.lux.network"
+  endpoint:    "https://kms.lux.cloud"
   projectID:   "lux-bridge"
   environment: "prod"                       # prod | staging | dev
 

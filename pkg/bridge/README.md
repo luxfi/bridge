@@ -65,7 +65,7 @@ mountBridge({
     },
 
     // KMS endpoint — same shape as <Exchange kms={…} />.
-    kms: { url: 'https://kms.lux.network' },
+    kms: { url: 'https://kms.lux.cloud' },
 
     // Wallet connector defaults (WalletConnect v2 + EVM chain set).
     wallet: {

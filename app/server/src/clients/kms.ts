@@ -27,7 +27,7 @@ const _fetch = (...args: Parameters<typeof globalThis.fetch>) =>
   globalThis.fetch(...args)
 
 export interface KMSConfig {
-  /** Lux KMS endpoint, e.g. `https://kms.lux.network`. */
+  /** Lux KMS endpoint, e.g. `https://kms.lux.cloud`. */
   url: string
   /** Org slug whose secret namespace we're reading from. */
   org: string

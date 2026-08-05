@@ -7,7 +7,7 @@ kms:
   site_url: "http://localhost:8080"
   
   # For production Lux KMS
-  # site_url: "https://kms.lux.network"
+  # site_url: "https://kms.lux.cloud"
   
   # Project settings (required)
   project_id: "your-project-id"  # Or set KMS_PROJECT_ID env var

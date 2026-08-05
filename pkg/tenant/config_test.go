@@ -354,7 +354,7 @@ iam:
   clientID: lux-bridge
   organization: lux
 kms:
-  endpoint: https://kms.lux.network
+  endpoint: https://kms.lux.cloud
   projectID: lux-bridge
   environment: prod
 mpc:
