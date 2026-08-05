@@ -5,7 +5,7 @@ import { KMSError, KMSSecretClient } from "../kms"
 import { IAMClient } from "../iam"
 
 const ISSUER = "https://iam.lux.network"
-const KMS_URL = "https://kms.lux.network"
+const KMS_URL = "https://kms.lux.cloud"
 
 function jsonResponse(body: object, status = 200): Response {
   return new Response(JSON.stringify(body), {

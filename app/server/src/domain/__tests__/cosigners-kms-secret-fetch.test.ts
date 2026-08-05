@@ -60,7 +60,7 @@ function textResponse(body: string, status = 200): Response {
 
 describe("fetchCosignerSecret — KMS-backed", () => {
   it("reads utila PEM from bridge/cosigners/utila/{org}/sa_pem when KMS is configured", async () => {
-    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.cloud"
     process.env.BRIDGE_KMS_ORG = "lux"
     process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
     process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
@@ -81,12 +81,12 @@ describe("fetchCosignerSecret — KMS-backed", () => {
     expect(pem).toBe("UTILA-PEM-BYTES")
     const url = fetchSpy.mock.calls[1]?.[0] as string
     expect(url).toBe(
-      "https://kms.lux.network/v1/kms/orgs/lux/secrets/bridge/cosigners/utila/ORG_A/sa_pem",
+      "https://kms.lux.cloud/v1/kms/orgs/lux/secrets/bridge/cosigners/utila/ORG_A/sa_pem",
     )
   })
 
   it("reads fireblocks PEM from bridge/cosigners/fireblocks/{api_key}/secret_pem", async () => {
-    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.cloud"
     process.env.BRIDGE_KMS_ORG = "lux"
     process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
     process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
@@ -106,12 +106,12 @@ describe("fetchCosignerSecret — KMS-backed", () => {
     expect(pem).toBe("FB-PEM")
     const url = fetchSpy.mock.calls[1]?.[0] as string
     expect(url).toBe(
-      "https://kms.lux.network/v1/kms/orgs/lux/secrets/bridge/cosigners/fireblocks/PUB_KEY/secret_pem",
+      "https://kms.lux.cloud/v1/kms/orgs/lux/secrets/bridge/cosigners/fireblocks/PUB_KEY/secret_pem",
     )
   })
 
   it("falls back to env var when KMS returns 404", async () => {
-    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.cloud"
     process.env.BRIDGE_KMS_ORG = "lux"
     process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
     process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"
@@ -156,7 +156,7 @@ describe("fetchCosignerSecret — KMS-backed", () => {
   })
 
   it("non-404 KMS error propagates (retryable on the caller side)", async () => {
-    process.env.BRIDGE_KMS_URL = "https://kms.lux.network"
+    process.env.BRIDGE_KMS_URL = "https://kms.lux.cloud"
     process.env.BRIDGE_KMS_ORG = "lux"
     process.env.BRIDGE_IAM_ISSUER = "https://iam.lux.network"
     process.env.BRIDGE_IAM_CLIENT_ID = "lux-bridge"

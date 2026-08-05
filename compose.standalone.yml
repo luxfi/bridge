@@ -59,7 +59,7 @@ services:
       LOG_LEVEL: info
       # All external integrations are OPTIONAL — uncomment to enable.
       # BRIDGE_IAM_ISSUER: https://iam.lux.network
-      # BRIDGE_KMS_URL: https://kms.lux.network
+      # BRIDGE_KMS_URL: https://kms.lux.cloud
       # BRIDGE_KMS_ORG: lux
       # BRIDGE_IAM_CLIENT_ID: lux-bridge
       # BRIDGE_IAM_CLIENT_SECRET: <fetch from your secret store>

@@ -60,7 +60,7 @@ export interface BridgeAuthConfig {
  * runtime secrets via JWT-gated requests.
  */
 export interface BridgeKMSConfig {
-  /** KMS endpoint URL (e.g. `https://kms.lux.network`). */
+  /** KMS endpoint URL (e.g. `https://kms.lux.cloud`). */
   url: string
 }
 

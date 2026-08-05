@@ -48,7 +48,7 @@ type Config struct {
 	IAM IAMConfig `yaml:"iam"`
 
 	// KMS points the bridge at the tenant's KMS (kms.hanzo.ai,
-	// kms.lux.network, ...). All secrets (mpc tokens, coingecko keys,
+	// kms.lux.cloud, ...). All secrets (mpc tokens, coingecko keys,
 	// release-wallet seeds) come from KMS via Universal Auth, NEVER
 	// from environment variables in production.
 	KMS KMSConfig `yaml:"kms"`
