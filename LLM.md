@@ -312,7 +312,7 @@ HTTP clients in `app/server/src/clients/`:
   Per-audience cache with early refresh. The bridge mints one token for
   `aud=lux-kms` and another for `aud=lux-mpc`; both rotate independently.
 - **`lux-kms.ts`** — `LuxKMSClient.getSecret(path)` reads from
-  `~/work/lux/kms` (`https://kms.lux.network`). Bearer JWT auth, path
+  `~/work/lux/kms` (`https://kms.lux.cloud`). Bearer JWT auth, path
   layout `bridge/cosigners/{utila|fireblocks}/{publicId}/{sa_pem|secret_pem}`.
   Replaces every env-var fallback in `domain/cosigners.ts::fetchCosignerSecret`.
 - **`lux-mpc.ts`** — `LuxMPCClient.keygen({...})` / `.sign({...})` /
@@ -327,7 +327,7 @@ Configuration via env (bridge backend startup):
 
 ```
 BRIDGE_IAM_ISSUER        https://iam.lux.network
-BRIDGE_KMS_URL           https://kms.lux.network
+BRIDGE_KMS_URL           https://kms.lux.cloud
 BRIDGE_KMS_ORG           lux
 BRIDGE_IAM_CLIENT_ID     lux-bridge
 BRIDGE_IAM_CLIENT_SECRET (from KMS at boot OR --kms-bootstrap-secret)
@@ -346,7 +346,7 @@ from the bridge tenant SDK:
 | Service | Frontend repo / path | Stack | Domain |
 |---|---|---|---|
 | **m-chain (mpcd)** | `~/work/lux/mpc/dashboard/` (`@luxfi/mpc-dashboard`) | Next.js 15 + React 19 + zustand | `mpc.lux.network/dashboard` |
-| **KMS** | `~/work/lux/kms/frontend/` (`@hanzo/kms-frontend`) | Vite + React | `kms.lux.network` |
+| **KMS** | `~/work/lux/kms/frontend/` (`@hanzo/kms-frontend`) | Vite + React | `kms.lux.cloud` |
 | **f-chain (fhed)** | **DOES NOT EXIST** — see below | — | — |
 
 The bridge does **not** embed these dashboards; they're separate
