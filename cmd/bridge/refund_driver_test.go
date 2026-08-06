@@ -905,3 +905,102 @@ func TestRefund_Orphan_BumpsAttemptsAcrossCrashCycles(t *testing.T) {
 		t.Errorf("OrphansRecovered should be 2 after two recoveries; got %d", d.Stats().OrphansRecovered)
 	}
 }
+
+// =============================================================================
+// fetchSolanaBalance / truncRefund / truncRefundErr
+// =============================================================================
+
+func TestFetchSolanaBalance_HappyPath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Method string `json:"method"`
+			Params []any  `json:"params"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		if req.Method != "getBalance" {
+			t.Errorf("method = %q, want getBalance", req.Method)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": 1,
+			"result": map[string]any{"value": 3_000_000_000},
+		})
+	}))
+	t.Cleanup(srv.Close)
+
+	d := &RefundDriver{
+		httpClient:   http.DefaultClient,
+		rpcOverrides: map[string]string{"SOLANA_DEVNET": srv.URL},
+	}
+	lamports, err := d.fetchSolanaBalance(t.Context(), "SOLANA_DEVNET", "SoLaNaAddr")
+	if err != nil {
+		t.Fatalf("fetchSolanaBalance: %v", err)
+	}
+	if lamports != 3_000_000_000 {
+		t.Errorf("lamports = %d, want 3000000000", lamports)
+	}
+}
+
+func TestFetchSolanaBalance_RPCErrorSurfaces(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": 1,
+			"error": map[string]any{"code": -32602, "message": "Invalid param: WrongSize"},
+		})
+	}))
+	t.Cleanup(srv.Close)
+
+	d := &RefundDriver{httpClient: http.DefaultClient, rpcOverrides: map[string]string{"SOLANA_DEVNET": srv.URL}}
+	_, err := d.fetchSolanaBalance(t.Context(), "SOLANA_DEVNET", "bogus")
+	if err == nil || !strings.Contains(err.Error(), "Invalid param") {
+		t.Errorf("err = %v, want it to surface the RPC error message", err)
+	}
+}
+
+func TestFetchSolanaBalance_NoRPCURLConfigured(t *testing.T) {
+	d := &RefundDriver{httpClient: http.DefaultClient}
+	_, err := d.fetchSolanaBalance(t.Context(), "NOT_A_REAL_NETWORK", "addr")
+	if err == nil {
+		t.Fatal("expected an error for an unconfigured network, got nil")
+	}
+}
+
+func TestFetchSolanaBalance_HTTPNon200(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte("node overloaded"))
+	}))
+	t.Cleanup(srv.Close)
+
+	d := &RefundDriver{httpClient: http.DefaultClient, rpcOverrides: map[string]string{"SOLANA_DEVNET": srv.URL}}
+	_, err := d.fetchSolanaBalance(t.Context(), "SOLANA_DEVNET", "addr")
+	if err == nil || !strings.Contains(err.Error(), "node overloaded") {
+		t.Errorf("err = %v, want it to surface the HTTP 503 body", err)
+	}
+}
+
+func TestTruncRefund(t *testing.T) {
+	if got := truncRefund([]byte("short"), 200); got != "short" {
+		t.Errorf("short input should pass through, got %q", got)
+	}
+	got := truncRefund([]byte(strings.Repeat("x", 300)), 10)
+	if got != strings.Repeat("x", 10)+"…" {
+		t.Errorf("truncRefund should cap at n chars + ellipsis, got %q", got)
+	}
+}
+
+func TestTruncRefundErr(t *testing.T) {
+	if got := truncRefundErr(nil, 100); got != "" {
+		t.Errorf("nil error should produce empty string, got %q", got)
+	}
+	short := errors.New("short error")
+	if got := truncRefundErr(short, 100); got != "short error" {
+		t.Errorf("got %q, want short error passed through unchanged", got)
+	}
+	long := errors.New(strings.Repeat("y", 300))
+	got := truncRefundErr(long, 10)
+	if got != strings.Repeat("y", 10)+"…" {
+		t.Errorf("truncRefundErr should cap at n chars + ellipsis, got %q", got)
+	}
+}
