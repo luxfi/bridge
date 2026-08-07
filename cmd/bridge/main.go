@@ -122,6 +122,10 @@ func main() {
 			"Example: ETHEREUM_SEPOLIA=https://ethereum-sepolia-rpc.publicnode.com,BITCOIN_TESTNET=https://mempool.space/testnet/api")
 	depositWatcherInterval := flag.Duration("deposit-watcher-interval", DefaultWatcherInterval,
 		"poll cadence for the deposit watcher (background loop that advances swaps from user_deposit_pending → bridge_transfer_pending). Set <= 0 to use the default 15s.")
+	walletHealthPollInterval := flag.Duration("wallet-health-poll-interval", DefaultWalletHealthPollInterval,
+		"how often the background poller exercises a throwaway canary sign against each minted release wallet, to catch a threshold-MPC key-share desync (see wallet_health_poller.go) before a real payout hits it. Zero uses the default (10m). Results surface as bridge_release_wallet_signable{network=...} on /metrics; the poller never blocks the scrape path or a real swap.")
+	disableWalletHealthPoller := flag.Bool("disable-wallet-health-poller", false,
+		"disable the release-wallet canary-sign health poller. The canary sign is a real (if harmless) call against the signing cluster on a timer; disable if that cluster's operator wants zero non-swap sign traffic, or during an incident where you don't want extra load on an already-struggling cluster.")
 	disableDepositWatcher := flag.Bool("disable-deposit-watcher", false,
 		"disable the background deposit watcher entirely. Swaps will then never advance state automatically — useful for tests + manual operation.")
 	signingInterval := flag.Duration("signing-interval", DefaultSigningInterval,
@@ -463,6 +467,25 @@ func main() {
 		} else {
 			logger.Info("release wallet store enabled",
 				"path", releasePath,
+			)
+		}
+
+		// Release-wallet health poller: background goroutine that runs a
+		// harmless canary sign against every minted release wallet on a
+		// timer, so a threshold-MPC key-share desync (see
+		// wallet_health_poller.go) surfaces on /metrics before it stalls
+		// a real payout. Uses the same client that signs real release
+		// txs and the FileReleaseStore to enumerate minted wallets.
+		if !*disableWalletHealthPoller {
+			walletHealthPoller := NewWalletHealthPoller(mchainClient, releaseStore, *walletHealthPollInterval, logger)
+			pollerCtx, pollerCancel := context.WithCancel(context.Background())
+			defer pollerCancel()
+			go func() {
+				_ = walletHealthPoller.Run(pollerCtx)
+			}()
+			api.SetWalletHealthPoller(walletHealthPoller)
+			logger.Info("release wallet health poller started",
+				"interval", *walletHealthPollInterval,
 			)
 		}
 	} else {
