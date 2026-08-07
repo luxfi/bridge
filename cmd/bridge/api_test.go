@@ -2,17 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/hanzoai/zip"
-	middleware "github.com/hanzoai/zip/middleware"
+	"github.com/zap-proto/zip"
+	middleware "github.com/zap-proto/zip/middleware"
 	"github.com/luxfi/bridge"
-	"github.com/luxfi/bridge/internal/bchain"
 )
 
 // apiRig is a minimal API+App pair for exercising the read-only REST
@@ -26,8 +24,7 @@ type apiRig struct {
 func newAPIRig(t *testing.T, cfg Config) *apiRig {
 	t.Helper()
 	store := NewInMemoryStore()
-	engine := &QuoteEngine{Feed: NewStaticPriceFeed(defaultPrices())}
-	api := NewAPI(cfg, "", nil, nil, nil, store, engine)
+	api := NewAPI(cfg, "", nil, nil, nil, store)
 	app := zip.New(zip.Config{AppName: "lux-bridge-test-api", DisableStartupMessage: true})
 	app.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(app)
@@ -186,36 +183,3 @@ func TestStripPathPrefix_EmptyPathBecomesRoot(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// rpcErrToJSONRPC
-// =============================================================================
-
-func TestRPCErrToJSONRPC_PreservesBchainErrorCode(t *testing.T) {
-	err := &bchain.RPCError{Code: -32001, Message: "signer set not found"}
-	resp := rpcErrToJSONRPC(json.RawMessage(`1`), err)
-	if resp.Error == nil || resp.Error.Code != -32001 || resp.Error.Message != "signer set not found" {
-		t.Errorf("resp.Error = %+v, want code=-32001 message=%q", resp.Error, "signer set not found")
-	}
-}
-
-// A *bchain.RPCError with Code==0 (the zero value, e.g. a transport
-// error that never got a real JSON-RPC code) must still map to a
-// valid JSON-RPC error code, not 0 -- 0 isn't a defined JSON-RPC error
-// code and would confuse a strict client.
-func TestRPCErrToJSONRPC_ZeroCodeFallsBackTo32603(t *testing.T) {
-	err := &bchain.RPCError{Code: 0, Message: "transport failed"}
-	resp := rpcErrToJSONRPC(json.RawMessage(`1`), err)
-	if resp.Error.Code != -32603 {
-		t.Errorf("Code = %d, want -32603 fallback for a zero upstream code", resp.Error.Code)
-	}
-}
-
-func TestRPCErrToJSONRPC_GenericErrorFallsBackTo32603(t *testing.T) {
-	resp := rpcErrToJSONRPC(json.RawMessage(`1`), errors.New("connection refused"))
-	if resp.Error == nil || resp.Error.Code != -32603 || resp.Error.Message != "connection refused" {
-		t.Errorf("resp.Error = %+v, want code=-32603 message=%q", resp.Error, "connection refused")
-	}
-	if resp.JSONRPC != "2.0" {
-		t.Errorf("JSONRPC = %q, want 2.0", resp.JSONRPC)
-	}
-}
