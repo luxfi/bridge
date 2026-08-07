@@ -493,3 +493,35 @@ These are tracked separately and **not** operationally fixable:
   are read-only.
 - Single-writer swap store. Horizontal scale-out requires migrating to
   a shared external store.
+
+---
+
+## 11. Release-wallet signability monitoring
+
+**Alert on `bridge_release_wallet_signable{network="..."} == 0`.** A
+background poller (`WalletHealthPoller`, `cmd/bridge/wallet_health_poller.go`)
+runs a harmless canary sign (arbitrary throwaway digest, discarded —
+never a real tx) against every minted release wallet on a timer
+(`--wallet-health-poll-interval`, default 10m) and caches the result.
+This exists because the real threshold-MPC cluster's key shares can
+silently desync on a long-lived wallet with **no node restart and no
+config change** — seen directly on 2026-06-11, when a ZOO release
+wallet went unsignable ~9h after keygen while a fresh wallet on the
+same cluster signed fine. A real payout would have stalled the exact
+same way; this poller catches it first. Companion series:
+`bridge_release_wallet_sign_latency_ms{network="..."}` (canary sign
+latency — a rising trend ahead of an outright failure is an early
+warning) and `bridge_release_wallet_last_check_age_seconds{network="..."}`
+(alert if this grows unbounded while `bridge_wallet_health_poller_running`
+is 1 — the loop is alive but stuck on a specific network). A network
+only appears once its release wallet has been minted and checked at
+least once — absence isn't a 0.
+
+If a wallet goes unsignable: don't retry in place. Re-mint the release
+wallet (mpcd keygen is not idempotent, so there's no "repair" path)
+and re-fund it.
+
+Alert rules ship in `k8s/bridge-alerts.yaml` (PrometheusRule) and the
+scrape target in `k8s/bridge-servicemonitor.yaml` (ServiceMonitor) —
+both plug into the existing o11y / luxfi-monitoring stack
+(dash.lux.network); no standalone Prometheus needed.

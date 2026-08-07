@@ -50,6 +50,15 @@ type ReleaseWalletStore interface {
 	GetOrCreate(ctx context.Context, network string) (*Wallet, error)
 }
 
+// ReleaseWalletLister is an optional capability of a ReleaseWalletStore:
+// enumerate every wallet already minted, without minting new ones.
+// Health/monitoring pollers use this to iterate the active release
+// wallets on a timer. FileReleaseStore implements it; minimal test
+// doubles for ReleaseWalletStore are not required to.
+type ReleaseWalletLister interface {
+	ListReleaseWallets() map[string]Wallet
+}
+
 // FileReleaseStore is a ReleaseWalletStore backed by a Client for fresh
 // keygen and (optionally) a JSON file for persistence. Safe for
 // concurrent use.
@@ -126,6 +135,21 @@ func (s *FileReleaseStore) GetOrCreate(ctx context.Context, network string) (*Wa
 	}
 	cp := *w
 	return &cp, nil
+}
+
+// ListReleaseWallets returns a snapshot copy of every wallet minted so
+// far, keyed by network. Cheap (lock + copy) — safe to call on a
+// health-check timer. Implements ReleaseWalletLister.
+func (s *FileReleaseStore) ListReleaseWallets() map[string]Wallet {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make(map[string]Wallet, len(s.cache))
+	for network, w := range s.cache {
+		if w != nil {
+			out[network] = *w
+		}
+	}
+	return out
 }
 
 // fileShape is the JSON layout written to s.path. Versioned so a

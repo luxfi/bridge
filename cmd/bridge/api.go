@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"sort"
 	"strings"
+	"time"
 
-	"github.com/zap-proto/zip"
 	"github.com/luxfi/bridge"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/zap-proto/zip"
 )
 
 // API serves the bridge HTTP surface. Read paths (networks, tokens,
@@ -58,6 +60,28 @@ type API struct {
 	// bchain are both non-nil the native handlers register and replace
 	// the legacy reverse-proxy.
 	store SwapStore
+
+	// walletHealthSnapshot returns the cached per-network release-wallet
+	// canary-sign results from the WalletHealthPoller background loop.
+	// nil → /metrics emits no bridge_release_wallet_signable series (not
+	// zeros — there's no fixed label set to iterate, unlike the other
+	// gauges, since the network set is whatever's been minted). Set via
+	// SetWalletHealthPoller.
+	walletHealthSnapshot func() map[string]WalletHealth
+	walletHealthRunning  func() bool
+}
+
+// SetWalletHealthPoller wires the background release-wallet canary-sign
+// poller. The /metrics handler reads cached snapshots from this poller
+// without blocking on an MPC sign call. nil clears any prior wiring
+// (no bridge_release_wallet_signable series emitted).
+func (a *API) SetWalletHealthPoller(p *WalletHealthPoller) {
+	if p == nil {
+		a.walletHealthSnapshot, a.walletHealthRunning = nil, nil
+		return
+	}
+	a.walletHealthSnapshot = p.Snapshot
+	a.walletHealthRunning = p.Running
 }
 
 func NewAPI(
@@ -424,6 +448,58 @@ func (a *API) metrics(c *zip.Ctx) error {
 	b.WriteString("# HELP bridge_profile_post_quantum_end_to_end 1 iff the active bridge profile is labelled E2E-PQ.\n")
 	b.WriteString("# TYPE bridge_profile_post_quantum_end_to_end gauge\n")
 	fmt.Fprintf(&b, "bridge_profile_post_quantum_end_to_end{profile=%q} %d\n", a.profile.Name, pq)
+
+	// Release-wallet canary-sign health. Reads the cached
+	// WalletHealthPoller snapshot — never blocks on an MPC sign call.
+	// bridge_release_wallet_signable=0 means the wallet's last canary
+	// sign failed or timed out; a real payout on that network would
+	// stall the exact same way (see wallet_health_poller.go for the
+	// incident that motivated this). Only networks the poller has
+	// actually checked at least once appear — an un-minted or
+	// not-yet-checked network is absent, not falsely reported as 0.
+	if a.walletHealthSnapshot != nil {
+		snap := a.walletHealthSnapshot()
+		networks := make([]string, 0, len(snap))
+		for network := range snap {
+			networks = append(networks, network)
+		}
+		sort.Strings(networks)
+
+		b.WriteString("# HELP bridge_release_wallet_signable 1 iff the release wallet's most recent canary sign succeeded; 0 means it failed or timed out and a real payout would stall the same way.\n")
+		b.WriteString("# TYPE bridge_release_wallet_signable gauge\n")
+		for _, network := range networks {
+			h := snap[network]
+			signable := 0
+			if h.Signable {
+				signable = 1
+			}
+			fmt.Fprintf(&b, "bridge_release_wallet_signable{network=%q,wallet_id=%q} %d\n", network, h.WalletID, signable)
+		}
+
+		b.WriteString("# HELP bridge_release_wallet_sign_latency_ms Milliseconds the last canary sign took, success or failure.\n")
+		b.WriteString("# TYPE bridge_release_wallet_sign_latency_ms gauge\n")
+		for _, network := range networks {
+			fmt.Fprintf(&b, "bridge_release_wallet_sign_latency_ms{network=%q,wallet_id=%q} %d\n", network, snap[network].WalletID, snap[network].LatencyMS)
+		}
+
+		b.WriteString("# HELP bridge_release_wallet_last_check_age_seconds Seconds since the last canary-sign attempt for this wallet. Large + poller running means checks for this network have stalled.\n")
+		b.WriteString("# TYPE bridge_release_wallet_last_check_age_seconds gauge\n")
+		for _, network := range networks {
+			h := snap[network]
+			age := 0
+			if !h.LastCheckedAt.IsZero() {
+				age = int(time.Since(h.LastCheckedAt).Seconds())
+			}
+			fmt.Fprintf(&b, "bridge_release_wallet_last_check_age_seconds{network=%q,wallet_id=%q} %d\n", network, h.WalletID, age)
+		}
+	}
+	running := 0
+	if a.walletHealthRunning != nil && a.walletHealthRunning() {
+		running = 1
+	}
+	b.WriteString("# HELP bridge_wallet_health_poller_running 1 iff the release-wallet canary-sign health poller loop is active.\n")
+	b.WriteString("# TYPE bridge_wallet_health_poller_running gauge\n")
+	fmt.Fprintf(&b, "bridge_wallet_health_poller_running %d\n", running)
 
 	c.SetHeader("Content-Type", "text/plain; version=0.0.4")
 	return c.String(http.StatusOK, b.String())
