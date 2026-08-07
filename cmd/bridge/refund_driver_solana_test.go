@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -167,10 +168,30 @@ func TestRefund_Solana_BaselineDeltaBelowFee_ImpossibleDespiteLargeBalance(t *te
 	}
 }
 
+// TestRefund_Solana_BaselineCapsRefundToDelta proves the actual SWEPT
+// AMOUNT is capped to the delta, not merely that a refund happened.
+// Captures the exact message the driver asked to be signed and
+// compares it against the real assembler's output for the correct
+// (delta) amount vs. the wrong (legacy full-balance) amount -- mirrors
+// TestRefund_XRP_BaselineCapsRefundToDelta's approach; see that test's
+// comment for why a status/broadcast-count-only check isn't sufficient.
 func TestRefund_Solana_BaselineCapsRefundToDelta(t *testing.T) {
-	const baselineLamports = 2_000_000_000  // 2 SOL standing release-wallet liquidity
-	const currentLamports = 2_100_000_000   // +0.1 SOL the user actually deposited
-	d, store, bc := newSolanaRefundRig(t, currentLamports)
+	const baselineLamports = 2_000_000_000 // 2 SOL standing release-wallet liquidity
+	const currentLamports = 2_100_000_000  // +0.1 SOL the user actually deposited
+
+	store := NewInMemoryStore()
+	signer := &rdFakeSigner{sig: strings.Repeat("11", 32) + strings.Repeat("22", 32)}
+	bc := &rdFakeBroadcaster{hash: strings.Repeat("s", 44)}
+	asm := txassembler.New(nil)
+	balSrv := balanceRPCServer(t, currentLamports)
+	d := NewRefundDriver(store, signer, bc, asm, time.Hour, 60*time.Second,
+		map[string]string{"SOLANA_DEVNET": balSrv.URL}, nil)
+	prov := &fakeSolanaRefundProvider{}
+	d.SetSolanaProvider(prov)
+	d.perBalanceTimeout = 2 * time.Second
+	d.perSignTimeout = 2 * time.Second
+	d.perBroadcastTimeout = 2 * time.Second
+
 	sw := seedBlockedSolanaSwap(t, store, func(s *Swap) {
 		s.SOLSourceBaselineLamports = baselineLamports
 	})
@@ -183,5 +204,35 @@ func TestRefund_Solana_BaselineCapsRefundToDelta(t *testing.T) {
 	}
 	if bc.calls.Load() != 1 {
 		t.Fatalf("expected exactly 1 broadcast, got %d", bc.calls.Load())
+	}
+
+	actualMsgHex, _ := signer.lastMsgHex.Load().(string)
+	if actualMsgHex == "" {
+		t.Fatal("signer was never asked to sign anything")
+	}
+
+	reconstruct := func(lamports uint64) string {
+		t.Helper()
+		u, err := asm.PreSignSolanaRefund(t.Context(), "SOLANA_DEVNET", solRefundDepositAddr, solRefundRecipientAddr, lamports, prov)
+		if err != nil {
+			t.Fatalf("reconstruct PreSignSolanaRefund(%d): %v", lamports, err)
+		}
+		return hex.EncodeToString(u.Message)
+	}
+
+	correctDelta := (currentLamports - baselineLamports) - txassembler.SolanaSignatureFeeLamports
+	buggyFullSweep := currentLamports - txassembler.SolanaSignatureFeeLamports
+
+	wantHex := reconstruct(correctDelta)
+	wrongHex := reconstruct(buggyFullSweep)
+	if wantHex == wrongHex {
+		t.Fatal("test fixture bug: correct-delta and buggy-full-sweep amounts produced the same signing bytes")
+	}
+	if actualMsgHex != wantHex {
+		if actualMsgHex == wrongHex {
+			t.Fatalf("driver signed the LEGACY FULL-SWEEP amount (%d lamports) instead of the baseline-capped delta (%d lamports) -- this is exactly the over-refund the cap exists to prevent",
+				buggyFullSweep, correctDelta)
+		}
+		t.Fatalf("driver signed neither the expected delta amount nor the buggy full-sweep amount -- got a third, unaccounted-for value")
 	}
 }

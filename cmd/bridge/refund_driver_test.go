@@ -25,9 +25,17 @@ import (
 type rdFakeSigner struct {
 	sig string
 	err error
+	// lastMsgHex captures the exact message the driver asked to be
+	// signed. Tests that need to prove WHICH amount a refund actually
+	// swept (not just that a refund happened) reconstruct the expected
+	// unsigned message via the real assembler + an identical fake
+	// provider and compare it against this capture -- see e.g.
+	// TestRefund_XRP_BaselineCapsRefundToDelta.
+	lastMsgHex atomic.Value // string
 }
 
-func (f *rdFakeSigner) SignForWallet(_ context.Context, _, _ string) (*mchain.SignResult, error) {
+func (f *rdFakeSigner) SignForWallet(_ context.Context, _, msgHex string) (*mchain.SignResult, error) {
+	f.lastMsgHex.Store(msgHex)
 	if f.err != nil {
 		return nil, f.err
 	}

@@ -14,6 +14,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"strings"
 	"testing"
 	"time"
@@ -218,11 +219,33 @@ func TestRefund_XRP_BalanceBelowReserveAndFee_StaysStuckNoBroadcast(t *testing.T
 // operator liquidity PLUS the user's real 10 XRP deposit. Without the
 // baseline cap this sweeps all ~510 XRP to the user; with it, only the
 // ~10 XRP delta above the snapshot goes out.
+//
+// A prior version of this test only checked that A refund happened
+// (Status==Refunded, one broadcast) -- that would still pass if the
+// cap silently regressed to sweeping the full balance, since nothing
+// inspected the amount that actually left the building. This version
+// captures the exact message the driver asked the MPC cluster to sign
+// and reconstructs, via the real assembler + an identical fake
+// provider, what that message MUST look like for the correct
+// (delta-capped) amount versus the wrong (legacy full-sweep) amount --
+// then asserts the driver's real output matches the former and not
+// the latter.
 func TestRefund_XRP_BaselineCapsRefundToDelta(t *testing.T) {
 	const baselineDrops = 500_000_000 // 500 XRP standing release-wallet liquidity at swap-create time
 	const currentDrops = 510_000_000  // +10 XRP the user actually deposited
-	prov := &fakeXRPRefundProvider{balanceDrops: currentDrops, sequence: 7, feeDrops: 12}
-	d, store, bc := newXRPRefundRig(t, prov)
+	const feeDrops = 12
+	prov := &fakeXRPRefundProvider{balanceDrops: currentDrops, sequence: 7, feeDrops: feeDrops}
+
+	store := NewInMemoryStore()
+	signer := &rdFakeSigner{sig: strings.Repeat("11", 32) + strings.Repeat("22", 32)}
+	bc := &rdFakeBroadcaster{hash: "XRPREFUNDTXHASH"}
+	asm := txassembler.New(nil)
+	d := NewRefundDriver(store, signer, bc, asm, time.Hour, 60*time.Second, nil, nil)
+	d.SetXRPProvider(prov)
+	d.perBalanceTimeout = 2 * time.Second
+	d.perSignTimeout = 2 * time.Second
+	d.perBroadcastTimeout = 2 * time.Second
+
 	sw := seedBlockedXRPSwap(t, store, func(s *Swap) {
 		s.XRPSourceBaselineDrops = baselineDrops
 	})
@@ -236,16 +259,40 @@ func TestRefund_XRP_BaselineCapsRefundToDelta(t *testing.T) {
 	if bc.calls.Load() != 1 {
 		t.Fatalf("expected exactly 1 broadcast, got %d", bc.calls.Load())
 	}
-	// The would-be over-refund catch: if the driver ever regresses to
-	// sweeping the full balance instead of the delta, the broadcast
-	// payload changes shape but RefundTxHash alone can't prove the
-	// swept AMOUNT was capped -- assert indirectly via the fee-vs-delta
-	// impossibility test below instead, which pins the boundary
-	// precisely. This test's job is: a refund DID happen (the swap
-	// isn't stuck) and it used the baseline-aware branch, not the
-	// legacy unconditional-sweep branch -- covered by the next test
-	// showing the SAME current balance is "impossible" once the
-	// baseline is close enough to it.
+
+	actualMsgHex, _ := signer.lastMsgHex.Load().(string)
+	if actualMsgHex == "" {
+		t.Fatal("signer was never asked to sign anything")
+	}
+
+	// Reconstruct what the driver MUST have asked to sign for each
+	// candidate amount, via the same production code path
+	// (PreSignXRPRefund) rather than hand-decoding the wire format.
+	reconstruct := func(sweepDrops uint64) string {
+		t.Helper()
+		u, err := asm.PreSignXRPRefund(t.Context(), "XRP_TESTNET", xrpRefundPubKeyHex, xrpDepositAddr, xrpSenderAddr, sweepDrops, prov)
+		if err != nil {
+			t.Fatalf("reconstruct PreSignXRPRefund(%d): %v", sweepDrops, err)
+		}
+		return hex.EncodeToString(u.SigningBytes)
+	}
+
+	correctDelta := uint64(currentDrops-baselineDrops) - feeDrops                       // what the baseline cap SHOULD produce
+	buggyFullSweep := uint64(currentDrops) - txassembler.XRPReserveDrops - feeDrops // what the legacy no-cap formula would produce
+
+	wantHex := reconstruct(correctDelta)
+	wrongHex := reconstruct(buggyFullSweep)
+
+	if wantHex == wrongHex {
+		t.Fatal("test fixture bug: correct-delta and buggy-full-sweep amounts produced the same signing bytes -- fixture doesn't actually distinguish the two cases")
+	}
+	if actualMsgHex != wantHex {
+		if actualMsgHex == wrongHex {
+			t.Fatalf("driver signed the LEGACY FULL-SWEEP amount (%d drops) instead of the baseline-capped delta (%d drops) -- this is exactly the over-refund the cap exists to prevent",
+				buggyFullSweep, correctDelta)
+		}
+		t.Fatalf("driver signed neither the expected delta amount nor the buggy full-sweep amount -- got a third, unaccounted-for value")
+	}
 }
 
 // TestRefund_XRP_BaselineDeltaBelowFee_ImpossibleDespiteLargeBalance
