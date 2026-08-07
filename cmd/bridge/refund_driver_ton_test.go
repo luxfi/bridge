@@ -11,10 +11,12 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/luxfi/bridge/internal/ton"
 	"github.com/luxfi/bridge/internal/txassembler"
 	"github.com/xssnick/tonutils-go/ton/wallet"
 )
@@ -28,9 +30,14 @@ import (
 // not silently accepted.
 type tonRealSigner struct {
 	priv ed25519.PrivateKey
+	// lastMsgHex captures the exact signing hash the driver asked for,
+	// so tests can prove WHICH amount was actually swept -- see
+	// TestRefund_TON_BaselineCapsRefundToDelta.
+	lastMsgHex atomic.Value // string
 }
 
 func (s *tonRealSigner) SignForWallet(_ context.Context, _, msgHex string) (*mchain.SignResult, error) {
+	s.lastMsgHex.Store(msgHex)
 	msg, err := hex.DecodeString(msgHex)
 	if err != nil {
 		return nil, err
@@ -220,16 +227,44 @@ func TestRefund_TON_BaselineDeltaBelowReserve_ImpossibleDespiteLargeBalance(t *t
 	}
 }
 
+// TestRefund_TON_BaselineCapsRefundToDelta proves the actual SWEPT
+// AMOUNT is capped to the delta, not merely that a refund happened --
+// mirrors TestRefund_XRP_BaselineCapsRefundToDelta's approach.
+//
+// Complication unique to TON: PreSignTONRefund hardcodes time.Now as
+// BuildUnsignedTransfer's clock (not injectable), and ValidUntil
+// (baked into the signing hash) is that clock's Unix-second value. We
+// can't reconstruct with byte-for-byte certainty using a single
+// after-the-fact timestamp, so we bracket: capture wall-clock time
+// immediately before and after the driver's Tick(), and check the
+// actual signed hash against reconstructions at both candidate
+// seconds. In the overwhelming majority of runs (sub-millisecond
+// Tick() execution) both candidates collapse to the same second
+// anyway; the bracket only matters for the rare run that straddles a
+// second boundary.
 func TestRefund_TON_BaselineCapsRefundToDelta(t *testing.T) {
-	const baselineNano = 5_000_000_000  // 5 TON standing liquidity
-	const currentNano = 5_500_000_000   // +0.5 TON the user actually deposited
-	prov := &fakeTONRefundProvider{active: true, seqno: 9, balanceNano: currentNano}
-	d, store, bc := newTONRefundRig(t, prov)
+	const baselineNano = 5_000_000_000 // 5 TON standing liquidity
+	const currentNano = 5_500_000_000  // +0.5 TON the user actually deposited
+	const seqno = 9
+
+	prov := &fakeTONRefundProvider{active: true, seqno: seqno, balanceNano: currentNano}
+	store := NewInMemoryStore()
+	signer := &tonRealSigner{priv: tonRefundPrivKey}
+	bc := &rdFakeBroadcaster{hash: "TONREFUNDTXHASH"}
+	asm := txassembler.New(nil)
+	d := NewRefundDriver(store, signer, bc, asm, time.Hour, 60*time.Second, nil, nil)
+	d.SetTONProvider(prov)
+	d.perBalanceTimeout = 2 * time.Second
+	d.perSignTimeout = 2 * time.Second
+	d.perBroadcastTimeout = 2 * time.Second
+
 	sw := seedBlockedTONSwap(t, store, func(s *Swap) {
 		s.TONSourceBaselineNanotons = baselineNano
 	})
 
+	before := time.Now()
 	d.Tick(t.Context())
+	after := time.Now()
 
 	got, _ := store.Get(t.Context(), sw.ID)
 	if got.Status != SwapStatusRefunded {
@@ -237,5 +272,41 @@ func TestRefund_TON_BaselineCapsRefundToDelta(t *testing.T) {
 	}
 	if bc.calls.Load() != 1 {
 		t.Fatalf("expected exactly 1 broadcast, got %d", bc.calls.Load())
+	}
+
+	actualMsgHex, _ := signer.lastMsgHex.Load().(string)
+	if actualMsgHex == "" {
+		t.Fatal("signer was never asked to sign anything")
+	}
+
+	reconstruct := func(amountNano uint64, at time.Time) string {
+		t.Helper()
+		u, err := ton.BuildUnsignedTransfer(tonRefundPubKey, seqno, tonSenderAddr, amountNano, "", true, func() time.Time { return at })
+		if err != nil {
+			t.Fatalf("reconstruct BuildUnsignedTransfer(%d, %v): %v", amountNano, at, err)
+		}
+		return hex.EncodeToString(u.SigningHash)
+	}
+
+	correctDelta := (uint64(currentNano-baselineNano)) - tonRefundFeeReserveNano
+	buggyFullSweep := uint64(currentNano) - tonRefundFeeReserveNano
+
+	candidates := []time.Time{before, after}
+	matchesAny := func(amountNano uint64) bool {
+		for _, at := range candidates {
+			if reconstruct(amountNano, at) == actualMsgHex {
+				return true
+			}
+		}
+		return false
+	}
+
+	if matchesAny(buggyFullSweep) {
+		t.Fatalf("driver signed the LEGACY FULL-SWEEP amount (%d nanoTON) instead of the baseline-capped delta (%d nanoTON) -- this is exactly the over-refund the cap exists to prevent",
+			buggyFullSweep, correctDelta)
+	}
+	if !matchesAny(correctDelta) {
+		t.Fatalf("driver's signed hash matched neither the expected delta amount (%d) nor the buggy full-sweep amount (%d) at either candidate timestamp -- got an unaccounted-for value (or the bracket missed a second boundary; re-run to rule out a flake)",
+			correctDelta, buggyFullSweep)
 	}
 }

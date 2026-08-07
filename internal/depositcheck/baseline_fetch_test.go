@@ -261,3 +261,45 @@ func TestFetchXRPDrops_RejectsNonXRPNetwork(t *testing.T) {
 		t.Errorf("err = %v, want a non-XRP-network rejection", err)
 	}
 }
+
+// A non-actNotFound XRPL error (e.g. malformed account, rate limit)
+// must surface as a real error, not be silently swallowed to 0 the
+// way actNotFound is -- 0 here would poison a baseline snapshot with
+// a false "wallet was empty" reading instead of failing the swap
+// creation outright.
+func TestFetchXRPDrops_OtherErrorSurfaces(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{"status": "error", "error": "invalidParams"},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := New(time.Second)
+	c.RPCURLOverrides = map[string]string{"XRP_TESTNET": srv.URL}
+
+	_, err := c.FetchXRPDrops(context.Background(), "XRP_TESTNET", "rTest")
+	if err == nil || !strings.Contains(err.Error(), "invalidParams") {
+		t.Errorf("err = %v, want it to surface the XRPL error reason", err)
+	}
+}
+
+func TestFetchXRPDrops_UnparseableBalanceErrors(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"result": map[string]any{
+				"account_data": map[string]any{"Balance": "not-a-number"},
+				"status":       "success",
+			},
+		})
+	}))
+	t.Cleanup(srv.Close)
+	c := New(time.Second)
+	c.RPCURLOverrides = map[string]string{"XRP_TESTNET": srv.URL}
+
+	_, err := c.FetchXRPDrops(context.Background(), "XRP_TESTNET", "rTest")
+	if err == nil {
+		t.Fatal("expected an error for an unparseable balance string, got nil")
+	}
+}
