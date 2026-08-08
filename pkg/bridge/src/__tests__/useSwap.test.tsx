@@ -35,10 +35,10 @@ import { makeTestWrapper } from './test-providers'
 
 const originalFetch = global.fetch
 
-function mockOnce(body: unknown, ok = true) {
+function mockOnce(body: unknown, ok = true, status = ok ? 200 : 500) {
   global.fetch = vi.fn().mockResolvedValue({
     ok,
-    status: ok ? 200 : 500,
+    status,
     statusText: ok ? 'OK' : 'ERR',
     json: () => Promise.resolve(body),
     text: () => Promise.resolve(JSON.stringify(body)),
@@ -143,5 +143,33 @@ describe('useSwap', () => {
       timeout: 1_000,
     })
     expect(result.current.quote).toBeNull()
+  })
+
+  it('shows the server’s reason for a refused pair, not just the status', async () => {
+    // The picker offers every network for every source, so landing on a pair
+    // the bridge cannot route is ordinary rather than exceptional. The server
+    // names the actual problem; showing "Quote failed (400)" instead reads as
+    // the site being broken.
+    mockOnce({ error: 'no bridge route between LBTC and ZETH' }, false, 400)
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
+
+    act(() => result.current.setAmount('5'))
+    await waitFor(() => expect(result.current.quoteError).not.toBeNull(), {
+      timeout: 1_000,
+    })
+    expect(result.current.quoteError).toBe('no bridge route between LBTC and ZETH')
+    expect(result.current.quote).toBeNull()
+  })
+
+  it('falls back to the status when the body carries no message', async () => {
+    // Never render "undefined" or "[object Object]" at someone.
+    mockOnce({ nope: true }, false, 400)
+    const { result } = renderHook(() => useSwap(), { wrapper: makeTestWrapper() })
+
+    act(() => result.current.setAmount('5'))
+    await waitFor(() => expect(result.current.quoteError).not.toBeNull(), {
+      timeout: 1_000,
+    })
+    expect(result.current.quoteError).toBe('Quote failed (400)')
   })
 })
