@@ -1,6 +1,9 @@
-import { getTokenPrice } from "@/domain/tokens"
-import { isExitFromLux, BRIDGE_FEE_RATE } from "./quote"
+import { convert, feeInUsd } from "./quote"
 
+// The same conversion as a quote, under different field names — this is what the
+// UI polls while the user is typing, so if it disagreed with getQuote the number
+// would change at the moment of committing. It projects from `convert` rather
+// than recomputing so that it cannot.
 export const getRate = async (
   fromNetwork: string,
   fromAsset: string,
@@ -10,16 +13,8 @@ export const getRate = async (
   version: 'mainnet' | 'testnet',
 ) => {
 
-  const [sourcePrice, destinationPrice] = await Promise.all([
-    getTokenPrice(fromAsset),
-    getTokenPrice(toAsset)
-  ])
-
-  const rawReceiveAmount = amount * sourcePrice / destinationPrice
-  const feeRate = isExitFromLux(fromNetwork, toNetwork) ? BRIDGE_FEE_RATE : 0
-  const feeAmount = rawReceiveAmount * feeRate
-  const receiveAmount = rawReceiveAmount - feeAmount
-  const feeUsd = feeAmount * destinationPrice
+  const { receiveAmount, feeAmount, feeRate } = convert(fromNetwork, fromAsset, toNetwork, toAsset, amount)
+  const feeUsd = await feeInUsd(toAsset, feeAmount)
 
   return {
     wallet_fee_in_usd: feeUsd,

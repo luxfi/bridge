@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express"
 import { getRate } from "@/domain/rate"
+import { UnsupportedPair } from "@/domain/quote"
 
 const router: Router = Router()
 
@@ -40,9 +41,12 @@ router.get(
     )
 
     res.status(200).json({ data: result})
-  } 
+  }
   catch (error: any) {
-    res.status(500).json({ error: error })
+    if (error instanceof UnsupportedPair || error instanceof RangeError) {
+      return res.status(400).json({ error: error.message })
+    }
+    res.status(500).json({ error: error?.message })
   }
 })
 

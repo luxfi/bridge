@@ -7,8 +7,7 @@ import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
 
-import { getTokenPrice } from "./tokens"
-import { isExitFromLux, BRIDGE_FEE_RATE } from "./quote"
+import { isExitFromLux, BRIDGE_FEE_RATE, convert, feeInUsd } from "./quote"
 import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWORK_ASSET_MAP } from "./mpc-wallet"
 import { isMPCSigningEnabled, mpcBridgeMint, mpcSendNative } from "./mpc-signer"
 
@@ -156,25 +155,31 @@ export async function handleSwapCreation(data: SwapData) {
     })
 
     // estimate swap rate — 1% fee only on exits from Lux/Zoo
-    const [sourcePrice, destinationPrice] = await Promise.all([getTokenPrice(source_asset), getTokenPrice(destination_asset)])
-    const raw_receive_amount = Number(amount) * sourcePrice / destinationPrice
-    const feeRate = isExitFromLux(source_network, destination_network) ? BRIDGE_FEE_RATE : 0
-    const service_fee_amount = raw_receive_amount * feeRate
-    const receive_amount = raw_receive_amount - service_fee_amount
-    const service_fee_usd = service_fee_amount * destinationPrice
+    //
+    // THIS row is the one that moves money: on an exit,
+    // handlerUtilaPayoutAction reads back quotes.receive_amount as payoutAmount
+    // and bridgeMints exactly it. So it projects from the same `convert` the
+    // quote and rate endpoints use — a swap must settle at the number the user
+    // was shown, and three separate copies of the arithmetic could not promise
+    // that. `convert` throws on an unroutable pair, which is caught with the
+    // rest of this handler.
+    const { receiveAmount: receive_amount, feeAmount: service_fee_amount, feeRate } =
+      convert(source_network, source_asset, destination_network, destination_asset, Number(amount))
+    const service_fee_usd = await feeInUsd(destination_asset, service_fee_amount)
 
     // save quote
     const quote = await prisma.quote.create({
       data: {
         swap_id: swap.id,
-        receive_amount: isNaN(receive_amount) ? 0 : receive_amount,
-        min_receive_amount: isNaN(receive_amount) ? 0 : receive_amount * (1 - 0.025),
+        receive_amount,
+        // A wrap is exact — the guaranteed minimum is the quote itself.
+        min_receive_amount: receive_amount,
         blockchain_fee: 0,
         service_fee: feeRate,
         avg_completion_time: "00:03:00",
-        slippage: 0.025,
-        total_fee: isNaN(service_fee_amount) ? 0 : service_fee_amount,
-        total_fee_in_usd: isNaN(service_fee_usd) ? 0 : service_fee_usd
+        slippage: 0,
+        total_fee: service_fee_amount,
+        total_fee_in_usd: service_fee_usd ?? 0
       }
     })
 
