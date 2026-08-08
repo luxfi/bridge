@@ -1,18 +1,14 @@
 # Licensing
 
-This repository is licensed under the **Lux Ecosystem License v1.2**
-(see [LICENSE](LICENSE)). It belongs to the **patent-protected** tier
-of the Lux three-tier IP strategy.
+Lux Bridge is open source under the **BSD 3-Clause License** (see
+[LICENSE](LICENSE)) — the same permissive license the rest of the Lux
+core network stack carries (`luxfi/cli`, `luxfi/sdk`, `luxfi/genesis`).
 
-- Free for **Authorized Networks** (Lux Primary NetID=1, EVM 96369;
-  official testnets/devnets; Descending Chains).
-- Free for **Research Use** (academic, education, evaluation).
-- **Commercial use outside Authorized Networks requires a paid
-  commercial license**.
+Use it, fork it, build on it, ship commercial products with it. The
+only obligation is BSD-3's: keep the copyright notice and disclaimer,
+and don't use the Lux name to endorse derived products without
+permission.
 
-For the canonical Lux IP and licensing strategy and the precise
-definitions of "Authorized Network", "Descending Chain", and "Research
-Use", see:
-<https://github.com/luxfi/.github/blob/main/profile/README.md>
-
-For commercial licensing inquiries, contact `licensing@lux.network`.
+Third-party dependencies keep their own licenses, carried through the
+module graph (`go.mod`, `package.json`); this repository vendors no
+modified upstream, so it adds no separate NOTICE.

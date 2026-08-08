@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Playwright smoke + multi-tenant specs for bridge.lux.network and downstream tenants (Zoo, etc).",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "type": "module",
   "scripts": {
     "test": "playwright test",
