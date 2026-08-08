@@ -14,6 +14,7 @@ import {
   handlerUtilaPayoutAction
 } from "@/domain/swaps"
 import { BadCosignerIntent, validateCosigners } from "@/domain/cosigners"
+import { UnsupportedPair } from "@/domain/quote"
 
 const router: Router = Router()
 
@@ -94,6 +95,11 @@ router.post(
       })
       res.status(200).json({ data: { ...result } })
     } catch (error: any) {
+      // A pair with no route, or a nonsense amount, is bad input — not a server
+      // fault. Both are rejected before anything is minted or written.
+      if (error instanceof UnsupportedPair || error instanceof RangeError) {
+        return res.status(400).json({ error: error.message })
+      }
       console.log(error)
       res.status(500).json({ error: error?.message })
     }

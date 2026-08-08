@@ -66,6 +66,19 @@ describe('convert', () => {
     expect(() => convert(LUX, 'LBTC', ZOO, 'ZBTC', NaN)).toThrow(RangeError)
     expect(() => convert(LUX, 'LBTC', ZOO, 'ZBTC', -1)).toThrow(RangeError)
   })
+
+  it('is pure, so a caller can settle terms before taking any action', () => {
+    // handleSwapCreation calls this BEFORE createMPCWalletForDeposit and
+    // prisma.swap.create, both of which outlive the request — a minted custody
+    // address and a swap row the payout path later reads. That ordering is only
+    // safe while convert touches nothing: no clock, no network, no db. If it
+    // ever needs any of those, the validation has to be split back out.
+    const a = convert(LUX, 'LBTC', ZOO, 'ZBTC', 3)
+    const b = convert(LUX, 'LBTC', ZOO, 'ZBTC', 3)
+    expect(a).toEqual(b)
+    expect(convert).toHaveLength(5)          // no callback, nothing injected
+    expect(convert(LUX, 'LBTC', ZOO, 'ZBTC', 3)).not.toBeInstanceOf(Promise)
+  })
 })
 
 describe('isSupportedPair', () => {
