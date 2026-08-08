@@ -431,6 +431,75 @@ on behalf of the tenant.
 **Native Tokens**: LUX, ETH, BNB, MATIC
 **Wrapped Assets**: ZETH, ZBNB, ZPOL, ZTON (ERC20B standard)
 
+### A bridge pair is a WRAP, not a trade
+
+`app/server/src/domain/settings/swap-pairs.ts` is the single declaration of what
+routes exist. Take its connected components and all 33 are one underlying under
+several names — `{BTC, LBTC, WBTC, ZBTC, cbBTC}`, `{ETH, LETH, WETH, ZETH}`,
+`{LUX, ZLUX}`, `{DAI, LUSD, USDC, USDT, ZUSD}`. **No edge in the table joins two
+different assets.** So the conversion rate is 1, exactly, both directions, and
+only the fee comes off it. `domain/quote.ts` `convert()` is the one place that
+computes it; `getQuote`, `getRate` and the stored swap row all project from it.
+
+**Do not reintroduce a price lookup on this path.** It used to be
+`amount * sourcePrice / destinationPrice` against Coinbase, with `getTokenPrice`
+answering `1` on failure. Coinbase lists 29 of the 38 symbols the bridge asks
+about, so a third of lookups returned an invented $1.00 and a pair got one real
+price and one fabricated one. Measured in production: 1000 ZLUX quoted 900,000
+LUX, 1000 LZOO quoted 47,142,857 ZOO, 1000 LBTC quoted 64,267,132 cbBTC — and on
+an exit `handlerUtilaPayoutAction` sets `payoutAmount` from the stored quote and
+`bridgeMint`s it, so those were unbacked mints, not display errors. A ratio built
+from one real price and one invented one also inverts when the legs swap, which
+is why the same route was wrong in opposite directions at once.
+
+There is no price at which wrapping is not 1:1, so consulting a feed at all was
+the error. `getTokenPrice` survives for the **display-only** USD fee and returns
+`undefined`, never `1`, when nobody quotes an asset.
+
+Two invariants hold this together, both pinned in
+`domain/__tests__/quote.test.ts`:
+- The peg classes are **pinned, not derived**. Recovering them means stripping an
+  `L`/`Z`/`W`/`cb` prefix and comparing the remainder — inferring an asset's
+  identity from the spelling of its ticker is the exact reasoning that caused
+  the bug (it also reads `LUX` as a wrapped "UX"). A change to the partition is a
+  change to the claim and wants human review.
+- `convert()` is **pure**. `handleSwapCreation` calls it before
+  `createMPCWalletForDeposit` (which mints a real custody address) and
+  `prisma.swap.create`, so that an unroutable pair is refused before anything
+  that outlives the request. That ordering is only safe while it stays pure.
+
+**The pair relation is symmetric and is read that way, not written twice.** 33
+rows name a destination that does not name them back (`BTC: [LBTC]`, while
+`LBTC: [WBTC, ZBTC, cbBTC]`), so a one-directional read offered a route inbound
+and refused it outbound. 169 declared edges, 202 usable routes. Adding the
+reverse entries by hand would just re-open the gap the next time an asset lands.
+
+The client does **not** keep a copy of the table — `/api/settings` already
+carries it, from the same table the server validates against. It used to
+overwrite the response with a local copy that had drifted (missing DOT and XRP
+entirely; no native SOL or TON as destinations), making six routable assets
+unreachable in the UI.
+
+### Delivery (as of 2026-08-08) — CI cannot ship this repo
+
+`app/server` changes reach production as: build → `ghcr.io/luxfi/bridge-server`
+→ bump the digest in `~/work/lux/universe/deploy/lux-bridge/bridge-server.yaml`
+→ hanzo-cd syncs (`apps.hanzo.ai/installation-id: hanzo-cd`). Production runs a
+**digest-pinned** image with `imagePullPolicy: IfNotPresent`.
+
+Three things are stale or broken in that path:
+- The self-hosted pool `lux-build-amd64` has had **no runner since 2026-07-30**
+  (last real execution: `evo-luxfi-*`). Jobs queue and cancel at the 24h timeout
+  — that is what the `cancelled 24h0m2s` runs are. Every recent luxfi *success*
+  is on `ubuntu-latest`, not the pool.
+- `server.yml` only runs `kubectl rollout restart`, which delivers nothing
+  against a digest-pinned deployment, and names no namespace (production is
+  `lux-bridge`).
+- `app/server/k8s/bridge-deployment.yaml` names `ghcr.io/luxfi/bridge/server:latest`
+  with `Always`. Production is `ghcr.io/luxfi/bridge-server@sha256:…`. The repo
+  manifest does not describe production. `docker:build` and `docker:push` in
+  `app/server/package.json` also disagree with each other on the image name.
+
 ## Key Smart Contracts
 
 ### Core Contracts
