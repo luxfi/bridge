@@ -69,6 +69,21 @@ type API struct {
 	// SetWalletHealthPoller.
 	walletHealthSnapshot func() map[string]WalletHealth
 	walletHealthRunning  func() bool
+
+	// broadcastStats snapshots the broadcast driver's counters for
+	// /metrics — the BTC confirmation-gate series live there. nil (no
+	// driver wired) ⇒ the series are omitted, not zero-faked.
+	broadcastStats func() BroadcastDriverStats
+}
+
+// SetBroadcastDriver wires the broadcast driver whose counters /metrics
+// surfaces (BTC confirm checks / timeouts / rebuilds). nil clears.
+func (a *API) SetBroadcastDriver(d *BroadcastDriver) {
+	if d == nil {
+		a.broadcastStats = nil
+		return
+	}
+	a.broadcastStats = d.Stats
 }
 
 // SetWalletHealthPoller wires the background release-wallet canary-sign
@@ -500,6 +515,26 @@ func (a *API) metrics(c *zip.Ctx) error {
 	b.WriteString("# HELP bridge_wallet_health_poller_running 1 iff the release-wallet canary-sign health poller loop is active.\n")
 	b.WriteString("# TYPE bridge_wallet_health_poller_running gauge\n")
 	fmt.Fprintf(&b, "bridge_wallet_health_poller_running %d\n", running)
+
+	// BTC confirmation-gate counters. A BTC release parks in
+	// bridge_transfer_pending_confirmation until mined; these expose how
+	// often the watcher polls and how often a release sat unconfirmed
+	// past the timeout and was rebuilt at a bumped RBF feerate.
+	// Sustained confirm-timeout growth means BTC network fees are
+	// outpacing the bump rate, or a specific release wallet's tx is
+	// stuck (low-fee UTXO, mempool congestion).
+	if a.broadcastStats != nil {
+		bs := a.broadcastStats()
+		b.WriteString("# HELP bridge_btc_confirm_checks_total Times the broadcast driver polled a parked BTC release for confirmation. Zero on a deploy with no BTC destinations — not an error state.\n")
+		b.WriteString("# TYPE bridge_btc_confirm_checks_total counter\n")
+		fmt.Fprintf(&b, "bridge_btc_confirm_checks_total %d\n", bs.ConfirmChecks)
+		b.WriteString("# HELP bridge_btc_confirm_timeouts_total Times a parked BTC release sat unconfirmed past the confirmation timeout and was rebuilt at a bumped RBF feerate.\n")
+		b.WriteString("# TYPE bridge_btc_confirm_timeouts_total counter\n")
+		fmt.Fprintf(&b, "bridge_btc_confirm_timeouts_total %d\n", bs.ConfirmTimeouts)
+		b.WriteString("# HELP bridge_broadcast_rebuilds_total Broadcast→re-sign resets (BTC fee rebuilds: submit rejects + confirmation timeouts).\n")
+		b.WriteString("# TYPE bridge_broadcast_rebuilds_total counter\n")
+		fmt.Fprintf(&b, "bridge_broadcast_rebuilds_total %d\n", bs.Rebuilds)
+	}
 
 	c.SetHeader("Content-Type", "text/plain; version=0.0.4")
 	return c.String(http.StatusOK, b.String())

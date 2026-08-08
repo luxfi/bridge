@@ -152,6 +152,14 @@ type BTCSpec struct {
 	// FeeRateSatPerVB overrides the assembler's FeeEstimator. Useful for
 	// tests and emergency operator bumps. Zero ⇒ FeeEstimator is queried.
 	FeeRateSatPerVB int64
+
+	// MinFeeRateSatPerVB is an optional sat/vB floor: PreSign uses
+	// max(resolved rate, this) instead of the bare estimate, so a
+	// rebuilt (RBF) tx out-bids the stuck attempt it replaces. Set by
+	// the signing driver from the swap's persisted LastFeeRate on a
+	// rebuild; zero on the first attempt. Unlike FeeRateSatPerVB it
+	// never LOWERS the rate — a live estimate above the floor wins.
+	MinFeeRateSatPerVB int64
 }
 
 // BTCInputCtx is the per-input state Finalize needs to reassemble the
@@ -335,6 +343,12 @@ func (a *BTCAssembler) PreSign(ctx context.Context, spec BTCSpec) (
 	feeRate := spec.FeeRateSatPerVB
 	if feeRate <= 0 {
 		feeRate = a.resolveFeeRate(ctx, spec.Network)
+	}
+	// RBF floor: a rebuild must strictly out-bid the tx it replaces
+	// (BIP-125), so the caller's floor wins over a lower live estimate
+	// — but a HIGHER live estimate still wins over the floor.
+	if spec.MinFeeRateSatPerVB > feeRate {
+		feeRate = spec.MinFeeRateSatPerVB
 	}
 
 	// Step 2 — pull UTXOs and compute the source pkScript locally.

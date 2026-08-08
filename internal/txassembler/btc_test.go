@@ -511,6 +511,58 @@ func TestBTCAssembler_PreSign_FeeRateOverride(t *testing.T) {
 	}
 }
 
+// The RBF floor wins over a LOWER live estimate: a rebuild must
+// strictly out-bid the stuck tx it replaces (BIP-125), even when the
+// fee market has since relaxed.
+func TestBTCAssembler_PreSign_MinFeeRateFloorApplied(t *testing.T) {
+	params := &chaincfg.MainNetParams
+	addr := bech32AddressFor(t, params, sampleCompressedPubKey)
+
+	fetch := &stubBTCFetcher{utxos: map[string][]BTCUTXO{
+		addr: {{TxID: sampleTxIDHex, Vout: 0, Value: 100_000}},
+	}}
+	// Live estimate 2 sat/vB, but the prior attempt's bumped floor is 10.
+	asm := NewBTCAssembler(BTCMainnet, fetch, &stubFeeEstimator{rate: 2})
+	_, unsigned, err := asm.PreSign(context.Background(), BTCSpec{
+		FromAddress:        addr,
+		FromPubKey:         sampleCompressedPubKey,
+		ToAddress:          addr,
+		ValueSat:           50_000,
+		MinFeeRateSatPerVB: 10,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unsigned.FeeRateSatPerVB != 10 {
+		t.Errorf("FeeRateSatPerVB = %d, want 10 (floor wins over estimate 2)", unsigned.FeeRateSatPerVB)
+	}
+}
+
+// A floor BELOW the live estimate must not lower the rate — the floor
+// only ever raises.
+func TestBTCAssembler_PreSign_MinFeeRateBelowEstimateIgnored(t *testing.T) {
+	params := &chaincfg.MainNetParams
+	addr := bech32AddressFor(t, params, sampleCompressedPubKey)
+
+	fetch := &stubBTCFetcher{utxos: map[string][]BTCUTXO{
+		addr: {{TxID: sampleTxIDHex, Vout: 0, Value: 100_000}},
+	}}
+	asm := NewBTCAssembler(BTCMainnet, fetch, &stubFeeEstimator{rate: 7})
+	_, unsigned, err := asm.PreSign(context.Background(), BTCSpec{
+		FromAddress:        addr,
+		FromPubKey:         sampleCompressedPubKey,
+		ToAddress:          addr,
+		ValueSat:           50_000,
+		MinFeeRateSatPerVB: 3,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unsigned.FeeRateSatPerVB != 7 {
+		t.Errorf("FeeRateSatPerVB = %d, want 7 (live estimate above floor wins)", unsigned.FeeRateSatPerVB)
+	}
+}
+
 // =============================================================================
 // Finalize — happy path + serialization
 // =============================================================================

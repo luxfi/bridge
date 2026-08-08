@@ -525,3 +525,22 @@ Alert rules ship in `k8s/bridge-alerts.yaml` (PrometheusRule) and the
 scrape target in `k8s/bridge-servicemonitor.yaml` (ServiceMonitor) —
 both plug into the existing o11y / luxfi-monitoring stack
 (dash.lux.network); no standalone Prometheus needed.
+
+---
+
+## 12. BTC release confirmation gate
+
+A Bitcoin release is only marked `completed` once its tx is **mined** —
+mempool admission parks the swap in `bridge_transfer_pending_confirmation`
+and the broadcast driver polls mempool.space until confirmed. A release
+that sits unconfirmed past `--btc-confirm-timeout` (default 30m) is
+rebuilt at a bumped RBF feerate (+25%+1, compounding, floored via the
+swap's persisted `last_fee_rate`); a fee-below-relay-floor reject on
+submit takes the same rebuild path. Both draw from one ceiling
+(`broadcast_rebuilds`, default 5) — past it the swap moves to `failed`
+with the reason in `last_error`, and the deposit needs a sweep.
+
+Watch `bridge_btc_confirm_timeouts_total` (each increment = one stuck
+release rebuilt) and `bridge_broadcast_rebuilds_total` alongside it;
+sustained growth means BTC network fees are outpacing the bump rate.
+`--disable-btc-confirm-gate` restores legacy complete-on-admission.

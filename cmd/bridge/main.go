@@ -138,6 +138,10 @@ func main() {
 		"disable the background broadcast driver. Swaps in broadcasting will then stall — useful when destination chains are unreachable.")
 	broadcastTimeout := flag.Duration("broadcast-timeout", broadcast.DefaultTimeout,
 		"per-request timeout for destination-chain RPC broadcasts (eth_sendRawTransaction etc.).")
+	btcConfirmTimeout := flag.Duration("btc-confirm-timeout", DefaultBTCConfirmationTimeout,
+		"how long a broadcast BTC release may sit unconfirmed in the mempool before the confirmation watcher rebuilds it at a higher RBF feerate. BTC releases park in bridge_transfer_pending_confirmation until mined; every other family completes on broadcast acceptance.")
+	disableBTCConfirmGate := flag.Bool("disable-btc-confirm-gate", false,
+		"complete BTC releases on mempool admission instead of waiting for a confirmation (legacy behaviour: a low-fee tx can then sit stuck forever with the swap already marked done).")
 	refundInterval := flag.Duration("refund-interval", DefaultRefundInterval,
 		"poll cadence for the refund driver (background loop that sweeps a stuck deposit back to the original sender when destination broadcast can't land).")
 	refundAfter := flag.Duration("refund-after", DefaultRefundAfter,
@@ -984,9 +988,21 @@ func main() {
 		// In-flight half of the withdrawal kill-switch: hold (never push) an
 		// already-signed swap whose destination became withdrawal-disabled.
 		bcastDriver.WithdrawalEnabled = cfg.WithdrawalEnabled
+		// BTC confirmation gate: releases park in awaiting-confirmation
+		// until mined, and stuck ones rebuild at a bumped RBF feerate.
+		// The broadcast client doubles as the checker (same mempool.space
+		// base URL the tx was posted to).
+		if !*disableBTCConfirmGate {
+			bcastDriver.SetConfirmer(bcastClient)
+			bcastDriver.SetBTCConfirmTimeout(*btcConfirmTimeout)
+			logger.Info("btc confirmation gate enabled",
+				"timeout", *btcConfirmTimeout,
+			)
+		}
 		go func() {
 			_ = bcastDriver.Run(bcastCtx)
 		}()
+		api.SetBroadcastDriver(bcastDriver)
 		logger.Info("broadcast driver started",
 			"interval", *broadcastInterval,
 			"timeout", *broadcastTimeout,

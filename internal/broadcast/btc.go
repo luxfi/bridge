@@ -35,6 +35,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -277,4 +278,56 @@ func truncateBTC(s string, n int) string {
 		return s
 	}
 	return s[:n] + "…"
+}
+
+// =============================================================================
+// Confirmation status
+// =============================================================================
+
+// btcTxStatus is mempool.space's GET /api/tx/{txid}/status shape. Only
+// the confirmed bit matters to the broadcast driver's BTC gate.
+type btcTxStatus struct {
+	Confirmed bool `json:"confirmed"`
+}
+
+// ConfirmationStatus reports whether a Bitcoin tx has been mined,
+// via mempool.space's tx-status endpoint on the same base URL the
+// broadcaster posts to. The broadcast driver polls this for releases
+// parked in awaiting-confirmation and rebuilds ones that sit too long.
+// Non-BTC networks are refused — every other family treats broadcast
+// acceptance as final and never asks.
+func (c *Client) ConfirmationStatus(ctx context.Context, network, txid string) (bool, error) {
+	base := RPCURLFor(network)
+	if base == "" || !strings.HasPrefix(strings.ToUpper(network), "BITCOIN_") {
+		return false, fmt.Errorf("broadcast: no BTC confirmation source for network %q", network)
+	}
+	txid = strings.TrimPrefix(strings.TrimPrefix(txid, "0x"), "0X")
+	if txid == "" {
+		return false, errors.New("broadcast: empty txid")
+	}
+
+	callCtx, cancel := context.WithTimeout(ctx, c.timeout())
+	defer cancel()
+	req, err := http.NewRequestWithContext(callCtx, http.MethodGet, base+"/"+txid+"/status", nil)
+	if err != nil {
+		return false, err
+	}
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 4<<10))
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, &RPCError{Code: resp.StatusCode,
+			Message: "btc tx status: " + truncateBTC(strings.TrimSpace(string(body)), 200)}
+	}
+	var st btcTxStatus
+	if err := json.Unmarshal(body, &st); err != nil {
+		return false, fmt.Errorf("broadcast: btc tx status decode: %w", err)
+	}
+	return st.Confirmed, nil
 }
