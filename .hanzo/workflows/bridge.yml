@@ -1,0 +1,88 @@
+name: Bridge
+
+# Builds the single-binary Go bridge image (cmd/bridge/Dockerfile) — the
+# all-in-one that serves the API and embeds the UI, and the image the
+# lux-bridge / pars-bridge / zoo-bridge deployments actually run. It carries a
+# `-server` tag suffix so it never collides with the SPA-only image the root
+# Dockerfile publishes on the plain semver line.
+#
+# This lives in .hanzo/workflows because the forge (git.hanzo.ai) dispatches
+# only from here — .github/workflows stopped being read on 2026-08-08, which
+# left the old .github/workflows/cmd-bridge-image.yml dead and the Go image
+# frozen. Mirrors server.yml: the `lux-build-linux-amd64` forge fleet, and ghcr
+# login via GHCR_USER / GHCR_TOKEN (the instance GITHUB_TOKEN is a Hanzo Git
+# token and ghcr.io rejects it).
+#
+# No GH_TOKEN build-arg: every module the bridge imports (github.com/luxfi/*,
+# github.com/zap-proto/*) is public, so the Dockerfile's GOPRIVATE never needs a
+# credential and its `if [ -n "$GH_TOKEN" ]` guard skips the git rewrite.
+#
+# BUILD ≠ DEPLOY. This publishes an image and stops; shipping is a separate
+# `image.tag` edit in universe/deploy/lux-bridge/*.yaml that Hanzo CD reconciles.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: bridge-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: [lux-build-linux-amd64]
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute tags
+        id: meta
+        run: |
+          set -euo pipefail
+          SHA_TAG="ghcr.io/luxfi/bridge:sha-${GITHUB_SHA:0:7}-server"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            {
+              echo "tags<<EOF"
+              echo "ghcr.io/luxfi/bridge:v${VERSION}-server"
+              echo "ghcr.io/luxfi/bridge:${VERSION}-server"
+              echo "ghcr.io/luxfi/bridge:server"
+              echo "$SHA_TAG"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "tags<<EOF"
+              echo "ghcr.io/luxfi/bridge:server"
+              echo "$SHA_TAG"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          driver-opts: network=host
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: cmd/bridge/Dockerfile
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          build-args: |
+            VERSION=${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
