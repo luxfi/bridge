@@ -157,6 +157,11 @@ func (d *SigningDriver) signOneBTC(ctx context.Context, sw *Swap) {
 		FromPubKey:  entry.Pubkey,
 		ToAddress:   sw.DestinationAddress,
 		ValueSat:    valueSat,
+		// On a rebuild (a recorded LastFeeRate from a prior attempt),
+		// floor the new tx strictly above the stuck one so it's a valid
+		// BIP-125 replacement. Zero on the first attempt → PreSign uses
+		// the live estimate.
+		MinFeeRateSatPerVB: bumpBTCFeeRate(sw.LastFeeRate),
 	}
 	sighashes, unsigned, aerr := d.btcAssembler.PreSign(ctx, spec)
 	if aerr != nil {
@@ -310,6 +315,10 @@ func (d *SigningDriver) signOneBTC(ctx context.Context, sw *Swap) {
 		}
 		s.DestRawTx = rawTxHex
 		s.Status = SwapStatusBroadcasting
+		// Persist the feerate this attempt pays so the broadcast
+		// driver's confirmation watcher (and the submit-reject handler)
+		// can bump strictly above it on a later RBF rebuild.
+		s.LastFeeRate = unsigned.FeeRateSatPerVB
 		s.LastError = ""
 		s.LastErrorAt = time.Time{}
 	})

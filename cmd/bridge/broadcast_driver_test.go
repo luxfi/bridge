@@ -616,3 +616,365 @@ func stringIndex(s, sub string) int {
 type stringErr string
 
 func (s stringErr) Error() string { return string(s) }
+func TestBroadcast_StaleBTCFee_ResetsForResign(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "BITCOIN_TESTNET", "0200000001deadbeef")
+	bc.failFor("BITCOIN_TESTNET", "0200000001deadbeef",
+		errors.New("broadcast: btc POST /tx HTTP 400: sendrawtransaction RPC error: min relay fee not met, 250 < 1000"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Fatalf("stale-fee should reset to bridge_transfer_pending for re-sign, got %q", got.Status)
+	}
+	if got.DestRawTx != "" || got.Signature != "" || got.MPCSessionID != "" {
+		t.Errorf("DestRawTx/Signature/MPCSessionID should be cleared; got DestRawTx=%q Signature=%q MPCSessionID=%q",
+			got.DestRawTx, got.Signature, got.MPCSessionID)
+	}
+	if got.BroadcastRebuilds != 1 {
+		t.Errorf("BroadcastRebuilds should be 1 after first rebuild, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "fee below relay floor") {
+		t.Errorf("LastError should explain the cause; got %q", got.LastError)
+	}
+	if d.Stats().Rebuilds != 1 {
+		t.Errorf("Rebuilds stat should be 1, got %d", d.Stats().Rebuilds)
+	}
+}
+func TestBroadcast_StaleBTCFee_MaxRebuilds_FailsSwap(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "BITCOIN_TESTNET", "0200000001deadbeef")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastRebuilds = DefaultBroadcastMaxRebuilds - 1
+	})
+	bc.failFor("BITCOIN_TESTNET", "0200000001deadbeef",
+		errors.New("broadcast: btc POST /tx HTTP 400: mempool min fee not met, 500 < 4200"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusFailed {
+		t.Fatalf("hitting rebuild ceiling should fail the swap, got %q", got.Status)
+	}
+	if got.BroadcastRebuilds != DefaultBroadcastMaxRebuilds {
+		t.Errorf("BroadcastRebuilds should reach the ceiling, got %d", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(strings.ToLower(got.LastError), "swap failed") {
+		t.Errorf("LastError should explain the ceiling hit, got %q", got.LastError)
+	}
+}
+func TestIsStaleBTCFee_Matchers(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		{"min relay fee not met", errors.New("sendrawtransaction RPC error: min relay fee not met, 250 < 1000"), true},
+		{"mempool min fee not met", errors.New("mempool min fee not met, 500 < 4200"), true},
+		{"rbf insufficient fee", errors.New("insufficient fee, rejecting replacement abc123; new feerate 1.0 <= old feerate 2.0"), true},
+		{"uppercase", errors.New("MIN RELAY FEE NOT MET"), true},
+		// Must NOT match: an unfunded release wallet is a different remedy
+		// (fund the address) — rebuilding can't help. Pins that the geth
+		// phrase "insufficient funds" doesn't collide with "insufficient fee".
+		{"insufficient funds", errors.New("insufficient funds for gas * price + value"), false},
+		// Must NOT match: a non-replaceable conflict isn't a fee problem.
+		{"txn-mempool-conflict", errors.New("txn-mempool-conflict"), false},
+		{"unrelated blockhash", errors.New("Blockhash not found"), false},
+		{"random text", errors.New("connection refused"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isStaleBTCFee(tc.err); got != tc.want {
+				t.Errorf("isStaleBTCFee(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
+type fakeConfirmer struct {
+	mu        sync.Mutex
+	confirmed map[string]bool
+	errs      map[string]error
+	calls     atomic.Int64
+}
+
+func newFakeConfirmer() *fakeConfirmer {
+	return &fakeConfirmer{confirmed: map[string]bool{}, errs: map[string]error{}}
+}
+
+func (f *fakeConfirmer) setConfirmed(network, txid string, v bool) {
+	f.mu.Lock()
+	f.confirmed[network+"|"+txid] = v
+	f.mu.Unlock()
+}
+
+func (f *fakeConfirmer) setErr(network, txid string, e error) {
+	f.mu.Lock()
+	f.errs[network+"|"+txid] = e
+	f.mu.Unlock()
+}
+
+func (f *fakeConfirmer) ConfirmationStatus(_ context.Context, network, txid string) (bool, error) {
+	f.calls.Add(1)
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	key := network + "|" + txid
+	if err, ok := f.errs[key]; ok {
+		return false, err
+	}
+	return f.confirmed[key], nil
+}
+
+// seedAwaitingConfirmationSwap creates a BTC swap already parked in
+// SwapStatusAwaitingConfirmation with a recorded release txid. Tests
+// further Patch BroadcastAt / LastFeeRate / BroadcastRebuilds as needed.
+func seedAwaitingConfirmationSwap(t *testing.T, store SwapStore, destNet, txid string) *Swap {
+	t.Helper()
+	sw := &Swap{
+		Status:             SwapStatusAwaitingConfirmation,
+		Amount:             0.01,
+		SourceNetwork:      "ETHEREUM_SEPOLIA",
+		SourceAsset:        "ETH",
+		DestinationNetwork: destNet,
+		DestinationAsset:   "BTC",
+		DestinationAddress: "tb1qrecipient",
+		Signature:          "0xsig",
+		MPCSessionID:       "sess",
+		DestRawTx:          "0200000001deadbeef",
+		DestTxHash:         txid,
+		BroadcastAt:        time.Now().UTC(),
+		LastFeeRate:        10,
+	}
+	if err := store.Create(t.Context(), sw); err != nil {
+		t.Fatalf("seed awaiting-confirmation swap: %v", err)
+	}
+	return sw
+}
+
+// TestBroadcast_BTC_ParksAwaitingConfirmation pins the core Part B
+// behaviour: a BTC release that the node ACCEPTS does NOT complete
+// immediately — it parks in awaiting_confirmation (mempool admission is
+// not final for Bitcoin) with BroadcastAt stamped for the watcher.
+func TestBroadcast_BTC_ParksAwaitingConfirmation(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "BITCOIN_TESTNET", "0200000001deadbeef")
+	bc.okFor("BITCOIN_TESTNET", "0200000001deadbeef", "btctxid123")
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.SetConfirmer(newFakeConfirmer())
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusAwaitingConfirmation {
+		t.Fatalf("status = %q, want awaiting_confirmation", got.Status)
+	}
+	if got.DestTxHash != "btctxid123" {
+		t.Errorf("DestTxHash = %q, want btctxid123", got.DestTxHash)
+	}
+	if got.BroadcastAt.IsZero() {
+		t.Error("BroadcastAt not stamped")
+	}
+	// Not a terminal success yet — successes increments only on confirm.
+	if s := d.Stats(); s.Successes != 0 {
+		t.Errorf("Successes = %d, want 0 (not confirmed yet)", s.Successes)
+	}
+}
+
+// TestBroadcast_BTC_NoConfirmer_CompletesImmediately guards back-compat:
+// a deploy without a BTC confirmer must NOT strand BTC swaps in the new
+// state — it falls back to the legacy immediate-Completed behaviour.
+func TestBroadcast_BTC_NoConfirmer_CompletesImmediately(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedBroadcastingSwap(t, store, "BITCOIN_TESTNET", "0200000001deadbeef")
+	bc.okFor("BITCOIN_TESTNET", "0200000001deadbeef", "btctxid123")
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil) // no SetConfirmer
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusCompleted {
+		t.Fatalf("status = %q, want completed (no confirmer ⇒ legacy path)", got.Status)
+	}
+}
+
+// TestConfirm_BTC_ConfirmedPromotesToCompleted: once the watcher sees
+// the release tx mined, the swap reaches the terminal Completed state
+// and the rebuild counter clears.
+func TestConfirm_BTC_ConfirmedPromotesToCompleted(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedAwaitingConfirmationSwap(t, store, "BITCOIN_TESTNET", "btctxidABC")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) { s.BroadcastRebuilds = 2 })
+
+	fc := newFakeConfirmer()
+	fc.setConfirmed("BITCOIN_TESTNET", "btctxidABC", true)
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.SetConfirmer(fc)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusCompleted {
+		t.Fatalf("status = %q, want completed", got.Status)
+	}
+	if got.BroadcastRebuilds != 0 {
+		t.Errorf("BroadcastRebuilds = %d, want 0 (cleared on success)", got.BroadcastRebuilds)
+	}
+	if s := d.Stats(); s.Successes != 1 || s.ConfirmChecks != 1 {
+		t.Errorf("stats = %+v, want Successes=1 ConfirmChecks=1", s)
+	}
+}
+
+// TestConfirm_BTC_WithinTimeoutStaysParked: an unconfirmed tx still
+// inside its timeout window is left alone — give the block a chance.
+func TestConfirm_BTC_WithinTimeoutStaysParked(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedAwaitingConfirmationSwap(t, store, "BITCOIN_TESTNET", "btctxidABC") // BroadcastAt = now
+
+	fc := newFakeConfirmer()
+	fc.setConfirmed("BITCOIN_TESTNET", "btctxidABC", false)
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.SetConfirmer(fc) // default 30m timeout — not elapsed
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusAwaitingConfirmation {
+		t.Fatalf("status = %q, want still awaiting_confirmation", got.Status)
+	}
+	if s := d.Stats(); s.Rebuilds != 0 || s.ConfirmTimeouts != 0 {
+		t.Errorf("stats = %+v, want no rebuilds/timeouts", s)
+	}
+}
+
+// TestConfirm_BTC_TimeoutRebuildsWithHigherFee: past the timeout, an
+// unconfirmed tx is reset for re-sign — and crucially LastFeeRate is
+// PRESERVED so PreSignBTC bumps strictly above the stuck tx (RBF).
+func TestConfirm_BTC_TimeoutRebuildsWithHigherFee(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedAwaitingConfirmationSwap(t, store, "BITCOIN_TESTNET", "btctxidABC")
+	// Push BroadcastAt into the past so the default timeout has elapsed.
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastAt = time.Now().Add(-time.Hour).UTC()
+		s.LastFeeRate = 42
+	})
+
+	fc := newFakeConfirmer()
+	fc.setConfirmed("BITCOIN_TESTNET", "btctxidABC", false)
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.SetConfirmer(fc)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusBridgeTransferPending {
+		t.Fatalf("status = %q, want bridge_transfer_pending (rebuild)", got.Status)
+	}
+	if got.DestRawTx != "" || got.Signature != "" || got.MPCSessionID != "" || got.DestTxHash != "" {
+		t.Errorf("re-sign artifacts not cleared: rawtx=%q sig=%q sess=%q txhash=%q",
+			got.DestRawTx, got.Signature, got.MPCSessionID, got.DestTxHash)
+	}
+	if got.LastFeeRate != 42 {
+		t.Errorf("LastFeeRate = %d, want 42 preserved across rebuild (RBF bump floor)", got.LastFeeRate)
+	}
+	if got.BroadcastRebuilds != 1 {
+		t.Errorf("BroadcastRebuilds = %d, want 1", got.BroadcastRebuilds)
+	}
+	if !strings.Contains(got.LastError, "higher RBF feerate") {
+		t.Errorf("LastError = %q, want mention of higher RBF feerate", got.LastError)
+	}
+	if s := d.Stats(); s.Rebuilds != 1 || s.ConfirmTimeouts != 1 {
+		t.Errorf("stats = %+v, want Rebuilds=1 ConfirmTimeouts=1", s)
+	}
+}
+
+// TestConfirm_BTC_TimeoutMaxRebuildsFailsSwap: a tx that stays
+// unconfirmed through the rebuild ceiling fails the swap rather than
+// bumping the fee forever.
+func TestConfirm_BTC_TimeoutMaxRebuildsFailsSwap(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedAwaitingConfirmationSwap(t, store, "BITCOIN_TESTNET", "btctxidABC")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastAt = time.Now().Add(-time.Hour).UTC()
+		s.BroadcastRebuilds = DefaultBroadcastMaxRebuilds - 1
+	})
+
+	fc := newFakeConfirmer()
+	fc.setConfirmed("BITCOIN_TESTNET", "btctxidABC", false)
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.SetConfirmer(fc)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusFailed {
+		t.Fatalf("status = %q, want failed at ceiling", got.Status)
+	}
+	if got.BroadcastRebuilds != DefaultBroadcastMaxRebuilds {
+		t.Errorf("BroadcastRebuilds = %d, want %d", got.BroadcastRebuilds, DefaultBroadcastMaxRebuilds)
+	}
+	if !strings.Contains(got.LastError, "swap failed") {
+		t.Errorf("LastError = %q, want 'swap failed'", got.LastError)
+	}
+}
+
+// TestConfirm_BTC_ConfirmerErrorStaysParked: a transient confirmer RPC
+// error must not disturb the swap — it stays parked for the next tick.
+func TestConfirm_BTC_ConfirmerErrorStaysParked(t *testing.T) {
+	store := NewInMemoryStore()
+	bc := newFakeBroadcaster()
+	sw := seedAwaitingConfirmationSwap(t, store, "BITCOIN_TESTNET", "btctxidABC")
+	_, _ = store.Patch(t.Context(), sw.ID, func(s *Swap) {
+		s.BroadcastAt = time.Now().Add(-time.Hour).UTC() // past timeout, but error wins
+	})
+
+	fc := newFakeConfirmer()
+	fc.setErr("BITCOIN_TESTNET", "btctxidABC", errors.New("mempool.space HTTP 503"))
+
+	d := NewBroadcastDriver(store, bc, time.Hour, nil)
+	d.SetConfirmer(fc)
+	d.Tick(t.Context())
+
+	got, _ := store.Get(t.Context(), sw.ID)
+	if got.Status != SwapStatusAwaitingConfirmation {
+		t.Fatalf("status = %q, want unchanged awaiting_confirmation on RPC error", got.Status)
+	}
+	if s := d.Stats(); s.Rebuilds != 0 || s.ConfirmTimeouts != 0 {
+		t.Errorf("stats = %+v, want no rebuild on transient error", s)
+	}
+}
+
+// TestBumpBTCFeeRate pins the RBF bump policy: zero passes through (first
+// attempt), otherwise +25% +1 so the replacement strictly out-bids even
+// for tiny feerates where integer truncation would tie.
+func TestBumpBTCFeeRate(t *testing.T) {
+	cases := []struct {
+		prev int64
+		want int64
+	}{
+		{0, 0},     // first attempt — no floor
+		{1, 2},     // 1 + 0 + 1
+		{4, 6},     // 4 + 1 + 1
+		{10, 13},   // 10 + 2 + 1
+		{100, 126}, // 100 + 25 + 1
+	}
+	for _, tc := range cases {
+		if got := bumpBTCFeeRate(tc.prev); got != tc.want {
+			t.Errorf("bumpBTCFeeRate(%d) = %d, want %d", tc.prev, got, tc.want)
+		}
+		if tc.prev > 0 && bumpBTCFeeRate(tc.prev) <= tc.prev {
+			t.Errorf("bumpBTCFeeRate(%d) did not strictly exceed input", tc.prev)
+		}
+	}
+}
