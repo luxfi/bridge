@@ -66,6 +66,17 @@ try {
     max: 100,                  // limit each IP to 100 requests per window
     standardHeaders: true,
     legacyHeaders: false,
+    // The kubelet is not a client. Its probes arrive straight at the pod IP with
+    // no X-Forwarded-For, so `trust proxy` cannot spread them the way it does
+    // real traffic — every probe from a node shares one key. Readiness every 5s
+    // plus liveness every 10s is ~270 requests per window against a limit of
+    // 100, so /health starts answering 429, the liveness probe reads that as
+    // dead, and the container is killed and restarted on a loop:
+    //   Liveness probe failed: HTTP probe failed with statuscode: 429
+    // Observed in lux-bridge as a restart every few minutes. Health is
+    // infrastructure asking whether the process is alive; rate-limiting the
+    // answer only teaches the platform to kill it.
+    skip: (req) => req.path === '/health',
   }))
   app.use(express.urlencoded({ extended: true }))
 
