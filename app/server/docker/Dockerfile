@@ -7,10 +7,18 @@ RUN corepack enable pnpm
 
 WORKDIR /app
 
-# Copy workspace root config
+# Copy workspace root config, plus a manifest for every workspace package
+# app/server depends on. pnpm resolves `workspace:` ranges against the manifests
+# present in the tree, so a missing one is not a slow fallback to the registry —
+# it is a hard failure:
+#   ERR_PNPM_WORKSPACE_PKG_NOT_FOUND  In app/server: "@luxfi/utila@workspace:^"
+#   is in the dependencies but no package named "@luxfi/utila" is present
+# which is what this image did for every build after app/server took the utila
+# dependency. Keep this list in step with app/server/package.json.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY app/server/package.json ./app/server/
 COPY pkg/core/package.json ./pkg/core/
+COPY pkg/utila/package.json ./pkg/utila/
 
 # Install workspace deps
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
@@ -25,8 +33,14 @@ WORKDIR /app
 COPY --from=deps /app ./
 COPY . .
 
-# Build @luxfi/core (workspace dep), then server
+# Build the workspace deps, then the server. Both resolve to files under their
+# own dist/, which is gitignored — @luxfi/utila's package.json points main at
+# ./dist/index.cjs.js — so an unbuilt dep is a module-not-found at container
+# start rather than at build time. domain/utila.ts and domain/cosigners.ts
+# import it for real (createGrpcClient, serviceAccountAuthStrategy), so it is
+# needed at runtime and not merely for types.
 RUN cd pkg/core && pnpm build && \
+    cd /app/pkg/utila && pnpm build && \
     cd /app/app/server && pnpm run build
 
 # Runner — copy only what we need
