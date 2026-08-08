@@ -1,0 +1,171 @@
+name: Server
+# Builds ghcr.io/luxfi/bridge-server on the native runners (git.hanzo.ai →
+# git-runner), which is the only fleet that currently serves this repo: the
+# GitHub-side pool `lux-build-amd64` has had no runner since 2026-07-30, so
+# .github/workflows jobs queue and cancel at the 24h timeout without ever
+# reporting a failure. The forge runners advertise both `lux-build-amd64` and
+# `lux-build-linux-amd64`; read them back with
+#   kubectl -n hanzo exec git-runner-0 -- cat /data/.runner
+#
+# BUILD ≠ DEPLOY. This publishes an image and stops. bridge-server is governed
+# by Hanzo CD (`apps.hanzo.ai/installation-id: hanzo-cd`) and runs a
+# DIGEST-PINNED image, so shipping is a separate edit to
+# universe/deploy/lux-bridge/bridge-server.yaml. A `kubectl rollout restart`
+# from CI — which is what .github/workflows/server.yml does — delivers nothing
+# against a pinned digest, and patching the live object would be reverted by CD.
+#
+# ghcr auth: GHCR_USER / GHCR_TOKEN, org Actions secrets on this forge. The
+# instance GITHUB_TOKEN is a Hanzo Git token and is NOT valid at ghcr.io.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/server/**'
+      - 'pkg/core/**'
+      - '.hanzo/workflows/server.yml'
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: [lux-build-linux-amd64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute tags
+        id: meta
+        run: |
+          set -euo pipefail
+          SHA_TAG="ghcr.io/luxfi/bridge-server:sha-${GITHUB_SHA:0:7}"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            {
+              echo "tags<<EOF"
+              echo "ghcr.io/luxfi/bridge-server:v${VERSION}"
+              echo "ghcr.io/luxfi/bridge-server:${VERSION}"
+              echo "$SHA_TAG"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            echo "probe=ghcr.io/luxfi/bridge-server:v${VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "tags<<EOF"
+              echo "$SHA_TAG"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            echo "probe=$SHA_TAG" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          driver-opts: network=host
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build (load for smoke, not yet pushed)
+        uses: docker/build-push-action@v6
+        with:
+          # The Dockerfile installs the pnpm workspace, so the context is the
+          # repo root and the file is addressed from it.
+          context: .
+          file: app/server/docker/Dockerfile
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Smoke — it serves, and it does not quote a mint
+        # Two things are checked, and the second is the reason this step exists.
+        #
+        # A quote is not advisory: on an exit, handlerUtilaPayoutAction reads
+        # back quotes.receive_amount as payoutAmount and bridgeMints exactly it.
+        # bridge-server serves /api for bridge.zoo.network, bridge.zoo.ngo and
+        # bridge.pars.network, and it shipped for months quoting 1000 LZOO as
+        # 47,142,857 ZOO because a failed price lookup answered $1.00. An image
+        # that would do that again must not reach the registry.
+        #
+        # POSTGRES_URL only has to be SET, not reachable: PrismaClient reads it
+        # at construction and would abort startup without it, but connects
+        # lazily, and neither /health nor /api/quote touches the database.
+        run: |
+          set -euo pipefail
+          img="${{ steps.meta.outputs.probe }}"
+          cid=$(docker run -d -p 3000:3000 \
+            -e PORT=3000 \
+            -e POSTGRES_URL="postgresql://smoke:smoke@127.0.0.1:5432/smoke" \
+            "$img")
+          trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
+
+          ok=""
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/health >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ -z "$ok" ]; then
+            docker logs "$cid" 2>&1 | tail -40
+            echo "::error::bridge-server never answered /health"; exit 1
+          fi
+          echo "health ok"
+
+          # 1000 LZOO out of Lux is a 1% exit fee on a wrap: exactly 990.
+          got=$(curl -sf -G http://localhost:3000/api/quote \
+            --data-urlencode 'source_network=LUX_MAINNET' \
+            --data-urlencode 'source_token=LZOO' \
+            --data-urlencode 'destination_network=ZOO_MAINNET' \
+            --data-urlencode 'destination_token=ZOO' \
+            --data-urlencode 'amount=1000' \
+            --data-urlencode 'refuel=false' \
+            --data-urlencode 'use_deposit_address=false' \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{process.stdout.write(String(JSON.parse(s).data.quote.receive_amount))})')
+          if [ "$got" != "990" ]; then
+            echo "::error::1000 LZOO quoted ${got}, want 990 — this image would mint it"; exit 1
+          fi
+          echo "quote ok: 1000 LZOO -> 990 ZOO"
+
+          # An unroutable pair must be refused, not priced.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -G http://localhost:3000/api/quote \
+            --data-urlencode 'source_network=LUX_MAINNET' \
+            --data-urlencode 'source_token=LBTC' \
+            --data-urlencode 'destination_network=ZOO_MAINNET' \
+            --data-urlencode 'destination_token=ZETH' \
+            --data-urlencode 'amount=1')
+          if [ "$code" != "400" ]; then
+            echo "::error::LBTC->ZETH answered ${code}, want 400"; exit 1
+          fi
+          echo "unroutable pair refused with 400"
+
+      - name: Push
+        run: |
+          set -euo pipefail
+          while IFS= read -r t; do
+            [ -n "$t" ] && docker push "$t"
+          done <<< "${{ steps.meta.outputs.tags }}"
+
+      - name: Verify the pushed manifest resolves
+        # build-push can exit 0 while the manifest is not yet resolvable, and a
+        # CR pinned to a phantom tag becomes ImagePullBackOff.
+        run: |
+          set -euo pipefail
+          img="${{ steps.meta.outputs.probe }}"
+          for i in 1 2 3 4 5 6; do
+            if docker manifest inspect "$img" >/dev/null 2>&1; then
+              echo "$img is resolvable"
+              echo "pin this in universe/deploy/lux-bridge/bridge-server.yaml:"
+              docker manifest inspect -v "$img" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log("  digest: "+(j.Descriptor?.digest||j.descriptor?.digest||"(unknown)"))})'
+              exit 0
+            fi
+            echo "manifest not visible yet (attempt ${i}/6) — retrying"; sleep 5
+          done
+          echo "::error::$img not pullable after push"; exit 1
