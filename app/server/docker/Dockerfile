@@ -54,22 +54,31 @@ RUN cd pkg/core && pnpm build && \
     cd /app/pkg/utila && pnpm build && \
     cd /app/app/server && pnpm run build
 
-# Runner — copy only what we need
+# Runner — keep the workspace layout
 FROM node:20-alpine
-WORKDIR /app
+WORKDIR /app/app/server
 
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 bridge && \
     adduser --system --uid 1001 bridge
 
-# Server dist + prisma schema + package.json for module resolution
+# EVERY PATH BELOW MATTERS. pnpm links dependencies with RELATIVE symlinks that
+# count directories from where they sit:
+#   app/server/node_modules/express      -> ../../../node_modules/.pnpm/express@…
+#   app/server/node_modules/@luxfi/core  -> ../../../../pkg/core
+# Flattening app/server/node_modules into /app/node_modules — which this used to
+# do — moves every one of those links two directories too high, so they resolve
+# above the filesystem root and the very first require fails:
+#   Error: Cannot find module 'express'
+#   Require stack: - /app/dist/server.js
+# The image built and pushed perfectly well and then could not start. So the
+# layout is reproduced exactly rather than tidied, and WORKDIR moves to meet it.
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/pkg /app/pkg
+COPY --from=builder /app/app/server/node_modules ./node_modules
 COPY --from=builder /app/app/server/dist ./dist
 COPY --from=builder /app/app/server/package.json ./
 COPY --from=builder /app/app/server/prisma ./prisma
-
-# node_modules — pnpm hoists to workspace root, copy both
-COPY --from=builder /app/app/server/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.pnpm /app/node_modules/.pnpm
 
 USER bridge
 EXPOSE 3000
