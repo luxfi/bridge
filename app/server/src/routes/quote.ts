@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express"
-import { getQuote } from "@/domain/quote"
+import { getQuote, UnsupportedPair } from "@/domain/quote"
 
 const router: Router = Router()
 
@@ -29,9 +29,15 @@ router.get("/", async (req: Request, res: Response) => {
     )
 
     res.status(200).json({ data: result})
-  } 
+  }
   catch (error: any) {
-    res.status(500).json({ error: error })
+    // A pair with no route is the caller asking for something that does not
+    // exist, not the server failing. It has to be distinguishable, because the
+    // old code answered every such request with a confident number.
+    if (error instanceof UnsupportedPair || error instanceof RangeError) {
+      return res.status(400).json({ error: error.message })
+    }
+    res.status(500).json({ error: error?.message })
   }
 })
 
