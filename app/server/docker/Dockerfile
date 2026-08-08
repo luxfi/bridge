@@ -20,6 +20,17 @@ COPY app/server/package.json ./app/server/
 COPY pkg/core/package.json ./pkg/core/
 COPY pkg/utila/package.json ./pkg/utila/
 
+# The root package.json runs `node scripts/patch-hanzogui-exports.cjs` on
+# postinstall, so the install fails outright without it:
+#   Error: Cannot find module '/app/scripts/patch-hanzogui-exports.cjs'
+# The script itself is a UI concern this image has no use for, but it is copied
+# rather than skipped with --ignore-scripts: that flag would also drop
+# @prisma/client's own postinstall, and it would make the image's install a
+# second, subtly different install from the one everyone runs locally. It guards
+# every path with existsSync, so with none of those packages present it is a
+# no-op. 64K.
+COPY scripts ./scripts
+
 # Install workspace deps
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --no-frozen-lockfile
