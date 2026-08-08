@@ -35,7 +35,7 @@
     }
   },
   "author": "Lux Industries, Inc.",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/luxfi/bridge.git",

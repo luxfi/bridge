@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": true,
   "description": "bridge.lux.network — Lux-branded tenant build consuming @luxfi/bridge + @luxfi/brand.",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "author": "Lux Industries, Inc.",
   "type": "module",
   "scripts": {

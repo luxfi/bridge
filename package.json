@@ -18,7 +18,7 @@
     "lux"
   ],
   "author": "Lux Network",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "@noble/ed25519": "^3.1.0"
   },
