@@ -101,18 +101,33 @@ jobs:
         # POSTGRES_URL only has to be SET, not reachable: PrismaClient reads it
         # at construction and would abort startup without it, but connects
         # lazily, and neither /health nor /api/quote touches the database.
+        # Probing runs INSIDE the container, via `docker exec`, not over a
+        # published port. The daemon here is a DinD sidecar, so `-p 3000:3000`
+        # publishes into the daemon's network namespace rather than this job's,
+        # and `curl localhost:3000` from the step would miss a perfectly healthy
+        # container. It uses node's global fetch rather than curl because the
+        # image is node:20-alpine and has no curl.
         run: |
           set -euo pipefail
           img="${{ steps.meta.outputs.probe }}"
-          cid=$(docker run -d -p 3000:3000 \
+          cid=$(docker run -d \
             -e PORT=3000 \
             -e POSTGRES_URL="postgresql://smoke:smoke@127.0.0.1:5432/smoke" \
             "$img")
           trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
 
+          # `get` prints "<status> <body>" for a path, or exits non-zero.
+          get() {
+            docker exec "$cid" node -e '
+              fetch("http://127.0.0.1:3000" + process.argv[1])
+                .then(async (r) => { console.log(r.status + " " + (await r.text())) })
+                .catch((e) => { console.error(e.message); process.exit(1) })
+            ' "$1"
+          }
+
           ok=""
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:3000/health >/dev/null 2>&1; then ok=1; break; fi
+            if get /health >/dev/null 2>&1; then ok=1; break; fi
             sleep 2
           done
           if [ -z "$ok" ]; then
@@ -122,27 +137,18 @@ jobs:
           echo "health ok"
 
           # 1000 LZOO out of Lux is a 1% exit fee on a wrap: exactly 990.
-          got=$(curl -sf -G http://localhost:3000/api/quote \
-            --data-urlencode 'source_network=LUX_MAINNET' \
-            --data-urlencode 'source_token=LZOO' \
-            --data-urlencode 'destination_network=ZOO_MAINNET' \
-            --data-urlencode 'destination_token=ZOO' \
-            --data-urlencode 'amount=1000' \
-            --data-urlencode 'refuel=false' \
-            --data-urlencode 'use_deposit_address=false' \
-            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{process.stdout.write(String(JSON.parse(s).data.quote.receive_amount))})')
+          q='/api/quote?source_network=LUX_MAINNET&source_token=LZOO&destination_network=ZOO_MAINNET&destination_token=ZOO&amount=1000&refuel=false&use_deposit_address=false'
+          out=$(get "$q")
+          got=$(printf '%s' "${out#* }" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(String(JSON.parse(s).data.quote.receive_amount))}catch(e){process.stdout.write("unparseable")}})')
           if [ "$got" != "990" ]; then
-            echo "::error::1000 LZOO quoted ${got}, want 990 — this image would mint it"; exit 1
+            echo "::error::1000 LZOO quoted ${got}, want 990 — this image would mint it"
+            echo "response: $out"; exit 1
           fi
           echo "quote ok: 1000 LZOO -> 990 ZOO"
 
           # An unroutable pair must be refused, not priced.
-          code=$(curl -s -o /dev/null -w '%{http_code}' -G http://localhost:3000/api/quote \
-            --data-urlencode 'source_network=LUX_MAINNET' \
-            --data-urlencode 'source_token=LBTC' \
-            --data-urlencode 'destination_network=ZOO_MAINNET' \
-            --data-urlencode 'destination_token=ZETH' \
-            --data-urlencode 'amount=1')
+          bad='/api/quote?source_network=LUX_MAINNET&source_token=LBTC&destination_network=ZOO_MAINNET&destination_token=ZETH&amount=1'
+          code=$(get "$bad" | cut -d' ' -f1)
           if [ "$code" != "400" ]; then
             echo "::error::LBTC->ZETH answered ${code}, want 400"; exit 1
           fi
