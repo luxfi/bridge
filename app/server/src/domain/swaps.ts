@@ -81,6 +81,15 @@ export async function handleSwapCreation(data: SwapData) {
     )
   }
 
+  // Settle the terms BEFORE anything is created. `convert` refuses a pair the
+  // bridge has no route for, and everything below this line has a side effect
+  // that outlives the request: createMPCWalletForDeposit mints a real custody
+  // address, and prisma.swap.create writes a row the payout path later reads.
+  // Validating after them would leave a funded-looking address and an
+  // unquotable swap behind for input that was never routable.
+  const { receiveAmount, feeAmount, feeRate } =
+    convert(source_network, source_asset, destination_network, destination_asset, Number(amount))
+
   try {
     // source network
     const sourceNetwork = await prisma.network.findUnique({
@@ -154,31 +163,26 @@ export async function handleSwapCreation(data: SwapData) {
       }
     })
 
-    // estimate swap rate — 1% fee only on exits from Lux/Zoo
-    //
     // THIS row is the one that moves money: on an exit,
     // handlerUtilaPayoutAction reads back quotes.receive_amount as payoutAmount
-    // and bridgeMints exactly it. So it projects from the same `convert` the
-    // quote and rate endpoints use — a swap must settle at the number the user
-    // was shown, and three separate copies of the arithmetic could not promise
-    // that. `convert` throws on an unroutable pair, which is caught with the
-    // rest of this handler.
-    const { receiveAmount: receive_amount, feeAmount: service_fee_amount, feeRate } =
-      convert(source_network, source_asset, destination_network, destination_asset, Number(amount))
-    const service_fee_usd = await feeInUsd(destination_asset, service_fee_amount)
+    // and bridgeMints exactly it. It stores the terms settled above, from the
+    // same `convert` the quote and rate endpoints project from — a swap must
+    // settle at the number the user was shown, and three separate copies of the
+    // arithmetic could not promise that.
+    const service_fee_usd = await feeInUsd(destination_asset, feeAmount)
 
     // save quote
     const quote = await prisma.quote.create({
       data: {
         swap_id: swap.id,
-        receive_amount,
+        receive_amount: receiveAmount,
         // A wrap is exact — the guaranteed minimum is the quote itself.
-        min_receive_amount: receive_amount,
+        min_receive_amount: receiveAmount,
         blockchain_fee: 0,
         service_fee: feeRate,
         avg_completion_time: "00:03:00",
         slippage: 0,
-        total_fee: service_fee_amount,
+        total_fee: feeAmount,
         total_fee_in_usd: service_fee_usd ?? 0
       }
     })
