@@ -17,13 +17,15 @@ name: Server
 # ghcr auth: GHCR_USER / GHCR_TOKEN, org Actions secrets on this forge. The
 # instance GITHUB_TOKEN is a Hanzo Git token and is NOT valid at ghcr.io.
 
+# No `paths:` filter, deliberately. luxfi/bridge reaches this forge as a MIRROR
+# of GitHub, and a path filter has to be evaluated against a diff the mirror sync
+# does not necessarily compute — the first version of this file carried one, the
+# forge synced the commit, and no job was ever dispatched. luxfi/kms, which does
+# build here, filters on nothing. Matching that is worth more than skipping the
+# occasional build of an untouched tree.
 on:
   push:
     branches: [main]
-    paths:
-      - 'app/server/**'
-      - 'pkg/core/**'
-      - '.hanzo/workflows/server.yml'
     tags: ['v*']
   workflow_dispatch:
 
