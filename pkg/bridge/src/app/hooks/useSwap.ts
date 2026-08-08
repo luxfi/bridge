@@ -94,6 +94,25 @@ function formatEta(raw: string): string {
 }
 
 /**
+ * The server's own explanation of a failed quote, when it gave one.
+ *
+ * `/api/quote` answers `{ error: "no bridge route between LBTC and ZETH" }`, and
+ * that sentence is the whole diagnosis — worth far more to whoever is looking at
+ * the form than the status code. Returns undefined when the body is not shaped
+ * that way, so the caller keeps its generic fallback rather than rendering
+ * "undefined" or "[object Object]".
+ */
+function serverMessage(err: BridgeApiError): string | undefined {
+  const body = err.body
+  if (typeof body === 'string') return body.trim() || undefined
+  if (body && typeof body === 'object' && 'error' in body) {
+    const e = (body as { error: unknown }).error
+    if (typeof e === 'string' && e.trim()) return e.trim()
+  }
+  return undefined
+}
+
+/**
  * Pick a sensible default chain ID — Lux first (the canonical source),
  * Ethereum second (the canonical destination), else the first chain in the
  * registry. Falls back to a benign string when the registry is empty so
@@ -315,7 +334,14 @@ export function useSwap(): SwapState {
         .catch((err: unknown) => {
           if (ctl.signal.aborted) return
           if (err instanceof BridgeApiError) {
-            setQuoteError(`Quote failed (${err.status})`)
+            // Prefer what the server said. A 4xx from /api/quote names the
+            // actual problem — "no bridge route between LBTC and ZETH" — and
+            // the picker offers every network for every source, so an
+            // unroutable pair is a normal thing for someone to land on rather
+            // than an edge case. "Quote failed (400)" told them a request had
+            // failed without telling them the route does not exist, which reads
+            // as the site being broken.
+            setQuoteError(serverMessage(err) ?? `Quote failed (${err.status})`)
           } else if (err instanceof Error && err.name === 'AbortError') {
             // Aborted by a newer keystroke — silent.
             return
