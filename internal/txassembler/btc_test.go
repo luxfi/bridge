@@ -2,12 +2,27 @@ package txassembler
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"testing"
 
 	"github.com/luxfi/bridge/internal/btc"
 )
+
+// sig32 returns a 32-byte slice of repeated `seed`, used to build
+// throwaway r||s components for FinalizeBTC tests -- Payment.Finalize
+// doesn't verify the signature cryptographically (see
+// internal/btc/payment_test.go's TestPayment_FinalizeNonEmpty), only
+// wires it into a DER container, so a fixed non-cryptographic value is
+// fine here.
+func sig32(seed byte) []byte {
+	b := make([]byte, 32)
+	for i := range b {
+		b[i] = seed
+	}
+	return b
+}
 
 // ───────────────────────────────────────────────────────────────────
 // Mock BTCProvider
@@ -274,5 +289,101 @@ func TestPreSignBTC_MinFeeRateBelowEstimateIgnored(t *testing.T) {
 	}
 	if u.FeeRate != 9 {
 		t.Errorf("FeeRate = %d, want 9 (estimate exceeds floor)", u.FeeRate)
+	}
+}
+
+// ───────────────────────────────────────────────────────────────────
+// FinalizeBTC
+// ───────────────────────────────────────────────────────────────────
+//
+// FinalizeBTC itself is a thin wrapper (nil check, signature-length
+// check, delegate to Payment.Finalize) -- the cryptographic/wire
+// correctness of Payment.Finalize is already exhaustively covered in
+// internal/btc/payment_test.go. These tests exist because the wrapper
+// logic itself (the guards, and the assembler's own boundary into
+// package btc) had never been exercised at all, from either the
+// release or refund side.
+
+func TestFinalizeBTC_ReleasePath_ProducesValidTxAndTxid(t *testing.T) {
+	a := newTestAssembler()
+	unsigned, err := a.PreSignBTC(context.Background(), btcReleaseIntent(0), releaseProvider(5), testDepositPubKeyHex)
+	if err != nil {
+		t.Fatalf("PreSignBTC: %v", err)
+	}
+
+	sig := append(sig32(0x10), sig32(0x20)...) // throwaway r||s -- Payment.Finalize doesn't verify
+	rawHex, txid, err := a.FinalizeBTC(unsigned, sig)
+	if err != nil {
+		t.Fatalf("FinalizeBTC: %v", err)
+	}
+	if len(rawHex) == 0 {
+		t.Error("expected non-empty raw tx hex")
+	}
+	if len(txid) != 64 {
+		t.Errorf("txid length = %d, want 64 (32-byte hash, hex-encoded)", len(txid))
+	}
+	if _, err := hex.DecodeString(rawHex); err != nil {
+		t.Errorf("rawHex is not valid hex: %v", err)
+	}
+}
+
+func TestFinalizeBTC_RefundPath_ProducesValidTxAndTxid(t *testing.T) {
+	a := newTestAssembler()
+	p := newProviderWith([]btc.UTXO{
+		confirmedUTXO("aaaa000000000000000000000000000000000000000000000000000000000001", 3, 20_000),
+	}, 1)
+	unsigned, err := a.PreSignBTCRefund(context.Background(),
+		"BITCOIN_TESTNET", testDepositPubKeyHex, testDepositAddress, testRecipientAddr, p)
+	if err != nil {
+		t.Fatalf("PreSignBTCRefund: %v", err)
+	}
+
+	sig := append(sig32(0x30), sig32(0x40)...)
+	rawHex, txid, err := a.FinalizeBTC(unsigned, sig)
+	if err != nil {
+		t.Fatalf("FinalizeBTC: %v", err)
+	}
+	if len(rawHex) == 0 || len(txid) != 64 {
+		t.Errorf("FinalizeBTC result raw=%d txid=%q", len(rawHex), txid)
+	}
+}
+
+func TestFinalizeBTC_RejectsNilUnsigned(t *testing.T) {
+	a := newTestAssembler()
+	_, _, err := a.FinalizeBTC(nil, append(sig32(0x1), sig32(0x2)...))
+	if err == nil {
+		t.Fatal("expected an error for a nil BTCUnsigned, got nil")
+	}
+}
+
+func TestFinalizeBTC_RejectsShortSignature(t *testing.T) {
+	a := newTestAssembler()
+	unsigned, err := a.PreSignBTC(context.Background(), btcReleaseIntent(0), releaseProvider(5), testDepositPubKeyHex)
+	if err != nil {
+		t.Fatalf("PreSignBTC: %v", err)
+	}
+	_, _, err = a.FinalizeBTC(unsigned, make([]byte, 63)) // one byte short of r||s
+	if err == nil {
+		t.Fatal("expected an error for a 63-byte signature, got nil")
+	}
+}
+
+// A 65-byte signature (r||s||v, the EVM-style shape ParseRSV produces)
+// must still work -- FinalizeBTC only uses the first 64 bytes and
+// silently ignores a trailing recovery byte, since Bitcoin doesn't use
+// one. Pins that the >= check in the wrapper is deliberate, not a bug.
+func TestFinalizeBTC_AcceptsSignatureWithTrailingRecoveryByte(t *testing.T) {
+	a := newTestAssembler()
+	unsigned, err := a.PreSignBTC(context.Background(), btcReleaseIntent(0), releaseProvider(5), testDepositPubKeyHex)
+	if err != nil {
+		t.Fatalf("PreSignBTC: %v", err)
+	}
+	sig65 := append(append(sig32(0x10), sig32(0x20)...), 0x00)
+	if len(sig65) != 65 {
+		t.Fatalf("test fixture bug: sig65 length = %d, want 65", len(sig65))
+	}
+	_, _, err = a.FinalizeBTC(unsigned, sig65)
+	if err != nil {
+		t.Fatalf("FinalizeBTC with a 65-byte signature: %v", err)
 	}
 }
