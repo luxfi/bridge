@@ -12,6 +12,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -133,6 +134,15 @@ func parseRSAPrivateKey(pemSrc string) (*rsa.PrivateKey, error) {
 	if pemSrc == "" {
 		return nil, errors.New("fireblocks jwt: empty PEM")
 	}
+	// The doc comment above promises whitespace/BOM tolerance, but
+	// pem.Decode only skips lines that are ENTIRELY blank before the
+	// "-----BEGIN" marker -- a leading space or tab on the same line
+	// as "-----BEGIN" (exactly what indentation from a pasted KMS dump
+	// produces) makes it return nil rather than skip past it. Trim the
+	// whole input (and a leading UTF-8 BOM, which a Windows-edited KMS
+	// export can carry) before decoding so the promised tolerance is
+	// actually real, not just documented.
+	pemSrc = strings.TrimPrefix(strings.TrimSpace(pemSrc), "\uFEFF")
 	block, _ := pem.Decode([]byte(pemSrc))
 	if block == nil {
 		return nil, errors.New("fireblocks jwt: no PEM block (bad format)")
