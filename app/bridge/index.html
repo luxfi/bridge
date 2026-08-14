@@ -4,14 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!--
-      Favicon is the canonical Lux mark from @luxfi/logo (getFaviconSVG):
-      white triangle on a black rounded square. This is hardcoded in
-      index.html because favicons must be present in the static HTML
-      (the bundler can't inject them into <link rel="icon"> at runtime).
-      Logo OTHER than the favicon comes from @luxfi/logo at runtime via
-      bridge.config.ts. Source: ~/work/lux/logo/dist/logos.js#getFaviconSVG.
+      The tab icon is the canonical Lux mark, @luxfi/logo@1.0.11
+      getFaviconSVG, served from public/ as a real file. Both tags are
+      written here rather than injected by the bundler because the
+      elements have to exist in the static HTML: the Go server rewrites
+      the href per tenant, and bridge.config.ts rewrites it again at
+      runtime. The .ico is what a browser fetches on its own when it
+      asks for /favicon.ico without reading the markup.
+      Logo OTHER than the tab icon comes from @luxfi/logo at runtime.
     -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='8' fill='%23000000'/><path d='M32 52 L12 18 L52 18 Z' fill='%23ffffff'/></svg>" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
     <title>Lux Bridge</title>
     <meta name="description" content="Cross-chain bridge for the Lux Network." />
     <!--
