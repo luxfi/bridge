@@ -1,8 +1,8 @@
-import { convert, feeInUsd } from "./quote"
+import { settle, feeInUsd } from "./quote"
 
-// The same conversion as a quote, under different field names — this is what the
+// The same settlement as a quote, under different field names — this is what the
 // UI polls while the user is typing, so if it disagreed with getQuote the number
-// would change at the moment of committing. It projects from `convert` rather
+// would change at the moment of committing. It projects from `settle` rather
 // than recomputing so that it cannot.
 export const getRate = async (
   fromNetwork: string,
@@ -13,7 +13,7 @@ export const getRate = async (
   version: 'mainnet' | 'testnet',
 ) => {
 
-  const { receiveAmount, feeAmount, feeRate } = convert(fromNetwork, fromAsset, toNetwork, toAsset, amount)
+  const { receiveAmount, feeAmount, feeRate } = await settle(fromNetwork, fromAsset, toNetwork, toAsset, amount)
   const feeUsd = await feeInUsd(toAsset, feeAmount)
 
   return {

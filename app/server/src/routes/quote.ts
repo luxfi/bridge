@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express"
-import { getQuote, UnsupportedPair } from "@/domain/quote"
+import { getQuote, UnsupportedPair, UnknownPrice } from "@/domain/quote"
 
 const router: Router = Router()
 
@@ -36,6 +36,11 @@ router.get("/", async (req: Request, res: Response) => {
     // old code answered every such request with a confident number.
     if (error instanceof UnsupportedPair || error instanceof RangeError) {
       return res.status(400).json({ error: error.message })
+    }
+    // The route exists but its price is momentarily unavailable — a transient
+    // upstream state the caller can retry, not bad input. 503 says so.
+    if (error instanceof UnknownPrice) {
+      return res.status(503).json({ error: error.message })
     }
     res.status(500).json({ error: error?.message })
   }

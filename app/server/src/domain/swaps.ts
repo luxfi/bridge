@@ -7,7 +7,7 @@ import logger from "@/logger"
 import { prisma } from "@/prisma-instance"
 import { isValidAddress } from "@/util"
 
-import { isExitFromLux, BRIDGE_FEE_RATE, convert, feeInUsd } from "./quote"
+import { isExitFromLux, BRIDGE_FEE_RATE, settle, feeInUsd } from "./quote"
 import { createMPCWalletForDeposit, checkNativeDeposit, archiveMPCWallet, NETWORK_ASSET_MAP } from "./mpc-wallet"
 import { isMPCSigningEnabled, mpcBridgeMint, mpcSendNative } from "./mpc-signer"
 
@@ -81,14 +81,16 @@ export async function handleSwapCreation(data: SwapData) {
     )
   }
 
-  // Settle the terms BEFORE anything is created. `convert` refuses a pair the
-  // bridge has no route for, and everything below this line has a side effect
-  // that outlives the request: createMPCWalletForDeposit mints a real custody
-  // address, and prisma.swap.create writes a row the payout path later reads.
-  // Validating after them would leave a funded-looking address and an
-  // unquotable swap behind for input that was never routable.
-  const { receiveAmount, feeAmount, feeRate } =
-    convert(source_network, source_asset, destination_network, destination_asset, Number(amount))
+  // Settle the terms BEFORE anything is created. `settle` refuses a pair the
+  // bridge has no route for — and a corridor it cannot price — and everything
+  // below this line has a side effect that outlives the request:
+  // createMPCWalletForDeposit mints a real custody address, and
+  // prisma.swap.create writes a row the payout path later reads. Settling after
+  // them would leave a funded-looking address and an unquotable swap behind for
+  // input that was never routable. A corridor consults a price feed here; a wrap
+  // does not — either way nothing is created until the terms hold.
+  const { receiveAmount, feeAmount, feeRate, slippage } =
+    await settle(source_network, source_asset, destination_network, destination_asset, Number(amount))
 
   try {
     // source network
@@ -166,7 +168,7 @@ export async function handleSwapCreation(data: SwapData) {
     // THIS row is the one that moves money: on an exit,
     // handlerUtilaPayoutAction reads back quotes.receive_amount as payoutAmount
     // and bridgeMints exactly it. It stores the terms settled above, from the
-    // same `convert` the quote and rate endpoints project from — a swap must
+    // same `settle` the quote and rate endpoints project from — a swap must
     // settle at the number the user was shown, and three separate copies of the
     // arithmetic could not promise that.
     const service_fee_usd = await feeInUsd(destination_asset, feeAmount)
@@ -176,12 +178,15 @@ export async function handleSwapCreation(data: SwapData) {
       data: {
         swap_id: swap.id,
         receive_amount: receiveAmount,
-        // A wrap is exact — the guaranteed minimum is the quote itself.
-        min_receive_amount: receiveAmount,
+        // A wrap is exact — its guaranteed minimum is the quote itself (slippage
+        // 0). A corridor is priced from a feed, so its minimum sits a band under.
+        // The band rides settle, so the stored swap, the quote and the rate can
+        // never disagree on it.
+        min_receive_amount: receiveAmount * (1 - slippage),
         blockchain_fee: 0,
         service_fee: feeRate,
         avg_completion_time: "00:03:00",
-        slippage: 0,
+        slippage,
         total_fee: feeAmount,
         total_fee_in_usd: service_fee_usd ?? 0
       }

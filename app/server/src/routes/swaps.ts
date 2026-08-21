@@ -14,7 +14,7 @@ import {
   handlerUtilaPayoutAction
 } from "@/domain/swaps"
 import { BadCosignerIntent, validateCosigners } from "@/domain/cosigners"
-import { UnsupportedPair } from "@/domain/quote"
+import { UnsupportedPair, UnknownPrice } from "@/domain/quote"
 
 const router: Router = Router()
 
@@ -99,6 +99,11 @@ router.post(
       // fault. Both are rejected before anything is minted or written.
       if (error instanceof UnsupportedPair || error instanceof RangeError) {
         return res.status(400).json({ error: error.message })
+      }
+      // A routable corridor the bridge can't price this instant — nothing was
+      // minted or written (settle runs first). Transient, so 503 + retryable.
+      if (error instanceof UnknownPrice) {
+        return res.status(503).json({ error: error.message })
       }
       console.log(error)
       res.status(500).json({ error: error?.message })
