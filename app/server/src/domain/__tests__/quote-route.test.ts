@@ -95,4 +95,24 @@ describe('GET /api/quote', () => {
     expect(body.data.quote.receive_amount).toBe(990)
     expect(body.data.quote.total_fee_in_usd).toBeNull()
   })
+
+  it('resolves the LUX<->ZOO corridor as a priced trade, not "no bridge route"', async () => {
+    // LUX and ZOO both price from the built-in table, so this settles with no
+    // network. 1000 LUX / (0.000021 / 0.0011) − 1% = 51857.14 ZOO — a trade, not
+    // the 990 a wrap would pay. The minimum sits a 2.5% band under.
+    const { status, body } = await quote('LUX_MAINNET', 'LUX', 'ZOO_MAINNET', 'ZOO', '1000')
+    expect(status).toBe(200)
+    expect(body.data.quote.receive_amount).toBeCloseTo(51857.142857, 3)
+    expect(body.data.quote.slippage).toBe(0.025)
+    expect(body.data.quote.min_receive_amount).toBeCloseTo(51857.142857 * 0.975, 3)
+  })
+
+  it('refuses the LUX<->ETH corridor with 503 when the ETH feed is unreachable', async () => {
+    // The route exists — so this is not the 400 an unroutable pair gets. ETH is
+    // priced from the upstream feed, which is stubbed to fail here, so the
+    // corridor refuses with price_unknown rather than inventing a rate.
+    const { status, body } = await quote('LUX_MAINNET', 'LUX', 'ETHEREUM_MAINNET', 'ETH', '1000')
+    expect(status).toBe(503)
+    expect(body.error).toMatch(/price_unknown/)
+  })
 })
