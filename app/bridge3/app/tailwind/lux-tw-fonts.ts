@@ -10,13 +10,13 @@ export default [
     twName: 'sans'
   },
   {
-    fontFamily: ['var(--font-druk-text-wide)'], // do not provide fall-backs due to next bug
-    cssVar: '--font-druk-text-wide',
+    // Zen carries the display roles. The wide, monumental cut they were set in is
+    // weight and tracking, applied in style/lux-fonts.css — not a second family.
+    fontFamily: ['Zen'],
     twName: 'nav'
   },
   {
-    fontFamily: ['var(--font-druk-wide)'], // do not provide fall-backs due to next bug
-    cssVar: '--font-druk-wide',
+    fontFamily: ['Zen'],
     twName: 'heading'
   },
   {

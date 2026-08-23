@@ -1,17 +1,14 @@
 @tailwind base;
 
 @layer base {
+  /* Zen — one variable file spans weights 100-900, so the display weight and the
+     text weight are the same face at two settings rather than two downloads. */
   @font-face {
-    font-family: "DrukWide";
-    src: url("/fonts/Druk-Wide-Medium.ttf");
-    font-weight: 500;
+    font-family: "Zen";
+    src: url("/fonts/Zen-Variable.woff2") format("woff2");
+    font-weight: 100 900;
     font-style: normal;
-  }
-  @font-face {
-    font-family: "DrukWide";
-    src: url("/fonts/Druk-Wide-Bold.ttf");
-    font-weight: 700;
-    font-style: normal;
+    font-display: swap;
   }
   @font-face {
     font-family: "inter";
@@ -26,5 +23,19 @@
       url("/fonts/InterVariable-Italic.ttf") format("ttf");
     font-weight: 500;
     font-style: italic;
+  }
+
+  /* The display voice: Zen fitted to the wide, monumental cut the headings and the
+     nav were set in. Weight and tracking ride the role, so a `font-heading` element
+     needs nothing else — and living in `base` means a `tracking-*` utility on the
+     same element still wins, which is why this is not a plain rule.
+
+     The horizontal scale that completes the fit is `.zen-wide` from
+     `@hanzo/font/presets.css`. It is deliberately NOT applied here: a transform
+     does not reflow, so a heading takes it only where its container has room. */
+  .font-heading,
+  .font-nav {
+    font-variation-settings: "wght" 845;
+    letter-spacing: -0.04em;
   }
 }

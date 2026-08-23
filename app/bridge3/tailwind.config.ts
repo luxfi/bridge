@@ -3,8 +3,8 @@ import { preset } from './app/tailwind'
 
 const fontFamily = {
   sans: 'inter',
-  heading: 'DrukWide',
-  nav: 'DrukWide',
+  heading: 'Zen',
+  nav: 'Zen',
   serif: ['ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times'],
   mono: [
     'ui-monospace',
