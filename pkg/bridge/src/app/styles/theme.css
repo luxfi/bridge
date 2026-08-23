@@ -24,19 +24,18 @@
  * downstream has to state a weight it did not state before.
  *
  * `size-adjust` is the x-height correction, and it is here so it is stated once.
- * Measured on the two files: the outgoing face put its x-height at 0.718 of its
- * cap, Zen puts it at 0.746, so at one font-size Zen's lowercase renders about 4%
- * larger. 96.2% takes that back for every size in the SDK without one of them
- * moving. (Read as an ABSOLUTE x-height instead — 0.494em against 0.530em — the
- * correction would be 93.2%; the cap-relative figure is the one the brand fit
- * uses, and it is the more conservative of the two.)
+ * Zen sets a taller x-height than the face it replaces, so the same nominal size
+ * reads larger. PER EM, not per cap: a size is an em measurement, so matching
+ * x-heights means matching x-per-em — measured on the two files, 494/1000 against
+ * 530/1000, giving 0.9321. Every size in the SDK then renders as it did without
+ * one of them moving.
  */
 @font-face {
   font-family: 'Zen';
   font-weight: 497;
   font-style: normal;
   font-display: swap;
-  size-adjust: 96.2%;
+  size-adjust: 93.21%;
   src: url('/fonts/Zen-Variable.woff2') format('woff2');
 }
 @font-face {
@@ -44,7 +43,7 @@
   font-weight: 606;
   font-style: normal;
   font-display: swap;
-  size-adjust: 96.2%;
+  size-adjust: 93.21%;
   src: url('/fonts/Zen-Variable.woff2') format('woff2');
 }
 
