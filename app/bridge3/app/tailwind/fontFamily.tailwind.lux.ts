@@ -9,7 +9,7 @@ export const fontFamily = (ignoreTheme: any): {
   let result: any = {}
   luxTwFonts.forEach((font: TwFontDesc) => {
     result[font.twName] = font.fontFamily
-    // eg: heading: ['var(--font-druk-text-wide)']
+    // eg: heading: ['Zen']
   })
 
   return result as {

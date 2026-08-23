@@ -8,25 +8,44 @@
  */
 
 /*
- * Basel Grotesk — the canonical brand face (BRAND_TOKENS.font) shared by all
- * four tenants (Lux/Zoo/Hanzo/Pars). Shipped as a bundled webfont so the body
- * font is a real sans face, never a Times serif fallback. The woff2 files are
- * served from the consuming app's public/fonts/ at the SPA root (bridge is a
- * full-page app mounted at `/`), so the absolute `/fonts/*` src resolves.
+ * Zen — the canonical brand face (BRAND_TOKENS.font) shared by all four tenants
+ * (Lux/Zoo/Hanzo/Pars). Shipped as a bundled webfont so the body font is a real
+ * sans face, never a Times serif fallback. The woff2 is served from the consuming
+ * app's public/fonts/ at the SPA root (bridge is a full-page app mounted at `/`),
+ * so the absolute `/fonts/*` src resolves.
+ *
+ * ONE file, declared TWICE, and the duplication is the point. Zen is variable
+ * across 100-900, and the two weights below are the fitted equivalents of the two
+ * static cuts this replaces: 497 for the text weight, 606 for the UI emphasis
+ * (`.zen-book` and `.zen-medium` in @hanzo/font). A single-value `font-weight`
+ * descriptor clamps the wght axis to that value, so CSS font matching picks the
+ * nearer of the two for whatever a rule asks — 400 and 500 land on 497, 600 and
+ * above on 606, which is exactly how the two static cuts behaved. Nothing
+ * downstream has to state a weight it did not state before.
+ *
+ * `size-adjust` is the x-height correction, and it is here so it is stated once.
+ * Measured on the two files: the outgoing face put its x-height at 0.718 of its
+ * cap, Zen puts it at 0.746, so at one font-size Zen's lowercase renders about 4%
+ * larger. 96.2% takes that back for every size in the SDK without one of them
+ * moving. (Read as an ABSOLUTE x-height instead — 0.494em against 0.530em — the
+ * correction would be 93.2%; the cap-relative figure is the one the brand fit
+ * uses, and it is the more conservative of the two.)
  */
 @font-face {
-  font-family: 'Basel Grotesk';
-  font-weight: 400;
+  font-family: 'Zen';
+  font-weight: 497;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/Basel-Grotesk-Book.woff2') format('woff2');
+  size-adjust: 96.2%;
+  src: url('/fonts/Zen-Variable.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Basel Grotesk';
-  font-weight: 500;
+  font-family: 'Zen';
+  font-weight: 606;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/Basel-Grotesk-Medium.woff2') format('woff2');
+  size-adjust: 96.2%;
+  src: url('/fonts/Zen-Variable.woff2') format('woff2');
 }
 
 :root {
@@ -76,7 +95,7 @@
   --bridge-spacing-lg: 24px;
 
   /* Typography. */
-  --bridge-font: 'Basel Grotesk', -apple-system, BlinkMacSystemFont, 'Inter',
+  --bridge-font: 'Zen', -apple-system, BlinkMacSystemFont, 'Inter',
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --bridge-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
     monospace;

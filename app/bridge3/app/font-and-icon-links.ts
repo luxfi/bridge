@@ -7,18 +7,12 @@ type CrossOrigin = "anonymous" | "use-credentials"
   // https://github.com/remix-run/remix/discussions/4963#discussioncomment-4556820
 export default [
   {
+      // One variable file covers every weight the display roles ask for.
     rel: "preload",
     as: "font",
-    href: "/fonts/Druk-Wide-Medium.ttf", 
-    type: "font/ttf",
+    href: "/fonts/Zen-Variable.woff2",
+    type: "font/woff2",
     crossOrigin: "anonymous" as CrossOrigin
-  },
-  {
-    rel: "preload",
-    as: "font",
-    href: "/fonts/Druk-Wide-Bold.ttf", 
-    type: "font/ttf",
-    crossOrigin: "anonymous" as CrossOrigin,
   },
   {
     rel: "preload",
