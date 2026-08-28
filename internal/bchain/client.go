@@ -142,25 +142,25 @@ type BridgeInfo struct {
 	TotalFees       string   `json:"totalFees"`
 }
 
-// FeeEstimate is the bridge_estimateFee result.
+// FeeEstimate is the bridge.EstimateFee result.
 type FeeEstimate struct {
 	FeeAmount     string `json:"feeAmount"`
 	NetAmount     string `json:"netAmount"`
 	EstimatedTime int    `json:"estimatedTime"`
 }
 
-// Health is the bridge_health result.
+// Health is the bridge.Health result.
 type Health struct {
 	Status   string `json:"status"`
 	MPCReady bool   `json:"mpcReady"`
 }
 
-// MPCPublicKey is the bridge_getMPCPublicKey result.
+// MPCPublicKey is the bridge.GetMPCPublicKey result.
 type MPCPublicKey struct {
 	PublicKey string `json:"publicKey"`
 }
 
-// BridgeSignature is the bridge_getSignature result.
+// BridgeSignature is the bridge.GetSignature result.
 type BridgeSignature struct {
 	Signature string `json:"signature"`
 	SessionID string `json:"sessionId"`
@@ -177,7 +177,7 @@ type BridgeSignature struct {
 // current epoch's quorum. mpcd remains authoritative on key share
 // material itself; b-chain is the membership + epoch ledger.
 //
-// The methods land on the same JSON-RPC endpoint as bridge_getInfo (the
+// The methods land on the same JSON-RPC endpoint as bridge.GetBridgeInfo (the
 // BridgeVM RPC at `${nodeUrl}/v1/bc/B/rpc`), not on ThresholdVM. They
 // are read-only — the bridge never proposes a rotation; node operators
 // do that out-of-band via BridgeVM governance.
@@ -201,7 +201,7 @@ type SignerMember struct {
 	Address string `json:"address,omitempty"`
 }
 
-// SignerSetInfo is the bridge_getSignerSetInfo result — a snapshot of
+// SignerSetInfo is the bridge.GetSignerSetInfo result — a snapshot of
 // the active MPC signer set at the current epoch. Bridge consumers
 // scrape this to surface "is the quorum the one I expect?" on dashboards.
 type SignerSetInfo struct {
@@ -236,7 +236,7 @@ type SignerSetInfo struct {
 	LastRotationAt int64 `json:"lastRotationAt,omitempty"`
 }
 
-// CurrentEpoch is the bridge_getCurrentEpoch result — the smaller
+// CurrentEpoch is the bridge.GetCurrentEpoch result — the smaller
 // payload meant for high-frequency polling (think 5-second cadence).
 // SignerSetInfo is the snapshot for dashboards; CurrentEpoch is for
 // "did anything change?" checks.
@@ -254,7 +254,7 @@ type CurrentEpoch struct {
 	StartedAt int64 `json:"startedAt,omitempty"`
 }
 
-// CancelResult is the bridge_cancelRequest result.
+// CancelResult is the bridge.CancelRequest result.
 type CancelResult struct {
 	Success bool `json:"success"`
 }
@@ -263,7 +263,7 @@ type CancelResult struct {
 // Method param shapes
 // =============================================================================
 
-// EstimateFeeParams is the bridge_estimateFee request body.
+// EstimateFeeParams is the bridge.EstimateFee request body.
 type EstimateFeeParams struct {
 	SourceChain string `json:"sourceChain"`
 	DestChain   string `json:"destChain"`
@@ -273,7 +273,7 @@ type EstimateFeeParams struct {
 	Refuel      bool   `json:"refuel,omitempty"`
 }
 
-// SubmitRequestParams is the bridge_submitRequest request body.
+// SubmitRequestParams is the bridge.SubmitRequest request body.
 type SubmitRequestParams struct {
 	SourceChain string `json:"sourceChain"`
 	DestChain   string `json:"destChain"`
@@ -497,8 +497,39 @@ func truncate(b []byte, n int) string {
 }
 
 // bridgeCall invokes a method against the BridgeVM endpoint.
-func (c *Client) bridgeCall(ctx context.Context, method string, params, out any) error {
-	return c.rpc(ctx, c.BridgeRPCURL, method, params, out)
+// A proc is a remote procedure on a service. BridgeVM serves through
+// gorilla/rpc v2, which dispatches by splitting the wire name on a single "."
+// and looking the second half up verbatim, so a service and a procedure are
+// two values and joining them is one function. Spelling that join by hand at
+// every call site is how this client came to name twelve procedures no server
+// implements.
+type proc struct {
+	service string
+	name    string
+}
+
+func (p proc) String() string { return p.service + "." + p.name }
+
+// The procedures BridgeVM serves, spelled as its Service exports them. Naming
+// one that does not exist is a compile error rather than a -32601 from a chain
+// that may not be running yet.
+var (
+	estimateFee        = proc{"bridge", "EstimateFee"}
+	submitRequest      = proc{"bridge", "SubmitRequest"}
+	getStatus          = proc{"bridge", "GetStatus"}
+	cancelRequest      = proc{"bridge", "CancelRequest"}
+	getBridgeInfo      = proc{"bridge", "GetBridgeInfo"}
+	getSupportedChains = proc{"bridge", "GetSupportedChains"}
+	getChainConfig     = proc{"bridge", "GetChainConfig"}
+	health             = proc{"bridge", "Health"}
+	getMPCPublicKey    = proc{"bridge", "GetMPCPublicKey"}
+	getSignature       = proc{"bridge", "GetSignature"}
+	getSignerSetInfo   = proc{"bridge", "GetSignerSetInfo"}
+	getCurrentEpoch    = proc{"bridge", "GetCurrentEpoch"}
+)
+
+func (c *Client) bridgeCall(ctx context.Context, p proc, params, out any) error {
+	return c.rpc(ctx, c.BridgeRPCURL, p.String(), params, out)
 }
 
 // thresholdCall invokes a method against the ThresholdVM endpoint.
@@ -522,7 +553,7 @@ func (c *Client) thresholdCall(ctx context.Context, method string, params, out a
 // EstimateFee returns the fee + receive-amount estimate for a bridge intent.
 func (c *Client) EstimateFee(ctx context.Context, params EstimateFeeParams) (*FeeEstimate, error) {
 	var out FeeEstimate
-	if err := c.bridgeCall(ctx, "bridge.EstimateFee", params, &out); err != nil {
+	if err := c.bridgeCall(ctx, estimateFee, params, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -532,7 +563,7 @@ func (c *Client) EstimateFee(ctx context.Context, params EstimateFeeParams) (*Fe
 // returned record carries the RequestID the caller polls via GetBridgeStatus.
 func (c *Client) SubmitBridgeRequest(ctx context.Context, params SubmitRequestParams) (*BridgeRequest, error) {
 	var out BridgeRequest
-	if err := c.bridgeCall(ctx, "bridge.SubmitRequest", params, &out); err != nil {
+	if err := c.bridgeCall(ctx, submitRequest, params, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -541,7 +572,7 @@ func (c *Client) SubmitBridgeRequest(ctx context.Context, params SubmitRequestPa
 // GetBridgeStatus reads the current state of a bridge request.
 func (c *Client) GetBridgeStatus(ctx context.Context, requestID string) (*BridgeRequest, error) {
 	var out BridgeRequest
-	if err := c.bridgeCall(ctx, "bridge.GetStatus", map[string]string{"requestId": requestID}, &out); err != nil {
+	if err := c.bridgeCall(ctx, getStatus, map[string]string{"requestId": requestID}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -550,7 +581,7 @@ func (c *Client) GetBridgeStatus(ctx context.Context, requestID string) (*Bridge
 // CancelRequest cancels a pending bridge request.
 func (c *Client) CancelRequest(ctx context.Context, requestID string) (*CancelResult, error) {
 	var out CancelResult
-	if err := c.bridgeCall(ctx, "bridge.CancelRequest", map[string]string{"requestId": requestID}, &out); err != nil {
+	if err := c.bridgeCall(ctx, cancelRequest, map[string]string{"requestId": requestID}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -563,7 +594,7 @@ func (c *Client) CancelRequest(ctx context.Context, requestID string) (*CancelRe
 // GetBridgeInfo reads node-level info (mpc readiness, threshold, totals).
 func (c *Client) GetBridgeInfo(ctx context.Context) (*BridgeInfo, error) {
 	var out BridgeInfo
-	if err := c.bridgeCall(ctx, "bridge.GetBridgeInfo", nil, &out); err != nil {
+	if err := c.bridgeCall(ctx, getBridgeInfo, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -572,7 +603,7 @@ func (c *Client) GetBridgeInfo(ctx context.Context) (*BridgeInfo, error) {
 // GetSupportedChains lists the chains the BridgeVM supports.
 func (c *Client) GetSupportedChains(ctx context.Context) ([]ChainConfig, error) {
 	var out []ChainConfig
-	if err := c.bridgeCall(ctx, "bridge.GetSupportedChains", nil, &out); err != nil {
+	if err := c.bridgeCall(ctx, getSupportedChains, nil, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -581,7 +612,7 @@ func (c *Client) GetSupportedChains(ctx context.Context) ([]ChainConfig, error) 
 // GetChainConfig fetches the per-chain config for the given chain id.
 func (c *Client) GetChainConfig(ctx context.Context, chainID string) (*ChainConfig, error) {
 	var out ChainConfig
-	if err := c.bridgeCall(ctx, "bridge.GetChainConfig", map[string]string{"chainId": chainID}, &out); err != nil {
+	if err := c.bridgeCall(ctx, getChainConfig, map[string]string{"chainId": chainID}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -591,7 +622,7 @@ func (c *Client) GetChainConfig(ctx context.Context, chainID string) (*ChainConf
 // to decide whether RPC is reachable before routing a request.
 func (c *Client) Health(ctx context.Context) (*Health, error) {
 	var out Health
-	if err := c.bridgeCall(ctx, "bridge.Health", nil, &out); err != nil {
+	if err := c.bridgeCall(ctx, health, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -604,7 +635,7 @@ func (c *Client) Health(ctx context.Context) (*Health, error) {
 // GetMPCPublicKey returns the active MPC public key.
 func (c *Client) GetMPCPublicKey(ctx context.Context) (*MPCPublicKey, error) {
 	var out MPCPublicKey
-	if err := c.bridgeCall(ctx, "bridge.GetMPCPublicKey", nil, &out); err != nil {
+	if err := c.bridgeCall(ctx, getMPCPublicKey, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -614,7 +645,7 @@ func (c *Client) GetMPCPublicKey(ctx context.Context) (*MPCPublicKey, error) {
 // bridge request.
 func (c *Client) GetBridgeSignature(ctx context.Context, requestID string) (*BridgeSignature, error) {
 	var out BridgeSignature
-	if err := c.bridgeCall(ctx, "bridge.GetSignature", map[string]string{"requestId": requestID}, &out); err != nil {
+	if err := c.bridgeCall(ctx, getSignature, map[string]string{"requestId": requestID}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -634,7 +665,7 @@ func (c *Client) GetBridgeSignature(ctx context.Context, requestID string) (*Bri
 // is not authoritative on signer set here; fall back to assumed state."
 func (c *Client) GetSignerSetInfo(ctx context.Context) (*SignerSetInfo, error) {
 	var out SignerSetInfo
-	if err := c.bridgeCall(ctx, "bridge.GetSignerSetInfo", nil, &out); err != nil {
+	if err := c.bridgeCall(ctx, getSignerSetInfo, nil, &out); err != nil {
 		return nil, err
 	}
 	// Defensive: if the upstream returned Members without Total, populate
@@ -653,7 +684,7 @@ func (c *Client) GetSignerSetInfo(ctx context.Context) (*SignerSetInfo, error) {
 // doesn't implement LP-333 yet. Same fallback contract as GetSignerSetInfo.
 func (c *Client) GetCurrentEpoch(ctx context.Context) (*CurrentEpoch, error) {
 	var out CurrentEpoch
-	if err := c.bridgeCall(ctx, "bridge.GetCurrentEpoch", nil, &out); err != nil {
+	if err := c.bridgeCall(ctx, getCurrentEpoch, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

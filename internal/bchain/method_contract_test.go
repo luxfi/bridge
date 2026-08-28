@@ -12,20 +12,11 @@ import (
 	"testing"
 )
 
-// BridgeVM serves its RPC through gorilla/rpc v2, registered as
-// server.RegisterService(&Service{vm: vm}, "bridge"). That library dispatches
-// by splitting the method on a single "." and looking up the Go method name
-// verbatim (v2/map.go: strings.Split(method, ".") then s.methods[parts[1]]),
-// so the wire names are exactly "bridge.<GoMethodName>". A name without a dot
-// is refused as "service/method request ill-formed" before any lookup happens
-// — it does not reach a handler and cannot be mistaken for an unimplemented
-// one.
-//
-// vmMethods is the exported surface of bridgevm's Service, which is what
-// gorilla exposes. Kept as a literal because luxfi/chains is not a dependency
-// here; if a method is renamed there, the corresponding call below stops
-// resolving and this test says which one.
-var vmMethods = map[string]bool{
+// served is the exported surface of BridgeVM's Service, which is exactly what
+// gorilla/rpc v2 exposes under the "bridge" service. Kept as a literal because
+// luxfi/chains is not a dependency here; when a procedure is renamed there,
+// the proc that names it stops matching and this says which one.
+var served = map[string]bool{
 	"CancelRequest":      true,
 	"EstimateFee":        true,
 	"GetBridgeInfo":      true,
@@ -45,57 +36,70 @@ var vmMethods = map[string]bool{
 	"SubmitRequest":      true,
 }
 
-// dispatcher answers like gorilla does: it records what it was asked for and
-// refuses anything the real server would refuse, for the same reason.
-type dispatcher struct {
-	seen []string
+// declared is every procedure this client can name.
+var declared = []proc{
+	estimateFee, submitRequest, getStatus, cancelRequest,
+	getBridgeInfo, getSupportedChains, getChainConfig, health,
+	getMPCPublicKey, getSignature, getSignerSetInfo, getCurrentEpoch,
 }
 
-func (d *dispatcher) server(t *testing.T) *httptest.Server {
-	t.Helper()
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// Every declared procedure must be one BridgeVM serves. The whole surface once
+// named procedures no server implements, and nothing noticed because the
+// client had never had a chain to talk to: an unset URL and an unreachable
+// chain both answer -32601, so "not configured", "not deployed" and "wrong
+// name entirely" were a single symptom.
+func TestEveryProcIsServed(t *testing.T) {
+	for _, p := range declared {
+		if p.service != "bridge" {
+			t.Errorf("%s addresses service %q; BridgeVM registers as \"bridge\"", p, p.service)
+		}
+		if !served[p.name] {
+			t.Errorf("%s names %q, which BridgeVM's Service does not export", p, p.name)
+		}
+	}
+}
+
+// gorilla dispatches by splitting the wire name on "." and requiring exactly
+// two parts (v2/map.go), so a name it cannot split is refused as ill-formed
+// before any lookup — it never reaches a handler and cannot be mistaken for an
+// unimplemented one. String() is the only place that join happens.
+func TestWireNameIsDispatchable(t *testing.T) {
+	for _, p := range declared {
+		parts := strings.Split(p.String(), ".")
+		if len(parts) != 2 {
+			t.Errorf("%q does not split into service and procedure", p)
+			continue
+		}
+		if parts[0] != p.service || parts[1] != p.name {
+			t.Errorf("%q does not rebuild to (%q, %q)", p, p.service, p.name)
+		}
+	}
+}
+
+// What the type says and what leaves the process must agree. Every call goes
+// through one transport, so this checks the join survives marshalling rather
+// than restating String().
+func TestDeclaredProcsAreWhatGoOnTheWire(t *testing.T) {
+	var seen []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
-			Method string          `json:"method"`
-			ID     json.RawMessage `json:"id"`
+			Method string `json:"method"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			t.Errorf("undecodable request: %v", err)
 			return
 		}
-		d.seen = append(d.seen, req.Method)
-
-		parts := strings.Split(req.Method, ".")
-		if len(parts) != 2 {
-			t.Errorf("gorilla would refuse %q: service/method request ill-formed", req.Method)
-		} else if parts[0] != "bridge" {
-			t.Errorf("%q addresses service %q; BridgeVM registers as \"bridge\"", req.Method, parts[0])
-		} else if !vmMethods[parts[1]] {
-			t.Errorf("%q names %q, which BridgeVM's Service does not export", req.Method, parts[1])
-		}
-
+		seen = append(seen, req.Method)
 		w.Header().Set("Content-Type", "application/json")
-		// An empty object decodes into every reply shape the client uses.
 		w.Write([]byte(`{"jsonrpc":"2.0","id":1,"result":{}}`)) //nolint:errcheck
 	}))
-}
-
-// Every call the client can make must name a method BridgeVM actually serves.
-// The whole surface was eth-style (bridge_getInfo) against a gorilla server
-// that requires bridge.GetBridgeInfo, so all twelve calls failed before
-// reaching a handler — and with no B-Chain deployed, the resulting error was
-// indistinguishable from "not deployed yet".
-func TestEveryCallNamesAMethodTheVMServes(t *testing.T) {
-	d := &dispatcher{}
-	srv := d.server(t)
 	defer srv.Close()
 
 	c := New(srv.URL, 0)
 	ctx := context.Background()
 
-	// One call per bridgeCall site in client.go. Errors are ignored on
-	// purpose: the assertion is what went onto the wire, which the
-	// dispatcher checks. A transport or decode error would fail the
-	// dispatcher's own checks first.
+	// One call per bridgeCall site. Errors are ignored deliberately: the
+	// assertion is what reached the wire.
 	_, _ = c.EstimateFee(ctx, EstimateFeeParams{})
 	_, _ = c.SubmitBridgeRequest(ctx, SubmitRequestParams{})
 	_, _ = c.GetBridgeStatus(ctx, "req-1")
@@ -109,22 +113,16 @@ func TestEveryCallNamesAMethodTheVMServes(t *testing.T) {
 	_, _ = c.GetSignerSetInfo(ctx)
 	_, _ = c.GetCurrentEpoch(ctx)
 
-	if len(d.seen) != 12 {
-		t.Fatalf("expected 12 calls on the wire, saw %d: %v", len(d.seen), d.seen)
+	if len(seen) != len(declared) {
+		t.Fatalf("expected %d calls on the wire, saw %d: %v", len(declared), len(seen), seen)
 	}
-}
-
-// The separator is the whole defect: an underscore name carries no service
-// part, so gorilla rejects it as ill-formed rather than as unknown. Pinning it
-// separately means a regression names the cause instead of a symptom.
-func TestUnderscoreNamesAreNotDispatchable(t *testing.T) {
-	for _, m := range []string{
-		"bridge_getInfo",
-		"bridge_getSignerSetInfo",
-		"bridge_health",
-	} {
-		if len(strings.Split(m, ".")) == 2 {
-			t.Fatalf("%q unexpectedly splits into service and method", m)
+	want := make(map[string]bool, len(declared))
+	for _, p := range declared {
+		want[p.String()] = true
+	}
+	for _, m := range seen {
+		if !want[m] {
+			t.Errorf("%q went out but is not a declared proc", m)
 		}
 	}
 }
