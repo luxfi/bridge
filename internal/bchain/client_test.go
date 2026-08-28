@@ -125,7 +125,7 @@ func clientForMock(m *mockNode) *Client {
 
 func TestEstimateFee_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_estimateFee", FeeEstimate{
+	m.onResult("bridge.EstimateFee", FeeEstimate{
 		FeeAmount:     "0.001",
 		NetAmount:     "0.099",
 		EstimatedTime: 180,
@@ -152,8 +152,8 @@ func TestEstimateFee_HappyPath(t *testing.T) {
 	if err := json.Unmarshal(m.lastBody, &req); err != nil {
 		t.Fatalf("decode last body: %v", err)
 	}
-	if req.Method != "bridge_estimateFee" {
-		t.Errorf("expected method bridge_estimateFee, got %q", req.Method)
+	if req.Method != "bridge.EstimateFee" {
+		t.Errorf("expected method bridge.EstimateFee, got %q", req.Method)
 	}
 	rawParams, _ := json.Marshal(req.Params)
 	if !strings.Contains(string(rawParams), `"sourceChain":"ETHEREUM_SEPOLIA"`) {
@@ -166,7 +166,7 @@ func TestEstimateFee_HappyPath(t *testing.T) {
 
 func TestSubmitBridgeRequest_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_submitRequest", BridgeRequest{
+	m.onResult("bridge.SubmitRequest", BridgeRequest{
 		RequestID:   "req_abc123",
 		SourceChain: "ETHEREUM_SEPOLIA",
 		DestChain:   "LUX_TESTNET",
@@ -206,7 +206,7 @@ func TestGetBridgeStatus_PhaseTransition(t *testing.T) {
 		StatusSigned, StatusReleasing, StatusCompleted,
 	}
 	var idx atomic.Int64
-	m.on("bridge_getStatus", func(req *jsonrpcRequest) jsonrpcResponse {
+	m.on("bridge.GetStatus", func(req *jsonrpcRequest) jsonrpcResponse {
 		n := idx.Add(1) - 1
 		if n >= int64(len(phases)) {
 			n = int64(len(phases)) - 1
@@ -232,7 +232,7 @@ func TestGetBridgeStatus_PhaseTransition(t *testing.T) {
 
 func TestGetBridgeInfo_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getInfo", BridgeInfo{
+	m.onResult("bridge.GetBridgeInfo", BridgeInfo{
 		Version:         "1.0.0",
 		NodeID:          "NodeID-XYZ",
 		ChainID:         "B",
@@ -260,7 +260,7 @@ func TestGetBridgeInfo_HappyPath(t *testing.T) {
 
 func TestGetSupportedChains_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getSupportedChains", []ChainConfig{
+	m.onResult("bridge.GetSupportedChains", []ChainConfig{
 		{ChainID: "1", ChainName: "Ethereum", Enabled: true,
 			TokenContracts: map[string]string{"USDC": "0xa0b8...e3"}},
 		{ChainID: "11155111", ChainName: "Sepolia", Enabled: true,
@@ -282,7 +282,7 @@ func TestGetSupportedChains_HappyPath(t *testing.T) {
 
 func TestHealth_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_health", Health{Status: "ok", MPCReady: true})
+	m.onResult("bridge.Health", Health{Status: "ok", MPCReady: true})
 	c := clientForMock(m)
 
 	got, err := c.Health(context.Background())
@@ -296,7 +296,7 @@ func TestHealth_HappyPath(t *testing.T) {
 
 func TestGetMPCPublicKey_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getMPCPublicKey", MPCPublicKey{PublicKey: "0xabcdef"})
+	m.onResult("bridge.GetMPCPublicKey", MPCPublicKey{PublicKey: "0xabcdef"})
 	c := clientForMock(m)
 
 	got, err := c.GetMPCPublicKey(context.Background())
@@ -310,7 +310,7 @@ func TestGetMPCPublicKey_HappyPath(t *testing.T) {
 
 func TestGetBridgeSignature_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getSignature", BridgeSignature{
+	m.onResult("bridge.GetSignature", BridgeSignature{
 		Signature: "0x" + strings.Repeat("ab", 32),
 		SessionID: "sess_42",
 	})
@@ -327,7 +327,7 @@ func TestGetBridgeSignature_HappyPath(t *testing.T) {
 
 func TestCancelRequest_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_cancelRequest", CancelResult{Success: true})
+	m.onResult("bridge.CancelRequest", CancelResult{Success: true})
 	c := clientForMock(m)
 
 	got, err := c.CancelRequest(context.Background(), "req_abc123")
@@ -345,7 +345,7 @@ func TestCancelRequest_HappyPath(t *testing.T) {
 
 func TestRPCError_FromNode(t *testing.T) {
 	m := newMockNode(t)
-	m.onError("bridge_estimateFee", -32602, "invalid params: amount must be positive")
+	m.onError("bridge.EstimateFee", -32602, "invalid params: amount must be positive")
 	c := clientForMock(m)
 
 	_, err := c.EstimateFee(context.Background(), EstimateFeeParams{Amount: "-1"})
@@ -359,8 +359,8 @@ func TestRPCError_FromNode(t *testing.T) {
 	if rpcErr.Code != -32602 || !strings.Contains(rpcErr.Message, "invalid params") {
 		t.Errorf("unexpected rpc error: %+v", rpcErr)
 	}
-	if rpcErr.Method != "bridge_estimateFee" {
-		t.Errorf("expected method tag bridge_estimateFee, got %q", rpcErr.Method)
+	if rpcErr.Method != "bridge.EstimateFee" {
+		t.Errorf("expected method tag bridge.EstimateFee, got %q", rpcErr.Method)
 	}
 }
 
@@ -535,7 +535,7 @@ func TestNextID_UniqueAndShaped(t *testing.T) {
 
 func TestRPCRoundTrip_RequestShape(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_health", Health{Status: "ok", MPCReady: true})
+	m.onResult("bridge.Health", Health{Status: "ok", MPCReady: true})
 	c := clientForMock(m)
 
 	if _, err := c.Health(context.Background()); err != nil {
@@ -548,7 +548,7 @@ func TestRPCRoundTrip_RequestShape(t *testing.T) {
 	if got.JSONRPC != "2.0" {
 		t.Errorf("JSONRPC = %q, want 2.0", got.JSONRPC)
 	}
-	if got.Method != "bridge_health" {
+	if got.Method != "bridge.Health" {
 		t.Errorf("Method = %q", got.Method)
 	}
 	if got.ID == "" {
@@ -568,7 +568,7 @@ func TestRPCRoundTrip_RequestShape(t *testing.T) {
 
 func TestGetSignerSetInfo_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getSignerSetInfo", SignerSetInfo{
+	m.onResult("bridge.GetSignerSetInfo", SignerSetInfo{
 		Members: []SignerMember{
 			{NodeID: "node-0", PublicKey: "0x" + strings.Repeat("a", 64), Address: "0xAAAA"},
 			{NodeID: "node-1", PublicKey: "0x" + strings.Repeat("b", 64), Address: "0xBBBB"},
@@ -609,7 +609,7 @@ func TestGetSignerSetInfo_HappyPath(t *testing.T) {
 // recount.
 func TestGetSignerSetInfo_DerivesTotalFromMembers(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getSignerSetInfo", SignerSetInfo{
+	m.onResult("bridge.GetSignerSetInfo", SignerSetInfo{
 		Members: []SignerMember{
 			{NodeID: "node-0"}, {NodeID: "node-1"}, {NodeID: "node-2"}, {NodeID: "node-3"},
 		},
@@ -634,7 +634,7 @@ func TestGetSignerSetInfo_DerivesTotalFromMembers(t *testing.T) {
 // "assumed state" mode.
 func TestGetSignerSetInfo_MethodNotFound(t *testing.T) {
 	m := newMockNode(t)
-	m.onError("bridge_getSignerSetInfo", -32601, "method not found")
+	m.onError("bridge.GetSignerSetInfo", -32601, "method not found")
 	c := clientForMock(m)
 
 	_, err := c.GetSignerSetInfo(context.Background())
@@ -652,7 +652,7 @@ func TestGetSignerSetInfo_MethodNotFound(t *testing.T) {
 
 func TestGetCurrentEpoch_HappyPath(t *testing.T) {
 	m := newMockNode(t)
-	m.onResult("bridge_getCurrentEpoch", CurrentEpoch{
+	m.onResult("bridge.GetCurrentEpoch", CurrentEpoch{
 		Epoch:         9,
 		SignerSetHash: "0xfeedface",
 		StartedAt:     1730000000,
@@ -676,7 +676,7 @@ func TestGetCurrentEpoch_HappyPath(t *testing.T) {
 
 func TestGetCurrentEpoch_MethodNotFound(t *testing.T) {
 	m := newMockNode(t)
-	m.onError("bridge_getCurrentEpoch", -32601, "method not found")
+	m.onError("bridge.GetCurrentEpoch", -32601, "method not found")
 	c := clientForMock(m)
 
 	_, err := c.GetCurrentEpoch(context.Background())
@@ -694,13 +694,13 @@ func TestRPCError_String(t *testing.T) {
 	}{
 		{
 			name: "with http status",
-			err:  &RPCError{Method: "bridge_health", HTTPStatus: 502, Message: "bad gateway"},
-			want: "bchain: bridge_health HTTP 502: bad gateway",
+			err:  &RPCError{Method: "bridge.Health", HTTPStatus: 502, Message: "bad gateway"},
+			want: "bchain: bridge.Health HTTP 502: bad gateway",
 		},
 		{
 			name: "rpc error",
-			err:  &RPCError{Method: "bridge_estimateFee", Code: -32602, Message: "invalid params"},
-			want: "bchain: bridge_estimateFee rpc -32602: invalid params",
+			err:  &RPCError{Method: "bridge.EstimateFee", Code: -32602, Message: "invalid params"},
+			want: "bchain: bridge.EstimateFee rpc -32602: invalid params",
 		},
 	}
 	for _, tc := range cases {
