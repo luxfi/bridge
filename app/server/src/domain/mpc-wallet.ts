@@ -2,6 +2,7 @@ import logger from "@/logger"
 import { IAMClient } from "@/clients/iam"
 import { MPCClient } from "@/clients/mpc"
 import { CardanoNetwork, encodeCardanoAddress } from "./cardano-address.js"
+import { encodeXRPAddress } from "./xrp-address.js"
 import { encodeSubstrateAddress, SUBSTRATE_NETWORKS } from "./substrate-address.js"
 import { checkSubstrateDeposit } from "./substrate-deposit.js"
 
@@ -102,6 +103,8 @@ const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp'
  *   sol/ton → ed25519 derived
  *   dot    → SS58-encoded ed25519 public key
  *   ada    → CIP-19 bech32 over blake2b-224 of the ed25519 public key
+ *   xrp    → classic r-address: base58check, XRPL alphabet, over
+ *            RIPEMD160(SHA256(pubkey))
  */
 export async function createMPCWalletForDeposit(
   networkInternalName: string,
@@ -178,13 +181,31 @@ export async function createMPCWalletForDeposit(
     case "ton":
       address = wallet.solAddress
       break
-    case "xrp":
-      // XRP uses secp256k1 but with rAddress derivation. mpcd doesn't
-      // currently return rAddress, so use ETH address as the wallet
-      // identifier; bridge-side derivation should be added when XRPL
-      // settlement ships.
-      address = wallet.ethAddress
+    case "xrp": {
+      // Derived here rather than waiting on mpcd to return an rAddress. It
+      // fell through to wallet.ethAddress, so anyone bridging to XRP was
+      // handed an 0x string to send XRP to — the Cardano bug in a different
+      // family.
+      //
+      // XRPL takes the compressed secp256k1 key, which is what ecdsaPubKey
+      // already is. The Ed25519 path exists in the encoder for completeness;
+      // the bridge's XRP custody is secp256k1.
+      const pubKeyHex = wallet.ecdsaPubKey
+      if (!pubKeyHex) {
+        throw new Error(
+          "MPC keygen did not return an ecdsa public key for the XRP address",
+        )
+      }
+      address = encodeXRPAddress(
+        new Uint8Array(
+          Buffer.from(
+            pubKeyHex.startsWith("0x") ? pubKeyHex.slice(2) : pubKeyHex,
+            "hex",
+          ),
+        ),
+      )
       break
+    }
     case "dot": {
       // SS58-encode the ed25519 public key.
       const pubKeyHex = wallet.eddsaPubKey
