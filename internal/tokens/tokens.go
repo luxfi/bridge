@@ -166,6 +166,12 @@ var defaultTokens = []Info{
 	{Network: "ZOO_MAINNET", Asset: "ZOO", Decimals: 18},
 	{Network: "ZOO_TESTNET", Asset: "ZOO", Decimals: 18},
 
+	// Hanzo, Pars and Osage — native only. Symbols are the ones each
+	// chain's own registry reports; Hanzo's coin is AI, not HANZO.
+	{Network: "HANZO_MAINNET", Asset: "AI", Decimals: 18},
+	{Network: "PARS_MAINNET", Asset: "PARS", Decimals: 18},
+	{Network: "OSAGE_MAINNET", Asset: "OSG", Decimals: 18},
+
 	// Base — Circle's canonical USDC addresses
 	{Network: "BASE_MAINNET", Asset: "ETH", Decimals: 18},
 	{Network: "BASE_MAINNET", Asset: "USDC", Contract: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", Decimals: 6},
