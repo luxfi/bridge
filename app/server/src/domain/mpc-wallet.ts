@@ -120,7 +120,18 @@ export async function createMPCWalletForDeposit(
   }
   const vaultId = process.env.BRIDGE_MPC_VAULT_ID || "bridge"
   const walletName = `bridge-${networkInternalName.toLowerCase()}-${Date.now()}`
-  const addrType = NETWORK_ADDRESS_TYPE[networkInternalName] || "eth"
+  // Refuse rather than guess. This defaulted to "eth", which was safe only
+  // while every supported chain was an EVM — untrue since Bitcoin. An unlisted
+  // non-EVM network silently became an EVM one and the user was handed an 0x
+  // deposit address for a chain that has never seen one. The same default was
+  // removed from internal/mchain on the Go side; this is its twin.
+  const addrType = NETWORK_ADDRESS_TYPE[networkInternalName]
+  if (!addrType) {
+    throw new Error(
+      `No address format is known for ${networkInternalName}. Minting a deposit ` +
+        "wallet would produce an address on the wrong chain.",
+    )
+  }
 
   // Pick the right keygen protocol/curve for the destination chain.
   // m-chain supports CGGMP21 (secp256k1) and FROST (ed25519); the bridge
@@ -258,7 +269,14 @@ export async function checkNativeDeposit({
   asset: string
   requiredAmount: number
 }): Promise<boolean> {
-  const addrType = NETWORK_ADDRESS_TYPE[networkInternalName] || 'eth'
+  // Same refusal as keygen. Checking an unknown network with the EVM checker
+  // reads an 0x address on a chain that has none and reports "no deposit"
+  // forever, rather than reporting that it cannot look.
+  const addrType = NETWORK_ADDRESS_TYPE[networkInternalName]
+  if (!addrType) {
+    logger.warn(`Deposit check refused: no address format for ${networkInternalName}`)
+    return false
+  }
 
   try {
     switch (addrType) {
@@ -266,6 +284,8 @@ export async function checkNativeDeposit({
         return await checkEVMDeposit(networkInternalName, address, asset, requiredAmount)
       case 'btc':
         return await checkBTCDeposit(networkInternalName, address, requiredAmount)
+      case 'ada':
+        return await checkADADeposit(networkInternalName, address, requiredAmount)
       case 'sol':
         return await checkSOLDeposit(networkInternalName, address, asset, requiredAmount)
       case 'ton':
@@ -310,6 +330,8 @@ const RPC_URLS: Record<string, string> = {
   TON_TESTNET: 'https://testnet.toncenter.com/api/v2',
   // Polkadot / Substrate
   POLKADOT_MAINNET: 'https://rpc.polkadot.io',
+  // Koios: public, read-only, no key. Not a JSON-RPC endpoint — a REST base.
+  CARDANO_MAINNET: 'https://api.koios.rest/api/v1',
 }
 
 async function checkEVMDeposit(network: string, address: string, asset: string, requiredAmount: number): Promise<boolean> {
@@ -344,6 +366,37 @@ async function checkBTCDeposit(network: string, address: string, requiredAmount:
   const balanceSats = (data.chain_stats?.funded_txo_sum || 0) - (data.chain_stats?.spent_txo_sum || 0)
   const balanceBtc = balanceSats / 1e8
   return balanceBtc >= requiredAmount
+}
+
+/**
+ * Cardano deposits, via Koios — a public read-only API over the chain, with no
+ * key required.
+ *
+ * `/address_info` returns the address's balance in lovelace, and ADA has six
+ * decimals. An address that has never been used is absent from the response
+ * rather than present with zero, so an empty array is "nothing here" and not
+ * an error.
+ */
+async function checkADADeposit(network: string, address: string, requiredAmount: number): Promise<boolean> {
+  const apiBase = RPC_URLS[network]
+  if (!apiBase) return false
+
+  const resp = await fetch(`${apiBase}/address_info`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ _addresses: [address] }),
+  })
+  if (!resp.ok) return false
+
+  const rows = (await resp.json()) as Array<{ balance?: string }>
+  if (!Array.isArray(rows) || rows.length === 0) return false
+
+  // Lovelace is a string because the value exceeds what a JSON number holds
+  // exactly. Parsing it as a float to compare against a float amount is the
+  // ordinary rounding hazard; BigInt against a scaled integer is not.
+  const lovelace = BigInt(rows[0]?.balance ?? '0')
+  const required = BigInt(Math.round(requiredAmount * 1e6))
+  return lovelace >= required
 }
 
 async function checkSOLDeposit(network: string, address: string, asset: string, requiredAmount: number): Promise<boolean> {
