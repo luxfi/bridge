@@ -1225,7 +1225,7 @@
     "managed_accounts": [],
     "nodes": [
       {
-        "url": "https://ava-mainnet.public.blastapi.io/ext/bc/C/rpc"
+        "url": "https://ava-mainnet.public.blastapi.io/v1/bc/C/rpc"
       }
     ],
     "created_date": "2023-05-29T13:19:19.214392+00:00"
