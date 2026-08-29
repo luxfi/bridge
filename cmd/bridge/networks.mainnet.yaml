@@ -35,6 +35,46 @@ networks:
     txExplorerTpl: https://explore.lux.network/tx/{tx}
     addrExplorerTpl: https://explore.lux.network/address/{addr}
 
+  # The other chains Lux runs. Each is a sovereign L1 on its own primary
+  # network, so its EVM chain id is the whole identity of the chain. Custody
+  # is the same secp256k1 key at the same address it derives on Lux — a
+  # crossing here needs no new key material, only liquidity on the far side.
+  - internalName: ZOO_MAINNET
+    displayName: Zoo
+    nativeCurrency: ZOO
+    chainId: "200200"
+    type: evm
+    avgCompletion: 1m
+    txExplorerTpl: https://explore-zoo.lux.network/tx/{tx}
+    addrExplorerTpl: https://explore-zoo.lux.network/address/{addr}
+
+  - internalName: HANZO_MAINNET
+    displayName: Hanzo
+    nativeCurrency: AI
+    chainId: "36963"
+    type: evm
+    avgCompletion: 1m
+    txExplorerTpl: https://explore-hanzo.lux.network/tx/{tx}
+    addrExplorerTpl: https://explore-hanzo.lux.network/address/{addr}
+
+  - internalName: PARS_MAINNET
+    displayName: Pars
+    nativeCurrency: PARS
+    chainId: "494949"
+    type: evm
+    avgCompletion: 1m
+    txExplorerTpl: https://explore-pars.lux.network/tx/{tx}
+    addrExplorerTpl: https://explore-pars.lux.network/address/{addr}
+
+  - internalName: OSAGE_MAINNET
+    displayName: Osage
+    nativeCurrency: OSG
+    chainId: "1872"
+    type: evm
+    avgCompletion: 1m
+    txExplorerTpl: https://explore-osage.lux.network/tx/{tx}
+    addrExplorerTpl: https://explore-osage.lux.network/address/{addr}
+
   - internalName: ETHEREUM_MAINNET
     displayName: Ethereum
     nativeCurrency: ETH
@@ -139,11 +179,28 @@ networks:
     addrExplorerTpl: https://livenet.xrpl.org/accounts/{addr}
 
 tokens:
-  # LUX
+  # The chains Lux runs — native coin only. Liquid tokens get added per
+  # chain when the contract list firms up.
   - asset: LUX
     name: Lux
     decimals: 18
     network: LUX_MAINNET
+  - asset: ZOO
+    name: Zoo
+    decimals: 18
+    network: ZOO_MAINNET
+  - asset: AI
+    name: Hanzo
+    decimals: 18
+    network: HANZO_MAINNET
+  - asset: PARS
+    name: Pars
+    decimals: 18
+    network: PARS_MAINNET
+  - asset: OSG
+    name: Osage
+    decimals: 18
+    network: OSAGE_MAINNET
 
   # Ethereum mainnet — ETH + 3 major stablecoins
   - asset: ETH
