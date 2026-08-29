@@ -1,6 +1,6 @@
 import React, { useState, type PropsWithChildren } from 'react'
 
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 import type SiteDef from '@/hanzo-ui-types/site-def'
 
 import DesktopHeader from './desktop'

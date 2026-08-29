@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 import {
   NavigationMenu,
   NavigationMenuContent,

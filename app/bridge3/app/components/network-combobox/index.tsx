@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { Combobox } from '@hanzo/ui/primitives-common'
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 
 import type { Network } from '@luxfi/core'
 

@@ -3,7 +3,7 @@ import { observable, runInAction, type IObservableValue } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useDebouncedCallback } from 'use-debounce'
 
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 import { Button, Input } from '@hanzo/ui/primitives-common'
 
 import { useSwapState } from '@/contexts/swap-state'

@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite'
 
 import { TooltipWrapper } from '@hanzo/ui/primitives-common'
 
-import { cn, type FormatThreshold, formatAndAbbreviateAsCurrency } from '@hanzo/ui/util'
+import { cn, type FormatThreshold, formatAndAbbreviateAsCurrency } from '@hanzo/ui'
 
 import { useSwapState } from '@/contexts/swap-state'
 

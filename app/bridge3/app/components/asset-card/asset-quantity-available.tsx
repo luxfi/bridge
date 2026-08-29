@@ -1,7 +1,7 @@
 import { type PropsWithChildren } from 'react'
 import { TooltipWrapper } from '@hanzo/ui/primitives-common'
 
-import { formatToMaxChar } from '@hanzo/ui/util'
+import { formatToMaxChar } from '@hanzo/ui'
 
 
 const AssetQuantityAvailable: React.FC<{

@@ -15,23 +15,23 @@
     "format": "prettier --write \"**/*.{ts,json,md}\""
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^25.9.1",
-    "@types/selenium-webdriver": "^4.35.5",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
-    "@typescript-eslint/parser": "^8.59.4",
-    "dotenv": "^17.4.2",
-    "eslint": "^10.4.0",
-    "jest": "^30.4.2",
-    "prettier": "^3.8.3",
-    "selenium-webdriver": "^4.44.0",
-    "ts-jest": "^29.4.11",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/selenium-webdriver": "catalog:",
+    "@typescript-eslint/eslint-plugin": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "dotenv": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "prettier": "catalog:",
+    "selenium-webdriver": "catalog:",
+    "ts-jest": "catalog:",
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "ethers": "^6.16.0",
-    "viem": "^2.50.4"
+    "ethers": "catalog:",
+    "viem": "catalog:"
   },
   "jest": {
     "preset": "ts-jest",

@@ -2,7 +2,7 @@
 import { ChevronsLeftRight } from 'lucide-react'
 
 import { Button } from '@hanzo/ui/primitives-common'
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 
 const ReverseButton: React.FC<{
   onClick: () => void

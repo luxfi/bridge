@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 
 import AssetCard from '../asset-card'
 import FromToCard from './from-to-card'

@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { Combobox, type ComboboxTriggerProps, type ListAdaptor } from '@hanzo/ui/primitives-common'
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 
 import type { Asset } from '@luxfi/core'
 

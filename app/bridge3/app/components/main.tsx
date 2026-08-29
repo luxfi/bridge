@@ -1,5 +1,5 @@
 import React, { type PropsWithChildren } from 'react'
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 
 const Main: React.FC<PropsWithChildren & { 
   id?: string

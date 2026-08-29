@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { AnimatePresence } from 'motion/react'
 import * as motion from 'motion/react-client'
 
-import { cn, formatToMaxChar } from '@hanzo/ui/util'
+import { cn, formatToMaxChar } from '@hanzo/ui'
 
 import { useSwapState } from '@/contexts/swap-state'
 

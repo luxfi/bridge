@@ -1,7 +1,7 @@
 import React, { useState, type FC, type PropsWithChildren } from 'react'
 
 import type { LinkDef } from '@hanzo/ui/types'
-import { cn } from '@hanzo/ui/util'
+import { cn } from '@hanzo/ui'
 
 import Logo, { type LogoVariant } from '../logo'
 import DesktopNav from './desktop-nav-menu'

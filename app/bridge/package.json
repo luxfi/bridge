@@ -2,7 +2,7 @@
   "name": "@luxbridge/lux-tenant",
   "version": "1.0.1",
   "private": true,
-  "description": "bridge.lux.network — Lux-branded tenant build consuming @luxfi/bridge + @luxfi/brand.",
+  "description": "bridge.lux.network \u2014 Lux-branded tenant build consuming @luxfi/bridge + @luxfi/brand.",
   "license": "BSD-3-Clause",
   "author": "Lux Industries, Inc.",
   "type": "module",
@@ -13,23 +13,23 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hanzogui/config-default": "^7.0.0",
-    "@luxfi/brand": "^1.0.0",
+    "@hanzogui/config-default": "catalog:",
+    "@luxfi/brand": "catalog:",
     "@luxfi/bridge": "workspace:*",
-    "@luxfi/logo": "^1.0.0",
+    "@luxfi/logo": "catalog:",
     "@luxfi/threshold": "workspace:*",
-    "@tanstack/react-query": "5.90.20",
+    "@tanstack/react-query": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-native-web": "^0.21.2",
-    "viem": "2.30.5",
-    "wagmi": "2.15.5"
+    "react-native-web": "catalog:",
+    "viem": "catalog:",
+    "wagmi": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "^6.0.2",
+    "@vitejs/plugin-react": "catalog:",
     "typescript": "catalog:",
-    "vite": "^8.0.14"
+    "vite": "catalog:"
   }
 }

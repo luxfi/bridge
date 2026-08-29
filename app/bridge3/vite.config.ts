@@ -56,7 +56,7 @@ export default defineConfig({
     //   b) optimize an old version!
     exclude: [
       '@hanzo/ui/primitives-common',
-      '@hanzo/ui/util',
+      '@hanzo/ui',
     ]
   },
   // https://github.com/remix-run/remix/issues/10156#issuecomment-2440234744
