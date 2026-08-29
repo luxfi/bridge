@@ -43,6 +43,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"math/big"
 	"net/http"
 	"strings"
@@ -97,6 +98,8 @@ var rpcURLs = map[string]string{
 	"TON_TESTNET": "https://testnet.toncenter.com/api/v2",
 	// Polkadot
 	"POLKADOT_MAINNET": "https://rpc.polkadot.io",
+	// Cardano (Koios REST — note: NOT JSON-RPC)
+	"CARDANO_MAINNET": "https://api.koios.rest/api/v1",
 	// XRP Ledger (rippled JSON-RPC). Same public clusters as the outbound
 	// broadcaster (internal/broadcast/client.go) — s1.ripple.com is the
 	// load-balanced mainnet cluster, s.altnet the Ripple-hosted testnet;
@@ -231,6 +234,8 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 		return c.checkTON(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeXRP:
 		return c.checkXRP(ctx, url, p.Address, p.RequiredAmount)
+	case mchain.AddressTypeADA:
+		return c.checkADA(ctx, url, p.Address, p.RequiredAmount)
 	case mchain.AddressTypeDOT:
 		return false, ErrSubstrateNotImplemented
 	default:
@@ -442,6 +447,51 @@ func (c *Client) checkSOL(ctx context.Context, rpcURL, address, _asset string, r
 // =============================================================================
 // TON — TON Center REST `/getAddressBalance`
 // =============================================================================
+
+// checkADA reads an address's balance from Koios, a public read-only API over
+// Cardano that needs no key.
+//
+// An address that has never been used is ABSENT from the response rather than
+// present with a zero balance, so an empty array means "nothing here" and not
+// an error.
+func (c *Client) checkADA(ctx context.Context, apiBase, address string, requiredAmount float64) (bool, error) {
+	body := `{"_addresses":["` + address + `"]}`
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		strings.TrimRight(apiBase, "/")+"/address_info", strings.NewReader(body))
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("koios: status %d", resp.StatusCode)
+	}
+
+	var rows []struct {
+		Balance string `json:"balance"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&rows); err != nil {
+		return false, err
+	}
+	if len(rows) == 0 {
+		return false, nil
+	}
+
+	// Lovelace is a decimal string because the value exceeds what a JSON
+	// number carries exactly. Comparing as integers avoids the rounding a
+	// float parse would introduce at the threshold.
+	lovelace, ok := new(big.Int).SetString(rows[0].Balance, 10)
+	if !ok {
+		return false, fmt.Errorf("koios: balance %q is not an integer", rows[0].Balance)
+	}
+	required := big.NewInt(int64(math.Round(requiredAmount * 1e6)))
+	return lovelace.Cmp(required) >= 0, nil
+}
 
 func (c *Client) checkTON(ctx context.Context, apiBase, address string, requiredAmount float64) (bool, error) {
 	url := strings.TrimRight(apiBase, "/") + "/getAddressBalance?address=" + address
