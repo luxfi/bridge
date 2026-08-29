@@ -72,3 +72,28 @@ func TestNonEVMNetworksAreNotRegisteredAsEVM(t *testing.T) {
 		}
 	}
 }
+
+// Every network offered must have at least its native asset. A network in
+// four of the five tables a crossing needs is one whose gap is found after
+// the user has sent funds.
+func TestEveryOfferedNetworkHasItsNativeAsset(t *testing.T) {
+	cfg, err := LoadConfig("networks.mainnet.yaml")
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+
+	assets := map[string]map[string]bool{}
+	for _, tk := range cfg.Tokens {
+		if assets[tk.Network] == nil {
+			assets[tk.Network] = map[string]bool{}
+		}
+		assets[tk.Network][strings.ToUpper(tk.Asset)] = true
+	}
+
+	for _, n := range cfg.Networks {
+		if !assets[n.InternalName][strings.ToUpper(n.NativeCurrency)] {
+			t.Errorf("%s is offered with no %s row — it cannot price or move its own gas",
+				n.InternalName, n.NativeCurrency)
+		}
+	}
+}
