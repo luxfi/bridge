@@ -42,50 +42,50 @@ const wrap: CSSProperties = {
   gap: 6,
 }
 
+// One shape for every field name on the card. The chain pickers and the
+// destination field said "From" and "Destination address"; these two said
+// "YOU SEND" in spaced capitals, which reads as a different form on the same
+// card. Sentence case, one size, one weight.
 const labelRow: CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  fontSize: 11,
+  gap: 12,
+  fontSize: 'var(--bridge-label-size)',
+  lineHeight: '20px',
   color: 'var(--bridge-text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-  fontWeight: 600,
+  fontWeight: 500,
 }
 
 const balanceLine: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 6,
-  textTransform: 'none',
-  letterSpacing: 0,
-  fontWeight: 500,
-  fontSize: 11,
-  color: 'var(--bridge-text-muted)',
+  gap: 8,
+  fontWeight: 400,
+  fontSize: 'var(--bridge-note-size)',
+  color: 'var(--bridge-text-subtle)',
 }
 
 const maxBtn: CSSProperties = {
-  background: 'var(--bridge-accent-soft)',
-  color: 'var(--bridge-accent)',
-  border: '1px solid var(--bridge-accent-border)',
+  background: 'transparent',
+  color: 'var(--bridge-text)',
+  border: '1px solid var(--bridge-border-strong)',
   borderRadius: 'var(--bridge-radius-pill)',
-  padding: '2px 8px',
-  fontSize: 10,
-  fontWeight: 700,
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase',
+  padding: '3px 10px',
+  fontSize: 11,
+  fontWeight: 500,
   cursor: 'pointer',
-  transition: 'background-color var(--bridge-transition-fast)',
+  transition: 'border-color var(--bridge-transition-fast)',
 }
 
 const row: CSSProperties = {
   display: 'flex',
-  gap: 10,
-  alignItems: 'stretch',
-  background: 'var(--bridge-bg-input)',
+  gap: 12,
+  alignItems: 'center',
+  background: 'var(--bridge-bg-soft)',
   border: '1px solid var(--bridge-border)',
   borderRadius: 'var(--bridge-radius-md)',
-  padding: '12px 14px',
+  padding: '10px 12px',
 }
 
 const inputStyle: CSSProperties = {
@@ -176,12 +176,17 @@ export const AssetInput: FC<AssetInputProps> = ({
       <div style={labelRow}>
         <span>{label}</span>
         {readOnly ? (
-          <span>estimated</span>
+          <span style={balanceLine}>Estimated</span>
         ) : balanceText !== null ? (
           <span style={balanceLine}>
             <span>Balance: {balanceText} {asset.symbol}</span>
             {showMax && balanceText !== '…' && balanceQuery.data ? (
-              <button type="button" style={maxBtn} onClick={onMax}>
+              <button
+                type="button"
+                style={maxBtn}
+                onClick={onMax}
+                aria-label={`Send my full ${asset.symbol} balance`}
+              >
                 Max
               </button>
             ) : null}
@@ -207,6 +212,7 @@ export const AssetInput: FC<AssetInputProps> = ({
         />
         <div style={assetSelectWrap}>
           <Select
+            name={`${label} asset`}
             value={value}
             options={options}
             onChange={(opt) => {

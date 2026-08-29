@@ -67,7 +67,7 @@ is the failure mode this doc is designed to catch.
 
 Open `http://localhost:3001/` in a fresh incognito window.
 
-- [ ] Header reads `LUX Bridge` + a `TESTNET` chip + `MPC · CGGMP21` chip.
+- [ ] Header reads `LUX Bridge` + a `TESTNET` chip, and nothing else.
       If the chip says `MAINNET`, the env var didn't reach `import.meta.env`
       — restart Vite with the prefix.
 - [ ] Devtools → Network → first request to `/api/networks` carries
