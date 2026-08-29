@@ -40,12 +40,12 @@ const chainsRow: CSSProperties = {
 const reverseBtn: CSSProperties = {
   alignSelf: 'flex-end',
   flexShrink: 0,
-  marginBottom: 6,
-  background: 'var(--bridge-bg-elevated)',
-  border: '1px solid var(--bridge-border-strong)',
+  marginBottom: 0,
+  background: 'var(--bridge-bg-input)',
+  border: '1px solid var(--bridge-border)',
   borderRadius: '50%',
-  width: 34,
-  height: 34,
+  width: 36,
+  height: 36,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -55,8 +55,7 @@ const reverseBtn: CSSProperties = {
   cursor: 'pointer',
   lineHeight: 1,
   padding: 0,
-  transition: 'background-color var(--bridge-transition-fast), border-color var(--bridge-transition-fast), transform var(--bridge-transition-fast)',
-  boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+  transition: 'background-color var(--bridge-transition-fast), border-color var(--bridge-transition-fast)',
 }
 
 const quoteCard: CSSProperties = {
@@ -72,7 +71,9 @@ const quoteCard: CSSProperties = {
 const quoteRow: CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
-  fontSize: 12,
+  gap: 12,
+  fontSize: 'var(--bridge-note-size)',
+  lineHeight: 1.6,
   color: 'var(--bridge-text-muted)',
 }
 
@@ -84,27 +85,28 @@ const quoteRowStrong: CSSProperties = {
 
 const submit: CSSProperties = {
   marginTop: 4,
-  background:
-    'linear-gradient(180deg, var(--bridge-accent-hover) 0%, var(--bridge-accent) 100%)',
-  color: 'white',
-  border: 'none',
+  background: 'var(--bridge-text)',
+  color: 'var(--bridge-bg)',
+  border: '1px solid var(--bridge-text)',
   borderRadius: 'var(--bridge-radius-md)',
   padding: '14px 16px',
+  minHeight: 48,
   fontSize: 15,
   fontWeight: 600,
   letterSpacing: '-0.01em',
   cursor: 'pointer',
   width: '100%',
-  transition: 'transform var(--bridge-transition-fast), filter var(--bridge-transition-fast)',
-  boxShadow: '0 6px 20px var(--bridge-accent-soft)',
+  transition: 'opacity var(--bridge-transition-fast)',
 }
 
+// Disabled says why in its own text, so it stays legible rather than fading
+// to a shape. The border is what marks it as the same control, unavailable.
 const submitDisabled: CSSProperties = {
   ...submit,
-  background: 'var(--bridge-bg-input)',
+  background: 'transparent',
+  border: '1px solid var(--bridge-border)',
   color: 'var(--bridge-text-muted)',
   cursor: 'not-allowed',
-  boxShadow: 'none',
 }
 
 const errorBox: CSSProperties = {
@@ -117,9 +119,9 @@ const errorBox: CSSProperties = {
 }
 
 const noticeBox: CSSProperties = {
-  background: 'var(--bridge-accent-soft)',
-  border: '1px solid var(--bridge-accent-border)',
-  color: 'var(--bridge-text-muted)',
+  background: 'var(--bridge-bg-soft)',
+  border: '1px solid var(--bridge-border)',
+  color: 'var(--bridge-text-subtle)',
   borderRadius: 'var(--bridge-radius-sm)',
   padding: '8px 10px',
   fontSize: 11,
@@ -135,21 +137,24 @@ const noticeBadge: CSSProperties = {
   fontWeight: 700,
   letterSpacing: '0.05em',
   textTransform: 'uppercase',
-  borderRadius: 4,
-  background: 'rgba(91, 141, 239, 0.18)',
-  color: 'var(--bridge-accent)',
+  borderRadius: 'var(--bridge-radius-pill)',
+  background: 'transparent',
+  border: '1px solid var(--bridge-border-strong)',
+  color: 'var(--bridge-text)',
 }
 
 const refuelRow: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '8px 12px',
+  gap: 16,
+  padding: '12px 14px',
   background: 'var(--bridge-bg-soft)',
   border: '1px solid var(--bridge-border)',
-  borderRadius: 'var(--bridge-radius-sm)',
-  fontSize: 12,
-  color: 'var(--bridge-text-muted)',
+  borderRadius: 'var(--bridge-radius-md)',
+  fontSize: 'var(--bridge-note-size)',
+  lineHeight: 1.5,
+  color: 'var(--bridge-text-subtle)',
 }
 
 const refuelLabel: CSSProperties = {
@@ -161,48 +166,49 @@ const refuelLabel: CSSProperties = {
 const destWrap: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 8,
 }
 
 const destLabelRow: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  fontSize: 11,
+  fontSize: 'var(--bridge-label-size)',
+  lineHeight: '20px',
   color: 'var(--bridge-text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-  fontWeight: 600,
+  fontWeight: 500,
 }
 
 const destUseWalletBtn: CSSProperties = {
-  background: 'var(--bridge-accent-soft)',
-  color: 'var(--bridge-accent)',
-  border: '1px solid var(--bridge-accent-border)',
+  background: 'transparent',
+  color: 'var(--bridge-text)',
+  border: '1px solid var(--bridge-border-strong)',
   borderRadius: 'var(--bridge-radius-pill)',
-  padding: '2px 8px',
-  fontSize: 10,
-  fontWeight: 700,
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase',
+  padding: '3px 10px',
+  fontSize: 11,
+  fontWeight: 500,
   cursor: 'pointer',
 }
 
 const destInput: CSSProperties = {
   width: '100%',
+  minHeight: 44,
   background: 'var(--bridge-bg-input)',
   border: '1px solid var(--bridge-border)',
   borderRadius: 'var(--bridge-radius-md)',
   color: 'var(--bridge-text)',
   padding: '10px 12px',
   fontSize: 13,
-  outline: 'none',
-  fontFamily:
-    'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+  fontFamily: 'var(--bridge-font-mono)',
 }
 
+// The one sentence on this card that says where the money goes. It used to be
+//10px in the faintest ink on the page; it is body text now, because a person
+// who cannot read it does not learn that they are paying an address rather
+// than pressing a button.
 const destHint: CSSProperties = {
-  fontSize: 10,
+  fontSize: 'var(--bridge-note-size)',
+  lineHeight: 1.55,
   color: 'var(--bridge-text-subtle)',
   letterSpacing: 0,
   textTransform: 'none',
@@ -212,14 +218,14 @@ const destHint: CSSProperties = {
 const refuelTitle: CSSProperties = {
   color: 'var(--bridge-text)',
   fontWeight: 500,
-  fontSize: 12,
+  fontSize: 'var(--bridge-body-size)',
 }
 
 const toggleTrack = (active: boolean): CSSProperties => ({
   width: 32,
   height: 18,
   borderRadius: 'var(--bridge-radius-pill)',
-  background: active ? 'var(--bridge-accent)' : 'var(--bridge-border-strong)',
+  background: active ? 'var(--bridge-text)' : 'var(--bridge-border-strong)',
   border: 'none',
   cursor: 'pointer',
   position: 'relative',
@@ -234,8 +240,8 @@ const toggleKnob = (active: boolean): CSSProperties => ({
   width: 14,
   height: 14,
   borderRadius: '50%',
-  background: 'white',
-  transition: 'left var(--bridge-transition-fast)',
+  background: active ? 'var(--bridge-bg)' : 'var(--bridge-text)',
+  transition: 'left var(--bridge-transition-fast), background-color var(--bridge-transition-fast)',
 })
 
 export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
@@ -333,7 +339,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
   }
 
   return (
-    <Card>
+    <Card title="Crossing">
       <div style={chainsRow}>
         <ChainSelector
           label="From"
@@ -411,10 +417,10 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           aria-label="Destination address"
         />
         <span style={destHint}>
-          The bridge will issue an MPC-secured deposit address — send your{' '}
-          {swap.fromAsset.symbol} from any {swap.fromChain.name} wallet to
-          that address and the {swap.toAsset.symbol} will arrive at your
-          destination after the threshold quorum signs.
+          You will be given a deposit address to pay. Send your{' '}
+          {swap.fromAsset.symbol} to it from any {swap.fromChain.name} wallet;
+          the {swap.toAsset.symbol} arrives here once the deposit is confirmed
+          and the release is approved. No single party can release it alone.
         </span>
       </div>
 
@@ -427,7 +433,7 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
           type="button"
           role="switch"
           aria-checked={swap.refuel}
-          aria-label="Toggle refuel"
+          aria-label="Refuel destination gas"
           style={toggleTrack(swap.refuel)}
           onClick={() => swap.setRefuel(!swap.refuel)}
         >
@@ -473,9 +479,10 @@ export const SwapForm: FC<SwapFormProps> = ({ swap, wallet, transfers }) => {
 
       {cosigners.length > 0 ? (
         <div style={noticeBox}>
-          <span style={noticeBadge}>2-of-2</span>
+          <span style={noticeBadge}>2 approvals</span>
           <span>
-            Settlement gated by native Lux MPC + {cosigners.join(' + ')} cosign.
+            Release needs Lux and {cosigners.join(' and ')} to approve, not
+            either one alone.
           </span>
         </div>
       ) : null}

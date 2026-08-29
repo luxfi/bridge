@@ -37,7 +37,7 @@ describe('ChainSelector — family label mapping', () => {
     render(
       <ChainSelector label="From" chains={[eth, sol, ton]} current={eth} onChange={vi.fn()} />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /Ethereum/ }))
+    fireEvent.click(screen.getByRole('combobox', { name: /From/ }))
     expect(screen.getByText('EVM')).toBeTruthy()
     expect(screen.getByText('Solana')).toBeTruthy()
     expect(screen.getByText('TON')).toBeTruthy()
@@ -51,7 +51,7 @@ describe('ChainSelector — family label mapping', () => {
     render(
       <ChainSelector label="From" chains={[eth, mystery]} current={eth} onChange={vi.fn()} />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /Ethereum/ }))
+    fireEvent.click(screen.getByRole('combobox', { name: /From/ }))
     expect(screen.getByText('NEARPROTOCOL')).toBeTruthy()
   })
 })
@@ -62,8 +62,8 @@ describe('ChainSelector — selection', () => {
     render(
       <ChainSelector label="From" chains={[eth, sol, ton]} current={eth} onChange={onChange} />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /Ethereum/ }))
-    fireEvent.click(screen.getByRole('option', { name: /Solana/ }))
+    fireEvent.click(screen.getByRole('combobox', { name: /From/ }))
+    fireEvent.mouseDown(screen.getByRole('option', { name: /Solana/ }))
     expect(onChange).toHaveBeenCalledWith(sol)
   })
 

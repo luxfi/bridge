@@ -82,7 +82,7 @@ beforeEach(() => {
 describe('TransferStatus — empty + basic row', () => {
   it('shows the empty-state message with no transfers', () => {
     render(<TransferStatus transfers={[]} />)
-    expect(screen.getByText(/No transfers yet/)).toBeTruthy()
+    expect(screen.getByText(/Nothing yet/)).toBeTruthy()
   })
 
   it('renders amounts, resolved chain names, and the phase label', () => {
@@ -166,9 +166,12 @@ describe('TransferStatus — MPC session line', () => {
         ]}
       />,
     )
-    expect(screen.getByText('cggmp21')).toBeTruthy()
-    expect(screen.getByText('sess_a…7890')).toBeTruthy()
+    // The reference support asks for, and where the release has got to.
+    // Which protocol the signers ran is not drawn: a person cannot act on it,
+    // and it is the one line on this row every visitor reads.
+    expect(screen.getByText('Ref sess_a…7890')).toBeTruthy()
     expect(screen.getByText('· signing')).toBeTruthy()
+    expect(screen.queryByText(/cggmp21/i)).toBeNull()
   })
 
   it('shows "session aborted" instead of a truncated id when aborted', () => {
@@ -182,7 +185,7 @@ describe('TransferStatus — MPC session line', () => {
         ]}
       />,
     )
-    expect(screen.getByText('session aborted')).toBeTruthy()
+    expect(screen.getByText('Release cancelled')).toBeTruthy()
     expect(screen.getByText('· quorum lost')).toBeTruthy()
   })
 })
@@ -190,13 +193,13 @@ describe('TransferStatus — MPC session line', () => {
 describe('TransferStatus — cosigner badges', () => {
   it('renders no badges when no layered cosigner is configured', () => {
     render(<TransferStatus transfers={[baseTransfer()]} />)
-    expect(screen.queryByText('Native MPC')).toBeNull()
+    expect(screen.queryByText('Lux')).toBeNull()
   })
 
   it('renders Native MPC + Utila when utila is configured', () => {
     mockConfig = { mpc: { utila: { vaultId: 'vault-1' } } } as Partial<BridgeConfig>
     render(<TransferStatus transfers={[baseTransfer()]} />)
-    expect(screen.getByText('Native MPC')).toBeTruthy()
+    expect(screen.getByText('Lux')).toBeTruthy()
     expect(screen.getByText('+ Utila')).toBeTruthy()
     expect(screen.queryByText('+ Fireblocks')).toBeNull()
   })

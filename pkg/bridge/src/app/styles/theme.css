@@ -30,41 +30,55 @@
 }
 
 :root {
-  /* Surfaces — layered dark stack with subtle blue undertone for depth. */
-  --bridge-bg: #07080b;
-  --bridge-bg-soft: #0d0e13;
-  --bridge-bg-elevated: #13141a;
-  --bridge-bg-input: #1a1c24;
-  --bridge-bg-hover: #20232d;
+  /* Surfaces. A near-black ground with two lifts above it — the page, the
+     panel, the control. Three greys is what the screen needs to separate
+     them; a fourth reads as a gradient nobody asked for. */
+  --bridge-bg: #000000;
+  --bridge-bg-soft: #0a0a0b;
+  --bridge-bg-elevated: #0d0d0e;
+  --bridge-bg-input: #171717;
+  --bridge-bg-hover: #1f1f1f;
 
   /* Borders. */
-  --bridge-border: #23252e;
-  --bridge-border-strong: #2e313c;
-  --bridge-border-focus: #4661c2;
+  --bridge-border: #262626;
+  --bridge-border-strong: #333333;
+  --bridge-border-focus: #a3a3a3;
 
-  /* Text. */
-  --bridge-text: #f7f8fa;
-  --bridge-text-muted: #9097a5;
-  --bridge-text-subtle: #5f6573;
+  /* Text.
+   *
+   * Three weights of legibility, and every one of them is meant to be read.
+   * `subtle` is the floor: at 12px on this ground it measures 6.2:1, which is
+   * where a sentence explaining what a deposit address is has to sit. A hint
+   * a person squints at is a hint that does not get read, and the sentence
+   * under the destination field is the one that says where the money goes. */
+  --bridge-text: #ededed;
+  --bridge-text-muted: #a3a3a3;
+  --bridge-text-subtle: #8b8b8b;
 
-  /* Accent — driven by `--brand-primary`, with sane fallback. */
+  /* The brand hue, published for host pages to paint with.
+   *
+   * The SDK's own chrome does not read it, and that is deliberate rather than
+   * an oversight. A tenant sets `--brand-primary` to whatever its brand is —
+   * Lux sets it to black — and a control that paints its selected row, its
+   * live badge and its toggle in that colour paints them black on a black
+   * page. Measured: the selected option's label and the phase dot both went
+   * invisible. Marking a thing is the neutral scale's job, which is legible
+   * by construction; the brand shows up where a brand belongs, in the mark
+   * and the wordmark. */
   --bridge-accent: var(--brand-primary, #5b8def);
-  --bridge-accent-hover: var(--brand-secondary, #7a9ff5);
-  --bridge-accent-soft: rgba(91, 141, 239, 0.12);
-  --bridge-accent-border: rgba(91, 141, 239, 0.32);
 
   /* Semantic. */
-  --bridge-danger: #f43d3d;
-  --bridge-danger-soft: rgba(244, 61, 61, 0.1);
-  --bridge-danger-border: rgba(244, 61, 61, 0.4);
-  --bridge-success: #34c759;
-  --bridge-success-soft: rgba(52, 199, 89, 0.1);
-  --bridge-success-border: rgba(52, 199, 89, 0.32);
-  --bridge-warning: #ffb02e;
+  --bridge-danger: #f87171;
+  --bridge-danger-soft: rgba(248, 113, 113, 0.1);
+  --bridge-danger-border: rgba(248, 113, 113, 0.35);
+  --bridge-success: #4ade80;
+  --bridge-success-soft: rgba(74, 222, 128, 0.1);
+  --bridge-success-border: rgba(74, 222, 128, 0.3);
+  --bridge-warning: #fbbf24;
 
-  /* Radii. Bridge cards use the large radius — modern bridge UIs run 16–20px. */
-  --bridge-radius: 20px;
-  --bridge-radius-md: 14px;
+  /* Radii. */
+  --bridge-radius: 16px;
+  --bridge-radius-md: 12px;
   --bridge-radius-sm: 10px;
   --bridge-radius-pill: 999px;
 
@@ -81,17 +95,21 @@
   --bridge-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
     monospace;
 
-  /* Shadows — layered, soft, used on cards + popovers. */
-  --bridge-shadow-card:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    0 10px 30px rgba(0, 0, 0, 0.5);
+  /* Type scale. Stated once so a heading and the sentence under it move
+     together, and a size is chosen by what it is rather than by a number at
+     the call site. */
+  --bridge-title-size: 34px;
+  --bridge-panel-title-size: 19px;
+  --bridge-body-size: 14px;
+  --bridge-note-size: 12px;
+  --bridge-label-size: 12px;
+
+  /* Shadows. Panels sit on the ground rather than float above it — an edge
+     does the separating, which is why there is one shadow here and it belongs
+     to the thing that genuinely overlaps: the popover. */
   --bridge-shadow-popover:
     0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 10px 40px rgba(0, 0, 0, 0.6);
-  --bridge-shadow-glow:
-    0 0 0 1px var(--bridge-accent-border),
-    0 0 24px var(--bridge-accent-soft);
+    0 12px 40px rgba(0, 0, 0, 0.8);
 
   /* Motion. */
   --bridge-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -103,47 +121,49 @@
    * here are desktop-sized; the (max-width: 640px) and (max-width: 480px)
    * overrides below tighten the values for tablet and phone.
    */
-  --bridge-page-padding-x: 16px;
-  --bridge-page-padding-y: 32px;
-  --bridge-card-padding: 20px;
-  --bridge-card-gap: 14px;
-  --bridge-stack-gap: 16px;
-  --bridge-stack-max-width: 480px;
-  --bridge-header-padding-x: 20px;
+  --bridge-page-padding-x: 24px;
+  --bridge-page-padding-y: 40px;
+  --bridge-card-padding: 24px;
+  --bridge-card-gap: 18px;
+  --bridge-stack-gap: 20px;
+  --bridge-stack-max-width: 520px;
+  --bridge-header-padding-x: 24px;
   --bridge-header-padding-y: 14px;
-  --bridge-asset-select-width: 140px;
-  --bridge-input-font-size: 24px;
+  --bridge-asset-select-width: 148px;
+  --bridge-input-font-size: 28px;
   --bridge-brand-name-size: 15px;
   --bridge-chip-display: inline-flex;
-  --bridge-mpc-chip-display: inline-flex;
 }
 
 /* Tablet — slightly tighter spacing, identical layout structure. */
 @media (max-width: 640px) {
   :root {
-    --bridge-page-padding-x: 14px;
-    --bridge-page-padding-y: 20px;
-    --bridge-card-padding: 16px;
-    --bridge-card-gap: 12px;
-    --bridge-stack-gap: 12px;
-    --bridge-header-padding-x: 14px;
+    --bridge-page-padding-x: 16px;
+    --bridge-page-padding-y: 28px;
+    --bridge-card-padding: 20px;
+    --bridge-card-gap: 16px;
+    --bridge-stack-gap: 16px;
+    --bridge-header-padding-x: 16px;
     --bridge-header-padding-y: 12px;
-    --bridge-asset-select-width: 120px;
-    --bridge-input-font-size: 22px;
+    --bridge-asset-select-width: 128px;
+    --bridge-input-font-size: 24px;
+    --bridge-title-size: 28px;
   }
 }
 
-/* Phone — MPC chip hidden to free header width for the wallet pill, amount
- * input shrunk a notch, page padding reduced to its iOS-safe minimum. */
+/* Phone — amount input shrunk a notch, page padding reduced to its iOS-safe
+ * minimum, and the env chip stood down so the header holds a wordmark and a
+ * wallet pill without either being cut. */
 @media (max-width: 480px) {
   :root {
     --bridge-page-padding-x: 12px;
-    --bridge-page-padding-y: 16px;
-    --bridge-card-padding: 14px;
-    --bridge-asset-select-width: 110px;
-    --bridge-input-font-size: 20px;
+    --bridge-page-padding-y: 20px;
+    --bridge-card-padding: 16px;
+    --bridge-asset-select-width: 116px;
+    --bridge-input-font-size: 22px;
     --bridge-brand-name-size: 14px;
-    --bridge-mpc-chip-display: none;
+    --bridge-title-size: 26px;
+    --bridge-chip-display: none;
   }
 }
 
@@ -157,16 +177,14 @@ body {
   font-family: var(--bridge-font);
 }
 
+/* Flat ground. The page was painted with an accent wash behind the header,
+   which put a coloured haze under the one panel a person reads numbers off.
+   The panel's own edge does the separating now. */
 .bridge-root {
   font-family: var(--bridge-font);
-  background:
-    radial-gradient(
-      ellipse 80% 60% at 50% 0%,
-      var(--bridge-accent-soft) 0%,
-      transparent 60%
-    ),
-    var(--bridge-bg);
+  background: var(--bridge-bg);
   color: var(--bridge-text);
+  font-size: var(--bridge-body-size);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -256,16 +274,13 @@ body {
   background: var(--bridge-bg-hover);
 }
 
-.bridge-popover-item[data-selected='true'] {
-  color: var(--bridge-accent);
-}
-
 .bridge-popover-item[data-selected='true']::after {
   content: '';
   width: 6px;
   height: 6px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: var(--bridge-accent);
+  background: var(--bridge-text);
   margin-left: auto;
 }
 
@@ -305,4 +320,81 @@ body {
   width: 32px;
   height: 32px;
   font-size: 13px;
+}
+
+/* ─── Focus ──────────────────────────────────────────────────────────
+ *
+ * One ring, on every control that takes focus from a keyboard. It is
+ * `:focus-visible` rather than `:focus` so a mouse click does not leave a
+ * halo, and it is stated once here rather than per component because a
+ * keyboard user following a form down the card needs the mark to look the
+ * same each time it lands.
+ */
+.bridge-root :focus-visible {
+  outline: 2px solid var(--bridge-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--bridge-radius-sm);
+}
+
+/* ─── Select trigger ─────────────────────────────────────────────────
+ *
+ * A class rather than an inline style, because the two states that matter
+ * — hover and keyboard focus — are pseudo-classes, and inline styles have
+ * none. The open state is data, so it is a data attribute.
+ */
+.bridge-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--bridge-bg-input);
+  border: 1px solid var(--bridge-border);
+  border-radius: var(--bridge-radius-md);
+  color: var(--bridge-text);
+  font-size: var(--bridge-body-size);
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background-color var(--bridge-transition-fast),
+    border-color var(--bridge-transition-fast);
+}
+
+.bridge-select-trigger:hover {
+  border-color: var(--bridge-border-strong);
+  background: var(--bridge-bg-hover);
+}
+
+.bridge-select-trigger[data-open='true'] {
+  border-color: var(--bridge-border-focus);
+  background: var(--bridge-bg-hover);
+}
+
+/* The caret. It turns because the menu is open, and it is drawn from a
+   border rather than a glyph so it keeps its weight at any type size. */
+.bridge-select-caret {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--bridge-text-muted);
+  border-bottom: 1.5px solid var(--bridge-text-muted);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--bridge-transition-fast);
+}
+
+.bridge-select-trigger[data-open='true'] .bridge-select-caret {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.bridge-select-trigger:hover .bridge-select-caret,
+.bridge-select-trigger[data-open='true'] .bridge-select-caret {
+  border-color: var(--bridge-text);
+}
+
+/* The option the keyboard is on. Marked with a visible edge as well as a
+   fill, so it survives a screen where the fill difference is one step. */
+.bridge-popover-item[data-highlighted='true'] {
+  box-shadow: inset 0 0 0 1px var(--bridge-border-strong);
 }
