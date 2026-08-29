@@ -264,12 +264,14 @@ networks:
     txExplorerTpl: https://polkascan.io/polkadot/extrinsic/{addr}
     addrExplorerTpl: https://polkascan.io/polkadot/account/{addr}
 
-  # CARDANO is deliberately absent. Its address type in the MPC wallet is
-  # `sol` — the comment beside it says "placeholder" — and Cardano is not
-  # Solana. Both are Ed25519 so the KEY is fine, but a Cardano address is
-  # bech32 `addr1...` and a Solana one is a base58 public key. Offering it
-  # would hand a user a Solana-shaped address to send ADA to, and the funds
-  # would be gone. It goes in when it has an encoder, not before.
+  - internalName: CARDANO_MAINNET
+    displayName: Cardano
+    nativeCurrency: ADA
+    type: cardano
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://cardanoscan.io/transaction/{tx}
+    addrExplorerTpl: https://cardanoscan.io/address/{addr}
 
 tokens:
   # The chains Lux runs — native coin only. Liquid tokens get added per
@@ -474,6 +476,10 @@ tokens:
     name: Polkadot
     decimals: 10
     network: POLKADOT_MAINNET
+  - asset: ADA
+    name: Cardano
+    decimals: 6
+    network: CARDANO_MAINNET
 
 limits:
   minUSD: 10
