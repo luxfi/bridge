@@ -53,6 +53,11 @@ const (
 	AddressTypeTON AddressType = "ton"
 	AddressTypeXRP AddressType = "xrp"
 	AddressTypeDOT AddressType = "dot"
+	// Cardano. Same Ed25519 key as Solana and a different address: bech32
+	// addr1… over blake2b-224 (CIP-19) rather than the base58 public key.
+	// Mapping it to SOL, as this table did, issues a Solana-shaped string
+	// to send ADA to.
+	AddressTypeADA AddressType = "ada"
 )
 
 // Curve names the threshold-signature scheme the MPC cluster keygens /
@@ -139,18 +144,24 @@ var networkAddressType = map[string]AddressType{
 	"KUSAMA_MAINNET":   AddressTypeDOT,
 	// Cardano — placeholder (Ed25519); use the sol address slot until a
 	// proper Cardano encoder lands. Matches TS mpc-wallet.ts behaviour.
-	"CARDANO_MAINNET": AddressTypeSOL,
+	"CARDANO_MAINNET": AddressTypeADA,
 }
 
-// AddressTypeFor returns the configured address type for an
-// MPC-supported network. Unknown networks default to AddressTypeETH —
-// safe because every BridgeVM-supported chain is at minimum an EVM,
-// and an EVM 0x… address is meaningful as a fallback identifier.
-func AddressTypeFor(networkInternalName string) AddressType {
-	if t, ok := networkAddressType[networkInternalName]; ok {
-		return t
-	}
-	return AddressTypeETH
+// AddressTypeFor returns the configured address type for a network, and
+// whether the network is known.
+//
+// The default used to be AddressTypeETH, on the reasoning that "every
+// BridgeVM-supported chain is at minimum an EVM". That has not been true
+// since Bitcoin: an unlisted non-EVM network silently became an EVM one, and
+// an 0x address was handed out for a chain that has never seen one. A network
+// this table does not name is a network whose address format is unknown, and
+// unknown is not eth.
+//
+// Callers that need a value for a known-EVM network should look it up; callers
+// that get ok=false should refuse rather than guess.
+func AddressTypeFor(networkInternalName string) (AddressType, bool) {
+	t, ok := networkAddressType[networkInternalName]
+	return t, ok
 }
 
 // =============================================================================
@@ -459,7 +470,16 @@ func (c *Client) KeygenForDepositWithOrg(ctx context.Context, networkInternalNam
 	if c.APIURL == "" {
 		return nil, &MPCError{Op: "keygen", Message: "APIURL not configured"}
 	}
-	addrType := AddressTypeFor(networkInternalName)
+	// Refuse rather than guess. Minting a deposit wallet for a network whose
+	// address format we do not know produces an address on the wrong chain,
+	// which is discovered when a user sends funds to it.
+	addrType, known := AddressTypeFor(networkInternalName)
+	if !known {
+		return nil, &MPCError{
+			Op:      "keygen",
+			Message: "no address format for network " + networkInternalName,
+		}
+	}
 	if orgID == "" {
 		return nil, &MPCError{Op: "keygen", Message: "org_id required (set Client.OrgID or pass per-call)"}
 	}

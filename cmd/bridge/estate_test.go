@@ -51,7 +51,12 @@ var estate = []struct {
 // non-EVM addition from inheriting that default silently.
 func TestEstateDerivesEthAddresses(t *testing.T) {
 	for _, c := range estate {
-		if got := mchain.AddressTypeFor(c.network); got != mchain.AddressTypeETH {
+		got, known := mchain.AddressTypeFor(c.network)
+		if !known {
+			t.Errorf("%s has no address family — custody would mint for an unknown chain", c.network)
+			continue
+		}
+		if got != mchain.AddressTypeETH {
 			t.Errorf("%s derives %v, want eth — custody address would be malformed", c.network, got)
 		}
 	}

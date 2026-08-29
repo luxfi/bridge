@@ -77,6 +77,17 @@ func clientFor(m *mockCluster, opts ...func(*Client)) *Client {
 // AddressTypeFor — registry lookups
 // =============================================================================
 
+// An unknown network reports unknown, not eth. The table used to return eth
+// for anything it did not name — safe only while every chain was an EVM, which
+// stopped being true at Bitcoin.
+func TestAddressTypeFor_UnknownIsUnknown(t *testing.T) {
+	for _, net := range []string{"UNKNOWN_NETWORK", "MARS_MAINNET", ""} {
+		if got, known := AddressTypeFor(net); known {
+			t.Errorf("AddressTypeFor(%q) = %q, known — an unnamed network has no known address format", net, got)
+		}
+	}
+}
+
 func TestAddressTypeFor_Coverage(t *testing.T) {
 	cases := []struct {
 		net  string
@@ -92,12 +103,12 @@ func TestAddressTypeFor_Coverage(t *testing.T) {
 		{"POLKADOT_MAINNET", AddressTypeDOT},
 		{"POLKADOT_TESTNET", AddressTypeDOT},
 		{"KUSAMA_MAINNET", AddressTypeDOT},
-		{"CARDANO_MAINNET", AddressTypeSOL}, // placeholder slot
-		{"UNKNOWN_NETWORK", AddressTypeETH}, // default fallback
+		{"CARDANO_MAINNET", AddressTypeADA}, // placeholder slot
+ // default fallback
 	}
 	for _, tc := range cases {
 		t.Run(tc.net, func(t *testing.T) {
-			if got := AddressTypeFor(tc.net); got != tc.want {
+			if got, _ := AddressTypeFor(tc.net); got != tc.want {
 				t.Errorf("AddressTypeFor(%q) = %q, want %q", tc.net, got, tc.want)
 			}
 		})
@@ -389,26 +400,21 @@ func TestKeygen_DOT_TestnetPrefix(t *testing.T) {
 	}
 }
 
-func TestKeygen_UnknownNetwork_DefaultsToETH(t *testing.T) {
+func TestKeygen_UnknownNetwork_IsRefused(t *testing.T) {
+	// This asserted the opposite until today: an unknown network fell back to
+	// an ETH address, on the reasoning that every supported chain "is at
+	// minimum an EVM". That stopped being true at Bitcoin. A network the
+	// address table does not name has an unknown address format, and minting
+	// an 0x address for it produces an address on the wrong chain — found
+	// when a user sends funds to it.
 	m := newMockCluster(t)
 	m.result = &keygenResult{ETHAddress: "0xfallback"}
 	c := clientFor(m)
 
-	w, err := c.KeygenForDeposit(context.Background(), "MARS_MAINNET")
-	if err != nil {
-		t.Fatalf("err: %v", err)
-	}
-	if w.AddressType != AddressTypeETH {
-		t.Errorf("AddressType = %q, want eth fallback", w.AddressType)
-	}
-	if w.Address != "0xfallback" {
-		t.Errorf("Address = %q", w.Address)
+	if _, err := c.KeygenForDeposit(context.Background(), "MARS_MAINNET"); err == nil {
+		t.Fatal("a wallet was minted for a network with no known address format")
 	}
 }
-
-// =============================================================================
-// LegacyDepositString format (TS SDK split-on-### contract)
-// =============================================================================
 
 func TestLegacyDepositString(t *testing.T) {
 	w := &Wallet{Name: "bridge-lux_testnet-12345", Address: "0xdeadbeef"}
