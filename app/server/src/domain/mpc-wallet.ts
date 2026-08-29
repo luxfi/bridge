@@ -1,6 +1,7 @@
 import logger from "@/logger"
 import { IAMClient } from "@/clients/iam"
 import { MPCClient } from "@/clients/mpc"
+import { CardanoNetwork, encodeCardanoAddress } from "./cardano-address.js"
 import { encodeSubstrateAddress, SUBSTRATE_NETWORKS } from "./substrate-address.js"
 import { checkSubstrateDeposit } from "./substrate-deposit.js"
 
@@ -36,7 +37,7 @@ export function _resetMpcWalletClientForTests(): void {
 }
 
 // Network type to address field mapping
-const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp' | 'dot'> = {
+const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp' | 'dot' | 'ada'> = {
   // EVM chains use eth address
   ETHEREUM_MAINNET: 'eth',
   ETHEREUM_SEPOLIA: 'eth',
@@ -78,8 +79,11 @@ const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp'
   XRP_TESTNET: 'xrp',
   // Polkadot / Substrate
   POLKADOT_MAINNET: 'dot',
-  // Cardano (placeholder — needs Ed25519)
-  CARDANO_MAINNET: 'sol',
+  // Cardano. Same curve and same FROST signing as Solana — the key is not
+  // the problem. The ADDRESS is: Cardano is bech32 addr1... over
+  // blake2b-224, Solana is the base58 public key. Mapped to 'sol' this
+  // issued Solana-shaped deposit addresses for ADA.
+  CARDANO_MAINNET: 'ada',
 }
 
 // The MPCClient.keygen / getWallet response shapes are defined in
@@ -97,6 +101,7 @@ const NETWORK_ADDRESS_TYPE: Record<string, 'eth' | 'btc' | 'sol' | 'ton' | 'xrp'
  *   btc    → secp256k1 derived (P2WPKH default)
  *   sol/ton → ed25519 derived
  *   dot    → SS58-encoded ed25519 public key
+ *   ada    → CIP-19 bech32 over blake2b-224 of the ed25519 public key
  */
 export async function createMPCWalletForDeposit(
   networkInternalName: string,
@@ -146,6 +151,29 @@ export async function createMPCWalletForDeposit(
     case "btc":
       address = wallet.btcAddress
       break
+    case "ada": {
+      // Same key as Solana — Ed25519, signed by FROST, which
+      // luxfi/threshold supports natively. Only the address differs:
+      // Solana's IS the public key, Cardano's is blake2b-224 of it inside a
+      // typed, network-tagged bech32 envelope. Mapped to "sol" this handed
+      // out a Solana-shaped string to send ADA to.
+      const pubKeyHex = wallet.eddsaPubKey
+      if (!pubKeyHex) {
+        throw new Error(
+          "MPC keygen did not return an eddsa public key for the Cardano address",
+        )
+      }
+      address = encodeCardanoAddress(
+        new Uint8Array(
+          Buffer.from(
+            pubKeyHex.startsWith("0x") ? pubKeyHex.slice(2) : pubKeyHex,
+            "hex",
+          ),
+        ),
+        CardanoNetwork.Mainnet,
+      )
+      break
+    }
     case "sol":
     case "ton":
       address = wallet.solAddress
