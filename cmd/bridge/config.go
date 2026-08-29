@@ -125,7 +125,11 @@ func (c Config) findToken(network, asset string) (Token, bool) {
 // stays default-ON (its many tokens carry no explicit flag). The network is
 // upper-cased to match mchain.AddressTypeFor's exact-uppercase routing table.
 func gatedFamily(network string) bool {
-	return mchain.AddressTypeFor(strings.ToUpper(network)) != mchain.AddressTypeETH
+	// An unknown network is gated. It used to read as EVM and pass, which is
+	// the wrong direction for a gate: a family nobody has named is exactly the
+	// one to hold, not the one to wave through.
+	t, known := mchain.AddressTypeFor(strings.ToUpper(network))
+	return !known || t != mchain.AddressTypeETH
 }
 
 // WithdrawalEnabled is the authoritative server-side gate behind the

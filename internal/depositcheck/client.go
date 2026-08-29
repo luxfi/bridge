@@ -78,6 +78,13 @@ var rpcURLs = map[string]string{
 	"ARBITRUM_MAINNET": "https://arb1.arbitrum.io/rpc",
 	"OPTIMISM_MAINNET": "https://mainnet.optimism.io",
 	"AVAX_MAINNET":     "https://api.avax.network/ext/bc/C/rpc",
+	"CELO_MAINNET":     "https://forno.celo.org",
+	"GNOSIS_MAINNET":   "https://rpc.gnosischain.com",
+	"FANTOM_MAINNET":   "https://rpc.ftm.tools",
+	"AURORA_MAINNET":   "https://mainnet.aurora.dev",
+	"ZORA_MAINNET":     "https://rpc.zora.energy",
+	"BLAST_MAINNET":    "https://rpc.blast.io",
+	"LINEA_MAINNET":    "https://rpc.linea.build",
 	"HOLESKY_TESTNET":  "https://ethereum-holesky-rpc.publicnode.com",
 	// Bitcoin (Blockstream REST API base — note: NOT JSON-RPC)
 	"BITCOIN_MAINNET": "https://blockstream.info/api",
@@ -203,7 +210,13 @@ func (c *Client) Check(ctx context.Context, p CheckParams) (bool, error) {
 		return false, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, p.NetworkInternalName)
 	}
 
-	addrType := mchain.AddressTypeFor(p.NetworkInternalName)
+	// Same refusal as the broadcaster: watching an unknown network with the
+	// EVM checker reads an 0x address on a chain that has none, and reports
+	// "no deposit" forever rather than reporting that it cannot look.
+	addrType, known := mchain.AddressTypeFor(p.NetworkInternalName)
+	if !known {
+		return false, fmt.Errorf("%w: %s", ErrUnsupportedNetwork, p.NetworkInternalName)
+	}
 	switch addrType {
 	case mchain.AddressTypeETH:
 		return c.checkEVM(ctx, url, p.NetworkInternalName, p.Address, p.Asset, p.RequiredAmount)

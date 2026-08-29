@@ -196,7 +196,7 @@ func (a *API) swapsCreateNative(c *zip.Ctx) error {
 	// own address shapes). Rejects X-addresses (which embed a tag the
 	// bridge can't honor through its separate DestinationTag field) and
 	// validates the classic r-address. See xrpl.ValidateDestination.
-	if mchain.AddressTypeFor(req.DestinationNetwork) == mchain.AddressTypeXRP {
+	if isFamily(req.DestinationNetwork, mchain.AddressTypeXRP) {
 		if err := xrpl.ValidateDestination(req.DestinationAddress); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{
 				"error":  "bad_destination",

@@ -24,7 +24,7 @@ type fakeKeygenerFamily struct {
 
 func (k *fakeKeygenerFamily) KeygenForDeposit(_ context.Context, network string) (*mchain.Wallet, error) {
 	i := k.calls.Add(1)
-	t := mchain.AddressTypeFor(network)
+	t, _ := mchain.AddressTypeFor(network)
 	addr := fmt.Sprintf("0x%dETH", i)
 	if t == mchain.AddressTypeSOL {
 		addr = fmt.Sprintf("SoLaNa%d", i)
