@@ -178,6 +178,99 @@ networks:
     txExplorerTpl: https://livenet.xrpl.org/transactions/{tx}
     addrExplorerTpl: https://livenet.xrpl.org/accounts/{addr}
 
+  # Reached by MPC custody rather than a teleporter contract. An empty
+  # teleporter is a mode, not a gap: Ethereum and Polygon carry empty ones
+  # too and cross fine, because the committee holds an address on the chain
+  # and a deposit to it is the lock. Custody spans these already — CGGMP21
+  # on secp256k1 for every EVM, FROST on Ed25519 for the substrate and
+  # Cardano families — so what was missing here was the row, not the ability.
+
+  - internalName: CELO_MAINNET
+    displayName: Celo
+    nativeCurrency: CELO
+    chainId: "42220"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://celoscan.io/tx/{tx}
+    addrExplorerTpl: https://celoscan.io/address/{addr}
+
+  - internalName: ZORA_MAINNET
+    displayName: Zora
+    nativeCurrency: ETH
+    chainId: "7777777"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://explorer.zora.energy/tx/{tx}
+    addrExplorerTpl: https://explorer.zora.energy/address/{addr}
+
+  - internalName: BLAST_MAINNET
+    displayName: Blast
+    nativeCurrency: ETH
+    chainId: "81457"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://blastscan.io/tx/{tx}
+    addrExplorerTpl: https://blastscan.io/address/{addr}
+
+  - internalName: LINEA_MAINNET
+    displayName: Linea
+    nativeCurrency: ETH
+    chainId: "59144"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://lineascan.build/tx/{tx}
+    addrExplorerTpl: https://lineascan.build/address/{addr}
+
+  - internalName: GNOSIS_MAINNET
+    displayName: Gnosis
+    nativeCurrency: XDAI
+    chainId: "100"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://gnosisscan.io/tx/{tx}
+    addrExplorerTpl: https://gnosisscan.io/address/{addr}
+
+  - internalName: FANTOM_MAINNET
+    displayName: Fantom
+    nativeCurrency: FTM
+    chainId: "250"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://ftmscan.io/tx/{tx}
+    addrExplorerTpl: https://ftmscan.io/address/{addr}
+
+  - internalName: AURORA_MAINNET
+    displayName: Aurora
+    nativeCurrency: ETH
+    chainId: "1313161554"
+    type: evm
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://explorer.aurora.dev/tx/{tx}
+    addrExplorerTpl: https://explorer.aurora.dev/address/{addr}
+
+  - internalName: POLKADOT_MAINNET
+    displayName: Polkadot
+    nativeCurrency: DOT
+    type: substrate
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://polkascan.io/polkadot/extrinsic/{addr}
+    addrExplorerTpl: https://polkascan.io/polkadot/account/{addr}
+
+  # CARDANO is deliberately absent. Its address type in the MPC wallet is
+  # `sol` — the comment beside it says "placeholder" — and Cardano is not
+  # Solana. Both are Ed25519 so the KEY is fine, but a Cardano address is
+  # bech32 `addr1...` and a Solana one is a base58 public key. Offering it
+  # would hand a user a Solana-shaped address to send ADA to, and the funds
+  # would be gone. It goes in when it has an encoder, not before.
+
 tokens:
   # The chains Lux runs — native coin only. Liquid tokens get added per
   # chain when the contract list firms up.
@@ -344,6 +437,43 @@ tokens:
     network: XRP_MAINNET
     isDepositEnabled: true
     isWithdrawalEnabled: false
+
+
+  # The native asset of each network reached by custody. A network with no
+  # asset row is in four of the five tables a crossing needs, and the fifth
+  # is discovered after the user has sent funds.
+  - asset: CELO
+    name: Celo
+    decimals: 18
+    network: CELO_MAINNET
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: ZORA_MAINNET
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: BLAST_MAINNET
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: LINEA_MAINNET
+  - asset: XDAI
+    name: xDAI
+    decimals: 18
+    network: GNOSIS_MAINNET
+  - asset: FTM
+    name: Fantom
+    decimals: 18
+    network: FANTOM_MAINNET
+  - asset: ETH
+    name: Ether
+    decimals: 18
+    network: AURORA_MAINNET
+  - asset: DOT
+    name: Polkadot
+    decimals: 10
+    network: POLKADOT_MAINNET
 
 limits:
   minUSD: 10
