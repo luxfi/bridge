@@ -43,7 +43,8 @@ export interface LuxWalletState {
   connecting: boolean
   /**
    * Connect a wallet for the given non-EVM family. Throws if the family has
-   * no @luxwallet/connect connector (EVM/Lux/Cardano) or the user rejects.
+   * no @luxwallet/connect connector (EVM and Lux, which use wagmi) or the
+   * user rejects.
    */
   connect: (family: ChainFamily) => Promise<string>
   /** Disconnect the active non-EVM wallet. */
@@ -75,22 +76,26 @@ export function useLuxWallet(opts: UseLuxWalletOptions = {}): LuxWalletState {
   const connectorOptions = opts.connectorOptions
 
   const resolveConnector = useCallback(
-    (fam: ChainFamily): WalletConnector => {
+    async (fam: ChainFamily): Promise<WalletConnector> => {
       const chain = familyToLuxChain(fam)
       if (!chain) {
         throw new Error(
           `useLuxWallet: no wallet connector for family "${fam}" ` +
-            '(EVM/Lux use wagmi; Cardano connect is unavailable)',
+            '(EVM and Lux go through wagmi)',
         )
       }
-      return getConnector(chain, connectorOptions)
+      // Awaited: 0.2.x loads a chain's wallet SDK only when that chain is
+      // asked for. Statically importing all seven pulled sats-connect,
+      // @tonconnect/sdk, @crossmarkio/sdk and @polkadot/util-crypto into
+      // every page load — the eager-import shape that blanked the exchange.
+      return await getConnector(chain, connectorOptions)
     },
     [connectorOptions],
   )
 
   const connect = useCallback(
     async (fam: ChainFamily): Promise<string> => {
-      const connector = resolveConnector(fam)
+      const connector = await resolveConnector(fam)
       setConnecting(true)
       try {
         const account = await connector.connect()

@@ -97,7 +97,7 @@
     "@tonconnect/sdk": "^4.0.0",
     "sats-connect": "^4.2.1",
     "@luxwallet/chains": "^0.1.0",
-    "@luxwallet/connect": "^0.1.0"
+    "@luxwallet/connect": "^0.2.1"
   },
   "peerDependencies": {
     "@hanzogui/avatar": "^7.0.0",
