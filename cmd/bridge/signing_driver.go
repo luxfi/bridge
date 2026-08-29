@@ -251,6 +251,14 @@ type SigningDriver struct {
 // signing driver will use real EVM EIP-155 sighashes (not placeholder
 // digests) and finalize a wire-ready raw tx into Swap.DestRawTx.
 // Optional — leaving it nil retains the v1 placeholder behavior.
+// isFamily reports whether a network is of this address family. An unknown
+// network is of no family — it does not silently become the one being tested
+// for, and it does not silently become EVM either.
+func isFamily(network string, want mchain.AddressType) bool {
+	t, known := mchain.AddressTypeFor(network)
+	return known && t == want
+}
+
 func (d *SigningDriver) SetAssembler(asm *txassembler.Assembler) { d.assembler = asm }
 
 // SetDOTAssembler wires the Polkadot / Substrate assembler. With a DOT
@@ -540,7 +548,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	if walletID == "" {
 		fallback := d.pool
 		if d.dotPool != nil && d.dotPool.Size() > 0 &&
-			mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeDOT {
+			isFamily(sw.DestinationNetwork, mchain.AddressTypeDOT) {
 			fallback = d.dotPool
 		}
 		if fallback != nil && fallback.Size() > 0 {
@@ -614,7 +622,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// SOL has its own message build + sign + finalize path because the
 	// cryptographic primitives are different (Ed25519 vs ECDSA, 64-byte
 	// sig vs 65-byte recoverable, no nonce/gas concept).
-	if mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeSOL {
+	if isFamily(sw.DestinationNetwork, mchain.AddressTypeSOL) {
 		d.signOneSOL(ctx, sw, walletID, senderAddr)
 		return
 	}
@@ -623,7 +631,7 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	// (Payment instead of EIP-155, DER signature instead of R||S||V,
 	// drops instead of wei). Route there before the EVM-specific
 	// assembler kicks in.
-	if mchain.AddressTypeFor(sw.DestinationNetwork) == mchain.AddressTypeXRP {
+	if isFamily(sw.DestinationNetwork, mchain.AddressTypeXRP) {
 		d.signOneXRP(ctx, sw, walletID, senderAddr, poolEntry)
 		return
 	}
@@ -639,7 +647,9 @@ func (d *SigningDriver) signOne(ctx context.Context, sw *Swap) {
 	var dotUnsigned *txassembler.DOTUnsigned // DOT
 	var tonUnsigned *txassembler.TONUnsigned // TON
 
-	destFamily := mchain.AddressTypeFor(sw.DestinationNetwork)
+	// An unknown destination matches no arm below and falls to the default,
+	// which is a refusal rather than the EVM path.
+	destFamily, _ := mchain.AddressTypeFor(sw.DestinationNetwork)
 	switch {
 	case destFamily == mchain.AddressTypeDOT && d.dotAssembler != nil && d.dotChainCtx != nil && senderAddr != "":
 		u, msg, aerr := d.preSignDOT(ctx, sw, walletID)
