@@ -61,12 +61,48 @@ const stack: React.CSSProperties = {
   gap: 'var(--bridge-stack-gap)',
 }
 
+const title: React.CSSProperties = {
+  fontSize: 'var(--bridge-title-size)',
+  fontWeight: 700,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.1,
+  margin: 0,
+}
+
+// The sentence under the title. Set at body size in the muted ink rather than
+// the subtle one: it is the only place the page says what it does, and a
+// screen that dims its own explanation has written it for nobody.
+const intro: React.CSSProperties = {
+  fontSize: 'var(--bridge-body-size)',
+  lineHeight: 1.55,
+  color: 'var(--bridge-text-muted)',
+  margin: '10px 0 0',
+}
+
 const footer: React.CSSProperties = {
-  textAlign: 'center',
-  padding: '20px 16px',
-  fontSize: 11,
-  color: 'var(--bridge-text-subtle)',
+  display: 'flex',
+  justifyContent: 'center',
+  padding: '28px var(--bridge-page-padding-x) 40px',
   borderTop: '1px solid var(--bridge-border)',
+}
+
+const footerText: React.CSSProperties = {
+  width: '100%',
+  maxWidth: 'var(--bridge-stack-max-width)',
+  fontSize: 'var(--bridge-note-size)',
+  lineHeight: 1.6,
+  color: 'var(--bridge-text-subtle)',
+}
+
+const footerLink: React.CSSProperties = {
+  color: 'var(--bridge-text-muted)',
+  textDecoration: 'underline',
+  textUnderlineOffset: 3,
+}
+
+const footerCode: React.CSSProperties = {
+  fontFamily: 'var(--bridge-font-mono)',
+  color: 'var(--bridge-text-muted)',
 }
 
 /**
@@ -119,36 +155,50 @@ const BridgeAppInner: FC = () => {
       <Header wallet={wallet} fromChain={swap.fromChain} />
       <main style={main}>
         <div style={stack}>
+          <div>
+            <h1 style={title}>Bridge</h1>
+            <p style={intro}>
+              Move an asset from one chain to another. Name the two chains and
+              an amount, and this quotes the crossing before you commit to it.
+            </p>
+          </div>
           <SwapForm swap={swap} wallet={wallet} transfers={transfers} />
           <TransferStatus transfers={transfers.transfers} />
         </div>
       </main>
       <footer style={footer}>
-        <span>Network: {env}</span>
-        {docsUrl ? (
-          <>
-            {' · '}
-            <a
-              href={docsUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              style={{ color: 'var(--bridge-text-muted)' }}
-            >
-              Docs
-            </a>
-          </>
-        ) : null}
-        {supportEmail ? (
-          <>
-            {' · '}
-            <a
-              href={`mailto:${supportEmail}`}
-              style={{ color: 'var(--bridge-text-muted)' }}
-            >
-              {supportEmail}
-            </a>
-          </>
-        ) : null}
+        <div style={footerText}>
+          <p style={{ margin: 0 }}>
+            You keep your keys. This page never holds one — you pay a deposit
+            address from a wallet you control, and the far side is delivered to
+            an address you name.
+            {docsUrl ? (
+              <>
+                {' '}
+                <a
+                  href={docsUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  style={footerLink}
+                >
+                  How the bridge works
+                </a>{' '}
+                is the longer answer.
+              </>
+            ) : null}
+          </p>
+          <p style={{ margin: '10px 0 0' }}>
+            Network <span style={footerCode}>{env}</span>
+            {supportEmail ? (
+              <>
+                {' · '}
+                <a href={`mailto:${supportEmail}`} style={footerLink}>
+                  {supportEmail}
+                </a>
+              </>
+            ) : null}
+          </p>
+        </div>
       </footer>
     </div>
   )

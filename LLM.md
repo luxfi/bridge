@@ -108,6 +108,38 @@ mountBridge({
 Mirrors `mountExchange` from the upstream exchange SDK. One declarative entry,
 build-time brand config, no hostname detection inside the SDK.
 
+### What the SDK's chrome may say, and what it paints with
+
+Two rules the UI is built to, both of which were violated and are now
+structural rather than advisory:
+
+**The page never names the signing protocol.** The header used to carry an
+`MPC · CGGMP21` chip and a transfer row used to badge `t.mpc.protocol`. A
+protocol name is not something a visitor can act on, and the header is the one
+surface everybody reads. What a person needs is which network they are on, that
+a deposit address is involved, and that no single party can release funds — all
+of which the copy now says in those words. `BRIDGE_MPC_PROTOCOL` still selects
+what the cluster runs; it just does not select what the page says. The rendered
+page, its attributes and every open menu are checked against the protocol
+vocabulary in the browser, not by grep over source.
+
+**The SDK's own chrome does not paint with `--bridge-accent`.** The token is
+bound to `--brand-primary`, and Lux's brand primary is `#000000` — so the
+selected option's label, the live phase dot, the refuel toggle and the header's
+only call to action were all being drawn black on a black page. Marking a thing
+is the neutral scale's job (`--bridge-text` / `--bridge-text-muted` /
+`--bridge-text-subtle`), which is legible whatever a tenant sets. The accent
+stays defined as the published brand hook for host pages; nothing inside the
+SDK reads it.
+
+Two smaller ones that follow from those. Every picker takes either `label` (a
+`<label>` bound to the trigger) or `name` (read, not drawn) — the prop type
+admits no third shape, so a nameless control does not compile. And every key a
+picker answers is handled on the trigger, which holds focus for the whole
+interaction, with `aria-activedescendant` naming the row the cursor is on;
+handling them on the menu meant the arrows were dead, because nothing ever
+focused the menu.
+
 ## Publishing
 
 `.github/workflows/publish.yml` fires on `v*` tag push, runs on the

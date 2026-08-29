@@ -262,8 +262,10 @@ quote attempt — that's the most common signal of a misconfigured deploy.
 ### Browser sanity (manual)
 
 1. Open `https://bridge.lux.network/` in a fresh incognito window.
-2. Header should show the env chip (`MAINNET` green) and the
-   `MPC · <protocol>` chip.
+2. Header should show the env chip (`MAINNET`, green) and nothing else
+   beside the wordmark. The signing protocol is not named on the page —
+   `BRIDGE_MPC_PROTOCOL` selects what the cluster runs, not what a visitor
+   is told.
 3. Open the chain selector — you should see 22 active chains pulled from
    `bridge-api.lux.network/api/networks` (Bitcoin, Solana, Ton, XRP,
    Polkadot, Ethereum, Base, Lux, Zoo, Polygon, Optimism, Arbitrum, Celo,
