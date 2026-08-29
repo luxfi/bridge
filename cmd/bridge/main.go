@@ -527,7 +527,7 @@ func main() {
 	asmProvider := txassembler.NewRPCProvider(overrides, 8*time.Second)
 	asm := txassembler.New(asmProvider)
 	asm.Tokens = tokenRegistry
-	configureEVM(asm)
+	configureEVM(asm, cfg.Networks)
 
 	// XRP-side of the assembler. Without an XRPProvider the
 	// PreSignXRP path refuses to build — the signing driver short-

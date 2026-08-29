@@ -13,6 +13,7 @@ package main
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/luxfi/bridge/internal/txassembler"
 )
@@ -23,9 +24,16 @@ import (
 // nodes report; each endpoint in internal/txassembler, internal/broadcast and
 // internal/depositcheck was asked eth_chainId and answered the id here. The
 // rest are the public networks the bridge settles to.
+// evmChainIDs is the fallback for a config that declares no chain id, and it
+// exists only for that. The networks file is the source: it already carries
+// `chainId` and `type: evm` per network, and a second copy here is a second
+// thing to keep in step — which it was not. Arbitrum, Optimism and Avalanche
+// were offered to users while this map had never heard of them, so a swap to
+// any of the three could be accepted and then not assembled.
+//
+// An EIP-155 id is signed into the transaction. A wrong one produces a
+// signature valid on some OTHER chain, so guessing is worse than refusing.
 var evmChainIDs = map[string]int64{
-	// Lux and the chains it runs. Sovereign L1s, each its own primary
-	// network, so an id here is the whole identity of the chain.
 	"LUX_MAINNET":   96369,
 	"LUX_TESTNET":   96368,
 	"ZOO_MAINNET":   200200,
@@ -34,7 +42,6 @@ var evmChainIDs = map[string]int64{
 	"PARS_MAINNET":  494949,
 	"OSAGE_MAINNET": 1872,
 
-	// Public networks.
 	"ETHEREUM_MAINNET": 1,
 	"ETHEREUM_SEPOLIA": 11155111,
 	"HOLESKY_TESTNET":  17000,
@@ -43,11 +50,42 @@ var evmChainIDs = map[string]int64{
 	"POLYGON_MAINNET":  137,
 	"BSC_MAINNET":      56,
 	"BSC_TESTNET":      97,
+	"ARBITRUM_MAINNET": 42161,
+	"OPTIMISM_MAINNET": 10,
+	"AVAX_MAINNET":     43114,
 }
 
-// configureEVM registers every EVM network on the assembler.
-func configureEVM(asm *txassembler.Assembler) {
+// configureEVM registers every EVM network the config declares.
+//
+// Reading the config rather than a list here is what stops the two drifting.
+// A network the operator offers is a network a user can select, and one the
+// assembler has never heard of fails AFTER they have sent funds — the worst
+// place in the flow to discover a gap.
+func configureEVM(asm *txassembler.Assembler, networks []Network) {
+	seen := map[string]bool{}
+
+	for _, n := range networks {
+		if !strings.EqualFold(n.Type, "evm") {
+			continue
+		}
+		id, ok := new(big.Int).SetString(n.ChainID, 10)
+		if !ok || id.Sign() <= 0 {
+			// No usable id: fall through to the table, and if that has none
+			// either the network stays unregistered and a swap to it is
+			// refused rather than mis-signed.
+			continue
+		}
+		asm.SetNetwork(n.InternalName, txassembler.PerNetwork{
+			ChainID:        id,
+			NativeDecimals: 18,
+		})
+		seen[n.InternalName] = true
+	}
+
 	for network, id := range evmChainIDs {
+		if seen[network] {
+			continue
+		}
 		asm.SetNetwork(network, txassembler.PerNetwork{
 			ChainID:        big.NewInt(id),
 			NativeDecimals: 18,

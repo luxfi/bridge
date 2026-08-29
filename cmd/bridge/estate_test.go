@@ -148,7 +148,9 @@ func itoa(n int64) string { return big.NewInt(n).String() }
 // a signature the destination rejects — or, worse, one another chain accepts.
 func TestEstateChainIDsAreConfigured(t *testing.T) {
 	asm := txassembler.New(nil)
-	configureEVM(asm)
+	// nil networks: this test is about the fallback table, and passing the
+	// config would test the config instead.
+	configureEVM(asm, nil)
 	for _, c := range estate {
 		net, ok := asm.Networks[c.network]
 		if !ok {
