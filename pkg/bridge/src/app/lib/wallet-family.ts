@@ -39,8 +39,8 @@ export function isEvmFamily(family: ChainFamily): boolean {
  *   - `evm` / `lux`  → handled by wagmi, NOT routed here (returns null so a
  *     caller that asks "which luxwallet connector?" gets an honest "none").
  *   - `cardano`      → no connector in @luxwallet/connect today (the SDK has
- *     no Cardano chain); returns null. The bridge still accepts a pasted
- *     Cardano destination address — connect is simply unavailable.
+ *     EVM and Lux return null and go through wagmi, which owns chain
+ *     switching and transaction sending — @luxwallet/connect has neither.
  *
  * Every other non-EVM family maps to a real, MIT/Apache-licensed connector.
  */
@@ -56,9 +56,10 @@ export function familyToLuxChain(family: ChainFamily): LuxChain | null {
       return 'xrp'
     case 'substrate':
       return 'polkadot'
+    case 'cardano':
+      return 'cardano'
     case 'evm':
     case 'lux':
-    case 'cardano':
       return null
   }
 }
