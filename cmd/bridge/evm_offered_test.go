@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/luxfi/bridge/internal/depositcheck"
+	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/txassembler"
 )
 
@@ -94,6 +96,46 @@ func TestEveryOfferedNetworkHasItsNativeAsset(t *testing.T) {
 		if !assets[n.InternalName][strings.ToUpper(n.NativeCurrency)] {
 			t.Errorf("%s is offered with no %s row — it cannot price or move its own gas",
 				n.InternalName, n.NativeCurrency)
+		}
+	}
+}
+
+// Every network offered must be complete across every table a crossing
+// touches, not just the one whoever added it happened to edit.
+//
+// A network reaches a user through several independently-edited tables. Present
+// in all but one, it is selectable, takes the deposit, and fails at the missing
+// step — after the funds have moved. That is exactly what happened when the
+// nine networks below were added: the network rows and the asset rows were
+// filled and the deposit-RPC table was not, so a Celo deposit would have been
+// watched for on a chain the watcher could not reach.
+func TestEveryOfferedNetworkIsCompleteAcrossTheTables(t *testing.T) {
+	cfg, err := LoadConfig("networks.mainnet.yaml")
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+
+	assets := map[string]bool{}
+	for _, tk := range cfg.Tokens {
+		assets[tk.Network] = true
+	}
+
+	for _, n := range cfg.Networks {
+		// The address family. Without it custody mints on the wrong chain,
+		// and until today an unnamed network silently became EVM.
+		if _, known := mchain.AddressTypeFor(n.InternalName); !known {
+			t.Errorf("%s: no address family — custody cannot mint a correct deposit address", n.InternalName)
+		}
+
+		// The deposit RPC. Without it a deposit is never seen and the swap
+		// waits forever on money that has already arrived.
+		if depositcheck.RPCURLFor(n.InternalName) == "" {
+			t.Errorf("%s: no deposit RPC — a deposit to it would never be observed", n.InternalName)
+		}
+
+		// At least one asset, or there is nothing to move.
+		if !assets[n.InternalName] {
+			t.Errorf("%s: no asset rows", n.InternalName)
 		}
 	}
 }

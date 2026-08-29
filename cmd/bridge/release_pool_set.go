@@ -103,7 +103,11 @@ func (s *ReleasePoolSet) Acquire(ctx context.Context, destinationNetwork string)
 // poolFor returns the *ReleasePool registered for the network's family.
 // Pure routing — no allocation, no I/O.
 func (s *ReleasePoolSet) poolFor(network string) (*ReleasePool, error) {
-	switch mchain.AddressTypeFor(network) {
+	addrType, known := mchain.AddressTypeFor(network)
+	if !known {
+		return nil, fmt.Errorf("%w: no address family for %s", ErrNoPoolForFamily, network)
+	}
+	switch addrType {
 	case mchain.AddressTypeETH:
 		if s.EVM == nil {
 			return nil, fmt.Errorf("%w: ETH", ErrNoPoolForFamily)
@@ -130,8 +134,7 @@ func (s *ReleasePoolSet) poolFor(network string) (*ReleasePool, error) {
 		}
 		return s.XRP, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrNoPoolForFamily,
-			mchain.AddressTypeFor(network))
+		return nil, fmt.Errorf("%w: %s", ErrNoPoolForFamily, addrType)
 	}
 }
 
@@ -140,7 +143,11 @@ func (s *ReleasePoolSet) poolFor(network string) (*ReleasePool, error) {
 // Distinct from poolFor (which returns an error) so callers don't have
 // to translate "no pool" into a probe boolean.
 func (s *ReleasePoolSet) PoolFor(network string) *ReleasePool {
-	switch mchain.AddressTypeFor(network) {
+	addrType, known := mchain.AddressTypeFor(network)
+	if !known {
+		return nil
+	}
+	switch addrType {
 	case mchain.AddressTypeETH:
 		return s.EVM
 	case mchain.AddressTypeSOL:

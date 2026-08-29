@@ -243,7 +243,14 @@ func (c *Client) Broadcast(ctx context.Context, network, rawTxHex string) (*Broa
 	// the operator's own Bitcoin Core via Client.RPCURLOverrides);
 	// SOL uses sendTransaction; DOT uses author_submitExtrinsic;
 	// XRP uses rippled's `submit` JSON-RPC; TON uses TON Center sendBoc.
-	switch mchain.AddressTypeFor(network) {
+	// An unknown network has no known transaction format, so there is no
+	// correct way to broadcast for it. The switch below falls through to a
+	// refusal rather than reaching the EVM arm by default.
+	addrType, known := mchain.AddressTypeFor(network)
+	if !known {
+		return nil, fmt.Errorf("broadcast: no transaction format for network %s", network)
+	}
+	switch addrType {
 	case mchain.AddressTypeETH:
 		return c.broadcastEVM(ctx, url, rawTxHex)
 	case mchain.AddressTypeBTC:
