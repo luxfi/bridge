@@ -27,7 +27,7 @@ export interface TransferStatusProps {
 
 const phaseLabel: Record<TransferPhase, string> = {
   pending: 'Pending',
-  signing: 'Signing (MPC threshold)',
+  signing: 'Approving release',
   broadcasting: 'Broadcasting',
   completed: 'Completed',
   refunding: 'Refunding',
@@ -37,8 +37,8 @@ const phaseLabel: Record<TransferPhase, string> = {
 
 const phaseColor: Record<TransferPhase, string> = {
   pending: 'var(--bridge-text-muted)',
-  signing: 'var(--bridge-accent)',
-  broadcasting: 'var(--bridge-accent-hover)',
+  signing: 'var(--bridge-text)',
+  broadcasting: 'var(--bridge-text)',
   completed: 'var(--bridge-success)',
   // Refund phases sit between "still working" and "done" — render in a
   // warning hue so users can tell they got their funds back but the
@@ -49,18 +49,10 @@ const phaseColor: Record<TransferPhase, string> = {
   failed: 'var(--bridge-danger)',
 }
 
-const heading: CSSProperties = {
-  fontSize: 12,
-  color: 'var(--bridge-text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-  marginBottom: 4,
-}
-
 const empty: CSSProperties = {
-  fontSize: 12,
+  fontSize: 'var(--bridge-body-size)',
+  lineHeight: 1.55,
   color: 'var(--bridge-text-subtle)',
-  fontStyle: 'italic',
 }
 
 const row: CSSProperties = {
@@ -86,35 +78,39 @@ const dot: CSSProperties = {
   marginRight: 8,
 }
 
-const mpcLine: CSSProperties = {
+const sessionLine: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
-  fontSize: 11,
-  color: 'var(--bridge-text-muted)',
-  fontFamily:
-    'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+  gap: 6,
+  flexWrap: 'wrap',
+  fontSize: 'var(--bridge-note-size)',
+  color: 'var(--bridge-text-subtle)',
+  fontFamily: 'var(--bridge-font-mono)',
 }
 
 const badgeRow: CSSProperties = {
   display: 'flex',
+  alignItems: 'center',
   gap: 6,
   flexWrap: 'wrap',
+}
+
+const badgeNote: CSSProperties = {
+  fontSize: 'var(--bridge-note-size)',
+  color: 'var(--bridge-text-subtle)',
 }
 
 const badge: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 4,
-  padding: '2px 6px',
-  fontSize: 10,
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  borderRadius: 4,
-  background: 'rgba(91, 141, 239, 0.12)',
-  color: 'var(--bridge-accent)',
-  border: '1px solid rgba(91, 141, 239, 0.32)',
+  padding: '3px 8px',
+  fontSize: 11,
+  fontWeight: 500,
+  borderRadius: 'var(--bridge-radius-pill)',
+  background: 'var(--bridge-bg-soft)',
+  color: 'var(--bridge-text-muted)',
+  border: '1px solid var(--bridge-border)',
 }
 
 const depositPanel: CSSProperties = {
@@ -122,8 +118,8 @@ const depositPanel: CSSProperties = {
   flexDirection: 'column',
   gap: 6,
   padding: 10,
-  background: 'var(--bridge-accent-soft)',
-  border: '1px solid var(--bridge-accent-border)',
+  background: 'var(--bridge-bg-soft)',
+  border: '1px solid var(--bridge-border-strong)',
   borderRadius: 'var(--bridge-radius-md)',
 }
 
@@ -135,7 +131,7 @@ const depositHeading: CSSProperties = {
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.06em',
-  color: 'var(--bridge-accent)',
+  color: 'var(--bridge-text)',
 }
 
 const depositAddressRow: CSSProperties = {
@@ -231,21 +227,23 @@ export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => {
   if (cfg.mpc?.utila) {
     cosignerBadges.push({
       label: 'Utila',
-      title: `Layered cosign — Utila vault ${cfg.mpc.utila.vaultId ?? cfg.mpc.utila.orgId}`,
+      title: 'Utila must also approve the release',
     })
   }
   if (cfg.mpc?.fireblocks) {
     cosignerBadges.push({
       label: 'Fireblocks',
-      title: `Layered cosign — Fireblocks vault ${cfg.mpc.fireblocks.vaultAccountId ?? cfg.mpc.fireblocks.apiKey}`,
+      title: 'Fireblocks must also approve the release',
     })
   }
 
   return (
-    <Card>
-      <div style={heading}>Transfers</div>
+    <Card title="Transfers">
       {transfers.length === 0 ? (
-        <div style={empty}>No transfers yet. Submit a bridge above to start.</div>
+        <div style={empty}>
+          Nothing yet. A crossing you start appears here and stays until it
+          settles or is refunded.
+        </div>
       ) : (
         <div>
           {transfers.map((t) => (
@@ -276,15 +274,18 @@ export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => {
                 <DepositPanel transfer={t} fromChainName={shortChainName(t.fromChainId)} />
               ) : null}
 
+              {/*
+                 The release reference and where it has got to. The session id
+                 is here because it is what support asks for; which protocol
+                 the signers ran is not something a person can act on, so it
+                 is not drawn.
+                 */}
               {t.mpc ? (
-                <div style={mpcLine}>
-                  <span style={badge} title={`MPC protocol ${t.mpc.protocol}`}>
-                    {t.mpc.protocol}
-                  </span>
+                <div style={sessionLine}>
                   <span>
                     {t.mpc.sessionId === 'aborted'
-                      ? 'session aborted'
-                      : shortAddress(t.mpc.sessionId, 6, 4)}
+                      ? 'Release cancelled'
+                      : `Ref ${shortAddress(t.mpc.sessionId, 6, 4)}`}
                   </span>
                   <span style={{ color: phaseColor[t.phase] }}>
                     · {t.mpc.status}
@@ -299,14 +300,13 @@ export const TransferStatus: FC<TransferStatusProps> = ({ transfers }) => {
 
               {cosignerBadges.length > 0 ? (
                 <div style={badgeRow}>
-                  <span style={badge} title="Native Lux MPC threshold sign">
-                    Native MPC
-                  </span>
+                  <span style={badge}>Lux</span>
                   {cosignerBadges.map((b) => (
                     <span key={b.label} style={badge} title={b.title}>
                       + {b.label}
                     </span>
                   ))}
+                  <span style={badgeNote}>both must approve the release</span>
                 </div>
               ) : null}
 

@@ -1,18 +1,27 @@
-// Custom popover-style Select.
+// A picker over a named set — a chain, an asset.
 //
-// Replaces native <select> with a controllable trigger + popover menu so
-// each option can carry a logo and secondary text (e.g. asset name under
-// symbol). The native <select> couldn't render either, which is why the
-// chain/asset pickers used to look out of place vs the rest of the chrome.
+// Replaces native <select> so each option can carry a logo and a secondary
+// line (an asset's name under its symbol, a chain's family under its name).
+// The native control renders neither, which is why the pickers used to look
+// pasted onto the rest of the card.
 //
-// Behavior: click-outside closes, Escape closes, ↑/↓ moves the highlight,
-// Enter / Space commits the highlighted item. Click anywhere outside the
-// trigger or popover dismisses without committing.
+// Keyboard, and why it is all on the trigger. The menu used to hold the key
+// handler, and nothing ever focused the menu — so opening with Enter left the
+// arrows dead and the only way through the list was a mouse. The trigger keeps
+// focus for the whole interaction and `aria-activedescendant` says which option
+// the keyboard is on, which is the combobox pattern and the reason there is one
+// handler here rather than two that can disagree.
 //
-// No portal dependency — the popover anchors directly below the trigger
-// via absolute positioning. This keeps the SDK free of @hanzogui/portal
-// for now; if a host page clips the popover with overflow:hidden we can
-// re-introduce a portal at that point.
+// The label names the control. `label` renders a <label> that points at the
+// trigger's own id, so a screen reader reads "From, Lux" rather than "Lux" —
+// and where a field's name is already carried by the layout (the asset picker
+// sits inside a row the amount input already names), `name` supplies it without
+// drawing a second word on screen. One of the two is required, which is what
+// makes a nameless picker unspellable rather than merely discouraged.
+//
+// No portal. The menu anchors below the trigger with absolute positioning; if
+// a host page ever clips it with overflow:hidden that is when a portal earns
+// its dependency.
 
 import {
   useCallback,
@@ -39,9 +48,16 @@ export interface SelectOption {
   logoUrl?: string
 }
 
-export interface SelectProps {
-  /** Field label, rendered above the trigger. */
-  label?: string
+/**
+ * What this picker is for, said once. Either it is drawn above the control
+ * (`label`) or it is read out without being drawn (`name`) — never neither,
+ * which is the shape of the rule rather than a comment asking for it.
+ */
+type Named =
+  | { label: ReactNode; name?: never }
+  | { name: string; label?: never }
+
+export type SelectProps = Named & {
   /** Currently-selected option. */
   value: SelectOption
   /** Full option set. */
@@ -58,47 +74,23 @@ const wrap: CSSProperties = {
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 8,
   minWidth: 0,
   flex: 1,
 }
 
 const labelStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: 'var(--bridge-label-size)',
   color: 'var(--bridge-text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-  fontWeight: 600,
-}
-
-const trigger: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  background: 'var(--bridge-bg-input)',
-  border: '1px solid var(--bridge-border)',
-  borderRadius: 'var(--bridge-radius-md)',
-  color: 'var(--bridge-text)',
-  padding: '10px 12px',
-  fontSize: 14,
   fontWeight: 500,
-  outline: 'none',
-  width: '100%',
   cursor: 'pointer',
-  transition: 'background-color var(--bridge-transition-fast), border-color var(--bridge-transition-fast)',
+  lineHeight: '20px',
 }
 
-const triggerOpen: CSSProperties = {
-  background: 'var(--bridge-bg-hover)',
-  borderColor: 'var(--bridge-border-focus)',
-  boxShadow: '0 0 0 3px var(--bridge-accent-soft)',
-}
-
-const caret: CSSProperties = {
-  marginLeft: 'auto',
-  fontSize: 10,
-  color: 'var(--bridge-text-muted)',
-  transition: 'transform var(--bridge-transition-fast)',
+const triggerText: CSSProperties = {
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
 }
 
 const popover: CSSProperties = {
@@ -110,7 +102,7 @@ const popover: CSSProperties = {
 }
 
 const itemSecondary: CSSProperties = {
-  fontSize: 11,
+  fontSize: 'var(--bridge-note-size)',
   color: 'var(--bridge-text-muted)',
   fontWeight: 400,
 }
@@ -126,15 +118,7 @@ const itemPrimaryRow: CSSProperties = {
 const DefaultTrigger: FC<{ option: SelectOption }> = ({ option }) => (
   <>
     <Logo url={option.logoUrl} fallback={option.label} />
-    <span
-      style={{
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {option.label}
-    </span>
+    <span style={triggerText}>{option.label}</span>
   </>
 )
 
@@ -173,7 +157,7 @@ export const Logo: FC<{
       <span className={cls}>
         <img
           src={url}
-          alt={fallback}
+          alt=""
           loading="lazy"
           onError={() => setFailed(true)}
         />
@@ -187,8 +171,25 @@ export const Logo: FC<{
   )
 }
 
+/** Where an arrow key lands, or null for a key this control does not own. */
+function moved(key: string, at: number, of: number): number | null {
+  switch (key) {
+    case 'ArrowDown':
+      return Math.min(of - 1, at + 1)
+    case 'ArrowUp':
+      return Math.max(0, at - 1)
+    case 'Home':
+      return 0
+    case 'End':
+      return of - 1
+    default:
+      return null
+  }
+}
+
 export const Select: FC<SelectProps> = ({
   label,
+  name,
   value,
   options,
   onChange,
@@ -196,18 +197,21 @@ export const Select: FC<SelectProps> = ({
   renderTrigger,
 }) => {
   const [open, setOpen] = useState(false)
-  const [highlight, setHighlight] = useState<number>(() =>
+  const [at, setAt] = useState<number>(() =>
     Math.max(0, options.findIndex((o) => o.id === value.id)),
   )
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const popoverRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
-  const listboxId = useId()
+  const own = useId()
+  const listId = `${own}-list`
+  const labelId = `${own}-label`
+  const optionId = (i: number) => `${own}-opt-${i}`
 
-  // Sync highlight when value changes externally.
+  // Sync the cursor when the value changes externally.
   useEffect(() => {
-    const idx = options.findIndex((o) => o.id === value.id)
-    if (idx >= 0) setHighlight(idx)
+    const i = options.findIndex((o) => o.id === value.id)
+    if (i >= 0) setAt(i)
   }, [value.id, options])
 
   // Click-outside to dismiss.
@@ -215,105 +219,80 @@ export const Select: FC<SelectProps> = ({
     if (!open) return
     const onDocClick = (e: MouseEvent) => {
       if (!wrapRef.current) return
-      if (!wrapRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
+      if (!wrapRef.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [open])
 
-  // Auto-scroll highlighted item into view.
+  // Keep the option the keyboard is on inside the scroll window.
   useLayoutEffect(() => {
     if (!open || !popoverRef.current) return
-    const el = popoverRef.current.querySelector<HTMLElement>(
-      `[data-index="${highlight}"]`,
-    )
-    if (el) el.scrollIntoView({ block: 'nearest' })
-  }, [highlight, open])
+    popoverRef.current
+      .querySelector<HTMLElement>(`[data-index="${at}"]`)
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [at, open])
 
   const commit = useCallback(
-    (idx: number) => {
-      const opt = options[idx]
+    (i: number) => {
+      const opt = options[i]
       if (!opt) return
       onChange(opt)
       setOpen(false)
-      // Return focus to trigger after commit for keyboard users.
       triggerRef.current?.focus()
     },
     [options, onChange],
   )
 
-  const onTriggerKey = useCallback(
+  // Every key this control answers for, in one place, on the element that
+  // holds focus for the whole interaction.
+  const onKey = useCallback(
     (e: KeyboardEvent<HTMLButtonElement>) => {
-      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        setOpen(true)
-      }
-    },
-    [],
-  )
-
-  const onListKey = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Escape') {
+        if (!open) return
         e.preventDefault()
         setOpen(false)
-        triggerRef.current?.focus()
-        return
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setHighlight((h) => Math.min(options.length - 1, h + 1))
-        return
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setHighlight((h) => Math.max(0, h - 1))
-        return
-      }
-      if (e.key === 'Home') {
-        e.preventDefault()
-        setHighlight(0)
-        return
-      }
-      if (e.key === 'End') {
-        e.preventDefault()
-        setHighlight(options.length - 1)
         return
       }
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
-        commit(highlight)
+        if (open) commit(at)
+        else setOpen(true)
+        return
       }
+      const to = moved(e.key, at, options.length)
+      if (to === null) return
+      e.preventDefault()
+      setAt(to)
+      setOpen(true)
     },
-    [options.length, highlight, commit],
+    [open, at, options.length, commit],
   )
-
-  const triggerStyle: CSSProperties = open
-    ? { ...trigger, ...triggerOpen }
-    : trigger
-  const caretStyle: CSSProperties = open
-    ? { ...caret, transform: 'rotate(180deg)' }
-    : caret
 
   return (
     <div ref={wrapRef} style={{ ...wrap, ...style }}>
-      {label ? <span style={labelStyle}>{label}</span> : null}
+      {label ? (
+        <label id={labelId} htmlFor={own} style={labelStyle}>
+          {label}
+        </label>
+      ) : null}
       <button
         ref={triggerRef}
+        id={own}
         type="button"
-        style={triggerStyle}
+        className="bridge-select-trigger"
+        data-open={open ? 'true' : 'false'}
         onClick={() => setOpen((o) => !o)}
-        onKeyDown={onTriggerKey}
+        onKeyDown={onKey}
+        role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls={listboxId}
+        aria-controls={listId}
+        aria-activedescendant={open ? optionId(at) : undefined}
+        {...(label ? { 'aria-labelledby': `${labelId} ${own}` } : { 'aria-label': name })}
       >
         {renderTrigger ? renderTrigger(value) : <DefaultTrigger option={value} />}
-        <span style={caretStyle} aria-hidden>
-          ▾
-        </span>
+        <span className="bridge-select-caret" aria-hidden />
       </button>
       {open ? (
         <div
@@ -321,25 +300,34 @@ export const Select: FC<SelectProps> = ({
           className="bridge-popover"
           style={popover}
           role="listbox"
-          id={listboxId}
-          tabIndex={-1}
-          onKeyDown={onListKey}
+          id={listId}
+          aria-label={typeof label === 'string' ? label : name}
         >
           {options.map((opt, i) => {
             const selected = opt.id === value.id
-            const highlighted = i === highlight
             return (
-              <button
+              /*
+               * A div, not a button. An option inside a listbox is reached by
+               * the arrows on the trigger, and a button inside it puts a
+               * second tab stop on every row of a list that can be forty long.
+               * Pointer users still click it; `onMouseDown` rather than
+               * `onClick` so the commit happens before the click-outside
+               * listener sees the press.
+               */
+              <div
                 key={opt.id}
-                type="button"
+                id={optionId(i)}
                 role="option"
                 className="bridge-popover-item"
                 data-index={i}
                 data-selected={selected ? 'true' : 'false'}
-                data-highlighted={highlighted ? 'true' : 'false'}
+                data-highlighted={i === at ? 'true' : 'false'}
                 aria-selected={selected}
-                onMouseEnter={() => setHighlight(i)}
-                onClick={() => commit(i)}
+                onMouseEnter={() => setAt(i)}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  commit(i)
+                }}
               >
                 <Logo url={opt.logoUrl} fallback={opt.label} />
                 <div style={itemPrimaryRow}>
@@ -348,7 +336,7 @@ export const Select: FC<SelectProps> = ({
                     <span style={itemSecondary}>{opt.secondary}</span>
                   ) : null}
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>

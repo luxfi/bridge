@@ -1,14 +1,16 @@
 // Copyright (C) 2019-2025, Lux Industries, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 //
-// Select replaced the native <select> specifically so the asset/chain
-// pickers could show a logo + secondary label — but that trade means
-// every bit of keyboard behavior a native <select> gets for free
-// (arrow-key nav, Home/End, Escape, click-outside-to-dismiss) had to be
-// hand-rolled, and none of it had a dedicated test. AssetInput.test.tsx
-// exercises Select only incidentally (open + click one option); this
-// file covers the interaction contract described in Select.tsx's own
-// header comment directly.
+// Select replaced the native <select> so the chain and asset pickers could
+// show a logo and a secondary line — and that trade means every bit of
+// keyboard behaviour a native control gets for free had to be written out.
+// This file is where that behaviour is held to its word.
+//
+// Two things it pins that the earlier version did not. Every key is answered
+// on the trigger, because the menu was never focused and the arrows were
+// therefore dead after opening with Enter. And the control carries a name:
+// `label` draws one, `name` reads one, and there is no third way to render a
+// picker whose only name is the value it happens to be holding.
 
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
@@ -24,177 +26,225 @@ const options: SelectOption[] = [
 function renderSelect(valueId = 'eth') {
   const onChange = vi.fn()
   const value = options.find((o) => o.id === valueId)!
-  render(<Select value={value} options={options} onChange={onChange} />)
+  render(<Select name="Asset" value={value} options={options} onChange={onChange} />)
   return { onChange }
 }
 
-function openPopover() {
-  fireEvent.click(screen.getByRole('button', { name: /ETH|SOL|XRP/ }))
+const trigger = () => screen.getByRole('combobox')
+
+function open() {
+  fireEvent.click(trigger())
 }
 
 describe('Select — open/close', () => {
   it('is closed by default and opens on trigger click', () => {
     renderSelect()
     expect(screen.queryByRole('listbox')).toBeNull()
-    openPopover()
+    open()
     expect(screen.getByRole('listbox')).toBeTruthy()
   })
 
   it('toggles closed on a second trigger click', () => {
     renderSelect()
-    openPopover()
+    open()
     expect(screen.getByRole('listbox')).toBeTruthy()
-    openPopover()
+    open()
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 
   it('closes on a mousedown outside the component, without committing', () => {
     const { onChange } = renderSelect()
-    openPopover()
-    expect(screen.getByRole('listbox')).toBeTruthy()
-
+    open()
     fireEvent.mouseDown(document.body)
-
     expect(screen.queryByRole('listbox')).toBeNull()
     expect(onChange).not.toHaveBeenCalled()
   })
 
   it('does not close on a mousedown inside the popover', () => {
     renderSelect()
-    openPopover()
+    open()
     fireEvent.mouseDown(screen.getByRole('listbox'))
     expect(screen.getByRole('listbox')).toBeTruthy()
   })
 
-  it.each(['ArrowDown', 'Enter', ' '])('opens on %s at the trigger', (key) => {
+  it.each(['ArrowDown', 'ArrowUp', 'Enter', ' ', 'Home', 'End'])(
+    'opens on %s at the trigger',
+    (key) => {
+      renderSelect()
+      fireEvent.keyDown(trigger(), { key })
+      expect(screen.getByRole('listbox')).toBeTruthy()
+    },
+  )
+
+  it('Escape closes the popover, and the trigger still holds focus', () => {
     renderSelect()
-    fireEvent.keyDown(screen.getByRole('button', { name: /ETH/ }), { key })
-    expect(screen.getByRole('listbox')).toBeTruthy()
+    trigger().focus()
+    open()
+    fireEvent.keyDown(trigger(), { key: 'Escape' })
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(document.activeElement).toBe(trigger())
   })
 
-  it('Escape closes the popover and returns focus to the trigger', () => {
+  it('answers Escape only while open, so a closed picker leaves it to the page', () => {
     renderSelect()
-    const trigger = screen.getByRole('button', { name: /ETH/ })
-    openPopover()
-    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' })
-    expect(screen.queryByRole('listbox')).toBeNull()
-    expect(document.activeElement).toBe(trigger)
+    const e = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    trigger().dispatchEvent(e)
+    expect(e.defaultPrevented).toBe(false)
   })
 })
 
 describe('Select — committing a value', () => {
-  it('clicking an option commits it and closes the popover', () => {
+  it('pressing an option commits it and closes the popover', () => {
     const { onChange } = renderSelect()
-    openPopover()
-    fireEvent.click(screen.getByRole('option', { name: /SOL/ }))
+    open()
+    fireEvent.mouseDown(screen.getByRole('option', { name: /SOL/ }))
     expect(onChange).toHaveBeenCalledWith(options[1])
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 
   it('does not call onChange when dismissed without a selection', () => {
     const { onChange } = renderSelect()
-    openPopover()
+    open()
     fireEvent.mouseDown(document.body)
     expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('returns focus to the trigger after a commit', () => {
+    renderSelect()
+    trigger().focus()
+    open()
+    fireEvent.mouseDown(screen.getByRole('option', { name: /SOL/ }))
+    expect(document.activeElement).toBe(trigger())
   })
 })
 
 describe('Select — keyboard navigation', () => {
-  function highlightedId(): string | undefined {
-    const opt = screen.getAllByRole('option').find((el) => el.getAttribute('data-highlighted') === 'true')
-    return opt?.getAttribute('data-index') ?? undefined
+  function cursor(): string | undefined {
+    return screen
+      .getAllByRole('option')
+      .find((el) => el.getAttribute('data-highlighted') === 'true')
+      ?.getAttribute('data-index') ?? undefined
   }
 
-  it('starts highlighted on the currently-selected option', () => {
+  it('starts on the currently-selected option', () => {
     renderSelect('sol')
-    openPopover()
-    expect(highlightedId()).toBe('1') // sol is options[1]
+    open()
+    expect(cursor()).toBe('1')
   })
 
-  it('ArrowDown/ArrowUp move the highlight and clamp at the ends', () => {
-    renderSelect('eth') // starts at index 0
-    openPopover()
-    const listbox = screen.getByRole('listbox')
-
-    fireEvent.keyDown(listbox, { key: 'ArrowUp' }) // clamp: stays at 0
-    expect(highlightedId()).toBe('0')
-
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' })
-    expect(highlightedId()).toBe('1')
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' })
-    expect(highlightedId()).toBe('2')
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' }) // clamp: stays at last index
-    expect(highlightedId()).toBe('2')
+  it('ArrowDown/ArrowUp move the cursor and clamp at the ends', () => {
+    renderSelect('eth')
+    open()
+    fireEvent.keyDown(trigger(), { key: 'ArrowUp' })
+    expect(cursor()).toBe('0')
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    expect(cursor()).toBe('1')
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    expect(cursor()).toBe('2')
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    expect(cursor()).toBe('2')
   })
 
   it('Home/End jump to the first/last option', () => {
     renderSelect('sol')
-    openPopover()
-    const listbox = screen.getByRole('listbox')
-
-    fireEvent.keyDown(listbox, { key: 'End' })
-    expect(highlightedId()).toBe('2')
-    fireEvent.keyDown(listbox, { key: 'Home' })
-    expect(highlightedId()).toBe('0')
+    open()
+    fireEvent.keyDown(trigger(), { key: 'End' })
+    expect(cursor()).toBe('2')
+    fireEvent.keyDown(trigger(), { key: 'Home' })
+    expect(cursor()).toBe('0')
   })
 
-  it('Enter commits the highlighted option, not just the selected one', () => {
+  it('Enter commits where the cursor is, not where the value was', () => {
     const { onChange } = renderSelect('eth')
-    openPopover()
-    const listbox = screen.getByRole('listbox')
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' }) // highlight -> sol
-    fireEvent.keyDown(listbox, { key: 'Enter' })
+    open()
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    fireEvent.keyDown(trigger(), { key: 'Enter' })
     expect(onChange).toHaveBeenCalledWith(options[1])
   })
 
-  it('Space also commits the highlighted option', () => {
+  it('Space also commits where the cursor is', () => {
     const { onChange } = renderSelect('eth')
-    openPopover()
-    const listbox = screen.getByRole('listbox')
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' })
-    fireEvent.keyDown(listbox, { key: ' ' })
+    open()
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    fireEvent.keyDown(trigger(), { key: ' ' })
     expect(onChange).toHaveBeenCalledWith(options[1])
   })
 
-  it('hovering an option updates the highlight', () => {
+  it('reaches every option from the keyboard alone — open, walk, commit', () => {
+    const { onChange } = renderSelect('eth')
+    fireEvent.keyDown(trigger(), { key: 'Enter' })
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    fireEvent.keyDown(trigger(), { key: 'Enter' })
+    expect(onChange).toHaveBeenCalledWith(options[2])
+  })
+
+  it('hovering an option moves the cursor', () => {
     renderSelect('eth')
-    openPopover()
+    open()
     fireEvent.mouseEnter(screen.getByRole('option', { name: /XRP/ }))
-    expect(highlightedId()).toBe('2')
+    expect(cursor()).toBe('2')
+  })
+
+  it('names the option under the cursor, so the reading follows the arrows', () => {
+    renderSelect('eth')
+    open()
+    const on = () => trigger().getAttribute('aria-activedescendant')
+    const first = on()
+    expect(first).toBe(screen.getAllByRole('option')[0]!.id)
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown' })
+    expect(on()).toBe(screen.getAllByRole('option')[1]!.id)
+  })
+})
+
+describe('Select — the control has a name', () => {
+  it('a drawn label names the control and points at it', () => {
+    render(<Select label="From" value={options[0]} options={options} onChange={vi.fn()} />)
+    const control = screen.getByRole('combobox', { name: /From/ })
+    const label = screen.getByText('From')
+    expect(label.getAttribute('for')).toBe(control.id)
+  })
+
+  it('a name reads without drawing a second word on screen', () => {
+    render(<Select name="You send asset" value={options[0]} options={options} onChange={vi.fn()} />)
+    expect(screen.getByRole('combobox', { name: 'You send asset' })).toBeTruthy()
+    expect(screen.queryByText('You send asset')).toBeNull()
+  })
+
+  it('the name survives a custom trigger body', () => {
+    render(
+      <Select
+        name="You receive asset"
+        value={options[0]}
+        options={options}
+        onChange={vi.fn()}
+        renderTrigger={(opt) => <span>Custom: {opt.label}</span>}
+      />,
+    )
+    expect(screen.getByRole('combobox', { name: 'You receive asset' })).toBeTruthy()
+    expect(screen.getByText('Custom: ETH')).toBeTruthy()
   })
 })
 
 describe('Select — rendering', () => {
   it('marks the currently-selected option with aria-selected', () => {
     renderSelect('sol')
-    openPopover()
-    const solOption = screen.getByRole('option', { name: /SOL/ })
-    expect(solOption.getAttribute('aria-selected')).toBe('true')
-    const ethOption = screen.getByRole('option', { name: /ETH/ })
-    expect(ethOption.getAttribute('aria-selected')).toBe('false')
+    open()
+    expect(screen.getByRole('option', { name: /SOL/ }).getAttribute('aria-selected')).toBe('true')
+    expect(screen.getByRole('option', { name: /ETH/ }).getAttribute('aria-selected')).toBe('false')
   })
 
   it('renders the secondary label under the primary one', () => {
     renderSelect()
-    openPopover()
+    open()
     expect(screen.getByText('Ripple')).toBeTruthy()
   })
 
-  it('supports a custom renderTrigger', () => {
-    const value = options[0]
-    render(
-      <Select
-        value={value}
-        options={options}
-        onChange={vi.fn()}
-        renderTrigger={(opt) => <span>Custom: {opt.label}</span>}
-      />,
-    )
-    expect(screen.getByText('Custom: ETH')).toBeTruthy()
-  })
-
-  it('renders a field label when provided', () => {
-    render(<Select label="Asset" value={options[0]} options={options} onChange={vi.fn()} />)
-    expect(screen.getByText('Asset')).toBeTruthy()
+  it('puts one tab stop on the whole picker, not one per option', () => {
+    renderSelect()
+    open()
+    const stops = document.querySelectorAll('[tabindex]:not([tabindex="-1"]), button, a[href], input')
+    expect(stops.length).toBe(1)
+    expect(stops[0]).toBe(trigger())
   })
 })

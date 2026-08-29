@@ -66,30 +66,37 @@ const wrap: CSSProperties = {
   gap: 4,
 }
 
+// The brand primary is black on this tenant, and a black fill on a black page
+// is a button with no edge — measured, the header's only call to action was
+// white text and nothing else. So the affordance is the outline: the same
+// bordered pill the rest of the chrome wears, at the one weight that says
+// press me.
 const buttonBase: CSSProperties = {
-  background: 'var(--bridge-accent)',
-  color: 'white',
-  border: 'none',
-  borderRadius: 'var(--bridge-radius-sm)',
-  padding: '8px 14px',
+  background: 'transparent',
+  color: 'var(--bridge-text)',
+  border: '1px solid var(--bridge-text)',
+  borderRadius: 'var(--bridge-radius-pill)',
+  padding: '0 16px',
+  height: 36,
   fontSize: 13,
-  fontWeight: 600,
+  fontWeight: 500,
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
   gap: 8,
-  transition: 'background-color 120ms ease',
+  whiteSpace: 'nowrap',
+  transition: 'background-color var(--bridge-transition-fast), color var(--bridge-transition-fast)',
 }
 
 const pillBase: CSSProperties = {
   background: 'var(--bridge-bg-input)',
   color: 'var(--bridge-text)',
   border: '1px solid var(--bridge-border)',
-  borderRadius: 'var(--bridge-radius-sm)',
-  padding: '6px 10px',
+  borderRadius: 'var(--bridge-radius-pill)',
+  padding: '0 14px',
+  height: 36,
   fontSize: 12,
-  fontFamily:
-    'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+  fontFamily: 'var(--bridge-font-mono)',
   display: 'inline-flex',
   alignItems: 'center',
   gap: 8,
@@ -341,7 +348,8 @@ const NonEvmConnect: FC<{ wallet: BridgeWallet; fromChain: Chain }> = ({
 
   if (address) {
     return (
-      <Button
+      <button
+        type="button"
         style={pillBase}
         onClick={() => {
           void wallet.disconnect(family)
@@ -359,13 +367,14 @@ const NonEvmConnect: FC<{ wallet: BridgeWallet; fromChain: Chain }> = ({
           aria-hidden
         />
         {shortAddress(address)}
-      </Button>
+      </button>
     )
   }
 
   return (
     <div style={wrap}>
-      <Button
+      <button
+        type="button"
         style={{
           ...buttonBase,
           opacity: wallet.connecting ? 0.7 : 1,
@@ -376,7 +385,7 @@ const NonEvmConnect: FC<{ wallet: BridgeWallet; fromChain: Chain }> = ({
         }}
       >
         {wallet.connecting ? 'Connecting…' : `Connect ${label} Wallet`}
-      </Button>
+      </button>
       {error ? (
         <span
           role="alert"
@@ -487,7 +496,8 @@ const EvmConnect: FC<{ wallet: BridgeWallet; defaultChainId: string }> = ({
   // Connected — show the address pill (no picker).
   if (wallet.address) {
     return (
-      <Button
+      <button
+        type="button"
         style={pillBase}
         onClick={wallet.disconnect}
         aria-label={`Disconnect wallet ${wallet.address}`}
@@ -503,7 +513,7 @@ const EvmConnect: FC<{ wallet: BridgeWallet; defaultChainId: string }> = ({
           aria-hidden
         />
         {shortAddress(wallet.address)}
-      </Button>
+      </button>
     )
   }
 
@@ -622,7 +632,14 @@ const EvmConnect: FC<{ wallet: BridgeWallet; defaultChainId: string }> = ({
 
   return (
     <div ref={triggerWrapRef} style={wrap}>
-      <Button
+      {/*
+        A native button. The kit's takes focus on mount, which put a keyboard
+        user and a screen reader on "Connect Wallet" before either had heard
+        what the page was — measured, it was the document's activeElement at
+        load. Nothing here needs what the kit adds.
+        */}
+      <button
+        type="button"
         style={{
           ...buttonBase,
           opacity: wallet.connecting ? 0.7 : 1,
@@ -636,7 +653,7 @@ const EvmConnect: FC<{ wallet: BridgeWallet; defaultChainId: string }> = ({
         aria-expanded={open}
       >
         {wallet.connecting ? 'Connecting…' : 'Connect Wallet'}
-      </Button>
+      </button>
       {dialogNode}
     </div>
   )
