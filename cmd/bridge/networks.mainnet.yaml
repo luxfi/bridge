@@ -264,13 +264,14 @@ networks:
     txExplorerTpl: https://polkascan.io/polkadot/extrinsic/{addr}
     addrExplorerTpl: https://polkascan.io/polkadot/account/{addr}
 
-  # CARDANO is not offered yet, and the gap is the deposit side rather than
-  # the address. The CIP-19 encoder exists (app/server cardano-address.ts,
-  # verified against its own vectors) and internal/mchain names the ADA
-  # family — but internal/depositcheck has no Cardano checker and no RPC, so
-  # a deposit to a correct address would be watched for by nobody and the
-  # swap would wait forever on money that had already arrived. It goes in
-  # when the checker does.
+  - internalName: CARDANO_MAINNET
+    displayName: Cardano
+    nativeCurrency: ADA
+    type: cardano
+    isFeatured: false
+    avgCompletion: 2m
+    txExplorerTpl: https://cardanoscan.io/transaction/{tx}
+    addrExplorerTpl: https://cardanoscan.io/address/{addr}
 
 tokens:
   # The chains Lux runs — native coin only. Liquid tokens get added per
@@ -475,6 +476,10 @@ tokens:
     name: Polkadot
     decimals: 10
     network: POLKADOT_MAINNET
+  - asset: ADA
+    name: Cardano
+    decimals: 6
+    network: CARDANO_MAINNET
 
 limits:
   minUSD: 10
