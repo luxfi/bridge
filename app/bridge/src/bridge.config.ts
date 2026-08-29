@@ -76,14 +76,27 @@ const networkName = brandName.replace(/\s*bridge\s*$/i, '').trim() || (shortName
 const brandDescription =
   env('BRIDGE_DESCRIPTION') || `Cross-chain bridge for the ${networkName} Network.`
 
-// Live bridge REST endpoint. Note the hostname is `bridge-api.lux.network`
-// (hyphenated) — this is the same Express backend the production
-// bridge.lux.network frontend uses today. The previous `api.bridge.lux.network`
-// fallback never resolved in DNS, which is why the UI used to surface
-// "Failed to fetch" on first load. When a public B-Chain (BridgeVM) JSON-RPC
-// endpoint is exposed, the SDK will try that first via `BridgeConfig.rpc`
-// and only fall back to this REST host on RPC failure.
-const fallbackApiHost = 'https://bridge-api.lux.network'
+// Where the REST API lives when nothing says otherwise: same origin.
+//
+// It used to be `https://bridge-api.lux.network`, and that is a DIFFERENT
+// SERVER — the older Express backend — serving a different set of networks.
+// Measured: bridge-api offers 22, this origin offers 13, and the nine extra
+// are not extra capability. Four (Celo, Zora, Blast, Linea) have real
+// contracts and are genuinely missing here; three (Gnosis, Fantom, Aurora)
+// carry an empty teleporter and vault, so they are offered and cannot bridge;
+// two (Cardano, Polkadot) have no contract entry at all.
+//
+// So an unset BRIDGE_API_HOST silently moved every user onto a server that
+// advertises chains it cannot cross. A default is not the place to change
+// which backend is answering. Same origin is the one answer that cannot be
+// wrong: whatever is serving the page is serving its API.
+//
+// The end state is neither of these. B-Chain (BridgeVM) is the bridge, and
+// when its JSON-RPC is exposed the SDK reaches it via `BridgeConfig.rpc`
+// first. Today B-Chain answers a canned stub — identical bytes for any
+// method, any nonsense, or an empty body — so it is not yet somewhere to
+// point.
+const fallbackApiHost = ''
 const fallbackDocsUrl = 'https://docs.lux.network/bridge'
 
 // MPC endpoints. publicUrl is the m-chain (public threshold network, used
@@ -165,17 +178,17 @@ const mpc: BridgeMPCConfig = {
   protocol: parseMpcProtocol(env('BRIDGE_MPC_PROTOCOL')),
 }
 
-// In Vite dev mode we want apiHost to be same-origin so /api/* routes through
-// the Vite dev proxy (which injects the production Origin header — see
-// vite.config.ts). In production builds we use the explicit env value or the
-// canonical bridge-api.lux.network fallback (where the prod origin is on
-// the server's CORS allow-list).
+// In Vite dev mode apiHost is same-origin so /api/* routes through the Vite
+// dev proxy (which injects the production Origin header — see vite.config.ts).
+// In production it is the explicit env value, or same origin.
 const devApiHost =
   import.meta.env.DEV && typeof window !== 'undefined'
     ? window.location.origin
     : undefined
 
 export const bridgeConfig: BridgeConfig = {
+  // Empty means same origin; the client resolves relative /api/* against the
+  // page it was served from.
   apiHost: devApiHost ?? env('BRIDGE_API_HOST', fallbackApiHost)!,
   env: envSlug,
   clientId: env('BRIDGE_CLIENT_ID'),
