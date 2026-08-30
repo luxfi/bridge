@@ -114,6 +114,8 @@ func main() {
 		"Tenant identifier the MPC daemon multiplexes keygen by. Default \"bridge\".")
 	depCheckTimeout := flag.Duration("deposit-check-timeout", 10*time.Second,
 		"per-request timeout for the /v1/bridge/check-deposit ops endpoint (source-chain RPC poll)")
+	adminRoutes := flag.Bool("admin-routes", envOr("BRIDGE_ADMIN_ROUTES", "") != "",
+		"mount /admin/swaps/:id/{reset,inject-raw-tx}. These take any swap id and no credential — their own comments say do not expose externally — so they are off unless asked for, and belong on a listener that is not public.")
 	disableDepositCheck := flag.Bool("disable-deposit-check", false,
 		"disable the /v1/bridge/check-deposit ops endpoint entirely (default: enabled)")
 	sourceRPCOverrides := flag.String("source-rpc-overrides", envOr("BRIDGE_SOURCE_RPC_OVERRIDES", ""),
@@ -1097,6 +1099,10 @@ func main() {
 	})
 
 	// API routes (/v1/bridge/* + /metrics).
+	if *adminRoutes {
+		api.EnableAdminRoutes()
+		logger.Warn("admin swap routes mounted", "note", "no credential, any swap id; keep this listener off the public edge")
+	}
 	api.Register(app)
 
 	// SPA + brand assets — install the existing http.Handler as a
