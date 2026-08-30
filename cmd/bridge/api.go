@@ -45,6 +45,10 @@ type API struct {
 	mchain   *mchain.Client       // optional; when set, swap creation with use_deposit_address=true mints an MPC address
 	depcheck *depositcheck.Client // optional; powers the /v1/bridge/check-deposit diagnostic endpoint
 
+	// adminRoutes mounts the uncredentialed /admin/swaps handlers. Off unless
+	// BRIDGE_ADMIN_ROUTES is set, because they take any swap id and no proof.
+	adminRoutes bool
+
 	// releaseStore is the per-destination-network release-wallet
 	// registry. Optional: when set, swapsCreateNative stamps the new
 	// swap with the long-lived MPC wallet that will pay out the
@@ -135,6 +139,11 @@ func NewAPI(
 // main.go after config + flags are parsed; the default is
 // BridgeClassicalCompat (the user-facing bridge UI talks to external
 // L1s on classical primitives).
+// EnableAdminRoutes mounts the operator handlers. They authenticate nobody, so
+// this is a decision to make once, deliberately, on a listener that is not
+// public — never a default.
+func (a *API) EnableAdminRoutes() { a.adminRoutes = true }
+
 func (a *API) SetProfile(p *bridge.BridgeProfile) {
 	if p != nil {
 		a.profile = p
@@ -203,12 +212,27 @@ func (a *API) Register(app *zip.App) {
 
 		// Admin: force a swap to re-sign (used to recover after a
 		// destination-chain reject of the previously-built raw tx).
-		app.Post("/admin/swaps/:id/reset", a.swapsResetNative)
+		// Registered only when asked for. Both handlers below mutate any
+		// swap by id with no credential — their own comments say
+		// "operator-only … no auth … do not expose externally", and a
+		// comment is not a control: they were mounted on the same app as
+		// the public routes, and the only thing keeping them unreachable
+		// was that the edge happened not to route /admin. That is an
+		// accident of ingress, not a decision, and it changes with an
+		// unrelated edit.
+		//
+		// Off by default, so production serves 404 because the route does
+		// not exist rather than because something upstream declined to
+		// forward it. An operator who needs them sets BRIDGE_ADMIN_ROUTES
+		// deliberately, and that is a decision with a record.
+		if a.adminRoutes {
+			app.Post("/admin/swaps/:id/reset", a.swapsResetNative)
 		// Admin: inject a caller-supplied DestRawTx so the broadcast
 		// driver can push it on the next tick. Used when mpcd dedupes
 		// a re-sign request but the operator already has a corrected
 		// raw tx (e.g. low-s canonicalization of a prior signature).
-		app.Post("/admin/swaps/:id/inject-raw-tx", a.swapsInjectRawTxNative)
+			app.Post("/admin/swaps/:id/inject-raw-tx", a.swapsInjectRawTxNative)
+		}
 	} else {
 		app.All("/v1/bridge/quote", proxied)
 		app.All("/v1/bridge/swaps", proxied)

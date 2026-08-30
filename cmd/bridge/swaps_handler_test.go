@@ -107,6 +107,11 @@ func newRigCfg(t *testing.T, cfg Config, bclient *bchain.Client) *testRig {
 	}
 	store := NewInMemoryStore()
 	api := NewAPI(cfg, "", bclient, nil, nil, store)
+	// The /admin/swaps handlers are off unless asked for (see admin_routes_test.go).
+	// Tests that exercise them ask here; without this the router answers 404 and a
+	// test of the inject handler's withdrawal refusal would be reading the
+	// router's answer rather than the handler's.
+	api.EnableAdminRoutes()
 	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
 	app.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(app)
