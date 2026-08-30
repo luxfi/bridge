@@ -37,7 +37,7 @@ These are pre-conditions the SDK + tenant satisfy as of the current branch:
 | EIP-6963 wallet (MetaMask, Rabby, Brave) | Browser extension |
 | Sepolia ETH (≥ 0.05 recommended) | https://www.alchemy.com/faucets/ethereum-sepolia or https://sepoliafaucet.com (any modern faucet — usually requires GitHub or Alchemy login) |
 | Recipient address on Lux Testnet | Lux Testnet is EVM chain 96368; reuse your MetaMask address — same hex string works as the destination |
-| (Optional) Lux Testnet RPC added to MetaMask | RPC `https://api.lux-test.network/v1/bc/C/rpc`, chainId `96368`, symbol `LUX`, explorer `https://explore.lux-test.network/` — lets you confirm the destination balance after settlement |
+| (Optional) Lux Testnet RPC added to MetaMask | RPC `https://api.lux-test.network/v1/chain/C/rpc`, chainId `96368`, symbol `LUX`, explorer `https://explore.lux-test.network/` — lets you confirm the destination balance after settlement |
 
 ## Run the app
 
@@ -141,7 +141,7 @@ Click **Bridge** (or whatever the active CTA reads — it should not say
       the corresponding LUX on Lux Testnet — confirm with
       `curl -s -X POST -H "Content-Type: application/json" \
        -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0xYOUR_ADDR","latest"]}' \
-       https://api.lux-test.network/v1/bc/C/rpc`.
+       https://api.lux-test.network/v1/chain/C/rpc`.
 
 ### 6. Treasury / fee path (optional)
 
