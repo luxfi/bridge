@@ -15,8 +15,8 @@ describe('createBridgeRPCClient default endpoints', () => {
       bridgeRpcUrl: string
       thresholdRpcUrl: string
     }
-    expect(c.bridgeRpcUrl).toBe(`${nodeUrl}/v1/chain/B/rpc`)
-    expect(c.thresholdRpcUrl).toBe(`${nodeUrl}/v1/chain/T/rpc`)
+    expect(c.bridgeRpcUrl).toBe(`${nodeUrl}/v1/bc/B/rpc`)
+    expect(c.thresholdRpcUrl).toBe(`${nodeUrl}/v1/bc/T/rpc`)
   })
 
   it('leaves no /ext anywhere in the defaults', () => {

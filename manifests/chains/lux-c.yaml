@@ -41,6 +41,6 @@ adapter:
 
 watcher:
   plugin: lux_warp_watcher
-  rpc_url: "https://api.lux.network/v1/chain/C/rpc"
+  rpc_url: "https://api.lux.network/v1/bc/C/rpc"
   poll_interval_ms: 2000  # ~2s C-Chain block time
   start_block: 0

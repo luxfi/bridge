@@ -38,11 +38,11 @@ var estate = []struct {
 	asset    string
 	endpoint string
 }{
-	{"LUX_MAINNET", 96369, "LUX", "https://api.lux.network/v1/chain/C/rpc"},
-	{"ZOO_MAINNET", 200200, "ZOO", "https://api.zoo.network/v1/chain/C/rpc"},
-	{"HANZO_MAINNET", 36963, "AI", "https://api.hanzo.network/v1/chain/C/rpc"},
-	{"PARS_MAINNET", 494949, "PARS", "https://api.pars.network/v1/chain/C/rpc"},
-	{"OSAGE_MAINNET", 1872, "OSG", "https://api.osage.network/v1/chain/C/rpc"},
+	{"LUX_MAINNET", 96369, "LUX", "https://api.lux.network/v1/bc/C/rpc"},
+	{"ZOO_MAINNET", 200200, "ZOO", "https://api.zoo.network/v1/bc/C/rpc"},
+	{"HANZO_MAINNET", 36963, "AI", "https://api.hanzo.network/v1/bc/C/rpc"},
+	{"PARS_MAINNET", 494949, "PARS", "https://api.pars.network/v1/bc/C/rpc"},
+	{"OSAGE_MAINNET", 1872, "OSG", "https://api.osage.network/v1/bc/C/rpc"},
 }
 
 // Custody on an EVM chain is the same secp256k1 key at the same address, so

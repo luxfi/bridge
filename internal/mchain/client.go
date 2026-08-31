@@ -8,7 +8,7 @@
 // Naming: the boss calls it "m-chain" in the broader sense ("proxy to
 // b-chain and m-chain"). The MPC keygen API is HTTP (port 9800 internal
 // k8s service `http://mpc-node-0.mpc-node-headless.lux-mpc.svc:9800`),
-// not a JSON-RPC chain endpoint — those live at `/v1/chain/T/rpc` and
+// not a JSON-RPC chain endpoint — those live at `/v1/bc/T/rpc` and
 // are handled by internal/bchain's ThresholdRPCURL path. Both belong
 // to the m-chain "layer" by the boss's vocabulary.
 //
