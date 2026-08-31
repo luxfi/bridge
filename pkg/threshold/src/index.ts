@@ -11,7 +11,7 @@
  * import { ThresholdClient } from '@luxfi/threshold'
  *
  * const client = new ThresholdClient({
- *   endpoint: 'http://localhost:9650/v1/bc/T'
+ *   endpoint: 'http://localhost:9650/v1/chain/T'
  * })
  *
  * // Generate key for Ethereum (auto-selects CGGMP21 protocol)
