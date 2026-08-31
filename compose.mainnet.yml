@@ -326,7 +326,7 @@ services:
       # fine for low-volume soak; pin to a private provider (Alchemy /
       # Infura / Quicknode) before high-volume cutover so rate limits
       # don't drop deposit-watcher polls.
-      - BRIDGE_SOURCE_RPC_OVERRIDES=ETHEREUM_MAINNET=https://eth.llamarpc.com,LUX_MAINNET=https://api.lux.network/v1/bc/C/rpc,ARBITRUM_MAINNET=https://arb1.arbitrum.io/rpc,OPTIMISM_MAINNET=https://mainnet.optimism.io,BASE_MAINNET=https://mainnet.base.org,POLYGON_MAINNET=https://polygon-rpc.com,BSC_MAINNET=https://bsc-dataseed.binance.org,AVAX_MAINNET=https://api.avax.network/ext/bc/C/rpc
+      - BRIDGE_SOURCE_RPC_OVERRIDES=ETHEREUM_MAINNET=https://eth.llamarpc.com,LUX_MAINNET=https://api.lux.network/v1/chain/C/rpc,ARBITRUM_MAINNET=https://arb1.arbitrum.io/rpc,OPTIMISM_MAINNET=https://mainnet.optimism.io,BASE_MAINNET=https://mainnet.base.org,POLYGON_MAINNET=https://polygon-rpc.com,BSC_MAINNET=https://bsc-dataseed.binance.org,AVAX_MAINNET=https://api.avax.network/ext/bc/C/rpc
     volumes:
       # Networks + tokens config. Read-only mount so an accidental write
       # inside the container can't corrupt the operator-checked source-
