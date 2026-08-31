@@ -2,8 +2,8 @@
 //
 // Direct, decentralized path: instead of the legacy Express REST backend at
 // bridge-api.lux.network, this talks straight to the Lux node's BridgeVM
-// JSON-RPC interface at `${nodeUrl}/v1/chain/B/rpc`. MPC signing rounds run
-// through the matching ThresholdVM interface (`/v1/chain/T/rpc`), handled by
+// JSON-RPC interface at `${nodeUrl}/v1/bc/B/rpc`. MPC signing rounds run
+// through the matching ThresholdVM interface (`/v1/bc/T/rpc`), handled by
 // `@luxfi/threshold` (see lib/mpc-session.ts).
 //
 // This file is a focused port of the original 1227-line client at
@@ -130,7 +130,7 @@ export interface FeeEstimate {
 // =============================================================================
 
 export interface BridgeRPCClientOptions {
-  /** B-Chain (BridgeVM) JSON-RPC URL, e.g. `https://node.lux.network/v1/chain/B/rpc`. */
+  /** B-Chain (BridgeVM) JSON-RPC URL, e.g. `https://node.lux.network/v1/bc/B/rpc`. */
   bridgeRpcUrl: string
   /** Optional T-Chain (ThresholdVM) JSON-RPC URL. */
   thresholdRpcUrl?: string
@@ -338,8 +338,8 @@ export function createBridgeRPCClient(opts: {
 }): BridgeRPCClient {
   const nodeUrl = opts.nodeUrl ?? 'http://127.0.0.1:9650'
   const init: BridgeRPCClientOptions = {
-    bridgeRpcUrl: opts.bridgeRpcUrl ?? `${nodeUrl}/v1/chain/B/rpc`,
-    thresholdRpcUrl: opts.thresholdRpcUrl ?? `${nodeUrl}/v1/chain/T/rpc`,
+    bridgeRpcUrl: opts.bridgeRpcUrl ?? `${nodeUrl}/v1/bc/B/rpc`,
+    thresholdRpcUrl: opts.thresholdRpcUrl ?? `${nodeUrl}/v1/bc/T/rpc`,
     ...(opts.timeoutMs !== undefined ? { timeoutMs: opts.timeoutMs } : {}),
   }
   return new BridgeRPCClient(init)

@@ -91,7 +91,7 @@ type Config struct {
 // RPC URLs and contract addresses must be overridden.
 func DefaultConfig() Config {
 	return Config{
-		LuxRPCURL:           "https://api.lux.network/v1/chain/C/rpc",
+		LuxRPCURL:           "https://api.lux.network/v1/bc/C/rpc",
 		BlockPollInterval:   DefaultBlockPollInterval,
 		BackingInterval:     DefaultBackingInterval,
 		ConfirmationDepth:   6,

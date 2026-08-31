@@ -10,7 +10,7 @@ describe('ThresholdClient', () => {
 
   beforeEach(() => {
     client = new ThresholdClient({
-      endpoint: 'http://localhost:9650/v1/chain/T',
+      endpoint: 'http://localhost:9650/v1/bc/T',
       chainId: 'test-chain',
     })
   })

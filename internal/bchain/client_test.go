@@ -497,10 +497,10 @@ func TestThresholdCall_NotConfigured(t *testing.T) {
 
 func TestNew_DerivesURLs(t *testing.T) {
 	c := New("https://api.lux-test.network", 0)
-	if c.BridgeRPCURL != "https://api.lux-test.network/v1/chain/B/rpc" {
+	if c.BridgeRPCURL != "https://api.lux-test.network/v1/bc/B/rpc" {
 		t.Errorf("BridgeRPCURL: %q", c.BridgeRPCURL)
 	}
-	if c.ThresholdRPCURL != "https://api.lux-test.network/v1/chain/T/rpc" {
+	if c.ThresholdRPCURL != "https://api.lux-test.network/v1/bc/T/rpc" {
 		t.Errorf("ThresholdRPCURL: %q", c.ThresholdRPCURL)
 	}
 	if c.Timeout != 0 {
@@ -510,7 +510,7 @@ func TestNew_DerivesURLs(t *testing.T) {
 
 func TestNew_DefaultsToLocalhost(t *testing.T) {
 	c := New("", 5*time.Second)
-	if c.BridgeRPCURL != "http://127.0.0.1:9650/v1/chain/B/rpc" {
+	if c.BridgeRPCURL != "http://127.0.0.1:9650/v1/bc/B/rpc" {
 		t.Errorf("expected localhost default, got %q", c.BridgeRPCURL)
 	}
 	if c.Timeout != 5*time.Second {
