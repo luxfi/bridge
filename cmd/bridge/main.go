@@ -114,7 +114,11 @@ func main() {
 		"Tenant identifier the MPC daemon multiplexes keygen by. Default \"bridge\".")
 	depCheckTimeout := flag.Duration("deposit-check-timeout", 10*time.Second,
 		"per-request timeout for the /v1/bridge/check-deposit ops endpoint (source-chain RPC poll)")
-	adminRoutes := flag.Bool("admin-routes", envOr("BRIDGE_ADMIN_ROUTES", "") != "",
+	// envBool, not `envOr(...) != ""`: the latter tests whether the variable is
+	// SET, so BRIDGE_ADMIN_ROUTES=false — the way an operator writes down that a
+	// switch is off — turned these routes on. They authenticate nobody, so that
+	// spelling is the whole distance between unmounted and world-writable.
+	adminRoutes := flag.Bool("admin-routes", envBool("BRIDGE_ADMIN_ROUTES", false),
 		"mount /admin/swaps/:id/{reset,inject-raw-tx}. These take any swap id and no credential — their own comments say do not expose externally — so they are off unless asked for, and belong on a listener that is not public.")
 	disableDepositCheck := flag.Bool("disable-deposit-check", false,
 		"disable the /v1/bridge/check-deposit ops endpoint entirely (default: enabled)")
