@@ -813,8 +813,8 @@ metadata:
   namespace: lux-bridge
 data:
   config.yaml: |
-    lux_rpc: https://api.lux.network/v1/bc/C/rpc
-    zoo_rpc: https://api.zoo.network/v1/bc/C/rpc
+    lux_rpc: https://api.lux.network/v1/chain/C/rpc
+    zoo_rpc: https://api.zoo.network/v1/chain/C/rpc
     opnet_rpc: https://opnet.lux.network/rpc
     teleporter_address: ""
     lux_chain_id: 96369
