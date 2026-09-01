@@ -162,7 +162,7 @@ func TestValidateAcceptsValidThreshold(t *testing.T) {
 func validConfig() Config {
 	cfg := DefaultConfig()
 	cfg.SourceRPCURL = "http://opnet:3000"
-	cfg.LuxRPCURL = "https://api.lux.network/v1/bc/C/rpc"
+	cfg.LuxRPCURL = "https://api.lux.network/v1/chain/C/rpc"
 	cfg.TeleporterAddr = "0xdead"
 	cfg.SourceBridgeAddr = "0xbeef"
 	cfg.SignerKeyPath = "/dev/null"

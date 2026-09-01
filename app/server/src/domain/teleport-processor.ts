@@ -11,12 +11,12 @@ const MAX_SWAP_AGE_HOURS = 72
 // RPC endpoints for verifying transfers on-chain
 // Zoo is an L2 subnet on Lux, NOT the Z-chain (ZK VM)
 const RPC_URLS: Record<string, string> = {
-  LUX_MAINNET: "https://api.lux.network/v1/bc/C/rpc",
-  LUX_TESTNET: "https://api.lux-test.network/v1/bc/C/rpc",
-  LUX_DEVNET: "https://api.lux-dev.network/v1/bc/C/rpc",
-  ZOO_MAINNET: "https://api.zoo.network/v1/bc/C/rpc",
-  ZOO_TESTNET: "https://api.zoo-test.network/v1/bc/C/rpc",
-  ZOO_DEVNET: "https://api.zoo-dev.network/v1/bc/C/rpc",
+  LUX_MAINNET: "https://api.lux.network/v1/chain/C/rpc",
+  LUX_TESTNET: "https://api.lux-test.network/v1/chain/C/rpc",
+  LUX_DEVNET: "https://api.lux-dev.network/v1/chain/C/rpc",
+  ZOO_MAINNET: "https://api.zoo.network/v1/chain/C/rpc",
+  ZOO_TESTNET: "https://api.zoo-test.network/v1/chain/C/rpc",
+  ZOO_DEVNET: "https://api.zoo-dev.network/v1/chain/C/rpc",
 }
 
 /**
