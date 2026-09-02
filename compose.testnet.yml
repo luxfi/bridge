@@ -246,6 +246,11 @@ services:
       - "8080:8080"
     environment:
       - BRIDGE_ADDR=:8080
+      # The operator listener: /metrics, the swap list, the deposit poll.
+      # Deliberately absent from `ports:` — it is reachable on the compose
+      # network (prometheus scrapes bridge-go:8081/metrics) and not from
+      # the host.
+      - BRIDGE_ADMIN_ADDR=:8081
       - BRIDGE_CONFIG=/etc/bridge/networks.yaml
       - BRIDGE_DATA_DIR=/var/lib/lux-bridge
       # Empty disables the legacy backend proxy — all /v1/bridge/*

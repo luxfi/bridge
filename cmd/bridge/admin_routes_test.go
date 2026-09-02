@@ -17,23 +17,22 @@ import (
 
 // The two /admin/swaps handlers mutate any swap by id and authenticate nobody —
 // their own comments say "operator-only … no auth … do not expose externally".
-// They were mounted on the same app as the public routes, so the only thing
-// keeping them unreachable was that they sit at the app root while the edge
-// forwards /v1/bridge and /api. That is a property of the ingress rules, not of
-// this program, and it holds until someone adds a catch-all.
+// They now sit on the operator listener (api.RegisterAdmin), and even there
+// only when an operator asks: two decisions before an arbitrary caller can
+// rewind a swap.
 //
 // The pair below is the difference between a comment and a control. The first
 // fails if the routes come back by default. The second fails if the flag stops
 // mounting them — which would otherwise make the first pass for a reason that
-// has nothing to do with the gate.
+// has nothing to do with the flag.
 //
 // Both use a swap that exists. An absent id is answered 404 by the handler
 // itself, which is the same status the router gives for a route that was never
-// mounted, so an unknown id cannot tell "gated" from "reachable and empty".
+// mounted, so an unknown id cannot tell "off" from "reachable and empty".
 
 const seededSwap = "swap-under-test"
 
-func adminRig(t *testing.T, enable bool) *zip.App {
+func adminRig(t *testing.T, enable bool) (public, admin *zip.App) {
 	t.Helper()
 	store := NewInMemoryStore()
 	if err := store.Create(context.Background(), &Swap{
@@ -49,22 +48,25 @@ func adminRig(t *testing.T, enable bool) *zip.App {
 	if enable {
 		api.EnableAdminRoutes()
 	}
-	app := zip.New(zip.Config{AppName: "lux-bridge-test-admin", DisableStartupMessage: true})
-	app.Use(middleware.Recover(), middleware.RequestID())
-	api.Register(app)
-	return app
+	public = zip.New(zip.Config{AppName: "lux-bridge-test-public", DisableStartupMessage: true})
+	public.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(public)
+	admin = zip.New(zip.Config{AppName: "lux-bridge-test-admin", DisableStartupMessage: true})
+	admin.Use(middleware.Recover(), middleware.RequestID())
+	api.RegisterAdmin(admin)
+	return public, admin
 }
 
-// Mounted at the app root, not under /v1/bridge or /api.
+// Mounted at the root of the operator listener, not under /v1/bridge or /api.
 var adminPaths = []string{
 	"/admin/swaps/" + seededSwap + "/reset",
 	"/admin/swaps/" + seededSwap + "/inject-raw-tx",
 }
 
 func TestAdminSwapRoutesAreAbsentByDefault(t *testing.T) {
-	app := adminRig(t, false)
+	_, admin := adminRig(t, false)
 	for _, path := range adminPaths {
-		status, _ := fireRequest(t, app, "POST", path, nil)
+		status, _ := fireRequest(t, admin, "POST", path, nil)
 		if status != http.StatusNotFound {
 			t.Fatalf("POST %s answered %d with the flag off — an uncredentialed swap mutator is reachable by default", path, status)
 		}
@@ -72,11 +74,24 @@ func TestAdminSwapRoutesAreAbsentByDefault(t *testing.T) {
 }
 
 func TestAdminSwapRoutesMountWhenAskedFor(t *testing.T) {
-	app := adminRig(t, true)
+	_, admin := adminRig(t, true)
 	for _, path := range adminPaths {
-		status, _ := fireRequest(t, app, "POST", path, nil)
+		status, _ := fireRequest(t, admin, "POST", path, nil)
 		if status == http.StatusNotFound {
 			t.Fatalf("POST %s answered 404 with the flag on — the flag mounts nothing, so the default-off test passes for the wrong reason", path)
+		}
+	}
+}
+
+// And with the flag on, they are still absent from the listener the edge
+// routes. The flag says an operator wants them; it does not say the internet
+// does.
+func TestAdminSwapRoutesNeverReachThePublicListener(t *testing.T) {
+	public, _ := adminRig(t, true)
+	for _, path := range adminPaths {
+		status, body := fireRequest(t, public, "POST", path, nil)
+		if status != http.StatusNotFound {
+			t.Fatalf("POST %s answered %d on the public listener; body=%s", path, status, body)
 		}
 	}
 }
@@ -86,8 +101,8 @@ func TestAdminSwapRoutesMountWhenAskedFor(t *testing.T) {
 // signature. No header, no token, no session. This test states that plainly, so
 // the default-off posture above reads as a decision rather than a preference.
 func TestResetRewindsASwapWithNoCredential(t *testing.T) {
-	app := adminRig(t, true)
-	status, _ := fireRequest(t, app, "POST", "/admin/swaps/"+seededSwap+"/reset", nil)
+	_, admin := adminRig(t, true)
+	status, _ := fireRequest(t, admin, "POST", "/admin/swaps/"+seededSwap+"/reset", nil)
 	if status != http.StatusOK {
 		t.Fatalf("reset answered %d; expected the handler to accept an unauthenticated caller", status)
 	}
