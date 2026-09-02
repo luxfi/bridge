@@ -45,12 +45,12 @@ func TestPublicListenerHasNoSwapList(t *testing.T) {
 	rig := newRig(t, nil, nil, nil)
 	sw := seedSigned(t, rig)
 
-	// Create keeps this path, so a refusal here reads 405 rather than 404.
+	// What is asserted is the BODY, not the status. main.go hangs a SPA
+	// catch-all after these routes, so a path this listener does not serve
+	// answers 200 with HTML rather than 404 — a status assertion here would
+	// pass for a reason production does not share.
 	for _, path := range []string{"/v1/bridge/swaps", "/api/swaps"} {
-		status, body := fireRequest(t, rig.app, http.MethodGet, path, nil)
-		if status == http.StatusOK {
-			t.Errorf("GET %s on the public listener answered 200; body=%s", path, body)
-		}
+		_, body := fireRequest(t, rig.app, http.MethodGet, path, nil)
 		if strings.Contains(string(body), sw.ID) || strings.Contains(string(body), sw.DestRawTx) {
 			t.Errorf("GET %s handed out a swap id or a signed destination tx: %s", path, body)
 		}
@@ -59,18 +59,24 @@ func TestPublicListenerHasNoSwapList(t *testing.T) {
 
 func TestPublicListenerHasNoMetrics(t *testing.T) {
 	rig := newRig(t, nil, nil, nil)
-	status, body := fireRequest(t, rig.app, http.MethodGet, "/metrics", nil)
-	if status != http.StatusNotFound {
-		t.Errorf("GET /metrics on the public listener answered %d; body=%s", status, body)
+	_, body := fireRequest(t, rig.app, http.MethodGet, "/metrics", nil)
+	// The scrape carries release-wallet ids and a live signal of which wallets
+	// can currently sign. Its absence is what matters, not the status the SPA
+	// catch-all happens to answer with.
+	if strings.Contains(string(body), "bridge_") {
+		t.Errorf("GET /metrics on the public listener returned a scrape; body=%s", body)
 	}
 }
 
 func TestPublicListenerHasNoDepositCheck(t *testing.T) {
 	rig := newRig(t, nil, nil, &depositcheck.Client{Timeout: time.Second})
 	body, _ := json.Marshal(checkDepositReq{Network: "ETHEREUM_SEPOLIA", Address: "0xabc", Amount: 1})
-	status, resp := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", body)
-	if status != http.StatusNotFound {
-		t.Errorf("POST /v1/bridge/check-deposit on the public listener answered %d; body=%s", status, resp)
+	_, resp := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", body)
+	// An unauthenticated caller must not be able to drive a source-chain RPC
+	// poll at an address it chooses. The poll answers JSON; the SPA answers
+	// HTML, so a JSON body here means the handler ran.
+	if json.Valid(resp) {
+		t.Errorf("POST /v1/bridge/check-deposit on the public listener ran the poll; body=%s", resp)
 	}
 }
 
