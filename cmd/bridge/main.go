@@ -1107,6 +1107,7 @@ func main() {
 	// Public API routes (/v1/bridge/* + the SPA's /api aliases).
 	if *adminRoutes {
 		api.EnableAdminRoutes()
+		logger.Warn("admin swap routes mounted", "note", "no credential, any swap id; keep this listener off the public edge")
 	}
 	api.Register(app)
 
