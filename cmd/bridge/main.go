@@ -684,7 +684,7 @@ func main() {
 			releasePool.Probe = balanceProbe
 		}
 		bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		if err := releasePool.Bootstrap(bootstrapCtx, mchainClient, *releasePoolSize); err != nil {
+		if err := releasePool.Bootstrap(bootstrapCtx, keygener(mchainClient), *releasePoolSize); err != nil {
 			bootstrapCancel()
 			logger.Error("release pool bootstrap failed", "err", err, "desired_size", *releasePoolSize)
 			os.Exit(1)
@@ -726,7 +726,7 @@ func main() {
 				}
 			}
 			bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
-			if err := btcReleasePool.Bootstrap(bootstrapCtx, mchainClient, *btcReleasePoolSize); err != nil {
+			if err := btcReleasePool.Bootstrap(bootstrapCtx, keygener(mchainClient), *btcReleasePoolSize); err != nil {
 				bootstrapCancel()
 				logger.Error("BTC release pool bootstrap failed", "err", err, "desired_size", *btcReleasePoolSize)
 				os.Exit(1)
@@ -777,7 +777,7 @@ func main() {
 				solPool.Probe = balanceProbe
 			}
 			bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
-			if err := solPool.Bootstrap(bootstrapCtx, mchainClient, *releasePoolSizeSOL); err != nil {
+			if err := solPool.Bootstrap(bootstrapCtx, keygener(mchainClient), *releasePoolSizeSOL); err != nil {
 				bootstrapCancel()
 				logger.Error("SOL release pool bootstrap failed", "err", err, "desired_size", *releasePoolSizeSOL)
 				os.Exit(1)
@@ -824,7 +824,7 @@ func main() {
 			// balance check authoritatively.
 		}
 		bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		if err := dotReleasePool.Bootstrap(bootstrapCtx, mchainClient, *dotPoolSize); err != nil {
+		if err := dotReleasePool.Bootstrap(bootstrapCtx, keygener(mchainClient), *dotPoolSize); err != nil {
 			bootstrapCancel()
 			logger.Error("DOT release pool bootstrap failed", "err", err, "desired_size", *dotPoolSize)
 			os.Exit(1)
@@ -859,7 +859,7 @@ func main() {
 				// generic eth_getBalance shape.
 			}
 			bootstrapCtx, bootstrapCancel := context.WithTimeout(context.Background(), 5*time.Minute)
-			if err := xrpReleasePool.Bootstrap(bootstrapCtx, mchainClient, *xrpReleasePoolSize); err != nil {
+			if err := xrpReleasePool.Bootstrap(bootstrapCtx, keygener(mchainClient), *xrpReleasePoolSize); err != nil {
 				bootstrapCancel()
 				logger.Error("XRP release pool bootstrap failed", "err", err, "desired_size", *xrpReleasePoolSize)
 				os.Exit(1)

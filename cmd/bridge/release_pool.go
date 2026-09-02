@@ -163,6 +163,23 @@ type Keygener interface {
 // Compile-time check: *mchain.Client satisfies Keygener.
 var _ Keygener = (*mchain.Client)(nil)
 
+// keygener hands Bootstrap a nil interface when there is no client, rather than
+// an interface holding a nil pointer.
+//
+// The two are not the same value. `var c *mchain.Client` assigned into a
+// Keygener parameter produces an interface that is not nil — it carries a type —
+// so the `kg == nil` guard below does not fire, and the first method call
+// dereferences nothing. The error that guard was written to return, naming the
+// missing MPC configuration, never reaches anyone: the process panics instead.
+// Running the bridge without MPC configured is an ordinary local case, and it
+// should say so.
+func keygener(c *mchain.Client) Keygener {
+	if c == nil {
+		return nil
+	}
+	return c
+}
+
 // =============================================================================
 // Balance probe surface (for the low-balance alerter)
 // =============================================================================
