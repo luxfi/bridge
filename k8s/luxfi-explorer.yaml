@@ -40,7 +40,7 @@ data:
       - slug: lux
         name: Lux Network
         chain_id: 96369
-        rpc_url: http://lux-c-chain:9650/v1/bc/C/rpc
+        rpc_url: http://lux-c-chain:9650/v1/chain/C/rpc
         subgraphs:
           - name: bridge
             schema: bridge

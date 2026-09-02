@@ -268,7 +268,7 @@ services:
       # Source-chain RPC overrides. Holesky's publicnode default is
       # geo-blocked from many hosts; drpc is reliable. Override per
       # chain if you hit rate limits.
-      - BRIDGE_SOURCE_RPC_OVERRIDES=ETHEREUM_SEPOLIA=https://ethereum-sepolia-rpc.publicnode.com,LUX_TESTNET=https://api.lux-test.network/v1/bc/C/rpc,BASE_SEPOLIA=https://sepolia.base.org,HOLESKY_TESTNET=https://holesky.drpc.org
+      - BRIDGE_SOURCE_RPC_OVERRIDES=ETHEREUM_SEPOLIA=https://ethereum-sepolia-rpc.publicnode.com,LUX_TESTNET=https://api.lux-test.network/v1/chain/C/rpc,BASE_SEPOLIA=https://sepolia.base.org,HOLESKY_TESTNET=https://holesky.drpc.org
     volumes:
       # YAML-driven SPA picker config (networks + tokens + limits).
       # Mounted read-only — the k8s deployment uses a ConfigMap for

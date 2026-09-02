@@ -8,27 +8,11 @@
  */
 
 /*
- * Basel Grotesk — the canonical brand face (BRAND_TOKENS.font) shared by all
  * four tenants (Lux/Zoo/Hanzo/Pars). Shipped as a bundled webfont so the body
  * font is a real sans face, never a Times serif fallback. The woff2 files are
  * served from the consuming app's public/fonts/ at the SPA root (bridge is a
  * full-page app mounted at `/`), so the absolute `/fonts/*` src resolves.
  */
-@font-face {
-  font-family: 'Basel Grotesk';
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  src: url('/fonts/Basel-Grotesk-Book.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Basel Grotesk';
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-  src: url('/fonts/Basel-Grotesk-Medium.woff2') format('woff2');
-}
-
 :root {
   /* Surfaces. A near-black ground with two lifts above it — the page, the
      panel, the control. Three greys is what the screen needs to separate
@@ -90,10 +74,8 @@
   --bridge-spacing-lg: 24px;
 
   /* Typography. */
-  --bridge-font: 'Basel Grotesk', -apple-system, BlinkMacSystemFont, 'Inter',
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --bridge-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
-    monospace;
+  --bridge-font: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bridge-font-mono: Zen Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   /* Type scale. Stated once so a heading and the sentence under it move
      together, and a size is chosen by what it is rather than by a number at
@@ -130,7 +112,7 @@
   --bridge-header-padding-x: 24px;
   --bridge-header-padding-y: 14px;
   --bridge-asset-select-width: 148px;
-  --bridge-input-font-size: 28px;
+  --bridge-input-font-size: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --bridge-brand-name-size: 15px;
   --bridge-chip-display: inline-flex;
 }
@@ -146,7 +128,7 @@
     --bridge-header-padding-x: 16px;
     --bridge-header-padding-y: 12px;
     --bridge-asset-select-width: 128px;
-    --bridge-input-font-size: 24px;
+    --bridge-input-font-size: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --bridge-title-size: 28px;
   }
 }
@@ -160,7 +142,7 @@
     --bridge-page-padding-y: 20px;
     --bridge-card-padding: 16px;
     --bridge-asset-select-width: 116px;
-    --bridge-input-font-size: 22px;
+    --bridge-input-font-size: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --bridge-brand-name-size: 14px;
     --bridge-title-size: 26px;
     --bridge-chip-display: none;
@@ -174,14 +156,14 @@
  */
 html,
 body {
-  font-family: var(--bridge-font);
+  font-family: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Flat ground. The page was painted with an accent wash behind the header,
    which put a coloured haze under the one panel a person reads numbers off.
    The panel's own edge does the separating now. */
 .bridge-root {
-  font-family: var(--bridge-font);
+  font-family: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--bridge-bg);
   color: var(--bridge-text);
   font-size: var(--bridge-body-size);
@@ -200,13 +182,13 @@ body {
 }
 
 .bridge-root button {
-  font-family: inherit;
+  font-family: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   cursor: pointer;
 }
 
 .bridge-root input,
 .bridge-root select {
-  font-family: inherit;
+  font-family: Zen, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Native scrollbar polish — applies inside any scroll container in the SDK. */
