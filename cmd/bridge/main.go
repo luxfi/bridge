@@ -119,7 +119,9 @@ func main() {
 	// switch is off — turned these routes on. They authenticate nobody, so that
 	// spelling is the whole distance between unmounted and world-writable.
 	adminRoutes := flag.Bool("admin-routes", envBool("BRIDGE_ADMIN_ROUTES", false),
-		"mount /admin/swaps/:id/{reset,inject-raw-tx}. These take any swap id and no credential — their own comments say do not expose externally — so they are off unless asked for, and belong on a listener that is not public.")
+		"add /admin/swaps/:id/{reset,inject-raw-tx} to the operator listener. These take any swap id and no credential, so they are off unless asked for.")
+	adminAddr := flag.String("admin-addr", envOr("BRIDGE_ADMIN_ADDR", ""),
+		"listen address for the operator surface: /metrics, the swap list, the deposit poll, and (with --admin-routes) the swap mutators. None of it identifies its caller, so give it a port the edge does not route — the ingress publishes --addr only. Empty serves none of it.")
 	disableDepositCheck := flag.Bool("disable-deposit-check", false,
 		"disable the /v1/bridge/check-deposit ops endpoint entirely (default: enabled)")
 	sourceRPCOverrides := flag.String("source-rpc-overrides", envOr("BRIDGE_SOURCE_RPC_OVERRIDES", ""),
@@ -1102,10 +1104,9 @@ func main() {
 		return c.JSON(200, body)
 	})
 
-	// API routes (/v1/bridge/* + /metrics).
+	// Public API routes (/v1/bridge/* + the SPA's /api aliases).
 	if *adminRoutes {
 		api.EnableAdminRoutes()
-		logger.Warn("admin swap routes mounted", "note", "no credential, any swap id; keep this listener off the public edge")
 	}
 	api.Register(app)
 
@@ -1118,7 +1119,7 @@ func main() {
 	// segment paths like /envs.js.
 	app.All("/*", zip.AdaptNetHTTP(frontend))
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error, 2)
 	go func() {
 		logger.Info("lux-bridge listening",
 			"addr", *addr,
@@ -1128,6 +1129,24 @@ func main() {
 		)
 		errCh <- app.Listen(*addr)
 	}()
+
+	// The operator surface is a second listener, not a route prefix: the
+	// edge routes a port, so a port is the thing that can be left unrouted.
+	var admin *zip.App
+	if *adminAddr != "" {
+		admin = zip.New(zip.Config{AppName: appName + "-admin", DisableStartupMessage: true})
+		admin.Use(middleware.Recover(), middleware.RequestID())
+		api.RegisterAdmin(admin)
+		go func() {
+			logger.Info("operator surface listening",
+				"addr", *adminAddr,
+				"swap_mutators", *adminRoutes,
+			)
+			errCh <- admin.Listen(*adminAddr)
+		}()
+	} else {
+		logger.Info("operator surface not served", "note", "set --admin-addr to expose /metrics, the swap list and the deposit poll on a port the edge does not route")
+	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -1145,6 +1164,11 @@ func main() {
 	defer cancel()
 	if err := app.ShutdownWithContext(ctx); err != nil {
 		logger.Error("shutdown", "err", err)
+	}
+	if admin != nil {
+		if err := admin.ShutdownWithContext(ctx); err != nil {
+			logger.Error("shutdown operator surface", "err", err)
+		}
 	}
 	logger.Info("shutdown complete")
 }

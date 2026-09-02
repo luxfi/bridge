@@ -168,9 +168,17 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+            # The operator surface: /metrics, the swap list, the deposit
+            # poll. The Ingress below publishes the http port and only the
+            # http port, so this one is reachable from inside the cluster
+            # and nowhere else.
+            - containerPort: 8081
+              name: admin
           env:
             - name: BRIDGE_ADDR
               value: ":8080"
+            - name: BRIDGE_ADMIN_ADDR
+              value: ":8081"
             - name: BRIDGE_CONFIG
               value: /etc/bridge/networks.yaml
             # Persistent swap store. The PVC mounted at this path
@@ -258,6 +266,9 @@ spec:
     - port: 80
       targetPort: http
       name: http
+    - port: 8081
+      targetPort: admin
+      name: admin
 ---
 # Ingress for the unified binary. Routes both the SPA (/) and the API
 # (/v1/bridge/*) to the same Service — the binary serves both. Replaces

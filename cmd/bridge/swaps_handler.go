@@ -24,8 +24,10 @@ import (
 // Native handlers:
 //   - GET  /v1/bridge/quote          quoteNative         — bchain pass-through (quote_handler.go)
 //   - POST /v1/bridge/swaps          swapsCreateNative   — local SwapStore + B-Chain quote snapshot
-//   - GET  /v1/bridge/swaps          swapsListNative     — local SwapStore
 //   - GET  /v1/bridge/swaps/:id      swapsGetNative      — local SwapStore
+//
+// Operator surface (API.RegisterAdmin, on its own listener):
+//   - GET  /v1/bridge/swaps          swapsListNative     — local SwapStore
 //   - POST /v1/bridge/check-deposit  checkDepositNative  — depositcheck
 //   - GET  /v1/bridge/info           infoNative          — bchain (signer-set info)
 //
@@ -363,13 +365,16 @@ func (a *API) swapsListNative(c *zip.Ctx) error {
 	}
 	out := make([]serverSwap, 0, len(swaps))
 	for _, sw := range swaps {
-		out = append(out, swapToServerShape(sw))
+		out = append(out, swapToOperatorShape(sw))
 	}
 	return c.JSON(http.StatusOK, envelope{Data: out})
 }
 
 // swapToServerShape collapses the internal Swap into the legacy
-// ServerSwap envelope the TS SDK consumes.
+// ServerSwap envelope the TS SDK consumes: what the swap is doing and
+// where its money went. The MPC signature and the signed destination tx
+// are omitted — a swap id is enough to ask for a swap, and it should not
+// be enough to read the material the signing cluster minted for it.
 func swapToServerShape(sw *Swap) serverSwap {
 	return serverSwap{
 		ID:                 sw.ID,
@@ -379,13 +384,23 @@ func swapToServerShape(sw *Swap) serverSwap {
 		DepositAddress:     sw.DepositAddress,
 		ReleaseAddress:     sw.ReleaseAddress,
 		ReceiveAmount:      sw.ReceiveAmount,
-		Signature:          sw.Signature,
 		SourceTxHash:       sw.SourceTxHash,
 		DestTxHash:         sw.DestTxHash,
-		DestRawTx:          sw.DestRawTx,
 		LastError:          sw.LastError,
 		RefundTxHash:       sw.RefundTxHash,
 	}
+}
+
+// swapToOperatorShape is the same envelope with the signature and the
+// signed destination tx filled in. Decoding the raw tx and recovering the
+// sender is how a "invalid sender" reject from a destination chain gets
+// diagnosed, so the fields exist — on the operator surface only
+// (API.RegisterAdmin).
+func swapToOperatorShape(sw *Swap) serverSwap {
+	s := swapToServerShape(sw)
+	s.Signature = sw.Signature
+	s.DestRawTx = sw.DestRawTx
+	return s
 }
 
 // =============================================================================

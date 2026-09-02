@@ -45,8 +45,9 @@ type API struct {
 	mchain   *mchain.Client       // optional; when set, swap creation with use_deposit_address=true mints an MPC address
 	depcheck *depositcheck.Client // optional; powers the /v1/bridge/check-deposit diagnostic endpoint
 
-	// adminRoutes mounts the uncredentialed /admin/swaps handlers. Off unless
-	// BRIDGE_ADMIN_ROUTES is set, because they take any swap id and no proof.
+	// adminRoutes mounts the /admin/swaps handlers on the operator surface.
+	// Off unless BRIDGE_ADMIN_ROUTES is set, because they take any swap id
+	// and no proof.
 	adminRoutes bool
 
 	// releaseStore is the per-destination-network release-wallet
@@ -139,9 +140,9 @@ func NewAPI(
 // main.go after config + flags are parsed; the default is
 // BridgeClassicalCompat (the user-facing bridge UI talks to external
 // L1s on classical primitives).
-// EnableAdminRoutes mounts the operator handlers. They authenticate nobody, so
-// this is a decision to make once, deliberately, on a listener that is not
-// public — never a default.
+// EnableAdminRoutes adds the swap mutators to the operator surface
+// (RegisterAdmin). They authenticate nobody, so this is a decision to make
+// once, deliberately — never a default.
 func (a *API) EnableAdminRoutes() { a.adminRoutes = true }
 
 func (a *API) SetProfile(p *bridge.BridgeProfile) {
@@ -159,8 +160,13 @@ func (a *API) SetReleaseStore(rs mchain.ReleaseWalletStore) {
 	a.releaseStore = rs
 }
 
-// Register mounts handlers on the given zip.App. The /v1/bridge prefix
-// matches what the SPA fetches and what hanzo/ingress routes externally.
+// Register mounts the public surface: config reads, quote, swap create,
+// and swap read by id. The /v1/bridge prefix matches what the SPA fetches
+// and what hanzo/ingress routes externally.
+//
+// Everything an operator needs and a visitor does not — the swap list, the
+// swap mutators, /metrics, and the deposit poll — is on RegisterAdmin, for a
+// listener the edge does not route.
 func (a *API) Register(app *zip.App) {
 	app.Get("/v1/bridge/networks", a.networks)
 	app.Get("/v1/bridge/tokens", a.tokens)
@@ -179,9 +185,6 @@ func (a *API) Register(app *zip.App) {
 
 	// JSON-RPC surface for bridge_getProfile (and future bridge_* methods).
 	app.Post("/v1/bridge/rpc", a.rpc)
-
-	// Prometheus metrics including bridge_classical_compat_total.
-	app.Get("/metrics", a.metrics)
 
 	// Native swap CRUD takes precedence when a SwapStore + bchain
 	// client are configured. Falls back to the legacy reverse-proxy /
@@ -202,45 +205,29 @@ func (a *API) Register(app *zip.App) {
 	if a.store != nil && a.bchain != nil {
 		app.Get("/v1/bridge/quote", a.quoteNative)
 		app.Post("/v1/bridge/swaps", a.swapsCreateNative)
-		app.Get("/v1/bridge/swaps", a.swapsListNative)
 		app.Get("/v1/bridge/swaps/:id", a.swapsGetNative)
 
 		app.Get("/api/quote", a.quoteNative)
 		app.Post("/api/swaps", a.swapsCreateNative)
-		app.Get("/api/swaps", a.swapsListNative)
 		app.Get("/api/swaps/:id", a.swapsGetNative)
-
-		// Admin: force a swap to re-sign (used to recover after a
-		// destination-chain reject of the previously-built raw tx).
-		// Registered only when asked for. Both handlers below mutate any
-		// swap by id with no credential — their own comments say
-		// "operator-only … no auth … do not expose externally", and a
-		// comment is not a control: they were mounted on the same app as
-		// the public routes, and the only thing keeping them unreachable
-		// was that the edge happened not to route /admin. That is an
-		// accident of ingress, not a decision, and it changes with an
-		// unrelated edit.
-		//
-		// Off by default, so production serves 404 because the route does
-		// not exist rather than because something upstream declined to
-		// forward it. An operator who needs them sets BRIDGE_ADMIN_ROUTES
-		// deliberately, and that is a decision with a record.
-		if a.adminRoutes {
-			app.Post("/admin/swaps/:id/reset", a.swapsResetNative)
-		// Admin: inject a caller-supplied DestRawTx so the broadcast
-		// driver can push it on the next tick. Used when mpcd dedupes
-		// a re-sign request but the operator already has a corrected
-		// raw tx (e.g. low-s canonicalization of a prior signature).
-			app.Post("/admin/swaps/:id/inject-raw-tx", a.swapsInjectRawTxNative)
-		}
 	} else {
 		app.All("/v1/bridge/quote", proxied)
-		app.All("/v1/bridge/swaps", proxied)
-		app.All("/v1/bridge/swaps/*", proxied)
+		app.Post("/v1/bridge/swaps", proxied)
 
 		app.All("/api/quote", proxied)
-		app.All("/api/swaps", proxied)
-		app.All("/api/swaps/*", proxied)
+		app.Post("/api/swaps", proxied)
+		// The SDK's per-swap legs (transfer, payout, mpcsign, getsig)
+		// live under this prefix on the backend and are forwarded
+		// unchanged. `+` and not `*`: `*` matches the empty remainder,
+		// so it forwards GET /api/swaps as well and hands back the list
+		// this route split is here to withhold.
+		//
+		// There is no /v1/bridge twin: the Director strips /v1/bridge,
+		// and the backend mounts its swap router at /api/swaps
+		// (app/server/src/server.ts), so a /v1/bridge/swaps/… request
+		// arrives at /swaps/… — a path space with no routes on it,
+		// whatever the sub-path spells.
+		app.All("/api/swaps/+", proxied)
 	}
 	if a.bchain != nil {
 		// /v1/bridge/info exposes signer-set info from BridgeVM (the
@@ -250,18 +237,53 @@ func (a *API) Register(app *zip.App) {
 		app.Get("/v1/bridge/info", a.infoNative)
 	}
 
-	// /v1/bridge/check-deposit is an ops-only diagnostic that polls
-	// the source-chain RPC for the balance at a deposit address. Not
-	// part of the SDK's happy path — BridgeVM owns deposit advancement
-	// in the target architecture. Always-on when a depositcheck client
-	// is configured (which is the default in main.go).
-	if a.depcheck != nil {
-		app.Post("/v1/bridge/check-deposit", a.checkDepositNative)
-	}
 	// Always proxied — rate / settings / explorer have no native impl yet.
 	app.All("/v1/bridge/rate", proxied)
 	app.All("/v1/bridge/settings", proxied)
 	app.All("/v1/bridge/explorer/*", proxied)
+}
+
+// RegisterAdmin mounts the operator surface. Nothing here identifies its
+// caller, so it goes on the listener main.go opens for --admin-addr, which
+// the ingress does not route — the only place these can be reached from is
+// the place an operator is.
+//
+// Three kinds of thing live here. The swap list carries every id plus the
+// signature and signed destination tx minted for it. /metrics names the MPC
+// release wallets and says which of them cannot sign right now. The deposit
+// poll turns one request into a source-chain RPC call with caller-chosen
+// arguments. Each is worth having and none is worth answering anonymously.
+func (a *API) RegisterAdmin(app *zip.App) {
+	// Prometheus metrics including bridge_classical_compat_total.
+	app.Get("/metrics", a.metrics)
+
+	if a.store != nil && a.bchain != nil {
+		app.Get("/v1/bridge/swaps", a.swapsListNative)
+		app.Get("/api/swaps", a.swapsListNative)
+
+		// Force a swap to re-sign, to recover after a destination-chain
+		// reject of the previously-built raw tx; or write a raw tx the
+		// operator derived out of band (mpcd dedupes a re-sign request,
+		// but a low-s canonicalization of the prior signature is already
+		// in hand) so the broadcast driver pushes it on the next tick.
+		//
+		// Both take any swap id and no proof, so they stay off unless an
+		// operator asks for them: two decisions, not one, before an
+		// arbitrary caller can rewind a swap.
+		if a.adminRoutes {
+			app.Post("/admin/swaps/:id/reset", a.swapsResetNative)
+			app.Post("/admin/swaps/:id/inject-raw-tx", a.swapsInjectRawTxNative)
+		}
+	} else {
+		app.Get("/api/swaps", a.proxied())
+	}
+
+	// The deposit poll reads the source-chain balance at an address. Not
+	// part of the SDK's happy path — BridgeVM owns deposit advancement in
+	// the target architecture.
+	if a.depcheck != nil {
+		app.Post("/v1/bridge/check-deposit", a.checkDepositNative)
+	}
 }
 
 // apiNetwork is the on-wire response shape — Network plus a nested

@@ -36,10 +36,25 @@ import (
 
 // testRig bundles an app with its underlying store so individual tests
 // can poke state directly when needed.
+// A rig holds both listeners the daemon opens: app is the public one the
+// edge routes, admin is the operator one it does not (main.go --admin-addr).
+// A test that reaches for admin is saying so out loud.
 type testRig struct {
 	app   *zip.App
+	admin *zip.App
 	store *InMemoryStore
 	api   *API
+}
+
+// listeners builds the pair for an already-wired API.
+func listeners(api *API) (public, admin *zip.App) {
+	public = zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
+	public.Use(middleware.Recover(), middleware.RequestID())
+	api.Register(public)
+	admin = zip.New(zip.Config{AppName: "lux-bridge-test-admin", DisableStartupMessage: true})
+	admin.Use(middleware.Recover(), middleware.RequestID())
+	api.RegisterAdmin(admin)
+	return public, admin
 }
 
 // defaultPrices is the unit-price table the mock B-Chain emits when
@@ -90,10 +105,8 @@ func newRig(t *testing.T, bclient *bchain.Client, mclient *mchain.Client, dc *de
 	)
 	store := NewInMemoryStore()
 	api := NewAPI(cfg, "", bclient, mclient, dc, store)
-	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
-	app.Use(middleware.Recover(), middleware.RequestID())
-	api.Register(app)
-	return &testRig{app: app, store: store, api: api}
+	app, admin := listeners(api)
+	return &testRig{app: app, admin: admin, store: store, api: api}
 }
 
 // newRigCfg is newRig with an explicit Config — for gate-behavior tests that
@@ -112,10 +125,8 @@ func newRigCfg(t *testing.T, cfg Config, bclient *bchain.Client) *testRig {
 	// test of the inject handler's withdrawal refusal would be reading the
 	// router's answer rather than the handler's.
 	api.EnableAdminRoutes()
-	app := zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
-	app.Use(middleware.Recover(), middleware.RequestID())
-	api.Register(app)
-	return &testRig{app: app, store: store, api: api}
+	app, admin := listeners(api)
+	return &testRig{app: app, admin: admin, store: store, api: api}
 }
 
 // newMockBChain spins up an in-process JSON-RPC server speaking the
@@ -526,8 +537,13 @@ func TestSwapsGet_ReturnsStored(t *testing.T) {
 	if err := json.Unmarshal(body, &resp); err != nil {
 		t.Fatal(err)
 	}
-	if resp.Data.ID != sw.ID || resp.Data.Signature != "0xsig" {
+	if resp.Data.ID != sw.ID || resp.Data.SourceTxHash != "0xsrctx" || resp.Data.DestTxHash != "0xdsttx" {
 		t.Errorf("returned swap mismatch: %+v", resp.Data)
+	}
+	// The signature is operator material and rides the operator surface
+	// instead (TestSwapListCarriesSignedMaterial in listener_test.go).
+	if resp.Data.Signature != "" {
+		t.Errorf("public swap read returned the MPC signature: %+v", resp.Data)
 	}
 }
 
@@ -554,7 +570,7 @@ func TestSwapsList_NewestFirst(t *testing.T) {
 		time.Sleep(2 * time.Millisecond) // ensure distinct CreatedAt
 	}
 
-	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/swaps", nil)
+	status, body := fireRequest(t, rig.admin, http.MethodGet, "/v1/bridge/swaps", nil)
 	if status != http.StatusOK {
 		t.Fatalf("status = %d, body=%s", status, body)
 	}
@@ -575,7 +591,7 @@ func TestSwapsList_FilterByStatus(t *testing.T) {
 	_ = rig.store.Create(t.Context(), &Swap{Status: SwapStatusCompleted})
 	_ = rig.store.Create(t.Context(), &Swap{Status: SwapStatusCompleted})
 
-	status, body := fireRequest(t, rig.app, http.MethodGet, "/v1/bridge/swaps?status=completed", nil)
+	status, body := fireRequest(t, rig.admin, http.MethodGet, "/v1/bridge/swaps?status=completed", nil)
 	if status != http.StatusOK {
 		t.Fatalf("status = %d", status)
 	}
@@ -973,7 +989,7 @@ func TestCheckDeposit_Confirmed(t *testing.T) {
 		Asset:   "ETH",
 		Amount:  0.5,
 	})
-	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	status, body := fireRequest(t, rig.admin, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
 	if status != http.StatusOK {
 		t.Fatalf("status = %d, body=%s", status, body)
 	}
@@ -989,7 +1005,7 @@ func TestCheckDeposit_DOT_501(t *testing.T) {
 	reqBody, _ := json.Marshal(checkDepositReq{
 		Network: "POLKADOT_MAINNET", Address: "1abc", Amount: 1,
 	})
-	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	status, body := fireRequest(t, rig.admin, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
 	if status != http.StatusNotImplemented {
 		t.Fatalf("status = %d, want 501. body=%s", status, body)
 	}
@@ -1003,7 +1019,7 @@ func TestCheckDeposit_MissingParams400(t *testing.T) {
 	rig := newRig(t, nil, nil, dc)
 
 	reqBody, _ := json.Marshal(checkDepositReq{Amount: 1})
-	status, body := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	status, body := fireRequest(t, rig.admin, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
 	if status != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400. body=%s", status, body)
 	}
@@ -1017,7 +1033,7 @@ func TestCheckDeposit_NotRegistered_WhenDisabled(t *testing.T) {
 	rig := newRig(t, nil, nil, nil)
 
 	reqBody, _ := json.Marshal(checkDepositReq{Network: "ETHEREUM_SEPOLIA", Address: "0xabc", Amount: 1})
-	status, _ := fireRequest(t, rig.app, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
+	status, _ := fireRequest(t, rig.admin, http.MethodPost, "/v1/bridge/check-deposit", reqBody)
 	if status != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404 (handler not registered when depcheck=nil)", status)
 	}
@@ -1335,7 +1351,7 @@ func TestSwapsInject_GatedByWithdrawal(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 	body, _ := json.Marshal(adminInjectRawTxReq{DestRawTx: "DEADBEEF"})
-	status, respBody := fireRequest(t, rig.app, http.MethodPost, "/admin/swaps/"+sw.ID+"/inject-raw-tx", body)
+	status, respBody := fireRequest(t, rig.admin, http.MethodPost, "/admin/swaps/"+sw.ID+"/inject-raw-tx", body)
 	if status != http.StatusForbidden {
 		t.Fatalf("inject to a withdrawal-disabled destination must be 403, got %d: %s", status, respBody)
 	}

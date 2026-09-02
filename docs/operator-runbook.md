@@ -16,6 +16,7 @@ This binary replaces the legacy `bridge-server` (Express + Prisma) and
 | Binary          | `cmd/bridge`                                       |
 | Image           | `ghcr.io/luxfi/bridge:<tag>`                       |
 | Listen port     | `:8080` (HTTP)                                     |
+| Operator port   | `:8081` (HTTP, not published by the Ingress)       |
 | Health endpoint | `GET /health` (200 JSON)                           |
 | Config file     | `/etc/bridge/networks.yaml`                        |
 | Data directory  | `/var/lib/lux-bridge` (zapdb / Lux Badger v4)      |
@@ -34,10 +35,19 @@ Routes:
 /v1/bridge/tokens          tokens per chain
 /v1/bridge/quote           price quote
 /v1/bridge/limits          per-token min/max swap caps
-/v1/bridge/swaps           create / list swaps
-/v1/bridge/swaps/:id       fetch / update swap
-/v1/bridge/check-deposit   ops diagnostic (poll source-chain RPC)
+/v1/bridge/swaps           create swap
+/v1/bridge/swaps/:id       fetch swap
+```
+
+Operator routes, on `BRIDGE_ADMIN_ADDR` and only there. They identify no
+caller, and the Ingress publishes the public port alone:
+
+```
 /metrics                   Prometheus exposition
+/v1/bridge/swaps           list swaps, with signatures and signed dest txs
+/v1/bridge/check-deposit   poll a source-chain RPC for an address balance
+/admin/swaps/:id/reset          re-sign a swap      (BRIDGE_ADMIN_ROUTES=true)
+/admin/swaps/:id/inject-raw-tx  push an operator's raw tx (same)
 ```
 
 Background drivers (all on by default, all toggleable):
@@ -145,7 +155,8 @@ Env vars are the standard way to configure inside the container.
 | Env / Flag                     | Default                          | Notes |
 |--------------------------------|----------------------------------|-------|
 | `BRIDGE_CONFIG` / `--config`   | `/etc/bridge/networks.yaml`      | Loaded from ConfigMap |
-| `BRIDGE_ADDR` / `--addr`       | `:8080`                          | |
+| `BRIDGE_ADDR` / `--addr`       | `:8080`                          | The listener the Ingress publishes. |
+| `BRIDGE_ADMIN_ADDR` / `--admin-addr` | `""`                       | The operator listener (`:8081` in k8s). Empty serves none of the operator routes — including `/metrics`. Give it a port the Ingress does not route. |
 | `BRIDGE_DATA_DIR` / `--data-dir` | `""`                          | Empty = in-memory swap store (lossy on restart). Set to a writable path on a PV for durability — e.g. `/var/lib/lux-bridge`. |
 | `BRIDGE_PROFILE` / `--profile` | `classical-compat`               | `strict-pq` for internal Lux↔Lux only |
 
@@ -277,7 +288,10 @@ kubectl -n lux-bridge logs deployment/lux-bridge --tail=1000 \
 
 ### Metrics
 
-Prometheus exposition at `/metrics`. Add to your scrape config:
+Prometheus exposition at `/metrics` on the operator port. The series name
+the MPC release wallets and report which of them cannot sign, so the scrape
+target is the `admin` port, never the published one
+(`k8s/bridge-servicemonitor.yaml`). Scraping by pod role instead:
 
 ```yaml
 - job_name: lux-bridge
@@ -288,6 +302,16 @@ Prometheus exposition at `/metrics`. Add to your scrape config:
     - source_labels: [__meta_kubernetes_pod_label_app]
       regex: lux-bridge
       action: keep
+    - source_labels: [__meta_kubernetes_pod_container_port_name]
+      regex: admin
+      action: keep
+```
+
+Reading it by hand:
+
+```bash
+kubectl -n lux-bridge port-forward svc/lux-bridge 8081:8081 &
+curl -sS localhost:8081/metrics
 ```
 
 ---
