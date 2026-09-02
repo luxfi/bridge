@@ -85,3 +85,9 @@ AGENTS.md
 GEMINI.md
 GROK.md
 QWEN.md
+
+# Compiled binaries: these were macOS arm64 builds committed from a laptop,
+# which no deploy can run and which every local `go build` dirties — a dirty
+# tracked binary blocks the next pull in a shared checkout.
+/bridge
+/opnet-watcher/opnet-watcher
