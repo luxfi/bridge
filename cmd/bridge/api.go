@@ -227,6 +227,16 @@ func (a *API) Register(app *zip.App) {
 		// (app/server/src/server.ts), so a /v1/bridge/swaps/… request
 		// arrives at /swaps/… — a path space with no routes on it,
 		// whatever the sub-path spells.
+		// mpcsign asks the MPC to sign for a swap id the caller names, and
+		// the backend router it reaches carries no authentication of any
+		// kind. It has no caller in the SPA — the hooks reach getsig,
+		// payout and transfer, never this — so it is an operator action
+		// wearing a public path, and it is registered on the operator
+		// listener below instead. Declared BEFORE the wildcard, because
+		// routes match in registration order and the wildcard would
+		// otherwise swallow it.
+		app.All("/api/swaps/mpcsign/+", absent)
+
 		app.All("/api/swaps/+", proxied)
 	}
 	if a.bchain != nil {
@@ -253,6 +263,12 @@ func (a *API) Register(app *zip.App) {
 // release wallets and says which of them cannot sign right now. The deposit
 // poll turns one request into a source-chain RPC call with caller-chosen
 // arguments. Each is worth having and none is worth answering anonymously.
+// absent answers as though nothing were mounted, so a path served elsewhere
+// reads from the public edge exactly like one that does not exist.
+func absent(c *zip.Ctx) error {
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "not_found"})
+}
+
 func (a *API) RegisterAdmin(app *zip.App) {
 	// Prometheus metrics including bridge_classical_compat_total.
 	app.Get("/metrics", a.metrics)
@@ -277,6 +293,10 @@ func (a *API) RegisterAdmin(app *zip.App) {
 	} else {
 		app.Get("/api/swaps", a.proxied())
 	}
+
+	// Where mpcsign lives now. See the note beside its refusal on the public
+	// listener.
+	app.All("/api/swaps/mpcsign/+", a.proxied())
 
 	// The deposit poll reads the source-chain balance at an address. Not
 	// part of the SDK's happy path — BridgeVM owns deposit advancement in

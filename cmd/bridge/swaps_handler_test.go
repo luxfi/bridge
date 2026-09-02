@@ -22,12 +22,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zap-proto/fiber/v3"
-	"github.com/zap-proto/zip"
-	"github.com/zap-proto/zip/middleware"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
+	"github.com/zap-proto/fiber/v3"
+	"github.com/zap-proto/zip"
+	"github.com/zap-proto/zip/middleware"
 )
 
 // =============================================================================
@@ -47,10 +47,18 @@ type testRig struct {
 }
 
 // listeners builds the pair for an already-wired API.
+// listeners builds the two apps main.go builds, in the order main.go builds
+// them. The order is the point: routes match as registered, and main.go hangs a
+// SPA catch-all at /* after everything else (main.go:1121). A rig without it
+// answers 404 where production answers the SPA, so a test asserting == 404
+// passes for a reason production does not share.
 func listeners(api *API) (public, admin *zip.App) {
 	public = zip.New(zip.Config{AppName: "lux-bridge-test", DisableStartupMessage: true})
 	public.Use(middleware.Recover(), middleware.RequestID())
 	api.Register(public)
+	public.All("/*", func(c *zip.Ctx) error {
+		return c.String(http.StatusOK, "<!doctype html><title>spa</title>")
+	})
 	admin = zip.New(zip.Config{AppName: "lux-bridge-test-admin", DisableStartupMessage: true})
 	admin.Use(middleware.Recover(), middleware.RequestID())
 	api.RegisterAdmin(admin)

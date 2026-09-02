@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"regexp"
 	"strings"
@@ -147,5 +148,45 @@ func TestNoBooleanFlagIsBuiltFromASetnessTest(t *testing.T) {
 			t.Errorf("main.go:%d builds a boolean from whether a variable is set, not what it says: %s",
 				i+1, strings.TrimSpace(line))
 		}
+	}
+}
+
+// mpcsign asks the MPC to sign for a swap id the caller names, and the backend
+// router it reaches authenticates nobody (app/server/src/routes/swaps.ts holds
+// no auth middleware). The SPA never calls it — its hooks reach getsig, payout
+// and transfer — so it is an operator action wearing a public path.
+//
+// The assertion is that the request never REACHES the backend, not that some
+// status came back: production hangs a SPA catch-all after these routes, so an
+// unrouted path answers 200 with HTML rather than 404, and a status assertion
+// would pass for a reason production does not share.
+func TestMPCSignNeverReachesTheBackendFromThePublicListener(t *testing.T) {
+	var got []string
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.URL.Path)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer backend.Close()
+
+	api := NewAPI(Config{}, backend.URL, nil, nil, nil, nil)
+	public, admin := listeners(api)
+
+	fireRequest(t, public, "POST", "/api/swaps/mpcsign/abc", nil)
+	if len(got) != 0 {
+		t.Fatalf("the public listener forwarded mpcsign to the backend as %v", got)
+	}
+
+	// A sibling leg the SPA does call still forwards, so the refusal above is
+	// mpcsign's and not the whole prefix going dark.
+	fireRequest(t, public, "POST", "/api/swaps/payout/abc", nil)
+	if len(got) == 0 {
+		t.Fatal("payout stopped reaching the backend; the prefix was taken down, not one leg")
+	}
+
+	// And mpcsign is served on the operator listener, not moved to nowhere.
+	before := len(got)
+	fireRequest(t, admin, "POST", "/api/swaps/mpcsign/abc", nil)
+	if len(got) == before {
+		t.Fatal("mpcsign reaches the backend from neither listener; it was moved to nowhere")
 	}
 }
