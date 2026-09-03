@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/zap-proto/zip"
 	"github.com/luxfi/bridge/internal/bchain"
 	"github.com/luxfi/bridge/internal/depositcheck"
 	"github.com/luxfi/bridge/internal/mchain"
 	"github.com/luxfi/bridge/internal/xrpl"
+	"github.com/zap-proto/zip"
 )
 
 // swaps_handler.go wires the native swap CRUD into cmd/bridge.

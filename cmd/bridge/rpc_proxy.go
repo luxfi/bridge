@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/zap-proto/zip"
 	luxlog "github.com/luxfi/log"
+	"github.com/zap-proto/zip"
 )
 
 // rpc_proxy.go — same-origin JSON-RPC reverse proxy for the embedded SPA.
