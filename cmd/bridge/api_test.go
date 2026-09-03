@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/luxfi/bridge"
 	"github.com/zap-proto/zip"
 	middleware "github.com/zap-proto/zip/middleware"
-	"github.com/luxfi/bridge"
 )
 
 // apiRig is a minimal API+App pair for exercising the read-only REST
@@ -182,4 +182,3 @@ func TestStripPathPrefix_EmptyPathBecomesRoot(t *testing.T) {
 		t.Errorf("Path = %q, want / for an exact-prefix match", req.URL.Path)
 	}
 }
-

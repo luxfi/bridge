@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zap-proto/zip"
 	"github.com/luxfi/bridge/internal/bchain"
+	"github.com/zap-proto/zip"
 )
 
 // quote_handler.go: thin REST → JSON-RPC pass-through for /v1/bridge/quote.

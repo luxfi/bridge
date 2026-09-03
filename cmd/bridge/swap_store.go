@@ -106,12 +106,12 @@ type Swap struct {
 	// (personal r-addresses, and every non-XRP chain). Validated to fit
 	// uint32 at the API boundary (swaps_handler.go) and read by the XRP
 	// signing path (signOneXRP) which carries it onto the Payment.
-	DestinationTag *uint32 `json:"destination_tag,omitempty"`
-	Sender         string  `json:"sender,omitempty"`
-	Refuel             bool       `json:"refuel"`
-	UseDepositAddress  bool       `json:"use_deposit_address"`
-	UseTeleporter      bool       `json:"use_teleporter"`
-	AppName            string     `json:"app_name,omitempty"`
+	DestinationTag    *uint32 `json:"destination_tag,omitempty"`
+	Sender            string  `json:"sender,omitempty"`
+	Refuel            bool    `json:"refuel"`
+	UseDepositAddress bool    `json:"use_deposit_address"`
+	UseTeleporter     bool    `json:"use_teleporter"`
+	AppName           string  `json:"app_name,omitempty"`
 
 	// Receive economics (snapshot at quote/create time).
 	ReceiveAmount    float64 `json:"receive_amount,omitempty"`
