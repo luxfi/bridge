@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: [lux-build-linux-amd64]
+    runs-on: [linux-amd64]
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
