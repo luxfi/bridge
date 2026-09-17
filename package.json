@@ -9,7 +9,8 @@
     "install:all": "pnpm install",
     "postinstall": "node scripts/patch-hanzogui-exports.cjs",
     "test": "echo 'Run tests in individual packages'",
-    "ci:test": "pnpm -r test"
+    "ci:test": "pnpm -r test",
+    "typecheck": "for d in app/bridge app/bridge3 app/explorer app/server pkg/bridge pkg/core pkg/settings pkg/threshold pkg/ui pkg/utila e2e; do node_modules/tsgo/bin/tsc --noEmit --incremental false -p $d/tsconfig.json || exit 1; done"
   },
   "keywords": [
     "bridge",
@@ -42,6 +43,7 @@
     }
   },
   "devDependencies": {
-    "playwright": "^1.60.0"
+    "playwright": "^1.60.0",
+    "tsgo": "npm:typescript@7.0.2"
   }
 }
